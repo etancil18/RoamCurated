@@ -1,3 +1,5 @@
+// lib/routeEngine.ts
+
 import type { Venue } from "@/types/venue";
 import { _intervalsForDate, daypartAllowedForNow } from "@/utils/timeUtils";
 import { vibeSimilarity } from "@/utils/vibeUtils";
@@ -12,17 +14,29 @@ export interface RouteOptions {
   customStart?: { lat: number; lon: number };
   latestEndHour?: number;
   minVibeSimilarity?: number;
+  theme?: string;
+
+  /** NEW — distance tightness */
+  tightness?: "tight" | "medium" | "loose";
+
+  /** OPTIONAL overrides (still allowed but usually replaced by tightness) */
   maxDistMeal?: number;
   maxDistOther?: number;
-  theme?: string;
+
+  /** NEW — city so we can apply proper scaling */
+  city?: "atl" | "nyc";
 }
 
 const DEFAULTS = {
   maxStops: 6,
   durationPerStopHours: 1,
   bufferHours: 1,
-  maxDistMealDefault: 2500,
-  maxDistOtherDefault: 1000,
+};
+
+/** NEW — city‑based distance thresholds */
+const CITY_DISTANCE_THRESHOLDS = {
+  atl: { tight: 800, medium: 1600, loose: 2500 },
+  nyc: { tight: 400, medium: 1200, loose: 2000 },
 };
 
 export async function generateRoute(
@@ -38,11 +52,38 @@ export async function generateRoute(
     customStart,
     latestEndHour,
     minVibeSimilarity = 0,
-    maxDistMeal = DEFAULTS.maxDistMealDefault,
-    maxDistOther = DEFAULTS.maxDistOtherDefault,
     theme,
+
+    /** NEW */
+    tightness = "medium",
+    city = "atl",
+
+    /** Legacy overrides still accepted */
+    maxDistMeal,
+    maxDistOther,
   } = opts;
 
+  /** -------------------------------------------------------
+   * 1) Compute max distances based on tightness & city
+   * ------------------------------------------------------ */
+  const cityThresholds = CITY_DISTANCE_THRESHOLDS[city] ?? CITY_DISTANCE_THRESHOLDS["atl"];
+
+  const derivedMaxDistance = cityThresholds[tightness] ?? cityThresholds.medium;
+
+  // If user provided direct overrides, respect them — else use tightness-based.
+  const MAX_MEAL_DISTANCE = typeof maxDistMeal === "number" ? maxDistMeal : derivedMaxDistance;
+  const MAX_OTHER_DISTANCE = typeof maxDistOther === "number" ? maxDistOther : derivedMaxDistance;
+
+  console.log("📏 Distance tightness resolution:", {
+    tightness,
+    city,
+    maxDistMeal: MAX_MEAL_DISTANCE,
+    maxDistOther: MAX_OTHER_DISTANCE,
+  });
+
+  /** -------------------------------------------------------
+   * 2) Prep venue pool
+   * ------------------------------------------------------ */
   const originLat = customStart?.lat ?? userLat;
   const originLon = customStart?.lon ?? userLon;
 
@@ -52,6 +93,9 @@ export async function generateRoute(
     return [];
   }
 
+  /** -------------------------------------------------------
+   * 3) Build stage plan (morning → lunch → drinks, etc.)
+   * ------------------------------------------------------ */
   const stagePlan = sequencedStagesForNow(startTime, {
     durationHours: maxStops,
     latestEndHour,
@@ -69,8 +113,12 @@ export async function generateRoute(
   const latestEndTime = new Date(startTime);
   latestEndTime.setHours(endHour, 0, 0, 0);
 
+  /** -------------------------------------------------------
+   * 4) Main routing loop
+   * ------------------------------------------------------ */
   for (let i = 0; i < stagePlan.length && route.length < maxStops; i++) {
     const desiredTypes = stagePlan[i];
+
     const arrival = new Date(currentTime.getTime() + DEFAULTS.bufferHours * 3600 * 1000);
     if (arrival > latestEndTime) break;
 
@@ -79,16 +127,19 @@ export async function generateRoute(
         if (route.includes(v)) return null;
         if (!hasType(v, desiredTypes)) return null;
 
+        /** --- Distance Filtering (NEW) --- */
         const dist = getDistanceMeters(lastLat, lastLon, v.lat, v.lon);
-        const maxDist = isMealType(v) ? maxDistMeal : maxDistOther;
+        const maxDist = isMealType(v) ? MAX_MEAL_DISTANCE : MAX_OTHER_DISTANCE;
         if (dist > maxDist) return null;
 
+        /** Time, daypart & vibe filters */
         if (filterOpen && !_isOpenAt(v, arrival)) return null;
         if (!daypartAllowedForNow(v, arrival)) return null;
 
         const similarity = lastVenue ? vibeSimilarity(lastVenue, v) : 1;
         if (lastVenue && similarity < minVibeSimilarity) return null;
 
+        /** Score = vibe similarity - distance weight */
         (v as any).__score = similarity * 1000 - dist;
         return v;
       })

@@ -16538,6 +16538,993 @@ const atlantaData = [
   "tags": "Espresso, Neighborhood, Chill, Cozy, Local",
   "price": "$",
   "duration": 1
+},
+{
+    "slug": "jenchans",
+    "name": "JenChan's",
+    "vibe": "Quirky, Communal, Fusion, Casual, Eclectic, Playful, Local, Brunchy, Bold, Welcoming",
+    "type": "brunch, lunch, dinner",
+    "lat": 33.7495145,
+    "lon": -84.3679665,
+    "link": "https://www.instagram.com/jenchansatl/",
+    "cover": "img/venues/JenChan's.jpg",
+    "openNow": true,
+    "hours": [
+      "Sunday: 11:00 AM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–10:00 PM",
+      "Wednesday: 5:00 PM–10:00 PM",
+      "Thursday: 12:00 PM–10:00 PM",
+      "Friday: 12:00 PM–10:00 PM",
+      "Saturday: 11:00 AM–10:00 PM"
+    ],
+    "dateEvents": [
+      {"date": "-", "title": "-", "time": "-"},
+      {"date": "-", "title": "-", "time": "-"}
+    ],
+    "hoursNumeric": {
+      "sun": {"open": 11, "close": 21},
+      "mon": null,
+      "tue": {"open": 17, "close": 22},
+      "wed": {"open": 17, "close": 22},
+      "thu": {"open": 12, "close": 22},
+      "fri": {"open": 12, "close": 22},
+      "sat": {"open": 11, "close": 22}
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "Afternoon, Evening",
+    "energyRamp": 3,
+    "tags": "Whimsical, Flavorful, Cozy, Inviting, Chill",
+    "price": "$$",
+    "duration": 1.66
+  },
+  {
+    "slug": "mudfire-studio-and-gallery",
+    "name": "Mudfire Studio and Gallery",
+    "vibe": "Creative, Hands-On, Immersive, Artistic, Relaxed, Social, Experimental, Expressive, Tactile, Community",
+    "type": "activity",
+    "lat": 33.7802743,
+    "lon": -84.2679867,
+    "link": "https://www.instagram.com/mudfire/",
+    "cover": "img/venues/Mudfire Studio and Gallery.jpg",
+    "openNow": true,
+    "hours": [
+      "Sunday: 12:00 PM–7:00 PM",
+      "Monday: 10:00 AM–10:00 PM",
+      "Tuesday: Closed",
+      "Wednesday: 10:00 AM–10:00 PM",
+      "Thursday: 10:00 AM–10:00 PM",
+      "Friday: 12:00 PM–7:00 PM",
+      "Saturday: 12:00 PM–7:00 PM"
+    ],
+    "dateEvents": [
+      {"date": "-", "title": "-", "time": "-"},
+      {"date": "-", "title": "-", "time": "-"}
+    ],
+    "hoursNumeric": {
+      "sun": {"open": 12, "close": 19},
+      "mon": {"open": 10, "close": 22},
+      "tue": null,
+      "wed": {"open": 10, "close": 22},
+      "thu": {"open": 10, "close": 22},
+      "fri": {"open": 12, "close": 19},
+      "sat": {"open": 12, "close": 19}
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "-",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "Midday, Afternoon",
+    "energyRamp": 2,
+    "tags": "Mindful, Grounding, Communal, Earthy, Hobbyist",
+    "price": "$$",
+    "duration": 1.75
+  },
+  {
+    "slug": "the-tuftest-class-in-town",
+    "name": "The Tuftest Class In Town",
+    "vibe": "Fun, Crafty, Immersive, Social, Creative, Dynamic, Playful, Guided, Trendy, Interactive",
+    "type": "activity",
+    "lat": 33.7717033,
+    "lon": -84.3527696,
+    "link": "https://www.instagram.com/thetuftestguyintown/",
+    "cover": "img/venues/The Tuftest Class In Town.jpg",
+    "openNow": true,
+    "hours": [
+      "Sunday: 11:00 AM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 2:30 PM–9:00 PM",
+      "Thursday: 2:30 PM–9:00 PM",
+      "Friday: 2:30 PM–9:00 PM",
+      "Saturday: 11:00 AM–9:00 PM"
+    ],
+    "dateEvents": [
+      {"date": "-", "title": "-", "time": "-"},
+      {"date": "-", "title": "-", "time": "-"}
+    ],
+    "hoursNumeric": {
+      "sun": {"open": 11, "close": 21},
+      "mon": null,
+      "tue": null,
+      "wed": {"open": 14.5, "close": 21},
+      "thu": {"open": 14.5, "close": 21},
+      "fri": {"open": 14.5, "close": 21},
+      "sat": {"open": 11, "close": 21}
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "-",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "Afternoon",
+    "energyRamp": 2,
+    "tags": "Energetic, Bold, Youthful, Indie, Pop-Centric",
+    "price": "$$",
+    "duration": 1.75
+  },
+  {
+"slug": "dads-garage-theatre",
+"name": "Dad's Garage Theatre",
+"vibe": "Edgy, Comedic, Live, Immersive, Inventive, Alternative, Social, Theatrical, Urban, Spontaneous",
+"type": "cinema",
+"lat": 33.7531952,
+"lon": -84.3686413,
+"link": "https://www.instagram.com/dadsgarageatl/",
+"cover": "img/venues/Dad's Garage Theatre.jpg",
+"openNow": true,
+"hours": [
+"Sunday: Closed",
+"Monday: Closed",
+"Tuesday: 7:00 PM–10:00 PM",
+"Wednesday: 7:00 PM–10:00 PM",
+"Thursday: 7:00 PM–12:30 AM",
+"Friday: 7:00 PM–12:30 AM",
+"Saturday: 7:00 PM–12:00 AM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": null,
+"mon": null,
+"tue": {"open": 19, "close": 22},
+"wed": {"open": 19, "close": 22},
+"thu": {"open": 19, "close": 24.5},
+"fri": {"open": 19, "close": 24.5},
+"sat": {"open": 19, "close": 24}
+},
+"dayParts": {
+"sun": "-",
+"mon": "-",
+"tue": "E",
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Evening",
+"energyRamp": 3,
+"tags": "Irreverent, Local-Centric, Cult, Engaging, Wildcard",
+"price": "$$",
+"duration": 2
+},
+{
+  "slug": "grit-ceramics-studio",
+  "name": "Grit Ceramics Studio",
+  "vibe": "Intimate, Artisanal, Rustic, Focused, Meditative, Tactile, Creative, Hands-On, Serene, Local",
+  "type": "activity",
+  "lat": 33.708509,
+  "lon": -84.4186929,
+  "link": "https://www.instagram.com/gritceramicstudio/",
+  "cover": "img/venues/Grit Ceramics Studio.jpg",
+  "openNow": true,
+  "hours": [
+    "Sunday: 12:00 PM–4:00 PM",
+    "Monday: 2:00 PM–6:00 PM",
+    "Tuesday: 2:00 PM–6:00 PM",
+    "Wednesday: 2:00 PM–6:00 PM",
+    "Thursday: 2:00 PM–6:00 PM",
+    "Friday: 2:00 PM–6:00 PM",
+    "Saturday: 12:00 PM–4:00 PM"
+  ],
+  "dateEvents": [
+    { "date": "-", "title": "-", "time": "-" },
+    { "date": "-", "title": "-", "time": "-" }
+  ],
+  "hoursNumeric": {
+    "sun": { "open": 12, "close": 16 },
+    "mon": { "open": 14, "close": 18 },
+    "tue": { "open": 14, "close": 18 },
+    "wed": { "open": 14, "close": 18 },
+    "thu": { "open": 14, "close": 18 },
+    "fri": { "open": 14, "close": 18 },
+    "sat": { "open": 12, "close": 16 }
+  },
+  "dayParts": {
+    "sun": "MD",
+    "mon": "MD",
+    "tue": "MD",
+    "wed": "MD",
+    "thu": "MD",
+    "fri": "MD",
+    "sat": "MD"
+  },
+  "timeCategory": "Midday",
+  "energyRamp": 2,
+  "tags": "Zen, Independent, Homely, Raw, Artistic",
+  "price": "$$",
+  "duration": 1.75
+},
+{
+"slug": "lullwater-preserve",
+"name": "Lullwater Preserve",
+"vibe": "Tranquil, Natural, Scenic, Restorative, Green, Peaceful, Untouched, Shady, Wild, Meditative",
+"type": "nature",
+"lat": 33.8009677,
+"lon": -84.3143671,
+"link": "https://www.instagram.com/p/CCZVmJtJT0C/",
+"cover": "img/venues/Lullwater Preserve.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 7:00 AM–9:00 PM",
+"Monday: 7:00 AM–9:00 PM",
+"Tuesday: 7:00 AM–9:00 PM",
+"Wednesday: 7:00 AM–9:00 PM",
+"Thursday: 7:00 AM–9:00 PM",
+"Friday: 7:00 AM–9:00 PM",
+"Saturday: 7:00 AM–9:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 7, "close": 21},
+"mon": {"open": 7, "close": 21},
+"tue": {"open": 7, "close": 21},
+"wed": {"open": 7, "close": 21},
+"thu": {"open": 7, "close": 21},
+"fri": {"open": 7, "close": 21},
+"sat": {"open": 7, "close": 21}
+},
+"dayParts": {
+"sun": "M",
+"mon": "M",
+"tue": "M",
+"wed": "M",
+"thu": "M",
+"fri": "M",
+"sat": "M"
+},
+"timeCategory": "Morning",
+"energyRamp": 1,
+"tags": "Refreshing, Escape, Serene, Jogger-Friendly, Spacious",
+"price": "$",
+"duration": 2
+},
+{
+"slug": "delbar-inman-park",
+"name": "Delbar - Inman Park",
+"vibe": "Upscale, Patio, Vibrant, Brunchy, Stylish, Social, Culinary, Contemporary, Lush, Refined",
+"type": "brunch, dinner, patio",
+"lat": 33.7615997,
+"lon": -84.3602065,
+"link": "https://www.instagram.com/delbaratl/",
+"cover": "img/venues/Delbar - Inman Park.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 11:00 AM–9:00 PM",
+"Monday: 4:00 PM–10:00 PM",
+"Tuesday: 4:00 PM–10:00 PM",
+"Wednesday: 4:00 PM–10:00 PM",
+"Thursday: 4:00 PM–10:00 PM",
+"Friday: 4:00 PM–11:00 PM",
+"Saturday: 11:00 AM–11:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 21},
+"mon": {"open": 16, "close": 22},
+"tue": {"open": 16, "close": 22},
+"wed": {"open": 16, "close": 22},
+"thu": {"open": 16, "close": 22},
+"fri": {"open": 16, "close": 23},
+"sat": {"open": 11, "close": 23}
+},
+"dayParts": {
+"sun": "A",
+"mon": "HH",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "E"
+},
+"timeCategory": "Afternoon, Happy Hour",
+"energyRamp": 4,
+"tags": "Exotic, Romantic, Design-Forward, Date-Worthy, Lush",
+"price": "$$$",
+"duration": 2.25
+},
+{
+"slug": "recuerdos-cafe",
+"name": "Recuerdos Cafe",
+"vibe": "Cozy, Coffee-Centric, Nostalgic, Minimal, Local, Intimate, Authentic, Relaxed, Humble, Mindful",
+"type": "coffee",
+"lat": 33.7735007,
+"lon": -84.3566349,
+"link": "https://www.instagram.com/recuerdos.atl/",
+"cover": "img/venues/Recuerdos Cafe.jpg",
+"openNow": true,
+"hours": [
+"Sunday: Closed",
+"Monday: Closed",
+"Tuesday: 8:00 AM–2:00 PM",
+"Wednesday: 8:00 AM–2:00 PM",
+"Thursday: 8:00 AM–2:00 PM",
+"Friday: 8:00 AM–2:00 PM",
+"Saturday: 8:00 AM–2:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": null,
+"mon": null,
+"tue": {"open": 8, "close": 14},
+"wed": {"open": 8, "close": 14},
+"thu": {"open": 8, "close": 14},
+"fri": {"open": 8, "close": 14},
+"sat": {"open": 8, "close": 14}
+},
+"dayParts": {
+"sun": "-",
+"mon": "-",
+"tue": "MD",
+"wed": "MD",
+"thu": "MD",
+"fri": "MD",
+"sat": "MD"
+},
+"timeCategory": "Midday",
+"energyRamp": 2,
+"tags": "Soft, Vintage, Sentimental, Spanish-Tinged, Simple",
+"price": "$",
+"duration": 1
+},
+{
+"slug": "portrait-coffee",
+"name": "Portrait Coffee",
+"vibe": "Vibrant, Specialty, Hip, Local, Energizing, Stylish, Flavorful, Urban, Focused, Artisanal",
+"type": "coffee",
+"lat": 33.7385064,
+"lon": -84.4226417,
+"link": "https://www.instagram.com/portraitcoffee/",
+"cover": "img/venues/Portrait Coffee.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 8:00 AM–3:00 PM",
+"Monday: 7:00 AM–4:00 PM",
+"Tuesday: 7:00 AM–4:00 PM",
+"Wednesday: 7:00 AM–4:00 PM",
+"Thursday: 7:00 AM–4:00 PM",
+"Friday: 7:00 AM–4:00 PM",
+"Saturday: 8:00 AM–3:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 8, "close": 15},
+"mon": {"open": 7, "close": 16},
+"tue": {"open": 7, "close": 16},
+"wed": {"open": 7, "close": 16},
+"thu": {"open": 7, "close": 16},
+"fri": {"open": 7, "close": 16},
+"sat": {"open": 8, "close": 15}
+},
+"dayParts": {
+"sun": "M",
+"mon": "M",
+"tue": "M",
+"wed": "M",
+"thu": "M",
+"fri": "M",
+"sat": "M"
+},
+"timeCategory": "Morning",
+"energyRamp": 2,
+"tags": "Mission-Driven, Afrocentric, Sleek, Conversational, Elevated",
+"price": "$",
+"duration": 1
+},
+{
+"slug": "atkins-park-restaurant-bar-virginia-highland",
+"name": "Atkins Park Restaurant & Bar - Virginia Highland",
+"vibe": "Historic, Neighborhood, Casual, Spirited, Patio, Friendly, Rustic, Lively, Comfortable, Classic",
+"type": "bar, patio",
+"lat": 33.7761465,
+"lon": -84.3527672,
+"link": "https://www.instagram.com/atkinspark/",
+"cover": "img/venues/Atkins Park Restaurant & Bar - Virginia Highland.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 12:00 PM–12:00 AM",
+"Monday: Closed",
+"Tuesday: 4:00 PM–12:00 AM",
+"Wednesday: 4:00 PM–12:00 AM",
+"Thursday: 4:00 PM–1:00 AM",
+"Friday: 12:00 PM–3:00 AM",
+"Saturday: 12:00 PM–3:00 AM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 12, "close": 24},
+"mon": null,
+"tue": {"open": 16, "close": 24},
+"wed": {"open": 16, "close": 24},
+"thu": {"open": 16, "close": 25},
+"fri": {"open": 12, "close": 27},
+"sat": {"open": 12, "close": 27}
+},
+"dayParts": {
+"sun": "E",
+"mon": "-",
+"tue": "HH",
+"wed": "HH",
+"thu": "E",
+"fri": "L",
+"sat": "L"
+},
+"timeCategory": "Evening, Happy Hour, Late",
+"energyRamp": 4,
+"tags": "Veteran, All-American, Community, Laid-Back, Welcoming",
+"price": "$$",
+"duration": 2
+},
+{
+"slug": "close-company-bar",
+"name": "Close Company Bar",
+"vibe": "Intimate, Obscure, Niche, Barroom, Late-Night, Hidden, Stylish, Eclectic, Relaxed, Social",
+"type": "bar",
+"lat": 33.7680393,
+"lon": -84.3627275,
+"link": "https://www.instagram.com/closecompanybar/",
+"cover": "img/venues/Close Company Bar.jpg",
+"openNow": true,
+"hours": [
+"Sunday: Closed",
+"Monday: 12:00 PM–12:00 AM",
+"Tuesday: 12:00 PM–12:00 AM",
+"Wednesday: 12:00 PM–12:00 AM",
+"Thursday: 12:00 PM–12:00 AM",
+"Friday: 4:00 PM–2:00 AM",
+"Saturday: 4:00 PM–2:00 AM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": null,
+"mon": {"open": 12, "close": 24},
+"tue": {"open": 12, "close": 24},
+"wed": {"open": 12, "close": 24},
+"thu": {"open": 12, "close": 24},
+"fri": {"open": 16, "close": 26},
+"sat": {"open": 16, "close": 26}
+},
+"dayParts": {
+"sun": "-",
+"mon": "E",
+"tue": "E",
+"wed": "E",
+"thu": "E",
+"fri": "L",
+"sat": "L"
+},
+"timeCategory": "Evening, Late",
+"energyRamp": 4,
+"tags": "Lo-Fi, Underground, Date-Night, Thoughtful, Moody",
+"price": "$$",
+"duration": 2
+},
+{
+"slug": "spiller-park-coffee-sp2",
+"name": "Spiller Park Coffee \"SP2\"",
+"vibe": "Bright, Neighborhood, Specialty, Casual, Morning, Energizing, Relaxed, Local, Modern, Inviting",
+"type": "coffee",
+"lat": 33.815326,
+"lon": -84.311954,
+"link": "https://www.instagram.com/spillerpark/",
+"cover": "img/venues/Spiller Park Coffee SP2.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 8:00 AM–5:00 PM",
+"Monday: 7:00 AM–5:00 PM",
+"Tuesday: 7:00 AM–5:00 PM",
+"Wednesday: 7:00 AM–5:00 PM",
+"Thursday: 7:00 AM–5:00 PM",
+"Friday: 7:00 AM–5:00 PM",
+"Saturday: 8:00 AM–5:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 8, "close": 17},
+"mon": {"open": 7, "close": 17},
+"tue": {"open": 7, "close": 17},
+"wed": {"open": 7, "close": 17},
+"thu": {"open": 7, "close": 17},
+"fri": {"open": 7, "close": 17},
+"sat": {"open": 8, "close": 17}
+},
+"dayParts": {
+"sun": "M",
+"mon": "M",
+"tue": "M",
+"wed": "M",
+"thu": "M",
+"fri": "M",
+"sat": "M"
+},
+"timeCategory": "Morning",
+"energyRamp": 2,
+"tags": "Easygoing, Third-Wave, Creative-Hub, Cheerful, Familiar",
+"price": "$",
+"duration": 1
+},
+{
+"slug": "omakase-table",
+"name": "Omakase Table",
+"vibe": "Exclusive, Refined, Intimate, High-End, Culinary, Serene, Luxe, Specialized, Gastronomic, Immersive",
+"type": "dinner",
+"lat": 33.846621,
+"lon": -84.3740912,
+"link": "https://www.instagram.com/omakasetable.atl/",
+"cover": "img/venues/Omakase Table.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 5:00 PM–10:30 PM",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: 5:30 PM–11:00 PM",
+"Thursday: 5:30 PM–11:00 PM",
+"Friday: 5:30 PM–11:00 PM",
+"Saturday: 5:30 PM–11:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 17, "close": 22.5},
+"mon": null,
+"tue": null,
+"wed": {"open": 17.5, "close": 23},
+"thu": {"open": 17.5, "close": 23},
+"fri": {"open": 17.5, "close": 23},
+"sat": {"open": 17.5, "close": 23}
+},
+"dayParts": {
+"sun": "E",
+"mon": "-",
+"tue": "-",
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Evening",
+"energyRamp": 2,
+"tags": "Private, Curated, Minimalist, Reverent, Bespoke",
+"price": "$$$$",
+"duration": 2.5
+},
+{
+"slug": "hayakawa",
+"name": "Hayakawa",
+"vibe": "Elevated, Sushi-Master, Minimalist, Refined, Luxurious, Intimate, High-Stakes, Elegant, Skilled, Exclusive",
+"type": "dinner",
+"lat": 33.7835093,
+"lon": -84.4110424,
+"link": "https://www.instagram.com/hayakawaatl/",
+"cover": "img/venues/Hayakawa.jpg",
+"openNow": true,
+"hours": [
+"Sunday: Closed",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: 6:00 PM–10:00 PM",
+"Thursday: 6:00 PM–10:00 PM",
+"Friday: 6:00 PM–10:00 PM",
+"Saturday: 6:00 PM–10:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": null,
+"mon": null,
+"tue": null,
+"wed": {"open": 18, "close": 22},
+"thu": {"open": 18, "close": 22},
+"fri": {"open": 18, "close": 22},
+"sat": {"open": 18, "close": 22}
+},
+"dayParts": {
+"sun": "-",
+"mon": "-",
+"tue": "-",
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Evening",
+"energyRamp": 2,
+"tags": "Traditional, Masterful, Discreet, Clean, Cultural",
+"price": "$$$$",
+"duration": 2.5
+},
+{
+"slug": "shoya-izakaya",
+"name": "Shoya Izakaya",
+"vibe": "Vibrant, Japanese, Bar-Food, Social, Casual, Late-Night, Lively, Cultural, Authentic, Spirited",
+"type": "dinner",
+"lat": 33.9078783,
+"lon": -84.2866435,
+"link": "https://www.instagram.com/explore/locations/1141441396009643/shoya-izakaya/",
+"cover": "img/venues/Shoya Izakaya.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 5:00 PM–9:30 PM",
+"Monday: 5:00 PM–10:30 PM",
+"Tuesday: 5:00 PM–10:30 PM",
+"Wednesday: 5:00 PM–10:30 PM",
+"Thursday: 5:00 PM–10:30 PM",
+"Friday: 5:00 PM–10:30 PM",
+"Saturday: 5:00 PM–10:30 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 17, "close": 21.5},
+"mon": {"open": 17, "close": 22.5},
+"tue": {"open": 17, "close": 22.5},
+"wed": {"open": 17, "close": 22.5},
+"thu": {"open": 17, "close": 22.5},
+"fri": {"open": 17, "close": 22.5},
+"sat": {"open": 17, "close": 22.5}
+},
+"dayParts": {
+"sun": "E",
+"mon": "E",
+"tue": "E",
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Evening",
+"energyRamp": 3,
+"tags": "Lively, Sake-Soaked, After-Hours, Festive, Comforting",
+"price": "$$",
+"duration": 2
+},
+{
+"slug": "eight-sushi-lounge",
+"name": "Eight Sushi Lounge",
+"vibe": "Modern, Stylish, Sushi-Bar, Upscale, Relaxed, Vibrant, Lounge-Style, Trendy, Contemporary, Social",
+"type": "dinner",
+"lat": 33.7799974,
+"lon": -84.4117628,
+"link": "https://www.instagram.com/eightsushiatl/",
+"cover": "img/venues/Eight Sushi Lounge.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 4:00 PM–10:00 PM",
+"Monday: Closed",
+"Tuesday: 4:00 PM–10:00 PM",
+"Wednesday: 4:00 PM–10:00 PM",
+"Thursday: 4:00 PM–10:00 PM",
+"Friday: 4:00 PM–11:00 PM",
+"Saturday: 4:00 PM–11:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 16, "close": 22},
+"mon": null,
+"tue": {"open": 16, "close": 22},
+"wed": {"open": 16, "close": 22},
+"thu": {"open": 16, "close": 22},
+"fri": {"open": 16, "close": 23},
+"sat": {"open": 16, "close": 23}
+},
+"dayParts": {
+"sun": "HH",
+"mon": "-",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "E"
+},
+"timeCategory": "Happy Hour, Evening",
+"energyRamp": 3,
+"tags": "Flashy, Instagrammable, Ambience-Driven, Crowd-Pleaser, Neon-Lit",
+"price": "$$$",
+"duration": 2.25
+},
+{
+"slug": "brush-sushi",
+"name": "Brush Sushi",
+"vibe": "Bold, Japanese-Fusion, Artistic, High-End, Avant-Garde, Culinary, Dramatic, Refined, Distinctive, Exclusive",
+"type": "brunch, lunch, dinner",
+"lat": 33.837404,
+"lon": -84.3809233,
+"link": "https://www.instagram.com/brushatl/",
+"cover": "img/venues/Brush Sushi.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 11:00 AM–3:00 PM; 5:00 PM–10:00 PM",
+"Monday: 5:00 PM–10:00 PM",
+"Tuesday: 5:00 PM–10:00 PM",
+"Wednesday: 5:00 PM–10:00 PM",
+"Thursday: 11:00 AM–3:00 PM; 5:00 PM–10:00 PM",
+"Friday: 11:00 AM–3:00 PM; 5:00 PM–11:00 PM",
+"Saturday: 11:00 AM–3:00 PM; 5:00 PM–10:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 22},
+"mon": {"open": 17, "close": 22},
+"tue": {"open": 17, "close": 22},
+"wed": {"open": 17, "close": 22},
+"thu": {"open": 11, "close": 22},
+"fri": {"open": 11, "close": 23},
+"sat": {"open": 11, "close": 22}
+},
+"dayParts": {
+"sun": "HH",
+"mon": "HH",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "HH"
+},
+"timeCategory": "Happy Hour",
+"energyRamp": 3,
+"tags": "Progressive, Sophisticated, Culinary-Art, Serious, New-School",
+"price": "$$$$",
+"duration": 2.25
+},
+{
+"slug": "lucky-star",
+"name": "Lucky Star",
+"vibe": "Retro, Greasy-Spoon, Dive-Charm, Casual, Local, Relaxed, Brunch-Friendly, Sturdy, Playful, Familiar",
+"type": "brunch, lunch, dinner",
+"lat": 33.7834391,
+"lon": -84.4112678,
+"link": "https://www.instagram.com/luckystaratl/",
+"cover": "img/venues/Lucky Star.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 10:00 AM–3:00 PM",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: 9:00 AM–3:00 PM; 4:00 PM–11:00 PM",
+"Thursday: 9:00 AM–3:00 PM; 4:00 PM–11:00 PM",
+"Friday: 9:00 AM–3:00 PM; 4:00 PM–12:00 AM",
+"Saturday: 10:00 AM–3:00 PM; 4:00 PM–12:00 AM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 10, "close": 15},
+"mon": null,
+"tue": null,
+"wed": {"open": 9, "close": 23},
+"thu": {"open": 9, "close": 23},
+"fri": {"open": 9, "close": 24},
+"sat": {"open": 10, "close": 24}
+},
+"dayParts": {
+"sun": "MD",
+"mon": "-",
+"tue": "-",
+"wed": "MD",
+"thu": "MD",
+"fri": "HH",
+"sat": "HH"
+},
+"timeCategory": "Midday, Happy Hour",
+"energyRamp": 3,
+"tags": "Americana, Kitsch, Honest, Foodie-Favorite, Social",
+"price": "$$$",
+"duration": 2
+},
+{
+"slug": "yeppa-and-co-beltline",
+"name": "Yeppa & Co. - Beltline",
+"vibe": "Trendy, Patio, Cocktail-Scene, Upscale, Social, Brunch-Friendly, Inventive, Stylish, Vibrant, City-Centric",
+"type": "brunch, dinner, patio, cocktail",
+"lat": 33.75708,
+"lon": -84.365486,
+"link": "https://www.instagram.com/yeppacoatl/",
+"cover": "img/venues/Yeppa & Co. - Beltline.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 11:30 AM–11:00 PM",
+"Monday: Closed",
+"Tuesday: 5:00 PM–11:00 PM",
+"Wednesday: 5:00 PM–11:00 PM",
+"Thursday: 5:00 PM–11:00 PM",
+"Friday: 5:00 PM–12:00 AM",
+"Saturday: 11:30 AM–12:00 AM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 11.5, "close": 23},
+"mon": null,
+"tue": {"open": 17, "close": 23},
+"wed": {"open": 17, "close": 23},
+"thu": {"open": 17, "close": 23},
+"fri": {"open": 17, "close": 24},
+"sat": {"open": 11.5, "close": 24}
+},
+"dayParts": {
+"sun": "HH",
+"mon": "-",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "E"
+},
+"timeCategory": "Happy Hour, Evening",
+"energyRamp": 4,
+"tags": "Euro-Vibe, Aperitivo, Scene-Driven, Fashionable, Italic",
+"price": "$$$",
+"duration": 2
+},
+{
+"slug": "rreal-tacos-beltline",
+"name": "Rreal Tacos - Beltline",
+"vibe": "Casual, Bold, Flavorful, Street-Style, Lunch-Friendly, Downtown, Social, Vibrant, Accessible, Fun",
+"type": "lunch, dinner",
+"lat": 33.7729948,
+"lon": -84.3641301,
+"link": "https://www.instagram.com/rrealtacos/",
+"cover": "img/venues/Rreal Tacos - Beltline.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 11:00 AM–11:00 PM",
+"Monday: 11:00 AM–12:00 AM",
+"Tuesday: 11:00 AM–12:00 AM",
+"Wednesday: 11:00 AM–12:00 AM",
+"Thursday: 11:00 AM–12:00 AM",
+"Friday: 11:00 AM–12:00 AM",
+"Saturday: 11:00 AM–12:00 AM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 23},
+"mon": {"open": 11, "close": 24},
+"tue": {"open": 11, "close": 24},
+"wed": {"open": 11, "close": 24},
+"thu": {"open": 11, "close": 24},
+"fri": {"open": 11, "close": 24},
+"sat": {"open": 11, "close": 24}
+},
+"dayParts": {
+"sun": "HH",
+"mon": "HH",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "HH"
+},
+"timeCategory": "Happy Hour",
+"energyRamp": 4,
+"tags": "Spicy, Unpretentious, Crowd-Friendly, Quick-Bite, Rowdy",
+"price": "$$",
+"duration": 1.75
+},
+{
+"slug": "fishmonger",
+"name": "Fishmonger",
+"vibe": "Fresh, Seafood-Centric, Lunch, Waterfront-Vibes, Urban Casual, Local, Bright, Crisp, Honest, Light",
+"type": "lunch",
+"lat": 33.7727821,
+"lon": -84.3526934,
+"link": "https://www.instagram.com/atlantafishmonger/?hl=en",
+"cover": "img/venues/Fishmonger.jpg",
+"openNow": true,
+"hours": [
+"Sunday: 11:00 AM–5:00 PM",
+"Monday: Closed",
+"Tuesday: 11:00 AM–8:00 PM",
+"Wednesday: 11:00 AM–8:00 PM",
+"Thursday: 11:00 AM–8:00 PM",
+"Friday: 11:00 AM–8:00 PM",
+"Saturday: 11:00 AM–8:00 PM"
+],
+"dateEvents": [
+{"date": "-", "title": "-", "time": "-"},
+{"date": "-", "title": "-", "time": "-"}
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 17},
+"mon": null,
+"tue": {"open": 11, "close": 20},
+"wed": {"open": 11, "close": 20},
+"thu": {"open": 11, "close": 20},
+"fri": {"open": 11, "close": 20},
+"sat": {"open": 11, "close": 20}
+},
+"dayParts": {
+"sun": "MD",
+"mon": "-",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "HH"
+},
+"timeCategory": "Midday, Happy Hour",
+"energyRamp": 2,
+"tags": "Nautical, Crisp, Honest, Sustainable, Breezy",
+"price": "$$",
+"duration": 1.5
 }
 ];
 

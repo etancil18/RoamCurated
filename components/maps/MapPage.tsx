@@ -44,7 +44,12 @@ export default function MapPage() {
       </div>
 
       <Suspense fallback={<div className="text-center p-4">Loading map...</div>}>
-        <MapCanvas venues={venues} city={city} />
+        <MapCanvas
+  venues={venues}
+  city={city}
+  travelMode="walking" // or state
+/>
+
       </Suspense>
     </main>
   );

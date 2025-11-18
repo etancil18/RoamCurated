@@ -30,7 +30,7 @@ function normalizeCity(value: string | null): 'atl' | 'nyc' {
 }
 
 export default async function CrawlPage({ params }: { params: { slug: string } }) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const { data, error } = await supabase
     .from('saved_routes')
@@ -71,6 +71,7 @@ export default async function CrawlPage({ params }: { params: { slug: string } }
         route={route}
         city={city}
         themeId={undefined}
+        travelMode="walking"
       />
     </main>
   )
