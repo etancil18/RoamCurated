@@ -43,6 +43,7 @@ function normalizeVenues(data: any[]): Venue[] {
 }
 
 export default function MapWrapper() {
+  const [isPanelOpen, setIsPanelOpen] = useState(true)
   const [city, setCity] = useState<'atl' | 'nyc'>('atl')
   const [venues, setVenues] = useState<Venue[]>([])
   const [filteredVenues, setFilteredVenues] = useState<Venue[]>([])
@@ -190,22 +191,44 @@ export default function MapWrapper() {
 
   return (
     <main className="h-screen w-screen relative overflow-hidden">
-      <ControlPanel
-        city={city}
-        onCityChange={setCity}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedThemeId={selectedThemeId}
-        setSelectedThemeId={setSelectedThemeId}
-        selectedPrice={selectedPrice}
-        setSelectedPrice={setSelectedPrice}
-        travelMode={travelMode}
-        setTravelMode={setTravelMode}
-        onGenerateRoute={handleGenerateRoute}
-        onClearRoute={handleClearRoute}
-        tightness={tightness}
-        setTightness={setTightness}
-      />
+      {isPanelOpen ? (
+  <div className="absolute top-4 left-4 z-[1000] bg-white p-4 rounded-xl shadow-lg w-[90vw] max-w-sm max-h-[125vh] overflow-y-auto text-black">
+    <button
+      onClick={() => setIsPanelOpen(false)}
+      className="absolute top-2 right-2 text-gray-500 hover:text-black"
+    >
+      ✕
+    </button>
+
+    <h2 className="text-lg font-semibold mb-4">Route Builder</h2>
+
+    <ControlPanel
+      city={city}
+      onCityChange={setCity}
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      selectedThemeId={selectedThemeId}
+      setSelectedThemeId={setSelectedThemeId}
+      selectedPrice={selectedPrice}
+      setSelectedPrice={setSelectedPrice}
+      travelMode={travelMode}
+      setTravelMode={setTravelMode}
+      onGenerateRoute={handleGenerateRoute}
+      onClearRoute={handleClearRoute}
+      tightness={tightness}
+      setTightness={setTightness}
+    />
+  </div>
+) : (
+  <button
+    onClick={() => setIsPanelOpen(true)}
+    className="absolute top-4 left-4 z-[1000] bg-white p-2 rounded-full shadow-md"
+  >
+    ☰
+  </button>
+)}
+
+
 
       <CrawlControl
         venues={filteredVenues}
