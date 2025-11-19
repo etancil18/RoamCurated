@@ -13,6 +13,9 @@ import L, { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-routing-machine'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
+import 'leaflet-extra-markers/dist/css/leaflet.extra-markers.min.css'
+
+
 
 import type { Venue } from '@/types/venue'
 import RouteControl from '@/components/RouteControl'
@@ -45,13 +48,9 @@ const themeColorMap: Record<string, string> = {
   'work-session': 'cyan',
 }
 
-const userLocationIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-  shadowSize: [41, 41],
+const userLocationIcon = L.divIcon({
+  className: 'custom-dot-marker',
+  iconSize: [12, 12], // size of the dot
 })
 
 function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {

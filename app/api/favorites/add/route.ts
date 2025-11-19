@@ -21,24 +21,21 @@ const requestSchema = z.object({
   }),
 })
 
-function validate_uuid(uuid: string): uuid is UUID {
+function validateUUID(uuid: string): uuid is UUID {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(uuid)
 }
 
 export async function POST(req: Request) {
   try {
-    const { supabase, userId } = await (async () => {
-      const supabase = await import('@/lib/supabase/server').then(m => m.createServerClient())
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser()
+    const supabase = await import('@/lib/supabase/server').then((m) => m.createServerClient())
 
-      if (error) throw new Error(`Auth error: ${error.message}`)
-      if (!user) throw new Error('User not authenticated')
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
 
-      return { supabase, userId: user.id as UUID }
-    })()
+    if (error) throw new Error(`Auth error: ${error.message}`)
+    if (!user) throw new Error('User not authenticated')
 
     const body = await req.json()
     const parse = requestSchema.safeParse(body)
@@ -52,31 +49,31 @@ export async function POST(req: Request) {
     }
 
     const { slug, venue_id, data } = parse.data
+
+    const fallbackVenueId = venue_id as UUID
     const venue = await getVenueBySlug(slug)
 
     let finalVenueId: UUID
-    let finalVenueData = data
     let finalCity: string | null = data.city ?? null
 
-    if (venue && validate_uuid(venue.id)) {
+    if (venue && validateUUID(venue.id)) {
       finalVenueId = venue.id as UUID
       finalCity = venue.city ?? finalCity
     } else {
-      if (!validate_uuid(venue_id)) {
-        console.warn('⚠️ fallback venue_id is not a UUID:', venue_id)
+      if (!validateUUID(fallbackVenueId)) {
         return NextResponse.json(
           { success: false, message: 'invalid_fallback_venue_id' },
           { status: 422 }
         )
       }
-      finalVenueId = venue_id as UUID
+      finalVenueId = fallbackVenueId
     }
 
     const result = await addVenueToFavorites({
-      userId,
+      userId: user.id as UUID,
       venueId: finalVenueId,
-      venueData: finalVenueData,
-      city: finalCity,
+      venueData: data,
+      city: finalCity ?? 'unknown',
     })
 
     return NextResponse.json({ success: true, data: result })

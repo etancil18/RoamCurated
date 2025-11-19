@@ -17,11 +17,24 @@ const TYPE_MATCH_MAP: Record<string, string[]> = {
 };
 
 function matchesVenueType(venueType: unknown, desiredCategory: string): boolean {
-  if (typeof venueType !== 'string') return false;
-  const normalized = venueType.toLowerCase();
+  if (!venueType) return false;
+
+  const types = Array.isArray(venueType)
+    ? venueType
+    : [venueType];
+
   const keywords = TYPE_MATCH_MAP[desiredCategory];
-  if (!keywords) return normalized.includes(desiredCategory);
-  return keywords.some((kw) => normalized.includes(kw));
+
+  return types.some((t) => {
+    if (typeof t !== 'string') return false;
+    const normalized = t.toLowerCase();
+
+    if (!keywords) {
+      return normalized.includes(desiredCategory);
+    }
+
+    return keywords.some((kw) => normalized.includes(kw));
+  });
 }
 
 export function selectCandidates({

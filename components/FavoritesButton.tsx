@@ -22,26 +22,31 @@ export function FavoritesButton({ venue }: { venue: Venue }) {
     setIsFavoriting(true)
 
     try {
-      const payload = {
-  slug: venue.slug,
-  venue_id: venue.id,
-  data: {
-    name: venue.name,
-    lat: Number(venue.lat),
-    lon: Number(venue.lon),
-    instagram_handle: (venue as any).instagram_handle ?? null,
-    type: (venue as any).type ?? undefined,
-    image_url: (venue as any).image_url ?? null,
-    vibe_tags: Array.isArray((venue as any).vibe_tags)
-      ? (venue as any).vibe_tags
-      : typeof (venue as any).vibe_tags === 'string'
-      ? (venue as any).vibe_tags.split(',').map((s: string) => s.trim())
-      : [],
-    price_tier: typeof (venue as any).price_tier === 'number'
-      ? (venue as any).price_tier
-      : parseInt((venue as any).price_tier, 10) || undefined,
-  },
-}
+  const payload = {
+    slug: venue.slug,
+    venue_id: venue.id, // MUST be a UUID string
+    data: {
+      name: venue.name,
+      lat: Number(venue.lat),
+      lon: Number(venue.lon),
+      instagram_handle: typeof venue.instagram_handle === 'string' ? venue.instagram_handle : undefined,
+      type: venue.type ?? undefined,
+      image_url: typeof venue.cover === 'string' ? venue.cover : undefined,
+      vibe_tags: typeof venue.vibe === 'string'
+        ? venue.vibe.split(',').map((s: string) => s.trim())
+        : undefined,
+      price_tier: (() => {
+        if (typeof venue.price === 'number') return venue.price;
+        if (typeof venue.price === 'string') {
+          const num = parseInt(venue.price.replace(/\$/g, '').trim(), 10);
+          return isNaN(num) ? undefined : num;
+        }
+        return undefined;
+      })(),
+      city: venue.city ?? undefined,
+    }
+  }
+
 
 
       console.log('📦 Payload to be sent to /api/favorites/add:', payload)

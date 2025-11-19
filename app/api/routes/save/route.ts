@@ -7,7 +7,7 @@ type UUID = string & { __uuidBrand: never }
 
 export async function POST(req: Request) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Authenticate user
     const {

@@ -7,6 +7,8 @@ import type { CombinedFavorite } from '@/types/ui'
 import { parseFavoriteList, parseRouteList } from '@/lib/parsers/favorite'
 
 import { removeSavedRouteAction } from './actions'  // ← NEW: delete crawl server action
+type UUID = string & { __uuidBrand: never }
+
 
 export default async function FavoritesPage() {
   const supabase = await createServerClient()
@@ -31,7 +33,7 @@ export default async function FavoritesPage() {
   try {
     const [venueFavsRaw, savedRoutesRaw] = await Promise.all([
       getVenueFavorites(),
-      getSavedRoutes(),
+      getSavedRoutes(user.id as UUID),
     ])
 
     const savedRoutes = parseRouteList(savedRoutesRaw)

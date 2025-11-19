@@ -1,45 +1,49 @@
 // hooks/useFavorites.ts
-import { useEffect, useState } from 'react';
-import { supabaseBrowser } from '@/lib/supabase/clientOnly';
-import type { Venue } from '@/types/venue';
+import { useEffect, useState } from 'react'
+import { supabaseBrowser } from '@/lib/supabase/clientOnly'
+import type { Venue } from '@/types/venue'
+
+interface FavoriteRow {
+  data: Partial<Venue>
+  city: string
+}
 
 export function useFavorites(city: 'atl' | 'nyc') {
-  const [favorites, setFavorites] = useState<(Venue & { city: string })[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [favorites, setFavorites] = useState<(Venue & { city: string })[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchFavorites() {
       const { data, error } = await supabaseBrowser
         .from('favorites')
         .select('data, city')
-        .eq('city', city);
+        .eq('city', city)
 
-      console.log('[useFavorites] fetched rows for city:', city, data);
+      console.log('[useFavorites] fetched rows for city:', city, data)
 
       if (error) {
-        console.error('[useFavorites] Error fetching favorites:', error);
-        setFavorites([]);
-        setLoading(false);
-        return;
+        console.error('[useFavorites] Error fetching favorites:', error)
+        setFavorites([])
+        setLoading(false)
+        return
       }
 
       if (Array.isArray(data)) {
-        // Attach city to each venue data object
-        const mapped = data.map((row: any) => ({
-          ...row.data,
+        const mapped = data.map((row: FavoriteRow) => ({
+          ...(row.data || {}),
           city: row.city,
-        })) as (Venue & { city: string })[];
+        })) as (Venue & { city: string })[]
 
-        setFavorites(mapped);
+        setFavorites(mapped)
       } else {
-        setFavorites([]);
+        setFavorites([])
       }
 
-      setLoading(false);
+      setLoading(false)
     }
 
-    fetchFavorites();
-  }, [city]);
+    fetchFavorites()
+  }, [city])
 
-  return { favorites, loading };
+  return { favorites, loading }
 }

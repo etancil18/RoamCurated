@@ -16,10 +16,10 @@ export type Venue = {
   // Metadata
   slug?: string
   vibe?: string
-  type?: string
+  type?: string | string[]
   cover?: string
   instagram_handle?: string
-  tags?: string
+  tags?: string 
   tier?: string
   city?: string
   neighborhood?: string

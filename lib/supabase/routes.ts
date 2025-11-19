@@ -46,12 +46,13 @@ export async function saveRoute({
   return { success: true, slug }
 }
 
-export async function getSavedRoutes(): Promise<SavedRouteRecord[]> {
+export async function getSavedRoutes(userId: UUID): Promise<SavedRouteRecord[]> {
   const supabase = await createServerClient() as unknown as import('@supabase/supabase-js').SupabaseClient<Database>
 
   const { data, error } = await supabase
     .from('saved_routes')
     .select('id, name, stops, city, slug, created_at, source_url, user_id')
+    .eq('user_id', userId)
 
   if (error) {
     console.error('[getSavedRoutes] Supabase fetch error:', {
@@ -82,4 +83,3 @@ export async function getRouteBySlug(slug: string): Promise<SavedRouteRecord> {
 
   return data as SavedRouteRecord
 }
-

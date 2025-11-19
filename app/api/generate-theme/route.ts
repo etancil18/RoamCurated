@@ -11,13 +11,13 @@ import type { Venue } from '@/types/venue'
  */
 const CITY_DISTANCE_THRESHOLDS = {
   atl: {
-    tight: 1000,
+    tight: 1200,
     medium: 2500,
     loose: 4500,
   },
   nyc: {
-    tight: 750,
-    medium: 1400,
+    tight: 850,
+    medium: 1500,
     loose: 2100,
   },
 }
