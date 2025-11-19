@@ -16,7 +16,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Roam App',
-  description: 'Itinerary generator and map for ATL',
+  description: 'Itinerary generator and map for ATL & NYC',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

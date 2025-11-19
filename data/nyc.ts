@@ -31674,7 +31674,7 @@ const nycData = [
     "lat": 40.76714,
     "lon": -73.9690482,
     "link": "https://www.instagram.com/madamegeorgenyc/?hl=en",
-    "cover": "",
+    "cover": "img/venues/Madame George.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -31717,7 +31717,7 @@ const nycData = [
     "lat": 40.7472322,
     "lon": -73.9869819,
     "link": "https://www.instagram.com/zoinomad/?hl=en",
-    "cover": "",
+    "cover": "img/venues/ZOI Mediterranean Cuisine.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 7:00 AM–11:00 PM",
@@ -31760,7 +31760,7 @@ const nycData = [
     "lat": 40.7426041,
     "lon": -74.0001774,
     "link": "https://www.instagram.com/junglebirdnyc/?hl=en",
-    "cover": "",
+    "cover": "img/venues/Jungle Bird.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 2:00 PM–2:00 AM",
@@ -31803,6 +31803,7 @@ const nycData = [
     "lat": "40.7419989",
     "lon": "-73.9975642",
     "link": "https://www.instagram.com/cobyclubnyc/?hl=en",
+    "cover": "img/venues/Coby Club.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",
@@ -31845,6 +31846,7 @@ const nycData = [
     "lat": "40.7427021",
     "lon": "-74.0007595",
     "link": "https://www.instagram.com/shyshybarnyc/?hl=en",
+    "cover": "img/venues/Shy Shy.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "2:00 PM–12:00 AM",
@@ -31887,6 +31889,7 @@ const nycData = [
     "lat": "40.7160921",
     "lon": "-74.0085818",
     "link": "https://www.instagram.com/holywaternyc/?hl=en",
+    "cover": "img/venues/Holywater.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–1:00 AM",
@@ -31929,6 +31932,7 @@ const nycData = [
     "lat": "40.7442721",
     "lon": "-73.9907621",
     "link": "https://www.instagram.com/theivorypeacock/?hl=en",
+    "cover": "img/venues/The Ivory Peacock.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–11:00 PM",
@@ -31971,6 +31975,7 @@ const nycData = [
     "lat": "40.720079",
     "lon": "-73.987785",
     "link": "https://www.instagram.com/verlainenyc/?hl=en",
+    "cover": "img/venues/Verlaine.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "5:00 PM–11:00 PM",
@@ -32013,6 +32018,7 @@ const nycData = [
     "lat": "40.721247",
     "lon": "-73.9874848",
     "link": "https://www.instagram.com/chinatonyc/?hl=en",
+    "cover": "img/venues/Chinato.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "6:00 PM–12:00 AM",
@@ -32055,6 +32061,7 @@ const nycData = [
     "lat": "40.7285774",
     "lon": "-73.9872948",
     "link": "https://www.instagram.com/therhymersclub_nyc/?hl=en",
+    "cover": "img/venues/The Rhymers' Club.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "5:00 PM–12:00 AM",
@@ -32097,6 +32104,7 @@ const nycData = [
     "lat": "40.737697",
     "lon": "-74.0041054",
     "link": "https://www.instagram.com/donotdisturb.ny/?hl=en",
+    "cover": "img/venues/Do Not Disturb.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "5:00 PM–12:00 AM",
@@ -32139,6 +32147,7 @@ const nycData = [
     "lat": "40.7328453",
     "lon": "-73.9974458",
     "link": "https://www.instagram.com/analoguenyc/?hl=en",
+    "cover": "img/venues/Analogue.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "5:00 PM–11:00 PM",
@@ -32181,6 +32190,7 @@ const nycData = [
     "lat": "40.7345368",
     "lon": "-74.0029321",
     "link": "https://www.instagram.com/fedoranyc/?hl=en",
+    "cover": "img/venues/Fedora.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "5:00 PM–10:00 PM",
@@ -32223,6 +32233,7 @@ const nycData = [
     "lat": "40.7288427",
     "lon": "-74.0048793",
     "link": "https://www.instagram.com/birds_ny/",
+    "cover": "img/venues/Birds.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "6:00 PM–12:00 AM",
@@ -32265,6 +32276,7 @@ const nycData = [
     "lat": "40.7312567",
     "lon": "-74.0052925",
     "link": "https://www.instagram.com/wildcherrynyc/?hl=en",
+    "cover": "img/venues/Wild Cherry.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "5:00 PM–11:00 PM",
@@ -32307,6 +32319,7 @@ const nycData = [
     "lat": "40.7217849",
     "lon": "-73.9978025",
     "link": "https://www.instagram.com/cafeselectnyc/?hl=en",
+    "cover": "img/venues/Cafe Select.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "11:00 AM–1:00 AM",
@@ -32349,6 +32362,7 @@ const nycData = [
     "lat": "40.76714",
     "lon": "-73.9690482",
     "link": "https://www.instagram.com/didonnagalleries/",
+    "cover": "img/venues/Di Donna.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",
@@ -32391,6 +32405,7 @@ const nycData = [
     "lat": "40.7264534",
     "lon": "-73.9839789",
     "link": "https://www.instagram.com/rossobar.nyc/?hl=en",
+    "cover": "img/venues/Rosso.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "4:00 PM–10:30 PM",
@@ -32433,6 +32448,7 @@ const nycData = [
     "lat": "40.7163046",
     "lon": "-73.9896627",
     "link": "https://www.instagram.com/tera.nyc/",
+    "cover": "img/venues/Tera.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "9:00 AM–4:00 PM; 5:30 PM–11:30 PM",
@@ -32475,6 +32491,7 @@ const nycData = [
     "lat": "40.7198928",
     "lon": "-73.9892375",
     "link": "https://www.instagram.com/barcontranyc/?hl=en",
+    "cover": "img/venues/Bar Contra.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",
@@ -32517,6 +32534,7 @@ const nycData = [
     "lat": "40.7274248",
     "lon": "-73.9899482",
     "link": "https://www.instagram.com/horsewithnoname/?hl=en",
+    "cover": "img/venues/horse with no name.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "3:00 PM–12:00 AM",
@@ -32559,6 +32577,7 @@ const nycData = [
     "lat": "40.7151571",
     "lon": "-73.9465147",
     "link": "https://www.instagram.com/lellalimentari/?hl=en",
+    "cover": "img/venues/Lella Alimentari.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "8:00 AM–6:30 PM",
@@ -32601,6 +32620,7 @@ const nycData = [
     "lat": "40.7138616",
     "lon": "-73.9619047",
     "link": "https://www.instagram.com/blazerssportsbar/?hl=en",
+    "cover": "img/venues/Blazers Sports Bar.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": null,
@@ -32643,6 +32663,7 @@ const nycData = [
     "lat": "40.7119922",
     "lon": "-73.9423954",
     "link": "https://www.instagram.com/littlegrandbk/?hl=en",
+    "cover": "img/venues/Little Grand.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "10:00 AM–1:00 AM",
@@ -32685,6 +32706,7 @@ const nycData = [
     "lat": "40.6558108",
     "lon": "-73.9532833",
     "link": "https://www.instagram.com/thedeianyc/?hl=en",
+    "cover": "img/venues/The Deia.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "4:00 PM–12:00 AM",
@@ -32727,6 +32749,7 @@ const nycData = [
     "lat": "40.7165595",
     "lon": "-73.9912397",
     "link": "https://www.instagram.com/colbo.nextdoor/",
+    "cover": "img/venues/colbo next door.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "3:00 PM–10:00 PM",
@@ -32769,6 +32792,7 @@ const nycData = [
     "lat": "40.6830325",
     "lon": "-73.9411454",
     "link": "https://www.instagram.com/daphnesbrooklyn",
+    "cover": "img/venues/Daphne's.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "5:30 PM–10:30 PM",
@@ -32811,6 +32835,7 @@ const nycData = [
     "lat": "40.7388596",
     "lon": "-73.9895743",
     "link": "https://www.instagram.com/barlumenyc/",
+    "cover": "img/venues/Barlume Downstairs.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",
@@ -32853,6 +32878,7 @@ const nycData = [
     "lat": "40.7117617",
     "lon": "-73.9633675",
     "link": "https://www.instagram.com/creativemindsbk/",
+    "cover": "img/venues/Creative Minds.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "10:00 AM–8:00 PM",
@@ -32895,6 +32921,7 @@ const nycData = [
     "lat": "40.7290742",
     "lon": "-73.9858437",
     "link": "https://www.instagram.com/m45records",
+    "cover": "img/venues/Manhattan45.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",
@@ -32937,6 +32964,7 @@ const nycData = [
     "lat": "40.686028",
     "lon": "-73.9441743",
     "link": "https://www.instagram.com/dearfriendbooks/",
+    "cover": "img/venues/dear friend books.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "11:00 AM–11:00 PM",
@@ -32979,6 +33007,7 @@ const nycData = [
     "lat": "40.7196245",
     "lon": "-73.9898779",
     "link": "https://www.instagram.com/extrabutter",
+    "cover": "img/venues/Extra Butter.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–6:00 PM",
@@ -33021,6 +33050,7 @@ const nycData = [
     "lat": "40.7181814",
     "lon": "-73.9900497",
     "link": "https://www.instagram.com/lepere/",
+    "cover": "img/venues/le PÈRE.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–6:00 PM",
@@ -33063,6 +33093,7 @@ const nycData = [
     "lat": "40.7168229",
     "lon": "-73.9906473",
     "link": "https://www.instagram.com/awakenewyorkclothing/",
+    "cover": "img/venues/Awake NY.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "1:00 PM–6:00 PM",
@@ -33105,6 +33136,7 @@ const nycData = [
     "lat": "40.7219097",
     "lon": "-74.0039152",
     "link": "https://www.instagram.com/mamorestaurant",
+    "cover": "img/venues/Mamo.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–10:00 PM",
@@ -33147,6 +33179,7 @@ const nycData = [
     "lat": "40.7192592",
     "lon": "-73.9956008",
     "link": "https://www.instagram.com/parkatkims/",
+    "cover": "img/venues/PARK at KIMS.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "8:00 AM–6:00 PM",
@@ -33189,6 +33222,7 @@ const nycData = [
     "lat": "40.7252509",
     "lon": "-74.0028734",
     "link": "https://www.instagram.com/dominiqueansel/",
+    "cover": "img/venues/Dominique Ansel Bakery.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "8:00 AM–7:00 PM",
@@ -33231,6 +33265,7 @@ const nycData = [
     "lat": "40.7445945",
     "lon": "-73.985527",
     "link": "https://www.instagram.com/thesevillenyc/",
+    "cover": "img/venues/The Seville.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",

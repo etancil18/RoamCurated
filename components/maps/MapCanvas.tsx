@@ -181,7 +181,20 @@ export default function MapCanvas({
         </div>
       )}
 
-      <MapContainer center={defaultCenter[city]} zoom={12} className="h-full w-full z-0">
+      <MapContainer
+  center={defaultCenter[city]}
+  zoom={12}
+  style={{ height: '100vh', width: '100%' }}
+  scrollWheelZoom={typeof window !== 'undefined' && window.innerWidth >= 768}
+  dragging={true}
+  ref={(mapInstance) => {
+    if (mapInstance) {
+      (mapInstance as any).options.tap = false;
+    }
+  }}
+>
+
+
         <MapRefSetter mapRef={mapRef} />
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
