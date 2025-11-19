@@ -37,6 +37,7 @@ function normalizeVenues(data: any[]): Venue[] {
       neighborhood: d.neighborhood ?? '',
       price: d.price ?? '',
       tags: d.tags ?? '',
+      type: d.type ?? '',
     }
   }) as Venue[]
 }
@@ -65,8 +66,10 @@ export default function MapWrapper() {
     const filtered = venues.filter((v) => {
       const matchesSearch =
         !searchTerm ||
+        v.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         v.vibe?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.tags?.toLowerCase().includes(searchTerm.toLowerCase())
+        v.tags?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(v.type ?? '').toLowerCase().includes(searchTerm.toLowerCase())
 
       const priceRank: Record<string, number> = { '$': 1, '$$': 2, '$$$': 3, '$$$$': 4 }
 

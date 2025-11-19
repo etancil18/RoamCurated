@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   MapContainer,
   TileLayer,
@@ -45,6 +45,15 @@ const themeColorMap: Record<string, string> = {
   'work-session': 'cyan',
 }
 
+const userLocationIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+  shadowSize: [41, 41],
+})
+
 function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
   const map = useMap()
 
@@ -84,6 +93,7 @@ export default function MapCanvas({
 }) {
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, L.Marker>>({})
+  const [userPosition, setUserPosition] = useState<[number, number] | null>(null)
 
   const defaultCenter: Record<'atl' | 'nyc', [number, number]> = {
     atl: [33.749, -84.388],
@@ -92,59 +102,77 @@ export default function MapCanvas({
 
   const visibleRoute = route?.length && route.length > 1 ? route : []
   const visibleVenues = visibleRoute.length > 0 ? visibleRoute : venues
-  const themeName = themeId ? themeById[themeId]?.name : null
+  const themeName = themeId ? themeById[themeId]?.description : null
   const lineColor = themeColorMap[themeId ?? ''] ?? 'cyan'
 
- // 🌆 Smooth city transition animation
-useEffect(() => {
-  const map = mapRef.current
-  const newCenter = defaultCenter[city]
+  // 🌆 Smooth city transition animation
+  useEffect(() => {
+    const map = mapRef.current
+    const newCenter = defaultCenter[city]
 
-  if (!map) return
+    if (!map) return
 
-  // First zoom out
-  map.flyTo(map.getCenter(), 4, { animate: true, duration: 1.25 })
+    map.flyTo(map.getCenter(), 4, { animate: true, duration: 1.25 })
 
-  // Then zoom into the city's default center
-  const id = setTimeout(() => {
-    map.flyTo(newCenter, 12, { animate: true, duration: 1.75 })
-  }, 600)
+    const id = setTimeout(() => {
+      map.flyTo(newCenter, 12, { animate: true, duration: 1.75 })
+    }, 600)
 
-  return () => {
-    clearTimeout(id)
-  }
-}, [city])
+    return () => {
+      clearTimeout(id)
+    }
+  }, [city])
 
+  // 📍 Fit bounds to route when visibleRoute changes
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || visibleRoute.length < 2) return
 
-// 📍 Fit bounds to route when visibleRoute changes
-useEffect(() => {
-  const map = mapRef.current
-  if (!map || visibleRoute.length < 2) return
+    const bounds = L.latLngBounds(
+      visibleRoute.map((v) => [v.lat, v.lon])
+    )
 
-  const bounds = L.latLngBounds(
-    visibleRoute.map((v) => [v.lat, v.lon])
-  )
+    map.fitBounds(bounds, { padding: [50, 50] })
+  }, [visibleRoute])
 
-  map.fitBounds(bounds, { padding: [50, 50] })
-}, [visibleRoute])
+  // 🖱️ Map click handler
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !onMapClick) return
 
+    const handler = (e: L.LeafletMouseEvent) => {
+      onMapClick(e.latlng.lat, e.latlng.lng)
+    }
 
-// 🖱️ Map click handler (used for custom start point)
-useEffect(() => {
-  const map = mapRef.current
-  if (!map || !onMapClick) return
+    map.on('click', handler)
 
-  const handler = (e: L.LeafletMouseEvent) => {
-    onMapClick(e.latlng.lat, e.latlng.lng)
-  }
+    return () => {
+      map.off('click', handler)
+    }
+  }, [onMapClick])
 
-  map.on('click', handler)
+  // 📡 Geolocation
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      console.warn("Geolocation is not supported by this browser.")
+      return
+    }
 
-  return () => {
-    map.off('click', handler)
-  }
-}, [onMapClick])
-
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        setUserPosition([latitude, longitude])
+      },
+      (error) => {
+        console.warn("Geolocation error:", error)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
+      }
+    )
+  }, [])
 
   return (
     <div className="h-screen w-screen relative">
@@ -179,41 +207,74 @@ useEffect(() => {
 
           return (
             <Marker
-  key={v.slug ?? v.name}
-  position={[v.lat, v.lon]}
-  icon={icon}
-  ref={(ref) => {
-    if (v.slug && ref) markerRefs.current[v.slug] = ref
-  }}
->
-  <Tooltip>{v.name}</Tooltip>
-  <Popup>
-    <div style={{ fontSize: 14 }}>
-      <strong>{v.name}</strong>
-      {v.cover || firstCandidate ? (
-        <img
-          src={`/${v.cover || firstCandidate}`}
-          alt={v.name}
-          style={{
-            width: '100%',
-            maxHeight: 140,
-            objectFit: 'cover',
-            margin: '6px 0',
-          }}
-        />
-      ) : null}
-      <div><em>Vibe:</em> {v.vibe || 'N/A'}</div>
-      <div><em>Status:</em> <span style={{ color: isOpen ? 'green' : 'red' }}>{isOpen ? 'Open' : 'Closed'}</span></div>
-      {v.link && <a href={v.link} target="_blank" rel="noopener noreferrer">More Info</a>}
-      { !v.id && (() => { console.warn('⚠️ Venue missing id for favorites:', v); return null })() }
-<FavoritesButton venue={v as Venue & { id: string }} />
+              key={v.slug ?? v.name}
+              position={[v.lat, v.lon]}
+              icon={icon}
+              ref={(ref) => {
+                if (v.slug && ref) markerRefs.current[v.slug] = ref
+              }}
+            >
+              <Tooltip>{v.name}</Tooltip>
+              <Popup>
+  <div style={{ fontSize: 14 }}>
+    <strong>{v.name}</strong>
 
+    {(v.cover || firstCandidate) && (
+      <img
+        src={`/${v.cover || firstCandidate}`}
+        alt={v.name}
+        style={{
+          width: '100%',
+          maxHeight: 140,
+          objectFit: 'cover',
+          margin: '6px 0',
+        }}
+      />
+    )}
+
+    <div><em>Vibe:</em> {v.vibe || 'N/A'}</div>
+
+    {v.price && <div><em>Price:</em> {v.price}</div>}
+
+    {Array.isArray(v.hours) && (() => {
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' })
+  const match = v.hours.find((line: string) => line.startsWith(today))
+  const todayHours = match ? match.split(': ').slice(1).join(': ') : 'N/A'
+  return <div><em>Hours:</em> {todayHours}</div>
+})()}
+
+
+    <div>
+      <em>Status:</em>{' '}
+      <span style={{ color: isOpen ? 'green' : 'red' }}>
+        {isOpen ? 'Open' : 'Closed'}
+      </span>
     </div>
-  </Popup>
-</Marker>
 
+    {v.link && (
+      <a href={v.link} target="_blank" rel="noopener noreferrer">
+        More Info
+      </a>
+    )}
+
+    {!v.id && (() => {
+      console.warn('⚠️ Venue missing id for favorites:', v);
+      return null;
+    })()}
+
+    <FavoritesButton venue={v as Venue & { id: string }} />
+  </div>
+</Popup>
+
+            </Marker>
           )
         })}
+
+        {userPosition && (
+          <Marker position={userPosition} icon={userLocationIcon}>
+            <Popup>You are here</Popup>
+          </Marker>
+        )}
 
         {visibleRoute.length > 1 && (
           <RouteControl

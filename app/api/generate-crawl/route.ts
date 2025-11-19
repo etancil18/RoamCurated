@@ -8,14 +8,14 @@ import type { Venue } from "@/types/venue";
  */
 const CITY_DISTANCE_THRESHOLDS = {
   atl: {
-    tight: 800,       // walkable cluster
-    medium: 1600,     // balanced
-    loose: 2500,      // explore more
+    tight: 1000,       // walkable cluster
+    medium: 2500,     // balanced
+    loose: 4500,      // explore more
   },
   nyc: {
-    tight: 400,       // walkable (NYC is denser)
-    medium: 1200,
-    loose: 2000,
+    tight: 750,       // walkable (NYC is denser)
+    medium: 1400,
+    loose: 2100,
   },
 };
 
