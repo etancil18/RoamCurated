@@ -175,11 +175,7 @@ export default function MapCanvas({
 
   return (
     <div className="h-screen w-screen relative">
-      {themeName && (
-        <div className="absolute top-4 right-4 z-[1000] bg-white px-3 py-1 rounded shadow text-xs font-semibold">
-          Theme: {themeName}
-        </div>
-      )}
+    
 
       <MapContainer
   center={defaultCenter[city]}

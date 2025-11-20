@@ -149,7 +149,7 @@ export default function CrawlControl({
     setModalData({ target: null, options: [], index: null })
   }
 
-  const themeName = selectedThemeId ? themeById[selectedThemeId]?.name : null
+  const themeName = selectedThemeId ? themeById[selectedThemeId]?.description : null
 
   return (
     <div className="absolute bottom-4 left-4 z-[2000] bg-white p-3 rounded-xl shadow-lg w-72 border border-gray-300">
