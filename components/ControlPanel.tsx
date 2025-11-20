@@ -70,7 +70,7 @@ export function ControlPanel({
   }
 
   return (
-    <div className="absolute top-4 left-4 z-[1000] bg-white rounded-lg shadow p-4 w-72 space-y-4">
+    <div className="w-full fixed top-0 left-0 z-[1000] bg-white shadow-md px-4 py-3 flex flex-wrap gap-4 items-center justify-between text-sm">
       {/* 🌆 City toggle */}
       <div className="flex gap-2">
         <Button

@@ -187,14 +187,8 @@ export default function MapCanvas({
   style={{ height: '100vh', width: '100%' }}
   scrollWheelZoom={typeof window !== 'undefined' && window.innerWidth >= 768}
   dragging={true}
-  ref={(mapInstance) => {
-    if (mapInstance) {
-      (mapInstance as any).options.tap = false;
-    }
-  }}
+  zoomControl={false}
 >
-
-
         <MapRefSetter mapRef={mapRef} />
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
 
