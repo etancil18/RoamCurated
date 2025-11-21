@@ -1,259 +1,293 @@
-// types/supabase.ts
-
+// -----------------------
+// Base JSON type
+// -----------------------
 export type Json =
   | string
   | number
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
-export interface Database {
+// -----------------------
+// Supabase Generated Types
+// -----------------------
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
+
   public: {
     Tables: {
-      favorites: {
+      events: {
         Row: {
-          id: string;
-          user_id: string;
-          venue_id: string;
-          created_at: string | null;
-          data: Json | null;
-          source_url?: string | null;
-          city?: string | null;
-        };
+          id: string
+          venue_id: string | null
+          title: string | null
+          description: string | null
+          starts_at: string | null
+          ends_at: string | null
+          tags: string[] | null
+          price_info: string | null
+          source: string | null
+          source_type: string | null
+          permalink: string | null
+          raw_payload: Json | null
+          timezone: string | null
+          is_active: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          venue_id: string;
-          created_at?: string | null;
-          data?: Json | null;
-          source_url?: string | null;
-          city?: string | null;
-        };
+          id?: string
+          venue_id?: string | null
+          title?: string | null
+          description?: string | null
+          starts_at?: string | null
+          ends_at?: string | null
+          tags?: string[] | null
+          price_info?: string | null
+          source?: string | null
+          source_type?: string | null
+          permalink?: string | null
+          raw_payload?: Json | null
+          timezone?: string | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          venue_id?: string;
-          created_at?: string | null;
-          data?: Json | null;
-          source_url?: string | null;
-          city?: string | null;
-        };
+          id?: string
+          venue_id?: string | null
+          title?: string | null
+          description?: string | null
+          starts_at?: string | null
+          ends_at?: string | null
+          tags?: string[] | null
+          price_info?: string | null
+          source?: string | null
+          source_type?: string | null
+          permalink?: string | null
+          raw_payload?: Json | null
+          timezone?: string | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: 'favorites_user_id_fkey';
-            columns: ['user_id'];
-            isOneToOne: false;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
+            foreignKeyName: "events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      favorites: {
+        Row: {
+          id: string
+          user_id: string
+          venue_id: string
+          created_at: string | null
+          data: Json | null
+          city: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          venue_id: string
+          created_at?: string | null
+          data?: Json | null
+          city?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          venue_id?: string
+          created_at?: string | null
+          data?: Json | null
+          city?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+            isOneToOne: false
           },
           {
-            foreignKeyName: 'favorites_venue_id_fkey';
-            columns: ['venue_id'];
-            isOneToOne: false;
-            referencedRelation: 'venues';
-            referencedColumns: ['id'];
+            foreignKeyName: "favorites_venue_id_fkey"
+            columns: ["venue_id"]
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+            isOneToOne: false
           }
-        ];
-      };
+        ]
+      }
 
       saved_routes: {
         Row: {
-          id: string;
-          user_id: string;
-          name: string;
-          stops: Json;
-          city: string | null;
-          created_at: string;
-          source_url: string | null;
-          slug?: string | null;
-        };
+          id: string
+          user_id: string | null
+          name: string
+          stops: Json
+          city: string | null
+          created_at: string
+          source_url: string | null
+          slug: string | null
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          name: string;
-          stops: Json;
-          city?: string | null;
-          created_at?: string;
-          source_url: string | null;
-          slug?: string | null;
-        };
+          id?: string
+          user_id?: string | null
+          name: string
+          stops: Json
+          city?: string | null
+          created_at?: string
+          source_url?: string | null
+          slug?: string | null
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          name?: string;
-          stops?: Json;
-          city?: string | null;
-          created_at?: string;
-          source_url: string | null;
-          slug?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'saved_routes_user_id_fkey';
-            columns: ['user_id'];
-            isOneToOne: false;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
-          }
-        ];
-      };
+          id?: string
+          user_id?: string | null
+          name?: string
+          stops?: Json
+          city?: string | null
+          created_at?: string
+          source_url?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
 
       user_routes: {
         Row: {
-          id: string;
-          user_id: string;
-          name: string | null;
-          route_data: Json | null;
-          created_at: string | null;
-        };
+          id: string
+          user_id: string | null
+          name: string | null
+          route_data: Json | null
+          created_at: string | null
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          name?: string | null;
-          route_data?: Json | null;
-          created_at?: string | null;
-        };
+          id?: string
+          user_id?: string | null
+          name?: string | null
+          route_data?: Json | null
+          created_at?: string | null
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          name?: string | null;
-          route_data?: Json | null;
-          created_at?: string | null;
-        };
+          id?: string
+          user_id?: string | null
+          name?: string | null
+          route_data?: Json | null
+          created_at?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: 'user_routes_user_id_fkey';
-            columns: ['user_id'];
-            isOneToOne: false;
-            referencedRelation: 'users';
-            referencedColumns: ['id'];
+            foreignKeyName: "user_routes_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+            isOneToOne: false
           }
-        ];
-      };
-
-      events: {
-        Row: {
-          id: string;
-          venue_id: string;
-          title: string | null;
-          event_date: string | null;
-          source: string | null;
-          permalink: string | null;
-        };
-        Insert: {
-          id?: string;
-          venue_id: string;
-          title?: string | null;
-          event_date?: string | null;
-          source?: string | null;
-          permalink?: string | null;
-        };
-        Update: {
-          id?: string;
-          venue_id?: string;
-          title?: string | null;
-          event_date?: string | null;
-          source?: string | null;
-          permalink?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: 'events_venue_id_fkey';
-            columns: ['venue_id'];
-            isOneToOne: false;
-            referencedRelation: 'venues';
-            referencedColumns: ['id'];
-          }
-        ];
-      };
-
-      venues: {
-        Row: {
-          id: string;
-          name: string | null;
-          lat: number | null;
-          lon: number | null;
-          instagram_handle: string | null;
-          access_token: string | null;
-          tags: string[] | null;
-          tier: string | null;
-          type: string | null;
-          time_category: string | null;
-          energy_ramp: number | null;
-          price: string | null;
-          duration: number | null;
-          cover: string | null;
-          city: string | null;
-          slug: string | null;
-        };
-        Insert: {
-          id?: string;
-          name?: string | null;
-          lat?: number | null;
-          lon?: number | null;
-          instagram_handle?: string | null;
-          access_token?: string | null;
-          tags?: string[] | null;
-          tier?: string | null;
-          type?: string | null;
-          time_category?: string | null;
-          energy_ramp?: number | null;
-          price?: string | null;
-          duration?: number | null;
-          cover?: string | null;
-          city?: string | null;
-          slug?: string | null;
-        };
-        Update: {
-          id?: string;
-          name?: string | null;
-          lat?: number | null;
-          lon?: number | null;
-          instagram_handle?: string | null;
-          access_token?: string | null;
-          tags?: string[] | null;
-          tier?: string | null;
-          type?: string | null;
-          time_category?: string | null;
-          energy_ramp?: number | null;
-          price?: string | null;
-          duration?: number | null;
-          cover?: string | null;
-          city?: string | null;
-          slug?: string | null;
-        };
-        Relationships: [];
-      };
+        ]
+      }
 
       users: {
         Row: {
-          id: string;
-          email: string | null;
-          created_at: string | null;
-        };
+          id: string
+          email: string | null
+          created_at: string | null
+        }
         Insert: {
-          id?: string;
-          email?: string | null;
-          created_at?: string | null;
-        };
+          id?: string
+          email?: string | null
+          created_at?: string | null
+        }
         Update: {
-          id?: string;
-          email?: string | null;
-          created_at?: string | null;
-        };
-        Relationships: [];
-      };
-    };
+          id?: string
+          email?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
 
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
-  };
+      venues: {
+        Row: {
+          id: string
+          name: string | null
+          lat: number | null
+          lon: number | null
+          instagram_handle: string | null
+          access_token: string | null
+          tags: string[] | null
+          tier: string | null
+          type: string | null
+          time_category: string | null
+          energy_ramp: number | null
+          price: string | null
+          duration: number | null
+          cover: string | null
+          city: string | null
+          slug: string | null
+        }
+        Insert: {
+          id?: string
+          name?: string | null
+          lat?: number | null
+          lon?: number | null
+          instagram_handle?: string | null
+          access_token?: string | null
+          tags?: string[] | null
+          tier?: string | null
+          type?: string | null
+          time_category?: string | null
+          energy_ramp?: number | null
+          price?: string | null
+          duration?: number | null
+          cover?: string | null
+          city?: string | null
+          slug?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string | null
+          lat?: number | null
+          lon?: number | null
+          instagram_handle?: string | null
+          access_token?: string | null
+          tags?: string[] | null
+          tier?: string | null
+          type?: string | null
+          time_category?: string | null
+          energy_ramp?: number | null
+          price?: string | null
+          duration?: number | null
+          cover?: string | null
+          city?: string | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
+    }
+
+    Views: { [_ in never]: never }
+    Functions: { [_ in never]: never }
+    Enums: { [_ in never]: never }
+    CompositeTypes: { [_ in never]: never }
+  }
 }
 
-// --- Convenience Types ---
+// -----------------------
+// Convenience Types (restored)
+// -----------------------
+export type EventRecord = Database['public']['Tables']['events']['Row']
+export type EventInsert = Database['public']['Tables']['events']['Insert']
+export type EventUpdate = Database['public']['Tables']['events']['Update']
+
+export type VenueRecord = Database['public']['Tables']['venues']['Row']
 export type FavoriteRecord = Database['public']['Tables']['favorites']['Row']
 export type FavoriteInsert = Database['public']['Tables']['favorites']['Insert']
 export type FavoriteUpdate = Database['public']['Tables']['favorites']['Update']
@@ -263,7 +297,4 @@ export type SavedRouteInsert = Database['public']['Tables']['saved_routes']['Ins
 export type SavedRouteUpdate = Database['public']['Tables']['saved_routes']['Update']
 
 export type UserRouteRecord = Database['public']['Tables']['user_routes']['Row']
-export type VenueRecord = Database['public']['Tables']['venues']['Row']
-export type EventRecord = Database['public']['Tables']['events']['Row']
 export type UserRecord = Database['public']['Tables']['users']['Row']
-

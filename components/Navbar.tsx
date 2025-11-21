@@ -1,53 +1,67 @@
-// components/Navbar.tsx
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { usePathname, useRouter } from 'next/navigation'
+import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react'
+import type { Database } from '@/types/supabase'
+import { useState } from 'react'
 
 export default function Navbar() {
   const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
+  const router = useRouter()
+  const supabase = useSupabaseClient<Database>()
+  const user = useUser()
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser()
-      setUser(data.user)
-    }
-
-    getUser()
-  }, [])
+  const navLinks = [
+    { href: '/', label: 'Map' },
+    { href: '/favorites', label: 'Favorites' },
+    { href: '/events', label: 'Events' }, 
+    // Future: { href: '/profile', label: 'Profile' },
+  ]
 
   const handleLogout = async () => {
+    setLoading(true)
     await supabase.auth.signOut()
-    window.location.href = '/' // redirect to home on logout
+    router.refresh()
+    router.push('/login')
   }
+
+  const linkClass = (path: string) =>
+    `underline transition-opacity ${
+      pathname === path ? 'font-bold' : 'opacity-70 hover:opacity-100'
+    }`
 
   return (
     <nav className="w-full flex justify-between items-center p-4 bg-blue-600 text-white">
       <div className="space-x-4">
-        <Link href="/" className={pathname === '/' ? 'font-bold' : ''}>
-          Map
-        </Link>
-        <Link href="/favorites" className={pathname === '/favorites' ? 'font-bold' : ''}>
-          Favorites
-        </Link>
+        {navLinks.map(({ href, label }) => (
+          <Link key={href} href={href} className={linkClass(href)}>
+            {label}
+          </Link>
+        ))}
       </div>
-      <div>
+
+      <div className="flex items-center gap-4">
+        {user && (
+          <span className="text-sm text-white opacity-80 hidden sm:inline">
+            {user.email}
+          </span>
+        )}
         {user ? (
-          <button onClick={handleLogout} className="underline">
-            Logout
+          <button
+            onClick={handleLogout}
+            className="underline disabled:opacity-50"
+            disabled={loading}
+          >
+            {loading ? 'Logging out...' : 'Logout'}
           </button>
         ) : (
-          <Link href="/login" className={pathname === '/login' ? 'font-bold underline' : 'underline'}>
+          <Link href="/login" className={linkClass('/login')}>
             Login
           </Link>
         )}
       </div>
     </nav>
   )
-} 
-
-// Include this component in your layout.tsx
-// <Navbar /> above the {children} line
+}

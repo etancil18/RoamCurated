@@ -1,709 +1,377 @@
 name,lat,lon,instagram_handle,tags,type,time_category,energy_ramp,price,duration,cover,city
-StEight(behind KUNIYA HAIR),40.718182,-73.991684,steightnyc,"{hidden gem,speakeasy}",speakeasy,evening,2,$$,1.25,img/venues/StEight.jpg,nyc
-Doris,40.68121,-73.957443,dorisbedstuy,{neighborhood bar},bar,happyhour,2,$$,1.25,img/venues/Doris.jpg,nyc
-Abe's Pagoda Bar,40.703831,-73.918953,abes_pagoda_bar,"{dive,chill}",bar,happyhour,2,$$,1.5,img/venues/Abe's Pagoda Bar.jpg,nyc
-Carmelo’s,40.7027604,-73.9205215,carmelosbushwick,"{Italian,romantic}",bar,midday,1,$,1.5,img/venues/Carmelo’s.jpg,nyc
-Saturdays NYC Crosby St,40.7207453,-73.9993515,saturdaysnyc,"{coffee,menswear}",lifestyle,morning,1,$$$,0.5,img/venues/Saturdays NYC Crosby St.jpg,nyc
-Honey's,40.710449,-73.9231575,honeysbrooklyn,"{distillery,alt-vibe}",rooftop,happyhour,2,$$,2,img/venues/Honey's.jpg,nyc
-La Cabra,40.7065032,-73.9209374,lacabracoffee,"{café,bakery}",coffee,morning,1,$,0.5,img/venues/La Cabra.jpg,nyc
-Freemans,40.7219458,-73.9924678,freemansrestaurant,{rustic brunch/dinner},brunch,midday,1,$$$,1.5,img/venues/Freemans.jpg,nyc
-Blue-Sun Record Store,40.7093019,-73.9516441,bluesun_nyc,"{music,browsing}",music,afternoon,1,$,0.5,img/venues/Blue-Sun Record Store.jpg,nyc
-Carousel,40.7058463,-73.9221354,carousel_bk,{speakeasy},bar,happyhour,1,$$,1.5,img/venues/Carousel.jpg,nyc
-Kanoyama,40.7306669,-73.9864792,nyc_kanoyama,"{sushi,upscale}",dinner,evening,1,$$$$,1.5,img/venues/Kanoyama.jpg,nyc
-Waiting on a Friend,40.7294609,-73.9807284,waitingonafriend,"{small plates,vinyl}",cocktail,happyhour,2,$$,1.5,img/venues/Waiting on a Friend.jpg,nyc
-Bakeri,40.7200222,-73.96010291,bakeribrooklyn,{Nordic bakery},bakery,morning,1,$,0.5,img/venues/Bakeri.jpg,nyc
-Red Sorghum 夜宴,40.7484928,-73.9390719,redsorghumlic,"{modern Chinese,late}",dinner,evening,2,$$,1.75,img/venues/Red Sorghum.jpg,nyc
-Rucola,40.6856132,-73.9858591,rucolanyc,"{brunch,cozy}",lunch,midday,1,$$,1.5,img/venues/Rucola.jpg,nyc
-Dead Letter No. 9,40.716096,-73.964839,no9nyc,"{cocktail,hidden}",cocktail,happyhour,2,$$,1.5,img/venues/Dead Letter No. 9.jpg,nyc
-HOMERUN NYC,40.71536325,-73.94424366,homerunnyc,{vintage retail},random gem,afternoon,1,$$,0.5,img/venues/HOMERUN NYC.jpg,nyc
-The Cactus Shop,40.71669275,-73.96538125,thecactusshopnyc,"{plant,design,Mexican}",speakeasy,happyhour,1,$$,1,img/venues/The Cactus Shop.jpg,nyc
-Chisholm Larsson Gallery,40.7419044,-74.0012093,chisholm_larsson,"{poster art,gallery}",gallery,afternoon,1,$,0.75,img/venues/Chisholm Larsson Gallery.jpg,nyc
-Nightly's,40.7724775,-73.9554399,nightlysnyc,"{speakeasy,velvet vibe}",dinner,happyhour,1,$$$,1.5,img/venues/Nightly's.jpg,nyc
-schmuck.,40.7263723,-73.9864184,schmuck.ny,"{wine bar,edgy}",cocktail,happyhour,2,$$,1,img/venues/schmuck..jpg,nyc
-Wo Hop,40.71420566,-73.99886037,wohop17,"{Chinese,late night}",dinner,evening,2,$,1.25,img/venues/Wo Hop.jpg,nyc
-L'Appartement 4F,40.6950814,-73.9948457,lappartement4f,"{French bakery,luxe}","bakery, wine bar",morning,1,$,0.75,img/venues/L'Appartement 4F.jpg,nyc
-Cafe Mogador,40.7273469,-73.984402,cafemogadornyc,"{brunch,Moroccan}",brunch,midday,1,$$,1.25,img/venues/Cafe Mogador mht.jpg,nyc
-Skarstedt Gallery,40.7762331,-73.96251428,skarstedtgallery,"{art,high-end}",gallery,afternoon,1,$,0.75,img/venues/Skarstedt Gallery.jpg,nyc
-BrownstoneJAZZ,40.68156285,-73.9470527,brownstonejazz,"{jazz,immersive}",music,evening,2,$,1.75,img/venues/BrownstoneJAZZ.jpg,nyc
-Million Goods,40.7275193,-73.9570584,million.goods,"{niche retail,concept}",bar,afternoon,1,$$,1.5,img/venues/Million Goods.png,nyc
-El Pingüino,40.7298408,-73.95978875,el_pinguino_greenpoint,"{tapas,wine bar}",dinner,happyhour,1,$$,1.25,img/venues/El Pingüino.jpg,nyc
-The Se7en,40.676976,-73.9634407,se7en.bk,"{nightlife,exclusive}",lounge,evening,2,$$,1.5,img/venues/The Se7en.jpg,nyc
-Experimental Cocktail Club,40.7424861,-73.99034942,experimentalcocktailclubnyc,"{mixology,speakeasy}",cocktail,happyhour,3,$$,1.75,img/venues/Experimental Cocktail Club.jpg,nyc
-So & So's Neighborhood Piano Bar,40.76355292,-73.98543914,soandso.nyc,"{music,cozy bar}",lounge,happyhour,2,$$,1.5,img/venues/So & So's.jpg,nyc
-LunÀtico,40.68337885,-73.93467864,barlunatico,"{jazz,wine}",music,happyhour,2,$$,1.5,img/venues/LunÀtico.jpg,nyc
-Carpenters Workshop Gallery,40.7611603,-73.9748539,carpentersworkshopgallery,"{gallery,avant-garde}",gallery,afternoon,1,,0.75,img/venues/Carpenters Workshop Gallery.jpg,nyc
-The Tusk Bar,40.7440135,-73.9869451,brass_tuskbar,"{cocktail,dark vibe}",cocktail,happyhour,1,$$$,1.5,img/venues/The Tusk Bar.jpg,nyc
-Codex,40.692626,-73.923672,codexbooks,"{coffee,literary}",bookstore,midday,2,$,0.5,img/venues/Codex.jpg,nyc
-The Hole,40.7250551,-73.9925494,theholenyc,"{art,edgy,exhibit}",gallery,afternoon,1,,0.75,img/venues/The Hole.jpg,nyc
-Botanica Bar,40.7246217,-73.9947736,botanicabar,"{dive,alt-classic}",bar,happyhour,2,$,1.25,img/venues/Botanica Bar.jpg,nyc
-Bibliotheque,40.7218082,-74.0007476,bibliothequenyc,"{cafe,minimalism,books}",bookstore,midday,2,$$$,1,img/venues/Bibliotheque.jpg,nyc
-% Arabica,40.7025899,-73.9941507,arabica.ny,"{coffee,sleek}",coffee,morning,1,$,0.5,img/venues/Arabica.jpg,nyc
-Tuffet,40.7121269,-73.94375126,tuffetbar,"{wine,cheese,patio}",bar,happyhour,1,$$,1.25,img/venues/Tuffet.jpg,nyc
-Bisou,40.723743,-74.004462,bisoubarnyc,"{date night,French}",wine bar,evening,2,$$,1.5,img/venues/Bisou.jpg,nyc
-Superbueno,40.7234538,-73.9885506,superbuenonyc,"{modern Mexican,vibrant}",cocktail,happyhour,2,$$,1.5,img/venues/Superbueno.jpg,nyc
-Bar Mario,40.6766251,-74.0135326,barmariobk,"{intimate,Euro vibe}",bar,happyhour,1,$$$,1.5,img/venues/Bar Mario.jpg,nyc
-Milady's,40.7259071,-74.0014471,miladysnyc,"{casual,nightlife}",cocktail,happyhour,2,$$,1.25,img/venues/Milady's.jpg,nyc
-Pepe Rosso,40.7279209,-74.0013375,peperossotogo,"{Italian,quick bite}",dinner,midday,1,$$,1.25,img/venues/Pepe Rosso.jpg,nyc
-Clover Club,40.6845677,-73.9920784,cloverclubny,"{cocktail,timeless}",cocktail,happyhour,2,$$,1,img/venues/Clover Club.jpg,nyc
-Brooklyn Social,40.6804846,-73.9945351,brooklynsocialbar,"{retro,local}",bar,happyhour,2,$$,1,img/venues/Brooklyn Social.jpeg,nyc
-Hard to Explain,40.7291261,-73.9856038,hardtoexplainnyc,"{indie,underground}",speakeasy,evening,1,$$,1.25,img/venues/Hard to Explain.JPG,nyc
-Have & Meyer,40.7132253,-73.9563783,haveandmeyer,"{natural wine,rustic}",dinner,happyhour,1,$$$,1.5,img/venues/Have & Meyer.jpg,nyc
-Antidote,40.7142684,-73.9654775,antidote__nyc,"{wine,hidden gem}",cocktail,happyhour,2,$$,1.5,img/venues/Antidote.jpg,nyc
-Sake Bar Decibel,40.7292871,-73.9877312,sakebar.decibel,"{sake,underground}",speakeasy,happyhour,2,$$,1.25,img/venues/Sake Bar Decibel.jpg,nyc
-Raku,40.7273101,-74.0025925,rakunyc,{Japanese comfort},dinner,midday,1,$$,1.5,img/venues/Raku.jpg,nyc
-Ichibantei,40.7324491,-73.9880197,ichibanteiny,"{izakaya,late night}",dinner,happyhour,1,$$,1.5,img/venues/Ichibantei.jpg,nyc
-Ask For Janice,40.7241881,-73.9508843,askforjanice.nyc,"{wine,natural,small plates}",speakeasy,happyhour,1,$$,1.5,img/venues/Ask For Janice.jpg,nyc
-With Others,40.7128073,-73.9625685,with.others.bk,"{art bar,social}",wine bar,happyhour,1,$$$,1.5,img/venues/With Others.png,nyc
-Samurai Mama,40.7141481,-73.96014,samuraimama_bk,"{ramen,cozy}",lunch,midday,1,$$,1,img/venues/Samurai Mama.jpg,nyc
-Birds of a Feather,40.7143133,-73.9605332,birdsofafeatherbk,"{Sichuan,modern}",lunch,midday,1,$$,1.5,img/venues/Birds of a Feather.jpg,nyc
-ACRE,40.72624105,-73.95466646,acre_nyc,"{ceramics,peaceful}",brunch,afternoon,1,$$,1.25,img/venues/ACRE.jpg,nyc
-Smalls Jazz Club,40.7343811,-74.0027295,smallslive,"{jazz,historic}",music,evening,2,$$,2,img/venues/Smalls Jazz Club.jpg,nyc
-Ornithology Jazz Club,40.6955322,-73.9320225,ornithologyjazzclub,"{jazz,intimate}",music,evening,2,$$,1,img/venues/Ornithology Jazz Club.jpg,nyc
-Angel’s Share,40.73301145,-74.00432961,angelssharenyc,"{speakeasy,high-end}",cocktail,evening,2,$$$,1.25,img/venues/Angel’s Share.jpg,nyc
-Layla,40.71232145,-73.96295099,layla_nyc_,"{Mediterranean,romantic}",cocktail,midday,1,$$$,1.5,img/venues/Layla.png,nyc
-Taqueria Ramirez,40.7278816,-73.9569597,taqueria_ramirez_,"{tacos,casual}",lunch,midday,1,$,0.75,img/venues/Taqueria Ramirez.jpg,nyc
-Madeline's Martini,40.7263349,-73.9775392,madelinesmartini,"{cocktails,stylish}",cocktail,evening,2,$$,1.5,img/venues/Madeline's Martini.jpg,nyc
-MONO+MONO,40.7254822,-73.9880334,monomono.nyc,"{Korean jazz,lounge}",dinner,happyhour,1,$$$,1.5,img/venues/MONO+MONO.jpg,nyc
-Romeos,40.726959,-73.984037,romeosnyc,"{moody bar,date spot}",cocktail,happyhour,2,$$,1.25,img/venues/Romeos.jpg,nyc
-Simple,40.71242,-73.962782,simplecafebrooklyn,"{café,zen minimal}",brunch,morning,1,$$,1.25,img/venues/Simple.jpg,nyc
-The Belfry,40.732743,-73.986294,belfrynyc,"{cocktail,piano bar}",cocktail,happyhour,2,$$,1.25,img/venues/The Belfry.jpg,nyc
-Spectacle,40.7125158,-73.9629051,spectaclenyc,"{cinema,underground}",random gem,evening,3,$,1.5,img/venues/Spectacle.jpg,nyc
-Nightmoves,40.7130756,-73.9572969,everybodyiknowcanbefoundhere,"{deep house,late night}",club,evening,3,$$,1.5,img/venues/Nightmoves.jpg,nyc
-Radegast Hall & Biergarten,40.7167708,-73.9615252,radegasthall,"{beerhall,social}",bar,afternoon,2,$$,1.75,img/venues/Radegast Hall & Biergarten.jpg,nyc
-Deux Chats,40.7108795,-73.9677352,deuxchatsbk,"{speakeasy,moody}",cocktail,happyhour,2,$$$,1.5,img/venues/Deux Chats.jpg,nyc
-Sauced,40.71263565,-73.9622739,saucedbklyn,"{natural wine,fun vibe}",wine bar,afternoon,1,$$,1.5,img/venues/Sauced bk.jpg,nyc
-Ponyboy,40.7239657,-73.9507806,ponyboyny,"{music,dance,cocktails}",club,happyhour,3,$,1.75,,nyc
-Twins Lounge,40.7263236,-73.95193139,twinsloungenyc,"{dive,artsy}",bar,happyhour,2,$$,1.25,img/venues/Twins Lounge.jpg,nyc
-Hotel Delmano,40.7197084,-73.9580192,hoteldelmano,"{cocktail,old world}",cocktail,happyhour,1,$$,1.5,img/venues/Hotel Delmano.jpg,nyc
-Studio 151,40.7256585,-73.9780286,studio151nyc,"{sushi,DJ,small bites}",speakeasy,evening,3,$$$$,1.25,img/venues/Studio 151.jpg,nyc
-Joyface,40.723859,-73.9787539,joyfacenyc,"{retro,immersive,dance}",club,evening,3,$$,1.5,img/venues/Joyface.png,nyc
-Fresh Kills Bar,40.7147822,-73.9615254,freshkillsbar,"{cocktail,serious bar}",cocktail,evening,1,$$,1.5,img/venues/Fresh Kills Bar.JPG,nyc
-Bar Blondeau,40.7219036,-73.9580608,barblondeau,"{scenic,upscale}",cocktail,happyhour,2,$$$,1.25,img/venues/Bar Blondeau.jpg,nyc
-Night of Joy,40.7169821,-73.9499766,nightofjoy,"{rooftop,intimate}",bar,happyhour,2,$,1.25,img/venues/Night of Joy.JPG,nyc
-PPL,40.712872,-73.958497,pplnyc,"{nightlife,queer-forward}",coffee,morning,3,$,0.5,img/venues/PPL.jpg,nyc
-Barano,40.7105655,-73.96788,baranobk,"{Italian,dinner spot}",dinner,afternoon,1,$$,1.25,img/venues/Barano.jpg,nyc
-Pollyn,40.7104488,-73.9644726,pollyn.nyc,"{cocktail,edge}",garden,happyhour,1,$,0.5,img/venues/Pollyn.JPG,nyc
-Fan Fried Rice Bar,40.712665,-73.9607387,fanfriedricebar,"{casual,post-drink}",dinner,happyhour,1,$$,1,img/venues/Fan Fried Rice Bar.jpg,nyc
-Casa Magazines,40.737675,-74.0044663,casamagazinesnyc,"{culture,print}",bookstore,afternoon,1,$,0.5,img/venues/Casa Magazines.jpg,nyc
-Café-Flor / Bar 21,40.744122,-73.99921644,cafeflornyc,"{cafe by day,bar by night}",coffee,morning,2,$,0.5,img/venues/Café-Flor : Bar 21.jpg,nyc
-Frevo,40.73449485,-73.99520423,frevonyc,"{fine dining,hidden}",dinner,evening,1,$$$$,1.5,img/venues/Frevo.jpg,nyc
-Au Cheval,40.7180421,-74.0019638,auchevaldiner,"{indulgent burger,upscale}",dinner,midday,2,$$$,1.5,img/venues/Au Cheval.jpg,nyc
-Casa Mono,40.7359257,-73.9871655,casamonobarjamon,"{Spanish,wine,intimate}",lunch,midday,1,$$$,1.5,img/venues/Casa Mono.jpg,nyc
-Ampersand,40.7386819,-73.9834817,ampersandbarnyc,"{small plates,date night}",cocktail,happyhour,1,$$,1.5,img/venues/Ampersand.jpeg,nyc
-Cherry on Top,40.7049007,-73.92135392,cherry.on.top.nyc,"{rooftop,wine}",wine bar,happyhour,1,$,1.25,img/venues/Cherry on Top.jpg,nyc
-Close Up,40.72079935,-73.9886623,nyc_close_up,"{arthouse cinema,curated}",music,evening,1,$$,1.75,img/venues/Close Up.jpg,nyc
-The Noguchi Museum,40.76699005,-73.93760723,noguchimuseum,"{art,sculpture,contemplative}",gallery,afternoon,1,$,1,img/venues/The Noguchi Museum.jpg,nyc
-SculptureCenter,40.7469077,-73.9408643,sculpturecenter,"{art,conceptual}",gallery,afternoon,1,$,0.75,img/venues/SculptureCenter.jpg,nyc
-Glenn Marlowe Sculpture Studio and Gallery,40.7496655,-73.9494444,sculpturesnyc,{hidden art studio},gallery,afternoon,1,$,0.75,img/venues/Glenn Marlowe Sculpture Studio and Gallery.png,nyc
-Salon 94,40.78344811,-73.95873594,salon94,{contemporary gallery},gallery,afternoon,1,$,0.5,img/venues/Salon 94.jpg,nyc
-APPARATUS,40.7476547,-73.9907793,apparatusstudio,"{design,lighting,showroom}",gallery,afternoon,1,$,0.75,img/venues/APPARATUS.jpg,nyc
-Yan's Antique Jewelry Inc.,40.7149056,-73.998684,yansantiquejewelry,"{antique,eclectic}",random gem,afternoon,1,,0.5,img/venues/Yan's Antique Jewelry Inc..jpeg,nyc
-Magic Jewelry,40.71807671,-74.00019657,magicjewelrynyc,"{spiritual,mystic}",random gem,afternoon,1,$,0.5,img/venues/Magic Jewelry.jpg,nyc
-Philip Williams Posters,40.7149888,-74.00890916,postermuseum,"{vintage posters,discovery}",random gem,afternoon,1,,0.5,img/venues/Philip Williams Posters.jpg,nyc
-Westsider Rare & Used Books Inc.,40.7846803,-73.9790284,westsiderbooks,"{bookstore,literary escape}",bookstore,afternoon,1,$,0.5,img/venues/Westsider Rare & Used Books Inc..jpg,nyc
-niconeco zakkaya,40.7284229,-73.9833099,niconeco_zakkaya,"{Japanese stationery,kawaii}",random gem,afternoon,1,$,0.5,img/venues/niconeco zakkaya.jpg,nyc
-Bungee Space,40.7224818,-73.9923162,bungee.space,"{magazine store,hidden media}",random gem,afternoon,2,$,0.5,img/venues/Bungee Space.png,nyc
-Brandy Library,40.7199472,-74.007213,brandylibrarynyc,"{cocktails,dark,refined}",cocktail,happyhour,1,$$$,1,img/venues/Brandy Library.jpg,nyc
-Cafe Erzulie,40.6978902,-73.9371547,cafe.erzulie,"{cafe by day,music garden by night}",music,morning,4,$,2,img/venues/Cafe Erzulie.jpg,nyc
-Mr. Melo,40.7169978,-73.9501191,mr.melobar,"{bar,vibe spot}",bar,happyhour,3,$$,1.25,img/venues/Mr. Melo.jpg,nyc
-Nem's Japandi Bistro,40.7189664,-73.9612431,nemsbistro,"{cozy fusion,quiet luxury}",brunch,midday,1,$$,1,img/venues/Nem's Japandi Bistro.jpg,nyc
-Milk & Roses,40.737425,-73.9550647,milkandrosesbistro,"{romantic,Euro garden}",brunch,midday,2,$$,1.5,img/venues/Milk & Roses.jpg,nyc
-Tula House,40.7263995,-73.95507429,tulahouse,"{plant house,design}",random gem,afternoon,1,$$,0.5,img/venues/Tula House.jpg,nyc
-Death & Co East Village,40.725936,-73.98465537,deathandcompany,{cocktail institution},cocktail,happyhour,2,$$$,1.5,img/venues/Death & Co East Village.jpg,nyc
-Midnight Blue,40.7371981,-73.9874568,midnightblue_nyc,"{sultry bar,ambient}",music,evening,2,$$$,1.75,img/venues/Midnight Blue.jpg,nyc
-The Office of Mr. Moto,40.7268131,-73.984036,dear.mr.moto,"{immersive tasting,speakeasy}",speakeasy,evening,2,$$$$,1.5,img/venues/The Office of Mr. Moto.jpeg,nyc
-Jones Street Wine Bar & Chefs Tasting Counter,40.72618255,-73.98427166,jonesstreetwinebar,"{intimate,high-end}",wine bar,evening,1,$$,1.25,img/venues/Jones Street Wine Bar.jpg,nyc
-A-1 Record Shop,40.7257903,-73.9844558,a1recordshop,"{vinyl,crate digging}",random gem,afternoon,1,$,0.5,img/venues/A-1 Record Shop.jpg,nyc
-The Lot Radio,40.722668,-73.954374,thelotradio,"{music,outdoor,community}",music,afternoon,3,$,1,img/venues/The Lot Radio.jpg,nyc
-Rule of Thirds,40.7247377,-73.9552053,thirdsbk,"{Japanese,design-forward}",brunch,midday,1,$$$,1.5,img/venues/Rule of Thirds.jpg,nyc
-The Met Cloisters,40.8648684,-73.9319228,metcloisters,"{museum,sacred calm}",gallery,afternoon,1,$,2,img/venues/The Met Cloisters.jpg,nyc
-Lexington Candy Shop,40.7775102,-73.9572158,lexingtoncandyshop,{vintage soda fountain},breakfast,midday,1,$,0.5,img/venues/Lexington Candy Shop.png,nyc
-Tsumo Omakase,40.74235215,-73.9822272,tsumonyc,"{omakase,quiet craft}",dinner,evening,1,$$$,1.5,img/venues/Tsumo Omakase.jpg,nyc
-Piccola Strada,40.7267074,-73.9901283,piccolastrada4thstreet,"{tiny trattoria,date fuel}",dinner,midday,1,$$,1.5,img/venues/Piccola Strada.JPG,nyc
-Kam Man Market,40.7168494,-73.9983694,kamman.canal,{Chinatown essentials},random gem,afternoon,1,$$,0.5,img/venues/Kam Man Market.jpg,nyc
-Kai Feng Fu Dumpling House,40.64200185,-74.00239612,explore,"{cheap eats,late cravings}",lunch,evening,1,$,0.5,img/venues/Kai Feng Fu Dumpling House.jpg,nyc
-Le Veau d'Or,40.763157,-73.968135,leveaudor,"{classic French,timeless}",lunch,midday,1,$$$$,1.5,img/venues/Le Veau d'Or.jpg,nyc
-Cafe Regular,40.67509325,-73.9755335,caferegular,{tiny Euro café},coffee,morning,1,$,0.75,img/venues/Cafe Regular.jpg,nyc
-NBetween,40.743558,-73.979469,nbetween.bar,"{conceptual,niche retail}",cocktail,evening,1,$$,1.5,img/venues/NBetween.jpg,nyc
-Craftsman Ave,40.6711851,-73.9937056,craftsmanave,"{hands-on workshops,DIY}",random gem,afternoon,1,,1.5,img/venues/Craftsman Ave.jpg,nyc
-Untermyer Gardens,40.96599465,-73.88601742,untermyergardens,"{majestic,garden escape}",garden,afternoon,1,$,3,img/venues/Untermyer Gardens.png,nyc
-Dahing Plants,40.7175216,-73.9924393,dahingplantsnyc,"{plant jungle,immersive}",random gem,afternoon,1,$,0.5,img/venues/Dahing Plants.jpg,nyc
-Bricolage,40.6778967,-73.9796265,bricolagebk,"{Vietnamese,backyard feel}",lunch,midday,2,$$$,1.5,img/venues/Bricolage.jpg,nyc
-The Bar at Café Kitsuné,40.686585,-73.985173,104bond,"{sleek,design-forward café bar}",cocktail,evening,1,$$,1.25,img/venues/The Bar at Café Kitsuné.jpg,nyc
-Public Records,40.6821013,-73.9865223,publicrecordsnyc,"{music,design,café/bar hybrid}",club,midday,3,$$,2,img/venues/Public Records.jpg,nyc
-Casino,40.7139367,-73.9896705,casino.ny,"{bold,postmodern nightlife}",cocktail,evening,4,$$$,1.5,img/venues/Casino.jpg,nyc
-Bode Men’s,40.715837,-73.990996,bode,"{men’s boutique,aesthetic retail}",lifestyle,afternoon,1,$$,0.5,img/venues/Bode Men’s.jpg,nyc
-Desert Vintage,40.71573925,-73.9912318,desertvintage,"{curated vintage,art-wear}",lifestyle,afternoon,1,$$,0.5,img/venues/Desert Vintage.jpg,nyc
-Regina's Grocery,40.7154868,-73.9917005,reginasgrocery,"{Italian deli,nostalgia chic}",lunch,midday,1,$,0.5,img/venues/Regina's Grocery.jpg,nyc
-TUMBAO,40.7152638,-73.991428,tumbao.world,"{salsa energy,open air}",lifestyle,evening,5,,0,img/venues/TUMBAO.jpeg,nyc
-Sommwhere,40.7162588,-73.9902028,sommwhere,"{wine bar,grounded elegance}",random gem,happyhour,1,,0,img/venues/Sommwhere.jpg,nyc
-Old Friend Photobooth,40.7204819,-73.9900143,oldfriendphotobooth,{analog nostalgia shot},random gem,afternoon,2,$,0.5,img/venues/Old Friend Photobooth.jpg,nyc
-The Little Shop,40.7083307,-74.00090579,thelittleshopny,{hidden cocktail bar},speakeasy,happyhour,2,$$,1.25,img/venues/The Little Shop.JPG,nyc
-Cellar 36,40.71256495,-73.99415102,cellarthirtysix,{under-the-radar wine bar},wine bar,happyhour,2,$$,1.5,img/venues/Cellar 36.jpg,nyc
-the Ground,40.71209225,-73.99373305,thegroundnyc,"{fitness,rooftop,activity}",random gem,morning,1,$,1.25,img/venues/the Ground.jpg,nyc
-Amsterdam Billiards Club,40.7317233,-73.9898254,amsterdambilliards,"{games,social,casual energy}",bar,happyhour,3,$$,1.5,img/venues/Amsterdam Billiards Club.jpg,nyc
-colbo,40.7165595,-73.9912397,colbo.nyc,"{fashion,culture}",coffee,afternoon,1,$$,0.5,img/venues/colbo.jpg,nyc
-tearoom by calmplex,40.7555061,-73.96942222,tearoom.by.calmplex,{minimalist tea & sound ritual},tea,afternoon,1,$$,1,img/venues/tearoom by calmplex.jpg,nyc
-St Jardim,40.7343755,-74.0028479,stjardimnyc,"{espresso bar,minimal}",coffee,morning,1,$$,0.5,img/venues/St Jardim.jpg,nyc
-renewfinds,40.7274515,-73.95784981,renewfinds,"{vintage,lifestyle curation}",random gem,afternoon,1,$,0.5,img/venues/renewfinds.jpg,nyc
-Bury Your Dead Downwind,40.7194984,-74.0002831,bddw_etc,{niche music venue},lifestyle,evening,2,$$$,0.5,img/venues/Bury Your Dead Downwind.jpg,nyc
-Paquita,40.7336769,-74.0057112,paquita.nyc,{Spanish vermouth bar},tea,midday,2,$,1,img/venues/Paquita.jpeg,nyc
-Bar Orai,40.75658145,-73.96929948,bar.orai,"{cocktails,minimal chic}",speakeasy,evening,1,$$,1.5,img/venues/Bar Orai.jpg,nyc
-Sake Bar Asoko,40.7136931,-73.99196929,sakebarasoko,"{sake,hidden bar}",speakeasy,happyhour,2,$$,1.5,img/venues/Sake Bar Asoko.jpg,nyc
-Mezzrow,40.7345395,-74.0018374,mezzrowjazzclub,"{jazz,intimate}",music,evening,1,$$,1.75,img/venues/Mezzrow.jpg,nyc
-Sun at Six Gallery,40.6742921,-73.96260438,sunatsix,"{furniture as art,slow design}",gallery,afternoon,1,,0.5,,nyc
-Quarters,40.71821778,-74.00301211,shopquarters,"{wine & snacks,mellow}",wine bar,afternoon,3,$$,1,img/venues/Quarters.jpg,nyc
-Sullaluna,40.73018045,-74.00362275,sullaluna.nyc,{wine bar meets bookstore},dinner,happyhour,1,$$,1,img/venues/Sullaluna.jpg,nyc
-Parcelle Chinatown,40.71437695,-73.9911555,parcellewine,"{natural wine,low-key cool}",wine bar,happyhour,1,$$,1.5,img/venues/Parcelle Chinatown.jpg,nyc
-Mao Mao,40.695805,-73.9334721,maomaobrooklyn,"{late bites,neon chaos}",dinner,evening,3,$$,1.5,img/venues/Mao Mao.jpg,nyc
-Damballa,40.69811855,-73.93688719,damballa.nyc,{mystic retail + spiritual layer},cocktail,evening,2,$$$,1.75,img/venues/Damballa.jpg,nyc
-Lévy Gorvy Dayan,40.767004,-73.9693969,levygorvydayan,{elite art gallery},gallery,afternoon,1,$,0.5,img/venues/Lévy Gorvy Dayan.jpg,nyc
-Dream Fishing Tackle,40.7250097,-73.953394,dreamfishingtackle,"{absurdist retail,brainy oddball}",random gem,afternoon,2,$,0.5,img/venues/Dream Fishing Tackle.jpg,nyc
-Silence Please,40.7189289,-73.9948154,silenceplease,{conceptual tea bar},tea,afternoon,1,$,1.25,img/venues/Silence Please.jpg,nyc
-le gaz,40.7150483,-73.9919913,cafelegaz,{scent & concept retail},coffee,morning,2,$,0.5,img/venues/le gaz.jpg,nyc
-Chess Forum,40.7291544,-73.9992134,chessforum,"{legacy niche,contemplative}",random gem,afternoon,1,$,1,img/venues/Chess Forum.jpg,nyc
-Early Terrible [New York City],40.71951196,-73.99459486,earlyterriblenyc,"{speakeasy,lush}",cocktail,evening,2,$$$,2,img/venues/Early Terrible New York City.jpg,nyc
-Elvis,40.7267174,-73.9921853,elvisgreatjones,{food & vibes},wine bar,midday,3,$$,1.5,img/venues/Elvis.jpg,nyc
-High Valley Books,40.7229711,-73.95114043,highvalleybooks,"{rare books,literary curiosity}",bookstore,afternoon,1,$,0.5,img/venues/High Valley Books.jpg,nyc
-Ed’s Elbow Room,40.7723172,-73.9550167,edselbowroomnyc,"{dive,locals only}",dinner,happyhour,2,$$,1.5,img/venues/Ed’s Elbow Room.jpeg,nyc
-la milagrosa,40.7117087,-73.9573417,mezcaleriamilagrosa,"{mezcal,speakeasy,cumbia}",speakeasy,happyhour,4,$$,2,img/venues/la milagrosa.jpg,nyc
-Film Noir Cinema,40.7273136,-73.951608,filmnoircinema,"{indie film,moody}",random gem,evening,1,$,1.5,img/venues/Film Noir Cinema.jpg,nyc
-Pearlbox,40.72289975,-74.00298799,pearlboxnyc,"{art,alternative retail}",speakeasy,afternoon,2,$$$,1.5,img/venues/Pearlbox.jpg,nyc
-We Got Company,40.7141936,-73.9539085,wegotcompanybar,{espresso + media shop},cocktail,morning,1,$$,1.5,img/venues/We Got Company.jpg,nyc
-Oxomoco,40.72977,-73.95546035,_oxomoco_,"{Michelin Mexican,bright vibe}",lunch,midday,2,$$$,1.5,img/venues/Oxomoco.jpg,nyc
-Frog,40.6848704,-73.9385509,frogwinebar,"{curated wine,calm}",wine bar,happyhour,2,$$,1,img/venues/Frog.jpg,nyc
-Apotheke Chinatown,40.7144,-73.999818,apothekenyc,{high-design cocktails},speakeasy,happyhour,2,$$,1.25,img/venues/Apotheke Chinatown.jpg,nyc
-Patent Pending,40.7453222,-73.9902716,patentpendingnyc,"{speakeasy,hidden in lobby}",speakeasy,happyhour,2,$$$,1.5,img/venues/Patent Pending.jpg,nyc
-Wilfie & Nell,40.734068,-74.0030242,wilfieandnell,"{bar,warm neighborhood feel}",bar,happyhour,2,$$,1.25,img/venues/Wilfie & Nell.jpg,nyc
-Rosecrans Cafe & Wine Bar,40.7341712,-73.9998463,rosecrans,"{botanical,brunch to bar shift}",coffee,morning,1,$,0.5,img/venues/Rosecrans Cafe & Wine Bar.jpg,nyc
-Sunshine Laundromat,40.7292851,-73.953737,sunshinelaundromat,"{pinball speakeasy,weird magic}",random gem,happyhour,3,$,1,img/venues/Sunshine Laundromat.jpg,nyc
-Gran Torino,40.7183923,-73.9588733,grantorinonyc,"{Italian,group-friendly}",lunch,midday,2,$$,1,img/venues/Gran Torino.jpg,nyc
-Cafe Balearica,40.7210681,-73.9567687,cafebalearica,{day-to-night cafe/lounge},club,morning,3,$$,1.5,img/venues/Cafe Balearica.png,nyc
-Juliette Restaurant,40.716997,-73.9591501,juliettebkny,"{rooftop brunch,greenery}",lunch,midday,2,$$,1.5,img/venues/Juliette Restaurant.jpg,nyc
-MIDNIGHTS,40.7174706,-73.9584368,midnightsbrooklyn,"{nightlife,alt scene}",cocktail,evening,3,$$,1,img/venues/MIDNIGHTS.jpg,nyc
-Skinny Dennis,40.7158872,-73.9621335,skinnydennis,{dive bar with country twist},music,happyhour,4,$,1,img/venues/Skinny Dennis.jpg,nyc
-Pokito,40.7116327,-73.961939,pokitobrooklyn,"{tropical cocktails,fun}",cocktail,happyhour,3,$$,1,img/venues/Pokito.JPG,nyc
-MoMA PS1,40.745568,-73.946913,momaps1,"{museum,experimental}",gallery,afternoon,3,$,2,img/venues/MoMA PS1.jpg,nyc
-Record Room,40.74574039,-73.9571733,recordroom,"{DJ bar,niche vinyl scene}",lounge,evening,2,$$,1.75,img/venues/Record Room.jpg,nyc
-Honeycomb Hi-Fi Lounge,40.6807473,-73.9776796,thehoneycomb_bk,"{audiophile bar,serious tones}",cocktail,happyhour,2,$$,1.25,img/venues/Honeycomb Hi-Fi Lounge.png,nyc
-Rhodora Wine Bar,40.6917428,-73.9714335,rhodora_wine_bar,"{natural wine,elevated chill}",wine bar,happyhour,1,$$,1,img/venues/Rhodora Wine Bar.jpg,nyc
-Bar Birba,40.6874732,-73.9570883,barbirbabk,"{negronis,edge,cozy tight space}",wine bar,happyhour,1,$$,1,img/venues/Bar Birba.jpg,nyc
-Entre Nous,40.6879326,-73.962875,entrenous.bk,"{natural wine,hidden}",wine bar,happyhour,1,$$$,1,img/venues/Entre Nous.png,nyc
-Anaïs,40.6848831,-73.9860837,anaiswinebk,{cozy Parisian},wine bar,happyhour,1,$,1,img/venues/Anaïs.jpg,nyc
-Petit Paulette,40.689612,-73.9757378,petitpaulettebk,"{sidewalk wine,low-lit charm}",wine bar,happyhour,1,$$,1,img/venues/Petit Paulette.jpg,nyc
-The Ten Bells Brooklyn,40.70467705,-73.92385397,thetenbellsbk,"{big energy,Euro feel}",wine bar,happyhour,2,$$,1.25,img/venues/The Ten Bells Brooklyn.jpg,nyc
-Bouquet,40.73538615,-73.9553597,bouquetwinebar,"{intimate,romantic}",wine bar,happyhour,1,$$,1.5,img/venues/Bouquet.jpg,nyc
-Diamond Lil,40.725437,-73.946085,diamondlilbar,"{cocktails,neon retro}",cocktail,happyhour,2,$$,1.5,img/venues/Diamond Lil.jpg,nyc
-Heaven & Earth,40.7260331,-73.9391293,heavenandearth.bk,"{meditative,poetic bar}",wine bar,happyhour,1,$$,1,img/venues/Heaven & Earth.jpg,nyc
-BABA on Withers,40.717003,-73.95074,babaonwithers,"{wine cave,vibey hideaway}",wine bar,happyhour,1,$$,1,img/venues/BABA on Withers.jpg,nyc
-Plus de Vin,40.7185124,-73.9451974,pdvnyc,{minimalist natural wine},wine bar,happyhour,1,$$,1,img/venues/Plus de Vin.jpg,nyc
-Woodhul Wine Bar,40.7149932,-73.9587858,woodhulwinebar,"{local-focused,easy social}",wine bar,happyhour,1,$$,1,img/venues/Woodhul Wine Bar.jpg,nyc
-Pinkerton Wine Bar,40.7148899,-73.9542821,pinkertonbk,"{retro,intimate}",wine bar,happyhour,1,$$,1,img/venues/Pinkerton Wine Bar.jpg,nyc
-Sauced,40.7254538,-73.99029434,sauced.nyc,"{raw energy,wine party spot}",wine bar,happyhour,2,$$,1.5,img/venues/Sauced mht.jpg,nyc
-The Immigrant,40.7285237,-73.9854028,theimmigrant_nyc,"{hybrid wine/beer,tiny}",wine bar,happyhour,2,$,1,,nyc
-Ruffian,40.7264,-73.984114,ruffian_nyc,"{acclaimed,small,bold flavors}",wine bar,happyhour,2,$$$,1,img/venues/Ruffian.jpg,nyc
-Bibi Wine Bar,40.7238517,-73.983598,bibiwinebar,"{deep cuts,conversation-rich}",wine bar,happyhour,1,$$,1.25,img/venues/Bibi Wine Bar.jpg,nyc
-Brick Wine Bar,40.7206712,-73.9843722,brick.winebar,"{natural wine,long hangs}",wine bar,happyhour,1,$$,1,img/venues/Brick Wine Bar.jpg,nyc
-Domino Wine Bar,40.7114643,-73.9577638,dominowinebarbk,{Williamsburg casual chic},wine bar,happyhour,2,$$,1,,nyc
-Lise & Vito,40.72438215,-73.94842052,liseandvito,{curated intimacy},wine bar,happyhour,2,$$,1.5,img/venues/Lise & Vito.jpg,nyc
-Maison Premiere,40.7142409,-73.9616034,maisonpremiere,"{oysters,absinthe,drama}",cocktail,happyhour,2,$$$,1.5,img/venues/Maison Premiere.jpg,nyc
-Horses and Divorces,40.7140953,-73.961424,horsesanddivorces,"{dark,chaotic bar energy}",bar,evening,3,$,1,img/venues/Horses and Divorces.jpg,nyc
-The Sultan Room,40.705705,-73.9223702,thesultanroom,"{performance venue,glam chaos}",music,evening,4,$,2,img/venues/The Sultan Room.jpg,nyc
-Elsewhere,40.70947715,-73.92323547,elsewherespace,{big nightlife venue},club,happyhour,5,$$,2,img/venues/Elsewhere.jpg,nyc
-Mansions,40.713964,-73.921365,mansions.bar,"{bold bar,mystery branding}",club,happyhour,5,$$,2,img/venues/Mansions.jpg,nyc
-Please Tell Me,40.71463863,-73.94413785,pleasetellmebk,"{wine bar,covertly playful}",wine bar,happyhour,2,$$,1.75,img/venues/Please Tell Me.jpg,nyc
-Arcane Estate Coffee,40.7312595,-74.0028009,arcaneestatecoffee,"{dark café,niche,brooding}",coffee,morning,1,$,0.5,img/venues/Arcane Estate Coffee.jpg,nyc
-PUBLIC Hotel,40.723034,-73.9920355,publichotels,"{sleek chaos,entry to nightlife layers}",cocktail,evening,4,$$$$,2,img/venues/PUBLIC Hotel.jpg,nyc
-Ray’s,40.7212174,-73.9924737,raysbarnyc,"{dive bar,scene-heavy}",bar,happyhour,4,$$,1,img/venues/Ray’s mht.jpg,nyc
-Fig. 19,40.71951185,-73.99353903,fig19nyc,{gallery → speakeasy twist},cocktail,happyhour,2,$$,1.25,img/venues/Fig. 19.jpg,nyc
-Attaboy,40.7188823,-73.9913742,attaboy134,{legendary cocktail den},cocktail,happyhour,2,$$$,1.5,img/venues/Attaboy.jpg,nyc
-The Flower Shop,40.7180663,-73.992134,theflowershopnyc,{multi-level chill to party progression},bar,happyhour,3,$$,2,img/venues/The Flower Shop.jpg,nyc
-Skin Contact,40.7176753,-73.99022276,skincontact.nyc,"{natural wine,sophisticated edge}",wine bar,happyhour,2,$$,1.25,img/venues/Skin Contact.jpg,nyc
-Ramen Ishida,40.7196475,-73.9884561,ramenishida,{low-key ramen with quiet aesthetic},dinner,afternoon,1,$$,0.75,img/venues/Ramen Ishida.jpg,nyc
-The Back Room,40.7187356,-73.9869338,thebackroomnyc,"{speakeasy,hidden behind toy shop}",speakeasy,evening,2,$$,1.25,img/venues/The Back Room.jpg,nyc
-Dear Irving Gramercy,40.7361878,-73.9873741,dearirving,"{glam speakeasy,intimacy-focused}",cocktail,happyhour,2,$$$,1.5,img/venues/Dear Irving Gramercy.jpg,nyc
-Raines Law Room Chelsea,40.7387302,-73.9945926,raineslawroom,"{elite speakeasy,ultra-curated service}",cocktail,happyhour,2,$$,1,img/venues/Raines Law Room Chelsea.jpg,nyc
-La Noxe,40.747027,-73.993071,lanoxenyc,{cocktail bar in subway station},speakeasy,evening,3,$$,1.25,img/venues/La Noxe.jpg,nyc
-The Coyote Club,40.6886088,-73.9418208,thecoyoteclub_bk,"{moody,artsy bar}",bar,happyhour,4,$,1,img/venues/The Coyote Club.jpg,nyc
-Union Pool,40.7150021,-73.9516171,union_pool,{social dive with open patio},bar,happyhour,3,$,1.25,img/venues/Union Pool.jpg,nyc
-7 Spring,40.7213601,-73.9943672,7springnyc,"{refined,upscale hidden bar}",coffee,midday,2,$,0.5,img/venues/7 Spring.jpg,nyc
-yakuni,40.7571743,-73.968383,yakuninyc,{izakaya-style energy},speakeasy,happyhour,2,$$,1.25,img/venues/yakuni.jpg,nyc
-Bar Bianchi,40.7225634,-73.9864693,barbianchinyc,{espresso & aperitivo crossover},cocktail,afternoon,1,$$$,1.25,img/venues/Bar Bianchi.jpg,nyc
-Little Fino,40.7220606,-73.9568097,littlefinonyc,"{chill,romantic,Euro lean}",breakfast,happyhour,2,$,1.25,img/venues/Little Fino.jpg,nyc
-Clemente Bar,40.7415982,-73.9871904,theclementebar,"{hybrid café/bar,contemporary Latino art}",cocktail,evening,1,$$$,1.5,img/venues/Clemente Bar.jpg,nyc
-Greenburg Café,40.7273389,-73.95736096,greenburgcafe,"{modern café,art-influenced}",coffee,morning,1,$,0.5,img/venues/Greenburg Café.jpg,nyc
-RHYTHM ZERO | GREENPOINT,40.73015835,-73.96001608,rhythmzeronyc,{coffee},coffee,morning,1,$,0.5,img/venues/RHYTHM ZERO gp.jpg,nyc
-The Metropolitan Museum of Art,40.7794396,-73.96338248,themuseumofmodernart,{classical art flagship},gallery,afternoon,1,$,3,img/venues/The Metropolitan Museum of Art.jpg,nyc
-Solomon R. Guggenheim Museum,40.78301,-73.959124,guggenheim,"{modernist spiral,psychological pull}",gallery,afternoon,1,$,2,img/venues/Guggenheim Museum.jpg,nyc
-The Frick Collection,40.7710857,-73.9673861,frickcollection,"{classical,quiet power}",gallery,afternoon,1,$,2,img/venues/The Frick Collection.jpg,nyc
-American Museum of Natural History,40.7813241,-73.9739882,amnh,"{wonder,childhood awe}",gallery,afternoon,1,$,3,img/venues/American Museum of Natural History.jpg,nyc
-Whitney Museum of American Art,40.73964505,-74.00892095,whitneymuseum,{contemporary American focus},gallery,afternoon,1,$,2.5,img/venues/Whitney Museum of American Art.jpg,nyc
-Eden Gallery,40.757618,-73.975533,edengallery,"{commercial art,bright,sleek}",gallery,afternoon,1,$,0.5,img/venues/EDEN (Eden Gallery) - SoHo.jpg,nyc
-Taglialatella Galleries,40.7482129,-74.00421095,taglialatellagalleries,{pop/street art crossover},gallery,afternoon,1,$,0.5,img/venues/Taglialatella Galleries.jpg,nyc
-Gagosian,40.7494423,-74.0059445,gagosian,"{elite minimalism,ultra-curated}",gallery,afternoon,1,$,0.75,img/venues/Gagosian.jpg,nyc
-Agora Gallery,40.7494529,-74.0046681,agoragallery,"{emerging artists,accessible}",gallery,afternoon,1,$,0.5,img/venues/Agora Gallery.jpg,nyc
-Pace Gallery,40.7495759,-74.0049685,pacegallery,{institutional powerhouse},gallery,afternoon,1,$,0.75,img/venues/Pace Gallery.jpg,nyc
-David Zwirner,40.745866,-74.006985,davidzwirner,"{serious,cerebral}",gallery,afternoon,1,$,0.75,img/venues/David Zwirner.jpg,nyc
-Lisson Gallery,40.7485502,-74.0044742,lisson_gallery,"{conceptual lean,British aesthetic}",gallery,afternoon,1,$,0.5,img/venues/Lisson Gallery.jpg,nyc
-Gladstone Gallery,40.7489761,-74.004588,gladstone.gallery,"{installation,avant-garde}",gallery,afternoon,1,$,0.5,img/venues/Gladstone Gallery.jpg,nyc
-Eli Klein Gallery,40.73341965,-74.00984088,elikleingallery,{Chinese contemporary},gallery,afternoon,1,$,0.5,img/venues/Eli Klein Gallery.jpg,nyc
-The Jazz Gallery,40.7445908,-73.988682,thejazzgallery,"{niche live performance,elegant}",music,happyhour,2,$,1.5,img/venues/The Jazz Gallery.jpg,nyc
-PERROTIN NEW YORK,40.7196517,-73.9892959,perrotin,{edgier European contemporary},gallery,afternoon,1,$,0.75,img/venues/PERROTIN NEW YORK.png,nyc
-Hannah Traore Gallery,40.7206549,-73.98866775,hannahtraoregallery,"{new voices,BIPOC focus}",gallery,afternoon,1,$,0.5,img/venues/Hannah Traore Gallery.jpg,nyc
-Mr. Purple,40.7216444,-73.9883116,mrpurplenyc,"{rooftop party spot,upscale chaos}",lounge,happyhour,4,$$$,2,img/venues/Mr. Purple.jpeg,nyc
-Van Der Plas Gallery,40.7208693,-73.98864371,vanderplasnyc,"{outsider art,lower east side vibe}",gallery,afternoon,1,$,0.5,img/venues/Van Der Plas Gallery.jpg,nyc
-BAR GOTO,40.7227628,-73.9898629,bargoto_nyc,{Japanese cocktail perfection},cocktail,happyhour,2,$$,1.25,img/venues/BAR GOTO.jpg,nyc
-Make Believe,40.7218303,-73.98927365,makebelieve,{rooftop Latin nightlife},club,happyhour,4,$$,2,img/venues/Make Believe.jpg,nyc
-River Deli,40.6936542,-73.9984656,riverdelibrooklyn,"{riverside Italian,mellow vibe}",lunch,midday,1,$$,1.25,img/venues/River Deli.jpg,nyc
-The Sandwich Board,40.7183721,-73.9919964,thesandwichboardnyc,{classic deli energy},lunch,morning,1,$,0.5,img/venues/The Sandwich Board.jpg,nyc
-Chimito's,40.740812,-73.853837,chimitosnyc,{fast-casual Latin food},lunch,morning,1,$,0.75,img/venues/Chimito's.jpg,nyc
-"Krispy Pizza- Brooklyn, NY",40.622363,-74.005499,krispypizza,{old-school NYC pizza},lunch,morning,1,$,0.5,img/venues/Krispy Pizza.png,nyc
-Tigre,40.7199283,-73.9881704,tigre.nyc,{Argentinian chic bistro},cocktail,midday,2,$$,1.5,img/venues/Tigre.jpg,nyc
-The Nines,40.7272258,-73.9940546,thenines_nyc,"{live piano bar,glam date-night}",cocktail,happyhour,4,$$$$,1.75,img/venues/The Nines.jpg,nyc
-Lovers of Today,40.7258254,-73.9834216,loversoftodaynyc,"{dark,tiny,perfect for intimacy}",speakeasy,happyhour,2,$,1.5,img/venues/Lovers of Today.jpg,nyc
-Pebble Bar,40.7592111,-73.9804982,pebblebarnyc,{layered experience inside old Rockefeller HQ},cocktail,happyhour,3,$$,1.5,img/venues/Pebble Bar.jpg,nyc
-HiLot,40.7238208,-73.9788238,hilotnyc,"{loud,modern,Tokyo cocktail influence}",cocktail,happyhour,4,$$,1.25,img/venues/HiLot.jpeg,nyc
-Ding-a-ling,40.7243198,-73.9784447,dingalingcocktaillounge,{high-energy dive feel},club,happyhour,3,$$,1.25,img/venues/Ding-a-ling.jpg,nyc
-Bar Room at the Beekman,40.7110329,-74.0069365,thebeekmanny,"{classic NYC hotel bar,ornate elegance}",cocktail,happyhour,2,$$,1,img/venues/Bar Room at the Beekman.jpg,nyc
-The Portrait Bar,40.7449926,-73.9877939,theportraitbarnyc,"{precision cocktails,refined interior}",cocktail,happyhour,3,$$$,1.25,img/venues/The Portrait Bar.jpg,nyc
-Shinji's,40.740715,-73.993176,shinjisbar,{Tokyo-style sensory cocktail theater},speakeasy,happyhour,2,$$$,1.25,img/venues/Shinji's.jpeg,nyc
-Dante West Village,40.7352204,-74.0062506,dantewestvillage,"{aperitivo legend,IG-famous}",brunch,happyhour,2,$$$,1.5,img/venues/Dante West Village.jpg,nyc
-Martiny’s,40.73615025,-73.98771028,martinys_nyc,"{quiet excellence,narrative drinks}",speakeasy,happyhour,2,$$$,1.5,img/venues/Martiny’s.jpg,nyc
-Jac's on Bond,40.7265452,-73.9936365,jacsonbondnyc,"{cool-kid cocktail spot,hip nostalgic}",cocktail,happyhour,3,$$$,1.75,img/venues/Jac's on Bond.jpg,nyc
-Ma•dé,40.7214053,-73.9951726,ma_de.nyc,"{tropical dining,bright drinks}",lunch,midday,2,$$$$,1.5,img/venues/Ma-dé.jpg,nyc
-The Mulberry,40.72278985,-73.9957122,themulberrybar,"{polished bar,New Americana}",speakeasy,happyhour,3,$$$,1.5,img/venues/The Mulberry.jpg,nyc
-Café Leon Dore,40.72221429,-73.99605,explore,{fashion x espresso culture},coffee,morning,1,$,0.5,img/venues/Café Leon Dore.jpg,nyc
-Torrisi,40.724217,-73.9954001,richtorrisi,"{upscale Italian,elite culinary experience}",lunch,happyhour,2,$$$$,1.5,img/venues/Torrisi.jpg,nyc
-Lil' Frankie's,40.7235847,-73.9884552,lilfrankies,"{casual Italian,always buzzing}",lunch,midday,2,$$,1.75,img/venues/Lil' Frankie's.jpg,nyc
-Mission Ceviche,40.76924287,-73.95791763,missionceviche,"{vibrant,fast upscale Latin fusion}",lunch,midday,2,$$$$,1.5,img/venues/Mission Ceviche.jpg,nyc
-Xolo,40.711594,-73.967379,xolobk,"{casual Mexican,small footprint}",dinner,morning,2,$$,1.25,img/venues/Xolo.jpg,nyc
-Bird Dog,40.7340612,-74.00656451,birddog.nyc,"{Southern twist,cozy and new}",dinner,midday,2,$$$,1.5,img/venues/Bird Dog.jpg,nyc
-Le French Diner,40.7220477,-73.9880873,lefrenchdiner,"{tiny,romantic,tucked away}",dinner,midday,1,$$$,1.25,img/venues/Le French Diner.jpg,nyc
-(SUB)MERCER,40.7249122,-73.9986434,submercer,"{covert,legacy nightlife basement}",speakeasy,evening,4,$$$,1.75,img/venues/(SUB)MERCER.jpg,nyc
-COQODAQ,40.7400751,-73.98874859,coqodaq,{upscale fried chicken w/ theatrical style},lunch,happyhour,3,$$$,1.5,img/venues/COQODAQ.jpg,nyc
-The Campbell,40.7529987,-73.9776159,thecampbellnyc,{grand central’s old money power bar},cocktail,happyhour,2,$$,1.25,img/venues/The Campbell.jpg,nyc
-Shoo Shoo Nolita,40.7201124,-73.9961673,shooshoo_nyc,"{Israeli fusion,brunch to date night}",brunch,midday,2,$$,1.25,img/venues/Shoo Shoo Nolita.jpg,nyc
-Bar Pisellino,40.7329348,-74.0034603,barpisellino,"{espresso,aperitivo,Italian sidewalk}",cocktail,morning,1,$$$,1.5,img/venues/Bar Pisellino.jpg,nyc
-Black Mountain Wine House,40.6808556,-73.9915451,blkmtnbk,"{cabin-core wine,fireplace energy}",wine bar,happyhour,1,$$,1.25,img/venues/Black Mountain Wine House.jpg,nyc
-The Flower Shop Rooftop,40.718348,-74.00214,walkerrooftop,"{hip,casual,peak Gen Z hang}",lounge,happyhour,3,$$,1.5,img/venues/The Flower Shop Rooftop.jpg,nyc
-Jolene Sound Room,40.7116551,-73.9629261,jolenesoundroom.bk,{audiophile cocktail den},club,happyhour,5,$$,1.75,img/venues/Jolene Sound Room.jpg,nyc
-The Ten Bells,40.71781905,-73.9898471,thetenbells,"{LES wine staple,low-light vibe}",wine bar,happyhour,2,$$,1.25,img/venues/The Ten Bells.jpg,nyc
-Ammazzacaffè,40.7114031,-73.9446152,ammazzacaffe.nyc,"{refined Italian,back garden hidden gem}",lunch,happyhour,2,$$$,0.5,img/venues/Ammazzacaffè.jpg,nyc
-Alice,40.7371073,-73.9986308,alicerestaurantnyc,"{Italian,Romantic,Aesthetic,Garden}",dinner,happyhour,3,$$$,1.5,img/venues/Alice.jpg,nyc
-Vinyl Steakhouse,40.74003245,-73.9930861,vinylsteakhouse,{dinner w/ playlist experience},dinner,happyhour,3,$$$$,1.5,img/venues/Vinyl Steakhouse.jpg,nyc
-Saint Tuesday,40.718348,-74.00214,sainttuesday_nyc,"{hidden cocktail perfection,piano energy}",speakeasy,happyhour,3,$$,1.75,img/venues/Saint Tuesday.jpg,nyc
-Le Dive,40.7147362,-73.9909568,ledivenyc,"{trendy French bistro,effortless}",cocktail,happyhour,2,$$,1.5,img/venues/Le Dive.jpg,nyc
-Scarr's Pizza,40.7157403,-73.9915692,scarrspizza,{classic NYC slice joint},lunch,morning,1,$,0.75,img/venues/Scarr's Pizza.jpg,nyc
-Little Ways,40.7225653,-74.0033643,littlewaysnyc,"{glam cocktail vibe,modern finish}",cocktail,happyhour,3,$$,2,img/venues/Little Ways.jpg,nyc
-NURA,40.7246593,-73.9537088,nurabrooklyn,{serious seasonal plates + design focus},brunch,happyhour,2,$$$,1.5,img/venues/NURA.jpg,nyc
-Casa Ora,40.70783935,-73.9437523,casaoranyc,{elegant Latinx cuisine},lunch,happyhour,2,$$$,1.5,img/venues/Casa Ora.jpg,nyc
-JIMMY,40.72244,-74.004816,jimmy.soho,"{rooftop,hotel party lean}",lounge,happyhour,4,$$$,1.25,img/venues/JIMMY.jpg,nyc
-Urban Backyard,40.7207982,-73.9965628,urbanbackyardnyc,"{café with personality,plants,community}",coffee,morning,1,$,0.5,img/venues/Urban Backyard.png,nyc
-Llama Inn,40.716681,-73.9504137,llamainnnyc,"{rooftop Peruvian energy,sleek atmosphere}",dinner,happyhour,3,$$$,1.5,img/venues/Llama Inn.jpg,nyc
-Ms. Yoo,40.7212083,-73.9897713,ms.yoo,{Korean bar food with nightlife lean},cocktail,happyhour,3,$$,1.5,img/venues/Ms. Yoo.jpg,nyc
-NR,40.7371073,-73.9549709,nr_nyc,{experimental Japanese cocktail lab},cocktail,happyhour,2,$$$,1.5,img/venues/NR.jpg,nyc
-Macao Trading Company,40.719643,-74.0040209,macaonyc,"{theatrical cocktails,Shanghai noir}",speakeasy,happyhour,3,$$$,1.75,img/venues/Macao Trading Company.jpg,nyc
-Please Don't Tell,40.7271211,-73.983769,pdtnyc,"{secretive speakeasy,reservation-only}",speakeasy,happyhour,2,$$,1.5,img/venues/Please Don't Tell.jpg,nyc
-Thyme Bar,40.7417356,-73.9905364,thymebar_nyc,"{molecular cocktails,quiet opulence}",cocktail,happyhour,3,$$$$,1.5,img/venues/Thyme Bar.jpg,nyc
-Bathtub Gin,40.7435663,-74.0031566,bathtubginnyc,{roaring 20s style speakeasy},speakeasy,happyhour,3,$$,1.5,img/venues/Bathtub Gin.jpg,nyc
-Lucien,40.72334135,-73.988076,lucien.nyc,{French cool-kid bistro},lunch,midday,2,$$$,1.5,img/venues/Lucien.jpg,nyc
-Glass Ceiling Rooftop,40.7462694,-73.9883642,glassceilingrooftop,"{Midtown rooftop,Instagram energy}",lounge,happyhour,4,$$$,1.25,img/venues/Glass Ceiling Rooftop.jpg,nyc
-Palmetto,40.7016806,-73.9231726,palmetto_bk,{cocktail lab in Bushwick},bar,happyhour,3,$$,1.25,img/venues/Palmetto.jpg,nyc
-Electric Lemon,40.7545577,-74.00200571,electriclemonnyc,{Hudson Yards haute cuisine},lounge,happyhour,3,$$$,1.25,img/venues/Electric Lemon.jpg,nyc
-Bemelmans Bar,40.7742561,-73.962989,bemelmansbar,"{classic hotel bar,old New York charm}",cocktail,happyhour,2,$$$$,1.5,img/venues/Bemelmans Bar.jpg,nyc
-The Tyger,40.718902,-73.999442,thetygernyc,{downtown Asian fusion},dinner,happyhour,3,$$$,1.5,img/venues/The Tyger.jpg,nyc
-JANE Motorcycles,40.7125186,-73.9660797,janemotorcycles,{cafe x retail x lifestyle},random gem,morning,1,$$,0.5,img/venues/JANE Motorcycles.jpg,nyc
-Tokyo Record Bar,40.7306295,-74.00015175,tokyorecordbar,{tasting menu + vinyl ritual},music,happyhour,2,$$$$,1.5,img/venues/Tokyo Record Bar.jpg,nyc
-LaRina Pastificio & Vino,40.6932918,-73.9704197,larinabrooklyn,{Brooklyn pasta perfection},wine bar,midday,2,$$,1.5,img/venues/LaRina Pastificio & Vino.jpg,nyc
-The Django,40.7193091,-74.0048375,thedjangonyc,{jazz + cocktails in vaulted cellar},music,happyhour,4,$$$,2,img/venues/The Django.jpg,nyc
-Maracuja,40.7132401,-73.9577771,maracujabk,"{divey,cozy,unpretentious}",bar,happyhour,3,$$,1.5,img/venues/Maracuja.jpg,nyc
-The Woods,40.7129071,-73.9663175,thewoodsbrooklyn,{late-night party bar},club,happyhour,4,$,1.5,img/venues/The Woods.jpg,nyc
-Adore,40.7268711,-73.987535,bar.adore,{wine-focused romantic small plates},wine bar,happyhour,3,$$,1.5,img/venues/Adore.jpg,nyc
-The Monkey King,40.7061629,-73.9210971,themonkeykingnyc,{Chinese speakeasy with dramatic flair},dinner,happyhour,3,$$$,2.5,img/venues/The Monkey King.jpeg,nyc
-The Noble Brooklyn,40.7286204,-73.95442,thenoblebk,"{refined cocktails,slow tempo}",wine bar,happyhour,2,$$$,1.25,img/venues/The Noble Brooklyn.jpg,nyc
-Sereneco,40.7303713,-73.9578334,sereneconyc,{elegant Greenpoint seasonal dining},brunch,midday,2,$$,1.5,img/venues/Sereneco.jpg,nyc
-Cozy Royale,40.7169346,-73.9429324,cozyroyalebk,"{meat-focused,neighborhood cult spot}",lunch,midday,2,$$,1,img/venues/Cozy Royale.jpg,nyc
-Nowadays,40.6928669,-73.9016974,nowadaysnyc,"{outdoor,vibey,DJ-forward}",club,happyhour,5,$$,2.5,img/venues/Nowadays.jpg,nyc
-Caffè Panna,40.72437788,-73.95469863,caffepanna,{creative soft serve},dessert,morning,1,$$,0.5,img/venues/Caffè Panna.jpg,nyc
-Mắm,40.7170163,-73.99325241,mam.nyc,{Vietnamese fast-casual gem},lunch,midday,1,$$,1.25,img/venues/Mắm.jpg,nyc
-Cosenza's Fish Market,40.8545359,-73.88819948,explore,{rugged Bronx seafood counter},random gem,morning,1,$,0.5,img/venues/Cosenza's Fish Market.jpg,nyc
-Strong Rope Brewery Red Hook,40.6772792,-74.0187905,strongropebrewery,{Red Hook craft beer w/ industrial feel},bar,midday,2,$$,1,img/venues/Strong Rope Brewery Red Hook.JPG,nyc
-Roy's Fish Market,40.76172155,-73.9601005,explore,{classic outer-borough market},random gem,morning,1,$$,0.5,img/venues/Roy's Fish Market.jpg,nyc
-Le Gratin,40.711274,-74006676,legratinnyc,{Daniel Boulud’s Lyonnaise bistro},dinner,happyhour,2,$$$$,1.5,img/venues/Le Gratin.jpg,nyc
-Ella Funt,40.7262314,-73.9900046,ellafunt.nyc,{wine bar + community feel},cocktail,happyhour,3,$$$,1.75,img/venues/Ella Funt.jpg,nyc
-Troost,40.7334503,-73.9549611,troostnyc,{casual Greenpoint local bar},cocktail,happyhour,2,$$,1.5,img/venues/Troost.jpeg,nyc
-Bar Madonna,40.7142028,-73.9556881,barmadonnabk,{sultry cocktail hideout},cocktail,happyhour,4,$$$,1.5,img/venues/Bar Madonna.jpg,nyc
-Casetta,40.715807,-73.990317,casetta.ny,{Italian-leaning natural wine bar},wine bar,midday,2,$$,1.25,img/venues/Casetta.jpg,nyc
-Ketchy Shuby,40.7210382,-73.9977804,ketchyshuby.nyc,{retro funk bar with late-night pull},club,happyhour,3,$$$,2,img/venues/Ketchy Shuby.jpg,nyc
-Arlo Williamsburg,40.7215045,-73.9587016,arloafterdark,{rooftop hotel bar with Manhattan views},club,happyhour,3,$$$,2,img/venues/Arlo Williamsburg.jpg,nyc
-Westlight,40.722297,-73.9565396,westlightnyc,"{polished rooftop,sunset crowd}",lounge,happyhour,4,$$$,1.5,img/venues/Westlight.jpg,nyc
-Unveiled,40.7225704,-73.9566575,unveiled_nyc,{immersive/artsy pop-up nightlife concept},club,evening,2,$$$$,2,img/venues/Unveiled.jpg,nyc
-Good Room,40.7269085,-73.9528103,goodroombk,"{warehouse music venue,raw and late}",club,late,5,$$,2,img/venues/Good Room.jpg,nyc
-Bar Milagro,40.7115944,-73.9673794,barmilagrobk,{small Mexican cocktail den},cocktail,happyhour,2,$$,1.25,img/venues/Bar Milagro.JPG,nyc
-PIPS,40.6908713,-73.99573195,pipsbrooklyn,{Japanese-Italian hybrid w/ back garden},dinner,midday,2,$$$,1.5,img/venues/PIPS.jpg,nyc
-Grand Army,40.6882685,-73.9865349,grandarmybar,{oyster + cocktail combo bar},cocktail,happyhour,3,$$,1.25,img/venues/Grand Army.jpg,nyc
-Liar Liar,40.6796022,-73.9869318,liarliarbk,{pink-lit femme-forward cocktail bar},bar,happyhour,2,$$,1.25,img/venues/Liar Liar.jpg,nyc
-Elsa,40.6902868,-73.99534426,elsabarnyc,{minimalist bar with warm tone},cocktail,happyhour,3,$$,1.5,img/venues/Elsa.jpg,nyc
-Saint Julivert,40.6878828,-73.995709,saintjulivertbk,{seafood-focused w/ Euro flair},wine bar,midday,1,$$$,1.5,img/venues/Saint Julivert.jpg,nyc
-The Otheroom,40.7349434,-74.0080378,theotheroomnyc,{dimly-lit West Village wine bar},cocktail,happyhour,2,$$,1.25,img/venues/The Otheroom.jpg,nyc
-Ophelia Lounge NYC,40.7533299,-73.966171,opheliany,{1920s glam rooftop + Art Deco aesthetic},lounge,happyhour,4,$$$,1.25,img/venues/Ophelia Lounge NYC.jpg,nyc
-Koi Bā,40.7189329,-73.961364,koibabrooklyn,{upscale sushi + neon future design},speakeasy,happyhour,3,$$,1.25,img/venues/Koi Bā.jpg,nyc
-Bridges,40.7140307,-73.9980719,bridges.nyc,{French-influenced fine dining},dinner,happyhour,2,$$$$,1.5,img/venues/Bridges.jpg,nyc
-Hildur,40.7026903,-73.9931263,hildur.brooklyn,{bakery-café w/ local feel},wine bar,morning,1,$$$,1.5,img/venues/Hildur.jpg,nyc
-Knockdown Center,40.7152788,-73.9136706,knockdowncenter,{sprawling art + music venue},music,evening,5,$$,3,img/venues/Knockdown Center.jpg,nyc
-Winona's,40.7000476,-73.9457873,winonasbk,{neighborhood European-style bistro},dinner,morning,2,$$$,1.5,img/venues/Winona's.jpg,nyc
-Market Hotel,40.6969323,-73.934588,market.hotel,{underground concert space w/ DIY legacy},club,late,5,$$,2.5,img/venues/Market Hotel.jpg,nyc
-Le Boudoir,40.6907472,-73.9955872,leboudoirbrooklyn,{underground Versailles-style cocktail bar},lounge,happyhour,2,$,1.5,img/venues/Le Boudoir.png,nyc
-Father Knows Best,40.6902212,-73.9070274,fathersbk,"{hybrid café + bar,creative crowd}",brunch,midday,2,$$,1.25,img/venues/Father Knows Best.png,nyc
-Umbra,40.701113,-73.9238807,umbrabrooklyn,{moody new cocktail bar},speakeasy,happyhour,4,$$,1.5,img/venues/Umbra.jpg,nyc
-Jupiter Disco,40.7081511,-73.9235714,jupiter_disco,{late-night sci-fi electro haunt},club,late,4,$$,2.5,img/venues/Jupiter Disco.jpg,nyc
-Roberta's,40.7050062,-73.9335894,robertaspizza,{cult pizza + back patio bar scene},lunch,midday,3,$$,0.75,img/venues/Roberta's.jpg,nyc
-Mood Ring,40.6977941,-73.9269769,moodringnyc,"{astrology-themed,queer-friendly dive}",club,happyhour,3,$$,1.75,img/venues/Mood Ring.jpg,nyc
-Goldie's Bar,40.7256573,-73.9451403,goldiesbrooklyn,{retro-chic neighborhood bar},cocktail,happyhour,2,$,1.25,img/venues/Goldie's Bar.jpg,nyc
-Razor-N-Tape,40.72707645,-73.95230534,razorntape,{vinyl label bar + dance floor},music,evening,2,$,0.5,img/venues/Razor-N-Tape.jpg,nyc
-Dolly's Swing and Dive,40.7207181,-73.9611056,dollysbk,{dive with soft-core Americana aesthetic},bar,happyhour,3,$,0.9,img/venues/Dolly's Swing and Dive.jpg,nyc
-Rocka Rolla ,40.7139355,-73.952822,rockarolla_bk,{biker meets rock'n'roll bar},bar,happyhour,4,$,0.9,img/venues/Rocka Rolla.jpg,nyc
-Duff's ,40.70885025,-73.95788102,duffsbrooklyn,{heavy metal cathedral dive bar},bar,happyhour,5,$,0.9,img/venues/Duff's.jpg,nyc
-TØRST ,40.7233997,-73.95081892,torst_nyc,"{rare beer mecca,lowkey Scandi}",wine bar,midday,2,$$,1.33,img/venues/TØRST.jpg,nyc
-Ray's Hometown Bar ,40.7235334,-73.9518146,raysbarbk,{ultra-casual with shuffleboard},bar,happyhour,2,$$,1.25,img/venues/Ray's Hometown Bar-gp.jpg,nyc
-Good Bar,40.7238537,-73.9510984,goodbarbk,{design-forward with relaxed pace},bar,happyhour,2,$,1.25,img/venues/Good Bar.jpg,nyc
-Berry Park ,40.7224689,-73.95525274,berryparkbk,"{big rooftop bar,sports-friendly}",bar,midday,4,$$,1.75,img/venues/Berry Park.jpg,nyc
-The Gutter,40.7227408,-73.9554759,gutterbar,{bowling alley dive with real grit},bar,happyhour,3,$$,2,img/venues/The Gutter wb.jpg,nyc
-Brooklyn Billiards,40.721591,-73.957999,bkbilliards,{all-purpose hang + billiards},bar,happyhour,3,$,2,img/venues/Brooklyn Billiards.png,nyc
-Bathhouse Williamsburg,40.720582,-73.957492,bathhouse,{spa-meets-bar-meets-Instagram},spa,midday,3,$$$,2.25,img/venues/Bathhouse Williamsburg.jpg,nyc
-Juicery Kitchen,40.71778365,-73.95182439,juicerykitchen,{day-centric health bar},coffee,morning,1,$,0.25,img/venues/Juicery Kitchen.jpg,nyc
-Bar Americano ,40.7313991,-73.9577041,baramericanonyc,{sleek and minimal euro-style aperitivo},cocktail,happyhour,3,$,1.5,img/venues/Bar Americano.jpg,nyc
-Little Rascal Bar,40.729358,-73.9573671,littlerascalgreenpoint,{Moroccan-flavored cocktail experience},cocktail,happyhour,2,$$,1.5,img/venues/Little Rascal Bar bk.jpg,nyc
-Paulie Gee's Slice Shop ,40.7283593,-73.9571898,pauliegees_sliceshop,{pizza-focused casual gem},lunch,morning,1,$,0.5,img/venues/Paulie Gee's Slice Shop.jpg,nyc
-Bk Backyard Bar ,40.72407826,-73.95487861,bkbackyardbar,{outdoor social + retro games},bar,midday,2,$$,1.75,img/venues/Bk Backyard Bar.jpg,nyc
-Beco,40.718569,-73.946201,becobar,{Brazilian café + brunch},lunch,morning,3,$$,1.5,img/venues/Beco.jpg,nyc
-Cafe MSMN ,40.71997973,-73.94616318,cafemsmn,{minimalist coffee & snack bar},coffee,morning,1,$,0.5,img/venues/Cafe MSMN.jpg,nyc
-Hide & Seek,40.7229766,-73.950475,hideandseekbk,{workspace},coffee,morning,4,$,0.75,img/venues/Hide & Seek.jpg,nyc
-Birdee ,40.71364545,-73.9671479,birdeenyc,"{bright cocktail bar,tropical vibes}",coffee,happyhour,2,$,0.75,img/venues/Birdee.jpg,nyc
-The Charleston ,40.7181636,-73.9576733,charlestonbar,{dive bar + free pizza},bar,happyhour,4,$,1.25,img/venues/The Charleston.jpg,nyc
-SESSION TRAINING | SOUTH WILLIAMSBURG ,40.7121091,-73.9640587,sessiontraining_,{fitness + social crossover},fitness,morning,2,$$,1.5,img/venues/SESSION TRAINING.jpg,nyc
-Barcade ,40.7120257,-73.951117,barcade,{retro arcade bar},bar,happyhour,3,$,1.5,img/venues/Barcade.jpg,nyc
-Last Place On Earth ,40.721326,-73.947,lastplacebk,{dystopian-leaning moody cocktail spot},activity,happyhour,4,$,1.5,img/venues/Last Place On Earth.jpg,nyc
-Union Square Greenmarket ,40.66337083,-73.99072543,unionsqmarket,"{seasonal produce,big community draw}",market,morning,1,$,0.75,img/venues/Union Square Greenmarket.jpg,nyc
-Brooklyn Borough Hall Greenmarket ,40.6938768,-73.9906235,grownyc_brooklyn,"{borough central,smaller but dense}",market,morning,1,$,0.75,img/venues/Brooklyn Borough Hall Greenmarket.jpg,nyc
-Tompkins Square Park Greenmarket ,40.777048,-73.967596,grownyc_brooklyn,{East Village culture draw},market,morning,1,$,0.75,img/venues/Tompkins Square Park Greenmarket.jpg,nyc
-Fort Greene Park Greenmarket ,40.6913475,-73.9734488,grownyc_brooklyn,{family + foodie crowd},market,morning,1,$,0.75,img/venues/Fort Greene Park Greenmarket.jpg,nyc
-McCarren Park Greenmarket ,40.70880713,-73.95076069,grownyc_brooklyn,"{artsy,local heavy,market,Williamsburg}",market,morning,1,$,0.75,img/venues/McCarren Park Greenmarket.jpg,nyc
-Stuyvesant Town Greenmarket ,40.7325505,-73.9771568,grownyc_brooklyn,"{quieter,residential,produce}",market,morning,1,$,0.75,img/venues/Stuyvesant Town Greenmarket.jpg,nyc
-Tribeca Greenmarket ,40.708299,-74.013569,grownyc_brooklyn,{upscale local market},market,morning,1,$,0.75,img/venues/Tribeca Greenmarket.jpg,nyc
-Carroll Gardens Greenmarket ,40.6805223,-73.994768,grownyc_brooklyn,"{family,chill,garden-type neighborhood}",market,morning,1,$,0.75,img/venues/Carroll Gardens Greenmarket.jpg,nyc
-Staten Island Ferry Whitehall Terminal Greenmarket ,40.7011331,-74.0133908,grownyc_brooklyn,{commuter drop-off culture node},market,morning,1,$,0.75,img/venues/Staten Island Ferry Whitehall.jpg,nyc
-Smorgasburg Williamsburg ,40.7209531,-73.9622447,smorgasburg,"{food bazaar,major event vibe}",market,afternoon,3,$,1.25,img/venues/Smorgasburg Williamsburg.jpg,nyc
-Smorgasburg WTC ,40.71155485,-74.01141991,smorgasburg,{financial district meets foodie wave},market,afternoon,2,$,1.25,img/venues/Smorgasburg WTC.jpeg,nyc
-Smorgasburg Prospect Park ,40.6591667,-73.9663889,smorgasburg,"{huge,family-focused food sprawl}",market,afternoon,3,$,1.25,img/venues/Smorgasburg Prospect Park.jpg,nyc
-Grand Banks Park ,40.7215197,-74.0123696,grandbanksnyc,"{floating oyster bar,sunset lure}",cocktail,happyhour,1,$$$,1.5,img/venues/Grand Banks.jpg,nyc
-The Water Tower Bar ,40.7215151,-73.9588044,thewatertowerbar,"{rooftop,luxury lite}",cocktail,happyhour,4,$$,1.75,img/venues/The Water Tower Bar.jpg,nyc
-elNico ,40.71575715,-73.95307469,elnicony,{rooftop w/ Latin-forward drinks},cocktail,happyhour,4,$$$,1.5,img/venues/elNico.jpg,nyc
-Pineapple Club,40.72533265,-73.98322251,pineappleclubnyc,{visually driven cocktail spot},cocktail,happyhour,3,$$,1.33,img/venues/Pineapple Club.jpg,nyc
-Book Club Bar,40.72297255,-73.98323789,bookclubbar,{bookstore + coffee + bar},bookstore,morning,2,$,1,img/venues/Book Club Bar.jpg,nyc
-Happy Medium,40.7332695,-73.95757815,gethappymedium,{creative workshop bar hybrid},activity,happyhour,2,$$,1.5,img/venues/Happy Medium wb.jpg,nyc
-Books Are Magic,40.6840334,-73.9921482,booksaremagicbk,"{indie bookstore,community}",bookstore,morning,1,$,0.66,img/venues/Books Are Magic.jpg,nyc
-Commune Cafe + Wine Bar,40.6868109,-73.9594329,communenyc,{chill hybrid},wine bar,midday,2,$$,0.66,img/venues/Commune Cafe.jpg,nyc
-Holcombe Rucker Park,40.8288869,-73.93685031,ruckerparkstreetball,{iconic basketball court},park,afternoon,3,$,2,img/venues/Holcombe Rucker Park.jpg,nyc
-Tomi Jazz,40.75722835,-73.96776927,tomijazznewyork_official,{intimate Japanese jazz bar},music,evening,4,$$,1.75,img/venues/Tomi Jazz.jpg,nyc
-The Morgan Library & Museum,40.7492685,-73.9814652,themorganlibrary,{historic literary archive},gallery,morning,1,$,1.25,img/venues/The Morgan Library.jpg,nyc
-Brooklyn Flea,40.702588,-73.9877353,bkflea,{vintage market},market,morning,2,$,1.25,img/venues/Brooklyn Flea.jpg,nyc
-Puerh Brooklyn Teashop,40.7143305,-73.9611864,puerh_brooklyn_teashop,"{calm,Eastern tea vibes}",tea,morning,1,$,0.5,img/venues/Puerh Brooklyn teashop.jpg,nyc
-Patio Tropical,40.7135282,-73.95938374,patiotropicalnyc,{colorful outdoor cocktails},lunch,happyhour,3,$$,1.5,img/venues/Patio Tropical.jpg,nyc
-Pete's Candy Store,40.7181021,-73.9501774,petescandystore,{music + bar w/ nostalgia},music,happyhour,4,$,1.5,img/venues/Pete's Candy Store.jpg,nyc
-Wiggle Room,40.7226631,-73.9863232,wiggleroom.bar,{high-energy dance & drinks},club,evening,5,$$,1.25,img/venues/Wiggle Room.jpg,nyc
-Broken Shaker,40.7395891,-73.9844966,brokenshaker,{rooftop casual cocktails},cocktail,happyhour,3,$$,1.25,img/venues/Broken Shaker.jpg,nyc
-Nerina,40.736665,-73.958064,nerinanyc,"{intimate,sceney Italian spot}",dinner,evening,2,$$$,1.5,img/venues/Nerina.jpg,nyc
-Tara Rose,40.7417705,-73.9812603,tararosenyc,{upscale yet social bar},brunch,happyhour,3,$$,1.33,img/venues/Tara Rose.png,nyc
-Tavern 29,40.7445031,-73.9846308,tavern29,"{sports,after-work,casual}",rooftop,happyhour,3,$$,1.5,img/venues/Tavern 29.jpg,nyc
-"Amélie west village Restaurant, Bistro & Wine Bar",40.7326969,-73.9976557,ameliebistronyc,"{romantic,French,cozy}",wine bar,evening,2,$$$,1.5,img/venues/Amélie West Village.jpg,nyc
-Zona Rosa Brooklyn,40.7139332,-73.94957827,zonarosabrooklyn,"{rooftop,Latin,fun}",lunch,evening,4,$$,1.5,,nyc
-Pally,40.7168987,-73.9652375,pallynyc,"{wine,neighborhood,mellow}",coffee,happyhour,2,$,0.66,img/venues/Pally.jpg,nyc
-Pan Pan,40.72593,-73.949881,panpanbrooklyn,"{tropical,intimate,niche}",bakery,evening,2,$,0.66,img/venues/Pan Pan.jpg,nyc
-Gabriela,40.721792,-73.9583887,gabriela90.nyc,"{Mexican,festive,dinner}",club,afternoon,3,$$,2,img/venues/Gabriela.jpg,nyc
-forecast,40.7264841,-73.957893,forecast.space,"{moody,dimly-lit,cool}",lifestyle,evening,4,$$,0.75,img/venues/forecast.jpg,nyc
-Yawning Cobra,40.72691925,-73.9919531,yawningcobranyc,"{underground,alt,rowdy}",speakeasy,night,5,$$$,1.5,img/venues/Yawning Cobra.jpg,nyc
-The Garret,40.7323251,-74.0038428,thegarretgroup,"{speakeasy,lowkey,chic}",speakeasy,happyhour,3,$$,1.25,img/venues/The Garret.jpg,nyc
-Cafe Kitsune West Village,40.735053,-74.0059043,cafekitsune,"{chic,airy,Euro-style}",coffee,morning,1,$,0.75,,nyc
-Tompkins Square Bagels,40.7281762,-73.9821791,tompkinssquarebagels,"{classic,fast,breakfast}",bakery,morning,1,$,0.5,img/venues/Tompkins Square Bagels.jpg,nyc
-Maison Close Restaurant,40.7232195,-74.00367915,maisoncloserestaurant,"{indulgent,upscale,dinner}",lunch,evening,3,$$$$,1.5,img/venues/Maison Close Restaurant.jpg,nyc
-Scarlet Lounge,40.7855628,-73.9767913,scarletloungenyc,"{luxe,lounge,bottle scene}",cocktail,night,5,$$,1.75,img/venues/Scarlet Lounge.jpg,nyc
-Baretto New York,40.7567686,-73.9755276,barettonyc,"{Italian,elegant,social}",music,evening,3,$$$$,2,img/venues/Baretto New York.jpg,nyc
-Desert 5 Spot,40.72167975,-73.9584274,desertfivespotny,"{western,rowdy,neon}",bar,evening,5,$$,1.5,img/venues/Desert 5 Spot.jpg,nyc
-Bar Nena,40.7297917,-74.0045465,nena.nyc,"{Latin,party,dance}",wine bar,night,4,$$$,1.66,img/venues/Bar Nena.jpg,nyc
-Easy Lover,40.7145615,-73.9425485,easyloverbk,"{playful,vibey,danceable}",bar,evening,4,$$,1.66,img/venues/Easy Lover.jpg,nyc
-Prima Brooklyn,40.6867938,-73.9662119,primabrooklyn,"{sleek,intimate,date-night}",coffee,evening,3,$,1,img/venues/Prima Brooklyn.jpg,nyc
-The Riff Raff Club,40.74647695,-73.98885781,theriffraffclub,"{chaotic,dance,wild}",club,night,5,$$$,1.5,img/venues/The Riff Raff Club.jpg,nyc
-Silver Lining Lounge,40.71906775,-73.99414258,silverlininglounge,"{throwback,jazz,speakeasy}",lounge,evening,4,$$,1.75,img/venues/Silver Lining Lounge.jpg,nyc
-Castell Rooftop Lounge,40.755533,-73.9902804,castellnyc,"{skyline,elegant,sunset}",lounge,happyhour,3,$$$,1.5,img/venues/Castell Rooftop Lounge.jpg,nyc
-Selva,40.7063004,-73.92111013,selva_nyc,"{Latin,nightlife,high-energy}",bar,night,5,$,1.5,img/venues/Selva.png,nyc
-Daintree,40.7518932,-73.9840991,daintreenyc,"{rooftop,chic,date-spot}",cocktail,happyhour,3,$$,1.75,img/venues/Daintree.jpg,nyc
-Laziza,40.68241685,-73.92920535,funkylaziza,"{hookah,Arab lounge,cozy}",dinner,evening,3,$$$,1.5,img/venues/Laziza.jpg,nyc
-Che,40.6825223,-73.9291165,che_brooklyn,"{Argentine,romantic,rustic}",breakfast,evening,2,$$,1.5,img/venues/Che .jpg,nyc
-Suono,40.686525,-73.944402,suonobrooklyn,"{DJ-driven,niche,underground}",music,night,5,$$,1.75,img/venues/Suono.jpg,nyc
-Bar Camillo,40.6865279,-73.9443999,barcamillobk,"{Italian,relaxed,neighborhood}",cocktail,happyhour,2,$$,1.5,img/venues/Bar Camillo.jpg,nyc
-Tadpole,40.68482895,-73.938632,tadpole.bk,"{natural wine,cozy,quiet}",bar,happyhour,1,$$,1.75,img/venues/Tadpole.jpg,nyc
-Reservoir,40.7331707,-73.9936418,reservoirny,"{sports bar,casual,NY-local}",lunch,happyhour,3,$$,1.5,img/venues/Reservoir.jpg,nyc
-The Skylark - Rooftop Bar,40.7540102,-73.9888897,theskylarknyc,"{luxe,skyline views,dates}",lounge,happyhour,3,$$$,1.25,img/venues/The Skylark - Rooftop Bar.JPG,nyc
-Iggy's,40.7711285,-73.9564384,iggysbarnyc,"{divey,karaoke,rowdy}",bar,night,4,$$,1.75,img/venues/Iggy's.jpeg,nyc
-Space Karaoke Bar & Lounge | Koreatown NYC,40.7477981,-73.9872728,spacekaraokenyc,"{K-pop,karaoke,group,LED-lit}",activity,night,5,$$,1.75,img/venues/Space Karaoke Bar.jpg,nyc
-161 Lafayette,40.7198136,-73.9990736,161lafayette,"{pop-up,artsy,hidden}",cocktail,evening,3,$$,1.75,img/venues/161 Lafayette.jpg,nyc
-McSorley's Old Ale House,40.7287612,-73.9897021,mcsorleysoldalehouse,"{historic,Irish,communal}",bar,midday,2,$,1,img/venues/McSorley’s Old Ale House.jpg,nyc
-Reforesters Laboratory,40.7161422,-73.9620296,reforesters.io,"{design,niche,quiet}",coffee,midday,1,$,0.5,img/venues/Reforesters Laboratory.jpg,nyc
-Gelateria Gentile - Williamsburg,40.7162118,-73.9638223,gelateria_gentile_ny,"{dessert,casual,family}",dessert,afternoon,1,$,0.5,img/venues/Gelateria Gentile.jpg,nyc
-10 ft Single by Stella Dallas,40.7146109,-73.9535933,10ftsinglebystelladallas,"{vintage,curated,eclectic}",lifestyle,midday,1,$$,0.66,img/venues/Stella Dallas.jpg,nyc
-FourFiveSix,40.7191201,-73.9431975,fourfivesixbkny,"{dancey,moody,DJ bar}",cocktail,night,4,$,1.25,img/venues/FourFiveSix.png,nyc
-Birria-Landia,40.71398192,-73.95204547,birria_landia,"{casual,quick-bite,delicious}",dinner,midday,2,$,0.75,img/venues/Birria-Landia.jpg,nyc
-The Commodore,40.7139513,-73.9558034,thecommodorebars,"{divey,fried chicken,vibey}",lunch,evening,3,$$,1.33,img/venues/The Commodore.jpg,nyc
-Roebling Sporting Club,40.7169763,-73.9546566,roeblingnyc,"{pool table,TV,lowkey}",bar,evening,3,$$,1.5,img/venues/Roebling Sporting Club.jpg,nyc
-Tabare Williamsburg,40.7129782,-73.9589272,tabarenyc,"{Latin fusion,chill,low light}",brunch,evening,2,$$,1.5,img/venues/Tabare Williamsburg.jpg,nyc
-Lavender Lake,40.7107645,-73.9663357,lavenderlakebrooklyn,"{hidden gem,cozy,mellow}",cocktail,evening,2,$$,1.5,img/venues/Lavender Lake.jpg,nyc
-TBA Brooklyn,40.7111986,-73.9663773,tbabrooklyn,"{warehouse,after-hours,dance}",club,late night,5,$$,2,,nyc
-Lucali,40.6818319,-74.0003712,lucali_bk,"{iconic,intimate,no-reserve}",dinner,evening,2,$$,1.5,img/venues/Lucali.jpg,nyc
-Steve's Authentic Key Lime Pie,40.6777473,-74.0182768,stevesauthentic,"{classic,lowkey,waterfront}",dessert,midday,1,$,0.75,img/venues/Steve's Authentic Key Lime Pie.jpg,nyc
-On The 7 - Where Manhattan Meets LIC,40.74262675,-73.95438051,onthe7lic,"{rooftop,skyline views,luxe}",music,evening,3,$,1.5,img/venues/On The 7.jpg,nyc
-56709,40.7490013,-73.9406662,56709nyc,"{indie,music-heavy,underground}",speakeasy,night,5,$$,1.5,img/venues/56709.jpg,nyc
-Lost in Paradise Rooftop,40.751801,-73.947672,lostinparadiserooftop,"{tropical,flashy,party vibes}",lounge,night,5,$$,1.5,img/venues/Lost in Paradise Rooftop.jpg,nyc
-Anable Basin Sailing Bar & Grill,40.7494671,-73.9552271,anablebasin,"{waterfront,chill,picnic-style}",bar,evening,2,$$,1.5,img/venues/Anable Basin Sailing.jpg,nyc
-The Gutter Bar LIC,40.7465899,-73.9518102,thegutterlic,"{bowling,divey,fun crowd}",bar,evening,3,$$,1.75,img/venues/The Gutter Bar LIC.jpg,nyc
-LIC Bar,40.7470196,-73.9528397,lic_bar,"{local live music,lowkey}",bar,evening,2,$,1.25,img/venues/LIC Bar.jpg,nyc
-Darling,40.764621,-73.9753353,darlingrooftop,"{posh,cocktail-first,date-night}",lounge,evening,3,$$$,1.5,img/venues/Darling.jpg,nyc
-Brooklyn Farmacy & Soda Fountain,40.6840022,-73.9993095,brooklynfarmacy,"{retro,family-friendly,sweets}",dessert,midday,1,$,0.75,img/venues/Brooklyn Farmacy.jpg,nyc
-Turbo Pizza,40.70245015,-73.92070438,turbopizzabar,"{bold branding,NY-slice w/ edge}",bar,midday,1,$,1.5,img/venues/Turbo Pizza.jpg,nyc
-O'Hanlon's,40.7317717,-73.98283928,ohanlonsbarnyc,"{Irish pub,neighborhood,sports}",bar,evening,2,$,1.66,img/venues/O'Hanlon's.jpg,nyc
-Legends,40.7479631,-73.9857839,legendsnyc,"{sports,kitschy,energetic}",bar,night,4,$$,1.66,img/venues/Legends.jpg,nyc
-Huuma,40.7178259,-73.9979942,huuma_nyc,"{moody,fusion,hidden}",cocktail,evening,3,$$,1.5,img/venues/Huuma.jpg,nyc
-Little Island,40.73393933,-74.00492971,littleislandnyc,"{outdoor,art walk,mellow}",park,daytime,1,$,2,img/venues/Little Island.jpg,nyc
-Domino Park,40.71662833,-73.96650733,dominopark,"{waterfront,green,active}",park,daytime,1,$,2,img/venues/Domino Park.jpg,nyc
-Harriet's Rooftop,40.7024228,-73.9955097,harrietsbk,"{upscale,cocktails,skyline}",lounge,evening,4,$$$$,3.5,img/venues/Harriet's Rooftop.png,nyc
-Brooklyn Crab,40.6753603,-74.0165403,brooklyn_crab,"{seafood,games,sunset spot}",lunch,evening,2,$$,3,img/venues/Brooklyn Crab.jpg,nyc
-All Blues,40.7178766,-74.0015815,allbluesnyc,"{vintage jazz,velvet energy}",lounge,evening,3,$$,3,img/venues/All Blues.jpg,nyc
-TIME AGAIN,40.7156747,-73.9940649,timeagainbar,"{curated crowd,fashion-forward}",bar,night,4,$,2,img/venues/TIME AGAIN.jpg,nyc
-Undercote,40.7412149,-73.9913162,undercote,"{underground,cocktails,sleek}",lounge,night,4,$$$,2.5,img/venues/Undercote.jpg,nyc
-Barely Disfigured,40.6830816,-73.9927916,barelydisfigured,"{sexy,dark,intimate date vibes}",cocktail,evening,3,$$,2,img/venues/Barely Disfigured.jpg,nyc
-Bar Valentina,40.7180749,-73.9903709,barvalentinanyc,"{colorful,bright,modern}",bar,evening,2,$$,2.5,img/venues/Bar Valentina.jpg,nyc
-Bar Oliver,40.7130612,-73.9982064,barolivernyc,"{cozy,modern,low-profile}",cocktail,evening,2,$$$,2.5,img/venues/Bar Oliver.jpg,nyc
-Kettl Tea - Greenpoint,40.7296813,-73.9581821,kettltea,"{serene,aesthetic,tea sanctuary}",tea,midday,1,$,1,img/venues/Kettl Tea - Greenpoint.jpg,nyc
-Little Rascal,40.7208393,-73.9950056,littlerascalnolita,"{lively,Mediterranean-inspired}",cocktail,evening,3,$$,2.5,img/venues/Little Rascal.jpg,nyc
-Dae,40.6785539,-73.9958031,dae.bk.newyork,"{minimalist,Korean-Japanese,intimate}",cocktail,evening,2,$$,2.5,img/venues/Dae.jpg,nyc
-Rude Mouth,40.714274,-73.95596384,rudemouthbk,"{irreverent,artsy,music-oriented}",wine bar,night,4,$$,2,img/venues/Rude Mouth.jpg,nyc
-Swiss Institute,40.7284048,-73.9875749,swissinstitute,"{cutting-edge art,conceptual}",gallery,midday,1,$,3,img/venues/Swiss Institute.jpg,nyc
-San Tokki Studio (Appt. only),40.676984,-74.01425526,santokkistudio,"{private,artistic,sake-focused}",random gem,evening,2,,0.75,img/venues/San Tokki Studio.jpg,nyc
-THE LAST CALL,40.7110998,-73.9483032,thelastcallbrooklyn,"{party bar,loud,end-of-night vibe}",bar,night,5,$,2,img/venues/THE LAST CALL.jpg,nyc
-Double Chicken Please,40.7195842,-73.9904912,doublechickenpleasenyc,"{experiential,world-class cocktails}",cocktail,evening to night,5,$$$,2.5,img/venues/Double Chicken Please.jpg,nyc
-Cubbyhole,40.7376427,-74.0037475,cubbyholebar,"{queer-friendly,colorful,joyful}",bar,evening to night,4,$,3,img/venues/Cubbyhole.jpg,nyc
-Julius',40.7345416,-74.0015246,juliusbarnyc,"{oldest gay bar,historic,local vibe}",bar,evening,2,$,3,img/venues/Julius'.JPG,nyc
-The Cobra Club,40.7067043,-73.9235017,cobraclubbk,"{punk,yoga by day,rock show by night}",bar,all-day,4,$,2,img/venues/The Cobra Club.jpg,nyc
-ANIMAL,40.71870937,-73.94714459,animal.nyc,"{queer,art club energy}",club,late night,5,$$,3.5,img/venues/ANIMAL.jpg,nyc
-Hidden Lane Bar,40.7345947,-73.98766965,hiddenlanenyc,"{tucked away,vibey,plant-filled}",speakeasy,evening,3,$$,2.5,img/venues/Hidden Lane Bar.jpg,nyc
-Botanica at Widow Jane,40.677249,-74.0153893,botanicawidowjane,"{spirits and botanicals,sexy-lush}",cocktail,evening,3,$$,2,img/venues/Botanica at Widow Jane.jpg,nyc
-La Bicyclette Bakery,40.7143881,-73.95913,labicyclettebakery_nyc,"{Parisian,charming,offbeat}",bakery,morning to midday,1,$,0.75,img/venues/La Bicyclette Bakery.jpg,nyc
-Elizabeth Street Garden,40.720326,-73.995084,elizabethstreetgarden,"{peaceful,hidden,communal green}",park,daytime,1,$,1.25,img/venues/Elizabeth Street Garden.JPG,nyc
-Brooklyn Botanic Garden,40.6676619,-73.96362613,brooklynbotanic,"{iconic,floral immersion}",park,daytime,1,$,3,img/venues/Brooklyn Botanic Garden.jpg,nyc
-Xanadu Roller Arts,40.7064509,-73.92143211,xanadu.nyc,"{alt,roller skate-centric,vintage chaos}",activity,night,4,$$,3,img/venues/Xanadu Roller Arts.jpg,nyc
-The Clocktower,40.7413262,-73.9874695,clocktowernyc,"{upscale,gilded,dramatic}",breakfast,evening,3,$$$$,2,img/venues/The Clocktower.jpeg,nyc
-Little Dipper,40.7482055,-73.9912156,littledippernyc,"{celestial,neighborhood gem}",cocktail,evening,2,$$,2.25,img/venues/Little Dipper.jpg,nyc
-Bar Bonobo,40.742976,-73.9998997,barbonobonyc,"{natural wine,sleek,warm lighting}",cocktail,evening,2,$$$,2,img/venues/Bar Bonobo.jpg,nyc
-The Ripple Room,40.7204795,-73.9937373,therippleroomnyc,"{dim,experimental,mixed crowd}",cocktail,night,4,$$,2,img/venues/The Ripple Room.jpg,nyc
-Rockaway Brewing Company,40.7471977,-73.9549525,rockawaybrewco,"{craft brew,beachy,casual}",bar,afternoon-evening,2,$,2,img/venues/Rockaway Brewing Company.jpeg,nyc
-Fifth Hammer Brewing Company,40.7464921,-73.9515404,fifthhammerbeer,"{industrial,live music,rotating taps}",bar,afternoon-evening,3,$,2,img/venues/Fifth Hammer Brewing Company.jpg,nyc
-Achilles Heel,40.7331765,-73.9596929,achillesheelbk,"{wine bar,dockside,BK night scene}",cocktail,evening,2,$$,1.75,img/venues/Achilles Heel.jpg,nyc
-Saint James Libations,40.701737,-73.9195609,saintjameslibations,"{hidden gem,cocktails,stylish}",cocktail,evening,2,$$,1.75,img/venues/Saint James Libations.jpg,nyc
-Hell Phone,40.70423585,-73.934179,hellphonebrooklyn,"{secret,speakeasy,late night}",speakeasy,late night,4,$,1.5,img/venues/Hell Phone.jpeg,nyc
-Vacations BK,40.7082711,-73.9202317,vacationsbk,"{chill rooftop,neighborhood bar,BK nights}",bar,evening,3,$,1.75,img/venues/Vacations BK.jpg,nyc
-Lovejoys,40.7067992,-73.9224982,lovejoysnyc,"{casual drinks,cozy,neighborhood}",bar,evening,2,$,1.5,img/venues/Lovejoys.jpg,nyc
-Left Hand Path,40.7051341,-73.92023186,lefthandpathbk,"{cocktails,moody,nightcap}",cocktail,late night,2,$,1.5,img/venues/Left Hand Path.jpeg,nyc
-Kato Sake Works,40.7059366,-73.9236866,katosakeworks,"{brewery,sake,lowkey}",bar,evening,1.25,$,1.5,img/venues/Kato Sake Works.jpg,nyc
-Lou's Athletic Club,40.700231,-73.921083,lousathleticclub,"{rowdy,sports,late crowd}",bar,late night,4,$,1.5,img/venues/Lou’s Athletic Club.jpg,nyc
-ALPHAVILLE,40.700587,-73.925757,alphavillebk,"{live music,casual hang,neighborhood bar}",bar,late night,3,$,1.5,img/venues/ALPHAVILLE.jpg,nyc
-The Narrows,40.7040945,-73.93082439,thenarrows,"{date night,chic bar,dimly lit}",cocktail,evening,2,$$,2,img/venues/The Narrows.jpg,nyc
-Yours Sincerely,40.7028281,-73.929185,yourssincerelybk,"{affordable cocktails,lowkey,romantic}",cocktail,evening,2,$,1.5,img/venues/Yours Sincerely.jpg,nyc
-Fini Pizza,40.7134723,-73.9618052,finipizza,"{pizza,no-res,casual bite}",lunch,midday,1,$,0.75,img/venues/Fini Pizza.jpg,nyc
-Fast Times,40.7216246,-73.9998097,fasttimescoffee,"{coffee,casual,retro aesthetic}",coffee,daytime,1,$,0.5,img/venues/Fast Times.jpg,nyc
-Leonessa,40.7151482,-74.0156573,leonessarooftop,"{rooftop dining,romantic,skyline views}",cocktail,evening,3,$$$,2,img/venues/Leonessa.jpg,nyc
-The Five Lamps,40.77421885,-73.94804036,thefivelampsnyc,"{speakeasy vibes,cocktails,upper east chill}",cocktail,evening,2,$$,1.75,img/venues/The Five Lamps.jpg,nyc
-Soda Club,40.7256895,-73.9840619,sodaclubnyc,"{brunch cocktails,downtown vibes,stylish crowd}",brunch,midday,3,$$$,1.75,img/venues/Soda Club.jpg,nyc
-Ha's Snack Bar,40.7186095,-73.9921037,has_dac_biet,"{modern asian,pop-up energy}",dinner,evening,2,$$$,2,img/venues/Ha's Snack Bar.jpg,nyc
-BabySips,40.7189528,-73.9843854,babysips.nyc,"{queer safe space,fun crowd}",wine bar,evening,2,$$,1.5,img/venues/BabySips.jpg,nyc
-Brooklyn Granary & Mill,40.67557747,-73.99839929,brooklyngranaryandmill,"{coffee,rustic charm}",coffee,midday,1,$,0.75,img/venues/Brooklyn Granary & Mill.jpg,nyc
-Olmo,40.6831425,-73.9170946,olmobk,"{mediterranean,sleek}",dinner,evening,2,$$$,2,img/venues/Olmo.jpg,nyc
-DOLORES,40.683861,-73.94387,dolores.bk,"{latin energy,upscale cocktails}",cocktail,evening,2,$$,2,img/venues/DOLORES.jpg,nyc
-kalei nyc,40.7195805,-73.9939956,kalei.nyc,"{coffee cocktails,artsy vibe}",gallery,daytime,1,$,1,img/venues/kalei nyc.jpg,nyc
-Demo,40.7299274,-74.0029971,demo.nyc,"{hidden bar,velvet energy}",dinner,evening,3,$$$,1.75,img/venues/Demo.jpg,nyc
-Sunn's,40.7143881,-73.99097463,sunnsnyc,"{queer-friendly,chic cozy bar}",dinner,evening,2,$$$,2,img/venues/Sunn’s.jpg,nyc
-Banzarbar,40.72148537,-73.99257138,banzarbar,"{creative cocktails,hideaway}",speakeasy,evening,1.5,$,1.5,img/venues/Banzarbar.jpg,nyc
-Plug Uglies,40.73843685,-73.98302223,pluguglies,"{dive,sports bar,chaotic fun}",bar,late night,4,$,2,img/venues/Plug Uglies.jpg,nyc
-Unlisted,40.72148873,-73.99256976,unlisted.nyc,"{hidden,chic,high-end}",speakeasy,evening,3,$$$,1.75,img/venues/Unlisted.png,nyc
-Elevated Acre,40.7033361,-74.0085763,explore,"{scenic,relaxing,urban escape,green space}",park,afternoon,1.25,$,1,img/venues/Elevated Acre.jpg,nyc
-Maison Nur,40.7217163,-73.9931901,maisonnur.nyc,"{craft cocktails,upscale,elegant}",cocktail,evening,3,$$$$,2,img/venues/Maison Nur.jpg,nyc
-Moonflower,40.8070452,-73.9387486,moonflower_nyc,"{intimate,coffee,chic}",wine bar,evening,1.5,$$,2,img/venues/Moonflower.jpg,nyc
-Gem Home,40.72069095,-73.9960831,gem.nyc,"{artsy,boutique,cozy}",lifestyle,morning,1,$,1,img/venues/Gem Home.jpg,nyc
-Good Guy's,40.7188823,-73.9913742,goodguysgoodguys,"{casual drinks,chill,eclectic}",wine bar,late night,2,$,1.5,img/venues/Good Guy's.jpg,nyc
-June,40.6860636,-73.9938871,junewinebk,"{wine bar,intimate,relaxing}",wine bar,evening,2,$$$,1.5,img/venues/June.JPG,nyc
-Swallow Cafe,40.6901367,-73.994571,swallowcafenyc,"{cafe,wine bar,quiet spot}",coffee,morning,1,$,0.5,img/venues/Swallow Cafe.jpg,nyc
-6BC Botanical Garden,40.7237765,-73.98041122,6bcgarden,"{green space,relaxing,nature}",park,afternoon,1,$,1,img/venues/6BC Botanical Garden.jpg,nyc
-Binx,40.733941,-74.00160176,binx_nyc,"{lounge,trendy,artistic}",lounge,evening,2,$,1.5,img/venues/Binx.jpg,nyc
-Saturn Road,40.6847429,-73.9949911,saturnroadnyc,"{coffee,cocktails,trendy}",coffee,morning,1,$,0.5,img/venues/Saturn Road.jpg,nyc
-Rose Marie,40.7125159,-73.9490142,rosemariebk,"{intimate,trendy,artistic}",cocktail,evening,2,$$,1.75,img/venues/Rose Marie.jpg,nyc
-Quick Eternity,40.7080782,-74.0020772,quicketernity_nyc,"{hidden bar,cocktails,unique}",dinner,evening,2,$$,1.5,img/venues/Quick Eternity.jpg,nyc
-Fandi Mata,40.7188471,-73.9492531,fandimatabklyn,"{artsy,cozy,relaxed}",brunch,evening,3,$$$,2,img/venues/Fandi Mata.jpg,nyc
-Ye's Apothecary 夜莺,40.71956833,-73.989608,yesapothecary,"{hidden,intimate,cocktails}",speakeasy,evening,3,$$$,2,img/venues/Ye's Apothecary.png,nyc
-New Love City,40.7295188,-73.95824479,newlovecity_,"{cozy,unique,wellness}",fitness,daytime,1,$,1.5,img/venues/New Love City.jpg,nyc
-OH MERCY,40.7292924,-73.95735,ohmercycafe,"{quirky,intimate,cocktails}",cocktail,morning,1,$,0.5,img/venues/OH MERCY.jpg,nyc
-Élysée's,40.723611,-74.010487,fouquets.newyork,"{exclusive,romantic,upscale}",cocktail,midday,2,$$,2,img/venues/Élysée's.jpg,nyc
-Wildcard Bar,40.7568586,-73.96814765,wildcardbar.nyc,"{speakeasy,stylish,cocktails}",speakeasy,evening,2,$$$,1.75,img/venues/Wildcard Bar.jpg,nyc
-Paragon,40.6961288,-73.934041,paragonbroadway,"{club,DJ,dance}",club,late night,4,$$,4,img/venues/Paragon.jpg,nyc
-Pearl Street Caviar,40.6806807,-74.0081971,pearlstreetcaviar,"{luxe,upscale,seafood}",cocktail,happyhour,2,$$,2,img/venues/Pearl Street Caviar.jpg,nyc
-MEILI Rooftop,40.7209065,-73.955531,meiliwilliamsburg,"{rooftop bar,skyline views,summer cocktails}",cocktail,evening,4,$$$,2.25,img/venues/MEILI Rooftop.jpg,nyc
-Fellini Cucina,40.735914,-74.0016986,fellinicoffee,"{Italian trattoria,pasta & wine,neighborhood dinner}",coffee,midday,2,$,1,img/venues/Fellini Cucina.jpg,nyc
-Fellini Coffee Soho,40.7259694,-74.00157,fellinicoffee,"{specialty coffee,cozy café,community brunch}",coffee,midday,2,$,0.5,img/venues/Fellini Coffee Soho.jpg,nyc
-Apartment 5,40.72100615,-73.9881241,apt5ny,"{cocktail lounge,speakeasy vibe,date night bar}",speakeasy,evening,4,$$,2,img/venues/Apartment 5.jpg,nyc
-NAZ AROMA INC,40.7473764,-73.98740086,nazaroma3,"{artisan perfumery,scent studio,gifting shop}",random gem,midday,2,$,0.66,img/venues/NAZ AROMA INC.jpg,nyc
-The Hidden Pearl,40.7235819,-73.95079645,hiddenpearlbk,"{jewelry design,fine accessories,emerging designer}",speakeasy,happy hour,3,$$,1.5,img/venues/The Hidden Pearl.jpg,nyc
-LALIKO,40.7294493,-74.0049438,laliko.nyc,"{Mediterranean fusion,evening plates,stylish dining}",wine bar,midday,3,$$,2.25,img/venues/LALIKO.jpg,nyc
-Yesterday's News Antiques and Collectibles,40.6792892,-73.9975798,yesterdaysnewsbk,"{vintage decor,collectible finds,niche antiques}",random gem,midday,1,$,1,img/venues/Yesterday's News Antiques and Collectibles.jpg,nyc
-Sloane's,40.72407133,-74.003176,sloanessoho,"{late-night lounge,chic cocktails,scene-y bar}",cocktail,evening,4,$$$,2.5,img/venues/Sloane's.jpg,nyc
-Bayard's Ale House,40.7343055,-74.0063829,bayardsalehouse,"{pub classics,sports,football,hearty American fare}",bar,evening,5,$$,2,img/venues/Bayard's Ale House.jpg,nyc
-Automatic Slim’s,40.7363112,-74.0081723,automaticslimsnyc,"{dive bar,pool tables,live music bar}",bar,evening,5,$$,1.25,img/venues/Automatic Slim’s.jpg,nyc
-Margaux,40.7326395,-73.9967993,cheznousmarlton,"{modern French bistro,elegant dining,seasonal menu}",breakfast,midday,3,$$,2.25,img/venues/Margaux.jpg,nyc
-Waverly Inn,40.7369557,-74.002226,thewaverlyinnstagram,"{old-school charm,Hudson Square dining,celeb-rated}",dinner,evening,3,$$$$,1.75,img/venues/Waverly Inn.jpg,nyc
-Vin Sur Vingt Wine Bar - West Village,40.736338,-74.001501,vinsurvingt_bars,"{wine tastings,French wine bar,cozy West Village}",wine bar,evening,4,$$$,1.66,img/venues/Vin Sur Vingt Wine Bar - West Village.jpg,nyc
-Arthur's Tavern,40.7331992,-74.0034508,arthurstavern_nyc,"{blues club,jazz music,historic East Village}",bar,late,5,$$$,2,img/venues/Arthur's Tavern.jpg,nyc
-Sip&Guzzle,40.7314151,-74.002447,sipandguzzlenyc,"{cocktail innovation,underground bar,weekend crowd}",cocktail,late,4,$$$,2,img/venues/Sip&Guzzle.jpg,nyc
-John's of Bleecker Street,40.7316098,-74.0033416,johnsofbleeckerstreet,"{classic Italian,West Village staple,family-style}",lunch,midday,3,$$,1.5,img/venues/John's of Bleecker Street.jpg,nyc
-SoHo Cigar Bar,40.7236175,-74.0022271,sohocigarbar,"{whiskey lounge,cigar night,boys' club,dark interiors}",lounge,late,4,$$$,2,img/venues/SoHo Cigar Bar.jpg,nyc
-Houston Hall,40.732383,-74.006396,houstonhallny,"{group hangouts,craft beer,party energy,loud AF}",bar,happy hour,5,$$,2.5,img/venues/Houston Hall.jpg,nyc
-Ear Inn,40.7275726,-74.0079097,theearinn,"{historic pub,late-night beers,old NYC charm}",bar,late,3,$$,1.75,img/venues/Ear Inn.jpg,nyc
-Rocco's Sports & Recreation,40.7303392,-74.0008879,roccosnyc,"{sports bar,retro games,weekend parties}",bar,evening,4,$$,2,img/venues/Rocco's Sports & Rec.jpg,nyc
-Bleecker Street Bar,40.7285425,-74.0024387,bleeckerstreetbar,"{dive bar,pool table,sports on TV,no BS}",bar,late,4,$,2,img/venues/Bleecker Street Bar.jpg,nyc
-Lei,40.714595,-73.998267,lei_nyc,"{tropical cocktails,first date,palm vibes}",wine bar,evening,3,$$,1.5,img/venues/Lei.jpg,nyc
-BADABOOM,40.728442,-74.004673,badaboomnyc,"{bottle service,Latin vibes,birthday dinner,party energy}",dinner,evening,4,$$$,2,img/venues/BADABOOM.jpg,nyc
-Bascule,40.727163,-74.000832,basculenyc,"{French wine,date night,candlelit setting}",wine bar,evening,3,$$,2,img/venues/Bascule.jpg,nyc
-Le Chêne,40.732182,-74.000915,lechenenyc,"{French bistro,intimate dining,romantic dinners}",dinner,evening,2,$$$,1.75,img/venues/Le Chêne.jpg,nyc
-Atelier Ariana,40.748201,-73.985845,atelierariana,"{coffee,bakery,French,breakfast}",coffee,midday,2,$$,1.25,img/venues/Atelier Ariana.jpg,nyc
-Lulla's Bakery - Grand Café & Cocktails,40.718912,-73.992741,lullasbakery,"{coffee shop by day,cocktail bar by night,pastry & plate}",bakery,morning,3,$$,1.5,img/venues/Lulla's Bakery.jpg,nyc
-Eckhaus Latta,40.719774,-73.992294,eckhaus_latta,"{experimental fashion,downtown style,local designer}",lifestyle,midday,2,$$$,1,img/venues/Eckhaus Latta.jpg,nyc
-OLD JEWELRY STORE,40.721033,-73.994205,oldjewelrystore,"{vintage jewelry,boutique accessories,fashion trove}",lifestyle,midday,2,$$,1.25,img/venues/OLD JEWELRY STORE.jpg,nyc
-Argosy Book Store,40.758215,-73.972028,argosybookstore,"{rare books,antique prints,old NYC institution}",bookstore,midday,2,$,1.25,img/venues/Argosy Book Store.jpg,nyc
-McNally Jackson Books Seaport,40.706291,-74.003632,mcnallyjackson,"{independent bookstore,curated selection,local lit scene}",bookstore,midday,3,$,1.5,img/venues/McNally Jackson Books Seaport.jpg,nyc
-"Kitchen Arts & Letters, books on food and drink",40.782183,-73.951021,kitchenartsandletters,"{cookbooks,food culture,culinary reference}",bookstore,midday,2,$,1,img/venues/Kitchen Arts & Letters.jpg,nyc
-Left Bank Books,40.735255,-74.001049,leftbankbooksny,"{used books,literary treasures,collector editions}",bookstore,-,1,$,1,img/venues/Left Bank Books.jpg,nyc
-Rizzoli Bookstore,40.751135,-73.982927,rizzolibookstore,"{art books,Italian publishers,coffee table books}",bookstore,midday,3,$$,1.25,img/venues/Rizzoli Bookstore.jpg,nyc
-Albertine,40.773087,-73.963589,albertinebooks,"{French books,bilingual titles,cultural destination}",bookstore,midday,2,$,1.25,img/venues/Albertine.jpg,nyc
-Mast Books,40.726092,-73.985553,mastbooks,"{design books,art publications,curated shelves}",bookstore,midday,2,$$,1,img/venues/Mast Books.jpg,nyc
-Spoonbill & Sugartown Books,40.717925,-73.958029,spoonbillbooks,"{avant-garde titles,zines,art books}",bookstore,midday,3,$,1,img/venues/Spoonbill & Sugartown Books.jpg,nyc
-Bar Centrale,40.763476,-73.987632,barcentralenyc,"{pre-theater cocktails,hidden gem,upscale bar}",cocktail,evening,3,$$$,2,img/venues/Bar Centrale.jpg,nyc
-Lion's Milk,40.717875,-73.956691,lionsmilknyc,"{Turkish coffee,global café,brunch favorite}",coffee,morning,2,$,1,img/venues/Lion's Milk.jpg,nyc
-Intelligentsia Coffee High Line Hotel Coffeebar,40.7465,-74.0014,intelligentsiacy,"{third‑wave coffee,High Line brunch,architectural café}",coffee,morning,2,$,1,img/venues/Intelligentsia Coffee High Line.jpg,nyc
-Drawing Room Midtown: Creative Living,40.7527,-73.9819,drawingroomny,"{home goods pop‑up,design show,creative workshop}",random gem,midday,2,$$,1.5,img/venues/Drawing Room Midtown.jpg,nyc
-Drawing Room Williamsburg: Creative Living,40.7105,-73.957,drawingroombk,"{Brooklyn design market,local makers,creative retail}",random gem,midday,2,$$,1.5,img/venues/Drawing Room Williamsburg.jpg,nyc
-Loaf on Paper by niconeco zakkaya,40.7156481,-73.9650005,niconecozakkaya,"{stationery shop,Japanese paper goods,designer notebooks}",coffee,midday,1,$$,1,img/venues/Loaf on Paper.png,nyc
-The Long Island Bar,40.6869,-73.9966,thelongislandbar,"{Brooklyn bar,retro cocktails,classic diner vibes}",bar,evening,3,$$,1.75,img/venues/The Long Island Bar.jpg,nyc
-Primo's,40.7174,-74.0111,primosnyc,"{cocktail lounge,velvet banquettes,date night NYC}",lounge,evening,4,$$$,2,img/venues/Primo's.jpg,nyc
-BRASS,40.7172,-73.9939,brass.nyc,"{hidden cocktail bar,upscale lounge,date-ready}",cocktail,evening,3,$$$,1.5,img/venues/BRASS.jpg,nyc
-GATHER espresso & wine bar,40.716593,-73.9907581,gatherbrooklyn,"{wine bar café,morning espresso,evening rosé}",coffee,midday,3,$$,1.5,img/venues/GATHER espresso & wine bar.jpg,nyc
-Do or Dive Bar,40.6867791,-73.9548217,doordivebar,"{dive bar,cheap drinks,local haunt}",bar,late,5,$,2,img/venues/Do or Dive Bar.jpg,nyc
-The Swan,40.6890943,-73.9552778,theswanbk,"{cocktail spot,brunch to late,Williamsburg bar}",bar,evening,4,$$,2,img/venues/The Swan.jpg,nyc
-Singers,40.6902169,-73.9541333,singerskaraokebar,"{karaoke bar,sing-along nights,rowdy fun}",bar,late,5,$$,2.5,img/venues/Singers.jpg,nyc
-Milly's Neighborhood Bar,40.6881039,-73.9551546,millysbar,"{neighborhood bar,laid-back,casual hang}",bar,happy hour,2,$,1.5,img/venues/Milly’s Neighborhood Bar.jpg,nyc
-The Holler,40.6872281,-73.9571333,thehollernyc,"{retro jukebox,live music bar,craft beer selection}",bar,happy hour,4,$$,2,img/venues/The Holler.jpg,nyc
-Disco Birdies,40.6872785,-73.9566572,discobirdies,"{theme bar,disco vibes,colorful cocktails}",bar,midday,3,$$,2,img/venues/Disco Birdies.jpg,nyc
-Dynaco,40.6866784,-73.954747,dynaconyc,"{dance floor bar,queer nights,vintage club}",bar,happy hour,5,$$,2.5,img/venues/Dynaco.png,nyc
-Fan Fan Doughnuts,40.6890824,-73.9570607,fanfandoughuts,"{gourmet doughnuts,brunch spot,sweet treats}",bakery,morning,2,$$,1,img/venues/Fan Fan Doughnuts.jpeg,nyc
-Bar Laika by e-flux,40.6870032,-73.9620883,barlaika,"{film screenings,experimental sound,art crowd}",cocktail,evening,3,$,2,img/venues/Bar Laika by e-flux.jpg,nyc
-Izzy Rose,40.6868393,-73.9627852,izzyrosebk,"{queer-friendly,romantic cocktails,garden patio}",cocktail,evening,4,$$,2,img/venues/Izzy Rose.jpg,nyc
-Place des Fêtes,40.6868258,-73.9628829,placedesfetesbrooklyn,"{natural wine,Spanish tapas,low-lit romance}",wine bar,evening,3,$$$,2,img/venues/Place des Fêtes.jpg,nyc
-Locanda Vini & Olii,40.684965,-73.9629488,locandavinioliinyc,"{authentic Italian,neighborhood gem,romantic pasta dinner}",dinner,evening,3,$$$,1.5,img/venues/Locanda Vini & Olii.jpg,nyc
-Speedy Romeo,40.6875,-73.96,speedyromeo,"{wood-fired pizza,Brooklyn casual,local staple}",wine bar,midday,3,$$,1.5,img/venues/Speedy Romeo.jpg,nyc
-Little Grenjai,40.6866874,-73.9478504,littlegrenjai,"{Thai bites,neighborhood eatery,cozy evening}",lunch,happy hour,2,$$,1.5,img/venues/Little Grenjai.jpg,nyc
-Van Leeuwen Ice Cream,40.703191,-73.9947458,vanleeuwenicecream,"{ice cream date,vegan treats,classic cones}",dessert,evening,2,$,0.5,img/venues/Van Leeuwen Ice Cream dumbo.jpg,nyc
-Dick and Jane's,40.689854,-73.971357,dickandjanesbar,"{neighborhood cocktails,date night,relaxed vibe}",cocktail,evening,3,$$,1.5,img/venues/Dick and Jane’s.jpg,nyc
-Loafers Cocktail Bar,40.6750845,-73.9992285,loafersbar,"{cocktail bar,neighborhood vibe,late-night drinks}",cocktail,happy hour,3,$$,2,img/venues/Loafers Cocktail Bar.jpg,nyc
-Travel Bar,40.6761496,-73.9991528,travelbarbk,"{whiskey bar,laid-back,classic cocktails}",bar,happy hour,3,$$,1.5,img/venues/Travel Bar.JPG,nyc
-Nerd be cool. Espresso Lab,40.6761949,-73.9991293,nerdbecoolnyc,"{espresso lab,specialty coffee,local favorite}",coffee,morning,2,$,0.75,img/venues/Nerd be cool.jpg,nyc
-Court Street Grocers,40.6762056,-73.9986694,courtstreetgrocers,"{sandwich shop,Brooklyn lunch,deli counter}",lunch,midday,2,$,1,img/venues/Court Street Grocers.jpg,nyc
-F&F Restaurant and Bar,40.6772305,-73.9981372,fandfpizza,"{pasta bar,neighborhood favorite,date night restaurant}",dinner,happy hour,3,$$,1.5,img/venues/F&F Restaurant and Bar.jpg,nyc
-Baby Luc's,40.6800784,-73.9968577,babylucs,"{outdoor seating,walk-up pizza,weekend hangout}",lunch,midday,3,$,1.5,img/venues/Baby Luc's.jpg,nyc
-DISTRICT,40.6799225,-73.9965174,districtbrooklyn,"{early morning cafe,smoothies,commuter-friendly}",fitness,morning,2,$,0.75,img/venues/DISTRICT.jpg,nyc
-PKLYN,40.676563,-73.993362,pklyncafe,"{laptop friendly,casual cafe,long hours}",activity,morning,2,$,1.5,img/venues/PKLYN.jpg,nyc
-Cafecito Social,40.6805498,-73.9892902,cafecitosocial,"{Latin café,neighborhood brunch,coffee & empanadas}",coffee,midday,2,$,1,img/venues/Cafecito Social.png,nyc
-South Brooklyn Weightlifting Club,40.6805386,-73.9846347,southbrooklynweight,"{weightlifting gym,community training,strength workouts}",fitness,afternoon,3,$,1.5,img/venues/South Brooklyn Weightlifting Club.jpg,nyc
-The Armory,40.6793157,-73.9814255,thearmorybk,"{live shows,event space,nightlife hub}",cocktail,evening,4,$$,2.5,img/venues/The Armory.jpg,nyc
-Parklife,40.6787343,-73.9832325,parklifebk,"{outdoor games,beer garden,open‑air vibes}",bar,afternoon,4,$$,2,img/venues/Parklife.jpg,nyc
-Royal Palms Shuffleboard Club,40.6786376,-73.9869098,royalpalmsshuffle,"{shuffleboard,party groups,retro games}",bar,midday,5,$$,2.5,img/venues/Royal Palms Shuffleboard Club Brooklyn.jpg,nyc
-cityWell brooklyn,40.6778803,-73.9868536,citywellbrooklyn,"{sauna,hot tubs,quiet time,couples retreat}",spa,midday,2,$$$,2,img/venues/cityWell brooklyn.png,nyc
-Cotra,40.6775859,-73.9872039,cotra.nyc,"{natural wine,minimalist aesthetic,relaxed vibe}",cocktail,evening,2,$$,1.5,img/venues/Cotra.jpg,nyc
-Logan's Run,40.6710497,-73.9844495,logansrun,"{dance club,synthwave lights,all-night parties}",cocktail,late,5,$$,3,img/venues/Logan's Run.jpg,nyc
-LoFI Bar,40.6736217,-73.9829477,lofibarnyc,"{DJ nights,chill hop,art bar}",bar,happy hour,4,$$,2,img/venues/LoFI Bar.jpg,nyc
-Blueprint,40.6768844,-73.980377,blueprintlounge,"{speakeasy vibe,rooftop adjacent,stylish cocktails}",cocktail,happy hour,4,$$$,2,img/venues/Blueprint.jpg,nyc
-Vinegar Hill House,40.7027648,-73.9812524,vinegarhillhouse,"{garden courtyard,seasonal tasting menu,cozy date spot}",lunch,midday,3,$$$,2,img/venues/Vinegar Hill House.jpg,nyc
-Archivio Records,40.7031,-73.984034,archiviorecords,"{rare vinyl,record hunting,indie music vibes}",random gem,-,1,$,1,img/venues/Archivio Records.png,nyc
-Cafe Mado,40.6729083,-73.9626279,cafemadonow,"{Korean brunch,bingsu,pastries and coffee}",breakfast,midday,2,$$,1.5,img/venues/Cafe Mado.jpg,nyc
-Rialto Grande,40.676346,-73.9561648,rialtograndenyc,"{Italian seafood,group dinners,neon-lit plates}",cocktail,evening,4,$$,2,img/venues/Rialto Grande.jpg,nyc
-Kissa Kissa,40.6756639,-73.9559666,kissakissa,"{matcha bar,Japanese tea lounge,serene vibe}",cocktail,evening,3,$$,1.75,img/venues/Kissa Kissa.jpg,nyc
-Welcome Home,40.6881606,-73.9546488,welcomehome.bk,"{warm nostalgia,small-batch charm,slow mornings,cozy retreat,heartfelt simplicity}",bakery,midday,1,$,0.5,img/venues/Welcome Home.jpg,nyc
-Misi,40.713401,-73.9671874,misinewyork,"{pasta shrine,Brooklyn icon,foodies’ gem,stylish dining,modern Italian}",dinner,evening,3,$$$,2,img/venues/Misi.jpg,nyc
-Blinky’s,40.7114709,-73.9478073,blinkysbar,"{low-lit hideaway,craft-forward,local gem,indie energy,Brooklyn nightspot}",bar,late,4,$,1.25,img/venues/Blinky's.jpg,nyc
-Comal,40.7191233,-73.9921624,comalnyc,"{upscale Mexican,cultural dining,artisanal kitchen,Brooklyn fusion,bold flavors}",dinner,evening,3,$$$,2,img/venues/Comal.jpg,nyc
-King Cole Bar,40.761289,-73.9743901,stregisnewyork,"{cocktail classic,storied venue,upscale Midtown,New York legacy,timeless drinks}",cocktail,evening,3,$$$,1.66,img/venues/King Cole Bar.jpg,nyc
-Lobby Bar at The Hotel Chelsea,40.744428,-73.996881,hotelchelsea,"{artsy landmark,cultural hotspot,historic bohemia,intimate lounge,literary spirit}",cocktail,late,3,$$$,1.5,img/venues/Lobby Bar at The Hotel Chelsea.jpg,nyc
-Hank’s Bar,40.6985858,-73.9342066,hanksbk,"{gritty local,jukebox energy,dive staple,cheap fun,authentic Brooklyn}",bar,late,3,$$,1.25,img/venues/Hank’s Bar.jpg,nyc
-Birdy’s,40.6975171,-73.9314536,birdysbushwick,"{hipster haunt,eclectic neighborhood,late-night dive,colorful hang,indie social}",bar,late,3,$,1.25,img/venues/Birdy's.jpg,nyc
-El Vez and Burrito Bar,40.714811,-74.015811,elveznyc,"{tequila-fueled,fiesta vibe,casual fun,group-friendly energy,colorful scene}",lunch,evening,3,$$,1.75,img/venues/El Vez and Burrito Bar.jpeg,nyc
-Bushwick Country Club,40.7111521,-73.947767,bushwick_country_club,"{ironic dive,hipster haven,quirky games,backyard bar,Brooklyn offbeat}",bar,late,4,$,1.5,img/venues/Bushwick Country Club.jpg,nyc
-recess grove,40.71274685,-73.95630666,recessgrove,"{mindful space,creative calm,artistic haven,slow-living,neighborhood niche}",activity,evening,2,$$,1.66,img/venues/recess grove.jpg,nyc
-St. Mazie Bar & Supper Club,40.7125929,-73.9558255,stmazie,"{old-world romance,vintage charm,jazz hideaway,candlelit vibe,sultry setting}",music,late,3,$$,2,img/venues/St. Mazie Bar & Supper Club.jpg,nyc
-Fred's Dog House,40.71224115,-73.95596088,fredsdoghousebk,"{funky dive,playful neighborhood,quirky crowd,casual hangout,eclectic energy}",music,late,4,$,2,img/venues/Fred's Dog House.jpg,nyc
-Canary Cafe,40.7113494,-73.961145,canarybrooklyn,"{artsy nook,modern coffeehouse,Brooklyn-friendly,warm vibe,intimate charm}",coffee,midday,2,$,0.75,img/venues/Canary Cafe.jpg,nyc
-Whim Golf Club,40.7188441,-73.99175809,whimgolfclub,"{playful experiment,ironic club,conceptual space,alternative social,indie edge}",activity,afternoon,3,$,0.75,img/venues/Whim Golf Club.jpg,nyc
-Outer Heaven,40.7219976,-73.9922737,outerheaven.nyc,"{underground nightlife,raw energy,Brooklyn rave,edgy youth,immersive beats}",club,late,5,$$$,2.5,img/venues/Outer Heaven.jpg,nyc
-Celene's,40.7410183,-73.9929415,celenesnyc,"{quiet bar,mellow hideout,artsy nook,quirky cocktails,intimate local}",cocktail,late,5,$$$,2.5,img/venues/Celene's.jpg,nyc
-Sweet Pickle Books,40.7164063,-73.9912317,sweetpicklebooks,"{indie bookstore,playful spirit,quirky cultural,literary niche,whimsical vibes}",bookstore,evening,2,$,0.5,img/venues/Sweet Pickle Books.jpg,nyc
-Paley Park,40.7602575,-73.9750532,explore,"{hidden oasis,city calm,meditative space,waterfall serenity,pocket retreat}",park,evening,1,$,1,img/venues/Paley Park.jpg,nyc
-Greenacre Park,40.7562408,-73.9692841,greenacreparkny,"{secret Midtown,lush urban,water feature,reflective hideaway,quiet charm}",park,midday,1,$,1,img/venues/Greenacre Park.jpg,nyc
-Bobo,40.7344552,-74.0026304,boborestaurant,"{romantic garden,stylish West Village,chic French,elegant hideaway,intimate dining}",brunch,evening,3,$$$,2,img/venues/Bobo.jpg,nyc
-VALERIE,40.7563426,-73.9811274,valerienewyorkcity,"{Midtown cocktail hub,sleek social,upscale bar,lively energy,cosmopolitan spot}",cocktail,late,4,$$$,2,img/venues/VALERIE.jpg,nyc
-Turks & Frogs,40.7357449,-74.0073406,turksandfrogs,"{candlelit bar,vintage charm,Old World romance,tucked-away nook,eclectic vibe}",cocktail,happy hour,3,$,1.75,img/venues/Turks & Frogs.jpg,nyc
-Orient Express Cocktail Bar,40.7358256,-74.00747899,orient_express_bar,"{themed speakeasy,transportive vibe,design-forward,vintage train charm,atmospheric escape}",cocktail,happy hour,3,$$,1.66,img/venues/Orient Express Cocktail Bar.jpg,nyc
-Fairfax,40.734351,-74.0031358,fairfaxnyc,"{chic café,brunch hotspot,stylish corner,airy social,modern neighborhood}",brunch,midday,3,$$,2,img/venues/Fairfax.jpg,nyc
-Cellar Dog,40.7336334,-74.0032842,cellardognyc,"{quirky basement,retro games,casual fun,playful dive,unpretentious hang}",bar,late,4,$,1.5,img/venues/Cellar Dog.jpg,nyc
-Dia Chelsea,40.7478387,-74.0063018,diaartfoundation,"{cultural hub,avant-garde space,intellectual art,minimalist design,contemporary edge}",gallery,midday,1,$,1,img/venues/Dia Chelsea.jpg,nyc
-RHYTHM ZERO,40.7332909,-74.0043095,,"{indie coffeehouse,creative nook,peaceful corner,minimalist energy,community-driven}",coffee,midday,2,$,0.75,img/venues/RHYTHM ZERO gp.jpg,nyc
-Little Owl,40.7322791,-74.0052939,littleowlnyc,"{West Village icon,cozy dining,rustic chic,foodie favorite,intimate charm}",lunch,midday,3,$$$,2,img/venues/Little Owl.jpg,nyc
-The Commerce Inn,40.731477,-74.0056977,commerceinn,"{historic-inspired,minimalist dining,thoughtful concept,upscale rustic,contemplative vibe}",breakfast,midday,3,$$$,2,img/venues/The Commerce Inn.png,nyc
-Tía Pol,40.74728,-74.0047984,tia_pol,"{authentic Spanish,tapas haven,lively bar,cozy eatery,Chelsea gem}",brunch,midday,3,$$$,1.66,img/venues/Tía Pol.jpg,nyc
-Chantelle NYC,40.718386,-73.98895335,hotelchantelle,"{flashy club,rooftop party,nightlife staple,bottle-service scene,young energy}",club,late,5,$$,2,img/venues/Chantelle NYC.jpg,nyc
-The Dancer,40.7139726,-73.9870319,thedancernyc,"{sultry,hidden gem,intimate energy,cocktail lounge,artistic crowd}",cocktail,late,3,$,1.66,img/venues/The Dancer.jpg,nyc
-Happy Medium,40.7119043,-73.9944565,gethappymedium,"{whimsical,creative lab,niche hangout,vibrant,DIY vibes}",activity,midday,2,$$,1.66,img/venues/Happy Medium mht.jpg,nyc
-Overstory,40.7065765,-74.0080763,overstory,"{panoramic,luxury,cocktail temple,glamorous,refined}",cocktail,late,3,$$$,1.75,img/venues/Overstory.png,nyc
-Café Colmado,40.71862695,-73.99141395,colmadocoffee,"{indie charm,cultural cafe,slow-living,neighborhood favorite,artisan-driven}",coffee,midday,2,$,0.75,img/venues/Café Colmado.jpg,nyc
-124 Old Rabbit Club,40.729905,-74.000246,124rabbitclub,"{hidden gem,Euro-inspired,vintage charm,rebellious,character-filled}",bar,late,4,$$,1.5,img/venues/124 Old Rabbit Club.jpg,nyc
-Off the Wagon,40.7299118,-74.0008153,offthewagonnyc,"{beer-fueled,messy fun,young crowd,social chaos,late-night heavy}",bar,late,4,$$,1.75,img/venues/Off the Wagon.jpg,nyc
-Copper & Oak,40.7210247,-73.9897308,copperandoak,"{earthy,modern rustic,lounge vibe,approachable luxury,warm energy}",cocktail,happy hour,3,$$,1.5,img/venues/Copper & Oak.jpg,nyc
-George Bang Bang,40.7457045,-73.985371,gbbnewyork,"{hipster-chic,buzzy,fashion-forward,expressive,social mixer}",cocktail,late,4,$$,1.6,img/venues/George Bang Bang.jpg,nyc
-Aldo Sohm Wine Bar,40.76120496,-73.98136302,sohmbar,"{cultured,polished,European lounge,wine library,chic escape}",wine bar,late,3,$$$,1.66,img/venues/Aldo Sohm Wine Bar.jpg,nyc
-nuar,40.7449414,-73.99040864,nuarnyc,"{boutique,luxury dessert,sleek design,foodie niche,quiet indulgence}",dessert,midday,2,$,0.5,img/venues/nuar.jpg,nyc
-Lisbonata,40.672615,-73.95766996,lisbonatanyc,"{artisanal,charming,nostalgic bakery,sweet escape,warm authenticity}",bakery,midday,2,$,0.75,img/venues/Lisbonata.jpg,nyc
-Pil Pil,40.7729328,-73.9558793,pilpilnyc,"{festive,flavorful,wine-social,casual-elegant,intimate dining}",brunch,late,3,$$,2,img/venues/Pil Pil.jpg,nyc
-Jeremy's,40.777496,-73.95168979,jeremysnyc,"{no-frills,relaxed,warm social,local regulars,friendly casual}",cocktail,late,3,$$,1.75,img/venues/Jeremy's.jpg,nyc
-Sunday to Sunday,40.7180119,-73.9901723,sundaytosundaynyc,"{everyday comfort,weekend vibe,wholesome,easygoing,social brunch}",breakfast,evening,3,$$,1.5,img/venues/Sunday to Sunday.jpg,nyc
-Chalk Gyms,40.718347,-73.955376,chalkgyms,"{boutique fitness,serious training,clean design,wellness-forward,tight-knit}",fitness,midday,2,$$,1.5,img/venues/Chalk Gyms.jpg,nyc
-Serpentine,40.7361304,-74.00060185,serpentinenyc,"{crafted cocktails,sleek intimacy,moody chic,stylish bar,trendy edge}",cocktail,evening,3,$$,1.5,img/venues/Serpentine.jpg,nyc
-StudioTwentySeven,40.7174008,-74.0057855,studiotwentyseven,"{design-centric,architectural,high-end,modernist,curated}",gallery,afternoon,1,$,1,img/venues/StudioTwentySeven.jpg,nyc
-Sargent's Daughters,40.717639,-74.003176,sargentsdaughters,"{cultural niche,progressive art,contemporary-focused,small-scale,refined}",gallery,midday,1,$,1.33,img/venues/Sargent's Daughters.jpg,nyc
-The Vilcek Foundation,40.77076085,-73.96647639,vilcekfoundation,"{cultural heritage,socially aware,thought-leadership,prestigious,mission-driven}",gallery,,1,$,1.33,img/venues/The Vilcek Foundation.jpg,nyc
-Tappeto Volante,40.6693268,-73.9938805,tvprojects.bk,"{grassroots,local art,alternative,emerging voices,Brooklyn indie}",gallery,afternoon,1,$,1,img/venues/Tappeto Volante.jpg,nyc
-Ricco/Maresca Gallery,40.7465171,-74.0068656,riccomaresca,"{eclectic taste,cultural bridge,collector’s gem,bold,artistic soul}",gallery,,1,$,1,img/venues/Ricco:Maresca Gallery.jpg,nyc
-Karma Gallery,40.7224564,-73.9841125,karmakarma9,"{fashionable,scene-driven,cultural buzz,progressive art,youthful}",gallery,midday,1,$,1,img/venues/Karma Gallery.JPG,nyc
-Judd Foundation,40.7235189,-73.9994085,juddfoundation,"{iconic,purist,art-historical,timeless,landmark}",gallery,midday,1,$,1.33,img/venues/Judd Foundation.jpg,nyc
-Isabel Sullivan Gallery,40.7198682,-74.00334,is.gallery.nyc,"{fresh,boutique experience,contemporary lean,cultural taste,stylish edge}",gallery,midday,1,$,1,img/venues/Isabel Sullivan Gallery.jpg,nyc
-Hollis Taggart,40.7502048,-74.003717,hollistaggart,"{established,blue-chip energy,polished professionalism,heritage-driven,curatorial depth}",gallery,midday,1,$,1,img/venues/Hollis Taggart.jpg,nyc
-Hashimoto Contemporary,40.7165611,-73.9899858,hashimotocontemporary,"{urban art,gallery cool,streetwise,gritty-inspired,subcultural}",gallery,midday,1,$,1.33,img/venues/Hashimoto Contemporary.jpg,nyc
-François Ghebaly New York,40.7159389,-73.9875609,francoisghebaly,"{bold voices,risk-taking,visionary,creative pulse,conceptual art}",gallery,midday,1,$,1.33,img/venues/François Ghebaly New York.jpeg,nyc
-CUE Art Foundation,40.745074,-73.993431,cueart,"{grassroots,non-mainstream,inclusive,artist-first,culture-builder}",gallery,afternoon,1,$,1.33,img/venues/CUE Art Foundation.jpg,nyc
-Broadway Gallery,40.7179084,-74.0033708,broadwaygallerynyc,"{cozy gallery,indie art,discovery-driven,neighborhood cultural spot,contemporary lean}",gallery,midday,1,$,1,img/venues/Broadway Gallery.jpg,nyc
-Fort Greene Park,40.6914322,-73.975246,fortgreenepark,"{family-friendly,historic vibe,gathering space,lively greenery,cultural hub}",park,morning,1,$,1.5,img/venues/Fort Greene Park.jpg,nyc
-Brooklyn Bridge Park,40.7022422,-73.9958601,brooklynbridgepark,"{iconic NYC,outdoorsy,waterfront leisure,tourist draw,vibrant culture}",park,morning,1,$,1.5,img/venues/Brooklyn Bridge Park.jpg,nyc
-Clover Smoothie&Tea,40.6871772,-73.9904095,cloversmoothie_tea,"{colorful,fresh vibes,youthful energy,cheerful,health scene}",juice bar,morning,1,$,0.5,img/venues/Clover Smoothie&Tea.jpg,nyc
-Swoony's,40.6847011,-74.0026429,swoonysbrooklyn,"{Brooklyn stylish,foodie chic,American-modern,polished atmosphere,trend-driven}",dinner,evening,3,$$$,2,img/venues/Swoony's.jpg,nyc
-Alma BK,40.6855707,-74.0021592,almabklyn,"{rooftop festive,cultural fusion,lively social,tequila scene,upbeat}",lunch,evening,3,$$,2,img/venues/Alma BK.jpg,nyc
+Beso Buckhead,33.84377,-84.378946,besobuckhead,"{bottle service,upscale date night,Latin DJ,dressed crowd,velvet rope}",club,evening,4,$$,3,img/venues/Beso Buckhead.jpg,unknown
+Pisces,33.754117,-84.371798,pisces.atl,"{late-night oysters,artsy couples,low-light date spot,hidden Atlanta gem}",club,late,3,$,2,img/venues/Pisces.jpg,unknown
+Alici Oyster Bar,33.7803409,-84.3686685,alicioysterbar,"{raw bar lunch,chic seafood,weekday elegant lunch,light wine pairings}",dinner,midday,2,$$$,2,img/venues/Alici Oyster Bar.jpg,unknown
+KR SteakBar,33.81826905,-84.37497385,krsteakbar,"{power dinner,quiet upscale,wine-forward,suits after dark}",dinner,happy hour,2,$$$,2,img/venues/KR SteakBar.jpg,unknown
+Ruby Chow's,33.7715868,-84.3681182,rubychowsatl,"{date night energy,design-forward Asian fusion,moody lighting,group-friendly hangout}",dinner,happy hour,3,$$,2,img/venues/Ruby Chow's.jpg,unknown
+After Eight,33.7802207,-84.41060596,aftereightatl,"{late night lounge,high-energy DJ,upscale crowd,no sneakers}",cocktail,evening,5,$$,2,img/venues/After Eight.jpg,unknown
+Bon Ton,33.772956,-84.3803812,bontonatlanta,"{boozy brunch,seafood with attitude,neon vibes,funky Creole fusion}",dinner,midday,4,$$,2,img/venues/Bon Ton.jpg,unknown
+APT 4B,33.8156255,-84.3908082,apt4batl,"{vinyl lounge,curated cocktails,Afro-Caribbean energy,retro-modern fusion}",brunch,evening,4,$$$,2,img/venues/APT 4B.jpg,unknown
+Delbar - Buckhead,33.839527,-84.38125303,delbaratl,"{garden patio brunch,chic Persian,lush Mediterranean date,floral decor}",lunch,midday,3,$$$,2,img/venues/Delbar - Buckhead.jpg,unknown
+Echo Room,33.7749037,-84.41030778,echoroomatl,"{underground party,warehouse rave,creative scene,BYOB energy}",bar,evening,5,$$,3,img/venues/Echo Room.jpg,unknown
+97 Estoria,33.7519921,-84.36345598,97estoria,"{casual patio beers,alt crowd hangout,dive with soul,intown classic}",bar,evening,4,$,1.5,img/venues/97 Estoria.jpg,unknown
+Bona Fide Deluxe,33.76066881,-84.34042587,bona_fide_deluxe,"{colorful cocktails,offbeat lounge,eastside flair,date spot without pressure}",bar,midday,5,$$,1,img/venues/Bona Fide Deluxe.jpg,unknown
+The Porter Beer Bar,33.7652193,-84.34965626,theporterbeerbar,"{beer,craft nerd haven,small-plate pub food,low-light chill}",bar,evening,3,$$,1.5,img/venues/The Porter Beer Bar.jpg,unknown
+Wish Atlanta,33.7665546,-84.34895681,wishatl,"{fashion-forward,sneaker drops,curated streetwear,creative scene hub}",random gem,afternoon,2,$$,0.75,img/venues/Wish Atlanta.jpg,unknown
+Wrecking Bar Brewpub,33.762309,-84.3496422,wreckingbarbrewpub,"{historic house brews,slow food pub,smart beer pairings,neighborhood classic}",bar,evening,2,$$,2,img/venues/Wrecking Bar Brewpub.jpg,unknown
+The Brewhouse Cafe,33.7652432,-84.3488434,thebrewhousecafe,"{soccer bar,rowdy brunches,casual pint crowd,weekend match day zone}",bar,evening,3,$,2.5,img/venues/The Brewhouse Cafe.jpg,unknown
+East Palisades Trailhead,33.87122555,-84.44004635,explore,"{nature escape,Chattahoochee views,shaded trails,city detox}",nature,afternoon,1,$,3.5,img/venues/East Palisades Trailhead.jpg,unknown
+E+ROSE Wellness Cafe - Westside Provisions Atlanta,33.7847648,-84.4122192,eandrosewellness,"{smoothie stop,clean eats,post-pilates refuel,casual wellness hang}",coffee,midday,1,$,0.5,img/venues/E+ROSE Wellness Cafe - Westside.jpg,unknown
+Smith's Olde Bar,33.79770375,-84.36880644,smithsoldebar,"{local music venue,dive-rock feel,gritty charm,late-night shows}",bar,evening,4,$,2.5,img/venues/Smith's Olde Bar.jpg,unknown
+Jeni's Splendid Ice Creams,33.8401417,-84.3809742,jenisicecreams,"{Instagram scoop,inventive flavors,family-friendly,date night dessert}",dessert,evening,1,$,0.75,img/venues/Jeni's Splendid Ice Creams.jpg,unknown
+Redacted Basement Drink Parlor,33.7367005,-84.3856771,redactedbasementdrinkparlor,"{hidden bar,password entry,vintage cocktails,prohibition aesthetic}",speakeasy,evening,4,$,1.75,img/venues/Redacted Basement Drink Parlor.jpg,unknown
+Edgar's Proof & Provision,33.7724536,-84.3844007,edgarsproofprovisionsav,"{whiskey-focused,hotel bar energy,quiet nightcap,Southern dark woods}",cocktail,happy hour,3,$$,1.5,img/venues/Edgar's Proof & Provision.jpg,unknown
+Red Phone Booth,33.7595884,-84.3869147,rpbatlanta,"{secret speakeasy,cigar lounge vibe,upscale exclusivity,VIP reservation only}",speakeasy,happy hour,4,$$$,2,img/venues/Red Phone Booth.png,unknown
+STATS Brewpub,33.7615575,-84.3964558,statsbrewpub,"{game day hub,corporate happy hour,group tables,beer towers}",bar,midday,5,$$,2.5,img/venues/STATS Brewpub.png,unknown
+The Painted Duck,33.7814781,-84.4136351,paintedduckatl,"{luxury bowling,high-concept bar games,date-friendly activity spot,upscale arcade}",activity,evening,5,$$,2.5,img/venues/The Painted Duck.jpg,unknown
+MJQ Concourse,33.7518911,-84.3892495,mjqofficial,"{underground dance cave,grungy nightlife,no-frills energy,late-night misfits}",club,late,5,$,3,img/venues/MJQ Concourse.jpeg,unknown
+Lazy Betty,33.7811172,-84.38370924,lazybettyatl,"{chef’s tasting menu,quiet upscale,Michelin-starred vibe,intimate fine dining}",dinner,happy hour,1,$$$$,2,img/venues/Lazy Betty.jpg,unknown
+Jojo’s Beloved Cocktail Lounge,33.787223,-84.3829621,jojosbeloved,"{retro disco bar,neon lounge,velvet seating,themed cocktails}",speakeasy,evening,4,$$,2,img/venues/Jojo’s Beloved Cocktail Lounge.jpg,unknown
+Distillery of Modern Art in Chamblee,33.8971099,-84.2961643,distilleryofmodernart,"{industrial-chic,local spirits,art gallery crossover,event-forward venue}",bar,happy hour,2,$$,2,img/venues/Distillery of Modern Art.png,unknown
+Larakin,33.7844809,-84.3805853,larakinatl,"{natural wine,stylish minimalism,soft lighting,bar for design people}",wine bar,midday,2,$,1.5,img/venues/Larakin.png,unknown
+Evergreen Butcher + Baker,33.7510262,-84.3217927,evergreenbutcherandbaker,"{locally sourced,rustic brunch,fresh pastries,chef-driven deli}",lunch,midday,1,$,1,img/venues/Evergreen Butcher + Baker.jpg,unknown
+Wai's Gong Fu Tea House,33.79233935,-84.4201058,waisgongfutea,"{ceremonial tea,meditative space,Asian minimalism,quiet culture escape}",tea,afternoon,1,$,1.33,img/venues/Wai's Gong Fu Tea House.jpeg,unknown
+Kinship Butcher & Sundry,33.7822964,-84.3538294,kinshipbutcher_atl,"{neighborhood butcher counter,curated pantry,casual gourmet,local-first}",lunch,midday,1,$$,1,img/venues/Kinship Butcher & Sundry.jpg,unknown
+Whoopsie's,33.7534631,-84.3493682,whooopsies_place,"{low-key cocktail bar,off-the-radar date spot,moody lighting,mellow music}",dinner,evening,3,$$,2,img/venues/Whoopsie's.jpg,unknown
+May Peel,33.7901025,-84.3881552,maypeel_atlanta,"{floral-forward cocktails,intimate ambiance,feminine energy,warm pastel vibe}",cocktail,evening,3,$$,2,img/venues/May Peel.png,unknown
+Commune,33.775806,-84.273451,commune_atl,"{plant-based brunch,Scandi aesthetics,community tables,slow dining}",cocktail,evening,2,$$,2,img/venues/Commune.jpg,unknown
+The Waiting Room,33.772956,-84.3803812,justkeepwaitingroom,"{hotel rooftop,craft cocktails,skyline view,reservation recommended}",speakeasy,happy hour,4,$$,2,img/venues/The Waiting Room.JPG,unknown
+Controllerise,33.7949913,-84.4098768,controllerise,"{nerd nightlife,lo-fi beats,anime culture crowd,gaming-centric community}",activity,late,4,$,3,img/venues/Controllerise.jpg,unknown
+Grana,33.805921,-84.366886,granaatl,"{Italian patio dining,rooftop Negronis,burrata & spritz,crowd-pleasing pasta}",lunch,happy hour,3,$$,2,img/venues/Grana.jpg,unknown
+Home grown GA Restaurant,33.7467393,-84.35594354,homegrownga,"{ATL breakfast classic,kitschy Southern,chicken biscuit fame,old-school diner feel}",breakfast,midday,1,$,1.5,img/venues/Home grown GA Restaurant.jpg,unknown
+Small Fry,33.74483765,-84.3613051,smallfryatl,"{fast casual remix,comfort food reimagined,smash burgers & nostalgia,indie energy}",lunch,afternoon,2,$,1.5,img/venues/Small Fry.jpg,unknown
+Wicked Wolf Atlanta,33.7838568,-84.3836206,wickedwolfatlanta,"{high-volume nightlife,Midtown bros,drink specials,club-adjacent crowd}",bar,evening,5,$$,2.5,img/venues/Wicked Wolf Atlanta.jpg,unknown
+BLOCK & DRUM,33.888521,-84.313226,blockanddrum,"{vinyl DJ lounge,analog aesthetic,cocktail-forward,beat-driven experience}",bar,midday,4,$$,2,img/venues/BLOCK & DRUM.jpg,unknown
+Victory Sandwich Bar,33.7639997,-84.3577859,victorysandwichbar,"{ironic lunch spot,boozy slushies,casual first date,cheap eats with edge}",lunch,evening,3,$,1.25,img/venues/Victory Sandwich Bar.jpg,unknown
+Twain's Brewpub & Billiards,33.77228,-84.294616,twainsbrewpub,"{local beer,pool tables,Decatur community hangout,weekend casual}",bar,evening,3,$,2.5,img/venues/Twain's Brewpub & Billiards.png,unknown
+Fawn Wine + Amaro,33.775424,-84.295543,fawnwineamaro,"{natural wine hideout,dim date bar,intimate pours,wine nerd gem}",wine bar,evening,2,$$$,2,img/venues/Fawn Wine.jpg,unknown
+Indaco,33.77372173,-84.36195002,indacoatl,"{neighborhood Italian,wood-fired mains,soft-light date spot,upscale comfort}",lunch,midday,2,$$$,2,img/venues/Indaco.jpg,unknown
+Tesserae,33.83820075,-84.37431322,tesseraeatl,"{rooftop cocktails,skyline date energy,sleek atmosphere,lounge seating}",rooftop,evening,3,$$$,2.5,img/venues/Tesserae.jpg,unknown
+Halfway Crooks Beer,33.736999,-84.385751,halfwaycrooksbeer,"{Euro-style beer,retro-futurist branding,chill outdoor hangs,alt-brew vibe}",bar,happy hour,3,$,1.25,img/venues/Halfway Crooks Beer.jpg,unknown
+SkyLounge,33.7569695,-84.392911,skyloungeatl,"{hotel rooftop,skyline selfies,cocktails with view,post-dinner flex}",rooftop,happy hour,4,$$,2.5,img/venues/SkyLounge.jpg,unknown
+Fox Marquee Club,33.7726429,-84.38556184,foxmarqueeclub,"{Broadway afterparty,dressy theater drinks,velvet and chandeliers,pre-show energy}",rooftop,evening,5,$$,1.66,img/venues/Fox Marquee Club.jpg,unknown
+9 Mile Station,33.7728212,-84.3659039,9milestation,"{beer garden rooftop,elevated pub menu,tourist-friendly spot,social skyline}",rooftop,evening,3,$$,2,img/venues/9 Mile Station.jpg,unknown
+Breaker Breaker,33.7521019,-84.3568532,breakerbreaker_atl,"{oceanic vibe,bright cocktails,New American coastal,daytime-to-night transition}",dinner,evening,3,$$,1.5,img/venues/Breaker Breaker.jpg,unknown
+SCAD FASH Museum of Fashion + Film,33.798045,-84.390777,scadfash,"{fashion history,high-design,editorial photo ops,arts crowd magnet}",gallery,afternoon,1,$,2.25,img/venues/SCAD FASH Museum of Fashion .jpg,unknown
+Moonlight,33.768629,-84.363636,moonlightatlanta,"{hidden lounge,dark glam,romantic minimalist,vinyl energy}",rooftop,afternoon,4,$$,2.5,img/venues/Moonlight.jpg,unknown
+Little Spirit,33.7624505,-84.35858396,littlespiritatl,"{craft cocktail den,tight quarters,speakeasy-adjacent,date-before-dinner}",cocktail,late,5,$$,1.75,img/venues/Little Spirit.jpg,unknown
+Blind Willie's,33.77707,-84.352605,blindwilliesblues,"{live blues,divey authenticity,ATL music legacy,gritty charm}",music,evening,4,$,2,img/venues/Blind Willie's.jpg,unknown
+Academy Coffee,33.7822964,-84.3538294,academycoffeeatl,"{third wave espresso,minimalist interior,creative freelancers,quiet ritual space}",coffee,midday,1,$,0.5,img/venues/Academy Coffee.jpg,unknown
+Big Softie,33.77173338,-84.35261552,bigsoftieatl,"{soft serve shop,kid-friendly,Instagram cone art,sunny weekend stop}",dessert,afternoon,1,$,0.5,img/venues/Big Softie.jpg,unknown
+Plaza Theatre,33.77334445,-84.35304857,plazaatlanta,"{cult classic hub,indie film,drag shows & midnight screenings,ATL nostalgia}",cinema,,2,$,2.5,img/venues/Plaza Theatre.jpg,unknown
+Whitespace Gallery,33.7557099,-84.36083484,whitespace814,"{emerging artists,experimental works,intimate art events,critical darling}",gallery,midday,1,$,1.5,img/venues/Whitespace Gallery.jpg,unknown
+ABV Gallery,33.7419059,-84.3481672,abvgallery,"{street art curation,culture crossover,sneakerhead crowd,music meets mural}",gallery,midday,2,$,1.5,img/venues/ABV Gallery.jpg,unknown
+Mason Fine Art,33.830522,-84.361945,masonfineart,"{large-scale exhibits,high-end contemporary,VIP art circuit,private events}",gallery,midday,1,$,1.5,img/venues/Mason Fine Art.jpg,unknown
+Johnson Lowe Gallery,33.8312303,-84.3621253,johnsonlowegallery,"{Afrocentric focus,academic lean,cultural storytelling,black fine art spotlight}",gallery,midday,1,$,1.5,img/venues/Johnson Lowe Gallery.jpg,unknown
+The Painted Pin,33.83001715,-84.362606,thepaintedpinatl,"{lux bowling,group date fun,cocktails and competition,party arcade}",activity,evening,4,$$$,3,img/venues/The Painted Pin.jpg,unknown
+Painted Pickle,33.81169055,-84.37754088,paintedpickleatl,"{pickleball & play,social club energy,day-to-night action,fitness meets fun}",activity,midday,4,$$,3,img/venues/Painted Pickle.jpg,unknown
+SweetWater Brewing Company,33.8083643,-84.38069217,sweetwatertaproom,"{flagship ATL brewery,outdoor beer garden,fratty energy,large-group friendly}",bar,afternoon,3,$,2,img/venues/SweetWater Brewing Company.jpg,unknown
+Hotto Hotto Ramen & Teppanyaki,33.7258276,-84.37704052,hottohottoatl,"{DIY teppan tables,cozy ramen spot,lunch crowd favorite,fusion-friendly}",dinner,afternoon,2,$$,1.75,img/venues/Hotto Hotto Ramen.jpg,unknown
+Buteco,33.7250434,-84.3770384,butecoatl,"{Brazilian bar café,live music nights,Latin low-key energy,ATL-Belo Horizonte crossover}",music,midday,3,$,1.75,img/venues/Buteco.jpg,unknown
+Ziba's Bistro and Wine Bar,33.7391559,-84.3679104,zibasbistroandwinebar,"{Euro-style bistro,intimate date spot,neighborhood wine escape,candlelit nook}",wine bar,evening,2,$$,1.66,img/venues/Ziba's Bistro and Wine Bar.png,unknown
+HC Biergarten,33.73708276,-84.38546065,hcbiergarten,"{German beer hall,open-air drinking,big tables,weekend soccer watch}",bar,evening,3,$$,1.5,img/venues/HC Biergarten.jpg,unknown
+BOCA,33.736626,-84.386469,bocaatl,"{Latino nightclub,bottle service vibe,neon heat,bachata-heavy nights}",dinner,evening,2,$,1.5,img/venues/BOCA.jpg,unknown
+Talat Market,33.7317567,-84.3839743,talatmarketatl,"{progressive Thai,tasting menu fusion,culinary acclaim,alt-dining energy}",dinner,evening,2,$$$,2,img/venues/Talat Market.jpg,unknown
+Lottafrutta,33.75597905,-84.36808679,lottafruttaatl,"{fruit-forward brunch,smoothie bowls,colorful cafe,health-conscious locals}",lunch,midday,1,$,0.5,img/venues/Lottafrutta.png,unknown
+The Little Tart Bakeshop,33.746078,-84.3727959,littletartbakeshop,"{French pastries,cozy morning ritual,aesthetic bakery,ATL's croissant benchmark}",bakery,morning,1,$,0.5,img/venues/The Little Tart Bakeshop.jpg,unknown
+Staplehouse,33.754103,-84.369851,staplehouse,"{Michelin-star intimacy,chef’s narrative,tasting menu journey,special-occasion minimalism}",dinner,evening,2,$$,2,img/venues/Staplehouse.jpg,unknown
+OK YAKI,33.7348157,-84.34881795,okyakiatl,"{gritty yakisoba house,Japanese dive feel,East ATL cult fave,late-night noodles}",dinner,late,3,$$,1.5,img/venues/OK YAKI.jpg,unknown
+Gaja Korean Bar,33.7405484,-84.3463317,gaja_eav,"{soju & small plates,neon-lit hangout,hidden,Korean fusion flavors,Gen Z nightlife magnet}",dinner,evening,4,$$,2,img/venues/Gaja Korean Bar.jpg,unknown
+Bellwood Coffee - East Atlanta Village,33.7403846,-84.34377155,bellwoodcoffee,"{minimalist brew bar,creative class caffeine,East Atlanta focus,sit-down sip spot}",coffee,morning,1,$,0.75,img/venues/Bellwood Coffee - East Atlanta Village.jpg,unknown
+Banshee,33.7400282,-84.3459555,banshee_eav,"{modern Southern,chef-led date night,chic bar crowd,inventive comfort food}",dinner,evening,5,$$$,2,img/venues/Banshee.jpg,unknown
+Lifting Noodles Ramen,33.7409824,-84.3464894,liftingnoodlesramen,"{quick casual ramen,heavy on toppings,anime-wrapped interiors,college crowd}",dinner,midday,2,$,1.25,img/venues/Lifting Noodles Ramen.jpg,unknown
+Pure Quill Superette,33.7477238,-84.3428416,pure.quill.superette,"{gourmet pantry,neighborhood micro-market,curated goods,hybrid cafe-model}",lunch,midday,1,$$,2,img/venues/Pure Quill Superette.jpg,unknown
+Adult Big Wheel Club,33.74970365,-84.3443804,adultbigwheelclub,"{karaoke dive,neon trash aesthetic,chaotic party energy,ATL’s weird late-night}",activity,midday,3,$,3,img/venues/Adult Big Wheel Club.jpg,unknown
+ParkGrounds,33.7501026,-84.354649,parkgrounds,"{dog-friendly patio,neighborhood coffee,fenced pup run,laptop-friendly}",coffee,morning,1,$,0.75,img/venues/ParkGrounds.jpg,unknown
+El Malo,33.7460782,-84.3610218,elmalo.atl,"{mezcal-centric,high-design dark bar,cool kid speakeasy,music-forward}",club,late,5,$$$,3,img/venues/El Malo.jpg,unknown
+Muchacho,33.7468699,-84.35798802,muchachoatl,"{sun-drenched tacos,counter-service chill,breakfast burrito hype,patio brunch energy}",bar,midday,2,$$,1.25,img/venues/Muchacho.jpg,unknown
+El Tesoro,33.749472,-84.342591,eltesoroatl,"{authentic Mexican,daytime margaritas,taco truck feel,no-frills delicious}",bar,afternoon,2,$,1.5,img/venues/El Tesoro.jpg,unknown
+a mano,33.76387055,-84.36830803,amanoatl,"{Italian comfort,cozy porch dining,low-key romance,wine and handmade pasta}",dinner,evening,2,$$,2,img/venues/a mano.jpg,unknown
+Woody's CheeseSteaks,33.77935922,-84.36955514,woodysatl,"{late-night comfort,walk-up window,counter culture,cheap eats classic}",lunch,midday,3,$,1,img/venues/Woody's CheeseSteaks.jpg,unknown
+Park Tavern,33.7821472,-84.36923885,parktavern,"{Piedmont Park patio,big weekend energy,drinks with a view,casual crowd magnet}",bar,evening,4,$,2,img/venues/Park Tavern.jpg,unknown
+Bar Margot,33.78657571,-84.38509403,barmargotatl,"{hotel cocktail lounge,chic business drinks,polished ambiance,polished plate menu}",cocktail,evening,3,$$$,1.5,img/venues/Bar Margot.jpg,unknown
+MidCity,33.7776363,-84.3872941,midcity.atl,"{modern bar & grill,weekday happy hour,downtown reset,unpretentious energy}",cocktail,evening,3,$$,2,img/venues/MidCity.png,unknown
+The Garden Room,33.8398015,-84.38241589,thegardenroomatlanta,"{floral maximalism,Instagram opulence,upscale cocktails,girls’ night luxe}",cocktail,midday,4,$$$$,2,img/venues/The Garden Room.jpg,unknown
+Himitsu,33.8387046,-84.3810675,umisushiatl,"{exclusive omakase,private sushi lounge,high-spend minimalism,zen luxe}",speakeasy,late,5,$$$,2,img/venues/Himitsu.jpg,unknown
+Ranger Station,33.759717,-84.3646037,rangerstationatl,"{intimate dive feel,Americana-heavy vibe,late-night regulars,whiskey-forward}",speakeasy,evening,2,$$,1.75,img/venues/Ranger Station.jpg,unknown
+Bully Boy,33.768267,-84.360439,bullyboyatl,"{East Asian-American fusion,hidden,sleek interiors,large-group dining,sake-driven menu}",dinner,evening,3,$$$,2,img/venues/Bully Boy.jpg,unknown
+Burle's Bar,33.7681929,-84.362462,burlesbar,"{Westside dive,under-the-radar,vinyl nights,no-frills charm}",cocktail,midday,3,$$,1.25,img/venues/Burle's Bar.jpg,unknown
+The Local,33.7741056,-84.36229035,thelocalonponce,"{neighborhood dive,trivia nights,comfort food + beer,ATL old guard}",bar,late,3,$,1.5,img/venues/The Local.jpg,unknown
+Alon's Bakery & Market,33.7926253,-84.3528263,alonsbakery,"{Euro-style deli,gourmet pastries,premium to-go,slow brunch escape}",bakery,morning,1,$,1,img/venues/Alon's Bakery & Market.jpg,unknown
+Mary Mac's Tea Room,33.7728357,-84.3799419,marymacstearoom,"{Southern hospitality classic,meat-and-three institution,family-style tradition,ATL heritage}",tea,midday,1,$$,1.5,img/venues/Mary Mac's Tea Room.jpg,unknown
+The Varsity,33.77170735,-84.38931505,thevarsity1928,"{fast food landmark,vintage counter service,greasy spoon energy,historic ATL staple}",lunch,midday,2,$,1.5,img/venues/The Varsity.jpg,unknown
+Drawbar,33.78497,-84.410571,drawbaratl,"{rooftop cocktails,skyline views,sleek date night,lounge meets luxe}",rooftop,midday,4,$$,2,img/venues/Drawbar.jpg,unknown
+Little Sparrow,33.787134,-84.41266,littlesparrowatlanta,"{natural wine,minimalist interiors,creative pairings,Eastside date staple}",cocktail,evening,2,$$$,2,img/venues/Little Sparrow.jpg,unknown
+Palo Santo,33.78396723,-84.41817131,palosanto_atl,"{rooftop taqueria,sexy tacos,mezcal-forward menu,tropical Atlanta energy}",cocktail,late,5,$$$,2.5,img/venues/Palo Santo.jpg,unknown
+High Museum of Art,33.78953465,-84.38626657,highmuseumofart,"{cultural cornerstone,rotating exhibitions,dressy museum crowd,art-forward programming}",gallery,midday,1,$,2.5,img/venues/High Museum of Art .jpg,unknown
+Johnny's Hideaway,33.857791,-84.380822,johnnyshideaway,"{boomer dance floor,cougar central,retro jukebox hits,late-night chaos}",club,evening,4,$$,2.5,img/venues/Johnny's Hideaway.jpg,unknown
+Le Bon Nosh,33.84132675,-84.38103404,lebonnosh,"{chef’s market cafe,French-leaning brunch,polished morning date,clean casual}",bakery,midday,1,$$,1.25,img/venues/Le Bon Nosh.png,unknown
+Irby's Tavern,33.83958005,-84.3770879,irbystavern,"{Buckhead sports crowd,wings & beer vibe,college game day hang,casual rowdy}",bar,evening,3,$,2,img/venues/Irby's Tavern.jpg,unknown
+St. Julep,33.83935865,-84.37503015,stjulep,"{colorful rooftop cocktails,fun-first lounge,DJ-curated weekends,upbeat interiors}",rooftop,evening,4,$$$,1.75,img/venues/St. Julep.jpg,unknown
+Yeppa & Co. - Buckhead,33.83831,-84.378026,yeppacoatl,"{Italian aperitivo culture,Milanese energy,Euro crowd,fashion-forward drinks}",cocktail,evening,3,$$$,2,img/venues/Yeppa & Co. - Buckhead.jpg,unknown
+Fado Irish Pub,33.7797074,-84.3840009,fadoirishpub,"{Irish sports bar,match-day energy,pint-heavy weekends,group-friendly crowd}",bar,midday,3,$$,2.5,img/venues/Fado Irish Pub.jpg,unknown
+Le Colonial Atlanta,33.83847596,-84.38087309,lecolonial_restaurants,"{upscale French-Vietnamese,romantic interiors,Buckhead luxury,timeless elegance}",cocktail,evening,1,$$$,2,img/venues/Le Colonial Atlanta.jpg,unknown
+Northside Tavern,33.7836184,-84.4120813,thenorthsidetavern,"{gritty blues bar,dive classic,no-frills live music,Atlanta institution}",bar,evening,4,$,2,img/venues/Northside Tavern.jpg,unknown
+Wagyu House Atlanta | Rooftop BBQ,33.783135,-84.407566,wagyuhouseatl,"{premium Korean BBQ,rooftop skyline dining,cook-at-table experience,group celebration spot,Buckhead power crowd}",rooftop,evening,4,$$$,2.5,img/venues/Wagyu House Atlanta.png,unknown
+Ormsby's,33.7859263,-84.4119319,ormsbys,"{basement games bar,bocce and brews,industrial chill,low-key hangout}",bar,evening,3,$$,1.75,img/venues/Ormsby's.jpg,unknown
+STEREO,33.755066,-84.357816,stereoatl,"{vinyl-focused lounge,deep listening room,analog-first DJ sets,elevated soundscape}",coffee,midday,5,$$,2,img/venues/STEREO.png,unknown
+LLoyd's Restaurant & Lounge,33.755066,-84.357816,lloydspizzaparty,"{retro diner bar,frozen cocktails,throwback Americana,comfort food + kitsch}",dinner,evening,2,$,2,img/venues/LLoyd's Restaurant & Lounge.jpg,unknown
+Glide Pizza,33.7560215,-84.36610812,glidepizza,"{neighborhood slice shop,walk-up counter,NY-style pizza,hangover cure}",dinner,afternoon,3,$,0.75,img/venues/Glide Pizza.jpg,unknown
+The James Room,33.7555043,-84.3655486,thejamesroom,"{hidden speakeasy,upscale cocktails,moody luxe,password-entry lounge}",speakeasy,evening,4,$$$,1.75,img/venues/The James Room.jpg,unknown
+Yuji Modern Japanese,33.75704209,-84.36615321,yujiatlanta,"{modern omakase,minimal interior,chef's curation,luxury sushi theater}",dinner,evening,2,$$$,2,img/venues/Yuji Modern Japanese.jpg,unknown
+Ladybird Grove & Mess Hall,33.759717,-84.3646037,ladybirdatlanta,"{outdoor beer lodge,BeltLine brunch,casual Southern plates,big table gatherings}",bar,evening,4,$$,2.5,img/venues/Ladybird Grove & Mess Hall.jpg,unknown
+Painted Park,33.76254145,-84.35944542,paintedparkatlanta,"{picnic tables,casual beer garden,relaxed weekend energy,group-friendly hang}",bar,evening,3,$$,2.5,img/venues/Painted Park.jpg,unknown
+Harbor Coffee,33.76346,-84.358494,harborcoffee,"{oceanic branding,clean design,remote work friendly,slow caffeine experience}",coffee,morning,1,$,0.5,img/venues/Harbor Coffee.jpg,unknown
+BeetleCat,33.7624505,-84.35858396,beetlecatatl,"{nautical seafood spot,oyster tower dates,funky Buckhead brunch,upscale East Coast vibes}",dinner,midday,3,$$$,2,img/venues/BeetleCat.jpg,unknown
+Highland Tap,33.78284196,-84.35453588,highlandtapatlanta,"{underground steakhouse,old-school martinis,dim-light intimacy,neighborhood tradition}",cocktail,evening,3,$$,1.5,img/venues/Highland Tap.jpg,unknown
+Dark Horse Tavern,33.7768237,-84.3526593,darkhorseatlanta,"{rock dive bar,grunge energy,live music throwbacks,Midtown chaos}",bar,late,4,$,2,img/venues/Dark Horse Tavern.JPG,unknown
+Dad's,33.77832855,-84.35305049,dadsatl,"{karaoke-fueled bar,nostalgia decor,late-night rowdiness,theme nights}",bar,evening,4,$$,1.75,img/venues/Dad's.jpg,unknown
+Moe's and Joe's,33.7828246,-84.3541834,moesandjoesatl,"{front porch beers,college bar classic,Inman Park staple,cheap pitchers}",bar,evening,3,$,1.75,img/venues/Moe's and Joe's.png,unknown
+The Rooftop at Clermont,33.77347,-84.361399,hotelclermont,"{retro motel rooftop,skyline dive vibes,kitschy chic,adult swim energy}",rooftop,happy hour,4,$$,1.75,img/venues/The Rooftop at Clermont.jpg,unknown
+Clermont Lounge,33.77347,-84.361399,clermontlounge,"{legendary strip club,ATL dive royalty,unpredictable energy,punk meets pole}",bar,late,5,$$,2,img/venues/Clermont Lounge.jpg,unknown
+Spaceman,33.8436339,-84.3620118,spacemanatl,"{Buckhead rooftop,glossy cocktail bar,hotel-luxe feel,skyline socializing}",rooftop,evening,4,$$$,2.5,img/venues/Spaceman.jpg,unknown
+Elemental Spirits Co.,33.7707666,-84.352723,elementalspirits.co,"{boutique bottle shop,curated spirits,cocktail-forward selection,ATL’s drink nerd haven}",random gem,afternoon,1,$,0.66,,unknown
+Murphy's Wine Shop,33.782121,-84.3548853,murphysatlwine,"{classic wine shop,Morningside anchor,sommelier-run picks,food pairings available}",random gem,afternoon,1,$,1.5,img/venues/Murphy's Wine Shop.jpg,unknown
+Wine Shoe,33.7515516,-84.3990245,wineshoe,"{tasting-first wine shop,casual classes,under-the-radar varietals,local wine community}",wine bar,afternoon,1,$,0.66,img/venues/Wine Shoe.jpg,unknown
+Vin ATL,33.76066881,-84.34042587,vin.atl,"{neighborhood wine bar,relaxed pours,friendly staff,solo-sip or date-ready}",wine bar,afternoon,2,$,0.66,img/venues/Vin ATL.jpg,unknown
+PERRINE's WINE - Westside,33.785691,-84.411774,perrineswine_westside,"{French-trained sommelier,high-end labels,Euro-centric palate,serious collectors shop}",random gem,midday,1,$,0.66,img/venues/PERRINE's WINE - Westside.jpg,unknown
+Barcelona Wine Bar,33.76254145,-84.35944542,barcelonawinebar,"{tapas & Tempranillo,lively date night,dim communal tables,late night pours}",wine bar,evening,3,$$,2.5,img/venues/Barcelona Wine Bar.jpg,unknown
+Lucian Books and Wine,33.8369462,-84.381205,lucianbooksandwine,"{literary wine bar,curated shelves,cultured sipping,upscale quiet energy}",wine bar,evening,2,$$$$,2,img/venues/Lucian Books and Wine.jpg,unknown
+3 Parks Wine Shop - Old Fourth Ward,33.7687646,-84.36298948,3parkswine_fourthward,"{community-first bottle shop,casual tastings,BeltLine crowd,natural wine forward}",wine bar,afternoon,1,$$,1.5,img/venues/3 Parks Wine Shop.png,unknown
+VinoTeca,33.7624505,-84.35858396,shopvinoteca,"{Euro-style boutique,focused import list,Inman Park favorite,language of terroir}",wine bar,afternoon,2,$,1.5,img/venues/VinoTeca.jpg,unknown
+SEBASTIAN PINTXOS BAR,33.7768867,-84.38316217,sebastianpintxosbar,"{tapas,wine bar,date night,European,stylish,Spanish food,late night}",bar,evening,4,$$,2.33,img/venues/SEBASTIAN PINTXOS BAR.jpg,unknown
+Criminal Records,33.7652096,-84.3498878,criminalrecords,"{vinyl records,music lovers,indie,gifts,browsing,ATL music culture}",random gem,midday,2,$$,0.66,img/venues/Criminal Records.jpg,unknown
+Carroll Street Cafe,33.7489907,-84.3679455,carrollstcafe,"{hidden gem,brunch,patio,cozy,eclectic,mimosas,neighborhood cafe}",brunch,midday,2,$$,1.75,img/venues/Carroll Street Cafe.jpg,unknown
+Brick Store Pub,33.7751446,-84.2958139,brickstorepub,"{craft beer,pub food,cozy bar,Decatur,historic,beer lovers,chill dinner}",bar,evening,4,$$,1.5,img/venues/Brick Store Pub.jpg,unknown
+The Family Dog,33.792682,-84.3522716,thefamilydogatl,"{casual eats,sports bar,family‑friendly,neighborhood bar,live music,dog‑friendly}",bar,evening,4,$,1.5,img/venues/The Family Dog.jpg,unknown
+Ash Coffee,33.77983002,-84.34895895,ashcoffeeatl,"{specialty coffee,work spot,aesthetic cafe,minimal design,good wifi}",coffee,morning,2,$,0.5,img/venues/Ash Coffee.jpg,unknown
+Java Saga,33.8932252,-84.2834331,javasagacoffee,"{chicken sandwich,Asian fusion,quick bite,lunch spot,Korean flavors}",lunch,midday,2,$,1,img/venues/Java Saga.jpg,unknown
+Hudson and Alphonse,33.71936579,-84.38000079,hudsonandalphonse,"{all-day cafe,European cafe,espresso,work-friendly,brunch + dinner combo}",lunch,midday,3,$,0.66,img/venues/Hudson and Alphonse.jpg,unknown
+How Crispy Express,33.736586,-84.38522,howcrispy,"{fried chicken,fast casual,funky vibe,sandwich spot,takeout}",dinner,midday,3,$,1,img/venues/How Crispy Express.jpg,unknown
+Gene's,33.7506665,-84.30957242,_genesgenesgenes_,"{New Orleans cuisine,cocktails,lively dinner,group-friendly,Southern food}",dinner,midday,4,$$,2,img/venues/Gene's.jpg,unknown
+Sublime Doughnuts,33.8284633,-84.3291753,sublimedoughnuts,"{best doughnuts,creative desserts,late night sweet,Atlanta classic}",dessert,evening,3,$,0.5,img/venues/Sublime Doughnuts.jpg,unknown
+Paolo's Gelato Italiano,33.78231572,-84.35403173,paolosgelatoatl,"{gelato,dessert stop,date night,European sweets,sweet tooth fix}",dessert,evening,2,$,0.66,img/venues/Paolo's Gelato Italiano.jpg,unknown
+Miss Conduck,33.754172,-84.375953,missconduckatl,"{modern Korean,stylish interior,upscale Asian,date night dinner}",dinner,evening,2,$$,2,img/venues/Miss Conduck.jpg,unknown
+BoccaLupo,33.7547586,-84.36276957,boccalupoatl,"{Italian,handmade pasta,romantic dinner,chef-driven,upscale eats}",dinner,evening,4,$$$,2,img/venues/BoccaLupo.jpg,unknown
+Yakitori Kona,33.78242657,-84.354841,yakitorikonaatl,"{Japanese food,skewers,izakaya,late night,sake bar}",dinner,late,4,$$,,img/venues/Yakitori Kona.jpg,unknown
+Blackjack Bar Tapas,33.7838568,-84.3836206,blackjackbartapas,"{tapas bar,late night spot,cocktails,moody vibe,lively dinner}",bar,late,5,$$$,,img/venues/Blackjack Bar Tapas.jpg,unknown
+Gigi's Italian Kitchen & Restaurant,33.7649126,-84.3332078,gigisitaliankitchen,"{Italian-American,vibey dinner,stylish,pasta and wine,date spot}",dinner,evening,4,$$,,img/venues/Gigi's Italian Kitchen & Restaurant.jpg,unknown
+Little Bear,33.736586,-84.38522,littlebearatl,"{neighborhood restaurant,chef-driven,fine casual,seasonal plates,foodie}",dinner,evening,4,$$$,,img/venues/Little Bear.jpg,unknown
+Tum Pok Pok,33.8877912,-84.2886581,tum_pok_pok,"{Northern Thai,authentic,spicy food,local favorite,late lunch/dinner}",dinner,evening,4,$$,,img/venues/Tum Pok Pok.png,unknown
+Northern China Eatery,33.8925867,-84.2838997,northernchinaeatery,"{dumplings,hole-in-the-wall,authentic Chinese,cheap eats,off the radar}",lunch,evening,3,$,,img/venues/Northern China Eatery.jpg,unknown
+LanZhou Ramen,33.8948429,-84.2819667,lanzhouramenga,"{hand-pulled noodles,ramen,casual,authentic Chinese,solo dining}",dinner,midday,3,$,,img/venues/LanZhou Ramen.jpg,unknown
+La Calavera,33.74751926,-84.33212981,lacalaverapizza,"{Latin bakery,empanadas,pastries,offbeat spot,breakfast grab}",dinner,evening,2,$,,img/venues/La Calavera.jpg,unknown
+Bread & Butterfly,33.7624293,-84.3581661,bread_and_butterfly,"{French bistro,brunch,aesthetic interior,wine & pastries,romantic lunch}",coffee,midday,2,$$,,img/venues/Bread & Butterfly.jpg,unknown
+Buena Gente Cuban Bakery,33.79332375,-84.30545994,buenagenteatl,"{Cuban sandwiches,pastelitos,Latin breakfast,local bakery,grab and go}",bakery,morning,2,$,,img/venues/Buena Gente Cuban Bakery.png,unknown
+Heaps Pies,33.778269,-84.277682,heapsatl,"{savory pies,Aussie-style,handheld lunch,quick meal,quirky eats}",bakery,midday,2,$,,img/venues/Heaps Pies.jpg,unknown
+Galette,33.77627052,-84.26804452,galetteatl,"{French cafe,crepes,breakfast + lunch,neighborhood spot,euro-vibe brunch}",bakery,morning,2,$,,img/venues/Galette.jpg,unknown
+Thinking Man Tavern,33.76787415,-84.30458409,thinking.man.tavern,"{trivia nights,local pub,craft beer,dive bar,neighborhood hangout}",bar,evening,5,$,,img/venues/Thinking Man Tavern.jpg,unknown
+Red's Beer Garden,33.71880063,-84.36842474,redsbeergarden,"{beer garden,casual eats,dog‑friendly,outdoor picnic tables,chill vibes}",bar,evening,4,$,,img/venues/Red's Beer Garden.jpeg,unknown
+Arepa Mia,33.7770981,-84.2674198,arepamia,"{Venezuelan food,arepas,Latin breakfast,quick lunch,gluten‑free options}",lunch,evening,3,$,,img/venues/Arepa Mia.jpg,unknown
+My Parents' Basement,33.7755875,-84.2723257,myparentsbasement,"{nerd culture,comic bar,pinball,craft beer,chill dining}",bar,evening,4,$,,img/venues/My Parents' Basement.jpg,unknown
+Boggs Social & Supply,33.7371739,-84.43040115,boggssocial,"{dive bar,alt music venue,cheap drinks,grungey vibe,DIY crowd}",bar,evening,5,$,,img/venues/Boggs Social & Supply.jpg,unknown
+Joystick Gamebar,33.754137,-84.373619,joystickgamebar,"{arcade bar,retro games,cocktails,late night,quirky date night}",activity,late,5,$,2,img/venues/Joystick Gamebar.jpg,unknown
+Sister Louisa's Church of the Living Room &...,33.7544842,-84.37235211,sisterlouisaschurch,"{kitsch bar,irreverent decor,art + drinks,weird ATL staple,divey}",bar,late,5,$,2,img/venues/Sister Louisa's Church.jpg,unknown
+Jackson Fine Art,33.8402295,-84.37434883,jacksonfineart,"{photography gallery,modern art,quiet and refined,upscale art seekers}",gallery,midday,2,$,0.75,img/venues/Jackson Fine Art.jpg,unknown
+The Bakery Atlanta (Arts Organization),42.089736,-87.98562,thebakeryatlanta,"{underground art,DIY events,community-driven,creative space}",gallery,,1,$,1.5,img/venues/The Bakery Atlanta .jpg,unknown
+ZuCot Gallery,33.7522285,-84.3988864,zucotgallery,"{African-American art,contemporary gallery,cultural depth,upscale experience}",gallery,midday,2,$,0.75,img/venues/ZuCot Gallery.jpg,unknown
+Monday Night Brewing - West Midtown,33.7949288,-84.409924,mondaynight,"{craft beer,brewery patio,group hang,after-work crowd,beer flights}",bar,evening,4,$,2.5,img/venues/Monday Night Brewing -The Grove.jpg,unknown
+The Goat Farm Arts Center,33.7866125,-84.41441842,thegoatfarm,"{industrial arts space,performances,film + art,offbeat location,emerging artists}",activity,midday,2,$,3,img/venues/The Goat Farm Arts Center.jpg,unknown
+La Bodega Atl,33.700541,-84.419055,labodega.atl,"{Dominican food,breakfast spot,homey cafe,authentic Latin,local secret}",coffee,morning,2,$,0.5,img/venues/La Bodega Atl.jpg,unknown
+Sammy's,33.7406345,-84.40807286,sammysatl,"{breakfast all day,comfort food,Southern classic,diner vibes}",breakfast,midday,2,$,0.5,img/venues/Sammy's.jpg,unknown
+Atlanta Auction Gallery,33.7400956,-84.4101224,atlantaauctiongallery,"{estate finds,antiques,upscale auctions,collector crowd,art & objects}",gallery,,1,$$$,2.25,img/venues/Atlanta Auction Gallery.jpg,unknown
+The Sun ATL,33.7542004,-84.3745335,thesunatl,"{art gallery,emerging artists,minimal design,white cube}",gallery,midday,2,$,2,img/venues/The Sun ATL.jpg,unknown
+One Contemporary Gallery,33.754138,-84.374769,one.contemporary,"{rotating shows,modern art,curator-driven gallery,gallery hopping}",gallery,midday,2,$,1,img/venues/One Contemporary Gallery.jpg,unknown
+Blooms Emporium Atlanta,33.77243965,-84.36520322,blooms.emporium,"{floral studio,boutique shopping,gift items,aesthetic retail,plant haven}",random gem,evening,2,$,1.66,img/venues/Blooms Emporium Atlanta.png,unknown
+The Supermarket,33.7718481,-84.35261541,thesupermarket.atl,"{nightlife,bar + DJ,Gen Z hangout,party bar,late night drinks}",gallery,evening,5,$,1.5,img/venues/The Supermarket.jpg,unknown
+Spalding Nix Fine Art,33.81937457,-84.3733047,spaldingnixfineart,"{blue‑chip art,collector gallery,refined viewing,elegant space}",gallery,midday,2,$,0.75,img/venues/Spalding Nix Fine Art.jpg,unknown
+7th House,33.7406345,-84.40807286,seventhouse,"{upscale lounge,moody lighting,DJ nights,velvet booths}",lounge,evening,4,$$$$,2,img/venues/7th House.jpg,unknown
+Madre Selva Atlanta,33.8226467,-84.3684826,madreselvaatl,"{Latin fusion,jungle chic,date night,chef-driven dinner}",dinner,evening,4,$$$,2,img/venues/Madre Selva Atlanta.jpg,unknown
+Strangers in Paradise,33.732134,-84.42061443,strangersinparadiseatl,"{moody lounge,creative cocktails,fashion-forward crowd,underground feels}",bar,evening,4,$,1.66,img/venues/Strangers in Paradise.jpg,unknown
+Bovino after dark,33.732134,-84.420261,bovinoafterdark,"{upscale dinner,romantic date night,moody,steakhouse vibe}",dinner,evening,4,$$$,2,img/venues/Bovino after dark.jpg,unknown
+Piedmont Park,33.78904775,-84.37188621,piedmontpark,"{urban park,picnic spot,running trail,dog-walking,city escape}",park,morning,2,$,2,img/venues/Piedmont Park.jpg,unknown
+Decatur Farmers Market,33.77916675,-84.29671367,communityfarmersmarkets,"{local produce,neighborhood market,community-driven,weekday fresh finds}",market,evening,2,$,1.33,img/venues/Decatur Farmers Market.jpg,unknown
+East Atlanta Village Farmers Market,33.7385222,-84.3444816,communityfarmersmarkets,"{lively market,local vendors,music meets produce,local street food}",market,evening,2,$,1.33,img/venues/East Atlanta Village Farmers Market.jpg,unknown
+Brookhaven Farmers Market,33.8598471,-84.3344076,brookhavenfarmersmarket,"{family-friendly,suburban feel,organic goods,weekly tradition}",market,midday,2,$,1.33,img/venues/Brookhaven Farmers Market.jpg,unknown
+Peachtree Road Farmers Market,33.8312329,-84.3862539,ptreefarmersmkt,"{organic market,family-friendly,local produce,health-conscious crowd}",market,midday,2,$,1.33,img/venues/Peachtree Road Farmers Market.jpg,unknown
+Morningside Farmer's Market,33.79301775,-84.35693639,morningsidefarmersmarket,"{artisan goods,community market,early morning gem,intimate setting}",market,morning,2,$,1.33,img/venues/Morningside Farmer's Market.jpg,unknown
+Virginia Highland Farmers Market,33.781839,-84.363367,vahifarmersmarket,"{artisanal goods,neighborhood market,fresh produce,local-first}",market,midday,2,$,1.33,img/venues/Virginia Highland Farmers Market.jpg,unknown
+Freedom Farmers Market,33.76778394,-84.35867613,freedomfarmersmkt,"{urban market,diverse vendors,foodie destination,community atmosphere}",market,midday,2,$,1.33,img/venues/Freedom Farmers Market.jpg,unknown
+Grant Park Farmers Market,33.72660094,-84.37661647,communityfarmersmarkets,"{food trucks,dog-friendly,family vibes,urban market,community shopping}",market,midday,2,$,1.33,img/venues/Grant Park Farmers Market.jpg,unknown
+The EARL,33.740986,-84.345892,badearl,"{indie music venue,dive bar,live shows,EAV nightlife,alt crowd}",music,late,5,$,2.5,img/venues/The EARL.jpeg,unknown
+Flight Club Atlanta,33.7831991,-84.4115332,flightclubdartsusa,"{social darts,games & drinks,group fun,trendy bar night}",bar,evening,4,$$,2.5,,unknown
+Bar Avize,33.78198587,-84.41364117,bar.avize,"{wine bar,date night,elegant,European vibe,moody}",dinner,evening,4,$$,2,img/venues/Bar Avize.jpg,unknown
+Atlanta Contemporary,33.772975,-84.4051806,atlantacontemporary,"{contemporary art,gallery hopping,rotating exhibitions,modern space}",gallery,midday,2,$,2.33,img/venues/Atlanta Contemporary.jpg,unknown
+Jolene Jolene,33.7596328,-84.3289425,jolenejoleneatl,"{wine bar,chill date spot,neighborhood gem,southern style}",lunch,midday,3,$,2,img/venues/Jolene Jolene.jpg,unknown
+Pullman Yards,33.7596269,-84.3289412,prattpullmandistrict,"{event space,industrial venue,immersive art,live shows}",market,,2,$,3,img/venues/Pullman Yards.jpg,unknown
+Ticonderoga Club,33.7588882,-84.36325649,ticonderogaclub,"{eclectic cocktails,hidden speakeasy,intimate dining,neighborhood lounge}",bar,evening,4,$$$,2,img/venues/Ticonderoga Club.png,unknown
+A Cappella Books,33.7595421,-84.3505635,acappellabooks,"{indie bookstore,author events,cozy bookshop,local literary}",bookstore,evening,2,$,0.75,img/venues/A Cappella Books.png,unknown
+Bar Blanc,33.787134,-84.41266,barblancatlanta,"{wine lounge,romantic spot,cocktails,late night bar,upscale vibe}",cocktail,evening,5,$$$,2,img/venues/Bar Blanc.jpg,unknown
+Carmel,33.83727906,-84.38016533,carmelatl,"{coastal Mediterranean,elevated dining,date night,modern cuisine}",dinner,evening,3,$$$,2,img/venues/Carmel.jpg,unknown
+Lyla Lila,33.7735507,-84.3846361,lylalilaatl,"{upscale European,moody dinner,pre-theater dining,refined menu}",dinner,evening,3,$$$,2,img/venues/Lyla Lila.jpg,unknown
+Elektra,33.768629,-84.363636,elektraatl,"{DJ lounge,pan-Latin food,nightlife,lively cocktails,energetic crowd}",cocktail,evening,4,$$$,2,img/venues/Elektra.jpg,unknown
+Mend Coffee & Goods,33.855474,-84.381357,mendcoffee,"{minimalist cafe,workspace spot,organic coffee,calm aesthetic}",coffee,midday,2,$,0.75,img/venues/Mend Coffee & Goods.jpg,unknown
+Daydreamer Coffee,33.77820925,-84.38836036,daydreamercafe,"{plant-filled cafe,espresso bar,calm mornings,cozy neighborhood spot}",coffee,morning,2,$,0.75,img/venues/Daydreamer Coffee.jpg,unknown
+Cochran Shoals Trail - River Loop,33.9032313,-84.4448052,explore,"{running trail,nature escape,river loop,hike & bike,urban scenic}",nature,morning,2,$,3,img/venues/Cochran Shoals Trail.jpg,unknown
+Sean’s Harvest Market,33.78830585,-84.36913713,seansharvestmarket,"{local-produce,casual-outdoor,health-conscious}",breakfast,morning,1,$,0.66,img/venues/Sean's Harvest Market.jpg,unknown
+Antico Pizza Napoletana,33.7846556,-84.4056305,gioantico,"{group-friendly,fast-casual,BYOB-vibe}",lunch,evening,3,$,1.5,img/venues/Antico Pizza Napoletana.jpg,unknown
+Pelicana Chicken Atlanta,33.78592805,-84.4008616,pelicanaatlanta,"{late-night-bite,K-food,casual}",lunch,late,4,$,2,img/venues/Pelicana Chicken Atlanta.jpg,unknown
+The Albert,33.76200645,-84.35752215,thealbertatl,"{sports-bar,neighborhood-hang,beer-focused}",bar,evening,3,$,1.5,img/venues/The Albert.jpg,unknown
+Der Biergarten,33.7615575,-84.3964558,derbiergarten,"{Oktoberfest-vibe,large-groups,beer-hall}",bar,happy hour,4,$$,2,img/venues/Der Biergarten.jpg,unknown
+Starlight Drive‑In Theatre & Flea Market,33.7026988,-84.3470132,starlightdrivein,"{retro,family-friendly,all-day-experience}",cinema,morning,3,$$,2.5,img/venues/Starlight Drive-In Theatre and Flea Market.jpg,unknown
+One Flew South – BeltLine,33.7615452,-84.3429678,oneflewsouthatl,"{upscale-cocktails,chef-driven,date-night}",lunch,evening,3,$$$,2,img/venues/One Flew South .jpg,unknown
+Double Zero,33.7879838,-84.3261663,doublezeroatl,"{wine-forward,Italian,date-night}",lunch,evening,3,$$,2,img/venues/Double Zero.jpg,unknown
+All Fired Up,33.78788597,-84.32672831,allfiredupatl,"{interactive,art-focused,BYOB-friendly}",activity,afternoon,2,$$,2.33,img/venues/All Fired Up.jpg,unknown
+The Po’Boy Shop Basement Bar,33.79113765,-84.30455607,thepoboyshop,"{divey,live-music,New-Orleans-vibe}",bar,late,4,$$,1.66,img/venues/The Po'Boy Shop Basement Bar.png,unknown
+Salaryman Toco Hills,33.815529,-84.31112,salarymanatl,"{ramen,sake-bar,casual-date}",lunch,evening,3,$$,1.75,img/venues/Salaryman Toco Hills.jpg,unknown
+CHE BUTTER JONEZ,33.81502703,-84.33629013,chebutterjonez,"{street-food,hip-hop-vibe,community-favorite}",lunch,happy hour,2,$,1,img/venues/CHE BUTTER JONEZ.jpg,unknown
+KODAK Film Lab Atlanta,33.81227048,-84.35827276,kodakfilmlabatl,"{creative-space,photography,retro-nostalgia}",random gem,morning,1,$,0.5,img/venues/KODAK Film Lab Atlanta.jpeg,unknown
+Eleventh Street Pub,33.7830897,-84.3875018,eleventhstreetpub,"{darts,casual-pub,neighborhood-hang}",bar,evening,4,$$,1.5,img/venues/Eleventh Street Pub.jpg,unknown
+Bulla Gastrobar,33.7834161,-84.3847646,bullagastrobar,"{tapas,wine-focused,lively-atmosphere}",lunch,evening,3,$$,2.5,img/venues/Bulla Gastrobar.jpg,unknown
+Lure,33.78499975,-84.38454233,lure.atl,"{seafood-forward,romantic,upscale}",lunch,evening,3,$$$,2.5,img/venues/Lure.jpg,unknown
+El Valle,33.7763008,-84.3847755,elvalleatl,"{modern-Mexican,cocktail-focused,lively}",lunch,evening,4,$$,2.5,img/venues/El Valle.jpg,unknown
+Trap Music Museum,33.7718036,-84.4086916,trapmusicmuseum,"{immersive-experience,hip-hop-culture,photo-op}",gallery,afternoon,2,$,3,img/venues/Trap Music Museum.jpg,unknown
+Mirko Pasta,33.870015,-84.380597,mirko_pasta,"{neighborhood-Italian,comfort-food,wine-friendly}",lunch,evening,2,$$,1.75,img/venues/Mirko Pasta.jpg,unknown
+Hal’s - The Steakhouse,33.8546922,-84.38169335,halsthesteakhouse,"{power-dinner,cigar-friendly,live-music}",dinner,evening,3,$$$$,2,img/venues/Hal's The Steakhouse.jpg,unknown
+The Punchline Comedy Club,33.85515489,-84.38276373,punchlinecomedy,"{stand-up-comedy,casual,date-night}",comedy,evening,4,$$,3,img/venues/The Punchline Comedy Club.jpg,unknown
+Little Alley Steak Buckhead,33.85211425,-84.36635429,littlealleysteakatl,"{high-end-steakhouse,business-meetings,bourbon}",dinner,evening,3,$$$$,2.5,img/venues/Little Alley Steak Buckhead.png,unknown
+Rose and Rye,33.8479272,-84.3663338,roseandrye.atl,"{skyline-views,craft-cocktails,romantic}",cocktail,late,5,$$$,2.5,img/venues/Rose and Rye.png,unknown
+Raging Burrito,33.78443335,-84.2933602,ragingburrito,"{large-patio,Tex-Mex,margarita-hub}",lunch,evening,2,$,1.25,img/venues/Raging Burrito.jpg,unknown
+Opo Coffee,33.77188743,-84.29244043,opocoffee,"{specialty-coffee,minimal-aesthetic,remote-work}",coffee,morning,1,$,0.75,img/venues/Opo Coffee.jpg,unknown
+Casa Balam,33.77548713,-84.29902085,casabalamatl,"{Latin-inspired,mezcal-focused,nightlife}",dinner,evening,4,$$$,2.25,img/venues/Casa Balam.png,unknown
+The S.O.S. Tiki Bar,33.7742092,-84.2950236,sostikibar,"{tiki-drinks,tropical,kitschy}",bar,late,4,$$,2,img/venues/The S.O.S. Tiki Bar.jpg,unknown
+Sapphire Karaoke & Restaurant,33.893689,-84.2854402,sapphirekaraoke,"{private-rooms,Asian-fusion,nightlife}",activity,late,5,$$,3,img/venues/Sapphire Karaoke.jpg,unknown
+Heirloom Market BBQ,33.8985938,-84.4471801,heirloommarketbbq,"{Korean-BBQ-fusion,casual,takeout-friendly}",lunch,evening,3,$,0.66,img/venues/Heirloom Market .jpg,unknown
+The Daily Cafe – Buckhead,33.85513221,-84.43122221,thedailyatl,"{brunch-spot,health-focused,bright-interior}",coffee,morning,1,$,0.5,img/venues/The Daily Cafe - Buckhead.jpg,unknown
+Bellwood Coffee – Riverside,33.81057,-84.476868,bellwoodcoffee,"{specialty-coffee,minimal-aesthetic,remote-work}",coffee,morning,1,$,0.5,img/venues/Bellwood Coffee - Riverside.jpg,unknown
+Hankook Taqueria,33.8114042,-84.4317513,hankooktaqueria,"{Korean-Mexican-fusion,casual,takeout}",lunch,midday,3,$,1,img/venues/Hankook Taqueria.jpg,unknown
+Taste Wine Bar and Market,33.80201249,-84.42947613,taste.winebar,"{wine-tasting,retail,date-night}",wine bar,evening,3,$$,2,img/venues/Taste Wine Bar and Market.png,unknown
+Deljou Art Group,33.7987173,-84.4245928,deljouartgroup,"{art-gallery,creative-space,appointment-only}",gallery,afternoon,1,$,1,img/venues/Deljou Art Group.JPG,unknown
+Floral Park Market,33.79438345,-84.41374163,floralparkmarket,"{local-market,seasonal-produce,family-friendly}",market,afternoon,2,$,0.66,img/venues/Floral Park Market.jpg,unknown
+Ace’s Place,33.86082479,-84.33155693,acesplacebrookhavenga,"{sports-bar,late-night,casual}",bar,evening,4,$$,2,img/venues/Ace's Place.jpg,unknown
+Gunshow,33.7407083,-84.3580222,gunshowatl,"{chef-driven,interactive-dining,rotating-menu}",dinner,evening,3,$$$$,2.25,img/venues/Gunshow.png,unknown
+The Dirty Tea,33.7755446,-84.3529905,thedirtyteaatl,"{bubble-tea,dessert-focused,casual-hang}",tea,afternoon,2,$$$,2,img/venues/The Dirty Tea.jpg,unknown
+Unknown,33.8148981,-84.3537531,unknown.atlanta,"{TBD,eclectic,flexible-use}",dinner,evening,4,$$$,2.5,img/venues/Unknown.jpg,unknown
+Whitehall Tavern,33.8201785,-84.3876576,whitehall_tavern,"{sports-bar,pub-grub,neighborhood-hang}",bar,evening,3,$$,1.5,img/venues/Whitehall Tavern.jpg,unknown
+Brewdog Atlanta,33.756269,-84.3649011,brewdogatl,"{craft-beer,dog-friendly,industrial-chic}",bar,evening,4,$$,1.66,img/venues/Brewdog Atlanta.jpg,unknown
+The Salty Donut,33.75772085,-84.36423362,thesaltydonut,"{artisan-donuts,coffee-pairing,instagrammable}",dessert,morning,2,$,0.5,img/venues/The Salty Donut.jpg,unknown
+The Vortex Bar & Grill,33.7662554,-84.349211,thevortexatl,"{burger-hub,edgy-vibe,21+-only}",bar,evening,3,$$,2,img/venues/The Vortex Bar & Grill.jpg,unknown
+no. 246,33.775422,-84.295294,no246atlanta,"{Italian-inspired,farm-to-table,date-night}",brunch,midday,3,$$,2.25,img/venues/no. 246.jpg,unknown
+Sotto Sotto Restaurant,33.7628556,-84.35769409,sottosottoatl,"{upscale-Italian,romantic,wine-forward}",dinner,evening,3,$$$,2.25,img/venues/Sotto Sotto Restaurant.jpg,unknown
+La Grotta Ristorante,33.82618443,-84.38759961,lagrottaatl,"{fine-dining,old-school-Italian,romantic}",dinner,evening,2,$$$$,2.25,img/venues/La Grotta Ristorante.jpg,unknown
+Yonder Yoga – Inman Park,33.7611561,-84.3657219,yonderyoga,"{boutique-fitness,wellness,community-focused}",fitness,morning,1,$,1.5,img/venues/Yonder Yoga - Inman Park.jpg,unknown
+evolation yoga atlanta,33.7801725,-84.3875317,evolationyogaatlanta,"{yoga-studio,meditation,wellness}",fitness,morning,1,$,1.5,img/venues/evolation yoga atlanta.jpg,unknown
+Yebo Beach Haus,33.84334392,-84.38290658,yebobeachhaus,"{coastal-vibe,seafood-forward,seasonal-menu}",lunch,evening,4,$$$,2.25,img/venues/Yebo Beach Haus.jpg,unknown
+Tiny Lou’s,33.77347,-84.361399,tinylousatl,"{French-bistro,boutique-hotel,romantic}",brunch,midday,3,$$$,2.25,img/venues/Tiny Lou's.jpg,unknown
+Yalda,33.7811243,-84.411056,yalda.atl,"{Persian-cuisine,upscale,share-plates}",dinner,midday,3,$$$,2.25,img/venues/Yalda.jpg,unknown
+Vesper Atlanta,33.7407235,-84.3578402,vesperatl,"{cocktail-lounge,speakeasy-vibe,date-night}",cocktail,evening,3,$$,2.25,img/venues/Vesper Atlanta.jpg,unknown
+Umi,33.8395908,-84.3816729,umisushiatl,"{upscale-sushi,celebrity-spotting,romantic}",dinner,evening,3,$$$$,2.25,img/venues/Umi.jpg,unknown
+Fudo,33.8877602,-84.3147177,fudoatl,"{sushi,Asian-fusion,casual-date}",lunch,evening,3,$$,2,img/venues/Fudo.jpg,unknown
+Mujō,33.7861054,-84.4106648,mujoatl,"{omakase,Japanese-fine-dining,chef-driven}",dinner,evening,2,$$$$,2,img/venues/Mujō.jpg,unknown
+Rock Steady – Atlanta,33.777293,-84.408183,rocksteadyatlanta,"{Caribbean-influenced,nightlife,DJ-sets}",dinner,evening,4,$$$,2.5,img/venues/Rock Steady - Atlanta.jpg,unknown
+Cafe Comma,33.8647205,-84.4719725,cafecomma_atl,"{Korean-style-cafe,dessert-focused,cozy}",coffee,morning,1,$,0.5,img/venues/Cafe Comma.jpg,unknown
+Old Vinings Inn,33.86654265,-84.46597944,oldvinings,"{Southern-fine-dining,historic-building,live-music}",lunch,midday,2,$$,2.5,img/venues/Old Vinings Inn.jpg,unknown
+Canoe,33.85974,-84.455173,canoe_atl,"{riverside-dining,upscale-American,romantic}",lunch,midday,3,$$$,2.25,img/venues/Canoe.jpg,unknown
+Read Shop by The Merchant,33.8649149,-84.4655889,read.shop,"{coffee-and-books,design-forward,remote-work}",coffee,morning,1,$,0.5,img/venues/Read Shop by The Merchant.jpg,unknown
+Folk Art Restaurant Inman Park,33.766686,-84.352985,folkart_inmanpark,"{brunch-spot,Southern-comfort,casual}",breakfast,morning,2,$,1.5,img/venues/Folk Art Restaurant Inman Park.jpg,unknown
+Communidad Taqueria,33.7611561,-84.3657219,communidadatl,"{authentic-Mexican,neighborhood-favorite,casual}",lunch,midday,3,$,1.5,img/venues/Communidad Taqueria.jpg,unknown
+La Semilla,33.74673873,-84.36330386,lasemilla.atl,"{plant-based,Latin-inspired,upscale}",lunch,evening,3,$$,1.75,img/venues/La Semilla.jpg,unknown
+Monday Night Brewing – The Garage,33.729269,-84.416017,mondaynight,"{craft-brewery,beer-garden,events-space}",bar,afternoon,4,$,1.5,img/venues/Monday Night Brewing - The Garage.jpg,unknown
+Daily Chew,33.8117273,-84.3627468,dailychewatl,"{all-day-cafe,seasonal-menu,health-conscious}",breakfast,morning,1,$,1.5,img/venues/Daily Chew.jpg,unknown
+Fellaship.ATL,33.7521147,-84.3990442,fellaship.atl,"{cigar-lounge,upscale-social,live-entertainment}",bar,afternoon,3,$$,2.25,,unknown
+The Record Loft,33.73453585,-84.34905613,recordloftatl,"{vinyl-shop,cafe,retro-vibe}",random gem,afternoon,2,$,0.5,img/venues/The Record Loft.jpg,unknown
+Your 3rd Spot,33.80292775,-84.42947057,your3rdspot,"{social-gaming,experiential-dining,nightlife}",bar,evening,4,$$,2.75,img/venues/Your 3rd Spot.jpg,unknown
+Side Saddle Wine Saloon & Bar,33.72584216,-84.36493295,sidesaddlewine,"{wine-bar,intimate,rustic-charm}",wine bar,evening,3,$$,1.75,img/venues/Side Saddle Wine Saloon.jpg,unknown
+Fat Matt’s Rib Shack,33.80470696,-84.36735975,fatmattsribshack,"{BBQ-joint,live-blues,casual}",lunch,midday,3,$,1.75,img/venues/Fat Matt's Rib Shack.jpg,unknown
+Pata Negra Mezcaleria,33.80277748,-84.39306704,patanegraatl,"{mezcal-bar,tapas,intimate-setting}",cocktail,midday,4,$$$,2,img/venues/Pata Negra Mezcaleria.jpg,unknown
+Varasano’s Pizzeria – Buckhead,33.813769,-84.392083,varasanospizzeria,"{artisan-pizza,casual-date,neighborhood}",lunch,midday,3,$$,1.5,img/venues/Varasano's Pizzeria.jpg,unknown
+Tuk Tuk Thai Food Loft,33.8003326,-84.3921328,tuktuk_thairestaurant,"{upscale-thai,city-views,date-night}",lunch,midday,3,$$,2,img/venues/Tuk Tuk Thai Food Loft.jpg,unknown
+El Azteca,33.80292081,-84.39310231,elaztecaatlanta,"{Tex-Mex,casual,margarita-focused}",lunch,evening,3,$,1.75,img/venues/El Azteca.jpg,unknown
+Little Rey,33.807094,-84.36650078,littlereyalcarbon,"{fast-casual,wood-grilled,Mexican-inspired}",lunch,midday,2,$,1.75,img/venues/Little Rey.jpg,unknown
+New Realm Brewing Co.,33.7690299,-84.36195415,newrealmbrewing,"{craft-brewery,rooftop,live-music}",rooftop,evening,4,$$,1.5,img/venues/New Realm Brewing Co..jpg,unknown
+Atlanta Worldwide Gallery,33.758602,-84.365546,atlworldwidegallery,"{art-gallery,contemporary,event-space}",random gem,afternoon,1,$,0.75,img/venues/Atlanta Worldwide Gallery.jpg,unknown
+TEN ATL,33.7403991,-84.34613055,tenatl,"{nightlife,hookah-lounge,DJ-sets}",bar,evening,4,$$,2.5,img/venues/TEN ATL.png,unknown
+Five Iron Golf,33.773304,-84.3860568,fiveirongolf,"{indoor-golf,sports-bar,group-activity}",activity,morning,3,$$,3,img/venues/Five Iron Golf.jpg,unknown
+Café Intermezzo - Midtown,33.78354631,-84.38342062,cafeintermezzo,"{decadent,layered,plush,sultry,romantic,nostalgic,indulgent,European}",dessert,evening,2,$$,1.5,img/venues/Café Intermezzo - Midtown.jpg,unknown
+The Daily Pilates - Inman Park,33.755066,-84.357816,thedailypilates,"{local,intentional,bright,feminine,habit,clean,structured,fresh}",fitness,morning,2,$,1,img/venues/The Daily Pilates - Inman Park.jpg,unknown
+Pêche Pilates,33.84303775,-84.38072177,pechepilates,"{airy,elegant,soft,graceful,curated,feminine,minimal,fluid}",fitness,morning,2,$,1,img/venues/Pêche Pilates.jpg,unknown
+Le' Muse Pilates,33.789128,-84.426118,lemusepilates,"{poised,sculpted,boutique,refined,mindful,luxe,ambient,precise}",fitness,morning,2,$,1,img/venues/Le' Muse Pilates.jpg,unknown
+The Union Fit Hub,33.7683055,-84.3602398,theunionfithub,"{bold,driven,modern,collective,functional,kinetic,focused,energized}",fitness,morning,2,$,1.25,img/venues/The Union Fit Hub.jpg,unknown
+Urban Body Fitness,33.78830585,-84.36913713,urbanbodyfitness,"{gritty,active,strength,reliable,durable,fast-paced,grounded,local-core}",fitness,morning,2,$,1.25,img/venues/Urban Body Fitness.jpg,unknown
+The Reading Room,33.77501829,-84.29474871,thereadingroomdecaturga,"{spiritual,healing,immersive,meditative,warm,slow,candlelit,sonic}",bookstore,morning,2,$,1,img/venues/The Reading Room.jpg,unknown
+Memento,33.7732851,-84.3625239,mementoatl,"{geometric,thought-provoking,neutral,layered,intentional,stark,conceptual,bold}",gallery,—,2,$,1.5,img/venues/Memento.png,unknown
+The Independent,33.7803409,-84.3686685,independentatlanta,"{analog,gamey,smoky,gritty,nostalgic,hangout,dive,spontaneous}",bar,evening,3,$,2,img/venues/The Independent.jpg,unknown
+Crates ATL,33.7520364,-84.3946526,cratesatl,"{crate-digging,underground,beats,localism,raw,audio,lo-fi,hip-hop}",lifestyle,afternoon,2,$,1,img/venues/Crates ATL.jpg,unknown
+Wild Leap Atlanta,33.751177,-84.396962,wildleapatl,"{energized,bold,contemporary,experimental,brewhouse,date-friendly,branded,bustling}",bar,happy hour,4,$$,2,img/venues/Wild Leap Atlanta.jpg,unknown
+Versus ATL,33.75165703,-84.39851514,vsatl,"{drop-culture,sneakerhead,expressive,logo-heavy,curated,urbanwear,collector,fashion}",lifestyle,afternoon,2,$$,1,img/venues/Versus ATL.jpg,unknown
+Bacchanalia,33.7947137,-84.4272646,starprovisions,"{refined,ceremonial,exclusive,chef-driven,ambient,sophisticated,intimate,indulgent}",dinner,evening,3,$$$$,2.5,img/venues/Bacchanalia.jpg,unknown
+Star Provisions Market & Cafe,33.7948534,-84.42727178,starprovisions,"{daylight,fragrant,mellow,brunchy,pastry,relaxed,warm,wholesome}",brunch,midday,2,$,1,img/venues/Star Provisions Market & Cafe.jpg,unknown
+YOUNG BLOOD,33.76496879,-84.34201307,youngbloodboutique,"{indie,vibrant,curated,sustainable,maker-focused,homey,thoughtful,quirky}",lifestyle,afternoon,1,$,0.5,img/venues/YOUNG BLOOD.jpg,unknown
+Fernbank Forest,33.773853,-84.327606,fernbankmuseum,"{shaded,expansive,organic,rooted,still,immersive,canopy,wander}",walk,afternoon,1,$,2.33,img/venues/Fernbank Forest.jpg,unknown
+Clyde Shepherd Nature Preserve,33.80619705,-84.28430186,,"{birding,low-key,community,dirt-trail,slow,hidden-gem,uncut,chill}",park,morning,1,$,2,img/venues/Clyde Shepherd Nature.jpg,unknown
+Blue Heron Nature Preserve,33.8671587,-84.3799249,bhnpatlanta,"{creekside,holistic,reflective,mindful,eco-conscious,airy,peaceful,small-scale}",park,morning,1,$,2,img/venues/Blue Heron Nature Preserve.jpg,unknown
+Morningside Nature Preserve,33.8096851,-84.3520012,,"{leaf-covered,worn-in,earthy,animal-friendly,meandering,locals-only,ambient,nature}",park,morning,1,$,2,img/venues/Morningside Nature Preserve.jpg,unknown
+Deepdene Park,33.7724424,-84.3203472,,"{curved,vintage,overgrown,mossy,legacy,tucked-away,poetic,historic-core}",park,morning,1,$,2,img/venues/Deepdene Park.jpg,unknown
+Tanyard Creek Park,33.8105983,-84.4029808,,"{babbling,runner-friendly,active-use,fresh-air,daylight,informal,playground,scenic}",park,morning,1,$,2,img/venues/Tanyard Creek Park.jpg,unknown
+Iris Garden & Pond @ Winn Park,33.79033845,-84.38304027,,"{blossoming,quaint,hidden,poetic,floral-scented,charming,organic,bright}",garden,afternoon,1,$,1,img/venues/Iris Garden & Pond.jpg,unknown
+Woodlands Garden,33.78638075,-84.30338078,woodlandsgarden,"{native-plants,intimate,restful,biodiverse,sheltered,rooted,hand-built,local-lush}",garden,morning,1,$,1,img/venues/Woodlands Garden.jpg,unknown
+Virginia Highland Books,33.7829119,-84.35467746,vahibooks,"{readerly,niche,indie-lit,writerly,quietude,analog-space,charming,timeless}",bookstore,afternoon,1,$,1,img/venues/Virginia Highland Books.jpg,unknown
+Murphy's Restaurant,33.782121,-84.3548853,murphysatlanta,"{neighborhood,homey,well-balanced,dependable,legacy,relaxed-upscale,weekend,hearty}",dinner,midday,3,$$,2.5,img/venues/Murphy's Restaurant.jpg,unknown
+Superica Buckhead,33.85989,-84.381567,supericatexmex,"{neon,upbeat,colorful,vibey,new-school,zesty,group-dining,pop}",lunch,evening,3,$$,2,img/venues/Superica Buckhead.jpg,unknown
+Postino Buckhead,33.855474,-84.381357,postinowinecafe,"{buzzed,modern,chatter,minimal-luxe,curated-space,sips,airy,patio}",wine bar,evening,3,$$,2,img/venues/Postino Buckhead.jpg,unknown
+JDS SUMMERHILL VARIETY DELI,33.73933505,-84.38424365,summerhill_variety,"{corner-shop,wrap-joint,fast-casual,lowkey,gritty,delicious,backdoor,local-vibe}",lunch,midday,1,$,0.5,img/venues/JDS SUMMERHILL VARIETY DELI.JPG,unknown
+Manny's Grant Park,33.745608,-84.3685077,mannysgrantpark,"{game-day,old-friend,easygoing,talky,neighborhood-core,shots,unfussy,casual-mood}",bar,late,4,$,2.33,img/venues/Manny's Grant Park.jpg,unknown
+El Ponce,33.7734985,-84.35664855,elponceatl,"{Latin-pop,punchy,flavorful,retro-vibe,salsa,late-bite,neighborhood-joint,festive}",lunch,evening,3,$,2,img/venues/El Ponce.jpg,unknown
+Roshambo,33.81919459,-84.38845395,roshamboatl,"{American,Brunch,Modern,Casual,Neighborhood,Family,Creative}",lunch,Midday,3,$$,1.5,img/venues/Roshambo.jpg,unknown
+Hawkers Asian Street Food,33.7562599,-84.365444,eathawkers,"{Asian,Streetfood,BeltLine,Shareable,Lively,Cocktails,Casual}",lunch,Midday,3,$$,1.5,img/venues/Hawkers Asian Street Food.jpg,unknown
+Kevin Rathbun Steak,33.7589303,-84.36335397,kevinrathbunsteak,"{Steakhouse,Upscale,BeltLine,Date-night,Wine,Classic,Elegant}",dinner,Evening,3,$$$$,2,img/venues/Kevin Rathbun Steak.jpg,unknown
+Buckhead Art & Company,33.83830287,-84.37823402,buckheadartcompany,"{Gallery,Contemporary,Artistic,Creative,Local,Cultural,Curated}",gallery,Afternoon,2,$,1,img/venues/Buckhead Art & Company.jpg,unknown
+Mister O1 Extraordinary Pizza - Buckhead,33.8496628,-84.3738312,mistero1pizza,"{Pizza,Italian,Artisan,Creative,Thin-crust,Casual,Shareable}",lunch,Midday,3,$,1,img/venues/Mister O1 Extraordinary Pizza Buckhead.jpg,unknown
+Bar Pilar,33.7797376,-84.3675947,barpilar_atl,"{Cocktails,Hidden,Intimate,Date-night,Seasonal,Cozy,Stylish}",dinner,Midday,3,$$,1.5,img/venues/Bar Pilar.jpg,unknown
+Pink Lotus Thai Restaurant,33.7814781,-84.4136351,pinklotusthai,"{Thai,Spicy,Modern,Vibrant,Shareable,Casual,Flavorful}",lunch,Midday,4,$$$,2,img/venues/Pink Lotus Thai Restaurant.jpg,unknown
+Slingshot Social Game Club,33.78177753,-84.42984293,slingshotsocialatl,"{Games,Arcade,Social,Casual,Beer,Playful,Group}",bar,Afternoon,4,$$,3,img/venues/Slingshot Social Game Club.jpg,unknown
+The Optimist,33.7798543,-84.4106489,theoptimistatl,"{Seafood,Oysters,Upscale,Nautical,Elegant,Polished,Date-night}",cocktail,Afternoon,3,$$$,2,img/venues/The Optimist.jpg,unknown
+Belen Bistro + Market Argentina,33.7744047,-84.2960771,belenbistro_argentina,"{Argentine,Empanadas,Wine,Cozy,Family,Rustic,Authentic}",lunch,Afternoon,3,$$,2,img/venues/Belen Bistro .jpg,unknown
+NoriFish Sushi & Izakaya,33.8161351,-84.390266,norifishsushiizakaya,"{Sushi,Japanese,Omakase,Izakaya,Upscale,Modern,Refined}",dinner,Evening,3,$$$$,2,img/venues/NoriFish Sushi.jpg,unknown
+Café Momentum Atlanta,33.75924167,-84.387691,cafemomentum.atl,"{Brunch,Seasonal,Social,Community,Wholesome,Modern,Casual}",lunch,Midday,3,$$,2,img/venues/Café Momentum Atlanta.jpg,unknown
+Billy's Avondale,33.776965,-84.268344,billysavondale,"{Sandwiches,Local,Nostalgic,Cozy,Neighborhood,Jersey,Lunch}",lunch,Midday,2,$,1,img/venues/Billy's Avondale.jpg,unknown
+Smiley's Burger Club,33.771963,-84.292277,smileysburgerclub,"{Burgers,Smashburger,Retro,Casual,Comfort,Juicy,Fun}",lunch,Midday,2,$,1.25,img/venues/Smiley's Burger Club.jpg,unknown
+Reynolds Makery & Pulperia,33.74969185,-84.36199475,shopreynoldsatl,"{Art,Creative,Local,Eclectic,Community,Hidden,Quirky}",coffee,Morning,1,$,0.5,img/venues/Reynolds Makery & Pulperia.jpg,unknown
+Flora/Fauna,33.7480535,-84.3627598,florafaunaatl,"{Bakery,Pastry,Coffee,Cozy,Breakfast,Sweet,Southern}",random gem,Afternoon,1,$$,0.66,img/venues/Flora:Fauna.jpg,unknown
+Tropical Express Atl,33.7752395,-84.41961189,tropicalexpressatl,"{Plants,Greenery,Community,Creative,Cozy,Urban,Botanical}",random gem,Afternoon,1,$$,0.66,img/venues/Tropical Express Atl.jpg,unknown
+Vinyl Paradise at Tropical Express,33.7752395,-84.41961189,vinylparadiseatl,"{Records,Retro,Vinyl,Plants,Music,Vintage,Eclectic}",random gem,Afternoon,2,$,0.66,img/venues/Vinyl Paradise at Tropical.jpg,unknown
+ADios Cafe,33.749891,-84.4010243,adioscafe,"{Mexican,Breakfast,Coffee,Brunch,Cozy,Patio,Colorful}",breakfast,Morning,1,$,1,img/venues/ADios Cafe.jpg,unknown
+Bottle Rocket Fine Food and Beverage,33.749828,-84.40096876,bottlerocketatl,"{Sushi,Burgers,Fusion,Divey,Casual,Eclectic,Local}",dinner,Evening,3,$$,2,img/venues/Bottle Rocket.jpg,unknown
+Smorgasburg Atlanta,33.75003202,-84.39545516,smorgasburgatlanta,"{Streetfood,Market,Outdoor,Global,Festival,Social,Weekend}",market,—,4,$$,2,,unknown
+Cat Eye Creative,33.7513147,-84.3939306,cat_eye_creative,"{Gallery,Contemporary,Creative,Artistic,Community,Modern,Colorful}",gallery,Afternoon,2,$,1,img/venues/Cat Eye Creative.png,unknown
+Ray's In the City,33.7603914,-84.3877294,raysrestaurants,"{Seafood,Steakhouse,Upscale,Jazz,Elegant,Downtown,Fine-dining}",lunch,Midday,3,$$,2,img/venues/Ray's In the City.jpg,unknown
+Mister Burger,33.8371162,-84.377444,misterburgeratl,"{Burgers,Late‑night,Smashburger,Casual,Juicy,Buckhead,Comfort}",lunch,Late Night,3,$,1.25,img/venues/Mister Burger.jpg,unknown
+Brasiliana Pizza - Atlanta,33.7400183,-84.3466872,brasilianaus,"{Pizza,Brazilian,Fusion,Creative,Artisan,Dessert,Eastside}",lunch,Evening,3,$$,1.25,img/venues/Brasiliana Pizza.jpg,unknown
+Krog Bar,33.81826905,-84.37497385,krogbar_pizza_,"{Intimate,Pizzeria,Neighborhood,Cozy,Italian}",lunch,Midday,2,$$,1.75,img/venues/Krog Bar.jpg,unknown
+The 57th Fighter Group Restaurant,33.87143786,-84.30933686,57threstaurantandevents,"{Destination,Scenic,Family,Americana,Quirky}",lunch,Midday,3,$$,1.75,img/venues/The 57th Fighter Group.jpg,unknown
+So So Fed,33.7348134,-84.3488242,sosofedatl,"{Homemade,Seasonal,Hidden,Tasty,Local}",dinner,Evening,3,$$,1.75,img/venues/So So Fed.jpg,unknown
+Skyline Park,33.7728212,-84.3659039,poncecityroof,"{Rooftop,Carnival,Family,Rides,Festive}",activity,Midday,4,$$$,2.5,img/venues/Skyline Park.jpg,unknown
+Social Space,33.759365,-84.3646745,socialspace.atl,"{Workspace,Artsy,Gathering,Pop‑up,Creative}",lifestyle,Morning,2,$$,0.66,img/venues/Social Space.jpg,unknown
+Elmyr,33.7633915,-84.3511774,elmyr_atl,"{Dive,Bar,Alternative,Local,Graffiti}",bar,Evening,3,$,1.25,img/venues/Elmyr.jpg,unknown
+Ollie's Market & Deli,33.7301663,-84.37392105,olliesmarketatl,"{Grocery,Fresh,Everyday,Sandwich,Local}",breakfast,Morning,2,$,0.66,img/venues/Ollie's Market & Deli.jpg,unknown
+Pizza Verdura Sincera,33.7647329,-84.3489303,pizzaverdura,"{Vegan,Gourmet,Creative,Ethical,Modern}",lunch,Evening,2,$,1.25,img/venues/Pizza Verdura Sincera.jpg,unknown
+The Midway Pub,33.739449,-84.344208,midwaypub,"{Sports,Beer,Patio,Burgers,Hangout}",bar,Evening,4,$,1.25,img/venues/The Midway Pub.jpg,unknown
+Universal Joint Decatur,33.7594521,-84.3030657,universaljointatl,"{Neighborhood,Friendly,Patio,Pub,Local}",bar,Evening,3,$,1.5,img/venues/Universal Joint Decatur.jpg,unknown
+Havana Nightclub ATL,33.84095755,-84.3704991,havananightclubatl,"{Salsa,Latin,Reggaeton,Nightlife,Party}",club,Late Night,5,$$$,2.5,img/venues/Havana Nightclub ATL.jpg,unknown
+Sanctuary Nightclub,33.8426247,-84.3818011,sanctuarynightclubatlanta,"{DJs,Elegant,Global,Stylish,Social}",club,Late Night,5,$$$,2.5,img/venues/Sanctuary Nightclub.jpg,unknown
+Tongue & Groove,33.8223388,-84.3687794,tongueandgrooveatl,"{Trendy,Fashion,DJ,Exclusive,Nightlife}",club,Late Night,5,$$$,2.5,img/venues/Tongue & Groove.jpg,unknown
+Anis Cafe & Bistro,33.8357586,-84.37659378,aniscafebistro,"{French,Romantic,Charming,Patio,Brunch}",lunch,Midday,3,$$,2,img/venues/Anis Cafe & Bistro.jpg,unknown
+Westside Motor Lounge,33.77475185,-84.41030889,westside_motor_lounge,"{Social,Retro,Stylish,Drinks,Hangout}",bar,Afternoon,4,$$,1.75,img/venues/Westside Motor Lounge.jpg,unknown
+Hattie B's Hot Chicken - Atlanta West Midtown,33.7818182,-84.4116779,hattiebs,"{Spicy,Southern,Comfort,Juicy,Nashville}",lunch,Midday,2,$,1,img/venues/Hattie B's Hot Chicken.jpg,unknown
+Flower Child Westside Provisions,33.7854942,-84.4126344,eatflowerchild,"{Healthy,Vegan,Organic,Modern,Casual}",lunch,Midday,2,$,1,img/venues/Flower Child Westside Provisions.jpg,unknown
+Kinjo Room,33.7866813,-84.41159442,kinjoroom,"{Upscale,Fusion,Stylish,Modern,Cocktails}",dinner,Evening,3,$$$,2,img/venues/Kinjo Room.jpg,unknown
+O-Ku,33.7845132,-84.4111736,okuatlanta,"{Japanese,Elegant,Date-night,Sushi,Modern}",brunch,Midday,3,$$$,2,img/venues/O-Ku.jpg,unknown
+Prevail Union,33.78345123,-84.4118933,prevailcoffee,"{Clean,Smoothies,Fresh,Healthy,Minimal}",coffee,Morning,3,$,0.5,img/venues/Prevail Union | ATL.jpg,unknown
+Negril ATL,33.8007556,-84.4204931,negrilatl,"{Island,Jamaican,Tropical,Spicy,Flavorful}",lunch,Evening,3,$$,2,img/venues/Negril ATL.jpg,unknown
+Con Leche Coffee,33.7486994,-84.3528036,conlecheatl,"{Espresso,Cozy,Local,Latte,Chill}",coffee,Morning,2,$,0.66,img/venues/Con Leche Coffee.png,unknown
+Necessary Purveyor,33.7724308,-84.3675124,necessarypurveyor,"{Market,Coffee,Quick,Fresh,Grab-and-go}",coffee,Morning,3,$,1.5,img/venues/Necessary Purveyor.jpg,unknown
+The Postcard,33.8399014,-84.3771177,thepostcardatl,"{Wine,Cozy,Social,Romantic,Chic}",coffee,Morning,1,$,0.5,img/venues/The Postcard.jpg,unknown
+Pecan Jacks Ice Cream & Candy,33.7738251,-84.405805,pecanjackswestmid,"{Ice cream,Sweet,Candy,Family,Nostalgic}",dessert,Afternoon,1,$,0.5,img/venues/Pecan Jacks Ice Cream & Candy .jpg,unknown
+The Book Bird of Avondale Estates,33.7757252,-84.2717867,thebookbirdae,"{Indie,Reading,Cozy,Local,Niche}",bookstore,Midday,1,$,0.66,img/venues/The Book Bird of Avondale Estates.jpg,unknown
+Atlanta Vintage Books,33.8667473,-84.3097037,atlantavintagebooks,"{Collectors,Literary,Historic,Quiet,Rare}",bookstore,Afternoon,1,$,0.66,img/venues/Atlanta Vintage Books.jpg,unknown
+Joe's Coffeehouse EAV,33.7403697,-84.3454548,joescoffeeeav,"{Espresso,Neighborhood,Chill,Cozy,Local}",coffee,Morning,2,$,1,img/venues/Joe's Coffeehouse EAV.jpg,unknown

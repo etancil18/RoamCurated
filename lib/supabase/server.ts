@@ -4,10 +4,9 @@ import type { Database } from '@/types/supabase'
 
 /**
  * Returns a fully typed Supabase client for server-side usage (Next.js Route Handlers or Server Components).
- * Note: This is synchronous — no need to use `await`.
+ * Now correctly handles async cookies() in Next.js 15+.
  */
-export function createServerClient() {
-  return createRouteHandlerClient<Database>({
-    cookies,
-  })
+export async function createServerClient() {
+  const cookieStore = cookies()
+  return createRouteHandlerClient<Database>({ cookies: () => cookieStore })
 }

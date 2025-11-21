@@ -52,7 +52,7 @@ async function getClientAndUserId(): Promise<{
   supabase: Awaited<ReturnType<typeof createServerClient>>
   userId: UUID
 }> {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   const {
     data: { user },
     error,
@@ -75,7 +75,7 @@ export async function addVenueToFavorites({
 }: AddFavoriteParams): Promise<
   Database['public']['Tables']['favorites']['Row'][]
 > {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const parsed = favoriteDataSchema.safeParse(venueData)
   if (!parsed.success) {
@@ -110,7 +110,7 @@ export async function removeFavorite({
   userId,
   venueId,
 }: RemoveFavoriteParams): Promise<boolean> {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const { error } = await supabase
     .from('favorites')
