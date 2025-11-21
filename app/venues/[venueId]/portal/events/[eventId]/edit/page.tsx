@@ -1,30 +1,13 @@
 // app/venues/[venueId]/portal/events/[eventId]/edit/page.tsx
 
-import { supabaseServerComponent } from "@/lib/supabase/client"
-import type { EventRecord } from "@/types/supabase"
+import { supabaseServer } from "@/lib/supabase/server"
+import type { Database } from "@/types/supabase"
 import EventForm from "@/components/events/EventForm"
+import Link from "next/link"
+
+type EventRecord = Database["public"]["Tables"]["events"]["Row"]
 
 export const revalidate = 0
-
-export async function generateMetadata({
-  params,
-}: {
-  params: { venueId: string; eventId: string }
-}) {
-  const supabase = supabaseServerComponent()
-
-  const { data, error } = await supabase
-    .from("events")
-    .select("title")
-    .eq("id", params.eventId)
-    .single()
-
-  const event = data as EventRecord | null
-
-  return {
-    title: event?.title ? `Edit Event – ${event.title}` : "Edit Event",
-  }
-}
 
 export default async function EditEventPage({
   params,
@@ -32,34 +15,41 @@ export default async function EditEventPage({
   params: { venueId: string; eventId: string }
 }) {
   const { venueId, eventId } = params
-  const supabase = supabaseServerComponent()
+
+  const supabase = await supabaseServer()
 
   const { data, error } = await supabase
     .from("events")
     .select("*")
     .eq("id", eventId)
-    .single()
+    .maybeSingle()
+
+  if (error) {
+    console.error("❌ Failed to load event:", error)
+  }
 
   const event = data as EventRecord | null
 
-  if (!event) {
-    return (
-      <div className="max-w-xl mx-auto py-10">
-        <p className="text-red-600 font-medium">Event not found.</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="max-w-3xl mx-auto py-10">
-      <h1 className="text-2xl font-semibold mb-6">
-        Edit Event – {event.title ?? "Untitled"}
-      </h1>
+    <div className="max-w-3xl mx-auto py-10 space-y-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">
+          {event?.title ? `Edit Event – ${event.title}` : "Edit Event"}
+        </h1>
 
+        <Link
+          href={`/venues/${venueId}/portal/events`}
+          className="text-blue-600 hover:underline"
+        >
+          ← Back to Events
+        </Link>
+      </div>
+
+      {/* ⭐ FIX: EventForm now accepts `mode` and `event` */}
       <EventForm
-        mode="edit"
         venueId={venueId}
-        event={event}
+        mode="edit"
+        event={event ?? undefined}
       />
     </div>
   )

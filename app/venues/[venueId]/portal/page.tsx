@@ -1,12 +1,15 @@
 // app/venues/[venueId]/portal/page.tsx
 
 import { supabaseServer } from "@/lib/supabase/server"
-import type { VenueRecord } from "@/types/supabase"
+import type { Database } from "@/types/supabase"
 import Link from "next/link"
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 
 export const revalidate = 0
+
+// Derive the correct Venue type directly from your Database schema
+type VenueRecord = Database["public"]["Tables"]["venues"]["Row"]
 
 export default async function VenuePortalPage({
   params,
@@ -14,20 +17,22 @@ export default async function VenuePortalPage({
   params: { venueId: string }
 }) {
   const { venueId } = params
-  const supabase = supabaseServer()
 
-  // Fetch the venue with full typing
+  // ⭐ MUST be awaited — supabaseServer() is async
+  const supabase = await supabaseServer()
+
+  // ⭐ Load the venue with correct typing
   const { data, error } = await supabase
     .from("venues")
     .select("*")
     .eq("id", venueId)
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error("❌ Venue fetch error:", error)
   }
 
-  const v: VenueRecord | null = data
+  const v: VenueRecord | null = data ?? null
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-8">
@@ -41,7 +46,8 @@ export default async function VenuePortalPage({
         <CardContent className="space-y-4">
           {v?.city && (
             <p className="text-sm text-muted-foreground">
-              Managing events for <strong>{v.city.toUpperCase()}</strong>
+              Managing events for{" "}
+              <strong>{v.city.toUpperCase()}</strong>
             </p>
           )}
 
