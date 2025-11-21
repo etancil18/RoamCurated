@@ -23,14 +23,14 @@ export default function VenueEventsPage() {
     async function load() {
       const { data, error } = await supabase
         .from("events")
-        .select("*")
+        .select<EventRecord>("*")
         .eq("venue_id", venueId)
         .order("starts_at", { ascending: true })
 
       if (error) {
         console.error("Failed to load events:", error)
       } else {
-        setEvents(data ?? [])
+        setEvents(Array.isArray(data) ? data : [])
       }
 
       setLoading(false)

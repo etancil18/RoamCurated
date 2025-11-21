@@ -1,6 +1,6 @@
 // app/venues/[venueId]/portal/page.tsx
 
-import { supabaseServerComponent } from "@/lib/supabase/client"
+import { supabaseServer } from "@/lib/supabase/server"
 import type { VenueRecord } from "@/types/supabase"
 import Link from "next/link"
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
@@ -14,10 +14,10 @@ export default async function VenuePortalPage({
   params: { venueId: string }
 }) {
   const { venueId } = params
-  const supabase = supabaseServerComponent()
+  const supabase = supabaseServer()
 
-  // Fetch venue
-  const { data: venue, error } = await supabase
+  // Fetch the venue with full typing
+  const { data, error } = await supabase
     .from("venues")
     .select("*")
     .eq("id", venueId)
@@ -27,7 +27,7 @@ export default async function VenuePortalPage({
     console.error("❌ Venue fetch error:", error)
   }
 
-  const v = venue as VenueRecord | null
+  const v: VenueRecord | null = data
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-8">

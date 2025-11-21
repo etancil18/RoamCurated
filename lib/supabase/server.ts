@@ -1,12 +1,38 @@
-import { cookies } from 'next/headers'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import type { Database } from '@/types/supabase'
+// lib/supabase/server.ts
+import { cookies } from "next/headers"
+import {
+  createRouteHandlerClient,
+  createServerComponentClient,
+  createServerActionClient,
+} from "@supabase/auth-helpers-nextjs"
+import type { Database } from "@/types/supabase"
 
 /**
- * Returns a fully typed Supabase client for server-side usage (Next.js Route Handlers or Server Components).
- * Now correctly handles async cookies() in Next.js 15+.
+ * Server-side Supabase client for API Route Handlers
  */
 export async function createServerClient() {
   const cookieStore = cookies()
   return createRouteHandlerClient<Database>({ cookies: () => cookieStore })
+}
+
+/**
+ * Server-side Supabase client for Server Components
+ */
+export function supabaseServerComponent() {
+  return createServerComponentClient<Database>({ cookies })
+}
+
+/**
+ * Server-side Supabase client for Server Actions
+ */
+export function supabaseServerAction() {
+  return createServerActionClient<Database>({ cookies })
+}
+
+/**
+ * Alias: a universal server-side client used for server pages
+ * (this is what your portal pages expect)
+ */
+export async function supabaseServer() {
+  return createServerClient()
 }
