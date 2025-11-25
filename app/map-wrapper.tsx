@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client'
 
 import dynamic from 'next/dynamic'
@@ -8,6 +9,8 @@ import type { Venue } from '@/types/venue'
 import CrawlControl from '@/components/maps/CrawlControl'
 import type { RouteOptions } from '@/lib/routeEngine'
 import { ControlPanel } from '@/components/ControlPanel'
+import { useSession } from '@supabase/auth-helpers-react'
+
 
 const MapCanvas = dynamic(() => import('@/components/maps/MapCanvas'), {
   ssr: false,
@@ -55,6 +58,8 @@ export default function MapWrapper() {
   const [travelMode, setTravelMode] = useState<'walking' | 'cycling' | 'driving'>('walking')
   const [customStart, setCustomStart] = useState<{ lat: number; lon: number } | null>(null)
   const [tightness, setTightness] = useState<'tight' | 'medium' | 'loose'>('medium')
+  const session = useSession()
+  const userId = session?.user?.id
 
   useEffect(() => {
     const raw = city === 'atl' ? atlantaData : nycData
@@ -175,11 +180,50 @@ export default function MapWrapper() {
       const url = new URL(window.location.href)
       url.searchParams.set('route', ids)
       window.history.replaceState(null, '', url.toString())
-    } catch (err) {
-      console.error('Generate Crawl Error:', err)
-      alert('Something went wrong. Try again.')
-    }
-  }
+
+      // 🔁 Updated: Log the route to Supabase via server proxy
+const origin = { lat: data.route[0].lat, lng: data.route[0].lon }
+const destination = { lat: data.route[data.route.length - 1].lat, lng: data.route[data.route.length - 1].lon }
+const waypoints = data.route.slice(1, -1).map((v: Venue) => ({ lat: v.lat, lng: v.lon }))
+
+if (!userId) {
+  console.warn('No user session found — skipping route log')
+  return
+}
+
+const proxyRes = await fetch('/api/mapbox', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ origin, destination, waypoints, travelMode }),
+})
+
+const routeData = await proxyRes.json()
+
+await fetch('/api/logRoute', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    userId,
+    crawlTheme: selectedThemeId || 'manual',
+    origin,
+    destination,
+    waypoints,
+    routeDuration: routeData.duration,
+    routeDistance: routeData.distance,
+    routeGeometry: routeData.geometry,
+    routeMetadata: {
+      travelMode,
+      city,
+      stops: data.route.length,
+    },
+  }),
+})
+
+} catch (err) {
+console.error('Generate Crawl Error:', err)
+alert('Something went wrong. Try again.')
+}
+}
 
   const handleClearRoute = () => {
     setRoute(undefined)
@@ -190,57 +234,53 @@ export default function MapWrapper() {
   }
 
   return (
-  <main className="h-screen w-screen relative overflow-hidden">
-    {/* Toggle Button */}
-    <button
-      onClick={() => setIsPanelOpen(!isPanelOpen)}
-      className="absolute top-2 left-2 z-[1100] bg-white px-3 py-1 rounded shadow text-sm"
-    >
-      {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
-    </button>
+    <main className="h-screen w-screen relative overflow-hidden">
+      <button
+        onClick={() => setIsPanelOpen(!isPanelOpen)}
+        className="absolute top-2 left-2 z-[1100] bg-white px-3 py-1 rounded shadow text-sm"
+      >
+        {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
+      </button>
 
-    {/* Top Bar Panel */}
-    {isPanelOpen && (
-      <ControlPanel
-        city={city}
-        onCityChange={setCity}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
+      {isPanelOpen && (
+        <ControlPanel
+          city={city}
+          onCityChange={setCity}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedThemeId={selectedThemeId}
+          setSelectedThemeId={setSelectedThemeId}
+          selectedPrice={selectedPrice}
+          setSelectedPrice={setSelectedPrice}
+          travelMode={travelMode}
+          setTravelMode={setTravelMode}
+          onGenerateRoute={handleGenerateRoute}
+          onClearRoute={handleClearRoute}
+          tightness={tightness}
+          setTightness={setTightness}
+        />
+      )}
+
+      <CrawlControl
+        venues={filteredVenues}
+        route={route}
+        onRoute={setRoute}
         selectedThemeId={selectedThemeId}
-        setSelectedThemeId={setSelectedThemeId}
-        selectedPrice={selectedPrice}
-        setSelectedPrice={setSelectedPrice}
-        travelMode={travelMode}
-        setTravelMode={setTravelMode}
+        customStart={customStart}
+        city={city}
         onGenerateRoute={handleGenerateRoute}
-        onClearRoute={handleClearRoute}
-        tightness={tightness}
-        setTightness={setTightness}
       />
-    )}
 
-
-<CrawlControl
-venues={filteredVenues}
-route={route}
-onRoute={setRoute}
-selectedThemeId={selectedThemeId}
-customStart={customStart}
-city={city}
-onGenerateRoute={handleGenerateRoute}
-/>
-
-
-<Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
-<MapCanvas
-venues={filteredVenues}
-route={route}
-city={city}
-onMapClick={handleMapClick}
-themeId={selectedThemeId}
-travelMode={travelMode}
-/>
-</Suspense>
-</main>
-)
+      <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
+        <MapCanvas
+          venues={filteredVenues}
+          route={route}
+          city={city}
+          onMapClick={handleMapClick}
+          themeId={selectedThemeId}
+          travelMode={travelMode}
+        />
+      </Suspense>
+    </main>
+  )
 }
