@@ -16,8 +16,7 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Map' },
     { href: '/favorites', label: 'Favorites' },
-    { href: '/events', label: 'Events' }, 
-    // Future: { href: '/profile', label: 'Profile' },
+    { href: '/events', label: 'Events' },
   ]
 
   const handleLogout = async () => {
@@ -43,9 +42,9 @@ export default function Navbar() {
       </div>
 
       <div className="flex items-center gap-4">
-        {user && (
+        {user?.email && (
           <span className="text-sm text-white opacity-80 hidden sm:inline">
-            {user.email}
+            👤 {user.email}
           </span>
         )}
         {user ? (

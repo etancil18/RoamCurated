@@ -13,7 +13,7 @@ const requestSchema = z.object({
     lat: z.number(),
     lon: z.number(),
     instagram_handle: z.string().nullable().optional(),
-    type: z.string().optional(),
+    type: z.union([z.string(), z.array(z.string())]).optional(),
     image_url: z.string().nullable().optional(),
     vibe_tags: z.array(z.string()).optional(),
     price_tier: z.number().optional(),
@@ -41,7 +41,10 @@ export async function POST(req: Request) {
     const parse = requestSchema.safeParse(body)
 
     if (!parse.success) {
-      console.warn('❌ Validation error in request body:', parse.error.flatten())
+      console.warn('❌ Validation failed:', {
+        body,
+        issues: parse.error.format(),
+      })
       return NextResponse.json(
         { success: false, message: 'invalid_request_format' },
         { status: 400 }
@@ -50,9 +53,7 @@ export async function POST(req: Request) {
 
     const { slug, venue_id, data } = parse.data
 
-    const fallbackVenueId = venue_id as UUID
     const venue = await getVenueBySlug(slug)
-
     let finalVenueId: UUID
     let finalCity: string | null = data.city ?? null
 
@@ -60,21 +61,26 @@ export async function POST(req: Request) {
       finalVenueId = venue.id as UUID
       finalCity = venue.city ?? finalCity
     } else {
-      if (!validateUUID(fallbackVenueId)) {
+      if (!validateUUID(venue_id)) {
         return NextResponse.json(
           { success: false, message: 'invalid_fallback_venue_id' },
           { status: 422 }
         )
       }
-      finalVenueId = fallbackVenueId
+      finalVenueId = venue_id as UUID
     }
 
     const result = await addVenueToFavorites({
       userId: user.id as UUID,
       venueId: finalVenueId,
-      venueData: data,
+      venueData: {
+        ...data,
+        type: Array.isArray(data.type) ? data.type.join(', ') : data.type,
+      },
       city: finalCity ?? 'unknown',
     })
+
+    console.log('✅ Venue added to favorites:', { userId: user.id, venueId: finalVenueId })
 
     return NextResponse.json({ success: true, data: result })
   } catch (error: any) {
