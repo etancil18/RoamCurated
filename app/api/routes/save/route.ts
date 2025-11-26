@@ -2,14 +2,24 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { saveRoute } from '@/lib/supabase/routes'
+import { RouteStopsArraySchema } from '@/validators/favorite' // <-- REUSE YOUR SCHEMA
+import { z } from 'zod'
 
 type UUID = string & { __uuidBrand: never }
+
+// Normalize "type" to a string
+function normalizeType(type: any): string | undefined {
+  if (!type) return undefined
+  if (typeof type === 'string') return type
+  if (Array.isArray(type)) return type.join(', ')
+  if (typeof type === 'object') return Object.values(type).join(', ')
+  return undefined
+}
 
 export async function POST(req: Request) {
   try {
     const supabase = await createServerClient()
 
-    // Authenticate user
     const {
       data: { user },
       error: authError,
@@ -22,17 +32,19 @@ export async function POST(req: Request) {
       )
     }
 
-    // Parse JSON body
     const body = await req.json()
     const { name, stops, city, slug, sourceUrl } = body
 
-    // Validation
-    if (!name || !Array.isArray(stops)) {
+    if (!name) {
       return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid data: "name" and "stops" are required',
-        },
+        { success: false, message: 'Missing route name' },
+        { status: 400 }
+      )
+    }
+
+    if (!Array.isArray(stops)) {
+      return NextResponse.json(
+        { success: false, message: '"stops" must be an array' },
         { status: 400 }
       )
     }
@@ -44,11 +56,31 @@ export async function POST(req: Request) {
       )
     }
 
-    // Call database saver
+    // 🔥 Normalize each stop BEFORE Zod validation
+    const cleanedStops = stops.map((s: any) => ({
+      name: s.name,
+      lat: Number(s.lat),
+      lon: Number(s.lon),
+      type: normalizeType(s.type),
+      image_url: typeof s.image_url === 'string' ? s.image_url : null,
+    }))
+
+    // 🔐 Validate cleaned stops with Zod
+    const parsed = RouteStopsArraySchema.safeParse(cleanedStops)
+
+    if (!parsed.success) {
+      console.error('[saveRoute] Invalid stops:', parsed.error.format())
+      return NextResponse.json(
+        { success: false, message: 'Invalid stop structure' },
+        { status: 400 }
+      )
+    }
+
+    // 💾 Save to Supabase
     await saveRoute({
       userId: user.id as UUID,
       name,
-      stops,
+      stops: parsed.data,
       city,
       slug,
       sourceUrl,
