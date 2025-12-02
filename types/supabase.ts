@@ -20,70 +20,71 @@ export type Database = {
   public: {
     Tables: {
       events: {
-        Row: {
-          id: string
-          venue_id: string | null
-          title: string | null
-          description: string | null
-          starts_at: string | null
-          ends_at: string | null
-          tags: string[] | null
-          price_info: string | null
-          source: string | null
-          source_type: string | null
-          permalink: string | null
-          raw_payload: Json | null
-          timezone: string | null
-          is_active: boolean | null
-          created_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: string
-          venue_id?: string | null
-          title?: string | null
-          description?: string | null
-          starts_at?: string | null
-          ends_at?: string | null
-          tags?: string[] | null
-          price_info?: string | null
-          source?: string | null
-          source_type?: string | null
-          permalink?: string | null
-          raw_payload?: Json | null
-          timezone?: string | null
-          is_active?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: string
-          venue_id?: string | null
-          title?: string | null
-          description?: string | null
-          starts_at?: string | null
-          ends_at?: string | null
-          tags?: string[] | null
-          price_info?: string | null
-          source?: string | null
-          source_type?: string | null
-          permalink?: string | null
-          raw_payload?: Json | null
-          timezone?: string | null
-          is_active?: boolean | null
-          created_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "events_venue_id_fkey"
-            columns: ["venue_id"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
+  Row: {
+    id: string
+    venue_id: string
+    title: string | null
+    description: string | null
+    tags: string[] | null
+    price_info: string | null
+    permalink: string | null
+    source: string | null
+    source_type: string | null
+    raw_payload: Json | null
+    starts_at: string | null
+    ends_at: string | null
+    timezone: string | null
+    is_active: boolean | null
+    created_at: string | null
+    updated_at: string | null
+  }
+  Insert: {
+    id?: string
+    venue_id: string
+    title?: string | null
+    description?: string | null
+    tags?: string[] | null
+    price_info?: string | null
+    permalink?: string | null
+    source?: string | null
+    source_type?: string | null
+    raw_payload?: Json | null
+    starts_at?: string | null
+    ends_at?: string | null
+    timezone?: string | null
+    is_active?: boolean | null
+    created_at?: string | null
+    updated_at?: string | null
+  }
+  Update: {
+    id?: string
+    venue_id?: string
+    title?: string | null
+    description?: string | null
+    tags?: string[] | null
+    price_info?: string | null
+    permalink?: string | null
+    source?: string | null
+    source_type?: string | null
+    raw_payload?: Json | null
+    starts_at?: string | null
+    ends_at?: string | null
+    timezone?: string | null
+    is_active?: boolean | null
+    created_at?: string | null
+    updated_at?: string | null
+  }
+  Relationships: [
+    {
+      foreignKeyName: "events_venue_id_fkey"
+      columns: ["venue_id"]
+      isOneToOne: false
+      referencedRelation: "venues"
+      referencedColumns: ["id"]
+    }
+  ]
+}
+
 
       favorites: {
         Row: {

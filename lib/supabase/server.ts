@@ -1,29 +1,36 @@
 // lib/supabase/server.ts
-import { cookies } from "next/headers"
-import {
-  createServerActionClient,
-  createServerComponentClient,
-  createRouteHandlerClient,
-} from "@supabase/auth-helpers-nextjs"
-import type { Database } from "@/types/supabase"
+import { createServerClient as _createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import type { Database } from '@/types/supabase'
 
-// Route Handlers (API routes)
-export function createServerClient() {
-  const cookieStore = cookies()
-  return createRouteHandlerClient<Database>({ cookies: () => cookieStore })
-}
+/**
+ * Server‑side Supabase client (SSR safe).
+ * Returns a fully configured Supabase client — MUST be awaited.
+ */
+export async function createServerClient() {
+  const cookieStore = await cookies()
 
-// Server Components
-export function supabaseServerComponent() {
-  return createServerComponentClient<Database>({ cookies })
-}
-
-// Server Actions
-export function supabaseServerAction() {
-  return createServerActionClient<Database>({ cookies })
-}
-
-// Alias used in server-only pages
-export function supabaseServer() {
-  return createServerClient()
+  return _createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name) => cookieStore.get(name)?.value ?? null,
+        set: (name, value, options) => {
+          try {
+            cookieStore.set(name, value, options)
+          } catch (err) {
+            console.warn('⚠️ Cookie set failed (read-only context):', err)
+          }
+        },
+        remove: (name) => {
+          try {
+            cookieStore.delete(name)
+          } catch {
+            // ignore
+          }
+        },
+      },
+    }
+  )
 }

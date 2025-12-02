@@ -1,4 +1,6 @@
-import { supabaseServer } from "@/lib/supabase/server"
+// app/venues/[venueId]/portal/events/page.tsx
+
+import { createServerClient } from "@/lib/supabase/server"
 import type { Database } from "@/types/supabase"
 import Link from "next/link"
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
@@ -6,13 +8,16 @@ import { Separator } from "@/components/ui/separator"
 
 type VenueRecord = Database["public"]["Tables"]["venues"]["Row"]
 
-export default async function VenuePortalPage({
+export const revalidate = 0 // Always fetch fresh data
+
+export default async function VenueEventsPage({
   params,
 }: {
   params: { venueId: string }
 }) {
   const { venueId } = params
-  const supabase = await supabaseServer()
+
+  const supabase = await createServerClient()
 
   const { data, error } = await supabase
     .from("venues")

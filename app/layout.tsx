@@ -1,10 +1,7 @@
-// app/layout.tsx
 import './globals.css'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { cookies } from 'next/headers'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import type { Database } from '@/types/supabase'
+import { createServerClient } from '@/lib/supabase/server'
 import { SupabaseProvider } from '@/components/SupabaseProvider'
 import Navbar from '@/components/Navbar'
 
@@ -31,10 +28,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // 🧠 Initialize Supabase with server cookies
-  const supabase = createServerComponentClient<Database>({ cookies: () => cookies() })
+  // ✅ Create Supabase client (await required since it calls cookies())
+  const supabase = await createServerClient()
 
-  // ✅ Fetch current session (SSR-safe)
+  // ✅ Fetch the current session securely (SSR-safe)
   const {
     data: { session },
   } = await supabase.auth.getSession()
@@ -44,7 +41,6 @@ export default async function RootLayout({
       <body
         className={`min-h-screen bg-white text-black antialiased ${geistSans.variable} ${geistMono.variable}`}
       >
-        {/* ✅ Wrap entire app (including Navbar) in Supabase context */}
         <SupabaseProvider initialSession={session}>
           <Navbar />
           <main className="w-full h-full">{children}</main>

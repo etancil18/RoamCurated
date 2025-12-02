@@ -9,7 +9,7 @@ import type { Venue } from '@/types/venue'
 import CrawlControl from '@/components/maps/CrawlControl'
 import type { RouteOptions } from '@/lib/routeEngine'
 import { ControlPanel } from '@/components/ControlPanel'
-import { useSession } from '@supabase/auth-helpers-react'
+import { useUser } from '@/hooks/useUser'
 
 
 const MapCanvas = dynamic(() => import('@/components/maps/MapCanvas'), {
@@ -58,8 +58,8 @@ export default function MapWrapper() {
   const [travelMode, setTravelMode] = useState<'walking' | 'cycling' | 'driving'>('walking')
   const [customStart, setCustomStart] = useState<{ lat: number; lon: number } | null>(null)
   const [tightness, setTightness] = useState<'tight' | 'medium' | 'loose'>('medium')
-  const session = useSession()
-  const userId = session?.user?.id
+  const { user } = useUser()
+  const userId = user?.id
 
   useEffect(() => {
     const raw = city === 'atl' ? atlantaData : nycData

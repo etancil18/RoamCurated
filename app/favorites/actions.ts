@@ -3,6 +3,8 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { removeFavorite } from '@/lib/supabase/favorites'
 import { revalidatePath } from 'next/cache'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
 
 // --- UUID Type & Validator ---
 type UUID = string & { __uuidBrand: never }
@@ -13,7 +15,8 @@ function validateUUID(uuid: string): uuid is UUID {
 
 // --- Server Action: Remove Favorite Venue ---
 export async function removeFavoriteAction(venueId: string): Promise<void> {
-  const supabase = await createServerClient()
+  const supabase = await createServerClient() as SupabaseClient<Database>
+
   const {
     data: { user },
     error: authError,
@@ -35,7 +38,7 @@ export async function removeFavoriteAction(venueId: string): Promise<void> {
       venueId,
     })
 
-    // Refresh list after removal
+    // ✅ Refresh favorites page after removal
     revalidatePath('/favorites')
   } catch (err) {
     console.error('❌ Failed to remove favorite:', err)
@@ -43,9 +46,10 @@ export async function removeFavoriteAction(venueId: string): Promise<void> {
   }
 }
 
-// --- NEW Server Action: Remove Saved Crawl (Route) ---
+// --- Server Action: Remove Saved Crawl (Route) ---
 export async function removeSavedRouteAction(routeId: string): Promise<void> {
-  const supabase = await createServerClient()
+  const supabase = await createServerClient() as SupabaseClient<Database>
+
   const {
     data: { user },
     error: authError,
@@ -65,15 +69,15 @@ export async function removeSavedRouteAction(routeId: string): Promise<void> {
     const { error } = await supabase
       .from('saved_routes')
       .delete()
-      .eq('id', routeId)
-      .eq('user_id', user.id)
+      .eq('id', routeId as string)
+      .eq('user_id', user.id as string)
 
     if (error) {
       console.error('[removeSavedRouteAction] Supabase error:', error)
       throw new Error('Failed to delete saved route')
     }
 
-    // Refresh favorites page after deletion
+    // ✅ Refresh favorites page after deletion
     revalidatePath('/favorites')
   } catch (err) {
     console.error('❌ Failed to remove saved crawl:', err)

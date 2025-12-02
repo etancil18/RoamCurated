@@ -1,13 +1,13 @@
 // app/api/events/route.ts
 
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { supabaseServerApi } from '@/lib/supabase/server-api'
 import type { Database } from '@/types/supabase'
 
 type EventRow = Database['public']['Tables']['events']['Row']
 
 export async function GET(req: Request) {
-  const supabase = await createServerClient()
+  const supabase = await supabaseServerApi()
 
   const url = new URL(req.url)
   const city = url.searchParams.get('city')        // "atl" | "nyc" | null

@@ -1,6 +1,7 @@
 // app/venues/[venueId]/portal/events/[eventId]/edit/page.tsx
 
-import { supabaseServer } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
 import EventForm from "@/components/events/EventForm"
 import Link from "next/link"
@@ -16,12 +17,14 @@ export default async function EditEventPage({
 }) {
   const { venueId, eventId } = params
 
-  const supabase = await supabaseServer()
+  // ✅ Use SSR Supabase client
+  const supabase = await createServerClient() as SupabaseClient<Database>
 
+  // ✅ Load the event
   const { data, error } = await supabase
     .from("events")
     .select("*")
-    .eq("id", eventId)
+    .eq("id", eventId as string)
     .maybeSingle()
 
   if (error) {
@@ -45,7 +48,7 @@ export default async function EditEventPage({
         </Link>
       </div>
 
-      {/* ⭐ FIX: EventForm now accepts `mode` and `event` */}
+      {/* ✅ EventForm now receives `mode` and `event` */}
       <EventForm
         venueId={venueId}
         mode="edit"

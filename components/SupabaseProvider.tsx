@@ -1,13 +1,16 @@
-// components/SupabaseProvider.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
-import {
-  SessionContextProvider,
-  useSessionContext,
-} from '@supabase/auth-helpers-react'
-import type { Session } from '@supabase/auth-helpers-nextjs'
+import { useState, useEffect, createContext, useContext } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
+
+type SupabaseContextType = {
+  session: Session | null
+  supabase: SupabaseClient<Database>
+}
+
+const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined)
 
 export function SupabaseProvider({
   children,
@@ -16,30 +19,48 @@ export function SupabaseProvider({
   children: React.ReactNode
   initialSession: Session | null
 }) {
-  const [supabaseClient] = useState(() => createPagesBrowserClient())
+  const [session, setSession] = useState<Session | null>(initialSession)
+
+  const [supabase] = useState(() =>
+    createBrowserClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  )
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
 
   return (
-    <SessionContextProvider
-      supabaseClient={supabaseClient}
-      initialSession={initialSession}
-    >
+    <SupabaseContext.Provider value={{ supabase, session }}>
       <Hydrated>{children}</Hydrated>
-    </SessionContextProvider>
+    </SupabaseContext.Provider>
   )
 }
 
 function Hydrated({ children }: { children: React.ReactNode }) {
-  const { isLoading } = useSessionContext()
   const [isMounted, setIsMounted] = useState(false)
 
-  // ✅ Corrected: useEffect, not useState
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  if (!isMounted || isLoading) {
+  if (!isMounted) {
     return <div className="p-6 text-gray-500 text-sm">Loading session...</div>
   }
 
   return <>{children}</>
+}
+
+export function useSupabase() {
+  const context = useContext(SupabaseContext)
+  if (!context) throw new Error('useSupabase must be used within SupabaseProvider')
+  return context
 }

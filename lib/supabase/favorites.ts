@@ -1,6 +1,9 @@
-import { createServerClient } from '@/lib/supabase/server'
-import type { Database } from '@/types/supabase'
-import { z } from 'zod'
+// lib/supabase/favorites.ts
+
+import { createServerClient } from "@/lib/supabase/server"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/types/supabase"
+import { z } from "zod"
 
 // ----------------------------------------
 // UUID branding
@@ -46,20 +49,20 @@ const favoriteDataSchema = z.object({
 })
 
 // ----------------------------------------
-// Authenticated Supabase client
+// Authenticated Supabase client helper
 // ----------------------------------------
 async function getClientAndUserId(): Promise<{
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: SupabaseClient<Database>
   userId: UUID
 }> {
-  const supabase = await createServerClient()
+  const supabase = await createServerClient() as SupabaseClient<Database>
   const {
     data: { user },
     error,
   } = await supabase.auth.getUser()
 
   if (error) throw new Error(`Auth error: ${error.message}`)
-  if (!user) throw new Error('User not authenticated')
+  if (!user) throw new Error("User not authenticated")
 
   return { supabase, userId: user.id as UUID }
 }
@@ -73,17 +76,17 @@ export async function addVenueToFavorites({
   venueData,
   city,
 }: AddFavoriteParams): Promise<
-  Database['public']['Tables']['favorites']['Row'][]
+  Database["public"]["Tables"]["favorites"]["Row"][]
 > {
-  const supabase = await createServerClient()
+  const supabase = await createServerClient() as SupabaseClient<Database>
 
   const parsed = favoriteDataSchema.safeParse(venueData)
   if (!parsed.success) {
-    console.error('❌ FavoriteData validation failed:', parsed.error.format())
-    throw new Error('Invalid venue data format')
+    console.error("❌ FavoriteData validation failed:", parsed.error.format())
+    throw new Error("Invalid venue data format")
   }
 
-  const payload: Database['public']['Tables']['favorites']['Insert'] = {
+  const payload: Database["public"]["Tables"]["favorites"]["Insert"] = {
     user_id: userId,
     venue_id: venueId,
     data: parsed.data,
@@ -91,12 +94,12 @@ export async function addVenueToFavorites({
   }
 
   const { data, error } = await supabase
-    .from('favorites')
-    .upsert([payload] as any, { onConflict: 'user_id,venue_id' })
+    .from("favorites")
+    .upsert([payload], { onConflict: "user_id,venue_id" })
     .select()
 
   if (error) {
-    console.error('[addVenueToFavorites] Error:', error)
+    console.error("[addVenueToFavorites] Error:", error)
     throw new Error(`Failed to add favorite: ${error.message}`)
   }
 
@@ -110,10 +113,10 @@ export async function removeFavorite({
   userId,
   venueId,
 }: RemoveFavoriteParams): Promise<boolean> {
-  const supabase = await createServerClient()
+  const supabase = await createServerClient() as SupabaseClient<Database>
 
   const { error } = await supabase
-    .from('favorites')
+    .from("favorites")
     .delete()
     .match({ user_id: userId, venue_id: venueId })
 
@@ -125,18 +128,18 @@ export async function removeFavorite({
 // Get Favorites (snake_case preserved)
 // ----------------------------------------
 export async function getFavorites(): Promise<
-  Database['public']['Tables']['favorites']['Row'][]
+  Database["public"]["Tables"]["favorites"]["Row"][]
 > {
   const { supabase, userId } = await getClientAndUserId()
 
   const { data, error } = await supabase
-    .from('favorites')
+    .from("favorites")
     .select()
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
+    .eq("user_id", userId as string)
+    .order("created_at", { ascending: false })
 
   if (error) {
-    console.error('[getFavorites] Error:', error)
+    console.error("[getFavorites] Error:", error)
     throw new Error(`Failed to fetch favorites: ${error.message}`)
   }
 

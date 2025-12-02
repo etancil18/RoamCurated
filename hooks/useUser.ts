@@ -1,13 +1,37 @@
 // hooks/useUser.ts
 'use client'
 
-import { useUser as useSupabaseUser, useSupabaseClient } from '@supabase/auth-helpers-react'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/supabase'
+import type { User } from '@supabase/supabase-js'
 
 export function useUser() {
-  const user = useSupabaseUser()
-  const supabase = useSupabaseClient<Database>()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  return { user, supabase }
+  const supabase = createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      setUser(data.user)
+      setLoading(false)
+    }
+
+    fetchUser()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
+
+  return { user, supabase, loading }
 }

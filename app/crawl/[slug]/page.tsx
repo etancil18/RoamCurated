@@ -1,10 +1,12 @@
 // app/crawl/[slug]/page.tsx
-import { notFound } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
-import MapCanvas from '@/components/maps/MapCanvas'
-import type { Venue } from '@/types/venue'
+import { notFound } from "next/navigation"
+import { createServerClient } from "@/lib/supabase/server"
+import MapCanvas from "@/components/maps/MapCanvas"
+import type { Venue } from "@/types/venue"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/types/supabase"
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 type SavedRouteResponse = {
   stops: {
@@ -17,29 +19,32 @@ type SavedRouteResponse = {
   city: string | null
 }
 
-function normalizeCity(value: string | null): 'atl' | 'nyc' {
-  if (!value) return 'nyc'
+function normalizeCity(value: string | null): "atl" | "nyc" {
+  if (!value) return "nyc"
 
   const v = value.toLowerCase()
 
-  if (v === 'atl' || v === 'atlanta') return 'atl'
-  if (v === 'nyc' || v === 'new-york' || v === 'newyork' || v === 'ny') return 'nyc'
+  if (v === "atl" || v === "atlanta") return "atl"
+  if (["nyc", "new-york", "newyork", "ny"].includes(v)) return "nyc"
 
-  // Default fallback
-  return 'nyc'
+  return "nyc"
 }
 
-export default async function CrawlPage({ params }: { params: { slug: string } }) {
-  const supabase = await createServerClient()
+export default async function CrawlPage({
+  params,
+}: {
+  params: { slug: string }
+}) {
+  const supabase = await createServerClient() as SupabaseClient<Database>
 
   const { data, error } = await supabase
-    .from('saved_routes')
-    .select('stops, city')
-    .eq('slug', params.slug)
+    .from("saved_routes")
+    .select("stops, city")
+    .eq("slug", params.slug as string)
     .single<SavedRouteResponse>()
 
   if (error || !data || !Array.isArray(data.stops)) {
-    console.error('[crawl/[slug]] Failed to load route for slug:', params.slug, error?.message)
+    console.error("[crawl/[slug]] Failed to load route for slug:", params.slug, error?.message)
     notFound()
   }
 
@@ -48,12 +53,12 @@ export default async function CrawlPage({ params }: { params: { slug: string } }
   const route: Venue[] = data.stops.map((stop) => ({
     id: stop.name,
     name: stop.name,
-    slug: stop.name.toLowerCase().replace(/\s+/g, '-'),
+    slug: stop.name.toLowerCase().replace(/\s+/g, "-"),
     lat: stop.lat,
     lon: stop.lon,
     type: stop.type ?? undefined,
     cover: stop.image_url ?? undefined,
-    link: '',
+    link: "",
     instagram_handle: undefined,
     tags: undefined,
     tier: undefined,

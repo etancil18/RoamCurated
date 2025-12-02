@@ -1,33 +1,31 @@
 // middleware.ts
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import type { Database } from '@/types/supabase'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const supabase = createMiddlewareClient<Database>({ req, res })
+
+  const supabase = await createServerClient()
 
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser()
 
   const pathname = req.nextUrl.pathname
+  console.log(`🔍 [Middleware] Path: ${pathname}`)
+  console.log('   User in middleware:', user?.email ?? 'None', error ?? '')
 
-  const protectedRoutes = ['/', '/favorites']
+  const protectedRoutes = ['/', '/favorites', '/venue-admin']
   const isProtected = protectedRoutes.some(route =>
     pathname === route || pathname.startsWith(`${route}/`)
   )
-
   const isLogin = pathname === '/login'
 
-  // 🚫 Block unauthenticated access to protected routes
   if (isProtected && !user) {
-    console.warn(`🔒 Redirecting unauthenticated user from ${pathname} to /login`)
     return NextResponse.redirect(new URL('/login', req.url))
   }
-
-  // 🚫 Prevent logged-in users from visiting /login
   if (isLogin && user) {
     return NextResponse.redirect(new URL('/', req.url))
   }
@@ -36,5 +34,12 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/',
+    '/favorites',
+    '/venue-admin',
+    '/venue-admin/(.*)',
+    '/api/(.*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 }

@@ -3,9 +3,12 @@ import { useEffect, useState } from 'react'
 import { supabaseBrowser } from '@/lib/supabase/clientOnly'
 import type { Venue } from '@/types/venue'
 
+/**
+ * Matches the actual shape Supabase returns from `.select('data, city')`
+ */
 interface FavoriteRow {
-  data: Partial<Venue>
-  city: string
+  data: Partial<Venue> | null
+  city: string | null
 }
 
 export function useFavorites(city: 'atl' | 'nyc') {
@@ -29,10 +32,13 @@ export function useFavorites(city: 'atl' | 'nyc') {
       }
 
       if (Array.isArray(data)) {
-        const mapped = data.map((row: FavoriteRow) => ({
-          ...(row.data || {}),
-          city: row.city,
-        })) as (Venue & { city: string })[]
+        const mapped = data.map((row) => {
+          const venueData = (row.data ?? {}) as Partial<Venue>
+          return {
+            ...venueData,
+            city: row.city ?? city,
+          }
+        }) as (Venue & { city: string })[]
 
         setFavorites(mapped)
       } else {

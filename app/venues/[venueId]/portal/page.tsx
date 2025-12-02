@@ -1,15 +1,12 @@
-// app/venues/[venueId]/portal/page.tsx
-
-import { supabaseServer } from "@/lib/supabase/server"
-import type { Database } from "@/types/supabase"
+import { cookies } from "next/headers"
+import { createServerClient } from "@/lib/supabase/server" // ✅ SSR-safe version
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { type Database, type VenueRecord } from "@/types/supabase"
 import Link from "next/link"
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 
 export const revalidate = 0
-
-// Derive the correct Venue type directly from your Database schema
-type VenueRecord = Database["public"]["Tables"]["venues"]["Row"]
 
 export default async function VenuePortalPage({
   params,
@@ -18,36 +15,33 @@ export default async function VenuePortalPage({
 }) {
   const { venueId } = params
 
-  // ⭐ MUST be awaited — supabaseServer() is async
-  const supabase = await supabaseServer()
+  // ✅ SSR-safe Supabase client (synchronous cookies access)
+  const supabase = await createServerClient()
 
-  // ⭐ Load the venue with correct typing
   const { data, error } = await supabase
     .from("venues")
     .select("*")
     .eq("id", venueId)
-    .maybeSingle()
+    .single()
 
-  if (error) {
+  if (error || !data) {
     console.error("❌ Venue fetch error:", error)
+    return <div className="text-red-600 p-4">Failed to load venue data.</div>
   }
 
-  const v: VenueRecord | null = data ?? null
+  const v: VenueRecord = data
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-8">
       <Card className="border">
         <CardHeader>
-          <CardTitle className="text-2xl">
-            {v?.name ?? "Venue"} Portal
-          </CardTitle>
+          <CardTitle className="text-2xl">{v.name ?? "Venue"} Portal</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {v?.city && (
+          {v.city && (
             <p className="text-sm text-muted-foreground">
-              Managing events for{" "}
-              <strong>{v.city.toUpperCase()}</strong>
+              Managing events for <strong>{v.city.toUpperCase()}</strong>
             </p>
           )}
 

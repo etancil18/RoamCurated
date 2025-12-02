@@ -3,8 +3,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 import { useUser } from '@/hooks/useUser'
+import type { Database } from '@/types/supabase'
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,7 +15,12 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
   const { user } = useUser()
-  const supabase = createPagesBrowserClient()
+
+  const supabase = createBrowserClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 
   // 🚀 Redirect if already logged in
   useEffect(() => {
@@ -31,7 +38,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/login`,
+        emailRedirectTo: `${window.location.origin}/auth/callback`, // ✅ fixed redirect
       },
     })
 
