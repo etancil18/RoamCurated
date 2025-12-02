@@ -40,10 +40,10 @@ export default function VenueAdminPage() {
       const { data } = await supabase.auth.getUser()
       // 🚧 DEV OVERRIDE: remove for production
       setUser(
-  data.user
-    ? { email: data.user.email ?? null }
-    : { email: "evantancil@gmail.com" }
-)
+        data.user
+          ? { email: data.user.email ?? null }
+          : { email: "evantancil@gmail.com" }
+      )
     }
     loadUser()
   }, [supabase])
@@ -79,20 +79,23 @@ export default function VenueAdminPage() {
       title: form.title.trim(),
       description: "",
       starts_at:
-        form.date && form.start_time
-          ? `${form.date}T${form.start_time}`
-          : null,
-      ends_at:
-        form.date && form.end_time
-          ? `${form.date}T${form.end_time}`
-          : null,
+  form.date && form.start_time
+    ? new Date(`${form.date}T${form.start_time}:00`).toISOString()
+    : null,
+ends_at:
+  form.date && form.end_time
+    ? new Date(`${form.date}T${form.end_time}:00`).toISOString()
+    : null,
       tags: form.tags
         ? form.tags.split(",").map((t) => t.trim()).filter(Boolean)
         : null,
       price_info: form.price_info.trim() || null,
       source_type: "portal",
       source: "venue-admin",
+      is_active: true, // ✅ ensure event is visible
     }
+
+    console.log("📝 Submitting new event:", payload)
 
     const res = await fetch(`/api/venues/${selectedVenue}/events`, {
       method: "POST",
@@ -102,8 +105,10 @@ export default function VenueAdminPage() {
 
     const json = await res.json()
     if (!res.ok) {
+      console.error("❌ Event creation error:", json)
       setError(json.details || json.error || "Error submitting event")
     } else {
+      console.log("✅ Event added successfully:", json)
       setSuccess(true)
       setForm({
         title: "",
@@ -144,7 +149,7 @@ export default function VenueAdminPage() {
                 <option value="">-- Choose Venue --</option>
                 {venues.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.name} ({v.city?.toUpperCase()})
+                    {v.name} ({v.city?.toLowerCase() || "unknown"})
                   </option>
                 ))}
               </select>

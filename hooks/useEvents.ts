@@ -1,31 +1,87 @@
-// hooks/useEvents.ts
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
-export function useEvents(city: 'atl' | 'nyc', daysAhead = 7) {
-  const [events, setEvents] = useState<any[]>([])
+type Event = {
+  id: string
+  title: string
+  starts_at: string | null
+  ends_at: string | null
+  tags: string[] | null
+  price_info: string | null
+  is_active: boolean
+  venue: {
+    id: string
+    name: string
+    slug: string
+    lat: number
+    lon: number
+    city: string
+    cover: string | null
+  } | null
+}
+
+export function useEvents(
+  city: 'atl' | 'nyc',
+  daysAhead = 7,
+  tags?: string[],
+  activeOnly = true,
+  limit = 30
+) {
+  const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      const from = new Date()
-      const to = new Date()
-      to.setDate(to.getDate() + daysAhead)
+  const fetchEvents = useCallback(async () => {
+    setLoading(true)
+    setError(null)
 
-      const params = new URLSearchParams({
-        city,
-        from: from.toISOString(),
-        to: to.toISOString()
-      })
+    const from = new Date()
+    from.setUTCHours(0, 0, 0, 0) // ✅ Include all of today
+    const to = new Date()
+    to.setDate(to.getDate() + daysAhead)
 
-      const res = await fetch(`/api/events?${params.toString()}`)
-      const json = await res.json()
-      setEvents(json.events ?? [])
-      setLoading(false)
+    const params = new URLSearchParams({
+      city,
+      from: from.toISOString(),
+      to: to.toISOString(),
+      limit: limit.toString(),
+    })
+
+    if (!activeOnly) {
+      params.set('active', 'false')
     }
 
-    load()
-  }, [city, daysAhead])
+    if (tags && tags.length > 0) {
+      params.set('tags', tags.join(','))
+    }
 
-  return { events, loading }
+    try {
+      const res = await fetch(`/api/events?${params.toString()}`)
+      const json = await res.json()
+
+      if (!res.ok) throw new Error(json.error || 'Failed to fetch events')
+
+      console.log(
+        `🎟️ useEvents fetched ${json.events?.length ?? 0} events for city: ${city}`
+      )
+
+      setEvents(json.events ?? [])
+    } catch (err: any) {
+      console.error('❌ useEvents error:', err)
+      setEvents([])
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [city, daysAhead, tags?.join(','), activeOnly, limit])
+
+  useEffect(() => {
+    fetchEvents()
+  }, [fetchEvents])
+
+  return {
+    events,
+    loading,
+    error,
+    refetch: fetchEvents,
+  }
 }
