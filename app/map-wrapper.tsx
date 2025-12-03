@@ -1,8 +1,7 @@
-/* eslint-disable */
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import atlantaData from '@/data/atlanta'
 import nycData from '@/data/nyc'
 import type { Venue } from '@/types/venue'
@@ -10,7 +9,6 @@ import CrawlControl from '@/components/maps/CrawlControl'
 import type { RouteOptions } from '@/lib/routeEngine'
 import { ControlPanel } from '@/components/ControlPanel'
 import { useUser } from '@/hooks/useUser'
-
 
 const MapCanvas = dynamic(() => import('@/components/maps/MapCanvas'), {
   ssr: false,
@@ -49,15 +47,15 @@ export default function MapWrapper() {
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [city, setCity] = useState<'atl' | 'nyc'>('atl')
   const [venues, setVenues] = useState<Venue[]>([])
-  const [filteredVenues, setFilteredVenues] = useState<Venue[]>([])
   const [route, setRoute] = useState<Venue[] | undefined>(undefined)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedThemeId, setSelectedThemeId] = useState('')
-  const [selectedNeighborhood, setSelectedNeighborhood] = useState('')
   const [selectedPrice, setSelectedPrice] = useState('')
   const [travelMode, setTravelMode] = useState<'walking' | 'cycling' | 'driving'>('walking')
   const [customStart, setCustomStart] = useState<{ lat: number; lon: number } | null>(null)
   const [tightness, setTightness] = useState<'tight' | 'medium' | 'loose'>('medium')
+  const [showLiveEventsOnly, setShowLiveEventsOnly] = useState(false)
+
   const { user } = useUser()
   const userId = user?.id
 
@@ -68,8 +66,8 @@ export default function MapWrapper() {
     setCustomStart(null)
   }, [city])
 
-  useEffect(() => {
-    const filtered = venues.filter((v) => {
+  const filteredVenues = useMemo(() => {
+    return venues.filter((v) => {
       const matchesSearch =
         !searchTerm ||
         v.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -89,9 +87,12 @@ export default function MapWrapper() {
 
       return matchesSearch && matchesPrice
     })
+  }, [venues, searchTerm, selectedPrice])
 
-    setFilteredVenues(filtered)
-  }, [venues, searchTerm, selectedThemeId, selectedNeighborhood, selectedPrice])
+  const visibleVenues = useMemo(() => {
+    if (!showLiveEventsOnly) return filteredVenues
+    return filteredVenues.filter((v) => v._has_upcoming_events === true)
+  }, [filteredVenues, showLiveEventsOnly])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -133,7 +134,7 @@ export default function MapWrapper() {
             themeId: selectedThemeId,
             userLat: startLat,
             userLon: startLon,
-            venues: filteredVenues,
+            venues: visibleVenues,
             city,
             options: {
               maxStops: 6,
@@ -158,7 +159,7 @@ export default function MapWrapper() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            venues: filteredVenues,
+            venues: visibleVenues,
             userLat: startLat,
             userLon: startLon,
             city,
@@ -181,49 +182,47 @@ export default function MapWrapper() {
       url.searchParams.set('route', ids)
       window.history.replaceState(null, '', url.toString())
 
-      // 🔁 Updated: Log the route to Supabase via server proxy
-const origin = { lat: data.route[0].lat, lng: data.route[0].lon }
-const destination = { lat: data.route[data.route.length - 1].lat, lng: data.route[data.route.length - 1].lon }
-const waypoints = data.route.slice(1, -1).map((v: Venue) => ({ lat: v.lat, lng: v.lon }))
+      const origin = { lat: data.route[0].lat, lng: data.route[0].lon }
+      const destination = { lat: data.route[data.route.length - 1].lat, lng: data.route[data.route.length - 1].lon }
+      const waypoints = data.route.slice(1, -1).map((v: Venue) => ({ lat: v.lat, lng: v.lon }))
 
-if (!userId) {
-  console.warn('No user session found — skipping route log')
-  return
-}
+      if (!userId) {
+        console.warn('No user session found — skipping route log')
+        return
+      }
 
-const proxyRes = await fetch('/api/mapbox', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ origin, destination, waypoints, travelMode }),
-})
+      const proxyRes = await fetch('/api/mapbox', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ origin, destination, waypoints, travelMode }),
+      })
 
-const routeData = await proxyRes.json()
+      const routeData = await proxyRes.json()
 
-await fetch('/api/logRoute', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    userId,
-    crawlTheme: selectedThemeId || 'manual',
-    origin,
-    destination,
-    waypoints,
-    routeDuration: routeData.duration,
-    routeDistance: routeData.distance,
-    routeGeometry: routeData.geometry,
-    routeMetadata: {
-      travelMode,
-      city,
-      stops: data.route.length,
-    },
-  }),
-})
-
-} catch (err) {
-console.error('Generate Crawl Error:', err)
-alert('Something went wrong. Try again.')
-}
-}
+      await fetch('/api/logRoute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          crawlTheme: selectedThemeId || 'manual',
+          origin,
+          destination,
+          waypoints,
+          routeDuration: routeData.duration,
+          routeDistance: routeData.distance,
+          routeGeometry: routeData.geometry,
+          routeMetadata: {
+            travelMode,
+            city,
+            stops: data.route.length,
+          },
+        }),
+      })
+    } catch (err) {
+      console.error('Generate Crawl Error:', err)
+      alert('Something went wrong. Try again.')
+    }
+  }
 
   const handleClearRoute = () => {
     setRoute(undefined)
@@ -258,11 +257,13 @@ alert('Something went wrong. Try again.')
           onClearRoute={handleClearRoute}
           tightness={tightness}
           setTightness={setTightness}
+          showLiveEventsOnly={showLiveEventsOnly}
+          setShowLiveEventsOnly={setShowLiveEventsOnly}
         />
       )}
 
       <CrawlControl
-        venues={filteredVenues}
+        venues={visibleVenues}
         route={route}
         onRoute={setRoute}
         selectedThemeId={selectedThemeId}
@@ -273,7 +274,7 @@ alert('Something went wrong. Try again.')
 
       <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
         <MapCanvas
-          venues={filteredVenues}
+          venues={visibleVenues}
           route={route}
           city={city}
           onMapClick={handleMapClick}

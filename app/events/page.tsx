@@ -10,6 +10,7 @@ const AVAILABLE_TAGS = ['music', 'rooftop', 'gallery', 'food', 'comedy']
 export default function EventsPage() {
   const [city, setCity] = useState('atl')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [interestedIds, setInterestedIds] = useState<string[]>([])
 
   useEffect(() => {
     const saved = localStorage.getItem('roam-city')
@@ -34,6 +35,23 @@ export default function EventsPage() {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     )
+  }
+
+  const markInterested = async (eventId: string) => {
+    if (interestedIds.includes(eventId)) return
+    try {
+      const res = await fetch(`/api/events/${eventId}/interest`, {
+        method: 'POST',
+      })
+      if (res.ok) {
+        setInterestedIds((prev) => [...prev, eventId])
+      } else {
+        const err = await res.json()
+        console.error('Error marking interest:', err)
+      }
+    } catch (err) {
+      console.error('Error marking interest:', err)
+    }
   }
 
   return (
@@ -128,8 +146,16 @@ export default function EventsPage() {
             )}
 
             <div className="mt-3">
-              <button className="text-sm bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-white">
-                ➕ Add to Crawl
+              <button
+                className={`text-sm px-3 py-1 rounded text-white ${
+                  interestedIds.includes(ev.id)
+                    ? 'bg-gray-500 cursor-default'
+                    : 'bg-emerald-600 hover:bg-emerald-700'
+                }`}
+                onClick={() => markInterested(ev.id)}
+                disabled={interestedIds.includes(ev.id)}
+              >
+                {interestedIds.includes(ev.id) ? '⭐ Interested' : '⭐ I\'m Interested'}
               </button>
             </div>
           </div>

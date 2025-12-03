@@ -20,6 +20,8 @@ interface ControlPanelProps {
   setTightness: (value: 'tight' | 'medium' | 'loose') => void
   onGenerateRoute: () => void
   onClearRoute: () => void
+  showLiveEventsOnly: boolean
+  setShowLiveEventsOnly: (val: boolean) => void
 }
 
 const themes = [
@@ -62,6 +64,8 @@ export function ControlPanel({
   setTightness,
   onGenerateRoute,
   onClearRoute,
+  showLiveEventsOnly,
+  setShowLiveEventsOnly,
 }: ControlPanelProps) {
   const handleTravelModeChange = (val: string) => {
     if (val) {
@@ -156,6 +160,18 @@ export function ControlPanel({
           <option value="medium">Balanced</option>
           <option value="loose">Spread Out (Explore More)</option>
         </select>
+      </div>
+
+      {/* 🎉 Live Events Only Toggle */}
+      <div className="space-y-2">
+        <Label className="text-xs font-semibold">Live Events Only</Label>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={showLiveEventsOnly}
+            onChange={(e) => setShowLiveEventsOnly(e.target.checked)}
+          />
+        </div>
       </div>
 
       {/* ⚙️ Actions */}

@@ -5,7 +5,11 @@ import type { Venue } from '@/types/venue'
 import { themeById } from '@/lib/crawlConfig'
 import { findSimilarVenuesNearby } from '@/utils/findSimilarVenues'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useInterestedEvents } from '@/hooks/useInterestedEvents'
 import { nanoid } from 'nanoid'
+import ReplaceStopModal from '@/components/modals/ReplaceStopModal'
+import FavoritesModal from '@/components/modals/FavoritesModal'
+import EventsModal from '@/components/modals/EventsModal'
 
 export type CrawlControlProps = {
   venues: Venue[]
@@ -38,8 +42,11 @@ export default function CrawlControl({
     index: number | null
   })
   const [showFavoritesModal, setShowFavoritesModal] = useState(false)
+  const [showEventsModal, setShowEventsModal] = useState(false)
 
   const { favorites, loading: loadingFavorites } = useFavorites(city)
+  const { interested: interestedEvents, loading: loadingEvents, error: interestError, markInterest, removeInterest, refresh } =
+    useInterestedEvents()
 
   async function handleGenerate() {
     setLoading(true)
@@ -59,7 +66,6 @@ export default function CrawlControl({
     const name = prompt('Name this crawl?')
     if (!name) return
 
-    // ✅ Generate slug and sourceUrl
     const slugBase = name.toLowerCase().replace(/\s+/g, '-')
     const slug = `${slugBase}-${nanoid(6)}`
     const sourceUrl = `${window.location.origin}/crawl/${slug}`
@@ -68,13 +74,7 @@ export default function CrawlControl({
       const res = await fetch('/api/routes/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          stops: route,
-          city,
-          slug,
-          sourceUrl,
-        }),
+        body: JSON.stringify({ name, stops: route, city, slug, sourceUrl }),
       })
 
       if (!res.ok) {
@@ -107,6 +107,17 @@ export default function CrawlControl({
     const updated = [...route.slice(0, index), newVenue, ...route.slice(index)]
     onRoute(updated)
     setShowFavoritesModal(false)
+  }
+
+  function handleInsertEventAt(newVenue: Venue, index: number) {
+    if (!route) return
+    if (route.find((r) => r.slug === newVenue.slug)) {
+      alert('This venue is already in your crawl.')
+      return
+    }
+    const updated = [...route.slice(0, index), newVenue, ...route.slice(index)]
+    onRoute(updated)
+    setShowEventsModal(false)
   }
 
   function handleCopyLink() {
@@ -211,6 +222,12 @@ export default function CrawlControl({
               ➕ Add from Favorites
             </button>
             <button
+              onClick={() => setShowEventsModal(true)}
+              className="w-full bg-gray-700 text-white py-1 rounded hover:bg-gray-800 transition"
+            >
+              🎟️ Add from Events
+            </button>
+            <button
               onClick={handleCopyLink}
               className="w-full bg-gray-700 text-white py-1 rounded hover:bg-gray-800 transition"
             >
@@ -226,106 +243,32 @@ export default function CrawlControl({
         </div>
       )}
 
-      {/* Replace/Remove Modal */}
-      {modalData.target && (
-        <div className="absolute bottom-24 left-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-72 z-[2100]">
-          <p className="font-semibold mb-2 text-gray-800">
-            Modify stop: {modalData.target.name}
-          </p>
-          {modalData.options.length > 0 ? (
-            <>
-              <p className="text-sm text-gray-600 mb-1">Replace with similar:</p>
-              <ul className="space-y-1 mb-2">
-                {modalData.options.map((opt, idx) => (
-                  <li key={idx}>
-                    <button
-                      className="text-blue-600 hover:underline"
-                      onClick={() => handleReplaceStop(opt, modalData.index!)}
-                    >
-                      {opt.name}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p className="text-sm text-gray-500 mb-2 italic">
-              No similar locations found nearby.
-            </p>
-          )}
-          <button
-            className="bg-red-500 text-white w-full py-1 rounded hover:bg-red-600 mb-2"
-            onClick={() => handleRemoveStop(modalData.index!)}
-          >
-            Remove Stop
-          </button>
-          <button
-            className="w-full py-1 rounded border border-gray-400 hover:bg-gray-50"
-            onClick={() => setModalData({ target: null, options: [], index: null })}
-          >
-            Cancel
-          </button>
-        </div>
-      )}
+      <ReplaceStopModal
+        modalData={modalData}
+        handleReplaceStop={handleReplaceStop}
+        handleRemoveStop={handleRemoveStop}
+        setModalData={setModalData}
+      />
 
-      {/* ADD FROM FAVORITES — Updated Modal */}
-      {showFavoritesModal && (
-        <div className="absolute bottom-24 left-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-72 z-[2100] overflow-y-auto max-h-[70vh]">
-          <p className="font-semibold mb-2 text-gray-800">Add stop from favorites</p>
-          {loadingFavorites ? (
-            <p className="text-sm text-gray-500">Loading favorites…</p>
-          ) : favorites.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">No favorites found.</p>
-          ) : (
-            <ul className="space-y-4">
-              {favorites
-                .filter((f) => f.city === city)
-                .map((fav, fIdx) => {
-                  const alreadyInCrawl = route?.some((v) => v.slug === fav.slug);
-                  return (
-                    <li key={fIdx} className="border border-gray-200 rounded p-2">
-                      <p className="font-semibold text-sm text-gray-800">{fav.name}</p>
-                      {alreadyInCrawl ? (
-                        <p className="text-xs italic text-gray-500 mt-1">
-                          Already in crawl
-                        </p>
-                      ) : route && route.length > 0 ? (
-                        <div className="space-y-1 mt-2">
-                          {route.map((stop, i) => (
-                            <div key={i} className="flex gap-2">
-                              <button
-                                className="text-xs text-blue-600 hover:underline"
-                                onClick={() => handleInsertFavoriteAt(fav, i)}
-                              >
-                                ➕ Before {stop.name}
-                              </button>
-                              <button
-                                className="text-xs text-green-600 hover:underline"
-                                onClick={() => handleInsertFavoriteAt(fav, i + 1)}
-                              >
-                                ➕ After {stop.name}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-gray-500 mt-1 italic">
-                          No crawl generated yet.
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
-            </ul>
-          )}
-          <button
-            className="w-full py-1 mt-4 rounded border border-gray-400 hover:bg-gray-50"
-            onClick={() => setShowFavoritesModal(false)}
-          >
-            Cancel
-          </button>
-        </div>
-      )}
+      <FavoritesModal
+        show={showFavoritesModal}
+        favorites={favorites}
+        loading={loadingFavorites}
+        route={route ?? []}
+        city={city}
+        onInsert={handleInsertFavoriteAt}
+        onClose={() => setShowFavoritesModal(false)}
+      />
+
+      <EventsModal
+        show={showEventsModal}
+        interestedEvents={interestedEvents}
+        loading={loadingEvents}
+        route={route ?? []}
+        city={city}
+        onInsert={handleInsertEventAt}
+        onClose={() => setShowEventsModal(false)}
+      />
     </div>
-  );
+  )
 }

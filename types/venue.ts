@@ -38,6 +38,7 @@ export type Venue = {
 
   // Events
   dateEvents?: DateEvent[]
+  _has_upcoming_events?: boolean
 }
 
 // StaticVenue extends Venue with guaranteed fields from static data
