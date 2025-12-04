@@ -10,6 +10,7 @@ export type CrawlTheme = {
     tags?: string[];
     price?: number[]; // $ = 1, $$ = 2, $$$ = 3, $$$$ = 4
     timeOfDay?: ("morning" | "day" | "evening" | "night" | "late-night")[];
+    eventCategories?: string[]; // NEW — categories used to match live events
   };
   keywords: string[]; // Keywords used to score how well a venue fits the theme
 };
@@ -23,6 +24,8 @@ export type ThemeRouteOptions = {
   startTime?: Date;
   maxStops?: number;
   filterOpen?: boolean; // true = strict (must be open at arrival), false = relaxed (can open within 90 mins)
+  maxDistanceMeters?: number;
+  eventOnly?: boolean; // NEW — limit to events only
 };
 
 export type Stage = {

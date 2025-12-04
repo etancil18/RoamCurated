@@ -15,6 +15,7 @@ export interface RouteOptions {
   latestEndHour?: number;
   minVibeSimilarity?: number;
   theme?: string;
+   eventOnly?: boolean;
 
   /** NEW — distance tightness */
   tightness?: "tight" | "medium" | "loose";
@@ -87,6 +88,7 @@ export async function generateRoute(
   const originLat = customStart?.lat ?? userLat;
   const originLon = customStart?.lon ?? userLon;
 
+  // Filter out invalid coordinates
   const pool = venues.filter((v) => typeof v.lat === "number" && typeof v.lon === "number");
   if (pool.length === 0) {
     console.warn("generateRoute: no venues with valid lat/lon", venues.length);
@@ -133,7 +135,11 @@ export async function generateRoute(
         if (dist > maxDist) return null;
 
         /** Time, daypart & vibe filters */
-        if (filterOpen && !_isOpenAt(v, arrival)) return null;
+        // If the venue has a `liveEvent` field, you could optionally skip _isOpenAt check for live events.
+        if (filterOpen && !_isOpenAt(v, arrival)) {
+          // Example: allow if v.liveEvent exists and starts near 'arrival'
+          if (!v.liveEvent) return null;
+        }
         if (!daypartAllowedForNow(v, arrival)) return null;
 
         const similarity = lastVenue ? vibeSimilarity(lastVenue, v) : 1;
@@ -141,6 +147,12 @@ export async function generateRoute(
 
         /** Score = vibe similarity - distance weight */
         (v as any).__score = similarity * 1000 - dist;
+
+        // ✅ BONUS: boost live events slightly (if flagged)
+        if ((v as any).liveEvent) {
+          (v as any).__score += 500;  // arbitrary boost — adjust as desired
+        }
+
         return v;
       })
       .filter(Boolean) as Venue[];
@@ -168,3 +180,4 @@ function _isOpenAt(venue: Venue, when: Date): boolean {
   const intervals = _intervalsForDate(when, venue.hoursNumeric || {});
   return intervals.some(([openTs, closeTs]) => when >= openTs && when < closeTs);
 }
+

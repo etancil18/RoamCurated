@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateRoute } from "@/lib/routeEngine";
+import { fetchLiveEventsForCity } from "@/lib/events/fetchLiveEvents";
 import type { Venue } from "@/types/venue";
 
 /**
@@ -8,12 +9,12 @@ import type { Venue } from "@/types/venue";
  */
 const CITY_DISTANCE_THRESHOLDS = {
   atl: {
-    tight: 1000,       // walkable cluster
-    medium: 2500,     // balanced
-    loose: 4500,      // explore more
+    tight: 1000,
+    medium: 2500,
+    loose: 4500,
   },
   nyc: {
-    tight: 750,       // walkable (NYC is denser)
+    tight: 750,
     medium: 1400,
     loose: 2100,
   },
@@ -38,14 +39,15 @@ export async function POST(req: NextRequest) {
   };
 
   /** ----------------------- Validation ----------------------- **/
-
   if (!Array.isArray(venues) || venues.length === 0) {
     return NextResponse.json({ error: "Venues must be a non-empty array." }, { status: 400 });
   }
 
   if (
-    typeof userLat !== "number" || typeof userLon !== "number" ||
-    isNaN(userLat) || isNaN(userLon)
+    typeof userLat !== "number" ||
+    typeof userLon !== "number" ||
+    isNaN(userLat) ||
+    isNaN(userLon)
   ) {
     return NextResponse.json({ error: "Invalid or missing user location." }, { status: 400 });
   }
@@ -59,7 +61,6 @@ export async function POST(req: NextRequest) {
   }
 
   /** ----------------------- Custom Start ----------------------- **/
-
   const customLat = options.customStart?.lat;
   const customLon = options.customStart?.lon;
   const customValid =
@@ -76,39 +77,57 @@ export async function POST(req: NextRequest) {
   }
 
   /** ----------------------- Distance Threshold Logic ----------------------- **/
-
   const tightness: "tight" | "medium" | "loose" = options.tightness ?? "medium";
-
   const maxDistanceMeters =
     CITY_DISTANCE_THRESHOLDS[city]?.[tightness] ??
     CITY_DISTANCE_THRESHOLDS[city].medium;
+  options.maxDistanceMeters = maxDistanceMeters;
 
-  options.maxDistanceMeters = maxDistanceMeters; // Pass to route engine
+  /** ----------------------- Event Logic Flags ----------------------- **/
+  const includeEvents = options.includeEvents ?? true;
+  const eventOnly = options.eventOnly ?? false;
 
-  console.log("📏 Tightness:", tightness);
-  console.log("📏 Max distance per hop (m):", maxDistanceMeters);
+  /** ----------------------- Fetch & Merge Venues ----------------------- **/
+  let eventVenues: Venue[] = [];
+
+  if (includeEvents || eventOnly) {
+    const liveEvents = await fetchLiveEventsForCity(city);
+    eventVenues = liveEvents.map((ev) => ({
+      ...ev,
+      type: ev.type || ["event"],
+    }));
+  }
+
+  let mergedVenues: Venue[];
+
+  if (eventOnly) {
+    mergedVenues = eventVenues;
+  } else {
+    const allVenuesMap = new Map<string, Venue>();
+    venues.forEach((v) => allVenuesMap.set(v.id, v));
+    eventVenues.forEach((ev) => allVenuesMap.set(ev.id, ev));
+    mergedVenues = Array.from(allVenuesMap.values());
+  }
 
   /** ----------------------- Logs ----------------------- **/
-
   console.log("🧪 Route generation input:", {
-    venueCount: venues.length,
+    venueCount: mergedVenues.length,
+    eventCount: eventVenues.length,
     startLat,
     startLon,
     city,
     options,
   });
 
-  /** ----------------------- Try Generating Route ----------------------- **/
-
+  /** ----------------------- Generate Route ----------------------- **/
   try {
     const t0 = performance.now();
-
-    const route = await generateRoute(venues, startLat, startLon, options);
-
+    const route = await generateRoute(mergedVenues, startLat, startLon, {
+      ...options,
+      eventOnly,
+    });
     const duration = performance.now() - t0;
-
     console.log(`✅ Route generated in ${duration.toFixed(1)}ms with ${route.length} stops`);
-
     return NextResponse.json({ route });
   } catch (err) {
     console.error("❌ Route generation failed:", err);

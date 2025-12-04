@@ -3,7 +3,6 @@ import type { Venue } from "@/types/venue";
 import { matchesThemeFilters } from "../../utils/typeUtils";
 import { isVenueOpenAtTime, isVenueOpenWithinWindow } from "../../utils/timeUtils";
 
-
 const TYPE_MATCH_MAP: Record<string, string[]> = {
   bar: ["bar", "pub", "tavern", "brewery"],
   cafe: ["cafe", "coffee", "espresso"],
@@ -19,14 +18,12 @@ const TYPE_MATCH_MAP: Record<string, string[]> = {
 function matchesVenueType(venueType: unknown, desiredCategory: string): boolean {
   if (!venueType) return false;
 
-  const types = Array.isArray(venueType)
-    ? venueType
-    : [venueType];
+  const types = Array.isArray(venueType) ? venueType : [venueType];
 
   const keywords = TYPE_MATCH_MAP[desiredCategory];
 
   return types.some((t) => {
-    if (typeof t !== 'string') return false;
+    if (typeof t !== "string") return false;
     const normalized = t.toLowerCase();
 
     if (!keywords) {
@@ -55,12 +52,35 @@ export function selectCandidates({
   windowMinutes?: number;
 }): Venue[] {
   return venues.filter((v) => {
-    if (!matchesVenueType(v.type, stageType)) return false;
-    if (selected.has(v.id || v.name)) return false;
+    const venueId = v.id || v.name;
 
-    // Time check
+    // 💡 Allow events through even if stage type mismatched
+    const isEventVenue =
+      v.type?.includes("event") || (v as any).liveEvent === true;
+
+    // 💥 Event category filtering (if theme specifies them)
+    if (isEventVenue && Array.isArray(theme.filters?.eventCategories)) {
+      const eventCategory = (v as any).eventCategory?.toLowerCase();
+      const matchesCategory = eventCategory
+        ? theme.filters.eventCategories.some((cat) =>
+            eventCategory.includes(cat.toLowerCase())
+          )
+        : false;
+
+      if (!matchesCategory) return false;
+    }
+
+    // Skip venue if it's not an event and doesn't match the stage type
+    if (!isEventVenue && !matchesVenueType(v.type, stageType)) return false;
+
+    // Skip already selected venues
+    if (selected.has(venueId)) return false;
+
+    // Time filtering
     const openNow = isVenueOpenAtTime(v, stageArrivalTime);
-    const opensSoon = relaxedMode ? isVenueOpenWithinWindow(v, stageArrivalTime, windowMinutes) : false;
+    const opensSoon = relaxedMode
+      ? isVenueOpenWithinWindow(v, stageArrivalTime, windowMinutes)
+      : false;
     if (!openNow && !opensSoon) return false;
 
     // Price filter
@@ -80,7 +100,9 @@ export function selectCandidates({
       typeof v.tags === "string"
     ) {
       const tags = v.tags.toLowerCase();
-      const matches = theme.filters.tags.some((tag) => tags.includes(tag.toLowerCase()));
+      const matches = theme.filters.tags.some((tag) =>
+        tags.includes(tag.toLowerCase())
+      );
       if (!matches) return false;
     }
 
@@ -91,7 +113,9 @@ export function selectCandidates({
       typeof v.vibe === "string"
     ) {
       const vibe = v.vibe.toLowerCase();
-      const matches = theme.filters.vibes.some((vibeKeyword) => vibe.includes(vibeKeyword.toLowerCase()));
+      const matches = theme.filters.vibes.some((vibeKeyword) =>
+        vibe.includes(vibeKeyword.toLowerCase())
+      );
       if (!matches) return false;
     }
 

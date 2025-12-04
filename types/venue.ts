@@ -1,51 +1,63 @@
-export type HoursNumeric = Record<string, { open: number; close: number } | null>
+export type HoursNumeric = Record<string, { open: number; close: number } | null>;
 
 export type DateEvent = {
-  date: string
-  title: string
-  time: string
-}
+  date: string;
+  title: string;
+  time: string;
+};
 
 export type Venue = {
-  id: string // 🔒 REQUIRED — used in favorites, crawls, and routing
-  name: string
-  lat: number
-  lon: number
-  link: string
+  id: string; // 🔒 REQUIRED — used in favorites, crawls, and routing
+  name: string;
+  lat: number;
+  lon: number;
+  link: string;
 
   // Metadata
-  slug?: string
-  vibe?: string
-  type?: string | string[]
-  cover?: string
-  instagram_handle?: string
-  tags?: string 
-  tier?: string
-  city?: string
-  neighborhood?: string
+  slug?: string;
+  vibe?: string;
+  type?: string | string[];
+  cover?: string;
+  instagram_handle?: string;
+  tags?: string;
+  tier?: string;
+  city?: string;
+  neighborhood?: string;
 
   // Time logic
-  openNow?: boolean | string
-  hours?: string[]
-  hoursNumeric?: HoursNumeric
-  dayParts?: Record<string, string>
-  timeCategory?: string
-  energyRamp?: number
+  openNow?: boolean | string;
+  hours?: string[];
+  hoursNumeric?: HoursNumeric;
+  dayParts?: Record<string, string>;
+  timeCategory?: string;
+  energyRamp?: number;
 
   // UX filters
-  price?: string // e.g., "$", "$$", "$$$"
-  duration?: number // in hours
+  price?: string;       // e.g., "$", "$$", "$$$"
+  duration?: number;    // in hours
 
   // Events
-  dateEvents?: DateEvent[]
-  _has_upcoming_events?: boolean
-}
+  dateEvents?: DateEvent[];
+  _has_upcoming_events?: boolean;
+
+  // ✅ Dynamic event crawl enhancements
+  liveEvent?: boolean;        // True if flagged as an active/ongoing event
+  event_id?: string;          // Underlying event record ID (for analytics & dedupe)
+  eventCategory?: string;     // Category of event (music, art, food, etc.)
+  starts_at?: string;         // ISO timestamp for event start
+  ends_at?: string;           // ISO timestamp for event end
+
+  // ✅ Scoring / logic helpers
+  _score?: number;            // Used internally during crawl sorting
+  _eventBoost?: number;       // Additional score weight for event relevance
+  scoreBoost?: number;        // Configurable per-venue weighting multiplier
+};
 
 // StaticVenue extends Venue with guaranteed fields from static data
-export type StaticVenue = Omit<Venue, 'id'> & {
-  slug: string
-  name: string
-  lat: number
-  lon: number
-  link: string
-}
+export type StaticVenue = Omit<Venue, "id"> & {
+  slug: string;
+  name: string;
+  lat: number;
+  lon: number;
+  link: string;
+};

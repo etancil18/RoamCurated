@@ -21,7 +21,7 @@ const CITY_DISTANCE_THRESHOLDS: Record<
   nyc: { tight: 400, medium: 1200, loose: 2000 },
 };
 
-interface ThemeRouteOptions {
+export interface ThemeRouteOptions {
   userLat: number;
   userLon: number;
   themeId: string;
@@ -33,10 +33,12 @@ interface ThemeRouteOptions {
   city?: "atl" | "nyc";
   tightness?: "tight" | "medium" | "loose";
   maxDistanceMeters?: number; // Allows API to directly pass
+  eventOnly?: boolean; // ✅ NEW — limit generation strictly to event venues
 }
 
 /**
  * Generates a themed crawl route from a user's location and theme ID.
+ * Includes dynamic event prioritization and optional event-only filtering.
  */
 export async function generateThemeRoute({
   userLat,
@@ -50,6 +52,7 @@ export async function generateThemeRoute({
   city = "atl",
   tightness = "medium",
   maxDistanceMeters,
+  eventOnly = false,
 }: ThemeRouteOptions): Promise<Venue[]> {
   const theme = themeById[themeId];
   if (!theme) {
@@ -59,9 +62,20 @@ export async function generateThemeRoute({
 
   const stageFlow = generateStageFlow(theme);
 
-  const pool = venues.filter(
+  // 🧩 Filter base venue pool
+  let pool = venues.filter(
     (v) => typeof v.lat === "number" && typeof v.lon === "number"
   );
+
+  // 🧩 If eventOnly flag is true, narrow pool strictly to event venues
+  if (eventOnly) {
+    pool = pool.filter(
+      (v) =>
+        (v as any).liveEvent === true ||
+        (Array.isArray(v.type) && v.type.includes("event"))
+    );
+  }
+
   if (pool.length === 0) {
     console.warn("❌ No valid venue coordinates found.");
     return [];
@@ -81,6 +95,7 @@ export async function generateThemeRoute({
     city,
     tightness,
     effectiveMaxDistance,
+    eventOnly,
   });
 
   const route: Venue[] = [];
@@ -107,12 +122,41 @@ export async function generateThemeRoute({
       return dist <= effectiveMaxDistance;
     });
 
-    const sorted = sortVenuesByScore(
+    /** 🎭 Dynamic event logic injection */
+    candidates = candidates.map((v) => {
+      const base = { ...v } as any;
+      const now = new Date();
+
+      if ((v as any).liveEvent || v.type?.includes("event")) {
+        const startTime = new Date((v as any).starts_at ?? now);
+        const timeDiffHours = Math.abs(startTime.getTime() - now.getTime()) / 3600000;
+
+        // Stronger boost if event is happening within next 2h
+        let eventBoost = 600;
+        if (timeDiffHours <= 2) eventBoost = 1000;
+        if (timeDiffHours <= 0.5) eventBoost = 1300;
+
+        base._eventBoost = eventBoost;
+      }
+
+      return base;
+    });
+
+    /** 🎯 Apply final scoring */
+    let sorted = sortVenuesByScore(
       candidates,
       theme,
       { lat: lastLat, lon: lastLon },
       route[route.length - 1] || null
     );
+
+    // Apply event boosts after sorting
+    sorted = sorted.map((v) => {
+      const boostedScore = (v._score ?? 0) + (v._eventBoost ?? 0);
+      return { ...v, _score: boostedScore };
+    });
+
+    sorted.sort((a, b) => (b._score ?? 0) - (a._score ?? 0));
 
     if (sorted.length === 0) {
       console.warn(`⚠️ No candidates for stage ${i} (${desiredType}). Skipping...`);
@@ -128,6 +172,10 @@ export async function generateThemeRoute({
       currentTime.getTime() + (next.duration || 1) * 60 * 60 * 1000
     );
   }
+
+  console.log(
+    `✅ Theme route generated with ${route.length} stops (includes live event logic + eventOnly support)`
+  );
 
   return route;
 }
