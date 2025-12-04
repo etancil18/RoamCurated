@@ -6,15 +6,13 @@ import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/types/supabase'
 
-
 export default function Navbar() {
   const { user } = useUser()
   const router = useRouter()
   const supabase = createBrowserClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -29,28 +27,31 @@ export default function Navbar() {
 
       <div className="flex items-center space-x-4">
         {user ? (
-  <>
-    <Link href="/events" className="text-sm text-gray-700 hover:text-black">
-      Events
-    </Link>
-    <Link href="/favorites" className="text-sm text-gray-700 hover:text-black">
-      Favorites
-    </Link>
-    <Link href="/venue-admin" className="text-sm text-gray-700 hover:text-black">
-      Admin
-    </Link>
-    <button
-      onClick={handleLogout}
-      className="text-sm text-gray-600 hover:text-red-500"
-    >
-      Logout
-    </button>
-  </>
-) : (
-  <Link href="/login" className="text-sm text-blue-600 hover:underline">
-    Login
-  </Link>
-)}
+          <>
+            <Link href="/events" className="text-sm text-gray-700 hover:text-black">
+              Events
+            </Link>
+            <Link href="/favorites" className="text-sm text-gray-700 hover:text-black">
+              Favorites
+            </Link>
+            <Link href="/profile" className="text-sm text-gray-700 hover:text-black">
+              Profile
+            </Link>
+            <Link href="/venue-admin" className="text-sm text-gray-700 hover:text-black">
+              Admin
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-gray-600 hover:text-red-500"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <Link href="/login" className="text-sm text-blue-600 hover:underline">
+            Login
+          </Link>
+        )}
       </div>
     </nav>
   )
