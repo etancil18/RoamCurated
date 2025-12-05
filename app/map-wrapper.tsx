@@ -280,6 +280,7 @@ export default function MapWrapper() {
           onMapClick={handleMapClick}
           themeId={selectedThemeId}
           travelMode={travelMode}
+          showLiveEventsOnly={showLiveEventsOnly}
         />
       </Suspense>
     </main>

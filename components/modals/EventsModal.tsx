@@ -25,19 +25,30 @@ export default function EventsModal({
 }: EventsModalProps) {
   if (!show) return null
 
-  // ✅ Filter: keep valid events, even if venue data is incomplete
+  const now = new Date()
+
+  // ✅ Filter: keep valid events for this city, and only current/upcoming ones
   const filtered = (interestedEvents ?? [])
     .filter((e): e is InterestedEvent => !!e)
     .filter((e) => !e.venue || e.venue.city === city)
+    .filter((e) => {
+      if (!e.starts_at) return true // if no time, still show
+      const eventStart = new Date(e.starts_at)
+      return eventStart >= now // keep only current or future events
+    })
 
   return (
-    <div className="absolute bottom-24 left-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-72 z-[2100] overflow-y-auto max-h-[70vh]">
-      <p className="font-semibold mb-2 text-gray-800">Add stop from your interested events</p>
+    <div className="absolute bottom-24 left-0 bg-white border border-gray-300 rounded-lg shadow-lg p-3 w-80 z-[2100] overflow-y-auto max-h-[70vh]">
+      <p className="font-semibold mb-2 text-gray-800">
+        Add stop from your interested events
+      </p>
 
       {loading ? (
         <p className="text-sm text-gray-500">Loading interested events…</p>
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-gray-500 italic">No interested events yet.</p>
+        <p className="text-sm text-gray-500 italic">
+          No current or upcoming interested events.
+        </p>
       ) : (
         <ul className="space-y-4">
           {filtered.map((ev, idx) => {
@@ -57,10 +68,25 @@ export default function EventsModal({
 
             const alreadyInCrawl = route.some((r) => r.slug === v.slug)
 
+            // ✅ Format event time
+            const timeLabel = ev.starts_at
+              ? new Date(ev.starts_at).toLocaleString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })
+              : null
+
             return (
               <li key={idx} className="border border-gray-200 rounded p-2">
                 <p className="font-semibold text-sm text-gray-800">
-                  {ev.title || 'Untitled Event'}
+                  {ev.title || 'Untitled Event'}{' '}
+                  {timeLabel && (
+                    <span className="text-gray-500 font-normal">
+                      ({timeLabel})
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-gray-500 mb-1">{v.name}</p>
 

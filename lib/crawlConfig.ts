@@ -2,6 +2,29 @@ import { CrawlTheme } from "@/lib/theme-engine/types";
 
 export const crawlThemes: CrawlTheme[] = [
   {
+  themeId: "active-all-day",
+  name: "Active All Day",
+  description: "High-energy city day powered by movement, outdoor play, and physical challenges. For explorers who'd rather sweat than sit.",
+  stageFlow: ["fitness", "market", "park",  "lunch", "activity", "dinner", "bar"],
+  filters: {
+    price: [1, 2, 3],
+    timeOfDay: ["morning", "day", "evening"],
+    vibes: [
+      "movement", "active", "fitness", "yoga", "sports", "social", "energy", "explore", "hike", "bike", "trail", "run", "sweat", 
+      "outdoor", "sunlight", "adventure", "energetic", "challenge", "refuel"
+    ],
+    tags: ["fitness", "juice", "bike ride", "hike", "market", "rooftop", "late-night"],
+    eventCategories: [
+      "fitness", "outdoor", "movement", "adventure", "market", "juice", "rooftop", "energy"
+    ]
+  },
+  keywords: [
+    "workout", "fitness", "run", "ride", "bike", "trail", "hike", "park", "sunlight", "outdoor",
+    "adventure", "sweat", "recovery", "juice", "protein", "group class", "step count", "refuel",
+    "active", "play", "explore"
+  ]
+},
+  {
     themeId: "cheap-cheerful",
     name: "Cheap & Cheerful",
     description: "Low-budget gems, fast bites, and casual fun throughout the city.",
@@ -62,6 +85,31 @@ export const crawlThemes: CrawlTheme[] = [
     ]
   },
   {
+  themeId: "december-crawl",
+  name: "December Crawl",
+  description: "A cozy, twinkling crawl through the city’s best holiday pop-ups, festive markets, warm drinks, and wintery bites.",
+  stageFlow: ["market", "random gem", "lunch", "lifestyle", "cocktail", "dinner", "bar"],
+  filters: {
+    price: [1, 2, 3, 4],
+    timeOfDay: ["day", "evening", "night"],
+    vibes: [
+      "festive", "holiday", "cozy", "twinkling", "seasonal", "cheer", "snowy", "warm", "spiced",
+      "lights", "winter", "magical", "nostalgic", "limited", "buzzy", "carols", "glow"
+    ],
+    tags: [
+      "market", "treat", "window", "lights", "holiday", "snow", "sweets", "bites", "bar", "pop-up", "cheer"
+    ],
+    eventCategories: [
+      "holiday", "market", "food", "drinks", "christmas", "cozy", "decorated", "pop-up", "seasonal", "lights", "night walk"
+    ]
+  },
+  keywords: [
+    "holiday", "christmas", "seasonal", "festive", "hot chocolate", "mulled wine", "gingerbread",
+    "holiday market", "twinkle", "pop-up", "winter", "lights", "caroling", "cozy", "limited time",
+    "holiday menu", "cheer", "snow", "ice skate", "gift shopping", "cider", "peppermint"
+  ]
+},
+  {
     themeId: "friends-night-out",
     name: "Friends Night Out",
     description: "Food → pregame → party → questionable decisions.",
@@ -92,21 +140,6 @@ export const crawlThemes: CrawlTheme[] = [
     ]
   },
   {
-    themeId: "patio-perfection",
-    name: "Patio Perfection",
-    description: "Outdoor seating, breezy rooftops, and relaxed vibes.",
-    stageFlow: ["brunch", "rooftop", "cocktail", "dinner", "dessert"],
-    filters: {
-      price: [2, 3, 4],
-      vibes: ["patio", "al fresco", "open-air", "sunny", "shade", "breezy", "terrace", "brunchy", "plants", "outdoor", "chill", "garden", "social", "view", "loungy", "relaxed"],
-      tags: ["brunch", "rooftop", "cocktail", "dinner", "dessert"],
-      timeOfDay: ["day","evening"],
-    },
-    keywords: [
-      "patio", "al fresco", "open-air", "sunny", "shade", "breezy", "terrace", "brunchy", "plants", "outdoor", "chill", "garden", "social", "view", "loungy", "relaxed"
-    ]
-  },
-  {
     themeId: "saturday-surge",
     name: "Saturday Surge",
     description: "Max energy from afternoon to after hours.",
@@ -125,7 +158,7 @@ export const crawlThemes: CrawlTheme[] = [
     themeId: "solo-explorer",
     name: "Solo Explorer",
     description: "Cozy solo spots and hidden gems for wandering.",
-    stageFlow: ["coffee", "random gem", "bookstore", "market", "park", "rooftop"],
+    stageFlow: ["coffee", "museum",  "bookstore", "lunch", "lifestyle", "random gem", "wine bar"],
     filters: {
       price: [1, 2],
       vibes: ["bookstore", "gallery", "quiet", "scenic", "café", "park", "rooftop", "garden", "introspective", "nook", "wander", "hidden spot", "photo walk"],
@@ -133,29 +166,14 @@ export const crawlThemes: CrawlTheme[] = [
       timeOfDay: ["day","evening"],
     },
     keywords: [
-      "bookstore", "gallery", "quiet", "scenic", "café", "park", "rooftop", "garden", "introspective", "nook", "wander", "hidden spot", "photo walk"
-    ]
-  },
-  {
-    themeId: "sunset-lovers",
-    name: "Sunset Lovers",
-    description: "Golden hour to skyline views and cocktails.",
-    stageFlow: ["park", "rooftop", "dinner", "cocktail"],
-    filters: {
-      price: [2, 3, 4],
-      tags: ["park", "rooftop", "dinner", "cocktail"],
-      vibes: ["park", "view", "golden hour", "romantic", "cocktail", "outdoor", "patio", "date", "skyline", "twilight", "serene", "photogenic"],
-      timeOfDay: ["evening"],
-    },
-    keywords: [
-      "park", "view", "golden hour", "romantic", "cocktail", "outdoor", "patio", "date", "skyline", "twilight", "serene", "photogenic"
+      "bookstore", "gallery", "quiet", "scenic", "café", "park", "garden", "introspective", "nook", "wander", "hidden spot", "photo walk"
     ]
   },
   {
   themeId: "sunday-reset",
   name: "Sunday Reset",
   description: "Restore your soul with quiet spaces, gentle wellness, and cozy comfort.",
-  stageFlow: ["fitness", "market", "lifestyle", "bookstore", "dinner"],
+  stageFlow: ["fitness", "coffee",  "market", "lifestyle", "bookstore", "dinner"],
   filters: {
     price: [1, 2, 3],
     vibes: ["garden", "tea", "spa", "quiet", "book", "relax", "wellness", "reflection", "meditation", "sunlight", "fresh", "slow"],

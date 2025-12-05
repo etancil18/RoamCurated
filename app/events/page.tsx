@@ -11,6 +11,13 @@ export default function EventsPage() {
   const [city, setCity] = useState('atl')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [interestedIds, setInterestedIds] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery)
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(searchQuery), 300)
+    return () => clearTimeout(timeout)
+  }, [searchQuery])
 
   useEffect(() => {
     const saved = localStorage.getItem('roam-city')
@@ -54,9 +61,19 @@ export default function EventsPage() {
     }
   }
 
+  const filteredEvents = events.filter((ev) => {
+    const query = debouncedSearch.toLowerCase()
+    return (
+      ev.title?.toLowerCase().includes(query) ||
+      ev.venue?.name?.toLowerCase().includes(query) ||
+      ev.description?.toLowerCase().includes(query) ||
+      (Array.isArray(ev.tags) && ev.tags.some((tag) => tag.toLowerCase().includes(query)))
+    )
+  })
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">🗓️ Upcoming Events</h1>
+      <h1 className="text-3xl font-bold mb-6">🗓️ Upcoming Events</h1>
 
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <div>
@@ -74,7 +91,7 @@ export default function EventsPage() {
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="text-sm font-medium mr-1">Tags:</label>
           {AVAILABLE_TAGS.map((tag) => (
             <button
@@ -99,30 +116,40 @@ export default function EventsPage() {
         </button>
       </div>
 
+      <div className="w-full mt-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search by title, venue, description, or tag..."
+          className="w-full border bg-white-900 text-black p-2 rounded"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       <div className="mb-4 text-sm text-neutral-400">
         {loading
           ? 'Loading events...'
           : error
           ? 'Failed to load events.'
-          : `${events.length} events found in ${city.toUpperCase()}`}
+          : `${filteredEvents.length} events found in ${city.toUpperCase()}`}
       </div>
 
-      {!loading && !error && events.length === 0 && (
+      {!loading && !error && filteredEvents.length === 0 && (
         <div className="text-center text-neutral-500 mt-10">
           😕 No upcoming events found for your filters.
         </div>
       )}
 
-      <div className="space-y-4">
-        {events.map((ev) => (
+      <div className="space-y-6">
+        {filteredEvents.map((ev) => (
           <div
             key={ev.id}
-            className="border rounded-lg p-4 bg-neutral-900 text-neutral-100"
+            className="border rounded-lg p-5 bg-neutral-900 text-neutral-100 shadow-sm"
           >
-            <h2 className="text-xl font-semibold">{ev.title}</h2>
+            <h2 className="text-2xl font-semibold mb-1">{ev.title}</h2>
 
             {ev.starts_at && (
-              <p className="text-sm mt-1">
+              <p className="text-sm text-neutral-400 mb-2">
                 {new Date(ev.starts_at).toLocaleString('en-US', {
                   weekday: 'short',
                   month: 'short',
@@ -133,21 +160,42 @@ export default function EventsPage() {
               </p>
             )}
 
+            {ev.description && (
+              <p className="text-sm text-neutral-200 mb-3 whitespace-pre-wrap">
+                {ev.description}
+              </p>
+            )}
+
+            <div className="text-sm text-neutral-300 mb-2">
+              {ev.price_info && <p><strong>Price:</strong> {ev.price_info}</p>}
+              {Array.isArray(ev.tags) && ev.tags.length > 0 && (
+                <p className="text-sm mt-2 text-neutral-400">
+                    <strong>Tags:</strong> {ev.tags.join(', ')}
+                </p>
+                )}
+            </div>
+
             {ev.venue && (
-              <div className="mt-2">
-                <p className="text-sm opacity-80">At: {ev.venue.name}</p>
-                <Link
-                  href={`/map?focus=${ev.venue.slug}`}
-                  className="text-cyan-400 hover:underline text-sm"
-                >
-                  View on Map
-                </Link>
+              <div className="flex items-center justify-between text-sm mt-4">
+                <span className="opacity-80">
+                  📍 {ev.venue.name}
+                </span>
+                {ev.venue.link && (
+                  <Link
+                    href={ev.venue.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-cyan-400 hover:underline font-medium"
+                  >
+                    More Info ↗
+                  </Link>
+                )}
               </div>
             )}
 
-            <div className="mt-3">
+            <div className="mt-4">
               <button
-                className={`text-sm px-3 py-1 rounded text-white ${
+                className={`text-sm px-4 py-2 rounded font-medium text-white ${
                   interestedIds.includes(ev.id)
                     ? 'bg-gray-500 cursor-default'
                     : 'bg-emerald-600 hover:bg-emerald-700'

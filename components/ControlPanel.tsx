@@ -25,10 +25,12 @@ interface ControlPanelProps {
 }
 
 const themes = [
+  { id: 'active-all-day', label: 'Active All Day' },
   { id: 'cheap-cheerful', label: 'Cheap & Cheerful' },
   { id: 'chill-hang', label: 'Chill Hang' },
   { id: 'creative-kickstart', label: 'Creative Kickstart' },
   { id: 'date-night', label: 'Date Night' },
+  { id: 'december-crawl', label: 'December Crawl' },
   { id: 'friends-night-out', label: 'Friends Night Out' },
   { id: 'gallery-crawl', label: 'Gallery Crawl' },
   { id: 'last-call', label: 'Last Call' },
@@ -36,13 +38,11 @@ const themes = [
   { id: 'mindful-mornings', label: 'Mindful Mornings' },
   { id: 'pages-to-pours', label: 'Pages to Pours' },
   { id: 'party-time', label: 'Party Time' },
-  { id: 'patio-perfection', label: 'Patio Perfection' },
   { id: 'post-work-wind-down', label: 'Post-Work Wind Down' },
   { id: 'saturday-surge', label: 'Saturday Surge' },
   { id: 'self-care', label: 'Self-Care' },
   { id: 'solo-explorer', label: 'Solo Explorer' },
   { id: 'sunrise-start', label: 'Sunrise Start' },
-  { id: 'sunset-lovers', label: 'Sunset Lovers' },
   { id: 'sunday-reset', label: 'Sunday Reset' },
   { id: 'work-session', label: 'Work Session' },
 ]

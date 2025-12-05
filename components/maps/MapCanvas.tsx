@@ -81,10 +81,10 @@ const themeColorMap: Record<string, string> = {
   'date-night': 'purple',
   'friends-night-out': 'red',
   'gallery-crawl': 'teal',
-  'patio-perfection': 'pink',
+  'december-crawl': 'pink',
   'saturday-surge': 'gold',
   'solo-explorer': 'gray',
-  'sunset-lovers': 'violet',
+  'active-all-day': 'violet',
   'sunday-reset': 'olive',
   'work-session': 'cyan',
 }
@@ -127,6 +127,7 @@ export default function MapCanvas({
   onMapClick,
   themeId,
   travelMode,
+  showLiveEventsOnly,
 }: {
   venues: Venue[]
   route?: Venue[]
@@ -134,6 +135,7 @@ export default function MapCanvas({
   onMapClick?: (lat: number, lon: number) => void
   themeId?: string
   travelMode: 'walking' | 'cycling' | 'driving'
+   showLiveEventsOnly?: boolean 
 }) {
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, L.Marker>>({})
@@ -144,26 +146,50 @@ export default function MapCanvas({
      ============================================================ */
   const { events } = useEvents(city)
 
-  // Group events by venue_id
-  const eventsByVenueId = useMemo(() => {
-    const map: Record<string, any[]> = {}
-    for (const ev of events) {
-      if (!ev.venue?.id) continue
-      const vId = ev.venue.id
-      if (!map[vId]) map[vId] = []
-      map[vId].push(ev)
-    }
-    return map
-  }, [events])
+// Group events by venue_id
+const eventsByVenueId = useMemo(() => {
+  const map: Record<string, any[]> = {}
+  for (const ev of events) {
+    if (!ev.venue?.id) continue
+    const vId = ev.venue.id
+    if (!map[vId]) map[vId] = []
+    map[vId].push(ev)
+  }
+  return map
+}, [events])
 
-  const defaultCenter: Record<'atl' | 'nyc', [number, number]> = {
-    atl: [33.749, -84.388],
-    nyc: [40.73061, -73.935242],
+const defaultCenter: Record<'atl' | 'nyc', [number, number]> = {
+  atl: [33.749, -84.388],
+  nyc: [40.73061, -73.935242],
+}
+
+const visibleRoute = route?.length && route.length > 1 ? route : []
+
+// ✅ Unified visibleVenues logic with live events filtering
+const visibleVenues = useMemo(() => {
+  const base = visibleRoute.length > 0 ? visibleRoute : venues
+
+  if (showLiveEventsOnly) {
+    return base.filter((v) => {
+      const evs = eventsByVenueId[v.id] ?? []
+      const hasValidEvent = evs.some((ev) => !!ev.venue?.id)
+      if (!hasValidEvent) {
+        console.warn(
+          '[MapCanvas] Venue skipped (no matching event):', 
+          v.id, v.name, evs
+        )
+      }
+      return hasValidEvent
+    })
   }
 
-  const visibleRoute = route?.length && route.length > 1 ? route : []
-  const visibleVenues = visibleRoute.length > 0 ? visibleRoute : venues
-  const lineColor = themeColorMap[themeId ?? ''] ?? 'cyan'
+  return base
+}, [venues, visibleRoute, eventsByVenueId, showLiveEventsOnly])
+
+
+
+const lineColor = themeColorMap[themeId ?? ''] ?? 'cyan'
+
 
   /* ============================================================
      MAP TRANSITIONS & EFFECTS
@@ -249,10 +275,10 @@ export default function MapCanvas({
                 iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
                 shadowUrl:
                   'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41],
+                iconSize: [18, 30],
+                iconAnchor: [9, 30],
+                popupAnchor: [1, -28],
+                shadowSize: [30, 30],
               })
           const firstCandidate = coverCandidates(v)[0]
 
@@ -315,24 +341,53 @@ export default function MapCanvas({
                   {/* ============================================================
                       🎉 UPCOMING EVENTS SECTION
                       ============================================================ */}
-                  {venueEvents.length > 0 && (
-                    <div style={{ marginTop: 12 }}>
-                      <strong>Upcoming Events:</strong>
-                      <ul style={{ marginTop: 6, paddingLeft: 16 }}>
-                        {venueEvents.slice(0, 3).map((ev) => (
-                          <li key={ev.id}>
-                            {new Date(ev.starts_at).toLocaleString('en-US', {
-                              weekday: 'short',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                            })}
-                            {' — '}
-                            {ev.title}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+
+                  {(() => {
+                      const venueId = v.id
+                      const venueEvents = eventsByVenueId[venueId] ?? []
+                      const now = Date.now()
+
+                      // ✅ Filter & sort only current or upcoming events
+                      const upcoming = venueEvents
+                        .filter((ev) => {
+                          if (!ev.starts_at) {
+                            console.warn('[MapCanvas] Event missing starts_at:', ev)
+                            return false
+                          }
+                          const startTs = new Date(ev.starts_at).getTime()
+                          return startTs >= now
+                        })
+                        .sort((a, b) => {
+                          return new Date(a.starts_at!).getTime() - new Date(b.starts_at!).getTime()
+                        })
+
+                      if (upcoming.length === 0) {
+                        return null
+                      }
+
+                      return (
+                        <div style={{ marginTop: 12 }}>
+                          <strong>Upcoming Events:</strong>
+                          <ul style={{ marginTop: 6, paddingLeft: 16 }}>
+                            {upcoming.map((ev) => (
+                              <li key={ev.id}>
+                                {new Date(ev.starts_at!).toLocaleString('en-US', {
+                                  month: 'numeric',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}{' '}
+                                @ {new Date(ev.starts_at!).toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })} — {ev.title}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )
+                    })()}
+
                 </div>
               </Popup>
             </Marker>

@@ -223,13 +223,13 @@ export default function CrawlControl({
             </button>
             <button
               onClick={() => setShowEventsModal(true)}
-              className="w-full bg-gray-700 text-white py-1 rounded hover:bg-gray-800 transition"
+              className="w-full bg-stone-700 text-white py-1 rounded hover:bg-gray-800 transition"
             >
               🎟️ Add from Events
             </button>
             <button
               onClick={handleCopyLink}
-              className="w-full bg-gray-700 text-white py-1 rounded hover:bg-gray-800 transition"
+              className="w-full bg-purple-700 text-white py-1 rounded hover:bg-gray-800 transition"
             >
               🔗 {copied ? 'Copied!' : 'Copy Link'}
             </button>

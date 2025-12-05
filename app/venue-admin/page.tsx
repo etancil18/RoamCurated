@@ -29,24 +29,31 @@ export default function VenueAdminPage() {
     end_time: "",
     tags: "",
     price_info: "",
+    description: "",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
   // --- AUTH CHECK ---
-  useEffect(() => {
-    async function loadUser() {
-      const { data } = await supabase.auth.getUser()
-      // 🚧 DEV OVERRIDE: remove for production
-      setUser(
-        data.user
-          ? { email: data.user.email ?? null }
-          : { email: "evantancil@gmail.com" }
-      )
+  const allowedEmails = ["evantancil@gmail.com", "otheradmin@example.com"]
+
+useEffect(() => {
+  async function loadUser() {
+    const { data } = await supabase.auth.getUser()
+    const email = data.user?.email ?? null
+
+    if (!email || !allowedEmails.includes(email)) {
+      // Redirect unauthorized users away
+      router.push('/')
+    } else {
+      setUser({ email })
     }
-    loadUser()
-  }, [supabase])
+  }
+
+  loadUser()
+}, [supabase])
+
 
   // --- FETCH VENUES ---
   useEffect(() => {
@@ -77,7 +84,7 @@ export default function VenueAdminPage() {
 
     const payload = {
       title: form.title.trim(),
-      description: "",
+      description: form.description.trim() || null,
       starts_at:
   form.date && form.start_time
     ? new Date(`${form.date}T${form.start_time}:00`).toISOString()
@@ -117,6 +124,7 @@ ends_at:
         end_time: "",
         tags: "",
         price_info: "",
+        description: "",
       })
     }
 
@@ -221,6 +229,17 @@ ends_at:
                 placeholder="$15 cover or Free"
               />
             </div>
+
+            <div>
+                <label className="block mb-1 font-medium">Event Description</label>
+                <textarea
+                    rows={4}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    className="w-full border p-2 rounded"
+                    placeholder="Brief details about the event..."
+                />
+                </div>
 
             <button
               type="submit"

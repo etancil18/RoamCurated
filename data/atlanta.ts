@@ -1060,7 +1060,7 @@ const atlantaData = [
   },
   {
     "slug": "stats-brewpub",    "name": "STATS Brewpub",
-    "vibe": "sports, casual, tvs, beer, group-friendly, loud, downtown, lively, approachable, festive, big-screen, energetic, relaxed",
+    "vibe": "sports, casual, tvs, beer, group-friendly, loud, downtown, lively, approachable, big-screen, energetic, relaxed",
     "type": "bar",
         "lat": 33.7615575,
     "lon": -84.3964558,
@@ -2394,7 +2394,7 @@ const atlantaData = [
   },
   {
     "slug": "breaker-breaker",    "name": "Breaker Breaker",
-    "vibe": "retro, seafood, colorful, beachy, tropical, casual, dog-friendly, patio, nautical, relaxed",
+    "vibe": "retro, seafood, colorful, beachy, tropical, casual, dog-friendly, patio, nautical, festive, seasonal, relaxed",
     "type": ["dinner", "lunch", "rooftop"],
         "lat": 33.7521019,
     "lon": -84.3568532,
@@ -2434,7 +2434,7 @@ const atlantaData = [
     },
     "timeCategory": "evening, afternoon, midday",
     "energyRamp": 3,
-    "tags": "oceanic vibe, bright cocktails, New American coastal, daytime-to-night transition",
+    "tags": "oceanic vibe, bright cocktails, New American coastal, daytime-to-night transition, holiday",
     "price": "$$",
     "duration": 1.5
   },
@@ -2532,7 +2532,7 @@ const atlantaData = [
   },
   {
     "slug": "little-spirit",    "name": "Little Spirit",
-    "vibe": "cocktails, edgy, neighborhood, stylish, mixology, curated, intimate, trendy, moody, artisanal",
+    "vibe": "cocktails, edgy, neighborhood, stylish, mixology, curated, intimate, trendy, moody, festive, buzzy, artisanal",
     "type": "cocktail",
         "lat": 33.7624505,
     "lon": -84.35858396,
@@ -2572,7 +2572,7 @@ const atlantaData = [
     },
     "timeCategory": "late",
     "energyRamp": 5,
-    "tags": "craft cocktail den, tight quarters, speakeasy-adjacent, date-before-dinner",
+    "tags": "craft cocktail den, tight quarters, speakeasy-adjacent, date-before-dinner, holiday",
     "price": "$$",
     "duration": 1.75
   },
@@ -3952,8 +3952,8 @@ const atlantaData = [
   },
   {
     "slug": "park-tavern",    "name": "Park Tavern",
-    "vibe": "patio, casual, events, piedmont-park, group-friendly, scenic, social, lively, outdoors, festive, laid-back",
-    "type": ["bar", "brunch"],
+    "vibe": "patio, casual, ice skate, group-friendly, sports, social, lively, outdoors, festive, holiday, seasonal, laid-back",
+    "type": ["bar", "activity", "brunch"],
         "lat": 33.7821472,
     "lon": -84.36923885,
     "link": "https://www.instagram.com/parktavern/",
@@ -4765,7 +4765,7 @@ const atlantaData = [
   },
   {
     "slug": "fado-irish-pub",    "name": "Fado Irish Pub",
-    "vibe": "irish, pub, sports, beer, community, casual, bar-food, friendly, lively, social, traditional, festive",
+    "vibe": "irish, pub, sports, beer, community, casual, bar-food, friendly, lively, social, traditional, soccer",
     "type": "bar",
         "lat": 33.7797074,
     "lon": -84.3840009,
@@ -5259,7 +5259,7 @@ const atlantaData = [
   },
   {
     "slug": "beetlecat",    "name": "BeetleCat",
-    "vibe": "seafood, nautical, oysters, brunch, stylish, fresh, patio",
+    "vibe": "seafood, nautical, oysters, brunch, stylish, fresh, festive, patio",
     "type": ["cocktail", "dinner"],
         "lat": 33.7624505,
     "lon": -84.35858396,
@@ -5291,7 +5291,7 @@ const atlantaData = [
     "dayParts": { "sun":"MD","mon":"E","tue":"E","wed":"E","thu":"E","fri":"E","sat":"E" },
     "timeCategory": "midday, evening",
     "energyRamp": 3,
-    "tags": "nautical seafood spot, oyster tower dates, funky Buckhead brunch, upscale East Coast vibes",
+    "tags": "nautical seafood spot, oyster tower dates, funky Buckhead brunch, upscale East Coast vibes, holiday",
     "price": "$$$",
     "duration": 2
   },
@@ -5373,7 +5373,7 @@ const atlantaData = [
   },
   {
     "slug": "dads",    "name": "Dad's",
-    "vibe": "cocktails, patio, retro, cinema, funky, fun, casual, eclectic, Photo Booth",
+    "vibe": "Cocktails, Patio, Retro, Cinema, Funky, Fun, Casual, Eclectic, Festive, Photo Booth",
     "type": ["bar", "cocktail"],
         "lat": 33.77832855,
     "lon": -84.35305049,
@@ -5405,7 +5405,7 @@ const atlantaData = [
     "dayParts": { "sun":"E","mon":"E","tue":"E","wed":"E","thu":"E","fri":"E","sat":"E" },
     "timeCategory": "evening",
     "energyRamp": 4,
-    "tags": "karaoke-fueled bar, nostalgia decor, late-night rowdiness, theme nights",
+    "tags": "karaoke-fueled bar, nostalgia decor, late-night rowdiness, theme nights, holiday",
     "price": "$$",
     "duration": 1.75
   },
@@ -8009,7 +8009,7 @@ const atlantaData = [
   },
   {
     "slug": "7th-house",    "name": "7th House",
-    "vibe": "Lounge, Mystical, Sultry, Tarot, Cocktails, Intimate, Night‑Life, Chic, Esoteric, Hidden",
+    "vibe": "Lounge, Mystical, Sultry, Tarot, Cocktails, Intimate, Night‑Life, Chic, Esoteric, Festive, Hidden",
     "type": ["lounge", "cocktail"],
         "lat": 33.7406345,
     "lon": -84.40807286,
@@ -10493,7 +10493,7 @@ const atlantaData = [
   },
   {
     "slug": "the-s-o-s-tiki-bar",    "name": "The S.O.S. Tiki Bar",
-    "vibe": "Tiki, Tropical, Kitschy, Rum, Playful, Retro, Escape, Colorful, Fun, Island",
+    "vibe": "Tiki, Tropical, Kitschy, Rum, Playful, Retro, Escape, Colorful, Fun, Festive, Island",
     "type": ["bar", "cocktail"],
     "lat": 33.7742092,
     "lon": -84.2950236,
@@ -12149,7 +12149,7 @@ const atlantaData = [
   },
   {
     "slug": "la-semilla",    "name": "La Semilla",
-    "vibe": "Vegan, Latin, Modern, Bright, Plant-Based, Brunch, Inventive, Healthy, Casual, Conscious",
+    "vibe": "Vegan, Latin, Modern, Bright, Plant-Based, Brunch, Inventive, Healthy, Casual, Festive, Conscious",
     "type": ["lunch", "dinner"],
     "lat": 33.74673873,
     "lon": -84.36330386,
@@ -12189,7 +12189,7 @@ const atlantaData = [
     },
     "timeCategory": "evening",
     "energyRamp": 3,
-    "tags": "plant-based, Latin-inspired, upscale",
+    "tags": "plant-based, Latin-inspired, upscale, holiday",
     "price": "$$",
     "duration": 1.75
   },
@@ -12241,7 +12241,7 @@ const atlantaData = [
   },
   {
     "slug": "daily-chew",    "name": "Daily Chew",
-    "vibe": "Seasonal, Fresh, Plant-Forward, Café, Bright, Wholesome, Healthy, Casual, Minimalist, Local",
+    "vibe": "Seasonal, Fresh, Plant-Forward, Café, Bright, Wholesome, Healthy, Casual, Minimalist, Festive, Local",
     "type": ["breakfast", "lunch"],
     "lat": 33.8117273,
     "lon": -84.3627468,
@@ -12281,7 +12281,7 @@ const atlantaData = [
     },
     "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "all-day-cafe, seasonal-menu, health-conscious",
+    "tags": "all-day-cafe, seasonal-menu, health-conscious, holiday",
     "price": "$",
     "duration": 1.5
   },
@@ -12425,7 +12425,7 @@ const atlantaData = [
   },
   {
     "slug": "side-saddle-wine-saloon-bar",    "name": "Side Saddle Wine Saloon & Bar",
-    "vibe": "Wine, Rustic, Cozy, Intimate, Date, Bar, Relaxed, Stylish, Warm, Inviting",
+    "vibe": "Wine, Rustic, Cozy, Intimate, Date, Bar, Relaxed, Stylish, Warm, Festive, Inviting",
     "type": "wine bar",
     "lat": 33.72584216,
     "lon": -84.36493295,
@@ -12457,7 +12457,7 @@ const atlantaData = [
     "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
-    "tags": "wine-bar, intimate, rustic-charm",
+    "tags": "wine-bar, intimate, rustic-charm, holiday",
     "price": "$$",
     "duration": 1.75
   },
@@ -15391,8 +15391,8 @@ const atlantaData = [
 },
 {
   "slug": "skyline-park",    "name": "Skyline Park",
-  "vibe": "Rooftop, Views, Games, Retro, Social, Carnival, Skyline, Amusement, Colorful, Playful",
-  "type": ["activity", "rooftop"],
+  "vibe": "Rooftop, Views, Games, Retro, Social, Carnival, Skyline, Amusement, Colorful, Festive, Playful",
+  "type": ["activity", "bar", "rooftop"],
   "lat": 33.7728212,
   "lon": -84.3659039,
   "link": "https://www.instagram.com/poncecityroof/",
@@ -15897,7 +15897,7 @@ const atlantaData = [
 },
 {
   "slug": "westside-motor-lounge",    "name": "Westside Motor Lounge",
-  "vibe": "Lounge, Retro, Motor, Drinks, Stylish, Casual, Social, Creative, Outdoor, Community",
+  "vibe": "Lounge, Retro, Motor, Drinks, Stylish, Casual, Social, Creative, Outdoor, Festive, Community",
   "type": ["bar", "patio"],
   "lat": 33.77475185,
   "lon": -84.41030889,
@@ -17388,7 +17388,7 @@ const atlantaData = [
 {
 "slug": "yeppa-and-co-beltline",
 "name": "Yeppa & Co. - Beltline",
-"vibe": "Italian, Trendy, Patio, Cocktail, Upscale, Social, Stylish, Inventive",
+"vibe": "Italian, Trendy, Patio, Cocktail, Upscale, Social, Stylish, Festive, Inventive",
 "type": ["brunch", "dinner", "patio", "cocktail"],
 "lat": 33.75708,
 "lon": -84.365486,
@@ -17428,14 +17428,14 @@ const atlantaData = [
 },
 "timeCategory": "Midday, Evening",
 "energyRamp": 4,
-"tags": "Euro-Vibe, Aperitivo, Scene-Driven, Fashionable, Italic",
+"tags": "Euro-Vibe, Aperitivo, Scene-Driven, Fashionable, Italic, holiday",
 "price": "$$$",
 "duration": 2
 },
 {
 "slug": "rreal-tacos-beltline",
 "name": "Rreal Tacos - Beltline",
-"vibe": "Casual, Bold, Flavorful, Street-Style, Social, Vibrant, Accessible, Fun, Spicy, Crowd-Friendly, Quick-Bite",
+"vibe": "Casual, Bold, Flavorful, Street-Style, Social, Vibrant, Accessible, Fun, Spicy, Crowd-Friendly, Festive, Seasonal, Quick-Bite",
 "type": "lunch, dinner",
 "lat": 33.7729948,
 "lon": -84.3641301,
@@ -17661,7 +17661,7 @@ const atlantaData = [
   {
     "slug": "cypress-street-pint-and-plate",
     "name": "Cypress Street Pint & Plate",
-    "vibe": "Casual, Bar, Local, Comfort‑Food, Friendly, Beer, Rustic, Relaxed, Social, Neighborhood",
+    "vibe": "Casual, Bar, Local, Comfort‑Food, Friendly, Beer, Rustic, Relaxed, Social, Festive, Neighborhood",
     "type": ["bar", "brunch", "lunch", "patio"],
     "lat": 33.7773253,
     "lon": -84.3861456,
