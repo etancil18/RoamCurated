@@ -1,0 +1,52 @@
+name,slug,lat,lon,instagram_handle,tags,type,time_category,energy_ramp,price,duration,cover,city
+Bar Premio,bar-premio,33.7683763,-84.363661,barpremioatlanta,"{Tapas,Date‑Night,Upscale,Night‑Out,Cocktails}",breakfast,Afternoon,3,$$,2,img/venues/Bar Premio.jpg,atl
+Atlanta Pickleball Center,atlanta-pickleball-center,33.7919452,-84.4266095,atlantapickleballcenter,"{Sport,Courts,Group,Fitness,Active}",activity,Afternoon,3,$,2.5,img/venues/Atlanta Pickleball Center.jpg,atl
+Sea Love,sea-love,33.8650504,-84.4666219,sealoveatlanta,"{Gifts,Scent,Home,Boutique,Cozy}",random gem,Afternoon,2,$$,1.5,img/venues/Sea Love.jpg,atl
+Cypress Street Pint & Plate,cypress-street-pint-and-plate,33.7773253,-84.3861456,cypressstreet,"{Bar‑Food,Wings,Casual,Beer‑Lovers,Friendly}",bar,Evening,4,$$,1.75,img/venues/Cypress Street.jpg,atl
+Firewall,firewall,33.7436261,-84.4383819,firewallatlanta,"{Stylish,Dinner,Modern,Creative,Night‑Out}",lunch,Afternoon,2,$,1.25,img/venues/Firewall.jpg,atl
+The Westwood,the-westwood,33.743445,-84.4377041,thewestwoodatl,"{Diner‑Style,Comfort,Value,Casual,Easygoing}",bar,Afternoon,3,$,1.25,img/venues/The Westwood.jpg,atl
+Midtown Bowl,midtown-bowl,33.8098487,-84.3681959,midtown_bowl,"{Bowling,Retro,Group‑Fun,Games,Night‑Out}",activity,Evening,4,$$,2.5,img/venues/Midtown Bowl.png,atl
+Roaring Social Decatur,roaring-social-decatur,33.7758723,-84.2966729,roaring.social,"{Social,Casual,Family‑Friendly,Shared‑Plates,Relaxed}",activity,Evening,5,$$,2.5,img/venues/Roaring Social Decatur.jpg,atl
+Sidetracked Wine Co.,sidetracked-wine-co,33.8910441,-84.3027681,sidetrackedwineco,"{Wine‑Shop,Tasting,Boutique,Cellar,Elegant}",wine bar,Afternoon,2,$$,1,img/venues/Sidetracked Wine Co.jpg,atl
+African Diaspora Art Museum of Atlanta,african-diaspora-art-museum-of-atlanta,33.7210261,-84.4003397,adama_atl,"{Museum,Culture,History,Educational,Community}",gallery,Afternoon,1,$,1,img/venues/African Diaspora Art Museum of Atlanta.jpg,atl
+Fernbank Museum,fernbank-museum,33.7739247,-84.3279985,fernbankmuseum,"{Museum,Nature,Science,Educational,Family}",museum,Afternoon,2,$$,2.5,img/venues/Fernbank Museum.jpg,atl
+Arnette's Chop Shop,arnettes-chop-shop,33.8652758,-84.3358484,arnetteschopshop,"{Steakhouse,Meaty,Hearty,Dinner,Classic}",dinner,Evening,3,$$$$,2,img/venues/Arnette's Chop Shop.jpg,atl
+Dixie Q,dixie-q,33.8612751,-84.3322859,dixieqbrookhaven,"{BBQ,Southern,Smokehouse,Casual,Hearty}",lunch,Afternoon,2,$,1.5,img/venues/Dixie Q.jpg,atl
+Lagarde American Eatery,lagarde-american-eatery,33.8891201,-84.3142637,lagardeatlanta,"{American,Casual,Classic,Affordable,Neighborhood}",lunch,Afternoon,4,$$,1.5,img/venues/Lagarde American Eatery.jpg,atl
+Westside Cultural Arts Center,westside-cultural-arts-center,33.781456,-84.4127884,westsideartsctr,"{Arts,Community,Gallery,Events,Cultural}",random gem,,4,$,2,img/venues/Westside Cultural Arts Center.jpg,atl
+BODYROK Inman Park,bodyrok-inman-park,33.7609805,-84.3659874,bodyrokatlanta,"{Pilates,Fitness,Studio,Wellness,Strength}",fitness,Midday,2,$,1.25,img/venues/BODYROK Inman Park.jpg,atl
+BODYROK Midtown,bodyrok-midtown,33.7880934,-84.3829003,bodyrokatlanta,"{Pilates,Urban,Fitness,Core,Health}",fitness,Midday,2,$,1.25,img/venues/BODYROK Midtown.jpg,atl
+Stellar Bodies LLC - West Midtown Atlanta,stellar-bodies-llc-west-midtown-atlanta,33.801568,-84.4283552,stellarbodiesatl,"{Pilates,Boutique,Wellness,Strength,Modern}",fitness,Morning,2,$,1.25,img/venues/Stellar Bodies LLC - West Midtown.jpg,atl
+Stellar Bodies,stellar-bodies,33.860081,-84.3821871,stellarbodiesatl,"{Pilates,Fitness,Calm,Core,Balanced}",fitness,Morning,2,$,1.25,img/venues/Stellar Bodies.jpg,atl
+Third Eye Tribe,third-eye-tribe,33.8130524,-84.3924989,thirdeyetribelagree,"{Yoga,Holistic,Mindful,Spiritual,Calm}",fitness,Morning,2,$,1.25,img/venues/Third Eye Tribe.jpg,atl
+Pure Motion Yoga,pure-motion-yoga,33.8058014,-84.3414324,puremotionyoga_atl,"{Yoga,Wellness,Stretch,Relaxation,Mindful}",fitness,Morning,2,$,1.25,img/venues/Pure Motion Yoga.png,atl
+The Daily Pilates - Buckhead,the-daily-pilates-buckhead,33.837278,-84.3798423,thedailypilates,"{Pilates,Balanced,Health,Studio,Wellness}",fitness,Morning,2,$,1.25,img/venues/The Daily Pilates - Buckhead.jpg,atl
+FiNCA TO FiLTER O4W,finca-to-filter-o4w,33.7662757,-84.3658041,fincatofilter,"{Coffee,Morning,Grab‑and‑Go,Local,Casual}",coffee,Morning,2,$,1,img/venues/FiNCA TO FiLTER O4W.jpg,atl
+FiNCA TO FilTER BoHo,finca-to-filter-boho,33.7269743,-84.365605,fincatofilter,"{Coffee,Boho,Chill,Local,Café}",coffee,Morning,2,$,1,img/venues/FiNCA TO FilTER BoHo.jpg,atl
+Bibliotech,bibliotech,33.7650606,-84.341983,bibliotech,"{Books,Study,Quiet,Indie,Literary}",bookstore,Afternoon,2,$,0.75,img/venues/Bibliotech.jpg,atl
+Little Tart Bakeshop,little-tart-bakeshop,33.7369522,-84.3856762,littletartbakeshop,"{Bakery,Pastry,Sweet,Brunch,Fresh}",bakery,Morning,2,$,2,img/venues/Little Tart Bakeshop.jpg,atl
+Orient Express,orient-express,33.8662072,-84.4679523,orientexpressatl,"{Sushi,Japanese,Dinner,Date‑Night,Cozy}",lunch,Afternoon,2,$,2,img/venues/Orient Express.jpg,atl
+Weezy's ATL,weezys-atl,33.8110844,-84.3957996,weezysatl,"{Bar,Night‑Out,Drinks,Social,Casual}",lounge,Evening,5,$$$,2.25,img/venues/Weezy's ATL.jpg,atl
+Seed Atlanta,seed-atlanta,33.8121338,-84.395189,seedatlanta,"{Plants,Nursery,Green,Urban‑Garden,Boutique}",random gem,Afternoon,2,$,1,img/venues/Seed Atlanta.jpg,atl
+Little's Food Store,littles-food-store,33.7492122,-84.3679703,littlesfoodstore,"{Deli,Sandwiches,Quick,Old‑School,Local}",lunch,Afternoon,2,$,1.25,img/venues/Little's Food Store.jpg,atl
+Eclipse di Luna - Beltline,eclipse-di-luna-beltline,33.7560346,-84.3654586,eclipsediluna,"{Tapas,Latin,Nightlife,Social,Shared‑Plates}",dinner,Evening,4,$$,2,img/venues/Eclipse di Luna - Beltline.jpg,atl
+The Rosefinch Spa & Loft,the-rosefinch-spa-and-loft,33.7626646,-84.3350261,therosefinchspa,"{Spa,Wellness,Relaxation,Luxe,Retreat}",spa,Afternoon,1,$$$,2,img/venues/The Rosefinch Spa.jpg,atl
+Candleporium Fragrance House,candleporium-fragrance-house,33.7931327,-84.3953653,candleporiumfragrancehouse,"{Candles,Scent,Boutique,Giftable,Artisan}",random gem,Afternoon,2,$$,1.5,img/venues/Candleporium Fragrance House.jpg,atl
+Westside Market Midtown,westside-market-midtown,33.7969853,-84.4274701,westsidemarketmidtownga,"{Vintage,Market,Eclectic,Browsing,Unique}",lifestyle,Afternoon,3,$$,1.75,img/venues/Westside Market Midtown.jpg,atl
+Bookish Atlanta,bookish-atlanta,33.7403061,-84.3486796,bookishatlanta,"{Books,Cozy,Indie,Quiet,Literary}",bookstore,Afternoon,2,$,0.75,img/venues/Bookish Atlanta.jpg,atl
+Village Books,village-books,33.7520144,-84.3946951,lovevillagebooks,"{Books,Family,Community,Quiet,Independent}",bookstore,Afternoon,2,$,0.75,img/venues/Village Books.jpg,atl
+Three Taverns Imaginarium,three-taverns-imaginarium,33.7456843,-84.3602092,3timaginarium,"{Brewery,Craft,Creative,Social,Experimental}",bar,Afternoon,3,$$,2,img/venues/Three Taverns Imaginarium.jpg,atl
+All the Tropes Romance Bookstore,all-the-tropes-romance-bookstore,33.7518722,-84.3245216,allthetropesbookstore,"{Brewery,Craft,Creative,Social,Experimental}",bookstore,Afternoon,2,$,0.75,img/venues/All the Tropes Romance Bookstore.jpg,atl
+44th & 3rd Bookseller,44th-and-3rd-bookseller,33.7426863,-84.414298,44thand3rdbookseller,"{Books,Literary,Culture,Local,Curated}",bookstore,Afternoon,2,$,0.75,img/venues/44th & 3rd Bookseller.jpg,atl
+Vintageland ATL,vintageland-atl,33.7632014,-84.351596,vintageland.atl,"{Vintage,Thrift,Retro,Affordable,Streetwear}",random gem,Afternoon,2,$$,1,img/venues/Vintageland ATL.jpg,atl
+Celestia,celestia,33.7827168,-84.3898115,celestiatl,"{Lounge,Nightlife,Social,Trendy,Bar}",rooftop,Evening,3,$$$,1.75,img/venues/Celestia.jpg,atl
+Rumi's Kitchen Colony Square,rumis-kitchen-colony-square,33.7867605,-84.3829333,rumiskitchenofficial,"{Persian,Middle‑Eastern,Dining,Flavorful,Cultural}",lunch,Evening,3,$$$,2,img/venues/Rumi's Kitchen Colony Square.jpg,atl
+Good Harvest,good-harvest,33.8925606,-84.2850087,goodharvestatlanta,"{Chinese,Comfort,Family,Local,Casual}",lunch,Evening,2,$$,1.5,img/venues/Good Harvest.jpg,atl
+Okiboru Tsukemen & Ramen,okiboru-tsukemen-and-ramen,33.8161984,-84.3901313,okiboru_atl,"{Ramen,Japanese,Noodles,Quick,Cozy}",lunch,Evening,2,$$,1.5,img/venues/Okiboru Tsukemen & Ramen.jpeg,atl
+LO KEE,lo-kee,33.7848343,-84.4100733,lokeeatl,"{Fusion,Asian,Trendy,Modern,Flavorful}",dinner,Evening,3,$$$,2,img/venues/LO KEE.jpg,atl
+Elise,elise,33.7895157,-84.3856966,eliseartscenter,"{Arts,Creative,Vintage,Boutique,Gallery}",lunch,Evening,3,$$$,2,img/venues/Elise.jpg,atl
+Peoples Town Coffee Bar,peoples-town-coffee-bar,33.7240843,-84.3861011,peoplestowncoffee,"{Coffee,Neighborhood,Casual,Chill,Work‑Friendly}",coffee,Morning,3,$,1,img/venues/Peoples Town Coffee Bar.jpg,atl
+Luella,luella,33.8564644,-84.3820695,luellaatl,"{Steakhouse,Upscale,Meat,Elegant,Dinner}",dinner,Evening,3,$$$,2,img/venues/Luella.jpg,atl
+Bar ANA,bar-ana,33.7735007,-84.3566349,barana.atl,"{Bar,Dessert,Casual,Cozy,Night‑Out}",dinner,Evening,3,$$,2,img/venues/Bar ANA.jpg,atl
+Press Shop,press-shop,33.7369743,-84.3851774,press.shop,"{Curated,Boutique,Eco‑Friendly,Gift,Community}",lifestyle,Afternoon,2,$,0.75,img/venues/Press Shop.jpg,atl
+Mistora,mistora,33.7988444,-84.3683545,mistoraatlanta,"{Cocktail,Bar,Stylish,Nightlife,Social}",cocktail,Evening,4,$$$,2,img/venues/Mistora.jpg,atl
