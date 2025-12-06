@@ -25,7 +25,6 @@ export async function GET(req: Request) {
     limit,
   })
 
-  // Log warning if essential filters are missing
   if (!city || !from || !to) {
     console.warn('⚠️ Missing filters in /api/events:', { city, from, to })
   }
@@ -54,7 +53,8 @@ export async function GET(req: Request) {
         lon,
         city,
         cover
-      )
+      ),
+      event_interests(count)
     `
     )
     .not('venue', 'is', null)
@@ -86,22 +86,28 @@ export async function GET(req: Request) {
     )
   }
 
-  // Log returned data key fields
+  // Add interest count to each event
+  const eventsWithCounts = (data ?? []).map((event) => ({
+    ...event,
+    interest_count: event.event_interests?.[0]?.count ?? 0,
+  }))
+
   console.log(
     '📤 Events returned from Supabase:',
-    data?.map((ev) => ({
+    eventsWithCounts.map((ev) => ({
       id: ev.id,
       title: ev.title,
       starts_at: ev.starts_at,
       venue_city: ev.venue?.city,
       is_active: ev.is_active,
-    })) ?? []
+      interest_count: ev.interest_count,
+    }))
   )
 
   const response = {
-    events: data,
+    events: eventsWithCounts,
     meta: {
-      count: data?.length ?? 0,
+      count: eventsWithCounts.length,
       city,
       from,
       to,

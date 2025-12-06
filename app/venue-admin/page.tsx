@@ -20,7 +20,8 @@ export default function VenueAdminPage() {
   const supabase = supabaseBrowser()
 
   const [user, setUser] = useState<SupabaseUser | null>(null)
-  const [venues, setVenues] = useState<VenueSummary[]>([])
+  const [venuesByCity, setVenuesByCity] = useState<Record<string, VenueSummary[]>>({})
+  const [selectedCity, setSelectedCity] = useState<string>("")
   const [selectedVenue, setSelectedVenue] = useState<string>("")
   const [form, setForm] = useState({
     title: "",
@@ -38,35 +39,63 @@ export default function VenueAdminPage() {
   // --- AUTH CHECK ---
   const allowedEmails = ["evantancil@gmail.com", "otheradmin@example.com"]
 
-useEffect(() => {
-  async function loadUser() {
-    const { data } = await supabase.auth.getUser()
-    const email = data.user?.email ?? null
-
-    if (!email || !allowedEmails.includes(email)) {
-      // Redirect unauthorized users away
-      router.push('/')
-    } else {
-      setUser({ email })
-    }
-  }
-
-  loadUser()
-}, [supabase])
-
-
-  // --- FETCH VENUES ---
   useEffect(() => {
-    async function loadVenues() {
-      const { data, error } = await supabase
-        .from("venues")
-        .select("id, name, city")
-        .order("city")
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser()
+      const email = data.user?.email ?? null
 
-      if (error) console.error("Error loading venues:", error)
-      setVenues((data as VenueSummary[]) ?? [])
+      if (!email || !allowedEmails.includes(email)) {
+        router.push('/')
+      } else {
+        setUser({ email })
+      }
     }
-    loadVenues()
+
+    loadUser()
+  }, [supabase])
+
+  // --- FETCH + GROUP VENUES (Batched by City) ---
+  useEffect(() => {
+    async function loadVenuesByCity() {
+      const { data: cityRows, error: cityError } = await supabase
+        .from("venues")
+        .select("city", { count: "exact", head: false })
+        .neq("city", null)
+        .order("city", { ascending: true })
+
+      if (cityError) {
+        console.error("Error fetching cities:", cityError)
+        return
+      }
+
+      const cities = [...new Set((cityRows ?? []).map((c) => c.city))]
+
+      const cityVenueMap: Record<string, VenueSummary[]> = {}
+
+      await Promise.all(
+        cities.map(async (city) => {
+            if (!city) return // skip nulls
+
+            const { data: venues, error } = await supabase
+            .from("venues")
+            .select("id, name, city")
+            .eq("city", city)
+            .range(0, 999)
+
+            if (error) {
+            console.error(`Error loading venues for ${city}:`, error)
+            } else {
+            console.log(`Loaded ${venues.length} venues for ${city}`)
+            cityVenueMap[city] = venues
+            }
+        })
+        )
+
+
+      setVenuesByCity(cityVenueMap)
+    }
+
+    loadVenuesByCity()
   }, [supabase])
 
   // --- FORM SUBMIT ---
@@ -86,20 +115,20 @@ useEffect(() => {
       title: form.title.trim(),
       description: form.description.trim() || null,
       starts_at:
-  form.date && form.start_time
-    ? new Date(`${form.date}T${form.start_time}:00`).toISOString()
-    : null,
-ends_at:
-  form.date && form.end_time
-    ? new Date(`${form.date}T${form.end_time}:00`).toISOString()
-    : null,
+        form.date && form.start_time
+          ? new Date(`${form.date}T${form.start_time}:00`).toISOString()
+          : null,
+      ends_at:
+        form.date && form.end_time
+          ? new Date(`${form.date}T${form.end_time}:00`).toISOString()
+          : null,
       tags: form.tags
         ? form.tags.split(",").map((t) => t.trim()).filter(Boolean)
         : null,
       price_info: form.price_info.trim() || null,
       source_type: "portal",
       source: "venue-admin",
-      is_active: true, // ✅ ensure event is visible
+      is_active: true,
     }
 
     console.log("📝 Submitting new event:", payload)
@@ -147,21 +176,44 @@ ends_at:
           {success && <p className="text-green-600 mb-2">✅ Event added successfully!</p>}
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* City Selector */}
             <div>
-              <label className="block mb-1 font-medium">Select Venue</label>
+              <label className="block mb-1 font-medium">Select City</label>
               <select
-                value={selectedVenue}
-                onChange={(e) => setSelectedVenue(e.target.value)}
+                value={selectedCity}
+                onChange={(e) => {
+                  setSelectedCity(e.target.value)
+                  setSelectedVenue("")
+                }}
                 className="w-full border p-2 rounded"
               >
-                <option value="">-- Choose Venue --</option>
-                {venues.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name} ({v.city?.toLowerCase() || "unknown"})
+                <option value="">-- Choose City --</option>
+                {Object.keys(venuesByCity).map((city) => (
+                  <option key={city} value={city}>
+                    {city}
                   </option>
                 ))}
               </select>
             </div>
+
+            {/* Venue Selector */}
+            {selectedCity && (
+              <div>
+                <label className="block mb-1 font-medium">Select Venue</label>
+                <select
+                  value={selectedVenue}
+                  onChange={(e) => setSelectedVenue(e.target.value)}
+                  className="w-full border p-2 rounded"
+                >
+                  <option value="">-- Choose Venue --</option>
+                  {venuesByCity[selectedCity]?.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block mb-1 font-medium">Event Title</label>
@@ -231,15 +283,15 @@ ends_at:
             </div>
 
             <div>
-                <label className="block mb-1 font-medium">Event Description</label>
-                <textarea
-                    rows={4}
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    className="w-full border p-2 rounded"
-                    placeholder="Brief details about the event..."
-                />
-                </div>
+              <label className="block mb-1 font-medium">Event Description</label>
+              <textarea
+                rows={4}
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className="w-full border p-2 rounded"
+                placeholder="Brief details about the event..."
+              />
+            </div>
 
             <button
               type="submit"

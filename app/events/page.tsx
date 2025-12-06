@@ -170,9 +170,9 @@ export default function EventsPage() {
               {ev.price_info && <p><strong>Price:</strong> {ev.price_info}</p>}
               {Array.isArray(ev.tags) && ev.tags.length > 0 && (
                 <p className="text-sm mt-2 text-neutral-400">
-                    <strong>Tags:</strong> {ev.tags.join(', ')}
+                  <strong>Tags:</strong> {ev.tags.join(', ')}
                 </p>
-                )}
+              )}
             </div>
 
             {ev.venue && (
@@ -193,7 +193,7 @@ export default function EventsPage() {
               </div>
             )}
 
-            <div className="mt-4">
+            <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
               <button
                 className={`text-sm px-4 py-2 rounded font-medium text-white ${
                   interestedIds.includes(ev.id)
@@ -205,6 +205,12 @@ export default function EventsPage() {
               >
                 {interestedIds.includes(ev.id) ? '⭐ Interested' : '⭐ I\'m Interested'}
               </button>
+
+              {typeof ev.interest_count === 'number' && ev.interest_count > 0 && (
+                <p className="text-sm text-neutral-400">
+                  {ev.interest_count} {ev.interest_count === 1 ? 'person is' : 'people are'} interested
+                </p>
+              )}
             </div>
           </div>
         ))}

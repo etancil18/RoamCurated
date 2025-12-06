@@ -9,6 +9,7 @@ export type InterestedEvent = {
   ends_at: string | null
   tags: string[] | null
   price_info: string | null
+  interest_count?: number
   venue: {
     id: string
     name: string

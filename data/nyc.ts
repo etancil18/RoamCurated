@@ -3234,7 +3234,7 @@ const nycData = [
     "duration": 1.5
   },
   {
-    "slug": "sauced-bk",    "name": "Sauced",
+    "slug": "sauced-bklyn",    "name": "Sauced (Bklyn)",
     "vibe": "Cozy, Spacious, Wine Bar, Outdoor Patio, DJ, Breezy, Relaxed, Ambient, Modern, Social",
     "type": ["wine bar", "patio"],
         "lat": "40.71263565",
@@ -8936,7 +8936,7 @@ const nycData = [
     "duration": 1
   },
   {
-    "slug": "sauced-nyc",    "name": "Sauced",
+    "slug": "sauced-nyc",    "name": "Sauced (NYC)",
     "vibe": "Cozy, Casual, Trendy Wine Bar, Hip, Casual, Creative, Refined, Chill, Modern",
     "type": "wine bar",
         "lat": "40.7254538",

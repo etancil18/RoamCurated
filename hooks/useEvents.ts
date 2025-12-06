@@ -7,7 +7,9 @@ type Event = {
   ends_at: string | null
   tags: string[] | null
   price_info: string | null
+  description?: string | null;
   is_active: boolean
+  interest_count?: number
   venue: {
     id: string
     name: string
@@ -16,6 +18,7 @@ type Event = {
     lon: number
     city: string
     cover: string | null
+    link?: string | null;
   } | null
 }
 
