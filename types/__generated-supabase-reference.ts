@@ -803,26 +803,21 @@ export type Database = {
       get_crawl_with_attendees: {
         Args: { input_crawl_id: string }
         Returns: {
+          city: string
           crawl_id: string
-          title: string | null
-          description: string | null
-          vibe_tags: string[] | null
-          datetime: string | null
-          city: string | null
+          datetime: string
+          description: string
+          instagram_handle: string
+          is_sponsored: boolean
+          personality_style: string
+          rsvp_user_id: string
+          title: string
           venue_ids: string[]
-          is_sponsored: boolean | null
-          rsvp_user_id: string | null
-          instagram_handle: string | null
-          note: string | null
-          joined_at: string | null
+          vibe_tags: string[]
         }[]
-
       }
       gettransactionid: { Args: never; Returns: unknown }
-      join_crawl: {
-  Args: { input_crawl_id: string };
-  Returns: undefined;
-};
+      join_crawl: { Args: { crawl_id: string }; Returns: undefined }
       leave_crawl: { Args: { crawl_id: string }; Returns: undefined }
       list_public_crawls: {
         Args: { city: string; end_date: string; start_date: string }
@@ -1610,23 +1605,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
-
-// -----------------------
-// Convenience Types (restored)
-// -----------------------
-export type EventRecord = Database['public']['Tables']['events']['Row']
-export type EventInsert = Database['public']['Tables']['events']['Insert']
-export type EventUpdate = Database['public']['Tables']['events']['Update']
-
-export type VenueRecord = Database['public']['Tables']['venues']['Row']
-export type FavoriteRecord = Database['public']['Tables']['favorites']['Row']
-export type FavoriteInsert = Database['public']['Tables']['favorites']['Insert']
-export type FavoriteUpdate = Database['public']['Tables']['favorites']['Update']
-
-export type SavedRouteRecord = Database['public']['Tables']['saved_routes']['Row']
-export type SavedRouteInsert = Database['public']['Tables']['saved_routes']['Insert']
-export type SavedRouteUpdate = Database['public']['Tables']['saved_routes']['Update']
-
-export type UserRouteRecord = Database['public']['Tables']['user_routes']['Row']
-export type UserRecord = Database['public']['Tables']['users']['Row']

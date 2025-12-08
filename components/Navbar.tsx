@@ -34,6 +34,9 @@ export default function Navbar() {
             <Link href="/favorites" className="text-sm text-gray-700 hover:text-black">
               Favorites
             </Link>
+            <Link href="/sponsor-crawl" className="text-sm text-amber-600 hover:text-black">
+              Host Crawl
+            </Link>
             <Link href="/profile" className="text-sm text-gray-700 hover:text-black">
               Profile
             </Link>
