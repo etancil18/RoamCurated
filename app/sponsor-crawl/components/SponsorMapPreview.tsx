@@ -101,11 +101,8 @@ export default function SponsorMapPreview({
 
   if (!venues.length || !coords.length) return null;
 
-  // Use the correct dark raster tile layer from Stadia Maps
-  const tileUrl =
-    'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
-  const tileAttribution =
-    '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>, &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors';
+  const tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  const tileAttribution = '&copy; <a href="https://carto.com/">CARTO</a>';
 
   const routeColor = vibeColorMap[themeTag] || vibeColorMap.Default;
 
