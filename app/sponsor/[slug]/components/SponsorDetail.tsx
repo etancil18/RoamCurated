@@ -6,13 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import SponsorMapPreview from '@/app/sponsor-crawl/components/SponsorMapPreview';
 import RSVPButton from './RSVPButton';
+import SponsorEditButton from './SponsorEditButton';
 import { supabaseBrowser } from '@/lib/supabase/client';
 
 type Props = {
   crawl: SponsorCrawlWithAttendees[];
 };
 
-// 🎯 Emoji mapping for venue mood
 const venueMoodEmojiMap: Record<string, string> = {
   bar: '🍻',
   cafe: '☕️',
@@ -53,7 +53,7 @@ export default function SponsorDetail({ crawl }: Props) {
   );
 
   const currentCount = attendees.length;
-  const maxCapacity = (meta as any).max_capacity ?? 0; // 👈 tolerate missing type
+  const maxCapacity = (meta as any).max_capacity ?? 0;
 
   // ⏳ Countdown timer
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function SponsorDetail({ crawl }: Props) {
     return () => clearInterval(timer);
   }, [meta.datetime]);
 
-  // 📍 Load Venues
+  // 📍 Fetch Venues
   useEffect(() => {
     const fetchVenues = async () => {
       const supabase = supabaseBrowser();
@@ -128,13 +128,12 @@ export default function SponsorDetail({ crawl }: Props) {
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto p-4">
-
-      {/* 🧃 Sponsor Callout Box */}
+      {/* 🧃 Hosted Crawl Notice */}
       {meta.is_sponsored && (
         <div className="p-4 bg-orange-50 border-l-4 border-orange-400 rounded-md">
-          <h2 className="text-lg font-semibold">🍹 Sponsored Crawl</h2>
+          <h2 className="text-lg font-semibold">🍹 Hosted Crawl</h2>
           <p className="text-sm text-muted-foreground">
-            This event is powered by our amazing sponsor — enjoy exclusive perks!
+            Someone planned the good times — you just need to join.
           </p>
         </div>
       )}
@@ -144,6 +143,12 @@ export default function SponsorDetail({ crawl }: Props) {
         <h1 className="text-2xl font-bold">{meta.title ?? 'Untitled Crawl'}</h1>
         <p className="text-muted-foreground">{meta.description ?? ''}</p>
 
+        {meta.sponsor_name && (
+          <p className="text-sm text-purple-600 font-semibold">
+            Sponsored by {meta.sponsor_name}
+          </p>
+        )}
+
         {meta.datetime && (
           <div className="text-sm text-muted-foreground">
             📅 {new Date(meta.datetime).toLocaleString()} &nbsp;•&nbsp; ⏳ Starts in:{' '}
@@ -151,7 +156,6 @@ export default function SponsorDetail({ crawl }: Props) {
           </div>
         )}
 
-        {/* 🎉 RSVP Progress */}
         {maxCapacity > 0 && (
           <div className="pt-2">
             <p className="text-sm text-muted-foreground">
@@ -177,7 +181,7 @@ export default function SponsorDetail({ crawl }: Props) {
         </div>
       </div>
 
-      {/* 📍 Mini Venue Cards w/ Emoji Mood */}
+      {/* 🗺️ Itinerary */}
       {venues.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold">🗺️ Itinerary:</h3>
@@ -210,10 +214,11 @@ export default function SponsorDetail({ crawl }: Props) {
         </div>
       )}
 
-      {/* RSVP Button */}
+      {/* RSVP + Edit */}
       <RSVPButton crawlId={meta.crawl_id} />
+      <SponsorEditButton creatorId={meta.creator_id} slug={meta.slug ?? ''} />
 
-      {/* Attendee list */}
+      {/* 👥 Attendees */}
       {attendees.length > 0 && (
         <div className="space-y-2 pt-4">
           <h3 className="text-sm font-semibold">People joining:</h3>
@@ -222,8 +227,20 @@ export default function SponsorDetail({ crawl }: Props) {
               <Card key={a.rsvp_user_id}>
                 <CardContent className="p-3">
                   <p className="text-sm font-medium">
-                    @{a.instagram_handle || 'anonymous'}
+                    {a.instagram_handle ? (
+                      <a
+                        href={`https://instagram.com/${a.instagram_handle.replace(/^@/, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {a.full_name || 'anonymous'}
+                      </a>
+                    ) : (
+                      a.full_name || 'anonymous'
+                    )}
                   </p>
+
                   {a.personality_style && (
                     <p className="text-xs text-muted-foreground">
                       Style: {a.personality_style}

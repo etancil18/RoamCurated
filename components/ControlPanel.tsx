@@ -30,7 +30,6 @@ const themes = [
   { id: 'chill-hang', label: 'Chill Hang' },
   { id: 'creative-kickstart', label: 'Creative Kickstart' },
   { id: 'date-night', label: 'Date Night' },
-  { id: 'december-crawl', label: 'December Crawl' },
   { id: 'friends-night-out', label: 'Friends Night Out' },
   { id: 'gallery-crawl', label: 'Gallery Crawl' },
   { id: 'last-call', label: 'Last Call' },

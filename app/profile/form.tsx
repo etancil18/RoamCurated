@@ -1,4 +1,3 @@
-// app/profile/form.tsx
 "use client"
 
 import { useEffect, useState } from "react"
@@ -21,6 +20,8 @@ export default function ProfileForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [fullName, setFullName] = useState<string>("")
+  const [instagramHandle, setInstagramHandle] = useState<string>("")
   const [preferredVibes, setPreferredVibes] = useState<string[]>([])
   const [interests, setInterests] = useState<string[]>([])
   const [frequency, setFrequency] = useState<string>("")
@@ -47,6 +48,8 @@ export default function ProfileForm() {
       if (error) {
         console.warn("Failed to load profile:", error.message)
       } else if (data) {
+        setFullName(data.full_name ?? "")
+        setInstagramHandle(data.instagram_handle ?? "")
         setPreferredVibes(data.preferred_vibes ?? [])
         setInterests(data.interest_categories ?? [])
         setFrequency(data.frequency ?? "")
@@ -77,6 +80,8 @@ export default function ProfileForm() {
 
     const updates = {
       id: user.id,
+      full_name: fullName,
+      instagram_handle: instagramHandle,
       preferred_vibes: preferredVibes,
       interest_categories: interests,
       frequency,
@@ -103,6 +108,22 @@ export default function ProfileForm() {
   return (
     <Card>
       <CardContent className="space-y-6 py-6">
+        <section className="space-y-2">
+          <label className="text-base font-medium">Full Name</label>
+          <Input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="e.g. Jordan Smith"
+          />
+        </section>
+        <section className="space-y-2">
+          <label className="text-base font-medium">Instagram Handle</label>
+          <Input
+            value={instagramHandle}
+            onChange={(e) => setInstagramHandle(e.target.value)}
+            placeholder="@yourhandle"
+          />
+        </section>
         <PreferredVibes value={preferredVibes} onChange={setPreferredVibes} />
         <InterestCategories value={interests} onChange={setInterests} />
         <Frequency value={frequency} onChange={setFrequency} />

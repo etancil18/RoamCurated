@@ -1,14 +1,16 @@
-// A single venue used in a crawl
+// types/sponsor.ts
+
+// 🏙️ A single venue used in a crawl
 export type SponsorVenue = {
   id: string;
   name: string;
   lat: number;
   lng: number;
   city: string;
-  instagram_handle?: string | null; // ✅ Added for Instagram linking
+  instagram_handle?: string | null; // ✅ For Instagram linking
 };
 
-// Payload for creating a sponsor crawl
+// 🧠 Payload for creating or updating a sponsored crawl
 export type SponsorCrawlPayload = {
   title: string;
   description: string;
@@ -18,12 +20,12 @@ export type SponsorCrawlPayload = {
   vibe_tags: string[]; // Optional — reserved for later use
   rsvp_enabled: boolean;
   slug: string;
-  max_capacity?: number;
+  max_capacity?: number | null;
   is_sponsored?: boolean;
-  sponsor_name?: string;
+  sponsor_name?: string | null; // ✅ For sponsored crawls
 };
 
-// A public crawl fetched from Supabase
+// 📋 A crawl fetched from Supabase
 export type SponsorCrawl = {
   id: string;
   title: string;
@@ -34,46 +36,56 @@ export type SponsorCrawl = {
   city: string;
   vibe_tags: string[];
   rsvp_enabled: boolean;
-  max_capacity?: number;
+  max_capacity?: number | null;
   is_sponsored?: boolean;
+  sponsor_name?: string | null; // ✅ For sponsored crawls
   slug: string;
   created_at: string;
   updated_at: string;
 };
 
-// RSVP record returned by Supabase
+// 👥 RSVP record returned by Supabase
 export type SponsorRSVP = {
   id: string;
   crawl_id: string;
   user_id: string;
-  instagram_handle?: string;
-  note?: string;
+  instagram_handle?: string | null;
+  note?: string | null;
   joined_at: string;
 };
 
-// Joined record from get_crawl_with_attendees
+// 🧩 Joined record from get_crawl_with_attendees (includes user + crawl data)
 export type SponsorCrawlWithAttendees = {
   crawl_id: string;
   title: string | null;
+  creator_id: string; 
+  slug: string;
   description: string | null;
   vibe_tags: string[] | null;
   datetime: string | null;
   city: string | null;
   venue_ids: string[];
   is_sponsored: boolean | null;
-  max_capacity?: number | null; // ✅ Added for RSVP progress bar support
+  sponsor_name: string | null; // ✅ Ensures consistent hydration
+  max_capacity: number | null; // ✅ For RSVP progress display
   rsvp_user_id: string | null;
   instagram_handle: string | null;
   note: string | null;
   joined_at: string | null;
   personality_style?: string | null;
+  full_name: string | null; // ✅ Used for attendee name display
 };
 
-// ✅ Explicitly define function param types for RPC calls
+// ⚙️ Explicit RPC argument definitions (strongly typed)
 export type JoinCrawlArgs = {
   input_crawl_id: string;
 };
 
 export type LeaveCrawlArgs = {
   crawl_id: string;
+};
+
+// ✏️ For creator-only updates
+export type UpdateCrawlArgs = Partial<SponsorCrawlPayload> & {
+  id: string;
 };

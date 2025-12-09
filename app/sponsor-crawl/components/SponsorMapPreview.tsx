@@ -76,14 +76,6 @@ const vibeColorMap: Record<string, string> = {
   Default: '#6366f1',
 };
 
-const numberedIcon = (i: number) =>
-  L.divIcon({
-    html: `<div class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">${i}</div>`,
-    className: '',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-
 export default function SponsorMapPreview({
   venues,
   mapboxAccessToken,
@@ -109,15 +101,11 @@ export default function SponsorMapPreview({
 
   if (!venues.length || !coords.length) return null;
 
+  // Use the correct dark raster tile layer from Stadia Maps
   const tileUrl =
-    mapboxAccessToken && mapboxStyle
-      ? `https://api.mapbox.com/styles/v1/${mapboxStyle}/tiles/{z}/{x}/{y}?access_token=${mapboxAccessToken}`
-      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-
+    'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png';
   const tileAttribution =
-    mapboxAccessToken && mapboxStyle
-      ? '© Mapbox © OpenStreetMap contributors'
-      : '&copy; OpenStreetMap contributors';
+    '&copy; <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a>, &copy; <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a> contributors';
 
   const routeColor = vibeColorMap[themeTag] || vibeColorMap.Default;
 
@@ -138,17 +126,12 @@ export default function SponsorMapPreview({
         zoomControl={false}
         style={{ height: '100%', width: '100%' }}
       >
-        <TileLayer
-          attribution={tileAttribution}
-          url={tileUrl}
-          tileSize={512}
-          zoomOffset={-1}
-        />
+        <TileLayer url={tileUrl} attribution={tileAttribution} />
         <FitBounds positions={path} />
         <Polyline positions={path} color={routeColor} weight={4} />
 
         {venues.map((v, i) => (
-          <Marker key={v.id} position={[v.lat, v.lng]} icon={numberedIcon(i + 1)}>
+          <Marker key={v.id} position={[v.lat, v.lng]}>
             <Popup>
               <strong>{i + 1}. {v.name}</strong><br />
               {v.city}
@@ -157,7 +140,6 @@ export default function SponsorMapPreview({
         ))}
       </MapContainer>
 
-      {/* Optional label */}
       {themeTag && (
         <div className="absolute top-2 right-2 bg-white bg-opacity-80 px-3 py-1 rounded text-xs shadow">
           Theme: {themeTag}

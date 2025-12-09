@@ -25,4 +25,6 @@ export type UserProfile = {
   id: string
   preferences: UserPreferences
   updated_at?: string
+  full_name?: string;
+  instagram_handle?: string;
 }

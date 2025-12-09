@@ -56,12 +56,20 @@ export async function getSponsorCrawlWithAttendees(crawlId: string) {
     input_crawl_id: crawlId,
   });
 
-  if (error) console.error('[getSponsorCrawlWithAttendees] ❌ RPC error:', error);
-  else console.log('[getSponsorCrawlWithAttendees] ✅ RPC data count:', data?.length || 0);
+  if (error) {
+    console.error('[getSponsorCrawlWithAttendees] ❌ RPC error:', error);
+    return { data: null, error };
+  }
+
+  const enriched = (data as SponsorCrawlWithAttendees[]).map((a) => ({
+    ...a,
+    sponsor_name: a.sponsor_name ?? null,
+    max_capacity: a.max_capacity ?? null,
+  }));
 
   return {
-    data: data as SponsorCrawlWithAttendees[] | null,
-    error,
+    data: enriched,
+    error: null,
   };
 }
 
@@ -81,14 +89,10 @@ export async function joinSponsorCrawl(crawlId: string) {
     return { error: new Error('User not authenticated') };
   }
 
-  console.log('[joinSponsorCrawl] 👤 Authenticated user:', user.id);
-
-  const rpcPayload = { crawl_id: crawlId };
-  console.log('[joinSponsorCrawl] 📦 RPC Payload:', rpcPayload);
-
   try {
-    const { data, error, status } = await supabase.rpc('join_crawl', { input_crawl_id: crawlId });
-
+    const { data, error, status } = await supabase.rpc('join_crawl', {
+      input_crawl_id: crawlId,
+    });
 
     console.log('[joinSponsorCrawl] 📡 RPC Response:', { status, data, error });
 
@@ -121,11 +125,10 @@ export async function leaveSponsorCrawl(crawlId: string) {
     return { error: new Error('User not authenticated') };
   }
 
-  const rpcPayload = { crawl_id: crawlId };
-  console.log('[leaveSponsorCrawl] 📦 RPC Payload:', rpcPayload);
-
   try {
-    const { data, error, status } = await supabase.rpc('leave_crawl', rpcPayload);
+    const { data, error, status } = await supabase.rpc('leave_crawl', {
+      crawl_id: crawlId,
+    });
 
     console.log('[leaveSponsorCrawl] 📡 RPC Response:', { status, data, error });
 
@@ -140,6 +143,35 @@ export async function leaveSponsorCrawl(crawlId: string) {
     console.error('[leaveSponsorCrawl] 💥 Unexpected exception:', err);
     return { error: err as Error };
   }
+}
+
+// ✏️ Update a sponsored crawl (creator-only)
+export async function updateSponsorCrawl(crawlId: string, updates: Partial<SponsorCrawlPayload>) {
+  const supabase = supabaseBrowser();
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    console.error('[updateSponsorCrawl] ❌ User not authenticated');
+    return { error: new Error('User not authenticated'), data: null };
+  }
+
+  console.log('[updateSponsorCrawl] ✏️ Attempting update:', { crawlId, updates });
+
+  const { data, error } = await supabase
+    .from('crawl_events')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', crawlId)
+    .eq('creator_id', userId)
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('[updateSponsorCrawl] ❌ Update failed:', error);
+    return { error, data: null };
+  }
+
+  console.log('[updateSponsorCrawl] ✅ Successfully updated crawl:', data);
+  return { data, error: null };
 }
 
 // 📅 List public crawls in a city within a date range (via RPC)
