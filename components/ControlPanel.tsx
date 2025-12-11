@@ -74,73 +74,70 @@ export function ControlPanel({
   }
 
   return (
-    <div className="w-full fixed top-0 left-0 z-[1000] bg-white shadow-md px-4 py-3 flex flex-wrap gap-4 items-center justify-between text-sm">
-      {/* 🌆 City toggle */}
+    <div className="w-full fixed top-0 left-0 z-[1000] bg-white dark:bg-zinc-950 border-b border-zinc-300 dark:border-zinc-700 px-4 py-2 text-xs grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 items-center rounded-b-xl shadow-sm">
       <div className="flex gap-2">
         <Button
           variant={city === 'atl' ? 'default' : 'outline'}
           onClick={() => onCityChange('atl')}
+          className="h-8 text-sm"
         >
           ATL
         </Button>
         <Button
           variant={city === 'nyc' ? 'default' : 'outline'}
           onClick={() => onCityChange('nyc')}
+          className="h-8 text-sm"
         >
           NYC
         </Button>
       </div>
 
-      {/* 🚦 Travel mode */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label className="text-xs font-semibold">Mode</Label>
         <ToggleGroup
-  type="single"
-  value={travelMode}
-  onValueChange={handleTravelModeChange}
-  className="w-full justify-between gap-2"
->
-  <ToggleGroupItem
-    value="walking"
-    className="flex-1 text-center border border-gray-300 dark:border-zinc-600 rounded-md data-[state=on]:bg-blue-500 data-[state=on]:text-white"
-  >
-    🚶
-  </ToggleGroupItem>
-  <ToggleGroupItem
-    value="cycling"
-    className="flex-1 text-center border border-gray-300 dark:border-zinc-600 rounded-md data-[state=on]:bg-blue-500 data-[state=on]:text-white"
-  >
-    🚲
-  </ToggleGroupItem>
-  <ToggleGroupItem
-    value="driving"
-    className="flex-1 text-center border border-gray-300 dark:border-zinc-600 rounded-md data-[state=on]:bg-blue-500 data-[state=on]:text-white"
-  >
-    🚗
-  </ToggleGroupItem>
-</ToggleGroup>
-
+          type="single"
+          value={travelMode}
+          onValueChange={handleTravelModeChange}
+          className="w-full justify-between gap-2"
+        >
+          <ToggleGroupItem
+            value="walking"
+            className="flex-1 text-center border border-zinc-400 dark:border-zinc-600 rounded-md text-sm h-8 data-[state=on]:bg-blue-500 data-[state=on]:text-white"
+          >
+            🚶
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="cycling"
+            className="flex-1 text-center border border-zinc-400 dark:border-zinc-600 rounded-md text-sm h-8 data-[state=on]:bg-blue-500 data-[state=on]:text-white"
+          >
+            🚲
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="driving"
+            className="flex-1 text-center border border-zinc-400 dark:border-zinc-600 rounded-md text-sm h-8 data-[state=on]:bg-blue-500 data-[state=on]:text-white"
+          >
+            🚗
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
-      {/* 🔍 Search */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label className="text-xs font-semibold">Search</Label>
         <input
           type="text"
           placeholder="Search vibe or tag..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-2 py-1 border rounded"
+          className="w-full h-8 px-2 py-1 border rounded text-sm bg-white text-black dark:bg-zinc-900 dark:text-white"
         />
       </div>
 
-      {/* 🎨 Theme */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label className="text-xs font-semibold">Theme</Label>
         <select
           value={selectedThemeId}
           onChange={(e) => setSelectedThemeId(e.target.value)}
-          className="w-full px-2 py-1 border rounded bg-white text-black dark:bg-zinc-900 dark:text-white"
+          className="w-full h-8 px-2 py-1 border rounded text-sm bg-white text-black dark:bg-zinc-900 dark:text-white"
         >
           <option value="">Select Theme</option>
           {themes.map(({ id, label }) => (
@@ -149,13 +146,12 @@ export function ControlPanel({
         </select>
       </div>
 
-      {/* 💰 Price */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label className="text-xs font-semibold">Price</Label>
         <select
           value={selectedPrice}
           onChange={(e) => setSelectedPrice(e.target.value)}
-          className="w-full px-2 py-1 border rounded bg-white text-black dark:bg-zinc-900 dark:text-white"
+          className="w-full h-8 px-2 py-1 border rounded text-sm bg-white text-black dark:bg-zinc-900 dark:text-white"
         >
           <option value="">Any Price</option>
           {prices.slice(1).map((p) => (
@@ -164,13 +160,12 @@ export function ControlPanel({
         </select>
       </div>
 
-      {/* 📏 Route Distance */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label className="text-xs font-semibold">Route Tightness</Label>
         <select
           value={tightness}
           onChange={(e) => setTightness(e.target.value as 'tight' | 'medium' | 'loose')}
-          className="w-full px-2 py-1 border rounded bg-white text-black dark:bg-zinc-900 dark:text-white"
+          className="w-full h-8 px-2 py-1 border rounded text-sm bg-white text-black dark:bg-zinc-900 dark:text-white"
         >
           <option value="tight">Compact (Walkable)</option>
           <option value="medium">Balanced</option>
@@ -178,8 +173,7 @@ export function ControlPanel({
         </select>
       </div>
 
-      {/* 🎉 Live Events Only Toggle */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         <Label className="text-xs font-semibold">Live Events Only</Label>
         <div className="flex items-center gap-2">
           <input
@@ -190,12 +184,11 @@ export function ControlPanel({
         </div>
       </div>
 
-      {/* ⚙️ Actions */}
-      <div className="space-y-2 pt-2">
-        <Button className="w-full" onClick={onGenerateRoute}>
+      <div className="space-y-1 pt-1">
+        <Button className="w-full h-8 text-sm" onClick={onGenerateRoute}>
           Generate Crawl
         </Button>
-        <Button variant="outline" className="w-full" onClick={onClearRoute}>
+        <Button variant="outline" className="w-full h-8 text-sm" onClick={onClearRoute}>
           Clear Route
         </Button>
       </div>
