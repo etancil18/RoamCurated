@@ -23,9 +23,9 @@ export default function Navbar() {
     <nav className="w-full flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 shadow-sm z-50">
       <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity duration-200">
         {/* Light mode logo */}
-        <img src="/img/logo-dark.png" alt="Roam Logo" className="h-8 w-auto dark:hidden" />
+        <img src="/img/favicon-32x32.png" alt="Roam Logo" className="h-8 w-auto dark:hidden" />
         {/* Dark mode logo */}
-        <img src="/img/logo-light.png" alt="Roam Logo" className="h-8 w-auto hidden dark:block" />
+        <img src="/img/favicon-32x32.png" alt="Roam Logo" className="h-8 w-auto hidden dark:block" />
       </Link>
 
       <div className="flex items-center space-x-4">
