@@ -231,7 +231,7 @@ export default function CrawlControl({
             </button>
             <button
               onClick={() => setShowEventsModal(true)}
-              className="w-full bg-stone-700 text-white py-1 rounded hover:bg-gray-800 transition"
+              className="w-full bg-stone-700 text-white py-1 rounded hover:bg-stone-800 transition"
             >
               🎟️ Add from Events
             </button>
@@ -239,14 +239,14 @@ export default function CrawlControl({
             {/* ✅ New Host Crawl button */}
             <button
               onClick={() => setShowHostModal(true)}
-              className="w-full bg-indigo-600 text-white py-1 rounded hover:bg-indigo-700 transition"
+              className="w-full bg-fuchsia-600 text-white py-1 rounded hover:bg-fuchsia-700 transition"
             >
               🏠 Host this Crawl
             </button>
 
             <button
               onClick={handleCopyLink}
-              className="w-full bg-purple-700 text-white py-1 rounded hover:bg-gray-800 transition"
+              className="w-full bg-purple-700 text-white py-1 rounded hover:bg-purple-800 transition"
             >
               🔗 {copied ? 'Copied!' : 'Copy Link'}
             </button>
