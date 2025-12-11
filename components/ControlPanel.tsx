@@ -79,14 +79,14 @@ export function ControlPanel({
         <Button
           variant={city === 'atl' ? 'default' : 'outline'}
           onClick={() => onCityChange('atl')}
-          className="h-8 text-sm"
+          className="h-8 text-sm dark:text-white"
         >
           ATL
         </Button>
         <Button
           variant={city === 'nyc' ? 'default' : 'outline'}
           onClick={() => onCityChange('nyc')}
-          className="h-8 text-sm"
+          className="h-8 text-sm dark:text-white"
         >
           NYC
         </Button>
@@ -180,15 +180,16 @@ export function ControlPanel({
             type="checkbox"
             checked={showLiveEventsOnly}
             onChange={(e) => setShowLiveEventsOnly(e.target.checked)}
+            className="accent-blue-500 dark:accent-blue-400"
           />
         </div>
       </div>
 
       <div className="space-y-1 pt-1">
-        <Button className="w-full h-8 text-sm" onClick={onGenerateRoute}>
+        <Button className="w-full h-8 text-sm dark:text-white" onClick={onGenerateRoute}>
           Generate Crawl
         </Button>
-        <Button variant="outline" className="w-full h-8 text-sm" onClick={onClearRoute}>
+        <Button variant="outline" className="w-full h-8 text-sm dark:text-white" onClick={onClearRoute}>
           Clear Route
         </Button>
       </div>
