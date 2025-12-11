@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createSponsorCrawl } from '@/lib/supabase/sponsor';
 import { SponsorVenue, SponsorCrawlPayload } from '@/types/sponsor';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import clsx from 'clsx';
 
 export default function SponsorCrawlPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -26,6 +27,33 @@ export default function SponsorCrawlPage() {
   const [isSponsored, setIsSponsored] = useState(false);
   const [sponsorName, setSponsorName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // ✅ Pre-populate venues from slug query param
+  useEffect(() => {
+  if (!searchParams) return;
+
+  const slugParam = searchParams.get('slugs');
+  if (!slugParam) return;
+
+  const slugs = slugParam
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (slugs.length > 0) {
+    fetch(`/api/venues/by-slugs?slugs=${slugs.join(',')}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data.venues)) {
+          setVenues(data.venues);
+        }
+      })
+      .catch((err) => {
+        console.error('Error preloading venues:', err);
+      });
+  }
+}, [searchParams]);
+
 
   const handleCreate = async () => {
     if (!title || venues.length < 2) {

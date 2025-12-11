@@ -35,6 +35,8 @@ function getEmojiForVenue(name: string): string {
 export default function SponsorDetail({ crawl }: Props) {
   const [venues, setVenues] = useState<SponsorVenue[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('');
+  const [checkedStops, setCheckedStops] = useState<number[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
 
   if (!crawl || crawl.length === 0) {
     console.warn('[SponsorDetail] No crawl data passed');
@@ -55,76 +57,109 @@ export default function SponsorDetail({ crawl }: Props) {
   const currentCount = attendees.length;
   const maxCapacity = (meta as any).max_capacity ?? 0;
 
-  // ⏳ Countdown timer
+  // 🕐 Countdown timer
   useEffect(() => {
     if (!meta.datetime) return;
     const target = new Date(meta.datetime).getTime();
 
     const update = () => {
       const diff = target - Date.now();
-      if (diff <= 0) {
-        setTimeLeft('Event started');
-      } else {
+      if (diff <= 0) setTimeLeft('Event started');
+      else {
         const hrs = Math.floor(diff / 3600000);
         const mins = Math.floor((diff % 3600000) / 60000);
-        const secs = Math.floor((diff % 60000) / 1000);
-        setTimeLeft(`${hrs}h ${mins}m ${secs}s`);
+        setTimeLeft(`${hrs}h ${mins}m`);
       }
     };
-
     update();
     const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
   }, [meta.datetime]);
 
-  // 📍 Fetch Venues
+  // 📍 Fetch venues
   useEffect(() => {
     const fetchVenues = async () => {
       const supabase = supabaseBrowser();
-
       const { data, error } = await supabase
         .from('venues')
         .select('id, name, city, lat, lon, instagram_handle')
         .in('id', meta.venue_ids);
 
-      if (error) {
-        console.error('[SponsorDetail] Venue fetch failed:', error);
-        return;
-      }
-
-      if (!data) {
-        console.warn('[SponsorDetail] No venue data returned');
-        return;
-      }
+      if (error) return console.error('[SponsorDetail] Venue fetch failed:', error);
+      if (!data) return;
 
       const ordered: SponsorVenue[] = meta.venue_ids
         .map((id) => data.find((v) => v.id === id))
-        .filter(
-          (v): v is {
-            id: string;
-            name: string | null;
-            city: string | null;
-            lat: number | null;
-            lon: number | null;
-            instagram_handle: string | null;
-          } => !!v
-        )
-        .map((v) => ({
+        .filter((v): v is NonNullable<typeof v> => !!v)
+        .map((v): SponsorVenue => ({
           id: v.id,
           name: v.name ?? '',
           city: v.city ?? '',
           lat: v.lat ?? 0,
-          lng: v.lon ?? 0,
+          lon: v.lon ?? 0,
           instagram_handle: v.instagram_handle ?? null,
         }));
 
+
       setVenues(ordered);
     };
-
-    if (meta.venue_ids?.length) {
-      fetchVenues();
-    }
+    if (meta.venue_ids?.length) fetchVenues();
   }, [meta]);
+
+  // 👤 Fetch user + progress
+  useEffect(() => {
+    const loadProgress = async () => {
+      const supabase = supabaseBrowser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setUserId(user.id);
+
+      const { data: progressData, error } = await supabase
+        .from('crawl_progress')
+        .select('stop_index')
+        .eq('user_id', user.id)
+        .eq('crawl_id', meta.crawl_id);
+
+      if (error) console.error('[SponsorDetail] Progress fetch failed:', error);
+      else setCheckedStops(progressData?.map((p) => p.stop_index) || []);
+    };
+    loadProgress();
+  }, [meta.crawl_id]);
+
+  // 🧩 Toggle a stop
+  const toggleStop = async (index: number) => {
+    if (!userId) return;
+    const supabase = supabaseBrowser();
+
+    const alreadyChecked = checkedStops.includes(index);
+    let updated: number[];
+
+    if (alreadyChecked) {
+      // Remove progress
+      const { error } = await supabase
+        .from('crawl_progress')
+        .delete()
+        .eq('crawl_id', meta.crawl_id)
+        .eq('user_id', userId)
+        .eq('stop_index', index);
+      if (error) console.error('Delete error:', error);
+      updated = checkedStops.filter((i) => i !== index);
+    } else {
+      // Add progress
+      const { error } = await supabase.from('crawl_progress').insert({
+        crawl_id: meta.crawl_id,
+        user_id: userId,
+        stop_index: index,
+      });
+      if (error) console.error('Insert error:', error);
+      updated = [...checkedStops, index];
+    }
+
+    setCheckedStops(updated);
+  };
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto p-4">
@@ -211,6 +246,29 @@ export default function SponsorDetail({ crawl }: Props) {
           </div>
 
           <SponsorMapPreview venues={venues} useStreetPolyline heightPx={300} />
+        </div>
+      )}
+
+      {/* 🧭 Progress Tracker */}
+      {venues.length > 0 && (
+        <div className="p-4 border rounded-md bg-gray-50">
+          <h3 className="text-sm font-semibold mb-2">✅ Track Your Progress</h3>
+          <ul className="space-y-2">
+            {venues.map((v, i) => (
+              <li key={v.id} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={checkedStops.includes(i)}
+                  onChange={() => toggleStop(i)}
+                  className="cursor-pointer"
+                />
+                <span className="text-sm">{v.name}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-foreground mt-2">
+            
+          </p>
         </div>
       )}
 

@@ -85,7 +85,10 @@ export default function SponsorMapPreview({
   themeTag = 'Default',
 }: Props) {
   const coords = useMemo(
-    () => venues.map((v) => [v.lng, v.lat] as [number, number]),
+    () =>
+      venues
+        .filter((v) => typeof v.lat === 'number' && typeof v.lon === 'number')
+        .map((v) => [v.lon, v.lat] as [number, number]),
     [venues]
   );
 
@@ -112,7 +115,7 @@ export default function SponsorMapPreview({
       style={{ height: heightPx }}
     >
       <MapContainer
-        center={[venues[0].lat, venues[0].lng]}
+        center={[venues[0].lat, venues[0].lon]}
         zoom={13}
         scrollWheelZoom={false}
         dragging={false}
@@ -128,7 +131,7 @@ export default function SponsorMapPreview({
         <Polyline positions={path} color={routeColor} weight={4} />
 
         {venues.map((v, i) => (
-          <Marker key={v.id} position={[v.lat, v.lng]}>
+          <Marker key={v.id} position={[v.lat, v.lon]}>
             <Popup>
               <strong>{i + 1}. {v.name}</strong><br />
               {v.city}

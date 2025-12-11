@@ -1651,24 +1651,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
-
-
-// -----------------------
-// Convenience Types (restored)
-// -----------------------
-export type EventRecord = Database['public']['Tables']['events']['Row']
-export type EventInsert = Database['public']['Tables']['events']['Insert']
-export type EventUpdate = Database['public']['Tables']['events']['Update']
-
-export type VenueRecord = Database['public']['Tables']['venues']['Row']
-export type FavoriteRecord = Database['public']['Tables']['favorites']['Row']
-export type FavoriteInsert = Database['public']['Tables']['favorites']['Insert']
-export type FavoriteUpdate = Database['public']['Tables']['favorites']['Update']
-
-export type SavedRouteRecord = Database['public']['Tables']['saved_routes']['Row']
-export type SavedRouteInsert = Database['public']['Tables']['saved_routes']['Insert']
-export type SavedRouteUpdate = Database['public']['Tables']['saved_routes']['Update']
-
-export type UserRouteRecord = Database['public']['Tables']['user_routes']['Row']
-export type UserRecord = Database['public']['Tables']['users']['Row']

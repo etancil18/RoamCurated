@@ -5,7 +5,7 @@ export type SponsorVenue = {
   id: string;
   name: string;
   lat: number;
-  lng: number;
+  lon: number;
   city: string;
   instagram_handle?: string | null; // ✅ For Instagram linking
 };
@@ -56,24 +56,24 @@ export type SponsorRSVP = {
 
 // 🧩 Joined record from get_crawl_with_attendees (includes user + crawl data)
 export type SponsorCrawlWithAttendees = {
-  crawl_id: string;
-  title: string | null;
-  creator_id: string; 
-  slug: string;
-  description: string | null;
-  vibe_tags: string[] | null;
-  datetime: string | null;
-  city: string | null;
-  venue_ids: string[];
-  is_sponsored: boolean | null;
-  sponsor_name: string | null; // ✅ Ensures consistent hydration
-  max_capacity: number | null; // ✅ For RSVP progress display
-  rsvp_user_id: string | null;
-  instagram_handle: string | null;
-  note: string | null;
-  joined_at: string | null;
-  personality_style?: string | null;
-  full_name: string | null; // ✅ Used for attendee name display
+crawl_id: string;
+title: string | null;
+description: string | null;
+vibe_tags: string[] | null;
+datetime: string | null;
+city: string | null;
+venue_ids: string[];
+is_sponsored: boolean | null;
+sponsor_name: string | null; // ✅ Required for consistent enrichment
+max_capacity: number | null; // ✅ Required for consistent enrichment
+rsvp_user_id: string | null;
+instagram_handle: string | null;
+note: string | null;
+joined_at: string | null;
+personality_style?: string | null;
+full_name: string | null; // ✅ Used for attendee display
+creator_id: string; // ✅ Needed for edit access logic
+slug: string | null; // ✅ Needed for routing or editing
 };
 
 // ⚙️ Explicit RPC argument definitions (strongly typed)

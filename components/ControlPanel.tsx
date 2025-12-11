@@ -30,6 +30,7 @@ const themes = [
   { id: 'chill-hang', label: 'Chill Hang' },
   { id: 'creative-kickstart', label: 'Creative Kickstart' },
   { id: 'date-night', label: 'Date Night' },
+  { id: 'december-crawl', label: 'December Crawl' },
   { id: 'friends-night-out', label: 'Friends Night Out' },
   { id: 'gallery-crawl', label: 'Gallery Crawl' },
   { id: 'last-call', label: 'Last Call' },
@@ -94,15 +95,31 @@ export function ControlPanel({
       <div className="space-y-2">
         <Label className="text-xs font-semibold">Mode</Label>
         <ToggleGroup
-          type="single"
-          value={travelMode}
-          onValueChange={handleTravelModeChange}
-          className="w-full justify-between"
-        >
-          <ToggleGroupItem value="walking" className="flex-1 text-center">Walk</ToggleGroupItem>
-          <ToggleGroupItem value="cycling" className="flex-1 text-center">Bike</ToggleGroupItem>
-          <ToggleGroupItem value="driving" className="flex-1 text-center">Drive</ToggleGroupItem>
-        </ToggleGroup>
+  type="single"
+  value={travelMode}
+  onValueChange={handleTravelModeChange}
+  className="w-full justify-between gap-2"
+>
+  <ToggleGroupItem
+    value="walking"
+    className="flex-1 text-center border border-gray-300 dark:border-zinc-600 rounded-md data-[state=on]:bg-blue-500 data-[state=on]:text-white"
+  >
+    🚶
+  </ToggleGroupItem>
+  <ToggleGroupItem
+    value="cycling"
+    className="flex-1 text-center border border-gray-300 dark:border-zinc-600 rounded-md data-[state=on]:bg-blue-500 data-[state=on]:text-white"
+  >
+    🚲
+  </ToggleGroupItem>
+  <ToggleGroupItem
+    value="driving"
+    className="flex-1 text-center border border-gray-300 dark:border-zinc-600 rounded-md data-[state=on]:bg-blue-500 data-[state=on]:text-white"
+  >
+    🚗
+  </ToggleGroupItem>
+</ToggleGroup>
+
       </div>
 
       {/* 🔍 Search */}
@@ -123,7 +140,7 @@ export function ControlPanel({
         <select
           value={selectedThemeId}
           onChange={(e) => setSelectedThemeId(e.target.value)}
-          className="w-full px-2 py-1 border rounded"
+          className="w-full px-2 py-1 border rounded bg-white text-black dark:bg-zinc-900 dark:text-white"
         >
           <option value="">Select Theme</option>
           {themes.map(({ id, label }) => (
@@ -138,7 +155,7 @@ export function ControlPanel({
         <select
           value={selectedPrice}
           onChange={(e) => setSelectedPrice(e.target.value)}
-          className="w-full px-2 py-1 border rounded"
+          className="w-full px-2 py-1 border rounded bg-white text-black dark:bg-zinc-900 dark:text-white"
         >
           <option value="">Any Price</option>
           {prices.slice(1).map((p) => (
@@ -153,7 +170,7 @@ export function ControlPanel({
         <select
           value={tightness}
           onChange={(e) => setTightness(e.target.value as 'tight' | 'medium' | 'loose')}
-          className="w-full px-2 py-1 border rounded"
+          className="w-full px-2 py-1 border rounded bg-white text-black dark:bg-zinc-900 dark:text-white"
         >
           <option value="tight">Compact (Walkable)</option>
           <option value="medium">Balanced</option>

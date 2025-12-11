@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid'
 import ReplaceStopModal from '@/components/modals/ReplaceStopModal'
 import FavoritesModal from '@/components/modals/FavoritesModal'
 import EventsModal from '@/components/modals/EventsModal'
+import HostCrawlModal from '@/components/modals/HostCrawlModal' // ✅ new import
 
 export type CrawlControlProps = {
   venues: Venue[]
@@ -43,10 +44,17 @@ export default function CrawlControl({
   })
   const [showFavoritesModal, setShowFavoritesModal] = useState(false)
   const [showEventsModal, setShowEventsModal] = useState(false)
+  const [showHostModal, setShowHostModal] = useState(false) // ✅ new state
 
   const { favorites, loading: loadingFavorites } = useFavorites(city)
-  const { interested: interestedEvents, loading: loadingEvents, error: interestError, markInterest, removeInterest, refresh } =
-    useInterestedEvents()
+  const {
+    interested: interestedEvents,
+    loading: loadingEvents,
+    error: interestError,
+    markInterest,
+    removeInterest,
+    refresh,
+  } = useInterestedEvents()
 
   async function handleGenerate() {
     setLoading(true)
@@ -227,6 +235,15 @@ export default function CrawlControl({
             >
               🎟️ Add from Events
             </button>
+
+            {/* ✅ New Host Crawl button */}
+            <button
+              onClick={() => setShowHostModal(true)}
+              className="w-full bg-indigo-600 text-white py-1 rounded hover:bg-indigo-700 transition"
+            >
+              🏠 Host this Crawl
+            </button>
+
             <button
               onClick={handleCopyLink}
               className="w-full bg-purple-700 text-white py-1 rounded hover:bg-gray-800 transition"
@@ -268,6 +285,12 @@ export default function CrawlControl({
         city={city}
         onInsert={handleInsertEventAt}
         onClose={() => setShowEventsModal(false)}
+      />
+
+      <HostCrawlModal
+        show={showHostModal}
+        route={route ?? []}
+        onClose={() => setShowHostModal(false)}
       />
     </div>
   )
