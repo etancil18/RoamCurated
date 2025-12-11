@@ -55,6 +55,7 @@ export default function MapWrapper() {
   const [customStart, setCustomStart] = useState<{ lat: number; lon: number } | null>(null)
   const [tightness, setTightness] = useState<'tight' | 'medium' | 'loose'>('medium')
   const [showLiveEventsOnly, setShowLiveEventsOnly] = useState(false)
+  const [routeErrorMessage, setRouteErrorMessage] = useState<string | null>(null)
 
   const { user } = useUser()
   const userId = user?.id
@@ -169,12 +170,21 @@ export default function MapWrapper() {
         data = await response.json()
       }
 
-      if (!Array.isArray(data.route)) {
-        console.error('❌ Invalid route format', data)
-        alert('Failed to build a route. Try different filters.')
+      if (!Array.isArray(data.route) || data.route.length < 2) {
+        const reason =
+          data.reason ||
+          (data.route?.length === 1
+            ? 'Only one stop matched your filters.'
+            : 'No venues matched your filters or location.')
+
+        setRoute(undefined)
+        setRouteErrorMessage(
+          `🛑 Couldn’t build a full route: ${reason} Routes are time-sensitive — try adjusting filters, starting location, or generating earlier in the day when more places are open.`
+        )
         return
       }
 
+      setRouteErrorMessage(null)
       setRoute(data.route)
 
       const ids = data.route.map((v: Venue) => v.id ?? v.name).join(',')
@@ -227,6 +237,7 @@ export default function MapWrapper() {
   const handleClearRoute = () => {
     setRoute(undefined)
     setCustomStart(null)
+    setRouteErrorMessage(null)
     const url = new URL(window.location.href)
     url.searchParams.delete('route')
     window.history.replaceState(null, '', url.toString())
@@ -260,6 +271,12 @@ export default function MapWrapper() {
           showLiveEventsOnly={showLiveEventsOnly}
           setShowLiveEventsOnly={setShowLiveEventsOnly}
         />
+      )}
+
+      {routeErrorMessage && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded shadow z-[1050] text-sm max-w-md text-center">
+          {routeErrorMessage}
+        </div>
       )}
 
       <CrawlControl
