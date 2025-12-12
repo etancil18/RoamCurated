@@ -30,30 +30,29 @@ export default function SponsorCrawlPage() {
 
   // ✅ Pre-populate venues from slug query param
   useEffect(() => {
-  if (!searchParams) return;
+    if (!searchParams) return;
 
-  const slugParam = searchParams.get('slugs');
-  if (!slugParam) return;
+    const slugParam = searchParams.get('slugs');
+    if (!slugParam) return;
 
-  const slugs = slugParam
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+    const slugs = slugParam
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
 
-  if (slugs.length > 0) {
-    fetch(`/api/venues/by-slugs?slugs=${slugs.join(',')}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.venues)) {
-          setVenues(data.venues);
-        }
-      })
-      .catch((err) => {
-        console.error('Error preloading venues:', err);
-      });
-  }
-}, [searchParams]);
-
+    if (slugs.length > 0) {
+      fetch(`/api/venues/by-slugs?slugs=${slugs.join(',')}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data.venues)) {
+            setVenues(data.venues);
+          }
+        })
+        .catch((err) => {
+          console.error('Error preloading venues:', err);
+        });
+    }
+  }, [searchParams]);
 
   const handleCreate = async () => {
     if (!title || venues.length < 2) {
@@ -97,53 +96,56 @@ export default function SponsorCrawlPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold">Host a Crawl</h1>
+    <div className="max-w-2xl mx-auto p-4 space-y-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-md sm:p-6">
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Host a Crawl</h1>
 
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title" className="text-gray-700 dark:text-gray-300">Title</Label>
         <Input
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. SoHo Patio Crawl"
+          className="bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description" className="text-gray-700 dark:text-gray-300">Description</Label>
         <Textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What's the vibe?"
+          className="bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="datetime">Date & Time (optional)</Label>
+        <Label htmlFor="datetime" className="text-gray-700 dark:text-gray-300">Date & Time (optional)</Label>
         <Input
           id="datetime"
           type="datetime-local"
           value={datetime}
           onChange={(e) => setDatetime(e.target.value)}
+          className="bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Venues</Label>
+        <Label className="text-gray-700 dark:text-gray-300">Venues</Label>
         <VenueSelector selected={venues} setSelected={setVenues} />
         <SponsorMapPreview venues={venues} />
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <Label htmlFor="rsvp">Allow RSVPs?</Label>
+        <Label htmlFor="rsvp" className="text-gray-700 dark:text-gray-300">Allow RSVPs?</Label>
         <Switch
           id="rsvp"
           checked={rsvpEnabled}
           onCheckedChange={setRsvpEnabled}
           className={clsx(
-            'bg-gray-300 data-[state=checked]:bg-green-600',
+            'bg-gray-300 dark:bg-gray-700 data-[state=checked]:bg-green-600',
             'transition-colors relative',
             'after:content-[""] after:block after:absolute after:bg-white after:rounded-full after:h-4 after:w-4 after:top-0.5 after:left-0.5',
             'data-[state=checked]:after:translate-x-5 after:transition-transform after:duration-200',
@@ -153,25 +155,28 @@ export default function SponsorCrawlPage() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="maxCapacity">Max Attendees (optional)</Label>
+        <Label htmlFor="maxCapacity" className="text-gray-700 dark:text-gray-300">Max Attendees (optional)</Label>
         <Input
           id="maxCapacity"
           type="number"
           value={maxCapacity}
-          onChange={(e) => setMaxCapacity(e.target.value === '' ? '' : Number(e.target.value))}
+          onChange={(e) =>
+            setMaxCapacity(e.target.value === '' ? '' : Number(e.target.value))
+          }
           placeholder="e.g. 50"
           min={1}
+          className="bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white"
         />
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <Label htmlFor="isSponsored">Is this crawl sponsored?</Label>
+        <Label htmlFor="isSponsored" className="text-gray-700 dark:text-gray-300">Is this crawl sponsored?</Label>
         <Switch
           id="isSponsored"
           checked={isSponsored}
           onCheckedChange={setIsSponsored}
           className={clsx(
-            'bg-gray-300 data-[state=checked]:bg-purple-600',
+            'bg-gray-300 dark:bg-gray-700 data-[state=checked]:bg-purple-600',
             'transition-colors relative',
             'after:content-[""] after:block after:absolute after:bg-white after:rounded-full after:h-4 after:w-4 after:top-0.5 after:left-0.5',
             'data-[state=checked]:after:translate-x-5 after:transition-transform after:duration-200',
@@ -182,12 +187,13 @@ export default function SponsorCrawlPage() {
 
       {isSponsored && (
         <div className="space-y-2">
-          <Label htmlFor="sponsorName">Sponsor Name</Label>
+          <Label htmlFor="sponsorName" className="text-gray-700 dark:text-gray-300">Sponsor Name</Label>
           <Input
             id="sponsorName"
             value={sponsorName}
             onChange={(e) => setSponsorName(e.target.value)}
             placeholder="e.g. Liquid Death"
+            className="bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white"
           />
         </div>
       )}
@@ -195,7 +201,7 @@ export default function SponsorCrawlPage() {
       <Button
         onClick={handleCreate}
         disabled={submitting}
-        className="w-full mt-4"
+        className="w-full mt-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold"
       >
         {submitting ? 'Publishing...' : 'Publish Crawl'}
       </Button>

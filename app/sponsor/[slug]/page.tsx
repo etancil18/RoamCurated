@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import SponsorDetail from './components/SponsorDetail';
 import SharePreview from './components/SharePreview';
-import { SponsorCrawlWithAttendees } from '@/types/sponsor';
+import { SponsorCrawl, SponsorCrawlWithAttendees } from '@/types/sponsor';
 
 export const dynamic = 'force-dynamic'; // Ensures fresh SSR per request
 
@@ -25,7 +25,7 @@ export default async function SponsorPage({ params }: PageProps) {
   const { data: crawl, error: crawlError } = await supabase
     .from('crawl_events')
     .select(
-      'id, title, description, datetime, venue_ids, city, vibe_tags, is_sponsored, sponsor_name, max_capacity, rsvp_enabled, slug'
+      'id, title, description, datetime, venue_ids, city, vibe_tags, is_sponsored, sponsor_name, max_capacity, rsvp_enabled, slug, creator_id'
     )
     .eq('slug', slug)
     .single();
@@ -52,7 +52,7 @@ export default async function SponsorPage({ params }: PageProps) {
     console.warn('RSVP fetch error:', rsvpError);
   }
 
-  // 3️⃣ Combine metadata + attendees
+  // 3️⃣ Enrich with metadata from crawl
   const enriched: SponsorCrawlWithAttendees[] = (attendees || []).map((a) => ({
     ...a,
     title: crawl.title ?? '',
@@ -64,6 +64,9 @@ export default async function SponsorPage({ params }: PageProps) {
     is_sponsored: crawl.is_sponsored ?? false,
     sponsor_name: crawl.sponsor_name ?? null,
     max_capacity: crawl.max_capacity ?? null,
+    full_name: a.full_name ?? null,
+    creator_id: crawl.creator_id,
+    slug: crawl.slug,
   }));
 
   return (
