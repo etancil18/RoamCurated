@@ -9,6 +9,20 @@ import RSVPButton from './RSVPButton';
 import SponsorEditButton from './SponsorEditButton';
 import { supabaseBrowser } from '@/lib/supabase/client';
 
+// 🆕 Fix for missing attendee details
+async function fetchAttendeeDetails(userIds: string[]) {
+  const supabase = supabaseBrowser();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, instagram_handle, personality_style')
+    .in('id', userIds);
+  if (error) {
+    console.error('[SponsorDetail] Failed to fetch profile details:', error);
+    return [];
+  }
+  return data || [];
+}
+
 type Props = {
   crawl: SponsorCrawlWithAttendees[];
 };
@@ -37,6 +51,7 @@ export default function SponsorDetail({ crawl }: Props) {
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [checkedStops, setCheckedStops] = useState<number[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [attendeesWithDetails, setAttendeesWithDetails] = useState<any[]>([]);
 
   if (!crawl || crawl.length === 0) {
     console.warn('[SponsorDetail] No crawl data passed');
@@ -57,7 +72,32 @@ export default function SponsorDetail({ crawl }: Props) {
   const currentCount = attendees.length;
   const maxCapacity = (meta as any).max_capacity ?? 0;
 
-  // 🕐 Countdown timer
+  useEffect(() => {
+    const preloadProfiles = async () => {
+      const ids = attendees
+  .map((a) => a.rsvp_user_id)
+  .filter((id): id is string => typeof id === 'string' && id.trim() !== '');
+
+if (ids.length === 0) return;
+
+const profiles = await fetchAttendeeDetails(ids);
+
+      const enriched = attendees.map((a) => {
+        const profile = profiles.find((p) => p.id === a.rsvp_user_id);
+        return {
+          ...a,
+          full_name: profile?.full_name ?? 'anonymous',
+          instagram_handle: profile?.instagram_handle ?? null,
+          personality_style: profile?.personality_style ?? null,
+        };
+      });
+
+      setAttendeesWithDetails(enriched);
+    };
+
+    if (attendees.length > 0) preloadProfiles();
+  }, [crawl]);
+
   useEffect(() => {
     if (!meta.datetime) return;
     const target = new Date(meta.datetime).getTime();
@@ -76,7 +116,6 @@ export default function SponsorDetail({ crawl }: Props) {
     return () => clearInterval(timer);
   }, [meta.datetime]);
 
-  // 📍 Fetch venues
   useEffect(() => {
     const fetchVenues = async () => {
       const supabase = supabaseBrowser();
@@ -100,13 +139,11 @@ export default function SponsorDetail({ crawl }: Props) {
           instagram_handle: v.instagram_handle ?? null,
         }));
 
-
       setVenues(ordered);
     };
     if (meta.venue_ids?.length) fetchVenues();
   }, [meta]);
 
-  // 👤 Fetch user + progress
   useEffect(() => {
     const loadProgress = async () => {
       const supabase = supabaseBrowser();
@@ -129,7 +166,6 @@ export default function SponsorDetail({ crawl }: Props) {
     loadProgress();
   }, [meta.crawl_id]);
 
-  // 🧩 Toggle a stop
   const toggleStop = async (index: number) => {
     if (!userId) return;
     const supabase = supabaseBrowser();
@@ -138,7 +174,6 @@ export default function SponsorDetail({ crawl }: Props) {
     let updated: number[];
 
     if (alreadyChecked) {
-      // Remove progress
       const { error } = await supabase
         .from('crawl_progress')
         .delete()
@@ -148,7 +183,6 @@ export default function SponsorDetail({ crawl }: Props) {
       if (error) console.error('Delete error:', error);
       updated = checkedStops.filter((i) => i !== index);
     } else {
-      // Add progress
       const { error } = await supabase.from('crawl_progress').insert({
         crawl_id: meta.crawl_id,
         user_id: userId,
@@ -163,7 +197,6 @@ export default function SponsorDetail({ crawl }: Props) {
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto p-4">
-      {/* 🧃 Hosted Crawl Notice */}
       {meta.is_sponsored && (
         <div className="p-4 bg-orange-50 border-l-4 border-orange-400 rounded-md">
           <h2 className="text-lg font-semibold">🍹 Hosted Crawl</h2>
@@ -173,7 +206,6 @@ export default function SponsorDetail({ crawl }: Props) {
         </div>
       )}
 
-      {/* Crawl metadata */}
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">{meta.title ?? 'Untitled Crawl'}</h1>
         <p className="text-muted-foreground">{meta.description ?? ''}</p>
@@ -216,7 +248,6 @@ export default function SponsorDetail({ crawl }: Props) {
         </div>
       </div>
 
-      {/* 🗺️ Itinerary */}
       {venues.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold">🗺️ Itinerary:</h3>
@@ -249,7 +280,6 @@ export default function SponsorDetail({ crawl }: Props) {
         </div>
       )}
 
-      {/* 🧭 Progress Tracker */}
       {venues.length > 0 && (
         <div className="p-4 border rounded-md bg-gray-50">
           <h3 className="text-sm font-semibold mb-2">✅ Track Your Progress</h3>
@@ -266,22 +296,17 @@ export default function SponsorDetail({ crawl }: Props) {
               </li>
             ))}
           </ul>
-          <p className="text-xs text-muted-foreground mt-2">
-            
-          </p>
         </div>
       )}
 
-      {/* RSVP + Edit */}
       <RSVPButton crawlId={meta.crawl_id} />
       <SponsorEditButton creatorId={meta.creator_id} slug={meta.slug ?? ''} />
 
-      {/* 👥 Attendees */}
-      {attendees.length > 0 && (
+      {attendeesWithDetails.length > 0 && (
         <div className="space-y-2 pt-4">
           <h3 className="text-sm font-semibold">People joining:</h3>
           <div className="grid grid-cols-2 gap-2">
-            {attendees.map((a) => (
+            {attendeesWithDetails.map((a) => (
               <Card key={a.rsvp_user_id}>
                 <CardContent className="p-3">
                   <p className="text-sm font-medium">
