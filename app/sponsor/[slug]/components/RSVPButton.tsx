@@ -18,30 +18,29 @@ export default function RSVPButton({ crawlId }: Props) {
   const [isJoined, setIsJoined] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Load RSVP status when user + crawlId are valid
+  // ✅ Load RSVP status once user + crawlId are valid
   useEffect(() => {
-    if (!user?.id || !crawlId) {
-      console.warn('[RSVPButton] ⚠️ Missing user or crawlId');
-      return;
-    }
+    if (!user?.id || !crawlId) return;
 
     const fetchStatus = async () => {
-      console.log('[RSVPButton] 👤 Fetching RSVP status for user:', user.id);
-      const { data, error } = await getSponsorCrawlWithAttendees(crawlId);
+      try {
+        const { data, error } = await getSponsorCrawlWithAttendees(crawlId);
 
-      if (error) {
-        console.error('[RSVPButton] ❌ Failed to fetch RSVP status:', error.message || error);
-        return;
+        if (error) {
+          console.error('[RSVPButton] ❌ Failed to fetch RSVP status:', error.message || error);
+          return;
+        }
+
+        if (!data || !Array.isArray(data)) {
+          console.warn('[RSVPButton] ⚠️ Invalid attendee data');
+          return;
+        }
+
+        const joined = data.some((r) => r.rsvp_user_id === user.id);
+        setIsJoined(joined);
+      } catch (err) {
+        console.error('[RSVPButton] 🚨 Unexpected error:', err);
       }
-
-      if (!data || !Array.isArray(data)) {
-        console.warn('[RSVPButton] ⚠️ No attendee data returned or wrong shape');
-        return;
-      }
-
-      const joined = data.some((r) => r.rsvp_user_id === user.id);
-      console.log('[RSVPButton] ✅ User joined status:', joined);
-      setIsJoined(joined);
     };
 
     fetchStatus();
@@ -54,34 +53,36 @@ export default function RSVPButton({ crawlId }: Props) {
     }
 
     if (!crawlId || typeof crawlId !== 'string') {
-      console.error('[RSVPButton] ❌ Invalid crawlId:', crawlId);
       alert('Invalid crawl ID.');
       return;
     }
 
     setLoading(true);
 
-    if (isJoined) {
-      console.log('[RSVPButton] 🔄 Leaving crawl:', crawlId);
-      const { error } = await leaveSponsorCrawl(crawlId);
-      if (error) {
-        console.error('[RSVPButton] ❌ Failed to leave crawl:', error.message || error);
-        alert('Error leaving crawl. Try again.');
+    try {
+      if (isJoined) {
+        const { error } = await leaveSponsorCrawl(crawlId);
+        if (error) {
+          console.error('[RSVPButton] ❌ Leave failed:', error);
+          alert('Failed to leave crawl.');
+        } else {
+          setIsJoined(false);
+        }
       } else {
-        setIsJoined(false);
+        const { error } = await joinSponsorCrawl(crawlId);
+        if (error) {
+          console.error('[RSVPButton] ❌ Join failed:', error);
+          alert('Failed to join crawl.');
+        } else {
+          setIsJoined(true);
+        }
       }
-    } else {
-      console.log('[RSVPButton] ➕ Joining crawl:', crawlId);
-      const { error } = await joinSponsorCrawl(crawlId);
-      if (error) {
-        console.error('[RSVPButton] ❌ Failed to join crawl:', error.message || error);
-        alert('Error joining crawl. Try again.');
-      } else {
-        setIsJoined(true);
-      }
+    } catch (err) {
+      console.error('[RSVPButton] 🚨 Unexpected error:', err);
+      alert('Unexpected error. Try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   if (isJoined === null) return null;

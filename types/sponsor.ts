@@ -50,30 +50,32 @@ export type SponsorRSVP = {
   crawl_id: string;
   user_id: string;
   instagram_handle?: string | null;
+  full_name?: string | null;
+  personality_style?: string | null;
   note?: string | null;
   joined_at: string;
 };
 
 // 🧩 Joined record from get_crawl_with_attendees (includes user + crawl data)
 export type SponsorCrawlWithAttendees = {
-crawl_id: string;
-title: string | null;
-description: string | null;
-vibe_tags: string[] | null;
-datetime: string | null;
-city: string | null;
-venue_ids: string[];
-is_sponsored: boolean | null;
-sponsor_name: string | null; // ✅ Required for consistent enrichment
-max_capacity: number | null; // ✅ Required for consistent enrichment
-rsvp_user_id: string | null;
-instagram_handle: string | null;
-note: string | null;
-joined_at: string | null;
-personality_style?: string | null;
-full_name: string | null; // ✅ Used for attendee display
-creator_id: string; // ✅ Needed for edit access logic
-slug: string | null; // ✅ Needed for routing or editing
+  crawl_id: string;
+  title: string | null;
+  description: string | null;
+  vibe_tags: string[] | null;
+  datetime: string | null;
+  city: string | null;
+  venue_ids: string[];
+  is_sponsored: boolean | null;
+  sponsor_name: string | null; // ✅ Required for consistent enrichment
+  max_capacity: number | null; // ✅ Required for consistent enrichment
+  rsvp_user_id: string | null;
+  instagram_handle: string | null;
+  note: string | null;
+  joined_at: string | null;
+  personality_style?: string | null;
+  full_name: string | null; // ✅ Used for attendee display
+  creator_id: string; // ✅ Needed for edit access logic
+  slug: string | null; // ✅ Needed for routing or editing
 };
 
 // ⚙️ Explicit RPC argument definitions (strongly typed)
@@ -88,4 +90,14 @@ export type LeaveCrawlArgs = {
 // ✏️ For creator-only updates
 export type UpdateCrawlArgs = Partial<SponsorCrawlPayload> & {
   id: string;
+};
+
+// ✅ Crawl progress tracking (new feature)
+export type CrawlProgress = {
+  id: string;
+  crawl_id: string;
+  user_id: string;
+  venue_id: string;
+  completed: boolean;
+  updated_at: string;
 };
