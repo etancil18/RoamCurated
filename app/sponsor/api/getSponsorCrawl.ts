@@ -28,16 +28,20 @@ export async function GET(req: NextRequest) {
   const { data: rsvps, error: rsvpError } = await supabase
     .from('crawl_rsvps')
     .select('user_id')
-    .eq('crawl_id', crawl.id);
+    .eq('crawl_id', crawl.id)
+    .not('user_id', 'is', null); // ✅ filter out null user_id
 
   if (rsvpError) {
     console.error('[getSponsorCrawl] RSVP fetch failed:', rsvpError);
     return NextResponse.json({ error: 'Failed to load attendees' }, { status: 500 });
   }
 
-  const userIds = (rsvps ?? []).map((r) => r.user_id).filter(Boolean);
+  // ✅ enforce correct typing
+  const userIds = (rsvps ?? [])
+    .map((r) => r.user_id)
+    .filter((id): id is string => typeof id === 'string');
 
-  // 3️⃣ Fetch profile info for these users
+  // 3️⃣ Fetch profile info
   let profiles: any[] = [];
   if (userIds.length > 0) {
     const { data: profData, error: profError } = await supabase
@@ -63,7 +67,7 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  // Optional: record referral
+  // Optional: log referral
   if (ref) {
     console.log('[getSponsorCrawl] Referral:', { from: ref, to: crawl.id, slug });
   }

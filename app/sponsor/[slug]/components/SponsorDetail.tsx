@@ -73,30 +73,34 @@ export default function SponsorDetail({ crawl }: Props) {
   const maxCapacity = (meta as any).max_capacity ?? 0;
 
   useEffect(() => {
-    const preloadProfiles = async () => {
-      const ids = attendees
-  .map((a) => a.rsvp_user_id)
-  .filter((id): id is string => typeof id === 'string' && id.trim() !== '');
+  const preloadProfiles = async () => {
+    const validIds = attendees
+      .map((a) => a.rsvp_user_id)
+      .filter((id): id is string => !!id);
 
-if (ids.length === 0) return;
+    if (validIds.length === 0) {
+      setAttendeesWithDetails([]);
+      return;
+    }
 
-const profiles = await fetchAttendeeDetails(ids);
+    const profiles = await fetchAttendeeDetails(validIds);
 
-      const enriched = attendees.map((a) => {
-        const profile = profiles.find((p) => p.id === a.rsvp_user_id);
-        return {
-          ...a,
-          full_name: profile?.full_name ?? 'anonymous',
-          instagram_handle: profile?.instagram_handle ?? null,
-          personality_style: profile?.personality_style ?? null,
-        };
-      });
+    const enriched = attendees.map((a) => {
+      const profile = profiles.find((p) => p.id === a.rsvp_user_id);
+      return {
+        ...a,
+        full_name: profile?.full_name ?? 'anonymous',
+        instagram_handle: profile?.instagram_handle ?? null,
+        personality_style: profile?.personality_style ?? null,
+      };
+    });
 
-      setAttendeesWithDetails(enriched);
-    };
+    setAttendeesWithDetails(enriched);
+  };
 
-    if (attendees.length > 0) preloadProfiles();
-  }, [crawl]);
+  if (attendees.length > 0) preloadProfiles();
+}, [attendees]);
+
 
   useEffect(() => {
     if (!meta.datetime) return;
