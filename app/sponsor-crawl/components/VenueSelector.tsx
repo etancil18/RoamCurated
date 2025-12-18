@@ -40,7 +40,7 @@ export default function VenueSelector({ selected, setSelected }: Props) {
           id: v.id,
           name: v.name ?? '',
           lat: v.lat ?? 0,
-          lng: v.lon ?? 0,
+          lon: v.lon ?? 0,
           city: v.city ?? '',
         }));
         setResults(mapped);

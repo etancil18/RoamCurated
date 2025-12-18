@@ -480,13 +480,148 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_claim_requests: {
+        Row: {
+          created_at: string | null
+          email: string
+          event_submission: string
+          id: string
+          instagram_handle: string | null
+          status: string | null
+          venue_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          event_submission: string
+          id?: string
+          instagram_handle?: string | null
+          status?: string | null
+          venue_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          event_submission?: string
+          id?: string
+          instagram_handle?: string | null
+          status?: string | null
+          venue_name?: string | null
+        }
+        Relationships: []
+      }
+      venue_live_status: {
+        Row: {
+          id: string
+          is_open_for_dropins: boolean | null
+          message: string | null
+          status_tags: string[] | null
+          updated_at: string | null
+          venue_id: string
+        }
+        Insert: {
+          id?: string
+          is_open_for_dropins?: boolean | null
+          message?: string | null
+          status_tags?: string[] | null
+          updated_at?: string | null
+          venue_id: string
+        }
+        Update: {
+          id?: string
+          is_open_for_dropins?: boolean | null
+          message?: string | null
+          status_tags?: string[] | null
+          updated_at?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_live_status_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_messages: {
+        Row: {
+          created_at: string | null
+          direction: string
+          id: string
+          message: string
+          user_id: string | null
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          direction: string
+          id?: string
+          message: string
+          user_id?: string | null
+          venue_id: string
+        }
+        Update: {
+          created_at?: string | null
+          direction?: string
+          id?: string
+          message?: string
+          user_id?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_messages_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          role: string | null
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          role?: string | null
+          venue_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          role?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_users_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           access_token: string | null
           city: string | null
+          contact: string | null
           cover: string | null
+          description: string | null
           duration: number | null
           energy_ramp: number | null
+          hours: Json | null
           id: string
           instagram_handle: string | null
           lat: number | null
@@ -502,9 +637,12 @@ export type Database = {
         Insert: {
           access_token?: string | null
           city?: string | null
+          contact?: string | null
           cover?: string | null
+          description?: string | null
           duration?: number | null
           energy_ramp?: number | null
+          hours?: Json | null
           id?: string
           instagram_handle?: string | null
           lat?: number | null
@@ -520,9 +658,12 @@ export type Database = {
         Update: {
           access_token?: string | null
           city?: string | null
+          contact?: string | null
           cover?: string | null
+          description?: string | null
           duration?: number | null
           energy_ramp?: number | null
+          hours?: Json | null
           id?: string
           instagram_handle?: string | null
           lat?: number | null
@@ -580,6 +721,28 @@ export type Database = {
           type?: string | null
         }
         Relationships: []
+      }
+      venue_rsvps_view: {
+        Row: {
+          crawl_id: string | null
+          crawl_rsvp_id: string | null
+          datetime: string | null
+          instagram_handle: string | null
+          joined_at: string | null
+          note: string | null
+          user_id: string | null
+          venue_id: string | null
+          vibe_tags: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_rsvps_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "crawl_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
