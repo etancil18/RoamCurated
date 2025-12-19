@@ -59,3 +59,5 @@ body.suppress-navbar header,
 body.suppress-navbar nav {
   display: none !important;
 }
+
+@import 'react-big-calendar/lib/css/react-big-calendar.css';

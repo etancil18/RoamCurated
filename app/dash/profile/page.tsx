@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { supabaseBrowser } from '@/lib/supabase/client'
+import TimeSelector from '@/components/ui/timeselector'
 
 const VIBE_OPTIONS = ['Chill', 'Lively', 'Romantic', 'Trendy', 'Historic']
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export default function DashProfilePage() {
   const supabase = supabaseBrowser()
@@ -15,12 +17,10 @@ export default function DashProfilePage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [tags, setTags] = useState<string[]>([])
+  const [customTag, setCustomTag] = useState('')
   const [contact, setContact] = useState('')
-  const [hours, setHours] = useState('')
+  const [hours, setHours] = useState<Record<string, { open: string; close: string }> | null>(null)
 
-  /* ------------------------------------------------------------------ */
-  /* Load venue data                                                     */
-  /* ------------------------------------------------------------------ */
   useEffect(() => {
     const load = async () => {
       const {
@@ -50,11 +50,7 @@ export default function DashProfilePage() {
         setDescription((venue as any).description ?? '')
         setTags(venue.tags ?? [])
         setContact((venue as any).contact ?? '')
-        setHours(
-          (venue as any).hours
-            ? JSON.stringify((venue as any).hours, null, 2)
-            : ''
-        )
+        setHours((venue as any).hours ?? null)
       }
 
       setLoading(false)
@@ -63,30 +59,30 @@ export default function DashProfilePage() {
     load()
   }, [])
 
-  /* ------------------------------------------------------------------ */
-  /* Helpers                                                            */
-  /* ------------------------------------------------------------------ */
-
   const toggleTag = (tag: string) => {
     setTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     )
   }
 
+  const addCustomTag = () => {
+    const trimmed = customTag.trim()
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags((prev) => [...prev, trimmed])
+    }
+    setCustomTag('')
+  }
+
+  const updateHours = (day: string, open: string, close: string) => {
+    setHours((prev) => ({
+      ...(prev || {}),
+      [day]: { open, close },
+    }))
+  }
+
   const saveProfile = async () => {
     if (!venueId) return
     setSaving(true)
-
-    let parsedHours: Record<string, any> | null = null
-    if (hours.trim()) {
-      try {
-        parsedHours = JSON.parse(hours)
-      } catch {
-        alert('Hours must be valid JSON.')
-        setSaving(false)
-        return
-      }
-    }
 
     const { error } = await supabase
       .from('venues')
@@ -95,7 +91,7 @@ export default function DashProfilePage() {
         description: description || null,
         tags,
         contact: contact || null,
-        hours: parsedHours,
+        hours,
       })
       .eq('id', venueId)
 
@@ -111,10 +107,6 @@ export default function DashProfilePage() {
   if (loading) {
     return <p className="text-sm text-gray-500">Loading profile…</p>
   }
-
-  /* ------------------------------------------------------------------ */
-  /* UI                                                                 */
-  /* ------------------------------------------------------------------ */
 
   return (
     <div className="max-w-2xl space-y-8">
@@ -142,7 +134,7 @@ export default function DashProfilePage() {
           />
         </div>
 
-        {/* Vibes */}
+        {/* Tags */}
         <div>
           <label className="block text-sm font-medium mb-1">Vibe Tags</label>
           <div className="flex flex-wrap gap-2 mt-1">
@@ -159,6 +151,20 @@ export default function DashProfilePage() {
                 {tag}
               </button>
             ))}
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              value={customTag}
+              onChange={(e) => setCustomTag(e.target.value)}
+              placeholder="Add your own…"
+              className="rounded px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800"
+            />
+            <button
+              onClick={addCustomTag}
+              className="text-sm bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+            >
+              Add
+            </button>
           </div>
         </div>
 
@@ -177,16 +183,23 @@ export default function DashProfilePage() {
 
         {/* Hours */}
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Hours (JSON format)
-          </label>
-          <textarea
-            value={hours}
-            onChange={(e) => setHours(e.target.value)}
-            placeholder={`{ "mon": "5pm-11pm", "fri": "4pm-1am" }`}
-            className="w-full rounded-md px-3 py-2 font-mono bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-sm"
-            rows={4}
-          />
+          <label className="block text-sm font-medium mb-1">Hours</label>
+          <div className="space-y-3">
+            {DAYS.map((day) => (
+              <div key={day} className="flex items-center gap-3">
+                <div className="w-10 text-sm font-medium">{day}</div>
+                <TimeSelector
+                  value={hours?.[day]?.open || ''}
+                  onChange={(val) => updateHours(day, val, hours?.[day]?.close || '')}
+                />
+                <span className="text-sm">to</span>
+                <TimeSelector
+                  value={hours?.[day]?.close || ''}
+                  onChange={(val) => updateHours(day, hours?.[day]?.open || '', val)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Save */}

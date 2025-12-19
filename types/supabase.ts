@@ -331,6 +331,59 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_time: string | null
+          ends_on: string | null
+          id: string
+          price_info: string | null
+          recurrence_rule: string
+          start_time: string
+          starts_on: string
+          tags: string[] | null
+          title: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          ends_on?: string | null
+          id?: string
+          price_info?: string | null
+          recurrence_rule: string
+          start_time: string
+          starts_on: string
+          tags?: string[] | null
+          title: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_time?: string | null
+          ends_on?: string | null
+          id?: string
+          price_info?: string | null
+          recurrence_rule?: string
+          start_time?: string
+          starts_on?: string
+          tags?: string[] | null
+          title?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       route_requests: {
         Row: {
           crawl_theme: string | null
@@ -1814,6 +1867,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 
 // -----------------------

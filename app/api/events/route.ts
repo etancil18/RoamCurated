@@ -14,16 +14,19 @@ export async function GET(req: Request) {
   const tags = url.searchParams.get('tags') || null
   const onlyActive = url.searchParams.get('active')
   const limit = parseInt(url.searchParams.get('limit') || '20')
+  const offset = parseInt(url.searchParams.get('offset') || '0')
 
-  // Log incoming params
-  console.log('📥 Incoming /api/events params:', {
-    city,
-    from,
-    to,
-    tags,
-    onlyActive,
-    limit,
-  })
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('📥 Incoming /api/events params:', {
+      city,
+      from,
+      to,
+      tags,
+      onlyActive,
+      limit,
+      offset,
+    })
+  }
 
   if (!city || !from || !to) {
     console.warn('⚠️ Missing filters in /api/events:', { city, from, to })
@@ -74,7 +77,7 @@ export async function GET(req: Request) {
     query = query.overlaps('tags', tagList)
   }
 
-  query = query.order('starts_at', { ascending: true }).limit(limit)
+  query = query.order('starts_at', { ascending: true }).range(offset, offset + limit - 1)
 
   const { data, error } = await query
 
@@ -86,23 +89,24 @@ export async function GET(req: Request) {
     )
   }
 
-  // Add interest count to each event
   const eventsWithCounts = (data ?? []).map((event) => ({
     ...event,
     interest_count: event.event_interests?.[0]?.count ?? 0,
   }))
 
-  console.log(
-    '📤 Events returned from Supabase:',
-    eventsWithCounts.map((ev) => ({
-      id: ev.id,
-      title: ev.title,
-      starts_at: ev.starts_at,
-      venue_city: ev.venue?.city,
-      is_active: ev.is_active,
-      interest_count: ev.interest_count,
-    }))
-  )
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug(
+      '📤 Events returned from Supabase:',
+      eventsWithCounts.map((ev) => ({
+        id: ev.id,
+        title: ev.title,
+        starts_at: ev.starts_at,
+        venue_city: ev.venue?.city,
+        is_active: ev.is_active,
+        interest_count: ev.interest_count,
+      }))
+    )
+  }
 
   const response = {
     events: eventsWithCounts,
@@ -114,11 +118,10 @@ export async function GET(req: Request) {
       active: isActive,
       tags: tags?.split(',') ?? [],
       limit,
+      offset,
       fetched_at: new Date().toISOString(),
     },
   }
-
-  console.log(`✅ Returned ${response.meta.count} events for city: ${city}`)
 
   return NextResponse.json(response)
 }
