@@ -1,11 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { VenueClaimForm } from '@/components/landing/VenueClaimForm';
 import { Sparkles, MapPin, BarChart3 } from 'lucide-react';
 
 export default function ClientPage() {
   const [submitted, setSubmitted] = useState(false);
+
+  // 🔒 Hide navbar on landing page
+  useEffect(() => {
+    document.body.classList.add('suppress-navbar');
+    return () => {
+      document.body.classList.remove('suppress-navbar');
+    };
+  }, []);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black text-white px-4 py-12">

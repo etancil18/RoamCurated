@@ -53,3 +53,9 @@ a {
   height: 12px;
   box-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
+
+/* 👇 Suppress navbar/header when body has class */
+body.suppress-navbar header,
+body.suppress-navbar nav {
+  display: none !important;
+}
