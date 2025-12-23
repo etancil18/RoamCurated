@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const supabase = await supabaseServerApi()
-  const { id: venueId } = params
+  const { id: venueId } = await params
 
   // require login
   const {

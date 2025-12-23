@@ -49,8 +49,7 @@ export default function DashProfilePage() {
         setName(venue.name ?? '')
         setDescription((venue as any).description ?? '')
         setTags(venue.tags ?? [])
-        setContact((venue as any).contact ?? '')
-
+        setContact(Array.isArray(venue.contact) ? venue.contact.join(', ') : '')
         const rawHours = venue.hours
         if (rawHours && typeof rawHours === 'object' && !Array.isArray(rawHours)) {
           setHours(rawHours as Record<string, { open: string; close: string }>)
@@ -104,7 +103,13 @@ export default function DashProfilePage() {
       name: name.trim() || null,
       description: description.trim() || null,
       tags: tags.length > 0 ? tags : null,
-      contact: contact.trim() || null,
+      contact:
+        typeof contact === 'string' && contact.length > 0
+          ? contact
+              .split(',')
+              .map((url) => url.trim())
+              .filter(Boolean)
+          : null,
       hours: Object.keys(normalizedHours).length > 0 ? normalizedHours : null,
     }
 
@@ -189,12 +194,12 @@ export default function DashProfilePage() {
         {/* Contact */}
         <div>
           <label className="block text-sm font-medium mb-1">
-            Contact / Social Link
+            Contact / Social Links (comma-separated)
           </label>
           <input
             value={contact}
             onChange={(e) => setContact(e.target.value)}
-            placeholder="https://instagram.com/yourvenue"
+            placeholder="https://instagram.com/yourvenue, https://linktr.ee/yourvenue"
             className="w-full rounded-md px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-sm"
           />
         </div>
