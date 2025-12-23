@@ -26,7 +26,7 @@ export type EditProfileFormProps = {
     name: string
     description: string
     tags: string[]
-    contact: string
+    contact: string[] // ← UPDATED to array
     hours: Record<string, DayHours> | null
   }
   onSuccess?: () => void
@@ -35,11 +35,12 @@ export type EditProfileFormProps = {
 export default function EditProfileForm({ initialData, onSuccess }: EditProfileFormProps) {
   const supabase = supabaseBrowser()
 
-  const [name, setName] = useState(initialData.name)
-  const [description, setDescription] = useState(initialData.description)
+  const [name, setName] = useState(initialData.name || '')
+  const [description, setDescription] = useState(initialData.description || '')
   const [tags, setTags] = useState<string[]>(initialData.tags || [])
   const [customTag, setCustomTag] = useState('')
-  const [contact, setContact] = useState(initialData.contact || '')
+  const [contact, setContact] = useState<string[]>(initialData.contact || [])
+  const [newContact, setNewContact] = useState('')
   const [saving, setSaving] = useState(false)
 
   const [hours, setHours] = useState<Record<string, DayHours>>(
@@ -64,6 +65,18 @@ export default function EditProfileForm({ initialData, onSuccess }: EditProfileF
     }
   }
 
+  const addContactLink = () => {
+    const clean = newContact.trim()
+    if (clean && !contact.includes(clean)) {
+      setContact([...contact, clean])
+      setNewContact('')
+    }
+  }
+
+  const removeContactLink = (url: string) => {
+    setContact((prev) => prev.filter((c) => c !== url))
+  }
+
   const updateHours = (day: string, field: keyof DayHours, value: any) => {
     setHours((prev) => ({
       ...prev,
@@ -77,15 +90,30 @@ export default function EditProfileForm({ initialData, onSuccess }: EditProfileF
   const saveProfile = async () => {
     setSaving(true)
 
+    const normalizedHours: any = {}
+    Object.entries(hours).forEach(([day, info]) => {
+      if (info.closed) {
+        normalizedHours[day] = { open: null, close: null, closed: true }
+      } else {
+        normalizedHours[day] = {
+          open: info.open || null,
+          close: info.close || null,
+          closed: false,
+        }
+      }
+    })
+
+    const payload = {
+      name: name.trim() || null,
+      description: description.trim() || null,
+      tags: tags.length > 0 ? tags : null,
+      contact: contact.length > 0 ? contact : null,
+      hours: Object.keys(normalizedHours).length ? normalizedHours : null,
+    }
+
     const { error } = await supabase
       .from('venues')
-      .update({
-        name,
-        description: description || null,
-        tags,
-        contact: contact || null,
-        hours,
-      })
+      .update(payload)
       .eq('id', initialData.id)
 
     setSaving(false)
@@ -158,14 +186,43 @@ export default function EditProfileForm({ initialData, onSuccess }: EditProfileF
         </div>
       </div>
 
-      {/* Contact */}
+      {/* Contact Links (array support) */}
       <div>
-        <label className="block text-sm font-medium mb-1">Contact / Social</label>
-        <input
-          value={contact}
-          onChange={(e) => setContact(e.target.value)}
-          className="w-full rounded-md px-3 py-2 border bg-white dark:bg-gray-800"
-        />
+        <label className="block text-sm font-medium mb-1">
+          Contact / Social Links
+        </label>
+        <div className="space-y-2">
+          {contact.map((url) => (
+            <div
+              key={url}
+              className="flex items-center justify-between gap-2 border px-3 py-2 rounded-md bg-white dark:bg-gray-800"
+            >
+              <span className="text-sm truncate">{url}</span>
+              <button
+                onClick={() => removeContactLink(url)}
+                className="text-xs text-red-600 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2 mt-3">
+          <input
+            value={newContact}
+            onChange={(e) => setNewContact(e.target.value)}
+            placeholder="https://instagram.com/..."
+            className="px-3 py-2 border rounded-md bg-white dark:bg-gray-800 w-full"
+          />
+          <button
+            type="button"
+            onClick={addContactLink}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md"
+          >
+            Add
+          </button>
+        </div>
       </div>
 
       {/* Hours */}

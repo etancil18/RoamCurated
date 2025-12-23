@@ -330,11 +330,17 @@ const lineColor = themeColorMap[themeId ?? ''] ?? 'cyan'
                     </span>
                   </div>
 
-                  {v.link && (
-                    <a href={v.link} target="_blank" rel="noopener noreferrer">
+                  {v.id && (
+                    <a
+                      href={`/venue-profile/${v.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
                       More Info
                     </a>
                   )}
+
 
                   <FavoritesButton venue={v as Venue & { id: string }} />
 

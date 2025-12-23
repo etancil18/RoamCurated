@@ -5,7 +5,7 @@ import { supabaseBrowser } from '@/lib/supabase/client'
 import TimeSelector from '@/components/ui/timeselector'
 
 const VIBE_OPTIONS = ['Chill', 'Lively', 'Romantic', 'Trendy', 'Historic']
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 export default function DashProfilePage() {
   const supabase = supabaseBrowser()
@@ -50,7 +50,13 @@ export default function DashProfilePage() {
         setDescription((venue as any).description ?? '')
         setTags(venue.tags ?? [])
         setContact((venue as any).contact ?? '')
-        setHours((venue as any).hours ?? null)
+
+        const rawHours = venue.hours
+        if (rawHours && typeof rawHours === 'object' && !Array.isArray(rawHours)) {
+          setHours(rawHours as Record<string, { open: string; close: string }>)
+        } else {
+          setHours(null)
+        }
       }
 
       setLoading(false)
@@ -76,7 +82,7 @@ export default function DashProfilePage() {
   const updateHours = (day: string, open: string, close: string) => {
     setHours((prev) => ({
       ...(prev || {}),
-      [day]: { open, close },
+      [day.toLowerCase()]: { open, close },
     }))
   }
 
@@ -84,15 +90,27 @@ export default function DashProfilePage() {
     if (!venueId) return
     setSaving(true)
 
+    const normalizedHours: Record<string, { open: string | null; close: string | null }> = {}
+    if (hours) {
+      for (const [day, times] of Object.entries(hours)) {
+        normalizedHours[day.toLowerCase()] = {
+          open: times?.open?.trim() || null,
+          close: times?.close?.trim() || null,
+        }
+      }
+    }
+
+    const payload = {
+      name: name.trim() || null,
+      description: description.trim() || null,
+      tags: tags.length > 0 ? tags : null,
+      contact: contact.trim() || null,
+      hours: Object.keys(normalizedHours).length > 0 ? normalizedHours : null,
+    }
+
     const { error } = await supabase
       .from('venues')
-      .update({
-        name,
-        description: description || null,
-        tags,
-        contact: contact || null,
-        hours,
-      })
+      .update(payload)
       .eq('id', venueId)
 
     setSaving(false)
@@ -187,15 +205,15 @@ export default function DashProfilePage() {
           <div className="space-y-3">
             {DAYS.map((day) => (
               <div key={day} className="flex items-center gap-3">
-                <div className="w-10 text-sm font-medium">{day}</div>
+                <div className="w-20 text-sm font-medium">{day}</div>
                 <TimeSelector
-                  value={hours?.[day]?.open || ''}
-                  onChange={(val) => updateHours(day, val, hours?.[day]?.close || '')}
+                  value={hours?.[day.toLowerCase()]?.open || ''}
+                  onChange={(val) => updateHours(day, val, hours?.[day.toLowerCase()]?.close || '')}
                 />
                 <span className="text-sm">to</span>
                 <TimeSelector
-                  value={hours?.[day]?.close || ''}
-                  onChange={(val) => updateHours(day, hours?.[day]?.open || '', val)}
+                  value={hours?.[day.toLowerCase()]?.close || ''}
+                  onChange={(val) => updateHours(day, hours?.[day.toLowerCase()]?.open || '', val)}
                 />
               </div>
             ))}

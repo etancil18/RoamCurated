@@ -563,6 +563,35 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_followers: {
+        Row: {
+          created_at: string | null
+          id: string
+          user_id: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          user_id: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          user_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_followers_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_live_status: {
         Row: {
           id: string
@@ -669,7 +698,7 @@ export type Database = {
         Row: {
           access_token: string | null
           city: string | null
-          contact: string | null
+          contact: string[] | null
           cover: string | null
           description: string | null
           duration: number | null
@@ -690,7 +719,7 @@ export type Database = {
         Insert: {
           access_token?: string | null
           city?: string | null
-          contact?: string | null
+          contact?: string[] | null
           cover?: string | null
           description?: string | null
           duration?: number | null
@@ -711,7 +740,7 @@ export type Database = {
         Update: {
           access_token?: string | null
           city?: string | null
-          contact?: string | null
+          contact?: string[] | null
           cover?: string | null
           description?: string | null
           duration?: number | null
