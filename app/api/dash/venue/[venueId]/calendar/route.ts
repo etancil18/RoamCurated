@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { venueId: string } }
 ) {
   const supabase = await supabaseServerApi()
-  const { venueId } = params
+  const { venueId } = await params
 
   const [eventsRes, recurringRes] = await Promise.all([
     supabase

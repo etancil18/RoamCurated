@@ -12,14 +12,19 @@ export default function VenueHours({ hours, isOpen }: Props) {
   const [expanded, setExpanded] = useState(false)
   if (!hours) return null
 
-  const today = new Date()
-    .toLocaleDateString('en-US', { weekday: 'long' })
-    .toLowerCase()
+  // get lowercased weekday like "monday"
+  const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+  }).toLowerCase()
 
   const formatTime = (time: string) => {
+    if (!time) return 'Closed'
     const [hourStr, minStr] = time.split(':')
+    const hour = parseInt(hourStr, 10)
+    const min = parseInt(minStr, 10)
+    if (isNaN(hour) || isNaN(min)) return 'Invalid'
     const date = new Date()
-    date.setHours(Number(hourStr), Number(minStr))
+    date.setHours(hour, min)
     return date.toLocaleTimeString([], {
       hour: 'numeric',
       minute: '2-digit',

@@ -18,6 +18,21 @@ export default function EventCarousel({ events }: Props) {
 
   if (!events || events.length === 0) return null
 
+  const now = Date.now()
+
+  const upcoming = events.filter((ev) => {
+    if (ev.isRecurring) {
+      return true
+    }
+    if (ev.ends_at) {
+      const endTs = new Date(ev.ends_at).getTime()
+      return endTs >= now
+    }
+    return false
+  })
+
+  if (upcoming.length === 0) return null
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -29,16 +44,14 @@ export default function EventCarousel({ events }: Props) {
         ref={scrollRef}
         className="flex space-x-4 overflow-x-auto md:hidden pb-2 -mx-1"
       >
-        {events.map((ev) => (
-          <div key={ev.id} className="px-1">
-            <EventCard event={ev} />
-          </div>
+        {upcoming.map((ev) => (
+          <EventCard key={ev.id} event={ev} />
         ))}
       </div>
 
       {/* — Desktop Grid — */}
       <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {events.map((ev) => (
+        {upcoming.map((ev) => (
           <EventCard key={ev.id} event={ev} />
         ))}
       </div>
@@ -53,6 +66,8 @@ function EventCard({ event }: { event: VenueEvent }) {
     recurrence_rule,
     starts_at,
     ends_at,
+    start_time,
+    end_time,
   } = event
 
   const formatTime = (iso: string) =>

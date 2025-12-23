@@ -65,7 +65,7 @@ export async function GET(req: Request) {
     const { rangeStart, rangeEnd } = computeDateRange(range, start, end)
 
     // Basic KPI counts
-    const [favRes, likeRes, crawlRes] = await Promise.all([
+    const [favRes, likeRes, crawlRes, followerRes] = await Promise.all([
       supabase
         .from('favorites')
         .select('*', { count: 'exact', head: true })
@@ -86,6 +86,13 @@ export async function GET(req: Request) {
         .contains('venue_ids', [venueId])
         .gte('created_at', rangeStart)
         .lte('created_at', rangeEnd),
+
+      supabase
+        .from('venue_followers')
+        .select('*', { count: 'exact', head: true })
+        .eq('venue_id', venueId)
+        .gte('created_at', rangeStart)
+        .lte('created_at', rangeEnd),
     ])
 
     // Fetch venue coordinates
@@ -98,6 +105,7 @@ export async function GET(req: Request) {
     if (venue?.lat == null || venue?.lon == null) {
       return NextResponse.json({
         favorites: favRes.count ?? 0,
+        followers: followerRes.count ?? 0,      // 👍 include here
         eventLikes: likeRes.count ?? 0,
         crawlInclusions: crawlRes.count ?? 0,
         crawlThemeBreakdown: [],
@@ -156,6 +164,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       favorites: favRes.count ?? 0,
+      followers: followerRes.count ?? 0,         // 👈 include here
       eventLikes: likeRes.count ?? 0,
       crawlInclusions: crawlRes.count ?? 0,
       rangeStart,

@@ -21,7 +21,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Lookup venue_id for this venue user
     const { data: vuData, error: vuError } = await supabase
       .from('venue_users')
       .select('venue_id')
@@ -37,7 +36,6 @@ export async function GET(req: Request) {
 
     const venueId = vuData.venue_id
 
-    // Fetch events for this venue
     const { data, error } = await supabase
       .from('events')
       .select('*')
@@ -82,7 +80,6 @@ export async function POST(req: Request) {
       source_type,
     } = body
 
-    // Lookup venue_id
     const { data: vuData, error: vuError } = await supabase
       .from('venue_users')
       .select('venue_id')
@@ -119,6 +116,19 @@ export async function POST(req: Request) {
       console.error('[events POST]', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // ✅ SURGICAL ADDITION: update live status
+    await supabase
+      .from('venue_live_status')
+      .upsert(
+        {
+          venue_id: venueId,
+          is_open_for_dropins: true,
+          status_tags: ['event'],
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'venue_id' }
+      )
 
     return NextResponse.json(newEvent)
   } catch (err: any) {

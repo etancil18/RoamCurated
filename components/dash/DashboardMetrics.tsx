@@ -21,6 +21,7 @@ type Props = {
 
 type Metrics = {
   favorites: number
+  followers: number
   eventLikes: number
   crawlInclusions: number
   crawlInclusionTimeline: { date: string; count: number }[]
@@ -30,6 +31,7 @@ type Metrics = {
 export default function DashboardMetrics({ venueId }: Props) {
   const [metrics, setMetrics] = useState<Metrics>({
     favorites: 0,
+    followers: 0,
     eventLikes: 0,
     crawlInclusions: 0,
     crawlInclusionTimeline: [],
@@ -57,6 +59,7 @@ export default function DashboardMetrics({ venueId }: Props) {
 
         const normalized: Metrics = {
           favorites: json.favorites ?? 0,
+          followers: json.followers ?? 0, 
           eventLikes: json.eventLikes ?? 0,
           crawlInclusions: json.crawlInclusions ?? 0,
           crawlInclusionTimeline: json.crawlInclusionTimeline ?? [],
@@ -97,6 +100,7 @@ export default function DashboardMetrics({ venueId }: Props) {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard label="Favorites" value={metrics.favorites} />
+        <MetricCard label="Followers" value={metrics.followers} />  
         <MetricCard label="Event Likes" value={metrics.eventLikes} />
         <MetricCard label="Crawl Inclusions" value={metrics.crawlInclusions} />
       </div>
