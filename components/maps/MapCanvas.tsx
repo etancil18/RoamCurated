@@ -236,15 +236,23 @@ const lineColor = themeColorMap[themeId ?? ''] ?? 'cyan'
 
 
   useEffect(() => {
-    if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserPosition([position.coords.latitude, position.coords.longitude])
-      },
-      (err) => console.warn('Geolocation error:', err),
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-    )
-  }, [])
+  if (!navigator.geolocation) {
+    setUserPosition(defaultCenter[city])
+    return
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      setUserPosition([position.coords.latitude, position.coords.longitude])
+    },
+    (err) => {
+      console.warn('Geolocation error:', err)
+      setUserPosition(defaultCenter[city]) // ✅ fallback to city center
+    },
+    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+  )
+}, [city])
+
 
   /* ============================================================
      RENDER
