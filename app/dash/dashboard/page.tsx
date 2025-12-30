@@ -28,11 +28,14 @@ export default async function DashDashboardPage() {
     .eq('venue_id', venueId)
     .single()
 
-  // Upcoming RSVPs
+  // Upcoming RSVPs (Today and future only)
+  const nowISO = new Date().toISOString()
+
   const { data: rsvps } = await supabase
     .from('venue_rsvps_view')
     .select('crawl_rsvp_id, note, joined_at, datetime')
     .eq('venue_id', venueId)
+    .gte('datetime', nowISO)
     .order('datetime', { ascending: true })
     .limit(10)
 
@@ -73,14 +76,14 @@ export default async function DashDashboardPage() {
                 <li key={rsvp.crawl_rsvp_id} className="text-sm">
                   <p>
                     <span className="font-semibold">Arrival Time:</span>{' '}
-                    {rsvp.datetime ? format(new Date(rsvp.datetime), 'PPpp') : 'Unknown'}
+                    {rsvp.datetime ? format(new Date(rsvp.datetime), 'PPPp') : 'Unknown'}
                   </p>
                   {rsvp.note && (
                     <p className="italic text-gray-500 mt-1">“{rsvp.note}”</p>
                   )}
                   {rsvp.joined_at && (
                     <p className="text-xs text-gray-400 mt-1">
-                      RSVP’d: {format(new Date(rsvp.joined_at), 'PPpp')}
+                      RSVP’d: {format(new Date(rsvp.joined_at), 'PPPp')}
                     </p>
                   )}
                 </li>

@@ -1,8 +1,6 @@
 // app/dash/crawls/page.tsx
-
 import { createServerClient } from '@/lib/supabase/server'
-import type { Database } from '@/types/supabase'
-import { format } from 'date-fns'
+import InteractiveRSVPCard from '@/components/dash/InteractiveRSVPCard'
 
 export default async function DashCrawlsPage() {
   const supabase = await createServerClient()
@@ -21,8 +19,6 @@ export default async function DashCrawlsPage() {
 
   if (!venueUser) return null
 
-  const venueId = venueUser.venue_id
-
   const { data: rsvps } = await supabase
     .from('venue_rsvps_view')
     .select(`
@@ -30,56 +26,50 @@ export default async function DashCrawlsPage() {
       user_id,
       crawl_id,
       instagram_handle,
+      profile_name,
       note,
       joined_at,
       datetime,
-      vibe_tags
+      vibe_tags,
+      status,
+      checked_in_at,
+      crawl_name
     `)
-    .eq('venue_id', venueId)
+    .eq('venue_id', venueUser.venue_id)
     .order('datetime', { ascending: true })
-    .limit(20)
+
+  if (!rsvps) return null
+
+  const validRsvps = rsvps.filter((r) => !!r.crawl_rsvp_id)
+
+  const stats = {
+    confirmed: validRsvps.filter((r) => r.status === 'Confirmed').length,
+    checkedIn: validRsvps.filter((r) => r.status === 'Checked In').length,
+    noShow: validRsvps.filter((r) => r.status === 'Did Not Attend').length,
+  }
 
   return (
-    <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">Upcoming Crawl RSVPs</h1>
+    <div className="max-w-3xl space-y-6">
+      <h1 className="text-2xl font-bold">Upcoming RSVPs</h1>
 
-      <div className="space-y-4">
-        {rsvps && rsvps.length > 0 ? (
-          rsvps.map((rsvp) => (
-            <div
-              key={rsvp.crawl_rsvp_id}
-              className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-            >
-              <div className="flex justify-between items-center">
-                <div className="text-sm">
-                  <p>
-                    <span className="font-semibold">Arrival Time:</span>{' '}
-                    {rsvp.datetime
-                      ? format(new Date(rsvp.datetime), 'PPpp')
-                      : 'Unknown'}
-                  </p>
-                </div>
-
-                {rsvp.joined_at && (
-                  <p className="text-xs text-gray-400">
-                    RSVP’d: {format(new Date(rsvp.joined_at), 'PPpp')}
-                  </p>
-                )}
-              </div>
-
-              {rsvp.note && (
-                <p className="mt-3 text-sm italic text-gray-500 dark:text-gray-400">
-                  “{rsvp.note}”
-                </p>
-              )}
-            </div>
-          ))
-        ) : (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            No crawl RSVPs yet. This list updates automatically when guests add your venue to their route.
-          </p>
-        )}
+      <div className="text-sm text-gray-600 dark:text-gray-400">
+        <p>
+          Confirmed: {stats.confirmed} | Checked In: {stats.checkedIn} | No Show: {stats.noShow}
+        </p>
       </div>
+
+      {validRsvps.length === 0 ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          No upcoming RSVPs at this time.
+        </p>
+      ) : (
+        validRsvps.map((rsvp) => (
+          <InteractiveRSVPCard
+            key={rsvp.crawl_rsvp_id!}
+            rsvp={rsvp as any} // Safe due to field filtering
+          />
+        ))
+      )}
     </div>
   )
 }

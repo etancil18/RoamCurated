@@ -1,6 +1,3 @@
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 
 import { createServerClient } from '@/lib/supabase/server'
 import { getFavorites as getVenueFavorites } from '@/lib/supabase/favorites'

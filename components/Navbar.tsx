@@ -38,7 +38,7 @@ export default function Navbar() {
               Favorites
             </Link>
             <Link href="/sponsor-crawl" className="text-sm text-amber-600 hover:text-black dark:hover:text-white">
-              Host Crawl
+              Get Social
             </Link>
             <Link href="/profile" className="text-sm text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white">
               Profile

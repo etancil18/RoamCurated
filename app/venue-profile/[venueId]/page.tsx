@@ -20,7 +20,6 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
   const { venueId } = await params
   const supabase = await supabaseServerApi()
 
-  // ——— Fetch Venue Info ———
   const { data: venue, error: venueError } = await supabase
     .from('venues')
     .select(`
@@ -40,7 +39,6 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
     notFound()
   }
 
-  // ✅ Normalize venue (NULL → SAFE TYPES)
   const normalizedVenue: VenueProfileData = {
     id: venue.id,
     name: venue.name ?? 'Unnamed Venue',
@@ -63,7 +61,6 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
         : undefined,
   }
 
-  // ——— Fetch Live Status ———
   const { data: liveStatusRaw } = await supabase
     .from('venue_live_status')
     .select('is_open_for_dropins, status_tags')
@@ -77,7 +74,6 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       }
     : undefined
 
-  // ——— Fetch Events ———
   const { data: events } = await supabase
     .from('events')
     .select('id, title, starts_at, ends_at, tags')
@@ -91,7 +87,6 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
     )
     .eq('venue_id', venueId)
 
-  // ✅ Normalize events (NULL → SAFE TYPES)
   const upcomingEvents: VenueEvent[] = [
     ...(events ?? [])
       .filter((e) => e.title)
@@ -119,6 +114,13 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-10">
       <HeroBanner venue={normalizedVenue} />
+
+      {/* ✅ Venue Description */}
+      {normalizedVenue.description && (
+        <p className="text-base text-gray-700 dark:text-gray-300">
+          {normalizedVenue.description}
+        </p>
+      )}
 
       {liveStatus && <LiveStatusPill status={liveStatus} />}
 

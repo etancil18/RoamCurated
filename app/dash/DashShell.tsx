@@ -49,7 +49,7 @@ export default function DashShell({ venueName, children }: Props) {
             {[
               ['/dash/dashboard', 'Dashboard'],
               ['/dash/live', 'Live Status'],
-              ['/dash/crawls', 'Upcoming Crawls'],
+              ['/dash/crawls', 'Upcoming RSVPs'],
               ['/dash/messages', 'Messages'],
               ['/dash/profile', 'Edit Profile'],
             ].map(([href, label]) => (

@@ -102,27 +102,33 @@ export type Database = {
       }
       crawl_rsvps: {
         Row: {
+          checked_in_at: string | null
           crawl_id: string
           id: string
           instagram_handle: string | null
           joined_at: string | null
           note: string | null
+          status: string | null
           user_id: string
         }
         Insert: {
+          checked_in_at?: string | null
           crawl_id: string
           id?: string
           instagram_handle?: string | null
           joined_at?: string | null
           note?: string | null
+          status?: string | null
           user_id: string
         }
         Update: {
+          checked_in_at?: string | null
           crawl_id?: string
           id?: string
           instagram_handle?: string | null
           joined_at?: string | null
           note?: string | null
+          status?: string | null
           user_id?: string
         }
         Relationships: [
@@ -167,6 +173,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "events"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_interests_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
           },
           {
             foreignKeyName: "event_interests_venue_id_fkey"
@@ -237,6 +250,13 @@ export type Database = {
             foreignKeyName: "events_venue_id_fkey"
             columns: ["venue_id"]
             isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
             referencedRelation: "venues"
             referencedColumns: ["id"]
           },
@@ -268,6 +288,13 @@ export type Database = {
           venue_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "favorites_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
           {
             foreignKeyName: "favorites_venue_id_fkey"
             columns: ["venue_id"]
@@ -375,6 +402,13 @@ export type Database = {
           venue_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "recurring_events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
           {
             foreignKeyName: "recurring_events_venue_id_fkey"
             columns: ["venue_id"]
@@ -587,6 +621,13 @@ export type Database = {
             foreignKeyName: "venue_followers_venue_id_fkey"
             columns: ["venue_id"]
             isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_followers_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
             referencedRelation: "venues"
             referencedColumns: ["id"]
           },
@@ -618,6 +659,13 @@ export type Database = {
           venue_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "venue_live_status_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
           {
             foreignKeyName: "venue_live_status_venue_id_fkey"
             columns: ["venue_id"]
@@ -657,6 +705,13 @@ export type Database = {
             foreignKeyName: "venue_messages_venue_id_fkey"
             columns: ["venue_id"]
             isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_messages_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
             referencedRelation: "venues"
             referencedColumns: ["id"]
           },
@@ -685,6 +740,13 @@ export type Database = {
           venue_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "venue_users_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
           {
             foreignKeyName: "venue_users_venue_id_fkey"
             columns: ["venue_id"]
@@ -806,12 +868,16 @@ export type Database = {
       }
       venue_rsvps_view: {
         Row: {
+          checked_in_at: string | null
           crawl_id: string | null
+          crawl_name: string | null
           crawl_rsvp_id: string | null
           datetime: string | null
           instagram_handle: string | null
           joined_at: string | null
           note: string | null
+          profile_name: string | null
+          status: string | null
           user_id: string | null
           venue_id: string | null
           vibe_tags: string[] | null
@@ -1896,6 +1962,7 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
 
 
 
