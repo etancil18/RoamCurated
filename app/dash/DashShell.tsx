@@ -48,7 +48,7 @@ export default function DashShell({ venueName, children }: Props) {
           <nav className="flex flex-col gap-1 px-4 py-2 text-sm">
             {[
               ['/dash/dashboard', 'Dashboard'],
-              ['/dash/live', 'Live Status'],
+              ['/dash/live', 'Live Status/Events'],
               ['/dash/crawls', 'Upcoming RSVPs'],
               ['/dash/messages', 'Messages'],
               ['/dash/profile', 'Edit Profile'],

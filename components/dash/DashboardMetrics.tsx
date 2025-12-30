@@ -42,9 +42,17 @@ export default function DashboardMetrics({ venueId }: Props) {
 
   useEffect(() => {
     const fetchMetrics = async () => {
-      let query = `venue_id=${venueId}&range=${range.range}`
-      if (range.range === 'custom' && range.start && range.end) {
-        query += `&start=${encodeURIComponent(range.start)}&end=${encodeURIComponent(range.end)}`
+      let query = `venue_id=${venueId}`
+
+      if (range.range === 'custom') {
+        if (range.start && range.end) {
+          query += `&range=custom&start=${encodeURIComponent(range.start)}&end=${encodeURIComponent(range.end)}`
+        } else {
+          // fallback to 30-day default if custom selected but missing dates
+          query += `&range=30day`
+        }
+      } else {
+        query += `&range=${range.range}`
       }
 
       try {

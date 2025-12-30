@@ -12,7 +12,12 @@ function computeDateRange(
 
   if (range === 'custom') {
     if (!start || !end) {
-      throw new Error('Custom range requires start and end')
+      // 👇 Gracefully fallback to 30d default if start/end missing
+      const fallbackStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      return {
+        rangeStart: fallbackStart.toISOString(),
+        rangeEnd: now.toISOString(),
+      }
     }
     return {
       rangeStart: new Date(start).toISOString(),
@@ -95,7 +100,6 @@ export async function GET(req: Request) {
         .lte('created_at', rangeEnd),
     ])
 
-    // Fetch venue coordinates
     const { data: venue } = await supabase
       .from('venues')
       .select('lat, lon')
@@ -105,7 +109,7 @@ export async function GET(req: Request) {
     if (venue?.lat == null || venue?.lon == null) {
       return NextResponse.json({
         favorites: favRes.count ?? 0,
-        followers: followerRes.count ?? 0,      // 👍 include here
+        followers: followerRes.count ?? 0,
         eventLikes: likeRes.count ?? 0,
         crawlInclusions: crawlRes.count ?? 0,
         crawlThemeBreakdown: [],
@@ -113,11 +117,9 @@ export async function GET(req: Request) {
       })
     }
 
-    // Round venue coords to 4 decimals
     const venueLat4 = Number(venue.lat.toFixed(4))
     const venueLon4 = Number(venue.lon.toFixed(4))
 
-    // Fetch route requests
     const { data: routes } = await supabase
       .from('route_requests')
       .select('crawl_theme, waypoints, created_at')
@@ -164,7 +166,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       favorites: favRes.count ?? 0,
-      followers: followerRes.count ?? 0,         // 👈 include here
+      followers: followerRes.count ?? 0,
       eventLikes: likeRes.count ?? 0,
       crawlInclusions: crawlRes.count ?? 0,
       rangeStart,
