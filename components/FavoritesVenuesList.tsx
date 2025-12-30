@@ -2,12 +2,10 @@
 
 import React, { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { MapPin, PlusCircle, Trash2, Tag } from 'lucide-react'
-import { useRouteStore } from '@/lib/store/routeStore'
+import { Trash2, Tag } from 'lucide-react'
 import { removeFavoriteAction } from '@/app/favorites/actions'
 import type { FavoriteVenueData } from '@/validators/favorite'
 import type { FavoriteRecord } from '@/types/supabase'
-import type { Venue } from '@/types/venue'
 
 type FavoriteWithParsedData = FavoriteRecord & { data: FavoriteVenueData }
 
@@ -17,27 +15,7 @@ export default function FavoritesVenuesList({
   venues: FavoriteWithParsedData[]
 }) {
   const router = useRouter()
-  const { addStop } = useRouteStore()
   const [isPending, startTransition] = useTransition()
-
-  const toVenue = (fav: FavoriteWithParsedData): Venue => ({
-    id: fav.venue_id,
-    slug: fav.venue_id,
-    name: fav.data.name,
-    lat: fav.data.lat,
-    lon: fav.data.lon,
-    instagram_handle: fav.data.instagram_handle || undefined,
-    link: '',
-    type: fav.data.type || undefined,
-    cover: fav.data.image_url || undefined,
-    tags: fav.data.vibe_tags?.join(', ') || undefined,
-    tier: undefined,
-    timeCategory: undefined,
-    energyRamp: undefined,
-    price: fav.data.price_tier ? String(fav.data.price_tier) : undefined,
-    duration: undefined,
-    city: fav.city || undefined,
-  })
 
   async function handleRemove(venueId: string) {
     const confirmDelete = confirm('Are you sure you want to remove this favorite?')
@@ -104,21 +82,9 @@ export default function FavoritesVenuesList({
               <div className="mt-3 flex gap-3 flex-wrap">
                 <button
                   className="text-xs flex items-center gap-1 text-blue-600 hover:underline"
-                  onClick={() => {
-                    router.push(`/?focus=${fav.venue_id}&lat=${lat}&lon=${lon}`)
-                  }}
+                  onClick={() => router.push(`/venue-profile/${fav.venue_id}`)}
                 >
-                  <MapPin size={14} /> View on Map
-                </button>
-
-                <button
-                  className="text-xs flex items-center gap-1 text-green-700 hover:underline"
-                  onClick={() => {
-                    addStop(toVenue(fav))
-                    router.push('/')
-                  }}
-                >
-                  <PlusCircle size={14} /> Add to Crawl
+                  View Profile
                 </button>
 
                 <button

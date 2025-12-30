@@ -4,7 +4,6 @@ import React from 'react'
 import type { CombinedFavorite } from '@/types/ui'
 import SavedCrawlsList from './SavedCrawlsList'
 import { getEmojiForType } from '@/utils/emoji'
-import { MapPin, PlusCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useRouteStore } from '@/lib/store/routeStore'
 import { removeFavoriteAction } from '@/app/favorites/actions'
@@ -19,7 +18,6 @@ export default function FavoritesList({
   const venues = favorites.filter((f) => f.type === 'venue')
   const routes = favorites.filter((f) => f.type === 'route')
   const router = useRouter()
-  const { addStop } = useRouteStore()
 
   async function handleRemove(venueId: string) {
     const confirmed = confirm('Are you sure you want to remove this favorite?')
@@ -65,37 +63,10 @@ export default function FavoritesList({
                   <button
                     className="flex items-center gap-1 text-blue-600 hover:underline"
                     onClick={() =>
-                      router.push(`/?focus=${v.record.venue_id}&lat=${v.data.lat}&lon=${v.data.lon}`)
+                      router.push(`/venue-profile/${v.record.venue_id}`)
                     }
                   >
-                    <MapPin size={14} /> View on Map
-                  </button>
-
-                  <button
-                    className="flex items-center gap-1 text-green-700 hover:underline"
-                    onClick={() => {
-                      addStop({
-                        id: v.record.venue_id,
-                        slug: v.record.venue_id,
-                        name: v.data.name,
-                        lat: v.data.lat,
-                        lon: v.data.lon,
-                        instagram_handle: v.data.instagram_handle || undefined,
-                        link: '',
-                        type: v.data.type || undefined,
-                        cover: v.data.image_url || undefined,
-                        tags: v.data.vibe_tags?.join(', ') || undefined,
-                        tier: undefined,
-                        timeCategory: undefined,
-                        energyRamp: undefined,
-                        price: v.data.price_tier ? String(v.data.price_tier) : undefined,
-                        duration: undefined,
-                        city: v.record.city || undefined,
-                      })
-                      router.push('/')
-                    }}
-                  >
-                    <PlusCircle size={14} /> Add to Crawl
+                    View Profile
                   </button>
 
                   <button
