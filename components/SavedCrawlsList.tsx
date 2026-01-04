@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { getEmojiForType } from '@/utils/emoji'
 import type { SavedRouteRecord } from '@/types/supabase'
 import type { RouteStop } from '@/validators/favorite'
+import { logVenueImpression } from '@/lib/logVenue'
 
 type ParsedRoute = SavedRouteRecord & { stops: RouteStop[] }
 
@@ -36,10 +37,10 @@ export default function SavedCrawlsList({
               <ul className="space-y-1 text-sm">
                 {route.stops.map((stop, i) => (
                   <li key={i} className="flex gap-2 items-center">
-                    <span className="text-lg">{getEmojiForType(stop.type)}</span>
-                    <span>{stop.name}</span>
-                    {stop.type && (
-                      <span className="text-xs italic text-gray-500">{stop.type}</span>
+                    <span className="text-lg">{getEmojiForType((stop as any)?.type)}</span>
+                    <span>{(stop as any)?.name}</span>
+                    {(stop as any)?.type && (
+                      <span className="text-xs italic text-gray-500">{(stop as any).type}</span>
                     )}
                   </li>
                 ))}
@@ -49,7 +50,23 @@ export default function SavedCrawlsList({
               {route.slug && (
                 <button
                   className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                  onClick={() => router.push(`/crawl/${route.slug}`)}
+                  onClick={() => {
+                    route.stops.forEach((stop, index) => {
+                      const venueId = (stop as any)?.id
+                      if (!venueId) return
+
+                      logVenueImpression('saved_crawl_clicked', {
+                        venue_id: venueId,
+                        metadata: {
+                          screen: 'saved_crawls_list',
+                          city: route.city,
+                          position_in_crawl: index,
+                          crawl_id: route.id,
+                        },
+                      })
+                    })
+                    router.push(`/crawl/${route.slug}`)
+                  }}
                 >
                   <Map size={14} /> Load on Map
                 </button>

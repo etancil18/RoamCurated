@@ -10,7 +10,8 @@ import { nanoid } from 'nanoid'
 import ReplaceStopModal from '@/components/modals/ReplaceStopModal'
 import FavoritesModal from '@/components/modals/FavoritesModal'
 import EventsModal from '@/components/modals/EventsModal'
-import HostCrawlModal from '@/components/modals/HostCrawlModal' // ✅ new import
+import HostCrawlModal from '@/components/modals/HostCrawlModal'
+import { logEvent } from '@/lib/logEvent' // ✅ NEW IMPORT
 
 export type CrawlControlProps = {
   venues: Venue[]
@@ -44,7 +45,7 @@ export default function CrawlControl({
   })
   const [showFavoritesModal, setShowFavoritesModal] = useState(false)
   const [showEventsModal, setShowEventsModal] = useState(false)
-  const [showHostModal, setShowHostModal] = useState(false) // ✅ new state
+  const [showHostModal, setShowHostModal] = useState(false)
 
   const { favorites, loading: loadingFavorites } = useFavorites(city)
   const {
@@ -91,6 +92,15 @@ export default function CrawlControl({
         throw new Error(msg)
       }
 
+      logEvent('crawl_saved', {
+        metadata: {
+          num_stops: route.length,
+          theme_id: selectedThemeId,
+          city,
+          route_ids: route.map((v) => v.id),
+        },
+      })
+
       alert('✅ Saved to your account!')
     } catch (err: any) {
       console.error(err)
@@ -100,6 +110,15 @@ export default function CrawlControl({
 
   function handleExportToMaps() {
     if (!Array.isArray(route) || route.length < 2) return
+
+    logEvent('crawl_exported', {
+      metadata: {
+        num_stops: route.length,
+        city,
+        theme_id: selectedThemeId,
+      },
+    })
+
     const base = 'https://www.google.com/maps/dir/'
     const waypoints = route.map((v) => `${v.lat},${v.lon}`).join('/')
     window.open(`${base}${waypoints}`, '_blank')
@@ -115,6 +134,14 @@ export default function CrawlControl({
     const updated = [...route.slice(0, index), newVenue, ...route.slice(index)]
     onRoute(updated)
     setShowFavoritesModal(false)
+
+    logEvent('favorite_added_to_crawl', {
+      venue_id: newVenue.id,
+      metadata: {
+        index,
+        city,
+      },
+    })
   }
 
   function handleInsertEventAt(newVenue: Venue, index: number) {
@@ -126,6 +153,14 @@ export default function CrawlControl({
     const updated = [...route.slice(0, index), newVenue, ...route.slice(index)]
     onRoute(updated)
     setShowEventsModal(false)
+
+    logEvent('event_added_to_crawl', {
+      venue_id: newVenue.id,
+      metadata: {
+        index,
+        city,
+      },
+    })
   }
 
   function handleCopyLink() {
@@ -138,6 +173,13 @@ export default function CrawlControl({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
+
+    logEvent('crawl_link_copied', {
+      metadata: {
+        num_stops: route.length,
+        city,
+      },
+    })
   }
 
   function handleClear() {
@@ -146,6 +188,13 @@ export default function CrawlControl({
     url.searchParams.delete('route')
     window.history.replaceState(null, '', url.toString())
     setCopied(false)
+
+    logEvent('crawl_cleared', {
+      metadata: {
+        previous_num_stops: route?.length ?? 0,
+        city,
+      },
+    })
   }
 
   function handleModifyStop(stop: Venue, index: number) {
@@ -159,16 +208,35 @@ export default function CrawlControl({
     updated[index] = newVenue
     onRoute(updated)
     setModalData({ target: null, options: [], index: null })
+
+    logEvent('stop_replaced', {
+      venue_id: newVenue.id,
+      metadata: {
+        index,
+        city,
+      },
+    })
   }
 
   function handleRemoveStop(index: number) {
     if (!route) return
+
+    logEvent('stop_removed', {
+      venue_id: route[index].id,
+      metadata: {
+        index,
+        removed_stop_id: route[index].id,
+        city,
+      },
+    })
+
     const updated = route.filter((_, i) => i !== index)
     onRoute(updated)
     setModalData({ target: null, options: [], index: null })
   }
 
   const themeName = selectedThemeId ? themeById[selectedThemeId]?.description : null
+
 
   return (
     <div className="absolute bottom-4 left-4 z-[2000] bg-white p-3 rounded-xl shadow-lg w-72 border border-gray-300">
@@ -236,7 +304,6 @@ export default function CrawlControl({
               🎟️ Add from Events
             </button>
 
-            {/* ✅ New Host Crawl button */}
             <button
               onClick={() => setShowHostModal(true)}
               className="w-full bg-fuchsia-600 text-white py-1 rounded hover:bg-fuchsia-700 transition"

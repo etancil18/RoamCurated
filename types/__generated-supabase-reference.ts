@@ -517,6 +517,61 @@ export type Database = {
         }
         Relationships: []
       }
+      user_impressions: {
+        Row: {
+          crawl_id: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          impression_type: string
+          metadata: Json | null
+          user_id: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          crawl_id?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          impression_type: string
+          metadata?: Json | null
+          user_id?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          crawl_id?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          impression_type?: string
+          metadata?: Json | null
+          user_id?: string | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_impressions_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "crawl_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_impressions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "user_impressions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_routes: {
         Row: {
           created_at: string | null
@@ -626,6 +681,61 @@ export type Database = {
           },
           {
             foreignKeyName: "venue_followers_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_impressions: {
+        Row: {
+          crawl_id: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          impression_type: string
+          metadata: Json | null
+          user_id: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          crawl_id?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          impression_type: string
+          metadata?: Json | null
+          user_id?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          crawl_id?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          impression_type?: string
+          metadata?: Json | null
+          user_id?: string | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_impressions_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "crawl_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_impressions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_impressions_venue_id_fkey"
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "venues"

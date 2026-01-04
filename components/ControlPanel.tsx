@@ -4,6 +4,7 @@ import React from 'react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { logEvent } from '@/lib/logEvent' // ✅ NEW
 
 interface ControlPanelProps {
   city: 'atl' | 'nyc'
@@ -30,9 +31,9 @@ const themes = [
   { id: 'chill-hang', label: 'Chill Hang' },
   { id: 'creative-kickstart', label: 'Creative Kickstart' },
   { id: 'date-night', label: 'Date Night' },
-  { id: 'december-crawl', label: 'December Crawl' },
   { id: 'friends-night-out', label: 'Friends Night Out' },
   { id: 'gallery-crawl', label: 'Gallery Crawl' },
+  { id: 'gameday-vibes', label: 'Gameday Vibes' },
   { id: 'last-call', label: 'Last Call' },
   { id: 'midday-recharge', label: 'Midday Recharge' },
   { id: 'mindful-mornings', label: 'Mindful Mornings' },
@@ -68,9 +69,16 @@ export function ControlPanel({
   setShowLiveEventsOnly,
 }: ControlPanelProps) {
   const handleTravelModeChange = (val: string) => {
-    if (val) {
-      setTravelMode(val as 'walking' | 'cycling' | 'driving')
-    }
+    if (!val) return
+
+    setTravelMode(val as 'walking' | 'cycling' | 'driving')
+
+    logEvent('travel_mode_changed', {
+      metadata: {
+        travel_mode: val,
+        city,
+      },
+    })
   }
 
   return (
@@ -78,14 +86,24 @@ export function ControlPanel({
       <div className="flex gap-2">
         <Button
           variant={city === 'atl' ? 'default' : 'outline'}
-          onClick={() => onCityChange('atl')}
+          onClick={() => {
+            onCityChange('atl')
+            logEvent('city_changed', {
+              metadata: { city: 'atl' },
+            })
+          }}
           className="h-8 text-sm dark:text-white"
         >
           ATL
         </Button>
         <Button
           variant={city === 'nyc' ? 'default' : 'outline'}
-          onClick={() => onCityChange('nyc')}
+          onClick={() => {
+            onCityChange('nyc')
+            logEvent('city_changed', {
+              metadata: { city: 'nyc' },
+            })
+          }}
           className="h-8 text-sm dark:text-white"
         >
           NYC
@@ -100,24 +118,9 @@ export function ControlPanel({
           onValueChange={handleTravelModeChange}
           className="w-full justify-between gap-2"
         >
-          <ToggleGroupItem
-            value="walking"
-            className="flex-1 text-center border border-zinc-400 dark:border-zinc-600 rounded-md text-sm h-8 data-[state=on]:bg-blue-500 data-[state=on]:text-white"
-          >
-            🚶
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="cycling"
-            className="flex-1 text-center border border-zinc-400 dark:border-zinc-600 rounded-md text-sm h-8 data-[state=on]:bg-blue-500 data-[state=on]:text-white"
-          >
-            🚲
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="driving"
-            className="flex-1 text-center border border-zinc-400 dark:border-zinc-600 rounded-md text-sm h-8 data-[state=on]:bg-blue-500 data-[state=on]:text-white"
-          >
-            🚗
-          </ToggleGroupItem>
+          <ToggleGroupItem value="walking" className="flex-1 h-8">🚶</ToggleGroupItem>
+          <ToggleGroupItem value="cycling" className="flex-1 h-8">🚲</ToggleGroupItem>
+          <ToggleGroupItem value="driving" className="flex-1 h-8">🚗</ToggleGroupItem>
         </ToggleGroup>
       </div>
 
@@ -127,8 +130,13 @@ export function ControlPanel({
           type="text"
           placeholder="Search vibe or tag..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full h-8 px-2 py-1 border rounded text-sm bg-white text-black dark:bg-zinc-900 dark:text-white"
+          onChange={(e) => {
+            setSearchTerm(e.target.value)
+            logEvent('search_updated', {
+              metadata: { value: e.target.value },
+            })
+          }}
+          className="w-full h-8 px-2 py-1 border rounded text-sm"
         />
       </div>
 
@@ -136,8 +144,16 @@ export function ControlPanel({
         <Label className="text-xs font-semibold">Theme</Label>
         <select
           value={selectedThemeId}
-          onChange={(e) => setSelectedThemeId(e.target.value)}
-          className="w-full h-8 px-2 py-1 border rounded text-sm bg-white text-black dark:bg-zinc-900 dark:text-white"
+          onChange={(e) => {
+            setSelectedThemeId(e.target.value)
+            logEvent('theme_selected', {
+              metadata: {
+                theme_id: e.target.value,
+                city,
+              },
+            })
+          }}
+          className="w-full h-8 px-2 py-1 border rounded text-sm"
         >
           <option value="">Select Theme</option>
           {themes.map(({ id, label }) => (
@@ -150,8 +166,13 @@ export function ControlPanel({
         <Label className="text-xs font-semibold">Price</Label>
         <select
           value={selectedPrice}
-          onChange={(e) => setSelectedPrice(e.target.value)}
-          className="w-full h-8 px-2 py-1 border rounded text-sm bg-white text-black dark:bg-zinc-900 dark:text-white"
+          onChange={(e) => {
+            setSelectedPrice(e.target.value)
+            logEvent('price_filter_changed', {
+              metadata: { price: e.target.value },
+            })
+          }}
+          className="w-full h-8 px-2 py-1 border rounded text-sm"
         >
           <option value="">Any Price</option>
           {prices.slice(1).map((p) => (
@@ -164,32 +185,57 @@ export function ControlPanel({
         <Label className="text-xs font-semibold">Route Tightness</Label>
         <select
           value={tightness}
-          onChange={(e) => setTightness(e.target.value as 'tight' | 'medium' | 'loose')}
-          className="w-full h-8 px-2 py-1 border rounded text-sm bg-white text-black dark:bg-zinc-900 dark:text-white"
+          onChange={(e) => {
+            const val = e.target.value as 'tight' | 'medium' | 'loose'
+            setTightness(val)
+            logEvent('route_tightness_changed', {
+              metadata: { tightness: val },
+            })
+          }}
+          className="w-full h-8 px-2 py-1 border rounded text-sm"
         >
-          <option value="tight">Compact (Walkable)</option>
+          <option value="tight">Compact</option>
           <option value="medium">Balanced</option>
-          <option value="loose">Spread Out (Explore More)</option>
+          <option value="loose">Explore</option>
         </select>
       </div>
 
       <div className="space-y-1">
         <Label className="text-xs font-semibold">Live Events Only</Label>
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showLiveEventsOnly}
-            onChange={(e) => setShowLiveEventsOnly(e.target.checked)}
-            className="accent-blue-500 dark:accent-blue-400"
-          />
-        </div>
+        <input
+          type="checkbox"
+          checked={showLiveEventsOnly}
+          onChange={(e) => {
+            setShowLiveEventsOnly(e.target.checked)
+            logEvent('live_events_toggle', {
+              metadata: { enabled: e.target.checked },
+            })
+          }}
+        />
       </div>
 
       <div className="space-y-1 pt-1">
-        <Button className="w-full h-8 text-sm dark:text-white" onClick={onGenerateRoute}>
+        <Button
+          className="w-full h-8 text-sm"
+          onClick={() => {
+            logEvent('generate_clicked', {
+              metadata: { city },
+            })
+            onGenerateRoute()
+          }}
+        >
           Generate Crawl
         </Button>
-        <Button variant="outline" className="w-full h-8 text-sm dark:text-white" onClick={onClearRoute}>
+        <Button
+          variant="outline"
+          className="w-full h-8 text-sm"
+          onClick={() => {
+            logEvent('clear_clicked', {
+              metadata: { city },
+            })
+            onClearRoute()
+          }}
+        >
           Clear Route
         </Button>
       </div>

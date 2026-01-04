@@ -8,6 +8,7 @@ import 'lrm-mapbox'
 
 import type { Venue } from '@/types/venue'
 import RoutePolyline from './RoutePolyline'
+import { logEvent } from '@/lib/logEvent' // ✅ NEW
 
 type RouteControlProps = {
   route: Venue[]
@@ -37,10 +38,8 @@ export default function RouteControl({
   const [polylineCoords, setPolylineCoords] = useState<LatLngExpression[]>([])
 
   useEffect(() => {
-    // Guard: must have valid map + at least two stops
     if (!map || !route || route.length < 2) return
 
-    // 🔥 Remove any previous routing instance before creating a new one
     if (controlRef.current) {
       try {
         map.removeControl(controlRef.current)
@@ -56,21 +55,18 @@ export default function RouteControl({
       return
     }
 
-    // Prepare valid waypoints
     const validWaypoints = route
       .map((v) => normalizeCoords(v.lat, v.lon))
       .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon))
 
     const latLngs = validWaypoints.map(([lat, lon]) => L.latLng(lat, lon))
 
-    // Create router instance
     const router = (L.Routing as any).mapbox(MAPBOX_TOKEN, {
       profile: `mapbox/${travelMode}`,
       language: 'en',
       polylinePrecision: 5,
     })
 
-    // Build control instance
     const control = L.Routing.control({
       waypoints: latLngs,
       router,
@@ -89,27 +85,36 @@ export default function RouteControl({
 
     controlRef.current = control
 
-    // ✅ Handle routing results
     control.on('routesfound', (e: any) => {
       const coords = e.routes[0].coordinates.map(
         (c: any) => [c.lat, c.lng] as [number, number]
       )
       setPolylineCoords(coords)
 
-      // Fit map bounds to route
-      map.fitBounds(L.latLngBounds(coords), { padding: [50, 50] })
+      const bounds = L.latLngBounds(coords)
+      map.fitBounds(bounds, { padding: [50, 50] })
+
+      // ✅ LOG route render
+      logEvent('route_rendered', {
+  metadata: {
+    num_stops: route.length,
+    travel_mode: travelMode,
+    polyline_length: coords.length,
+    bounds: {
+      sw: bounds.getSouthWest(),
+      ne: bounds.getNorthEast(),
+    },
+  },
+})
     })
 
-    // 🚨 Handle routing errors
     control.on('routingerror', (e: any) => {
       console.error('🚨 Routing error:', e?.error || e)
       setPolylineCoords([])
     })
 
-    // Add to map
     control.addTo(map)
 
-    // Cleanup on unmount or dependency change
     return () => {
       try {
         if (controlRef.current) {
@@ -123,7 +128,6 @@ export default function RouteControl({
     }
   }, [map, route, travelMode, color])
 
-  // Only render polyline once coordinates exist
   if (polylineCoords.length === 0) return null
 
   return <RoutePolyline coords={polylineCoords} color={color} />

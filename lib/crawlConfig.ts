@@ -85,29 +85,32 @@ export const crawlThemes: CrawlTheme[] = [
     ]
   },
   {
-  themeId: "december-crawl",
-  name: "December Crawl",
-  description: "A cozy, twinkling crawl through the city’s best holiday pop-ups, festive markets, warm drinks, and wintery bites.",
-  stageFlow: ["market", "random gem", "lunch", "lifestyle", "cocktail", "dinner", "bar"],
+  themeId: "gameday-vibes",
+  name: "Gameday Vibes",
+  description: "Settle into the city’s best sports bars, taprooms, and wing spots to catch the game in high-def with high vibes.",
+  stageFlow: ["lunch", "brewery", "bar", "bar", "cocktail"],
   filters: {
-    price: [1, 2, 3, 4],
+    price: [1, 2],
     timeOfDay: ["day", "evening", "night"],
     vibes: [
-      "festive", "holiday", "cozy", "twinkling", "seasonal", "cheer", "snowy", "warm", "spiced",
-      "lights", "winter", "magical", "nostalgic", "limited", "buzzy", "carols", "glow"
+      "sports", "rowdy", "screen", "beer", "gameday", "fans", "casual", "lively", "loud", "fun",
+      "tailgate", "chill", "celebratory", "teams", "energy", "crowd", "cheer", "wings", "burgers", "pitchers", "game", "football", "basketball", "baseball", "soccer", "social"
     ],
     tags: [
-      "market", "treat", "window", "lights", "holiday", "snow", "sweets", "bites", "bar", "pop-up", "cheer"
+      "bar", "brewery", "wings", "burgers", "screens", "pitchers", "game", "football", "basketball", "baseball"
     ],
     eventCategories: [
-      "holiday", "market", "food", "drinks", "christmas", "cozy", "decorated", "pop-up", "seasonal", "lights", "night walk"
+      "sports", "watch party", "drinks", "food", "bar", "brewery", "casual hang"
     ]
   },
   keywords: [
-    "holiday", "christmas", "seasonal", "festive", "hot chocolate", "mulled wine", "gingerbread",
-    "holiday market", "twinkle", "pop-up", "winter", "lights", "caroling", "cozy", "limited time",
-    "holiday menu", "cheer", "snow", "ice skate", "gift shopping", "cider", "peppermint"
-  ]
+  "gameday", "watchparty", "football", "superbowl", "collegeball", "nba", "tailgate",
+  "pitchers", "screens", "sportsbar", "wings", "burgers", "brewery", "celebrate",
+  "fange ar", "touchdown", "tipoff", "rivalry", "crowd",
+  "cheering", "kickoff", "buzzer", "halftime", "replay", "fans", "teams",
+  "squad", "highfive", "draft", "matchup", "lineup", "energy", "shout",
+  "barstool", "hangout", "clutch", "huddle", "moment", "cheer", "social"
+]
 },
   {
     themeId: "friends-night-out",

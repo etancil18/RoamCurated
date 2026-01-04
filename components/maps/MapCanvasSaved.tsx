@@ -14,6 +14,8 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 import type { Venue } from '@/types/venue'
+import { logEvent } from '@/lib/logEvent'
+import { logVenueImpression } from '@/lib/logVenue'
 
 const defaultCenter: Record<'atl' | 'nyc', [number, number]> = {
   atl: [33.749, -84.388],
@@ -110,6 +112,22 @@ export default function MapCanvasSaved({
     map.fitBounds(bounds, { padding: [50, 50] })
   }, [venues, polyline])
 
+  // ✅ LOG VENUE IMPRESSIONS FOR SAVED CRAWL MAP
+  useEffect(() => {
+    venues.forEach((v, index) => {
+      if (!v?.id) return
+
+      logEvent('saved_crawl_map_view', {
+        venue_id: v.id,
+        metadata: {
+          screen: 'saved_crawl_map',
+          city,
+          position_in_crawl: index,
+        },
+      })
+    })
+  }, [venues, city])
+
   return (
     <div className="h-screen w-screen relative">
       <MapContainer
@@ -158,6 +176,17 @@ export default function MapCanvasSaved({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
+                    onClick={() => {
+                      logVenueImpression('saved_crawl_more_info_click', {
+                        venue_id: v.id,
+                        metadata: {
+                          screen: 'saved_crawl_map',
+                          city,
+                          position_in_crawl: idx,
+                          name: v.name,
+                        },
+                      })
+                    }}
                   >
                     More Info
                   </a>

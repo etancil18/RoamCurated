@@ -14,7 +14,8 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet-routing-machine'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 import 'leaflet-extra-markers/dist/css/leaflet.extra-markers.min.css'
-
+import { logEvent } from '@/lib/logEvent'
+import { logVenueImpression } from '@/lib/logVenue'
 import type { Venue } from '@/types/venue'
 import RouteControl from '@/components/RouteControl'
 import { isVenueOpenNow } from '@/utils/timeUtils'
@@ -81,7 +82,7 @@ const themeColorMap: Record<string, string> = {
   'date-night': 'purple',
   'friends-night-out': 'red',
   'gallery-crawl': 'teal',
-  'december-crawl': 'pink',
+  'gameday-vibes': 'brown',
   'saturday-surge': 'gold',
   'solo-explorer': 'gray',
   'active-all-day': 'violet',
@@ -190,6 +191,15 @@ const visibleVenues = useMemo(() => {
 
 const lineColor = themeColorMap[themeId ?? ''] ?? 'cyan'
 
+useEffect(() => {
+  logEvent('map_opened', {
+    metadata: {
+      screen: 'map',
+      city,
+    },
+  })
+}, [city])
+
 
   /* ============================================================
      MAP TRANSITIONS & EFFECTS
@@ -293,14 +303,29 @@ const lineColor = themeColorMap[themeId ?? ''] ?? 'cyan'
           const venueEvents = eventsByVenueId[v.id] ?? []
 
           return (
-            <Marker
-              key={v.slug ?? v.name}
-              position={[v.lat, v.lon]}
-              icon={icon}
-              ref={(ref) => {
-                if (v.slug && ref) markerRefs.current[v.slug] = ref
-              }}
-            >
+          <Marker
+  key={v.slug ?? v.name}
+  position={[v.lat, v.lon]}
+  icon={icon}
+  ref={(ref) => {
+    if (v.slug && ref) markerRefs.current[v.slug] = ref
+  }}
+  eventHandlers={{
+    click: () => {
+      if (v?.id) {
+        logVenueImpression('map_marker_click', {
+          venue_id: v.id,
+          metadata: {
+            screen: 'map_marker',
+            city,
+            name: v.name,
+          },
+        })
+      }
+    },
+  }}
+>
+
               <Tooltip>{v.name}</Tooltip>
 
               <Popup>
@@ -339,15 +364,26 @@ const lineColor = themeColorMap[themeId ?? ''] ?? 'cyan'
                   </div>
 
                   {v.id && (
-                    <a
-                      href={`/venue-profile/${v.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      More Info
-                    </a>
-                  )}
+  <a
+    href={`/venue-profile/${v.id}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-600 underline"
+    onClick={() => {
+      logVenueImpression('map_more_info_click', {
+        venue_id: v.id,
+        metadata: {
+          screen: 'map_more_info',
+          city,
+          name: v.name,
+        },
+      })
+    }}
+  >
+    More Info
+  </a>
+)}
+
 
 
                   <FavoritesButton venue={v as Venue & { id: string }} />

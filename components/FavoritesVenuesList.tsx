@@ -6,6 +6,7 @@ import { Trash2, Tag } from 'lucide-react'
 import { removeFavoriteAction } from '@/app/favorites/actions'
 import type { FavoriteVenueData } from '@/validators/favorite'
 import type { FavoriteRecord } from '@/types/supabase'
+import { logVenueImpression } from '@/lib/logVenue' // ✅ LOGGING IMPORT
 
 type FavoriteWithParsedData = FavoriteRecord & { data: FavoriteVenueData }
 
@@ -38,7 +39,7 @@ export default function FavoritesVenuesList({
 
   return (
     <ul className="space-y-4">
-      {venues.map((fav) => {
+      {venues.map((fav, index) => {
         const { name, lat, lon, type, image_url, vibe_tags } = fav.data
 
         if (!fav.data) {
@@ -82,7 +83,19 @@ export default function FavoritesVenuesList({
               <div className="mt-3 flex gap-3 flex-wrap">
                 <button
                   className="text-xs flex items-center gap-1 text-blue-600 hover:underline"
-                  onClick={() => router.push(`/venue-profile/${fav.venue_id}`)}
+                  onClick={() => {
+                    // ✅ LOG VENUE IMPRESSION BEFORE NAVIGATING
+                    logVenueImpression('favorite_profile_clicked', {
+                      venue_id: fav.venue_id,
+                      metadata: {
+                        screen: 'favorites_list',
+                        position_in_list: index,
+                        name,
+                      },
+                    })
+
+                    router.push(`/venue-profile/${fav.venue_id}`)
+                  }}
                 >
                   View Profile
                 </button>
