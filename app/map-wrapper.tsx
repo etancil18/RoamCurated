@@ -6,9 +6,10 @@ import atlantaData from '@/data/atlanta'
 import nycData from '@/data/nyc'
 import type { Venue } from '@/types/venue'
 import CrawlControl from '@/components/maps/CrawlControl'
-import type { RouteOptions } from '@/lib/routeEngine'
 import { ControlPanel } from '@/components/ControlPanel'
 import { useUser } from '@/hooks/useUser'
+import { supabaseBrowser } from '@/lib/supabase/client'
+import type { Database } from '@/types/supabase'
 
 const MapCanvas = dynamic(() => import('@/components/maps/MapCanvas'), {
   ssr: false,
@@ -56,9 +57,12 @@ export default function MapWrapper() {
   const [tightness, setTightness] = useState<'tight' | 'medium' | 'loose'>('medium')
   const [showLiveEventsOnly, setShowLiveEventsOnly] = useState(false)
   const [routeErrorMessage, setRouteErrorMessage] = useState<string | null>(null)
+  const [crawlDate, setCrawlDate] = useState('')
+  const [crawlTime, setCrawlTime] = useState('')
 
   const { user } = useUser()
   const userId = user?.id
+  const supabase = supabaseBrowser()
 
   useEffect(() => {
     const raw = city === 'atl' ? atlantaData : nycData
@@ -115,6 +119,14 @@ export default function MapWrapper() {
     alert('Custom start location set. Generate your crawl when ready.')
   }
 
+  const computePlannedStartAt = () => {
+    if (crawlDate && crawlTime) {
+      const timestamp = new Date(`${crawlDate}T${crawlTime}`)
+      return isNaN(timestamp.getTime()) ? new Date().toISOString() : timestamp.toISOString()
+    }
+    return new Date().toISOString()
+  }
+
   const handleGenerateRoute = async () => {
     const fallbackCoords: Record<'atl' | 'nyc', { lat: number; lon: number }> = {
       atl: { lat: 33.749, lon: -84.388 },
@@ -123,35 +135,71 @@ export default function MapWrapper() {
 
     const startLat = customStart?.lat ?? fallbackCoords[city].lat
     const startLon = customStart?.lon ?? fallbackCoords[city].lon
+    const plannedStartAt = computePlannedStartAt()
+
+    if (!Array.isArray(visibleVenues) || visibleVenues.length === 0) {
+      setRouteErrorMessage(
+        `🛑 No venues available — adjust filters or search to build a crawl.`
+      )
+      return
+    }
 
     try {
       let data
+      let plannedStartAt = new Date().toISOString()
 
       if (selectedThemeId) {
-        const response = await fetch('/api/generate-theme', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            themeId: selectedThemeId,
-            userLat: startLat,
-            userLon: startLon,
-            venues: visibleVenues,
-            city,
-            options: {
-              maxStops: 6,
-              filterOpen: true,
-              tightness,
-              city,
-            },
-          }),
-        })
-        data = await response.json()
-      } else {
-        const options: RouteOptions = {
+  const response = await fetch('/api/generate-theme', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      themeId: selectedThemeId,
+      userLat: startLat,
+      userLon: startLon,
+      venues: visibleVenues,
+      city,
+      plannedStartAt,
+      options: {
+        maxStops: 6,
+        filterOpen: true,
+        tightness,
+      },
+    }),
+  });
+
+  if (response.status === 422) {
+    const errorJson = await response.json();
+    setRoute(undefined);
+    setRouteErrorMessage(
+      `⚠️ We couldn’t generate a route with this theme just now. Try adjusting your filters, time, or location for better results.`
+    );
+    return;
+  }
+
+  if (!response.ok) {
+    setRoute(undefined);
+    setRouteErrorMessage(
+      `⚠️ Something went wrong on our end. Please try again shortly.`
+    );
+    return;
+  }
+
+  data = await response.json();
+
+  if (!Array.isArray(data.route)) {
+    setRoute(undefined);
+    setRouteErrorMessage(
+      `⚠️ We couldn’t build a route with this theme. Try another one or tweak your inputs.`
+    );
+    return;
+  }
+}
+ else {
+        const options: any = {
           maxStops: 6,
           filterOpen: true,
           customStart: customStart ?? undefined,
-          startTime: new Date(),
+          startTime: plannedStartAt,
           tightness,
           city,
         }
@@ -167,7 +215,16 @@ export default function MapWrapper() {
             options,
           }),
         })
+
         data = await response.json()
+
+        if (!response.ok || !Array.isArray(data.route)) {
+          setRoute(undefined)
+          setRouteErrorMessage(
+            `🛑 Couldn’t generate route — crawl API returned no route.`
+          )
+          return
+        }
       }
 
       if (!Array.isArray(data.route) || data.route.length < 2) {
@@ -186,6 +243,53 @@ export default function MapWrapper() {
 
       setRouteErrorMessage(null)
       setRoute(data.route)
+
+     if (userId && plannedStartAt) {
+  try {
+    // get the browser Supabase client session token
+    const browserSupabase = supabaseBrowser()
+    const {
+      data: { session },
+    } = await browserSupabase.auth.getSession()
+
+    const accessToken = session?.access_token
+
+    if (!accessToken) {
+      console.warn('No Supabase session token — cannot save scheduled crawl')
+    } else {
+      const saveRes = await fetch('/api/scheduled-routes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          plannedStartAt,
+          route: data.route,
+          name: selectedThemeId
+            ? `${selectedThemeId} @ ${new Date(plannedStartAt).toLocaleString()}`
+            : `Scheduled Crawl @ ${new Date(plannedStartAt).toLocaleString()}`,
+        }),
+      })
+
+      const saved = await saveRes.json()
+
+      if (!saveRes.ok) {
+        console.error('❌ Save scheduled crawl failed:', saved)
+        setRouteErrorMessage(
+          `🛑 Couldn’t save scheduled crawl: ${saved.error || 'Unknown error'}`
+        )
+      } else {
+        console.log('✅ Scheduled crawl saved:', saved)
+      }
+    }
+  } catch (err) {
+    console.error('❌ Scheduled save error:', err)
+    setRouteErrorMessage('🛑 Couldn’t save scheduled crawl — check console for details.')
+  }
+}
+
+
 
       const ids = data.route.map((v: Venue) => v.id ?? v.name).join(',')
       const url = new URL(window.location.href)
@@ -268,8 +372,10 @@ export default function MapWrapper() {
           onClearRoute={handleClearRoute}
           tightness={tightness}
           setTightness={setTightness}
-          showLiveEventsOnly={showLiveEventsOnly}
-          setShowLiveEventsOnly={setShowLiveEventsOnly}
+          crawlDate={crawlDate}
+          setCrawlDate={setCrawlDate}
+          crawlTime={crawlTime}
+          setCrawlTime={setCrawlTime}
         />
       )}
 

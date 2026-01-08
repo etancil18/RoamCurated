@@ -81,7 +81,6 @@ const themeColorMap: Record<string, string> = {
   'creative-kickstart': 'orange',
   'date-night': 'purple',
   'friends-night-out': 'red',
-  'gallery-crawl': 'teal',
   'gameday-vibes': 'brown',
   'saturday-surge': 'gold',
   'solo-explorer': 'gray',

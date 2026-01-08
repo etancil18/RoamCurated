@@ -25,20 +25,27 @@ export const crawlThemes: CrawlTheme[] = [
   ]
 },
   {
-    themeId: "cheap-cheerful",
-    name: "Cheap & Cheerful",
-    description: "Low-budget gems, fast bites, and casual fun throughout the city.",
-    stageFlow: ["coffee", "market", "random gem", "gallery", "dinner", "bar"],
-    filters: {
-      price: [1, 2],
-      vibes: ["diner", "cheap", "budget", "street", "casual", "$", "bite", "fast", "local", "market", "takeout", "gallery", "food truck"],
-      tags: ["coffee", "market", "random gem", "gallery", "dinner", "bar"],
-      timeOfDay: ["day", "evening"],
-    },
-    keywords: [
-      "diner", "cheap", "budget", "street", "casual", "$", "bite", "fast", "local", "market", "takeout", "gallery", "food truck"
-    ]
+  "themeId": "cheap-cheerful",
+  "name": "Cheap & Cheerful",
+  "description": "Low-budget gems, fast bites, and casual fun throughout the city.",
+  "stageFlow": ["coffee", "market", "random gem", "gallery", "dinner", "bar"],
+  "filters": {
+    "price": [1, 2],
+    "vibes": [
+      "diner", "cheap", "budget", "street", "casual", "$", "bite", "fast", "local",
+      "market", "takeout", "gallery", "food truck", "friendly", "laid-back", "quirky",
+      "no-frills", "unpretentious", "daytime", "fun", "easy", "snappy"
+    ],
+    "tags": ["coffee", "market", "random gem", "gallery", "dinner", "bar"],
+    "timeOfDay": ["day", "evening"]
   },
+  "keywords": [
+    "diner", "cheap", "budget", "street", "casual", "$", "bite", "fast", "local",
+    "market", "takeout", "gallery", "food truck", "friendly", "laid-back", "quirky",
+    "no-frills", "snappy", "easy", "bargain", "hangout", "on-the-go", "lively",
+    "unpretentious", "simple", "affordable"
+  ]
+},
   {
     themeId: "chill-hang",
     name: "Chill Hang",
@@ -55,35 +62,58 @@ export const crawlThemes: CrawlTheme[] = [
     ]
   },
   {
-    themeId: "creative-kickstart",
-    name: "Creative Kickstart",
-    description: "Inspiration stops to fuel the imagination.",
-    stageFlow: ["coffee", "gallery", "random gem", "bookstore", "lunch"],
-    filters: {
-      price: [1, 2, 3],
-      tags: ["coffee", "gallery", "random gem", "bookstore", "lunch"],
-      vibes: ["studio", "journal", "sketch", "gallery", "quiet", "inspiration", "café", "bookstore", "sunny", "vinyl", "art", "notebook", "design", "creative space", "makers"],
-      timeOfDay: ["morning", "day"],
-    },
-    keywords: [
-      "studio", "journal", "sketch", "gallery", "quiet", "inspiration", "café", "bookstore", "sunny", "vinyl", "art", "notebook", "design", "creative space", "makers"
-    ]
+  themeId: "creative-kickstart",
+  name: "Creative Kickstart",
+  description: "Inspiration stops to fuel the imagination.",
+  stageFlow: ["coffee", "gallery", "random gem", "bookstore", "lunch"],
+  filters: {
+    price: [1, 2, 3],
+    tags: ["coffee", "gallery", "random gem", "bookstore", "lunch"],
+    vibes: [
+      "studio", "journal", "sketch", "gallery", "quiet", "inspiration", "café",
+      "bookstore", "sunny", "vinyl", "art", "notebook", "design", "creative space",
+      "makers", "colorful", "imaginative", "brainstorm", "cozy", "thoughtful", "ideas",
+      "workspace", "open-ended", "expressive"
+    ],
+    timeOfDay: ["morning", "day"]
   },
+  keywords: [
+    "studio", "journal", "sketch", "gallery", "quiet", "inspiration", "café",
+    "bookstore", "sunny", "vinyl", "art", "notebook", "design", "creative space",
+    "makers", "colorful", "thoughtful", "ideas", "imaginative", "brainstorm",
+    "sketchbook", "expressive", "concept", "muse", "creative"
+  ]
+},
   {
-    themeId: "date-night",
-    name: "Date Night",
-    description: "Romance, dim lights, and dessert to close the evening.",
-    stageFlow: ["dinner", "cocktail", "dessert"],
-    filters: {
-      price: [2, 3, 4],
-      vibes: ["romantic", "date spot", "cocktail", "jazz", "twilight", "vibe", "wine", "dim", "moody", "candlelit", "intimate", "charming", "slow-paced", "flirty", "cozy", "soft", "sweet", "elegant", "lush", "quiet", "dreamy", "gentle", "classic"],
-      tags: ["dinner", "cocktail", "dessert", "wine bar"],
-      timeOfDay: ["evening","night"],
-    },
-    keywords: [
-      "romantic", "date spot", "cocktail", "jazz", "twilight", "vibe", "wine", "dim", "moody", "candlelit", "intimate", "charming", "slow-paced", "flirty", "cozy", "soft", "sweet", "elegant", "lush", "quiet", "dreamy", "gentle", "classic"
-    ]
+  themeId: "date-night",
+  name: "Date Night",
+  description: "Romance, dim lights, and dessert to close the evening.",
+  stageFlow: ["dinner", "cocktail", "dessert"],
+  filters: {
+    price: [2, 3, 4],
+    timeOfDay: ["evening", "night"],
+    vibes: [
+      "romantic", "cocktail", "jazz", "twilight", "wine", "dim", "moody",
+      "candlelit", "intimate", "charming", "flirty", "cozy", "soft",
+      "sweet", "elegant", "lush", "quiet", "dreamy", "gentle", "classic",
+
+      "warm", "lowlit", "refined", "stylish", "serene", "sensual",
+      "plush", "polished", "tasteful", "inviting", "sultry", "relaxed",
+      "timeless", "romanticized", "velvety", "slow"
+    ],
+    tags: ["dinner", "cocktail", "dessert", "wine bar"],
   },
+  keywords: [
+    "romantic", "cocktail", "jazz", "twilight", "wine", "dim", "moody",
+    "candlelit", "intimate", "charming", "flirty", "cozy", "soft",
+    "sweet", "elegant", "lush", "quiet", "dreamy", "gentle", "classic",
+
+    "date", "night", "dinner", "dessert", "slow", "ambient",
+    "lowkey", "stylish", "refined", "warm", "softlight", "velvet",
+    "mood", "connection", "conversation", "chemistry", "spark",
+    "indulgent", "together"
+  ]
+},
   {
   themeId: "gameday-vibes",
   name: "Gameday Vibes",
@@ -113,20 +143,28 @@ export const crawlThemes: CrawlTheme[] = [
 ]
 },
   {
-    themeId: "friends-night-out",
-    name: "Friends Night Out",
-    description: "Food → pregame → party → questionable decisions.",
-    stageFlow: ["dinner", "bar", "bar", "club", "late-night"],
-    filters: {
-      price: [1, 2, 3],
-      vibes: ["loud", "shareable", "pitchers", "group dinner", "crowded", "bar", "dinner", "club", "dj", "party", "scene", "drinks", "late-night", "social", "vibrant", "group", "shots", "energy", "rowdy", "dance", "hype", "weekend", "pregame", "cheers", "lit"],
-      tags: ["dinner", "bar", "bar", "club", "late-night"],
-      timeOfDay: ["night","late-night"],
-    },
-    keywords: [
-      "loud", "shareable", "pitchers", "group dinner", "crowded", "bar", "dinner", "club", "dj", "party", "scene", "drinks", "late-night", "social", "vibrant", "group", "shots", "energy", "rowdy", "dance", "hype", "weekend", "pregame", "cheers", "lit"
-    ]
+  themeId: "friends-night-out",
+  name: "Friends Night Out",
+  description: "Food → pregame → party → questionable decisions.",
+  stageFlow: ["dinner", "bar", "bar", "club", "late-night"],
+  filters: {
+    price: [1, 2, 3],
+    vibes: [
+      "loud", "shareable", "pitchers", "group", "crowded", "bar", "dinner", "club", "dj",
+      "party", "scene", "drinks", "late-night", "social", "vibrant", "shots", "energy",
+      "rowdy", "dance", "hype", "weekend", "pregame", "cheers", "lit", "celebrate", "spontaneous",
+      "turnup", "toasts", "nightlife", "squad", "reckless"
+    ],
+    tags: ["dinner", "bar", "bar", "club", "late-night"],
+    timeOfDay: ["night", "late-night"]
   },
+  keywords: [
+    "loud", "shareable", "pitchers", "group", "crowded", "bar", "dinner", "club", "dj",
+    "party", "scene", "drinks", "late-night", "social", "vibrant", "shots", "energy",
+    "rowdy", "dance", "hype", "weekend", "pregame", "cheers", "lit", "toasts", "nightlife",
+    "squad", "celebrate", "reckless", "afterhours", "spontaneous", "turnup"
+  ]
+},
   {
     themeId: "gallery-crawl",
     name: "Gallery Crawl",
@@ -158,33 +196,50 @@ export const crawlThemes: CrawlTheme[] = [
     ]
   },
   {
-    themeId: "solo-explorer",
-    name: "Solo Explorer",
-    description: "Cozy solo spots and hidden gems for wandering.",
-    stageFlow: ["coffee", "museum",  "bookstore", "lunch", "lifestyle", "random gem", "wine bar"],
-    filters: {
-      price: [1, 2],
-      vibes: ["bookstore", "gallery", "quiet", "scenic", "café", "park", "rooftop", "garden", "introspective", "nook", "wander", "hidden spot", "photo walk"],
-      tags: ["coffee", "random gem", "bookstore", "market", "park", "rooftop"],
-      timeOfDay: ["day","evening"],
-    },
-    keywords: [
-      "bookstore", "gallery", "quiet", "scenic", "café", "park", "garden", "introspective", "nook", "wander", "hidden spot", "photo walk"
-    ]
+  themeId: "solo-explorer",
+  name: "Solo Explorer",
+  description: "Cozy solo spots and hidden gems for wandering.",
+  stageFlow: ["coffee", "museum", "bookstore", "lunch", "lifestyle", "random gem", "wine bar"],
+  filters: {
+    price: [1, 2],
+    vibes: [
+      "bookstore", "gallery", "quiet", "scenic", "café", "park", "garden", "introspective",
+      "nook", "wander", "hidden", "serene", "thoughtful", "breezy", "curious", "offbeat",
+      "reflective", "unplanned", "meander", "casual"
+    ],
+    tags: ["coffee", "random gem", "bookstore", "market", "park", "rooftop"],
+    timeOfDay: ["day", "evening"]
   },
+  keywords: [
+    "bookstore", "gallery", "quiet", "scenic", "café", "park", "garden", "introspective",
+    "nook", "wander", "hidden", "photo", "gem", "unplanned", "solo", "curious",
+    "museum", "artsy", "window", "vintage", "detour", "notebook", "meander", "reflective",
+    "breeze", "calm", "roam"
+  ]
+},
   {
   themeId: "sunday-reset",
   name: "Sunday Reset",
   description: "Restore your soul with quiet spaces, gentle wellness, and cozy comfort.",
-  stageFlow: ["fitness", "coffee",  "market", "lifestyle", "bookstore", "dinner"],
+  stageFlow: ["fitness", "coffee", "market", "lifestyle", "bookstore", "dinner"],
   filters: {
     price: [1, 2, 3],
-    vibes: ["garden", "tea", "spa", "quiet", "book", "relax", "wellness", "reflection", "meditation", "sunlight", "fresh", "slow"],
+    timeOfDay: ["morning", "day", "evening"],
+    vibes: [
+      "garden", "tea", "spa", "quiet", "book", "relax", "wellness", "reflection",
+      "meditation", "sunlight", "fresh", "slow",
+      "cozy", "warm", "soft", "restful", "breezy", "clean",
+      "mindful", "airy", "simple", "light", "nourish", "glow",
+      "reset", "peaceful", "unwind", "breathe"
+    ],
     tags: ["fitness", "market", "lifestyle", "bookstore", "dinner"],
-    timeOfDay: ["morning", "day", "evening"], 
   },
   keywords: [
-    "garden", "tea", "spa", "quiet", "book", "relax", "wellness", "reflection", "meditation", "sunlight", "fresh", "slow"
+    "garden", "tea", "spa", "quiet", "book", "relax", "wellness", "reflection",
+    "meditation", "sunlight", "fresh", "slow",
+    "sunday", "reset", "soft", "ritual", "cleanse", "calm",
+    "unwind", "balance", "nourish", "still", "glow", "breathe",
+    "yoga", "journal", "stretch", "flow", "routine", "lowkey"
   ]
 },
 {
@@ -195,13 +250,21 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     price: [1, 2, 3],
     tags: ["coffee", "lunch", "coffee", "cocktail"],
-    vibes: ["cafe", "wifi", "coffee", "focus", "remote-friendly", "laptop", "casual", "quiet", "workspace", "daytime", "study", "productive", "neighborhood", "light music", "comfortable seating"],
-    timeOfDay: ["morning", "day"],
+    vibes: [
+      "cafe", "wifi", "coffee", "focus", "remote-friendly", "laptop", "casual", "quiet",
+      "workspace", "daytime", "study", "productive", "neighborhood", "light music",
+      "comfortable seating", "independent", "easygoing", "minimal", "energized"
+    ],
+    timeOfDay: ["morning", "day"]
   },
   keywords: [
-    "cafe", "wifi", "coffee", "focus", "remote-friendly", "laptop", "casual", "quiet", "workspace", "daytime", "study", "productive", "neighborhood", "light music", "comfortable seating"
+    "cafe", "wifi", "coffee", "focus", "remote-friendly", "laptop", "casual", "quiet",
+    "workspace", "daytime", "study", "productive", "neighborhood", "light music",
+    "comfortable seating", "outlet", "windows", "concentration", "notebook", "journal",
+    "session", "solo", "sip", "menu", "relaxed", "airiness"
   ]
-},
+}
+,
 {
   themeId: "last-call",
   name: "Last Call",
@@ -225,10 +288,17 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["morning"],
     price: [1, 2],
+    vibes: [
+      "calm", "gentle", "quiet", "intentional", "sunlit", "light", "fresh",
+      "reflective", "still", "balanced", "restorative", "centered", "peaceful",
+      "cozy", "soft", "slowness", "natural", "clear", "grounded", "ease"
+    ]
   },
   keywords: [
     "yoga", "meditation", "spa", "sunlight", "tea", "calm", "minimal",
-    "introspective", "garden", "journal", "wellness", "fresh air", "stretch"
+    "introspective", "garden", "journal", "wellness", "fresh air", "stretch",
+    "breathe", "ritual", "balance", "clarity", "gentle", "routine", "mindful",
+    "morning", "flow", "reset", "ease", "solo", "cozy", "peace", "light"
   ]
 },
 {
@@ -239,11 +309,17 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["day", "evening"],
     price: [1, 2, 3],
+    vibes: [
+      "quiet", "cozy", "literary", "analog", "warm", "vintage", "reflective",
+      "moody", "artsy", "thoughtful", "bookish", "soft", "curated", "charming",
+      "elegant", "snug", "relaxed", "dreamy", "writerly", "poetic"
+    ]
   },
   keywords: [
     "bookstore", "quiet", "cozy", "literary", "analog", "warm", "vintage",
     "library", "indie", "wine", "reflective", "moody", "ink", "writerly",
-    "poetic", "sips"
+    "poetic", "sips", "sofa", "read", "pages", "glass", "conversation", "culture",
+    "gallery", "ambient", "slow", "soft"
   ]
 },
 {
@@ -254,11 +330,17 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["evening", "night"],
     price: [2, 3, 4],
+    vibes: [
+      "rowdy", "flashy", "high-energy", "social", "crowded", "fun", "late", "wild",
+      "buzzing", "glow", "pulsing", "neon", "afterdark", "boozy", "bold",
+      "hype", "intense", "buzzy", "playful", "electric"
+    ]
   },
   keywords: [
     "club", "dance", "beats", "late", "dj", "loud", "drinks", "bar",
-    "crowded", "energy", "flashy", "after hours", "party", "scene",
-    "friends night out", "rowdy", "weekend", "pregame", "lit", "cheers", "social"
+    "crowded", "energy", "flashy", "afterhours", "party", "scene",
+    "friends", "rowdy", "weekend", "pregame", "lit", "cheers", "social",
+    "shots", "celebrate", "nightout", "hype", "bass", "vibes", "neon", "rooftop"
   ]
 },
 {
@@ -269,11 +351,17 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["evening"],
     price: [1, 2, 3],
+    vibes: [
+      "relaxed", "cooldown", "casual", "afterwork", "patio", "easy", "laidback",
+      "mellow", "chill", "breezy", "social", "unwind", "refined", "slow",
+      "ambient", "light", "buzz", "friendly", "winddown", "lowkey"
+    ]
   },
   keywords: [
     "happy hour", "bar", "tapas", "light bite", "craft beer", "after work",
     "relax", "casual", "patio", "drinks", "mingle", "unwind", "refresh",
-    "lowkey", "cooldown", "ambient", "hangout", "winddown", "ease"
+    "lowkey", "cooldown", "ambient", "hangout", "winddown", "ease",
+    "chill", "lounge", "laidback", "slow", "evening", "buzz", "friendly"
   ]
 },
 {
@@ -284,10 +372,17 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["day"],
     price: [1, 2, 3],
+    vibes: [
+      "calm", "serene", "gentle", "restful", "quiet", "mindful", "soothing",
+      "grounded", "soft", "warm", "peaceful", "healing", "slow", "nourishing",
+      "private", "intentional", "cozy", "balanced", "reflective", "restorative"
+    ]
   },
   keywords: [
     "spa", "relax", "yoga", "meditation", "serenity", "retreat", "tea",
-    "calm", "detox", "massage", "rejuvenate", "peace"
+    "calm", "detox", "massage", "rejuvenate", "peace",
+    "wellness", "breathe", "stillness", "reset", "balance", "restore",
+    "solo", "gentle", "quiet", "soft", "unwind", "care"
   ]
 },
 {
@@ -298,12 +393,17 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["morning"],
     price: [1, 2],
+    vibes: [
+      "fresh", "early", "sunrise", "cozy", "quiet", "mindful", "energizing", "slow",
+      "breezy", "grounded", "warm", "natural", "gentle", "routine", "restorative",
+      "soft", "peaceful", "intentional", "inviting", "morning"
+    ]
   },
   keywords: [
     "coffee", "matcha", "sunrise", "morning", "café", "bakery", "brunch", "acai",
     "patio", "quiet", "fresh", "early", "energizing", "routine", "mindful",
     "stretch", "wellness", "cozy", "warm", "comforting", "inviting",
-    "breeze", "peaceful", "slow", "outdoor"
+    "breeze", "peaceful", "slow", "outdoor", "daylight", "granola", "leisurely", "reset"
   ]
 },
 {
@@ -314,11 +414,17 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["day"],
     price: [1, 2, 3],
+    vibes: [
+      "refresh", "sunny", "breezy", "chill", "casual", "cozy", "relaxed",
+      "light", "calm", "neighborhood", "pause", "airy", "open", "flow",
+      "quiet", "easy", "slow", "soft", "unwind", "clean"
+    ]
   },
   keywords: [
-    "lunch", "coffee", "café", "juice", "quick bite", "park", "sunlight", "relaxed",
-    "low key", "grab-and-go", "outdoor", "break", "neighborhood", "casual",
-    "breezy", "chill", "easygoing"
+    "lunch", "coffee", "café", "juice", "quick", "park", "sunlight", "relaxed",
+    "casual", "chill", "grab", "outdoor", "neighborhood", "gallery",
+    "pause", "break", "breezy", "open", "lowkey", "refresh",
+    "easygoing", "cozy", "clean", "flow"
   ]
 }
 ];

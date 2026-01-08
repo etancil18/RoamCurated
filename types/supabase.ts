@@ -418,6 +418,42 @@ export type Database = {
           },
         ]
       }
+      route_failures: {
+        Row: {
+          attempted_at: string | null
+          city: string
+          created_at: string | null
+          error: string | null
+          filter_params: Json | null
+          id: string
+          source: string | null
+          theme: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          city: string
+          created_at?: string | null
+          error?: string | null
+          filter_params?: Json | null
+          id?: string
+          source?: string | null
+          theme?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attempted_at?: string | null
+          city?: string
+          created_at?: string | null
+          error?: string | null
+          filter_params?: Json | null
+          id?: string
+          source?: string | null
+          theme?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       route_requests: {
         Row: {
           crawl_theme: string | null
@@ -492,6 +528,50 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      scheduled_routes: {
+        Row: {
+          crawl_id: string | null
+          created_at: string
+          id: string
+          name: string | null
+          planned_start_at: string
+          route_data: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          crawl_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          planned_start_at: string
+          route_data?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          crawl_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          planned_start_at?: string
+          route_data?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_routes_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "crawl_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       spatial_ref_sys: {
         Row: {
@@ -2072,7 +2152,6 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
 
 
 // -----------------------

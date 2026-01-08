@@ -26,6 +26,7 @@ export type ThemeRouteOptions = {
   filterOpen?: boolean; // true = strict (must be open at arrival), false = relaxed (can open within 90 mins)
   maxDistanceMeters?: number;
   eventOnly?: boolean; // NEW — limit to events only
+  relaxedTimeFiltering?: boolean; // 🔑 NEW — allows openSoon or future fallback in tighter filters
 };
 
 export type Stage = {

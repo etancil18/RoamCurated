@@ -10,14 +10,11 @@ const DEFAULTS = {
   fallbackWindowMinutes: 90,
 };
 
-/**
- * These match the thresholds used in generate-crawl.
- */
 const CITY_DISTANCE_THRESHOLDS: Record<
   "atl" | "nyc",
   Record<"tight" | "medium" | "loose", number>
 > = {
-  atl: { tight: 900, medium: 1700, loose: 3500 },
+  atl: { tight: 900, medium: 2000, loose: 3500 },
   nyc: { tight: 400, medium: 1200, loose: 2000 },
 };
 
@@ -32,14 +29,14 @@ export interface ThemeRouteOptions {
   /** NEW 👇 */
   city?: "atl" | "nyc";
   tightness?: "tight" | "medium" | "loose";
-  maxDistanceMeters?: number; // Allows API to directly pass
-  eventOnly?: boolean; // ✅ NEW — limit generation strictly to event venues
+  maxDistanceMeters?: number;
+  eventOnly?: boolean;
+
+  /** 🔑 Scheduled crawl support */
+  startTime?: Date;
+  relaxedTimeFiltering?: boolean;
 }
 
-/**
- * Generates a themed crawl route from a user's location and theme ID.
- * Includes dynamic event prioritization and optional event-only filtering.
- */
 export async function generateThemeRoute({
   userLat,
   userLon,
@@ -47,12 +44,12 @@ export async function generateThemeRoute({
   venues,
   maxStops = DEFAULTS.maxStops,
   filterOpen = true,
-
-  /** NEW defaults */
   city = "atl",
   tightness = "medium",
   maxDistanceMeters,
   eventOnly = false,
+  startTime = new Date(),
+  relaxedTimeFiltering = false,
 }: ThemeRouteOptions): Promise<Venue[]> {
   const theme = themeById[themeId];
   if (!theme) {
@@ -62,12 +59,10 @@ export async function generateThemeRoute({
 
   const stageFlow = generateStageFlow(theme);
 
-  // 🧩 Filter base venue pool
   let pool = venues.filter(
     (v) => typeof v.lat === "number" && typeof v.lon === "number"
   );
 
-  // 🧩 If eventOnly flag is true, narrow pool strictly to event venues
   if (eventOnly) {
     pool = pool.filter(
       (v) =>
@@ -81,11 +76,6 @@ export async function generateThemeRoute({
     return [];
   }
 
-  /**
-   * Final distance threshold:
-   * - Prefer explicit maxDistanceMeters passed from API
-   * - Otherwise compute via city + tightness
-   */
   const effectiveMaxDistance =
     maxDistanceMeters ??
     CITY_DISTANCE_THRESHOLDS[city]?.[tightness] ??
@@ -96,12 +86,13 @@ export async function generateThemeRoute({
     tightness,
     effectiveMaxDistance,
     eventOnly,
+    relaxedTimeFiltering,
   });
 
   const route: Venue[] = [];
   let lastLat = userLat;
   let lastLon = userLon;
-  let currentTime = new Date();
+  let currentTime = new Date(startTime);
 
   for (let i = 0; i < stageFlow.length && route.length < maxStops; i++) {
     const desiredType = stageFlow[i];
@@ -112,17 +103,15 @@ export async function generateThemeRoute({
       selected: new Set(route.map((v) => v.id ?? v.name)),
       theme,
       stageArrivalTime: currentTime,
-      relaxedMode: !filterOpen,
+      relaxedMode: relaxedTimeFiltering,
       windowMinutes: DEFAULTS.fallbackWindowMinutes,
     });
 
-    /** 🚀 Filter by max hop distance */
     candidates = candidates.filter((v) => {
       const dist = getDistanceMeters(lastLat, lastLon, v.lat, v.lon);
       return dist <= effectiveMaxDistance;
     });
 
-    /** 🎭 Dynamic event logic injection */
     candidates = candidates.map((v) => {
       const base = { ...v } as any;
       const now = new Date();
@@ -131,7 +120,6 @@ export async function generateThemeRoute({
         const startTime = new Date((v as any).starts_at ?? now);
         const timeDiffHours = Math.abs(startTime.getTime() - now.getTime()) / 3600000;
 
-        // Stronger boost if event is happening within next 2h
         let eventBoost = 600;
         if (timeDiffHours <= 2) eventBoost = 1000;
         if (timeDiffHours <= 0.5) eventBoost = 1300;
@@ -142,7 +130,6 @@ export async function generateThemeRoute({
       return base;
     });
 
-    /** 🎯 Apply final scoring */
     let sorted = sortVenuesByScore(
       candidates,
       theme,
@@ -150,7 +137,6 @@ export async function generateThemeRoute({
       route[route.length - 1] || null
     );
 
-    // Apply event boosts after sorting
     sorted = sorted.map((v) => {
       const boostedScore = (v._score ?? 0) + (v._eventBoost ?? 0);
       return { ...v, _score: boostedScore };

@@ -3,16 +3,44 @@ import type { Venue } from "@/types/venue";
 import { matchesThemeFilters } from "../../utils/typeUtils";
 import { isVenueOpenAtTime, isVenueOpenWithinWindow } from "../../utils/timeUtils";
 
-const TYPE_MATCH_MAP: Record<string, string[]> = {
-  bar: ["bar", "pub", "tavern", "brewery"],
-  cafe: ["cafe", "coffee", "espresso"],
-  club: ["club", "nightclub", "disco"],
-  lounge: ["lounge", "cocktail"],
-  gallery: ["gallery", "art"],
-  dessert: ["dessert", "ice cream", "gelato"],
-  wine: ["wine", "vintner"],
-  fitness: ["gym", "studio", "fitness"],
-  // Extend as needed
+const TYPE_MATCH_MAP: Record<string, string[]> = { 
+   // Food & Drink
+  bar: ["bar", "pub", "tavern", "brewery", "gastropub", "taproom", "sports bar", "happy hour"],
+  lounge: ["lounge", "cocktail", "speakeasy", "rooftop bar", "hotel bar"],
+  club: ["club", "nightclub", "disco", "dance hall"],
+  cafe: ["cafe", "coffee", "espresso", "bakery", "café"],
+  wine: ["wine", "wine bar", "vintner", "tasting room"],
+  dessert: ["dessert", "ice cream", "gelato", "pastry", "sweets"],
+  dinner: ["restaurant", "diner", "tapas", "bistro", "brasserie", "grill", "eatery"],
+  lunch: ["lunch spot", "cafe", "deli", "sandwich", "salad", "casual dining"],
+  cocktail: ["cocktail", "spirit", "mixology", "bar", "speakeasy", "rooftop"],
+  "late-night": ["late night", "after hours", "food truck", "24 hour", "night bite"],
+
+  // Cultural & Creative
+  gallery: ["gallery", "art", "exhibit", "installation"],
+  bookstore: ["bookstore", "books", "reading room", "literary"],
+  museum: ["museum", "history", "exhibit", "science center"],
+  lifestyle: ["boutique", "clothing", "fashion", "records", "vinyl", "home goods", "concept store", "retail", "design"],
+  random: ["hidden gem", "quirky", "unexpected", "eclectic", "offbeat"],
+
+  // Outdoor & Leisure
+  park: ["park", "green space", "botanical", "garden", "outdoor"],
+  market: ["market", "farmers market", "bazaar", "flea market", "street market"],
+  rooftop: ["rooftop", "viewpoint", "skyline", "terrace", "high-rise"],
+
+  // Wellness & Fitness
+  spa: ["spa", "massage", "facial", "sauna", "retreat"],
+  fitness: ["gym", "studio", "fitness", "yoga", "pilates", "spin", "workout"],
+  wellness: ["wellness", "meditation", "breathwork", "infrared", "sound bath"],
+
+  // Events & Entertainment
+  screening: ["screening", "watch party", "theater", "cinema", "sports bar"],
+  event: ["event", "festival", "performance", "live music", "comedy"],
+
+  // Specific Activities
+  game: ["arcade", "game night", "ping pong", "pool hall", "sports lounge"],
+  tea: ["tea", "matcha", "herbal", "tea room", "chai"],
+  juice: ["juice", "smoothie", "acai", "cleanse", "organic"],
 };
 
 function matchesVenueType(venueType: unknown, desiredCategory: string): boolean {
@@ -51,14 +79,14 @@ export function selectCandidates({
   relaxedMode?: boolean;
   windowMinutes?: number;
 }): Venue[] {
+  const isFutureCrawl = stageArrivalTime.getTime() > Date.now();
+
   return venues.filter((v) => {
     const venueId = v.id || v.name;
 
-    // 💡 Allow events through even if stage type mismatched
     const isEventVenue =
       v.type?.includes("event") || (v as any).liveEvent === true;
 
-    // 💥 Event category filtering (if theme specifies them)
     if (isEventVenue && Array.isArray(theme.filters?.eventCategories)) {
       const eventCategory = (v as any).eventCategory?.toLowerCase();
       const matchesCategory = eventCategory
@@ -70,20 +98,15 @@ export function selectCandidates({
       if (!matchesCategory) return false;
     }
 
-    // Skip venue if it's not an event and doesn't match the stage type
     if (!isEventVenue && !matchesVenueType(v.type, stageType)) return false;
 
-    // Skip already selected venues
     if (selected.has(venueId)) return false;
 
-    // Time filtering
     const openNow = isVenueOpenAtTime(v, stageArrivalTime);
-    const opensSoon = relaxedMode
-      ? isVenueOpenWithinWindow(v, stageArrivalTime, windowMinutes)
-      : false;
-    if (!openNow && !opensSoon) return false;
+    const opensSoon = isVenueOpenWithinWindow(v, stageArrivalTime, windowMinutes);
 
-    // Price filter
+    if (!(openNow || opensSoon || (isFutureCrawl && relaxedMode))) return false;
+
     if (
       Array.isArray(theme.filters.price) &&
       theme.filters.price.length > 0 &&
@@ -93,7 +116,6 @@ export function selectCandidates({
       if (!theme.filters.price.includes(priceValue)) return false;
     }
 
-    // Tag filter
     if (
       Array.isArray(theme.filters.tags) &&
       theme.filters.tags.length > 0 &&
@@ -106,7 +128,6 @@ export function selectCandidates({
       if (!matches) return false;
     }
 
-    // Vibe filter
     if (
       Array.isArray(theme.filters.vibes) &&
       theme.filters.vibes.length > 0 &&

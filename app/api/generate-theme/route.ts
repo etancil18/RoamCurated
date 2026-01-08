@@ -7,7 +7,6 @@ import type { ThemeRouteOptions } from "@/lib/theme-engine/types";
 
 /**
  * Per‑city distance thresholds for “tightness”
- * All values are maximum allowed meters between stops.
  */
 const CITY_DISTANCE_THRESHOLDS = {
   atl: { tight: 1200, medium: 2500, loose: 4500 },
@@ -25,6 +24,7 @@ export async function POST(req: NextRequest) {
       userLon,
       options = {},
       city,
+      plannedStartAt: plannedStartAtTop,
     } = body as {
       themeId: string;
       venues: Venue[];
@@ -32,20 +32,30 @@ export async function POST(req: NextRequest) {
       userLon: number;
       options?: Record<string, any>;
       city?: "atl" | "nyc";
+      plannedStartAt?: string;
     };
 
     /** ------------------ Validation ------------------ **/
     if (!themeId || typeof themeId !== "string") {
-      return NextResponse.json({ error: "Missing or invalid themeId" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing or invalid themeId" },
+        { status: 400 }
+      );
     }
 
     const theme = themeById[themeId];
     if (!theme) {
-      return NextResponse.json({ error: `Theme not found: ${themeId}` }, { status: 404 });
+      return NextResponse.json(
+        { error: `Theme not found: ${themeId}` },
+        { status: 404 }
+      );
     }
 
     if (!Array.isArray(venues) || venues.length === 0) {
-      return NextResponse.json({ error: "Venues must be a non-empty array." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Venues must be a non-empty array." },
+        { status: 400 }
+      );
     }
 
     if (
@@ -54,7 +64,10 @@ export async function POST(req: NextRequest) {
       isNaN(userLat) ||
       isNaN(userLon)
     ) {
-      return NextResponse.json({ error: "Invalid or missing user location." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or missing user location." },
+        { status: 400 }
+      );
     }
 
     if (!city || (city !== "atl" && city !== "nyc")) {
@@ -64,6 +77,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /** ------------------ Planned Start / Relaxed Mode ------------------ **/
+    const plannedStartAt =
+      plannedStartAtTop ?? options.plannedStartAt ?? null;
+
+    let startTime: Date | undefined;
+    let relaxedTimeFiltering = false;
+
+    if (plannedStartAt) {
+      const parsed = new Date(plannedStartAt);
+      if (isNaN(parsed.getTime())) {
+        return NextResponse.json(
+          { error: "Invalid plannedStartAt format" },
+          { status: 400 }
+        );
+      }
+
+      startTime = parsed;
+      if (parsed > new Date()) {
+        relaxedTimeFiltering = true;
+      }
+    }
+
     /** ------------------ Tightness → Max Distance ------------------ **/
     const tightness: "tight" | "medium" | "loose" = options.tightness ?? "medium";
     const maxDistanceMeters =
@@ -71,22 +106,24 @@ export async function POST(req: NextRequest) {
       CITY_DISTANCE_THRESHOLDS[city].medium;
 
     /** ------------------ Custom Start Logic ------------------ **/
-    const startTime = options.startTime ? new Date(options.startTime) : new Date();
     const customLat = options.customStart?.lat;
     const customLon = options.customStart?.lon;
 
     const originLat =
-      typeof customLat === "number" && !isNaN(customLat) ? customLat : userLat;
-    const originLon =
-      typeof customLon === "number" && !isNaN(customLon) ? customLon : userLon;
+      typeof customLat === "number" && !isNaN(customLat)
+        ? customLat
+        : userLat;
 
-    /** ------------------ Event Logic Flags ------------------ **/
+    const originLon =
+      typeof customLon === "number" && !isNaN(customLon)
+        ? customLon
+        : userLon;
+
+    /** ------------------ Event Logic ------------------ **/
     const includeEvents: boolean = options.includeEvents ?? true;
     const eventOnly: boolean = options.eventOnly ?? false;
 
-    /** ------------------ Fetch & Merge ------------------ **/
     let eventVenues: Venue[] = [];
-
     if (includeEvents || eventOnly) {
       const liveEvents = await fetchLiveEventsForCity(city);
       eventVenues = liveEvents.map((ev) => ({
@@ -95,28 +132,25 @@ export async function POST(req: NextRequest) {
       }));
     }
 
-    let mergedVenues: Venue[];
+    /** ------------------ Merge Venues ------------------ **/
+    const allVenuesMap = new Map<string, Venue>();
+    venues.forEach((v) => allVenuesMap.set(v.id, v));
+    eventVenues.forEach((ev) => allVenuesMap.set(ev.id, ev));
+    const mergedVenues = Array.from(allVenuesMap.values());
 
-    if (eventOnly) {
-      mergedVenues = eventVenues;
-    } else {
-      const allVenuesMap = new Map<string, Venue>();
-      venues.forEach((v) => allVenuesMap.set(v.id, v));
-      eventVenues.forEach((ev) => allVenuesMap.set(ev.id, ev));
-      mergedVenues = Array.from(allVenuesMap.values());
-    }
-
-    console.log("🎨 Theme‑based route input:", {
+    /** ------------------ Debug Log ------------------ **/
+    console.log("🎨 Theme crawl input", {
       theme: theme.name,
-      startLat: originLat,
-      startLon: originLon,
+      city,
       totalVenues: mergedVenues.length,
       eventCount: eventVenues.length,
-      options,
+      plannedStartAt,
+      relaxedTimeFiltering,
+      maxDistanceMeters,
     });
 
-    /** ------------------ Primary Route Attempt ------------------ **/
-    const route = await generateThemeRoute({
+    /** ------------------ Build Route Options ------------------ **/
+    const routeOptions: ThemeRouteOptions = {
       themeId,
       venues: mergedVenues,
       userLat: originLat,
@@ -125,36 +159,41 @@ export async function POST(req: NextRequest) {
       filterOpen: options.filterOpen ?? true,
       maxDistanceMeters,
       eventOnly,
-    } satisfies ThemeRouteOptions);
+      startTime,
+      relaxedTimeFiltering, // 🔑 critical fix
+    };
+
+    /** ------------------ Primary Route ------------------ **/
+    const route = await generateThemeRoute(routeOptions);
 
     if (!route || route.length === 0) {
-      console.warn("⚠️ Primary theme route generation failed. Attempting fallback without open filter…");
-
       const fallbackRoute = await generateThemeRoute({
-        themeId,
-        venues: mergedVenues,
-        userLat: originLat,
-        userLon: originLon,
-        maxStops: options.maxStops ?? 6,
+        ...routeOptions,
         filterOpen: false,
-        maxDistanceMeters,
-        eventOnly,
-      } satisfies ThemeRouteOptions);
+      });
 
       if (!fallbackRoute || fallbackRoute.length === 0) {
         return NextResponse.json(
-          { error: "No valid route could be generated, even with fallback." },
+          {
+            error: "No viable route could be generated.",
+            reason: "Theme filters too strict or venues unavailable at selected time.",
+          },
           { status: 422 }
         );
       }
 
-      console.log(`✅ Fallback theme route generated with ${fallbackRoute.length} stops`);
-      return NextResponse.json({ route: fallbackRoute, fallbackUsed: true });
+      return NextResponse.json({
+        route: fallbackRoute,
+        fallbackUsed: true,
+        plannedStartAt: startTime?.toISOString() ?? null,
+      });
     }
 
-    /** ------------------ Success ------------------ **/
-    console.log(`✅ Theme route generated with ${route.length} stops`);
-    return NextResponse.json({ route, fallbackUsed: false });
+    return NextResponse.json({
+      route,
+      fallbackUsed: false,
+      plannedStartAt: startTime?.toISOString() ?? null,
+    });
   } catch (err: any) {
     console.error("❌ Theme route generation failed:", err);
     return NextResponse.json(
