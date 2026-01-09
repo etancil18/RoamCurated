@@ -23,7 +23,7 @@ interface ControlPanelProps {
   setCrawlDate: (date: string) => void
   crawlTime: string
   setCrawlTime: (time: string) => void
-  onGenerateRoute: (plannedStartAt?: string) => void
+  onGenerateRoute: (plannedStartAt?: string | Date) => void
   onClearRoute: () => void
 }
 
@@ -80,7 +80,16 @@ export function ControlPanel({
   }
 
   const handleGenerateClick = () => {
-    const plannedStartAt = isScheduled && crawlDate && crawlTime ? `${crawlDate}T${crawlTime}:00Z` : undefined
+    const plannedStartAt =
+      isScheduled && crawlDate && crawlTime
+        ? (() => {
+            const [year, month, day] = crawlDate.split("-").map(Number)
+            const [hour, minute] = crawlTime.split(":").map(Number)
+            const localDate = new Date(year, month - 1, day, hour, minute)
+            return localDate.toISOString()
+          })()
+        : undefined
+
     logEvent('generate_clicked', { metadata: { city, plannedStartAt } })
     onGenerateRoute(plannedStartAt)
   }

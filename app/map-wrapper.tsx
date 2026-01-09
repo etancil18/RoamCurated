@@ -146,7 +146,6 @@ export default function MapWrapper() {
 
     try {
       let data
-      let plannedStartAt = new Date().toISOString()
 
       if (selectedThemeId) {
   const response = await fetch('/api/generate-theme', {
@@ -396,15 +395,17 @@ export default function MapWrapper() {
       />
 
       <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
-        <MapCanvas
-          venues={visibleVenues}
-          route={route}
-          city={city}
-          onMapClick={handleMapClick}
-          themeId={selectedThemeId}
-          travelMode={travelMode}
-          showLiveEventsOnly={showLiveEventsOnly}
-        />
+        {typeof window !== 'undefined' && (
+  <MapCanvas
+    venues={visibleVenues ?? []}
+    route={route ?? []}
+    city={city}
+    onMapClick={handleMapClick}
+    themeId={selectedThemeId}
+    travelMode={travelMode}
+    showLiveEventsOnly={showLiveEventsOnly}
+  />
+)}
       </Suspense>
     </main>
   )

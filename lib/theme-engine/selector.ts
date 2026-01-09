@@ -1,7 +1,11 @@
 import type { CrawlTheme } from "@/lib/theme-engine/types";
 import type { Venue } from "@/types/venue";
 import { matchesThemeFilters } from "../../utils/typeUtils";
-import { isVenueOpenAtTime, isVenueOpenWithinWindow } from "../../utils/timeUtils";
+import {
+  isVenueOpenAtTime,
+  isVenueOpenWithinWindow,
+  daypartAllowedAtTime,
+} from "../../utils/timeUtils";
 
 const TYPE_MATCH_MAP: Record<string, string[]> = { 
    // Food & Drink
@@ -47,7 +51,6 @@ function matchesVenueType(venueType: unknown, desiredCategory: string): boolean 
   if (!venueType) return false;
 
   const types = Array.isArray(venueType) ? venueType : [venueType];
-
   const keywords = TYPE_MATCH_MAP[desiredCategory];
 
   return types.some((t) => {
@@ -87,6 +90,7 @@ export function selectCandidates({
     const isEventVenue =
       v.type?.includes("event") || (v as any).liveEvent === true;
 
+    // Filter by event category if applicable
     if (isEventVenue && Array.isArray(theme.filters?.eventCategories)) {
       const eventCategory = (v as any).eventCategory?.toLowerCase();
       const matchesCategory = eventCategory
@@ -94,19 +98,25 @@ export function selectCandidates({
             eventCategory.includes(cat.toLowerCase())
           )
         : false;
-
       if (!matchesCategory) return false;
     }
 
+    // Match non-event types
     if (!isEventVenue && !matchesVenueType(v.type, stageType)) return false;
 
+    // Skip already selected
     if (selected.has(venueId)) return false;
 
+    // Time filters (open now, opens soon, or relaxed if future)
     const openNow = isVenueOpenAtTime(v, stageArrivalTime);
     const opensSoon = isVenueOpenWithinWindow(v, stageArrivalTime, windowMinutes);
 
     if (!(openNow || opensSoon || (isFutureCrawl && relaxedMode))) return false;
 
+    // Daypart filter — ensure time-accurate filtering
+    if (!daypartAllowedAtTime(v, stageArrivalTime)) return false;
+
+    // Price filter
     if (
       Array.isArray(theme.filters.price) &&
       theme.filters.price.length > 0 &&
@@ -116,6 +126,7 @@ export function selectCandidates({
       if (!theme.filters.price.includes(priceValue)) return false;
     }
 
+    // Tag filter
     if (
       Array.isArray(theme.filters.tags) &&
       theme.filters.tags.length > 0 &&
@@ -128,6 +139,7 @@ export function selectCandidates({
       if (!matches) return false;
     }
 
+    // Vibe filter
     if (
       Array.isArray(theme.filters.vibes) &&
       theme.filters.vibes.length > 0 &&

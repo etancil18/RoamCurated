@@ -1,7 +1,10 @@
 // lib/routeEngine.ts
 
 import type { Venue } from "@/types/venue";
-import { _intervalsForDate, daypartAllowedForNow } from "@/utils/timeUtils";
+import {
+  _intervalsForDate,
+  daypartAllowedAtTime, // ✅ FIXED — future‑aware
+} from "@/utils/timeUtils";
 import { vibeSimilarity } from "@/utils/vibeUtils";
 import { hasType, isMealType } from "@/utils/typeUtils";
 import { sequencedStagesForNow } from "@/utils/stageUtils";
@@ -17,17 +20,15 @@ export interface RouteOptions {
   theme?: string;
   eventOnly?: boolean;
 
-  /** NEW — distance tightness */
+  /** Distance control */
   tightness?: "tight" | "medium" | "loose";
-
-  /** OPTIONAL overrides */
   maxDistMeal?: number;
   maxDistOther?: number;
 
-  /** NEW — city */
+  /** City scaling */
   city?: "atl" | "nyc";
 
-  /** 🔑 NEW — scheduling support */
+  /** Scheduling mode */
   relaxedTimeFiltering?: boolean;
 }
 
@@ -48,6 +49,9 @@ export async function generateRoute(
   userLon: number,
   opts: RouteOptions = {}
 ): Promise<Venue[]> {
+  /** ---------------------------------------------
+   * 0) Normalize startTime (CRITICAL)
+   * -------------------------------------------- */
   const rawStartTime = opts.startTime;
   const startTime =
     rawStartTime instanceof Date
@@ -70,9 +74,9 @@ export async function generateRoute(
     relaxedTimeFiltering = false,
   } = opts;
 
-  /** -------------------------------------------------------
+  /** ---------------------------------------------
    * 1) Distance resolution
-   * ------------------------------------------------------ */
+   * -------------------------------------------- */
   const cityThresholds =
     CITY_DISTANCE_THRESHOLDS[city] ?? CITY_DISTANCE_THRESHOLDS.atl;
 
@@ -89,13 +93,14 @@ export async function generateRoute(
     city,
     tightness,
     relaxedTimeFiltering,
+    startTime: startTime.toISOString(),
     MAX_MEAL_DISTANCE,
     MAX_OTHER_DISTANCE,
   });
 
-  /** -------------------------------------------------------
-   * 2) Prep venue pool
-   * ------------------------------------------------------ */
+  /** ---------------------------------------------
+   * 2) Venue pool
+   * -------------------------------------------- */
   const originLat = customStart?.lat ?? userLat;
   const originLon = customStart?.lon ?? userLon;
 
@@ -108,9 +113,9 @@ export async function generateRoute(
     return [];
   }
 
-  /** -------------------------------------------------------
-   * 3) Stage plan
-   * ------------------------------------------------------ */
+  /** ---------------------------------------------
+   * 3) Stage plan (BASED ON startTime)
+   * -------------------------------------------- */
   const stagePlan = sequencedStagesForNow(startTime, {
     durationHours: maxStops,
     latestEndHour,
@@ -128,11 +133,12 @@ export async function generateRoute(
   const latestEndTime = new Date(startTime);
   latestEndTime.setHours(endHour, 0, 0, 0);
 
-  /** -------------------------------------------------------
+  /** ---------------------------------------------
    * 4) Routing loop
-   * ------------------------------------------------------ */
+   * -------------------------------------------- */
   for (let i = 0; i < stagePlan.length && route.length < maxStops; i++) {
     const desiredTypes = stagePlan[i];
+
     const arrival = new Date(
       currentTime.getTime() + DEFAULTS.bufferHours * 3600 * 1000
     );
@@ -151,12 +157,14 @@ export async function generateRoute(
 
         if (dist > maxDist) return null;
 
-        /** ⏰ Time filtering — skipped for scheduled crawls */
+        /** ⏰ TIME FILTERING — FULLY FUTURE‑AWARE */
         if (!relaxedTimeFiltering) {
           if (filterOpen && !_isOpenAt(v, arrival)) {
             if (!(v as any).liveEvent) return null;
           }
-          if (!daypartAllowedForNow(v, arrival)) return null;
+
+          // ✅ FIXED: uses scheduled arrival time
+          if (!daypartAllowedAtTime(v, arrival)) return null;
         }
 
         const similarity = lastVenue ? vibeSimilarity(lastVenue, v) : 1;
@@ -194,6 +202,9 @@ export async function generateRoute(
   return route;
 }
 
+/** ---------------------------------------------
+ * Open‑hours helper (future‑aware)
+ * -------------------------------------------- */
 function _isOpenAt(venue: Venue, when: Date): boolean {
   const intervals = _intervalsForDate(when, venue.hoursNumeric || {});
   return intervals.some(([openTs, closeTs]) => when >= openTs && when < closeTs);

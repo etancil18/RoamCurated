@@ -1,3 +1,5 @@
+// lib/theme-engine/index.ts
+
 import type { Venue } from "@/types/venue";
 import { themeById } from "@/lib/crawlConfig";
 import { sortVenuesByScore } from "@/lib/theme-engine/scorer-fixed";
@@ -92,17 +94,20 @@ export async function generateThemeRoute({
   const route: Venue[] = [];
   let lastLat = userLat;
   let lastLon = userLon;
-  let currentTime = new Date(startTime);
+
+  /** ✅ Key fix: initialize currentTime from scheduled startTime */
+  let currentTime = startTime instanceof Date ? new Date(startTime) : new Date();
 
   for (let i = 0; i < stageFlow.length && route.length < maxStops; i++) {
     const desiredType = stageFlow[i];
 
+    /** ✅ Pass accurate scheduled stageArrivalTime into selector */
     let candidates = selectCandidates({
       venues: pool,
       stageType: desiredType,
       selected: new Set(route.map((v) => v.id ?? v.name)),
       theme,
-      stageArrivalTime: currentTime,
+      stageArrivalTime: new Date(currentTime),
       relaxedMode: relaxedTimeFiltering,
       windowMinutes: DEFAULTS.fallbackWindowMinutes,
     });
@@ -117,8 +122,8 @@ export async function generateThemeRoute({
       const now = new Date();
 
       if ((v as any).liveEvent || v.type?.includes("event")) {
-        const startTime = new Date((v as any).starts_at ?? now);
-        const timeDiffHours = Math.abs(startTime.getTime() - now.getTime()) / 3600000;
+        const eventStart = new Date((v as any).starts_at ?? now);
+        const timeDiffHours = Math.abs(eventStart.getTime() - now.getTime()) / 3600000;
 
         let eventBoost = 600;
         if (timeDiffHours <= 2) eventBoost = 1000;
