@@ -1,14 +1,40 @@
 name,lat,lon,instagram_handle,tags,type,time_category,energy_ramp,price,duration,cover,city
-Rreal Tacos - Buckhead,33.8473254,-84.3727523,rrealtacos,"{Street,Fiesta,Tasty,Quick,Social}",lunch,Afternoon,4,$$,1.75,,atl
-El Sótano,33.7399836,-84.3466965,elsotanoatl,"{Mezcal,Hidden,Eclectic,Lounge,Cozy}",lunch,Midday,4,$$,1.5,,atl
-Monks Meadery,33.7700982,-84.3522537,monksmead,"{Meadery,Tasting,Craft,Local,Curious}",bar,Afternoon,3,$$,1.5,,atl
-Virtue Rooftop,33.7872526,-84.382934,virtuerooftop,"{Skybar,Sunset,Views,Chill,Party}",rooftop,Evening,4,$$$,2,,atl
-JB's Record Lounge,33.7389557,-84.4174261,jbsrecord,"{Vinyl,Vinyl‑Hunt,Classic,Laidback,Music}",random gem,Afternoon,2,$,0.5,,atl
-East Atlanta Comics,33.7403971,-84.3454547,east_atlanta_comics,"{Comics,Geek,Collectible,Graphic,Pop}",bookstore,Afternoon,2,$,0.5,,atl
-Miracle Bar Atlanta,33.7788521,-84.3671595,miraclebaratlanta,"{Festival,Novelty,Seasonal,Playful,Buzz}",bar,Evening,4,$$,1.5,,atl
-Georgia Aquarium,33.763382,-84.3951098,georgiaaquarium,"{Marine,Aquarium,Exhibits,Family,Educational}",museum,Midday,3,$$,3,,atl
-Bistro Niko,33.8466464,-84.3688437,bistroniko,"{French,Brunch,Wine,Date‑Night,Elegant}",brunch,Afternoon,3,$$$,2,,atl
-Amore e Amore,33.7666896,-84.3528699,eatamoreatl,"{Italian,Theatrical,Bold,Romantic,Unique}",dinner,Evening,3,$$$,2,,atl
-The Blind Pig Parlour Bar,33.8424254,-84.3830522,theblindpigparlourbar,"{Speakeasy,Prohibition,Creative,Mixology,Dark}",cocktail,Evening,3,$$,1.75,,atl
-Atlanta Botanical Garden,33.7899568,-84.3725988,atlbotanical,"{Gardens,Outdoor,Flowers,Scenic,Serene}",museum,Afternoon,3,$$,3,,atl
-Mission + Market,33.8522067,-84.367243,missionandmkt,"{Upscale,Contemporary,Refined,Seasonal,Business}",brunch,Afternoon,3,$$$,2.5,,atl
+Decatur Square,33.7747076,-84.2961203,cityofdecaturga,"{park,downtown,events,historic,gathering,festival,green,family,plaza,music}",park,Afternoon,1,$,0.5,img/venues/Decatur Square.jpg,atl
+Thirty,33.841001,-84.3803451,30barxo,"{nightclub,dance,club,music,VIP,nightlife,Buckhead,DJ,party,late}",club,Late Night,5,$$$,1.5,img/venues/Thirty.jpg,atl
+Five Paces Inn,33.8414694,-84.3801434,5pacesatl,"{bar,dive,pub,casual,downtown,beer,local,crowd,laidback,social}",bar,Evening,4,$$,1.5,img/venues/Five Paces Inn.jpg,atl
+Park Bar,33.7581973,-84.3927991,parkbaratl,"{pub,sports,beer,burgers,downtown,bar,casual,wings,outdoor,social}",bar,Evening,3,$$,1.5,img/venues/Park Bar.jpg,atl
+The Whelan,33.7891454,-84.4261668,thewhelanatl,"{bar,Irish,live‑music,patio,downtown,drinks,social,classic,local,cozy}",bar,Evening,3,$$,1.5,img/venues/The Whelan.jpg,atl
+Zoo Atlanta,33.732596,-84.371458,zooatl,"{zoo,animals,family,tickets,aquarium,kids,exhibits,education,safari,tours}",museum,Midday,3,$$,3,img/venues/Zoo Atlanta.jpg,atl
+Centennial Olympic Park,33.760463,-84.3930831,gaworldcongressctr,"{park,historic,fountain,downtown,events,family,walking,skyline,free,outdoor}",park,Afternoon,2,$,1,img/venues/Centennial Olympic Park.jpg,atl
+Atlantucky Brewing,33.7500392,-84.4033955,atlantucky,"{brewery,beer,craft,hops,tasting,taproom,local,pours,casual,suds}",bar,Afternoon,3,$$,1.5,img/venues/Atlantucky Brewing.jpg,atl
+Nest on Four,33.7585169,-84.4007167,nestonfour,"{sports,bar,games,beer,wings,downtown,social,TV,cheers,casual}",bar,Evening,4,$$,1.5,img/venues/Nest on Four.jpg,atl
+Fado Irish Pub - Midtown,33.7797074,-84.3840009,fadoirishpub,"{pub,Irish,whiskey,stout,music,Midtown,bar,social,food,cozy}",bar,Afternoon,4,$$,1.5,img/venues/Fado Irish Pub Midtown.png,atl
+Octopus Bar,33.739403,-84.3456604,octopusbareav,"{late‑night,cocktails,eatery,East Atlanta,small‑plates,nightlife,lounge,drinks,nightlife,creative}",cocktail,Late Night,4,$$,1.5,img/venues/Octopus Bar.jpg,atl
+Madeira Park,33.7718353,-84.3526972,madeiraparkatl,"{wine,bar,tasting,charcuterie,evening,cozy,date‑night,vineyard,pours,social}",wine bar,Afternoon,3,$$$,1.5,img/venues/Madeira Park.jpg,atl
+Marcel,33.7857453,-84.4125409,marcelatlanta,"{steakhouse,fine‑dining,steak,luxury,upscale,dinner,wine,date‑night,elegant,prime}",dinner,Evening,3,$$$$,2.25,img/venues/Marcel.jpg,atl
+Lewis Barbecue Atlanta,33.7986057,-84.371528,lewisbarbecue,"{barbecue,smoked,brisket,southern,Texas,casual,meat,comfort,BBQ,flavor}",lunch,Afternoon,3,$$,1.25,img/venues/Lewis Barbecue Atlanta.jpg,atl
+Fox Bros Bar‑B‑Q,33.761066,-84.347476,foxbrosbarbq,"{barbecue,ribs,southern,bbq,family,sauce,casual,smoked,pig,comfort}",lunch,Afternoon,3,$$,1.25,img/venues/Fox Bros Bar-B-Q.jpg,atl
+Sun in My Belly,33.764022,-84.316504,suninmybelly,"{brunch,breakfast,daytime,café,casual,comfort,local,bright,coffee,crowd}",breakfast,Midday,3,$$,1.25,img/venues/Sun in My Belly.jpg,atl
+Victory Sandwich Bar - Decatur,33.7742026,-84.2950238,victorysandwichbar,"{sandwiches,deli,lunch,quick,local,grab‑and‑go,casual,comfort,classic,subs}",lunch,Evening,2,$,1.25,img/venues/Victory Sandwich Bar - Decatur.jpg,atl
+Ela,33.7869124,-84.3554583,ela.atlanta,"{Mediterranean,small‑plates,social,date‑night,wine,tapas,chic,modern,fresh,shared}",brunch,Afternoon,3,$$,2,img/venues/Ela.jpg,atl
+Boqueria Colony Sqaure,33.7881477,-84.3830177,boqueria,"{spanish,tapas,wine,brunch,dinner,shared,social,classy,vibrant,mediterranean}",brunch,Afternoon,4,$$$,2,img/venues/Boqueria Colony Sqaure.jpg,atl
+5Church Midtown,33.7870834,-84.3828185,5churchatlanta,"{new‑american,downtown,stylish,dinner,cocktails,date‑night,upscale,chef,modern,social}",brunch,Evening,4,$$$,2,img/venues/5Church Midtown.jpg,atl
+Holeman and Finch,33.7879305,-84.3830763,holemanandfinch,"{gastropub,craft,burgers,stylish,drinks,urban,bar,chef,modern,classic}",brunch,Evening,3,$$,2,img/venues/Holeman and Finch.jpg,atl
+Lion Chaser Fitness,33.841929,-84.3800362,lionchaserlife,"{gym,workout,training,strength,fitness,health,cardio,classes,studio,wellness}",fitness,Morning,4,$,1,img/venues/Lion Chaser Fitness.jpg,atl
+Pollo Primo,33.73279,-84.3489586,polloprimoatl,"{chicken,Latin,grilled,casual,food,quick,tacos,family,comfort,rotisserie}",lunch,Afternoon,3,$,1.25,img/venues/Pollo Primo.jpg,atl
+Fritti,33.7629393,-84.3577256,frittiatl,"{italian,fried,snack,casual,comfort,street‑food,tasty,pizza,local,quick}",lunch,Evening,3,$$,1.5,img/venues/Fritti.jpg,atl
+Highland Cigar Company,33.7619564,-84.3596382,highland_cigar,"{cigars,lounge,smoke,whiskey,humidor,classic,relaxed,patio,old‑school,social}",lounge,Evening,3,$$,1.5,img/venues/Highland Cigar Company.jpg,atl
+Boxcar at Hop City West End,33.7299531,-84.4186258,boxcaratl,"{taproom,breweries,beer,casual,social,flights,hops,West End,urban,tasting}",brunch,Evening,3,$$,1.5,img/venues/Boxcar at Hop City West End.png,atl
+Toast On Lenox - Buckhead,33.8305078,-84.3561561,toastonlenox,"{brunch,breakfast,café,Buckhead,pancakes,daytime,casual,sweet,coffee,waffles}",breakfast,Midday,4,$$,1.5,img/venues/Toast On Lenox - Buckhead.jpg,atl
+THE CHASTAIN – Restaurant,33.8727778,-84.3963889,thechastainatl,"{fine‑dining,upscale,dinner,elegant,special‑occasion,chef,refined,seasonal,chic,date}",bakery,Midday,3,$$$,2,img/venues/THE CHASTAIN - Restaurant.jpg,atl
+404.exe,33.7740128,-84.3632003,atl404exe,"{nightclub,electronic,dance,music,late‑night,party,Atlanta,club,rave,DJ}",club,Late Night,5,$$,2,img/venues/404-atl.jpg,atl
+Wahoo! Grill,33.764898,-84.310732,wahoo_grill,"{grill,seafood,casual,fresh,lunch,dinner,family,local,coastal,social}",dinner,Evening,3,$$,2,img/venues/Wahoo! Grill.jpg,atl
+Verdure Kitchen & Cocktails,33.7923112,-84.3693822,verdureatlanta,"{fine‑dining,farm‑to‑table,seasonal,cocktails,elegant,chef,modern,dinner,refined,tasteful}",brunch,Evening,3,$$$$,2,img/venues/Verdure Kitchen & Cocktails.jpg,atl
+Souper Jenny Westside,33.7887844,-84.4229099,souperjennyatl,"{soup,lunch,healthy,café,quick,fresh,seasonal,casual,comfort,local}",lunch,Midday,2,$,0.75,img/venues/Souper Jenny Westside.jpg,atl
+The Village Skatepark ATL,33.7719878,-84.4229458,villageskateparkatl,"{skatepark,skating,outdoor,sport,ramps,community,youth,active,skate,park}",activity,Afternoon,3,$,2,img/venues/The Village Skatepark ATL.jpg,atl
+Black Coffee ATL,33.7208999,-84.4108434,blackcoffeeatl,"{coffee,café,espresso,chill,local,morning,quick,specialty,beans,hood}",coffee,Morning,2,$,0.75,img/venues/Black Coffee ATL.png,atl
+Tuft Rugs ATL,33.7197405,-84.3940665,tuftrugsatl,"{rugs,interior,design,artisan,home,textiles,custom,workshop,boutique,decor}",activity,Afternoon,2,$$,2,img/venues/Tuft Rugs ATL.jpg,atl
+Guilty Party,33.746231,-84.3731798,guiltypartyatl,"{boutique,men’s,fashion,style,trendy,streetwear,curated,local,apparel,modern}",lifestyle,Afternoon,1,$$,0.5,img/venues/Guilty Party.jpg,atl
+Storico Fresco Ristorante,33.83993,-84.3761214,storicofresco,"{italian,pasta,wine,cozy,date‑night,authentic,dinner,classic,refined,trattoria}",lunch,Evening,3,$$$,2,img/venues/Storico Fresco Ristorante.jpg,atl
+Toast on Lenox - Midtown,33.7863015,-84.3985756,toastonlenox,"{brunch,breakfast,café,pancakes,sweet,daytime,casual,coffee,Lenox,social}",breakfast,Midday,4,$$,1.5,img/venues/Toast on Lenox - Midtown.jpg,atl
+The Clothing Warehouse,33.765975,-84.3492574,clothingwarehouse,"{thrift,vintage,clothing,bargains,retro,mall,casual,deals,fashion,resale}",lifestyle,Afternoon,2,$$,0.75,img/venues/The Clothing Warehouse.jpg,atl
