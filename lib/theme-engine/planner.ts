@@ -25,9 +25,9 @@ export const fallbackStageFlows: Record<string, string[]> = {
 /**
  * Produces a stageFlow based on a theme, or generates one via fallback if missing.
  */
-function generateStageFlow(
+export function generateStageFlow(
   theme: CrawlTheme,
-  fallbackTime: "morning" | "midday" | "afternoon" | "evening" | "night" | "late-night" = "evening"
+  fallbackTime: "morning" | "midday" | "afternoon" |"evening" | "night" | "late-night" = "evening"
 ): string[] {
   if (Array.isArray(theme.stageFlow) && theme.stageFlow.length > 0) {
     return theme.stageFlow;
@@ -49,5 +49,3 @@ function generateStageFlow(
 
   return fallbackStageFlows[fallbackTime];
 }
-
-export { generateStageFlow };

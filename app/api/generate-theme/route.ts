@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             error: "No viable route could be generated.",
-            reason: "Theme filters too strict or venues unavailable at selected time.",
+            reason: "This sometimes happens when places matching your theme aren’t open at the time you picked, or your filters are too specific. Try adjusting the crawl time, loosening filters, or picking a different theme to explore more options.",
           },
           { status: 422 }
         );

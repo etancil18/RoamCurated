@@ -111,14 +111,14 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: "Failed to save scheduled route" },
+        { error: "We couldn’t save your scheduled crawl. Please try again shortly." },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ scheduledRoute: data });
   } catch (err: any) {
-    console.error("❌ Scheduled route API error:", err);
+    console.error("⚠️ Unexpected error while scheduling your crawl:", err);
 
     try {
       const authHeader = req.headers.get("authorization");
