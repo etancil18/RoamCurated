@@ -5,6 +5,8 @@ import { CrawlTheme } from "@/lib/theme-engine/types";
  */
 export const timeOfDayToHours: Record<string, [number, number]> = {
   morning: [6, 11],
+  midday: [11, 14],
+  afternoon: [14, 17],
   day: [11, 17],
   evening: [17, 21],
   night: [21, 1],
@@ -15,11 +17,13 @@ export const timeOfDayToHours: Record<string, [number, number]> = {
  * Sequence fallback based on timeOfDay slot — used if a theme doesn’t define a stageFlow
  */
 export const fallbackStageFlows: Record<string, string[]> = {
-  morning: ["coffee", "tea", "fitness", "park", "market"],
-  day: ["lunch", "gallery", "bookstore", "fitness", "cafe"],
-  evening: ["dinner", "cocktail", "dessert", "wine bar"],
-  night: ["bar", "club", "late-night", "speakeasy", "lounge", "wine bar"],
-  "late-night": ["after hours", "speakeasy", "bar", "lounge"],
+  morning: ["fitness", "coffee", "breakfast","tea", "park", "market", "lunch"],
+  midday: ["lunch", "gallery", "wine bar", "random gem", "park", "bookstore", "dinner"],
+  afternoon: ["lunch", "random gem", "cafe", "lifestyle", "gallery", "bookstore", "dinner"],
+  day: ["lunch", "gallery", "bookstore", "park", "wine bar", "random gem", "dinner"],
+  evening: ["dinner", "wine bar", "cocktail", "activity","dessert"],
+  night: ["dinner", "club", "rooftop", "speakeasy", "lounge", "wine bar"],
+  "late-night": ["cocktail", "club", "lounge"],
 };
 
 /**

@@ -21,7 +21,7 @@ const TYPE_MATCH_MAP: Record<string, string[]> = {
   "late-night": ["late night", "after hours", "food truck", "24 hour", "night bite"],
 
   // Cultural & Creative
-  gallery: ["gallery", "art", "exhibit", "installation"],
+  gallery: ["gallery", "art", "exhibit", "exhibition", "installation"],
   bookstore: ["bookstore", "books", "reading room", "literary"],
   museum: ["museum", "history", "exhibit", "science center"],
   lifestyle: ["boutique", "clothing", "fashion", "records", "vinyl", "home goods", "concept store", "retail", "design"],

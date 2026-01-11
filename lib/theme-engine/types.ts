@@ -9,7 +9,7 @@ export type CrawlTheme = {
     vibes?: string[];
     tags?: string[];
     price?: number[]; // $ = 1, $$ = 2, $$$ = 3, $$$$ = 4
-    timeOfDay?: ("morning" | "day" | "evening" | "night" | "late-night")[];
+    timeOfDay?: ("morning" | "afternoon" | "midday" | "happyhour" | "happy hour" | "day" | "evening" | "night" | "late-night")[];
     eventCategories?: string[]; // NEW — categories used to match live events
   };
   keywords: string[]; // Keywords used to score how well a venue fits the theme

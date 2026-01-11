@@ -20,7 +20,7 @@ export function computeScore(
   }
 ): number {
   const {
-    vibe = 1,
+    vibe = 2,
     tag = 1,
     keyword = 2,
     dist = 1,
