@@ -38,6 +38,7 @@ function normalizeVenues(data: any[]): Venue[] {
       lon: typeof d.lon === 'string' ? parseFloat(d.lon) : d.lon,
       neighborhood: d.neighborhood ?? '',
       price: d.price ?? '',
+      vibe: typeof d.vibe === 'string' ? d.vibe : undefined,
       tags: d.tags ?? '',
       type: d.type ?? '',
     }
