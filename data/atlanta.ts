@@ -676,7 +676,11 @@ const atlantaData = [
   {
     "slug": "echo-room",
     "name": "Echo Room",
+<<<<<<< HEAD
     "vibe": "minimal, dj, industrial, event-space, alternative, vinyl, warehouse, artsy, raw, open, urban, edgy, creative",
+=======
+    "vibe": "minimal, loft, industrial, event-space, alternative, mixed-crowd, warehouse, artsy, raw, open, urban, edgy, creative",
+>>>>>>> 5e00dbf (updated types of venues)
     "type": ["cocktail", "lounge", "music"],
     "lat": 33.7749037,
     "lon": -84.41030778,
@@ -1745,7 +1749,11 @@ const atlantaData = [
   {
     "slug": "stats-brewpub",
     "name": "STATS Brewpub",
+<<<<<<< HEAD
     "vibe": "sports, casual, tvs, beer, group-friendly, loud, downtown, lively, approachable, big-screen, energetic",
+=======
+    "vibe": "sports, casual, tvs, beer, group-friendly, loud, downtown, lively, approachable, big-screen, energetic, relaxed",
+>>>>>>> 5e00dbf (updated types of venues)
     "type": ["bar", "sports bar"],
     "lat": 33.7615575,
     "lon": -84.3964558,
@@ -2770,7 +2778,11 @@ const atlantaData = [
     },
     "timeCategory": "evening, late",
     "energyRamp": 4,
+<<<<<<< HEAD
     "tags": "jazz, cocktails, lounge, music, live, performance, night, piano, mood, acoustic, set, charm",
+=======
+    "tags": "craft cocktails, reservation recommended",
+>>>>>>> 5e00dbf (updated types of venues)
     "price": "$$",
     "duration": 2,
     "id": "3d60159f-66ea-4e4d-a54e-e1f46e4b08d2"
@@ -9264,7 +9276,11 @@ const atlantaData = [
   {
     "slug": "painted-park",
     "name": "Painted Park",
+<<<<<<< HEAD
     "vibe": "bar, outdoor, casual, colorful, festive, social, fun, bright, relaxed, playful, easygoing, local, sports",
+=======
+    "vibe": "bar, outdoor, casual, sports, fun, lively, crowd-pleaser",
+>>>>>>> 5e00dbf (updated types of venues)
     "type": ["bar", "patio", "sports bar"],
     "lat": 33.76254145,
     "lon": -84.35944542,
@@ -10408,7 +10424,11 @@ const atlantaData = [
   {
     "slug": "barcelona-wine-bar",
     "name": "Barcelona Wine Bar",
+<<<<<<< HEAD
     "vibe": "tapas, wine, Spanish, date-night, bustling, moody, dim, social, warm, communal, ambient, energetic",
+=======
+    "vibe": "tapas, wine, spanish, bustling, date-night, patio, energetic",
+>>>>>>> 5e00dbf (updated types of venues)
     "type": ["brunch", "lunch", "dinner", "wine bar"],
     "lat": 33.76254145,
     "lon": -84.35944542,
@@ -10633,8 +10653,13 @@ const atlantaData = [
   {
     "slug": "vinoteca",
     "name": "VinoTeca",
+<<<<<<< HEAD
     "vibe": "wine, stylish, mellow, cozy, charming, somm, relaxing, thoughtful, boutique, neighborhood, ambient, casual, live music",
     "type": "wine bar",
+=======
+    "vibe": "wine, casual, somm, retail, european, tastings, intimate, outdoor seating, live music",
+    "type": ["wine bar", "patio"],
+>>>>>>> 5e00dbf (updated types of venues)
     "lat": 33.7624505,
     "lon": -84.35858396,
     "link": "https://www.instagram.com/shopvinoteca/",
