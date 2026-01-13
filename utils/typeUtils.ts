@@ -51,5 +51,39 @@ function matchesThemeFilters(loc: any, filters: {
   return true;
 }
 
-export { matchesThemeFilters};
-export { hasVibeOrTagMatch }
+/**
+ * Counts keyword matches across name, description, tags, and vibe
+ */
+export function keywordMatchScore(loc: any, keywords: string[]): number {
+  const combined = [
+    (loc.name || '').toLowerCase(),
+    (loc.description || '').toLowerCase(),
+    (loc.tags || '').toLowerCase(),
+    (loc.vibe || '').toLowerCase(),
+  ].join(' ');
+  return keywords.reduce((count, kw) =>
+    combined.includes(kw.toLowerCase()) ? count + 1 : count, 0);
+}
+
+/**
+ * Counts vibe matches against venue.vibe
+ */
+export function vibeMatchScore(loc: any, vibes: string[]): number {
+  const v = (loc.vibe || '').toLowerCase();
+  return vibes.reduce((count, vibe) =>
+    v.includes(vibe.toLowerCase()) ? count + 1 : count, 0);
+}
+
+/**
+ * Counts tag matches against venue.tags
+ */
+export function tagMatchScore(loc: any, tags: string[]): number {
+  const t = (loc.tags || '').toLowerCase();
+  return tags.reduce((count, tag) =>
+    t.includes(tag.toLowerCase()) ? count + 1 : count, 0);
+}
+
+export {
+  matchesThemeFilters,
+  hasVibeOrTagMatch
+};

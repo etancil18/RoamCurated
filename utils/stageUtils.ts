@@ -28,6 +28,26 @@ export const THEME_STAGE_OVERRIDES: Record<string, string[][]> = {
 };
 
 /**
+ * Returns a fallback sequence of stage types based on a failed stage type.
+ * Prioritizes the same group, then expands.
+ */
+export function getSimilarStageTypes(stageType: string): string[] {
+  for (const group of STAGE_GROUPS) {
+    if (group.includes(stageType)) {
+      return group.filter((s) => s !== stageType);
+    }
+  }
+  return [];
+}
+
+/**
+ * Returns a short list of fallback types to try when a stage type fails.
+ */
+export function fallbackFlowFromStage(stageType: string, limit: number = 3): string[] {
+  return [stageType, ...getSimilarStageTypes(stageType)].slice(0, limit);
+}
+
+/**
  * Determine stage sequence based on current time, available duration, and optional theme.
  * 
  * @param now - Date/time to base sequencing on
@@ -60,7 +80,7 @@ export function sequencedStagesForNow(
   else if (H >= 13 && H < 16) startIdx = 4; // Chill
   else if (H >= 16 && H < 19) startIdx = 6; // Pre-Dinner
   else if (H >= 19 && H < 22) startIdx = 8; // Dinner
-  else if ((day >= 4 && H >= 22) || (day === 0 && H < 3)) startIdx = 9; // Late night
+  else if ((day >= 4 && H >= 23) || (day === 0 && H < 3)) startIdx = 9; // Late night
 
   const defaultPlan = STAGE_GROUPS.slice(startIdx).concat(STAGE_GROUPS.slice(0, startIdx));
   return defaultPlan.slice(0, stageLimit);

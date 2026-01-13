@@ -1,5 +1,3 @@
-// lib/theme-engine/index.ts
-
 import type { Venue } from "@/types/venue";
 import { themeById } from "@/lib/crawlConfig";
 import { sortVenuesByScore } from "@/lib/theme-engine/scorer-fixed";
@@ -27,14 +25,10 @@ export interface ThemeRouteOptions {
   venues: Venue[];
   maxStops?: number;
   filterOpen?: boolean;
-
-  /** NEW 👇 */
   city?: "atl" | "nyc";
   tightness?: "tight" | "medium" | "loose";
   maxDistanceMeters?: number;
   eventOnly?: boolean;
-
-  /** 🔑 Scheduled crawl support */
   startTime?: Date;
   relaxedTimeFiltering?: boolean;
 }
@@ -59,7 +53,10 @@ export async function generateThemeRoute({
     return [];
   }
 
-  const stageFlow = generateStageFlow(theme);
+  const { flow: stageFlow, isFallback, reason } = generateStageFlow(theme);
+  if (isFallback) {
+    console.info("🧭 Using fallback stageFlow:", reason);
+  }
 
   let pool = venues.filter(
     (v) => typeof v.lat === "number" && typeof v.lon === "number"
@@ -94,14 +91,11 @@ export async function generateThemeRoute({
   const route: Venue[] = [];
   let lastLat = userLat;
   let lastLon = userLon;
-
-  /** ✅ Key fix: initialize currentTime from scheduled startTime */
   let currentTime = startTime instanceof Date ? new Date(startTime) : new Date();
 
   for (let i = 0; i < stageFlow.length && route.length < maxStops; i++) {
     const desiredType = stageFlow[i];
 
-    /** ✅ Pass accurate scheduled stageArrivalTime into selector */
     let candidates = selectCandidates({
       venues: pool,
       stageType: desiredType,

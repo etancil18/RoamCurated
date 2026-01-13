@@ -17,11 +17,11 @@ export const timeOfDayToHours: Record<string, [number, number]> = {
  * Sequence fallback based on timeOfDay slot — used if a theme doesn’t define a stageFlow
  */
 export const fallbackStageFlows: Record<string, string[]> = {
-  morning: ["fitness", "coffee", "breakfast","tea", "park", "market", "lunch"],
+  morning: ["fitness", "coffee", "breakfast", "tea", "park", "market", "lunch"],
   midday: ["lunch", "gallery", "wine bar", "random gem", "park", "bookstore", "dinner"],
   afternoon: ["lunch", "random gem", "cafe", "lifestyle", "gallery", "bookstore", "dinner"],
   day: ["lunch", "gallery", "bookstore", "park", "wine bar", "random gem", "dinner"],
-  evening: ["dinner", "wine bar", "cocktail", "activity","dessert"],
+  evening: ["dinner", "wine bar", "cocktail", "activity", "dessert"],
   night: ["dinner", "club", "rooftop", "speakeasy", "lounge", "wine bar"],
   "late-night": ["cocktail", "club", "lounge"],
 };
@@ -32,26 +32,42 @@ export const fallbackStageFlows: Record<string, string[]> = {
 function generateStageFlow(
   theme: CrawlTheme,
   fallbackTime: "morning" | "midday" | "afternoon" | "evening" | "night" | "late-night" = "evening"
-): string[] {
+): { flow: string[]; isFallback: boolean; reason: string } {
   if (Array.isArray(theme.stageFlow) && theme.stageFlow.length > 0) {
-    return theme.stageFlow;
+    return {
+      flow: theme.stageFlow,
+      isFallback: false,
+      reason: "Theme defined stageFlow explicitly.",
+    };
   }
 
   const t = theme.filters?.timeOfDay ?? fallbackTime;
 
   if (typeof t === "string") {
-    return fallbackStageFlows[t] || fallbackStageFlows[fallbackTime];
+    return {
+      flow: fallbackStageFlows[t] || fallbackStageFlows[fallbackTime],
+      isFallback: true,
+      reason: `Used fallback flow for timeOfDay: '${t}'`,
+    };
   }
 
   if (Array.isArray(t) && t.length > 0) {
     for (const slot of t) {
       if (slot in fallbackStageFlows) {
-        return fallbackStageFlows[slot];
+        return {
+          flow: fallbackStageFlows[slot],
+          isFallback: true,
+          reason: `Used fallback flow from timeOfDay array: '${slot}'`,
+        };
       }
     }
   }
 
-  return fallbackStageFlows[fallbackTime];
+  return {
+    flow: fallbackStageFlows[fallbackTime],
+    isFallback: true,
+    reason: `Defaulted to fallbackTime: '${fallbackTime}'`,
+  };
 }
 
 export { generateStageFlow };

@@ -9,7 +9,17 @@ export type CrawlTheme = {
     vibes?: string[];
     tags?: string[];
     price?: number[]; // $ = 1, $$ = 2, $$$ = 3, $$$$ = 4
-    timeOfDay?: ("morning" | "afternoon" | "midday" | "happyhour" | "happy hour" | "day" | "evening" | "night" | "late-night")[];
+    timeOfDay?: (
+      | "morning"
+      | "afternoon"
+      | "midday"
+      | "happyhour"
+      | "happy hour"
+      | "day"
+      | "evening"
+      | "night"
+      | "late-night"
+    )[];
     eventCategories?: string[]; // NEW — categories used to match live events
   };
   keywords: string[]; // Keywords used to score how well a venue fits the theme
@@ -25,14 +35,14 @@ export type ThemeRouteOptions = {
   maxStops?: number;
   filterOpen?: boolean; // true = strict (must be open at arrival), false = relaxed (can open within 90 mins)
   maxDistanceMeters?: number;
-  eventOnly?: boolean; // NEW — limit to events only
-  relaxedTimeFiltering?: boolean; // 🔑 NEW — allows openSoon or future fallback in tighter filters
+  eventOnly?: boolean;
+  relaxedTimeFiltering?: boolean;
 };
 
 export type Stage = {
-  type: string;     // e.g., "coffee", "gallery", etc.
-  index: number;    // order in crawl
-  when: Date;       // estimated arrival time
+  type: string;
+  index: number;
+  when: Date;
 };
 
 export type ScoredCandidate = {
@@ -44,6 +54,29 @@ export type ScoredCandidate = {
   tagMatch: number;
 };
 
-// Each venue should have:
-// - hoursNumeric: { mon: { open: number, close: number } }
-// - duration: number (hours, float or int)
+/**
+ * Extended candidate with breakdowns for logging/debugging
+ */
+export type ScoredCandidateVerbose = ScoredCandidate & {
+  breakdown: {
+    vibe: number;
+    keyword: number;
+    tag: number;
+    distance: number;
+    eventBonus: number;
+    energy: number;
+  };
+  matchedVibes?: string[];
+  fallbackUsed?: string;
+};
+
+/**
+ * Optional per-theme weight overrides for scoring logic
+ */
+export type ScoringWeights = {
+  vibe?: number;
+  keyword?: number;
+  tag?: number;
+  dist?: number;
+  energy?: number;
+};

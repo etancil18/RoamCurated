@@ -1,11 +1,26 @@
 import type { Venue } from "@/types/venue";
 import type { CrawlTheme } from "@/lib/theme-engine/types";
 import { getDistanceMeters } from "@/utils/geoUtils";
-import { vibeSimilarity } from "@/utils/vibeUtils";
-import { hasVibeOrTagMatch } from "@/utils/typeUtils";
+import { vibeSimilarityVerbose } from "@/utils/vibeUtils";
+import {
+  keywordMatchScore,
+  vibeMatchScore,
+  tagMatchScore,
+} from "@/utils/typeUtils";
 
 /**
- * Computes a weighted score for a venue based on theme relevance, distance, and timing.
+ * Curved distance scoring — rewards tight clusters, penalizes long jumps
+ */
+function distanceScore(meters: number): number {
+  if (meters < 400) return 1;
+  if (meters < 800) return 0.6;
+  if (meters < 1600) return 0.2;
+  return -meters / 1000;
+}
+
+/**
+ * Computes a weighted score for a venue based on theme relevance,
+ * vibe continuity, distance, and event timing.
  */
 export function computeScore(
   venue: Venue,
@@ -17,6 +32,7 @@ export function computeScore(
     tag?: number;
     keyword?: number;
     dist?: number;
+    energy?: number;
   }
 ): number {
   const {
@@ -24,43 +40,77 @@ export function computeScore(
     tag = 1,
     keyword = 2,
     dist = 1,
+    energy = 0.5,
   } = weight || {};
 
-  const distMeters = getDistanceMeters(origin.lat, origin.lon, venue.lat, venue.lon);
-  const vibeScore = lastVenue ? vibeSimilarity(lastVenue, venue) * vibe : 1;
-  const keywordMatch = hasVibeOrTagMatch(venue, theme.keywords) ? keyword : 0;
+  const distMeters = getDistanceMeters(
+    origin.lat,
+    origin.lon,
+    venue.lat,
+    venue.lon
+  );
 
-  // 🎉 Bonus logic for live events
+  // 🎭 Vibe continuity (semantic, normalized)
+  const vibeSim = lastVenue
+    ? vibeSimilarityVerbose(lastVenue, venue).score
+    : 0.5;
+
+  // 🧠 Thematic relevance
+  const keywordHits = keywordMatchScore(venue, theme.keywords);
+  const vibeHits = theme.filters?.vibes
+    ? vibeMatchScore(venue, theme.filters.vibes)
+    : 0;
+  const tagHits = theme.filters?.tags
+    ? tagMatchScore(venue, theme.filters.tags)
+    : 0;
+
+  // ⚡ Energy ramp continuity (soft constraint)
+  let energyScore = 0;
+  if (lastVenue?.energyRamp != null && venue.energyRamp != null) {
+    const delta = venue.energyRamp - lastVenue.energyRamp;
+    energyScore = delta >= 0 ? 1 : -Math.abs(delta);
+  }
+
+  // 🎉 Live event bonus logic
   let eventBonus = 0;
   if ((venue as any).liveEvent) {
     const startsAt = new Date((venue as any).starts_at).getTime();
     const now = Date.now();
     const timeUntilStart = startsAt - now;
 
-    const isSoon = timeUntilStart > 0 && timeUntilStart <= 2 * 60 * 60 * 1000; // next 2 hours
-    if (isSoon) {
+    if (timeUntilStart > 0 && timeUntilStart <= 2 * 60 * 60 * 1000) {
       eventBonus += 3;
     }
 
-    // 🎯 Bonus for matching eventCategory against theme filters
     const eventCategory = (venue as any).eventCategory?.toLowerCase();
-    const matchesCategory = eventCategory && Array.isArray(theme.filters?.eventCategories)
-      ? theme.filters.eventCategories.some((cat) =>
-          eventCategory.includes(cat.toLowerCase())
-        )
-      : false;
+    const matchesCategory =
+      eventCategory &&
+      Array.isArray(theme.filters?.eventCategories)
+        ? theme.filters.eventCategories.some((cat) =>
+            eventCategory.includes(cat.toLowerCase())
+          )
+        : false;
 
     if (matchesCategory) {
       eventBonus += 2;
     }
   }
 
-  const score = vibeScore + keywordMatch + eventBonus - (distMeters / 1000) * dist;
+  const score =
+    vibeSim * vibe +
+    keywordHits * keyword +
+    vibeHits * vibe +
+    tagHits * tag +
+    energyScore * energy +
+    eventBonus +
+    distanceScore(distMeters) * dist;
+
   return score;
 }
 
 /**
  * Sorts venues descending by computed score.
+ * Adds _score for downstream inspection.
  */
 export function sortVenuesByScore(
   venues: Venue[],

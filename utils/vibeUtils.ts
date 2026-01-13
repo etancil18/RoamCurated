@@ -25,13 +25,25 @@ export function normalizeTag(tag: string): string {
   return synonymMap[t] ?? t;
 }
 
-// ✅ RE-EXPORT in a bundler-safe way
+/**
+ * Returns the normalized vibe vector from both vibe + tags
+ */
+export function extractVibeVector(v: { vibe?: string; tags?: string }): string[] {
+  return [
+    ...vibesArray(v.vibe),
+    ...vibesArray(v.tags),
+  ];
+}
+
+/**
+ * Simple similarity score between two vibe/tag vectors (0 to 1)
+ */
 function _vibeSimilarity(
   a: { vibe?: string; tags?: string },
   b: { vibe?: string; tags?: string }
 ): number {
-  const aVibes = new Set([...vibesArray(a.vibe), ...vibesArray(a.tags)]);
-  const bVibes = new Set([...vibesArray(b.vibe), ...vibesArray(b.tags)]);
+  const aVibes = new Set(extractVibeVector(a));
+  const bVibes = new Set(extractVibeVector(b));
   if (aVibes.size === 0 || bVibes.size === 0) return 0;
 
   let overlapCount = 0;
@@ -44,3 +56,26 @@ function _vibeSimilarity(
 }
 
 export { _vibeSimilarity as vibeSimilarity };
+
+/**
+ * Verbose similarity: returns score and matching tags
+ */
+export function vibeSimilarityVerbose(
+  a: { vibe?: string; tags?: string },
+  b: { vibe?: string; tags?: string }
+): { score: number; matches: string[] } {
+  const aVibes = new Set(extractVibeVector(a));
+  const bVibes = new Set(extractVibeVector(b));
+  if (aVibes.size === 0 || bVibes.size === 0) return { score: 0, matches: [] };
+
+  const matches: string[] = [];
+  aVibes.forEach((v) => {
+    if (bVibes.has(v)) matches.push(v);
+  });
+
+  const maxLen = Math.max(aVibes.size, bVibes.size);
+  return {
+    score: matches.length / maxLen,
+    matches,
+  };
+}
