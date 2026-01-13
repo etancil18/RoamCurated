@@ -146,7 +146,7 @@ const atlantaData = [
     "slug": "alici-oyster-bar",
     "name": "Alici Oyster Bar",
     "vibe": "oysters, bright, coastal, elegant, fresh, raw-bar, lunch-friendly, mediterranean, seaside, crisp, airy, refined, light, polished",
-    "type": "dinner",
+    "type": ["lunch", "dinner"],
     "lat": 33.7803409,
     "lon": -84.3686685,
     "link": "https://www.instagram.com/alicioysterbar/",
@@ -368,7 +368,7 @@ const atlantaData = [
     "slug": "after-eight",
     "name": "After Eight",
     "vibe": "lounge, late-night, cocktails, DJ, velvet, exclusive, dressy, music, sleek, intimate, chic, sophisticated, upscale, nightlife",
-    "type": "cocktail",
+    "type": ["cocktail", "lounge"],
     "lat": 33.7802207,
     "lon": -84.41060596,
     "link": "https://www.instagram.com/aftereightatl/",
@@ -442,7 +442,7 @@ const atlantaData = [
     "slug": "bon-ton",
     "name": "Bon Ton",
     "vibe": "cajun, vietnamese, funky, bold, neon, seafood, casual, lively, eclectic, playful, colorful, upbeat, quirky",
-    "type": "dinner",
+    "type": ["lunch","dinner"],
     "lat": 33.772956,
     "lon": -84.3803812,
     "link": "https://www.instagram.com/bontonatlanta/",
@@ -521,7 +521,7 @@ const atlantaData = [
     "vibe": "afro-caribbean, vintage, vinyl, lounge, curated, cozy, cool, intimate, soulful, nostalgic, warm, vibey, atmospheric",
     "type": [
       "brunch",
-      "lounge"
+      "lounge", "dinner"
     ],
     "lat": 33.8156255,
     "lon": -84.3908082,
@@ -677,7 +677,7 @@ const atlantaData = [
     "slug": "echo-room",
     "name": "Echo Room",
     "vibe": "minimal, loft, industrial, event-space, alternative, mixed-crowd, warehouse, artsy, raw, open, urban, edgy, creative",
-    "type": "bar",
+    "type": ["cocktail", "lounge", "music"],
     "lat": 33.7749037,
     "lon": -84.41030778,
     "link": "https://www.instagram.com/echoroomatl/",
@@ -819,7 +819,7 @@ const atlantaData = [
     "slug": "bona-fide-deluxe",
     "name": "Bona Fide Deluxe",
     "vibe": "retro, creative, diner-style, cocktails, quirky, colorful, playful, nostalgic, funky, vibrant, whimsical, artistic, bold",
-    "type": "bar",
+    "type": ["lunch", "cocktail"],
     "lat": 33.76066881,
     "lon": -84.34042587,
     "link": "https://www.instagram.com/bona_fide_deluxe/",
@@ -1124,7 +1124,7 @@ const atlantaData = [
     "slug": "the-brewhouse-cafe",
     "name": "The Brewhouse Cafe",
     "vibe": "pub, sports, soccer, brunch, casual, TVs, group-friendly, chill, laid-back, lively, approachable, easygoing, classic",
-    "type": "bar",
+    "type": ["bar", "sports bar"],
     "lat": 33.7652432,
     "lon": -84.3488434,
     "link": "https://www.instagram.com/thebrewhousecafe/",
@@ -1521,7 +1521,7 @@ const atlantaData = [
     "slug": "redacted-basement-drink-parlor",
     "name": "Redacted Basement Drink Parlor",
     "vibe": "speakeasy, cocktails, moody, underground, hidden, intimate, retro, mysterious, exclusive, dim, vintage, stylish, atmospheric",
-    "type": "speakeasy",
+    "type": ["speakeasy", "cocktail"],
     "lat": 33.7367005,
     "lon": -84.3856771,
     "link": "https://www.instagram.com/redactedbasementdrinkparlor/",
@@ -1746,7 +1746,7 @@ const atlantaData = [
     "slug": "stats-brewpub",
     "name": "STATS Brewpub",
     "vibe": "sports, casual, tvs, beer, group-friendly, loud, downtown, lively, approachable, big-screen, energetic, relaxed",
-    "type": "bar",
+    "type": ["bar", "sports bar"],
     "lat": 33.7615575,
     "lon": -84.3964558,
     "link": "https://www.instagram.com/statsbrewpub/",
@@ -2113,7 +2113,7 @@ const atlantaData = [
     "slug": "distillery-of-modern-art-in-chamblee",
     "name": "Distillery of Modern Art in Chamblee",
     "vibe": "distillery, gallery, events, modern, industrial, artisan, design-focused, creative, cultural, upscale, experiential, polished, unique",
-    "type": "bar",
+    "type": ["cocktail", "gallery"],
     "lat": 33.8971099,
     "lon": -84.2961643,
     "link": "https://www.instagram.com/distilleryofmodernart/",
@@ -2257,8 +2257,8 @@ const atlantaData = [
   {
     "slug": "evergreen-butcher-baker",
     "name": "Evergreen Butcher + Baker",
-    "vibe": "brunch, bakery, local, hipster, seasonal, fresh, artisanal, warm, rustic, wholesome, friendly, inviting, casual",
-    "type": "lunch",
+    "vibe": "bakery, local, hipster, seasonal, fresh, artisanal, warm, rustic, wholesome, friendly, inviting, casual",
+    "type": ["bakery","lunch"],
     "lat": 33.7510262,
     "lon": -84.3217927,
     "link": "https://www.instagram.com/evergreenbutcherandbaker/",
@@ -2318,7 +2318,7 @@ const atlantaData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "locally sourced, rustic brunch, fresh pastries, chef-driven deli",
     "price": "$",
@@ -2405,7 +2405,7 @@ const atlantaData = [
     "vibe": "butcher, grocery, casual, artisanal, neighborhood, rustic, heritage, hearty",
     "type": [
       "lunch",
-      "market"
+      "coffee"
     ],
     "lat": 33.7822964,
     "lon": -84.3538294,
@@ -2472,7 +2472,7 @@ const atlantaData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 1,
     "tags": "neighborhood butcher counter, curated pantry, casual gourmet, local-first",
     "price": "$$",
@@ -2704,8 +2704,8 @@ const atlantaData = [
   {
     "slug": "the-waiting-room",
     "name": "The Waiting Room",
-    "vibe": "lounge, rooftop, moody, intimate, scenic, bar, skyline, stylish, upscale, panoramic, chic, sophisticated, ambient",
-    "type": "speakeasy",
+    "vibe": "lounge, hidden, moody, intimate, cozy, bar, groovy, dim lighting, chic, ambient",
+    "type": ["speakeasy", "lounge"],
     "lat": 33.772956,
     "lon": -84.3803812,
     "link": "https://www.instagram.com/justkeepwaitingroom/",
@@ -2770,7 +2770,7 @@ const atlantaData = [
     },
     "timeCategory": "evening, late",
     "energyRamp": 4,
-    "tags": "hotel rooftop, craft cocktails, skyline view, reservation recommended",
+    "tags": "craft cocktails, reservation recommended",
     "price": "$$",
     "duration": 2,
     "id": "3d60159f-66ea-4e4d-a54e-e1f46e4b08d2"
@@ -2907,7 +2907,7 @@ const atlantaData = [
       "sat": "E",
       "sun": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "afternoon, evening",
     "energyRamp": 3,
     "tags": "Italian patio dining, rooftop Negronis, burrata & spritz, crowd-pleasing pasta",
     "price": "$$",
@@ -2984,7 +2984,7 @@ const atlantaData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "ATL breakfast classic, kitschy Southern, chicken biscuit fame, old-school diner feel",
     "price": "$",
@@ -3072,7 +3072,7 @@ const atlantaData = [
     "slug": "wicked-wolf-atlanta",
     "name": "Wicked Wolf Atlanta",
     "vibe": "sports-bar, nightlife, downtown, party, casual, high-energy, lively, bustling, social, fun, festive, urban, upbeat",
-    "type": "bar",
+    "type": ["bar", "sports bar"],
     "lat": 33.7838568,
     "lon": -84.3836206,
     "link": "https://www.instagram.com/wickedwolfatlanta/",
@@ -3149,7 +3149,7 @@ const atlantaData = [
     "slug": "block-drum",
     "name": "BLOCK & DRUM",
     "vibe": "whiskey, lounge, upscale, bourbon, polished, local, industrial, refined, stylish, intimate, masculine, moody, crafted",
-    "type": "bar",
+    "type": ["cocktail", "lounge"],
     "lat": 33.888521,
     "lon": -84.313226,
     "link": "https://www.instagram.com/blockanddrum/",
@@ -3220,7 +3220,7 @@ const atlantaData = [
     "slug": "victory-sandwich-bar",
     "name": "Victory Sandwich Bar",
     "vibe": "sandwiches, quirky, laid-back, drinks, ping pong, divey, quick-bite, fun, casual, hip, low-key",
-    "type": "lunch",
+    "type": ["lunch", "bar"],
     "lat": 33.7639997,
     "lon": -84.3577859,
     "link": "https://www.instagram.com/victorysandwichbar/",
@@ -3297,7 +3297,7 @@ const atlantaData = [
     "slug": "twains-brewpub-billiards",
     "name": "Twain's Brewpub & Billiards",
     "vibe": "billiards, beer, games, local, pub, casual, arcade, fun, group-friendly, laid-back, classic, social, relaxed",
-    "type": "bar",
+    "type": ["bar", "activity"],
     "lat": 33.77228,
     "lon": -84.294616,
     "link": "https://www.instagram.com/twainsbrewpub/",
@@ -3376,7 +3376,7 @@ const atlantaData = [
     "vibe": "wine, intimate, european, seafood, romantic, dim, curated, aperitif, refined, cozy, stylish, upscale, slow-paced, warm",
     "type": [
       "wine bar",
-      "cocktail"
+      "cocktail", "dinner"
     ],
     "lat": 33.775424,
     "lon": -84.295543,
@@ -3449,8 +3449,8 @@ const atlantaData = [
     "name": "Indaco",
     "vibe": "italian, stylish, light-filled, brunch, group-friendly, pasta, fresh, airy, modern, inviting, elegant, rustic, approachable",
     "type": [
-      "lunch",
-      "dinner"
+      "brunch", "lunch",
+      "dinner", "cocktail"
     ],
     "lat": 33.77372173,
     "lon": -84.36195002,
@@ -3608,7 +3608,7 @@ const atlantaData = [
     "slug": "halfway-crooks-beer",
     "name": "Halfway Crooks Beer",
     "vibe": "brewery, belgian-style, minimalist, local, industrial, craft, hipster, casual",
-    "type": "bar",
+    "type": ["bar", "brewery"],
     "lat": 33.736999,
     "lon": -84.385751,
     "link": "https://www.instagram.com/halfwaycrooksbeer/",
@@ -3839,7 +3839,7 @@ const atlantaData = [
     "slug": "9-mile-station",
     "name": "9 Mile Station",
     "vibe": "rooftop, beer-garden, gastropub, skyline, open-air, scenic, relaxed, social, warm, inviting, picturesque, casual, lively",
-    "type": "rooftop",
+    "type": ["rooftop", "brunch", "dinner"],
     "lat": 33.7728212,
     "lon": -84.3659039,
     "link": "https://www.instagram.com/9milestation/",
@@ -3919,7 +3919,7 @@ const atlantaData = [
     "type": [
       "dinner",
       "lunch",
-      "rooftop"
+      "rooftop", "bar"
     ],
     "lat": 33.7521019,
     "lon": -84.3568532,
@@ -3994,7 +3994,7 @@ const atlantaData = [
     "slug": "scad-fash-museum-of-fashion-film",
     "name": "SCAD FASH Museum of Fashion + Film",
     "vibe": "museum, fashion, culture, design, art-forward, modern, educational, inspiring, curated, creative, immersive, elevated",
-    "type": "gallery",
+    "type": ["lifestyle", "museum"],
     "lat": 33.798045,
     "lon": -84.390777,
     "link": "https://www.instagram.com/scadfash/",
@@ -4784,7 +4784,7 @@ const atlantaData = [
     "slug": "the-painted-pin",
     "name": "The Painted Pin",
     "vibe": "bowling, upscale, nightlife, social, arcade, cocktails, industrial, trendy, vibrant, playful, polished, stylish, group-friendly",
-    "type": "activity",
+    "type": ["activity", "cocktail"],
     "lat": 33.83001715,
     "lon": -84.362606,
     "link": "https://www.instagram.com/thepaintedpinatl/",
@@ -4938,7 +4938,7 @@ const atlantaData = [
     "slug": "sweetwater-brewing-company",
     "name": "SweetWater Brewing Company",
     "vibe": "brewery, beer, outdoors, casual, spacious, southern, laid-back, lively, social",
-    "type": "bar",
+    "type": ["bar", "brewery"],
     "lat": 33.8083643,
     "lon": -84.38069217,
     "link": "https://www.instagram.com/sweetwatertaproom/",
@@ -5098,7 +5098,7 @@ const atlantaData = [
     "type": [
       "music",
       "cocktail",
-      "workspace"
+      "coffee", "breakfast", "lunch", "dinner"
     ],
     "lat": 33.7250434,
     "lon": -84.3770384,
@@ -5247,7 +5247,7 @@ const atlantaData = [
     "slug": "hc-biergarten",
     "name": "HC Biergarten",
     "vibe": "biergarten, outdoor, social, casual, festive, group-friendly, picnic",
-    "type": "bar",
+    "type": ["bar", "brewery"],
     "lat": 33.73708276,
     "lon": -84.38546065,
     "link": "https://www.instagram.com/hcbiergarten/",
@@ -5466,7 +5466,7 @@ const atlantaData = [
     "slug": "lottafrutta",
     "name": "Lottafrutta",
     "vibe": "smoothie, fruit, cuban, breakfast, fresh, colorful, daytime, healthy, tropical, vibrant, casual, cheerful, light",
-    "type": "lunch",
+    "type": ["cafe", "lunch"],
     "lat": 33.75597905,
     "lon": -84.36808679,
     "link": "https://www.instagram.com/lottafruttaatl/",
@@ -5540,7 +5540,7 @@ const atlantaData = [
     "slug": "the-little-tart-bakeshop",
     "name": "The Little Tart Bakeshop",
     "vibe": "bakery, coffee, french-inspired, pastry, minimalist, local, cozy, artisanal, quaint, bright, casual, sweet, neighborhood",
-    "type": "bakery",
+    "type": ["cafe", "bakery"],
     "lat": 33.746078,
     "lon": -84.3727959,
     "link": "https://www.instagram.com/littletartbakeshop/",
@@ -5770,7 +5770,7 @@ const atlantaData = [
   {
     "slug": "gaja-korean-bar",
     "name": "Gaja Korean Bar",
-    "vibe": "korean, cocktails, late-night, trendy, neon, grilled, edgy, bold, vibrant, casual, nightlife, youthful, social",
+    "vibe": "korean, cocktails, trendy, neon, grilled, edgy, bold, vibrant, casual, nightlife, youthful, social",
     "type": [
       "dinner",
       "cocktail"
@@ -5925,7 +5925,7 @@ const atlantaData = [
     "slug": "banshee",
     "name": "Banshee",
     "vibe": "upscale, date-night, cocktails, new-american, moody, buzzy, chic, intimate, curated, creative, stylish, refined, dimly-lit",
-    "type": "dinner",
+    "type": ["dinner", "cocktail"],
     "lat": 33.7400282,
     "lon": -84.3459555,
     "link": "https://www.instagram.com/banshee_eav/",
@@ -6055,7 +6055,7 @@ const atlantaData = [
     "slug": "pure-quill-superette",
     "name": "Pure Quill Superette",
     "vibe": "gourmet, pantry, local-goods, deli, quirky, small-format, curated, artisanal, unique, cozy, nostalgic, boutique, casual",
-    "type": "lunch",
+    "type": ["breakfast", "lunch"],
     "lat": 33.7477238,
     "lon": -84.3428416,
     "link": "https://www.instagram.com/pure.quill.superette/",
@@ -6211,7 +6211,7 @@ const atlantaData = [
     "vibe": "dog-friendly, coffee, patio, casual, local, community, relaxed, social, cozy, laid-back",
     "type": [
       "coffee",
-      "workspace"
+      "workspace", "patio"
     ],
     "lat": 33.7501026,
     "lon": -84.354649,
@@ -6441,8 +6441,7 @@ const atlantaData = [
     "name": "El Tesoro",
     "vibe": "mexican, outdoor, margaritas, authentic, family-friendly, casual, vibrant, neighborhood",
     "type": [
-      "bar",
-      "dinner"
+      "dinner", "patio", "lunch"
     ],
     "lat": 33.749472,
     "lon": -84.342591,
@@ -6516,7 +6515,7 @@ const atlantaData = [
   {
     "slug": "a-mano",
     "name": "a mano",
-    "vibe": "italian, cozy, seasonal, neighborhood, date-night, romantic, intimate, casual-elegant, rustic, warm, charming, inviting, classic",
+    "vibe": "italian, cozy, wine, seasonal, neighborhood, date-night, romantic, intimate, casual-elegant, rustic, warm, charming, inviting, classic",
     "type": "dinner",
     "lat": 33.76387055,
     "lon": -84.36830803,
@@ -6619,7 +6618,7 @@ const atlantaData = [
     "name": "Woody's CheeseSteaks",
     "vibe": "cheesesteak, late-night, classic, fast-casual, local, no-frills, neighborhood, quick-bite, casual, hearty, retro, laid-back, friendly",
     "type": [
-      "lunch"
+      "lunch", "late-night"
     ],
     "lat": 33.77935922,
     "lon": -84.36955514,
@@ -6700,7 +6699,7 @@ const atlantaData = [
     "type": [
       "bar",
       "activity",
-      "brunch"
+      "brunch", "patio"
     ],
     "lat": 33.7821472,
     "lon": -84.36923885,
@@ -7007,7 +7006,7 @@ const atlantaData = [
     "slug": "himitsu",
     "name": "Himitsu",
     "vibe": "speakeasy, exclusive, japanese, intimate, moody, upscale, polished, refined, romantic, dimly-lit, luxurious, curated, stylish",
-    "type": "speakeasy",
+    "type": ["speakeasy", "cocktail"],
     "lat": 33.8387046,
     "lon": -84.3810675,
     "link": "https://www.instagram.com/umisushiatl",
@@ -7226,7 +7225,7 @@ const atlantaData = [
     "slug": "burles-bar",
     "name": "Burle's Bar",
     "vibe": "intimate, cocktails, plants, patio, jazz, music, hidden, lounge",
-    "type": "cocktail",
+    "type": ["cocktail", "patio"],
     "lat": 33.7681929,
     "lon": -84.362462,
     "link": "https://www.instagram.com/burlesbar/",
@@ -7768,7 +7767,7 @@ const atlantaData = [
   {
     "slug": "palo-santo",
     "name": "Palo Santo",
-    "vibe": "rooftop, latin, upscale, views, mezcal, nightlife, vibrant, trendy, exotic, festive, scenic, social, lively",
+    "vibe": "rooftop, latin, upscale, views, cocktail, wine, nightlife, vibrant, trendy, exotic, festive, scenic, dance, social, lively",
     "type": [
       "cocktail",
       "dinner",
@@ -7847,7 +7846,7 @@ const atlantaData = [
     "slug": "high-museum-of-art",
     "name": "High Museum of Art",
     "vibe": "art, contemporary, culture, modern, architecture, educational, design-forward, curated, inspiring, public, artistic, creative, iconic",
-    "type": "gallery",
+    "type": "museum",
     "lat": 33.78953465,
     "lon": -84.38626657,
     "link": "https://www.instagram.com/highmuseumofart/",
@@ -8341,9 +8340,9 @@ const atlantaData = [
     "slug": "fado-irish-pub",
     "name": "Fado Irish Pub",
     "vibe": "irish, pub, sports, beer, community, casual, bar-food, friendly, lively, social, traditional, soccer",
-    "type": "bar",
-    "lat": 33.7797074,
-    "lon": -84.3840009,
+    "type": ["bar", "sports bar"],
+    "lat": 33.8379478,
+    "lon": -84.3785214,
     "link": "https://www.instagram.com/fadoirishpub/",
     "cover": "img/venues/Fado Irish Pub.jpg",
     "openNow": true,
@@ -8499,7 +8498,7 @@ const atlantaData = [
     "slug": "northside-tavern",
     "name": "Northside Tavern",
     "vibe": "dive-bar, live-music, blues, gritty, historic, late-night, local, unpretentious, raw, neighborhood, soulful, casual, authentic",
-    "type": "bar",
+    "type": ["bar", "music"],
     "lat": 33.7836184,
     "lon": -84.4120813,
     "link": "https://www.instagram.com/thenorthsidetavern/",
@@ -8657,7 +8656,7 @@ const atlantaData = [
     "slug": "ormsbys",
     "name": "Ormsby's",
     "vibe": "pub, games, basement, chill, bocce, darts, social, casual, playful, retro, fun, beer, lively",
-    "type": "bar",
+    "type": ["bar", "activity"],
     "lat": 33.7859263,
     "lon": -84.4119319,
     "link": "https://www.instagram.com/ormsbys/",
@@ -9067,7 +9066,7 @@ const atlantaData = [
     "slug": "yuji-modern-japanese",
     "name": "Yuji Modern Japanese",
     "vibe": "omakase, minimalist, modern, japanese, refined, small-plates, chef-driven, exclusive",
-    "type": "dinner",
+    "type": ["lunch", "dinner"],
     "lat": 33.75704209,
     "lon": -84.36615321,
     "link": "https://www.instagram.com/yujiatlanta/",
@@ -9188,7 +9187,7 @@ const atlantaData = [
     "vibe": "patio, bar, beer, american, sports, group-friendly, lively, social, sunny",
     "type": [
       "brunch",
-      "bar"
+      "bar", "sports bar", "patio"
     ],
     "lat": 33.759717,
     "lon": -84.3646037,
@@ -9266,7 +9265,7 @@ const atlantaData = [
     "slug": "painted-park",
     "name": "Painted Park",
     "vibe": "bar, outdoor, casual, sports, fun, lively, crowd-pleaser",
-    "type": "bar",
+    "type": ["bar", "patio", "sports bar"],
     "lat": 33.76254145,
     "lon": -84.35944542,
     "link": "https://www.instagram.com/paintedparkatlanta/",
@@ -9418,7 +9417,7 @@ const atlantaData = [
     "name": "BeetleCat",
     "vibe": "seafood, nautical, oysters, brunch, stylish, fresh, festive, cheer, seasonal, patio",
     "type": [
-      "cocktail",
+      "brunch", "cocktail",
       "dinner"
     ],
     "lat": 33.7624505,
@@ -9578,7 +9577,7 @@ const atlantaData = [
     "slug": "dark-horse-tavern",
     "name": "Dark Horse Tavern",
     "vibe": "dive-bar, rock, karaoke, grungy, casual, nightlife, local, rowdy",
-    "type": "bar",
+    "type": ["bar", "music"],
     "lat": 33.7768237,
     "lon": -84.3526593,
     "link": "https://www.instagram.com/darkhorseatlanta/",
@@ -9648,7 +9647,7 @@ const atlantaData = [
     "vibe": "Cocktails, Patio, Retro, Cinema, Funky, Fun, Casual, Eclectic, Festive, Cheer, Photo Booth",
     "type": [
       "bar",
-      "cocktail"
+      "cocktail", "patio"
     ],
     "lat": 33.77832855,
     "lon": -84.35305049,
@@ -9725,8 +9724,8 @@ const atlantaData = [
   {
     "slug": "moes-and-joes",
     "name": "Moe's and Joe's",
-    "vibe": "pub, casual, sports, patio, local-favorite, old-school, unpretentious",
-    "type": "bar",
+    "vibe": "pub, dive, casual, sports, patio, local-favorite, old-school, unpretentious",
+    "type": ["bar", "sports bar", "patio"],
     "lat": 33.7828246,
     "lon": -84.3541834,
     "link": "https://www.instagram.com/moesandjoesatl/",
@@ -9882,8 +9881,8 @@ const atlantaData = [
   {
     "slug": "clermont-lounge",
     "name": "Clermont Lounge",
-    "vibe": "dive-bar, burlesque, historic, eccentric, gritty, legendary, unfiltered",
-    "type": "bar",
+    "vibe": "late-night, burlesque, historic, eccentric, gritty, legendary, unfiltered",
+    "type": "lounge",
     "lat": 33.77347,
     "lon": -84.361399,
     "link": "https://www.instagram.com/clermontlounge/",
@@ -9956,8 +9955,8 @@ const atlantaData = [
   {
     "slug": "spaceman",
     "name": "Spaceman",
-    "vibe": "rooftop, modern, cocktails, hotel-bar, skyline, upscale",
-    "type": "rooftop",
+    "vibe": "rooftop, modern, cocktails, hotel-bar, skyline, views, date-night, upscale",
+    "type": ["rooftop", "cocktail"],
     "lat": 33.8436339,
     "lon": -84.3620118,
     "link": "https://www.instagram.com/spacemanatl/",
@@ -10034,7 +10033,7 @@ const atlantaData = [
     "slug": "elemental-spirits-co",
     "name": "Elemental Spirits Co.",
     "vibe": "wine, spirits, curated, boutique, artisanal",
-    "type": "random gem",
+    "type": ["lifestyle", "random gem"],
     "lat": 33.7707666,
     "lon": -84.352723,
     "link": "https://www.instagram.com/elementalspirits.co/",
@@ -10336,7 +10335,7 @@ const atlantaData = [
     "slug": "perrines-wine-westside",
     "name": "PERRINE's WINE - Westside",
     "vibe": "wine, upscale, french, boutique, refined, expert",
-    "type": "random gem",
+    "type": ["lifestyle", "random gem"],
     "lat": 33.785691,
     "lon": -84.411774,
     "link": "https://www.instagram.com/perrineswine_westside/",
@@ -10410,7 +10409,7 @@ const atlantaData = [
     "slug": "barcelona-wine-bar",
     "name": "Barcelona Wine Bar",
     "vibe": "tapas, wine, spanish, bustling, date-night, patio, energetic",
-    "type": "wine bar",
+    "type": ["brunch", "lunch", "dinner", "wine bar"],
     "lat": 33.76254145,
     "lon": -84.35944542,
     "link": "https://www.instagram.com/barcelonawinebar/",
@@ -10488,7 +10487,7 @@ const atlantaData = [
     "name": "Lucian Books and Wine",
     "vibe": "wine, bookstore, quiet, elegant, artistic, refined",
     "type": [
-      "wine bar",
+      "lunch", "wine bar",
       "dinner"
     ],
     "lat": 33.8369462,
@@ -10634,8 +10633,8 @@ const atlantaData = [
   {
     "slug": "vinoteca",
     "name": "VinoTeca",
-    "vibe": "wine, stylish, retail, european, tastings, intimate, outdoor seating, live music",
-    "type": "wine bar",
+    "vibe": "wine, casual, somm, retail, european, tastings, intimate, outdoor seating, live music",
+    "type": ["wine bar", "patio"],
     "lat": 33.7624505,
     "lon": -84.35858396,
     "link": "https://www.instagram.com/shopvinoteca/",
@@ -11182,7 +11181,7 @@ const atlantaData = [
     "slug": "java-saga",
     "name": "Java Saga",
     "vibe": "Sandwich, Taiwanese, Coffee, Quick‑Bite, Trendy, Hidden‑Gem, Casual, Takeaway, Crunchy, Local",
-    "type": "lunch",
+    "type": ["coffee", "tea", "lunch"],
     "lat": 33.8932252,
     "lon": -84.2834331,
     "link": "https://www.instagram.com/javasagacoffee/?hl=en",
@@ -11327,7 +11326,7 @@ const atlantaData = [
     "slug": "how-crispy-express",
     "name": "How Crispy Express",
     "vibe": "Funky, Retro, Chicken‑Centric, Fast‑Casual, Urban, Bold, Crunchy, Flavorful, Casual, Street",
-    "type": "dinner",
+    "type": ["lunch", "dinner"],
     "lat": 33.736586,
     "lon": -84.38522,
     "link": "https://www.instagram.com/howcrispy/?hl=en",
@@ -11401,7 +11400,7 @@ const atlantaData = [
     "slug": "genes",
     "name": "Gene's",
     "vibe": "BBQ, Viet‑Cajun, Smoked‑Meats, Bold, Barbecue, Casual, Party‑Energy, Neighborhood, Late‑Night, Flavorful",
-    "type": "dinner",
+    "type": ["dinner", "cocktail"],
     "lat": 33.7506665,
     "lon": -84.30957242,
     "link": "https://www.instagram.com/_genesgenesgenes_/?hl=en",
@@ -11619,7 +11618,7 @@ const atlantaData = [
   {
     "slug": "miss-conduck",
     "name": "Miss Conduck",
-    "vibe": "Hidden, Intimate, Modern‑Southern, Date‑Spot, Early‑Evening, Cozy, Local, Chic, Flavorful, Casual",
+    "vibe": "Intimate, Modern‑Southern, Date‑Night, Early‑Evening, Cozy, Local, Chic, Flavorful, Casual",
     "type": "dinner",
     "lat": 33.754172,
     "lon": -84.375953,
@@ -12212,7 +12211,7 @@ const atlantaData = [
     "slug": "lanzhou-ramen",
     "name": "LanZhou Ramen",
     "vibe": "Ramen, Noodle‑Bar, Urban, Fast‑&‑Flavorful, Comfort, Casual, Local, Street‑Food, Quick, Trendy",
-    "type": "dinner",
+    "type": ["lunch", "dinner"],
     "lat": 33.8948429,
     "lon": -84.2819667,
     "link": "https://www.instagram.com/lanzhouramenga/?hl=en",
@@ -12289,7 +12288,7 @@ const atlantaData = [
     "slug": "la-calavera",
     "name": "La Calavera",
     "vibe": "Latin, Family‑Run, Morning, Spot, Casual, Chill, Local, Bright, Friendly, Warm",
-    "type": "dinner",
+    "type": ["lunch", "dinner"],
     "lat": 33.74751926,
     "lon": -84.33212981,
     "link": "https://www.instagram.com/lacalaverapizza/?hl=en",
@@ -12362,7 +12361,7 @@ const atlantaData = [
     "vibe": "Café, Parisian, Dreamy, Brunch, Euro, Instagram‑Friendly, Light, Elegant, Sophisticated, Cozy",
     "type": [
       "coffee",
-      "brunch"
+      "brunch", "dinner"
     ],
     "lat": 33.7624293,
     "lon": -84.3581661,
@@ -12736,7 +12735,7 @@ const atlantaData = [
     "slug": "reds-beer-garden",
     "name": "Red's Beer Garden",
     "vibe": "Beer, Laid‑Back, Outdoor, Dog‑Friendly, Local, Garden, Casual, Social, Chill, Refreshing",
-    "type": "bar",
+    "type": ["bar", "brewery"],
     "lat": 33.71880063,
     "lon": -84.36842474,
     "link": "https://www.instagram.com/redsbeergarden/?hl=en",
@@ -12881,7 +12880,7 @@ const atlantaData = [
     "slug": "my-parenets-basement",
     "name": "My Parents' Basement",
     "vibe": "Nerdy, Cool, Comics, Beer, Chill, Vibes, Quirky, Fun, Local, Bar",
-    "type": "bar",
+    "type": ["bar", "activity"],
     "lat": 33.7755875,
     "lon": -84.2723257,
     "link": "https://www.instagram.com/myparentsbasement/?hl=en",
@@ -12955,7 +12954,7 @@ const atlantaData = [
     "slug": "boggs-social-supply",
     "name": "Boggs Social & Supply",
     "vibe": "Live‑Music, Indie, Underground, Grunge, Local, Community, Artsy, Social, Night‑Life",
-    "type": "bar",
+    "type": ["bar", "music"],
     "lat": 33.7371739,
     "lon": -84.43040115,
     "link": "https://www.instagram.com/boggssocial/?hl=en",
@@ -13375,7 +13374,7 @@ const atlantaData = [
     "slug": "monday-night-brewing-west-midtown",
     "name": "Monday Night Brewing - West Midtown",
     "vibe": "Brewery, Industrial, Social, Garden, After‑Work, Beer, Polished, Spacious, Modern, Relaxed",
-    "type": "bar",
+    "type": ["bar", "brewery"],
     "lat": 33.7949288,
     "lon": -84.409924,
     "link": "https://www.instagram.com/mondaynight/?hl=en",
@@ -14168,7 +14167,7 @@ const atlantaData = [
     "slug": "madre-selva-atlanta",
     "name": "Madre Selva Atlanta",
     "vibe": "Latin, Modern, Jungle, Chic, Romantic, Ambiance, Dine, Stylish, Exotic, Upscale",
-    "type": "dinner",
+    "type": ["brunch", "dinner"],
     "lat": 33.8226467,
     "lon": -84.3684826,
     "link": "https://www.instagram.com/madreselvaatl/?hl=en",
@@ -14585,7 +14584,7 @@ const atlantaData = [
     "slug": "brookhaven-farmers-market",
     "name": "Brookhaven Farmers Market",
     "vibe": "Market, Suburban, Calm, Family‑Friendly, Organic, Morning, Local, Community, Simple, Relaxed",
-    "type": "market",
+    "type": ["breakfast", "market"],
     "lat": 33.8598471,
     "lon": -84.3344076,
     "link": "https://www.instagram.com/brookhavenfarmersmarket/?hl=en",
@@ -14644,7 +14643,7 @@ const atlantaData = [
     "slug": "peachtree-road-farmers-market",
     "name": "Peachtree Road Farmers Market",
     "vibe": "Market, Family, Organic, Upscale, Health‑Conscious, Shopping, Urban, Neighborhood, Fresh, Friendly",
-    "type": "market",
+    "type": ["breakfast", "market"],
     "lat": 33.8312329,
     "lon": -84.3862539,
     "link": "https://www.instagram.com/ptreefarmersmkt/?hl=en",
@@ -14703,7 +14702,7 @@ const atlantaData = [
     "slug": "morningside-farmers-market",
     "name": "Morningside Farmer's Market",
     "vibe": "Market, Intimate, Artisan, Community, Quiet, Local, Boutique, Fresh, Relaxed, Neighborhood",
-    "type": "market",
+    "type": ["breakfast", "market"],
     "lat": 33.79301775,
     "lon": -84.35693639,
     "link": "https://www.instagram.com/morningsidefarmersmarket/?hl=en",
@@ -14762,7 +14761,7 @@ const atlantaData = [
     "slug": "virginia-highland-farmers-market",
     "name": "Virginia Highland Farmers Market",
     "vibe": "Market, Neighborhood, Relaxed, Walkable, Local‑First, Community, Simple, Outdoor, Friendly, Morning",
-    "type": "market",
+    "type": ["breakfast", "market"],
     "lat": 33.781839,
     "lon": -84.363367,
     "link": "https://www.instagram.com/vahifarmersmarket/?hl=en",
@@ -14821,7 +14820,7 @@ const atlantaData = [
     "slug": "freedom-farmers-market",
     "name": "Freedom Farmers Market",
     "vibe": "Market, Diverse, Cultural, Urban, Foodie, Vendors, Vibrant, Community, Global, Dynamic",
-    "type": "market",
+    "type": ["breakfast", "market"],
     "lat": 33.76778394,
     "lon": -84.35867613,
     "link": "https://www.instagram.com/freedomfarmersmkt/?hl=en",
@@ -15022,7 +15021,7 @@ const atlantaData = [
     "type": [
       "brunch",
       "happy hour",
-      "bar"
+      "bar", "activity"
     ],
     "lat": 33.7831991,
     "lon": -84.4115332,
@@ -15359,7 +15358,7 @@ const atlantaData = [
     "name": "Ticonderoga Club",
     "vibe": "Cocktail, Hidden, Intimate, Old‑School, Cozy, Dining, Classic, Local, Bar, Refined",
     "type": [
-      "bar",
+      "cocktail",
       "dinner"
     ],
     "lat": 33.7588882,
@@ -15509,7 +15508,7 @@ const atlantaData = [
     "slug": "bar-blanc",
     "name": "Bar Blanc",
     "vibe": "Lounge, Romantic, Euro‑Chic, Date‑Night, Intimate, Wine, Stylish, Elegant, Cozy, Soft",
-    "type": "cocktail",
+    "type": ["cocktail", "dinner"],
     "lat": 33.787134,
     "lon": -84.41266,
     "link": "https://www.instagram.com/barblancatlanta/?hl=en",
@@ -15581,7 +15580,7 @@ const atlantaData = [
     "name": "Carmel",
     "vibe": "Mediterranean, Coastal, Breezy, Modern, Upscale, Light, Scenic, Elegant, Refined, Relaxed",
     "type": [
-      "dinner",
+      "lunch", "dinner",
       "cocktail"
     ],
     "lat": 33.83727906,
@@ -15741,7 +15740,7 @@ const atlantaData = [
     "name": "Elektra",
     "vibe": "Latin, Bold, Colorful, Social, Cocktails, Lively, Music, Trendy, Vibrant, Nightlife",
     "type": [
-      "cocktail",
+      "brunch", "lunch", "cocktail",
       "dinner"
     ],
     "lat": 33.768629,
@@ -16056,7 +16055,7 @@ const atlantaData = [
     "type": [
       "breakfast",
       "brunch",
-      "market"
+      "cafe"
     ],
     "lat": 33.78830585,
     "lon": -84.36913713,
@@ -16297,7 +16296,7 @@ const atlantaData = [
     "vibe": "Pub, American, Casual, Sports, Local, Laid-Back, Beer, Burgers, Neighborhood, Relaxed",
     "type": [
       "bar",
-      "dinner"
+      "dinner", "sports bar"
     ],
     "lat": 33.76200645,
     "lon": -84.35752215,
@@ -16973,7 +16972,7 @@ const atlantaData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 2,
     "tags": "street-food, hip-hop-vibe, community-favorite",
     "price": "$",
@@ -17044,7 +17043,7 @@ const atlantaData = [
       "fri": "M",
       "sat": "—"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "creative-space, photography, retro-nostalgia",
     "price": "$",
@@ -17055,7 +17054,7 @@ const atlantaData = [
     "slug": "eleventh-street-pub",
     "name": "Eleventh Street Pub",
     "vibe": "Pub, Draft, Sports, Relaxed, Local, Bar, Burgers, Casual, Game-Day, Chill",
-    "type": "bar",
+    "type": ["bar", "sports bar"],
     "lat": 33.7830897,
     "lon": -84.3875018,
     "link": "https://www.instagram.com/eleventhstreetpub/?hl=en",
@@ -17208,80 +17207,6 @@ const atlantaData = [
     "price": "$$",
     "duration": 2.5,
     "id": "386cca09-16f5-41b7-8645-46efbd33ca48"
-  },
-  {
-    "slug": "lure",
-    "name": "Lure",
-    "vibe": "Seafood, Coastal, Elegant, Patio, Refined, Modern, Fresh, Light, Upscale",
-    "type": [
-      "lunch",
-      "dinner"
-    ],
-    "lat": 33.78499975,
-    "lon": -84.38454233,
-    "link": "https://www.instagram.com/lure.atl/?hl=en",
-    "cover": "img/venues/Lure.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: Closed",
-      "Monday: Closed",
-      "Tuesday: 4:00 PM–9:00 PM",
-      "Wednesday: 4:00 PM–9:00 PM",
-      "Thursday: 4:00 PM–9:00 PM",
-      "Friday: 4:00 PM–10:00 PM",
-      "Saturday: 5:00 PM–10:00 PM"
-    ],
-    "dateEvents": [
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      },
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      }
-    ],
-    "hoursNumeric": {
-      "sun": null,
-      "mon": null,
-      "tue": {
-        "open": 16,
-        "close": 21
-      },
-      "wed": {
-        "open": 16,
-        "close": 21
-      },
-      "thu": {
-        "open": 16,
-        "close": 21
-      },
-      "fri": {
-        "open": 16,
-        "close": 22
-      },
-      "sat": {
-        "open": 17,
-        "close": 22
-      }
-    },
-    "dayParts": {
-      "sun": "—",
-      "mon": "—",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "evening",
-    "energyRamp": 3,
-    "tags": "seafood-forward, romantic, upscale",
-    "price": "$$$",
-    "duration": 2.5,
-    "id": "9a24857e-abb7-41bc-bec2-4d50be81dc73"
   },
   {
     "slug": "el-valle",
@@ -17644,7 +17569,7 @@ const atlantaData = [
     "slug": "little-alley-steak-buckhead",
     "name": "Little Alley Steak Buckhead",
     "vibe": "Steakhouse, Upscale, Whiskey, Dark, Business, Refined, Classic, Bourbon, Chic, Romantic",
-    "type": "dinner",
+    "type": ["lunch", "dinner", "cocktail"],
     "lat": 33.85211425,
     "lon": -84.36635429,
     "link": "https://www.instagram.com/littlealleysteakatl/?hl=en",
@@ -17950,7 +17875,7 @@ const atlantaData = [
     "slug": "casa-balam",
     "name": "Casa Balam",
     "vibe": "Latin, Cocktail, Artistic, Nightlife, Vibrant, Mezcal, Tropical, Stylish, Lively, Social",
-    "type": "dinner",
+    "type": ["brunch", "cocktail", "dinner"],
     "lat": 33.77548713,
     "lon": -84.29902085,
     "link": "https://www.instagram.com/casabalamatl/?hl=en",
@@ -18702,7 +18627,7 @@ const atlantaData = [
     "vibe": "Sports, Bar, Neighborhood, Casual, Screens, Pub, Social, Local, Easy, Game-Day",
     "type": [
       "bar",
-      "lunch"
+      "lunch", "sports bar", "patio"
     ],
     "lat": 33.86082479,
     "lon": -84.33155693,
@@ -18924,7 +18849,7 @@ const atlantaData = [
     "vibe": "American, Seasonal, Modern, Casual, Local, Date-Night, Elevated, Fresh, Neighborhood, Stylish",
     "type": [
       "dinner",
-      "cocktail"
+      "cocktail", "lounge"
     ],
     "lat": 33.8148981,
     "lon": -84.3537531,
@@ -18997,7 +18922,7 @@ const atlantaData = [
     "name": "Whitehall Tavern",
     "vibe": "Sports, Casual, Local, Classic, Pub, Burgers, Laid-Back, Social, Beer, Easy",
     "type": [
-      "bar",
+      "bar", "sports bar",
       "lunch"
     ],
     "lat": 33.8201785,
@@ -19076,7 +19001,7 @@ const atlantaData = [
     "slug": "brewdog-atlanta",
     "name": "Brewdog Atlanta",
     "vibe": "Brewery, Craft, Industrial, Dog-Friendly, Patio, Social, Modern, Energetic, Taproom, Casual",
-    "type": "bar",
+    "type": ["bar", "brewery"],
     "lat": 33.756269,
     "lon": -84.3649011,
     "link": "https://www.instagram.com/brewdogatl/",
@@ -19234,7 +19159,7 @@ const atlantaData = [
     "name": "The Vortex Bar & Grill",
     "vibe": "Burgers, Rock, Eclectic, Iconic, Retro, Bold, Attitude, Local, Casual, Wild",
     "type": [
-      "bar",
+      "bar", "lunch",
       "dinner"
     ],
     "lat": 33.7662554,
@@ -19727,7 +19652,7 @@ const atlantaData = [
     "name": "Yebo Beach Haus",
     "vibe": "Coastal, Trendy, Seasonal, Social, Upscale, Lounge, Vibrant, Stylish, Patio, Contemporary",
     "type": [
-      "lunch",
+      "cocktail", "lunch",
       "dinner"
     ],
     "lat": 33.84334392,
@@ -19907,8 +19832,8 @@ const atlantaData = [
     "name": "Yalda",
     "vibe": "Persian, Elegant, Luxe, Stylish, Flavorful, Modern, Upscale, Warm, Cultural, Refined",
     "type": [
-      "dinner",
-      "cocktail"
+      "brunch", "dinner",
+      "cocktail", "dessert"
     ],
     "lat": 33.7811243,
     "lon": -84.411056,
@@ -20013,8 +19938,7 @@ const atlantaData = [
     "name": "Vesper Atlanta",
     "vibe": "Cocktail, Lounge, Sophisticated, Moody, Late-Night, Stylish, Intimate, Craft, Dark, Social",
     "type": [
-      "cocktail",
-      "bar"
+      "cocktail", "lounge"
     ],
     "lat": 33.7407235,
     "lon": -84.3578402,
@@ -20397,7 +20321,7 @@ const atlantaData = [
     "vibe": "Coffee, Cozy, Minimalist, Work-Friendly, Pastry, Bright, Calm, Modern, Local, Relaxed",
     "type": [
       "coffee",
-      "breakfast"
+      "breakfast", "tea"
     ],
     "lat": 33.8647205,
     "lon": -84.4719725,
@@ -20477,7 +20401,7 @@ const atlantaData = [
     "vibe": "Southern, Historic, Charm, Upscale, Porch, Romantic, Classic, Warm, Local, Elegant",
     "type": [
       "lunch",
-      "dinner"
+      "dinner", "bar", "patio", "music"
     ],
     "lat": 33.86654265,
     "lon": -84.46597944,
@@ -20812,8 +20736,8 @@ const atlantaData = [
     "name": "Communidad Taqueria",
     "vibe": "Mexican, Fresh, Bright, Airy, Quick, Flavorful, Casual, Local, Modern, Accessible",
     "type": [
-      "lunch",
-      "dinner"
+      "breakfast", "lunch",
+      "dinner", "patio"
     ],
     "lat": 33.7611561,
     "lon": -84.3657219,
@@ -20968,7 +20892,7 @@ const atlantaData = [
     "slug": "monday-night-brewing-the-garage",
     "name": "Monday Night Brewing – The Garage",
     "vibe": "Brewery, Experimental, Funky, Warehouse, Social, Craft, Industrial, Creative, Casual",
-    "type": "bar",
+    "type": ["brewery", "bar"],
     "lat": 33.729269,
     "lon": -84.416017,
     "link": "https://www.instagram.com/mondaynight/",
@@ -21123,7 +21047,7 @@ const atlantaData = [
     "name": "Fellaship.ATL",
     "vibe": "Lounge, Upscale, Sports, Southern, Cigar, Social, Stylish, Dim, Bold, Vibe",
     "type": [
-      "bar",
+      "lounge",
       "dinner"
     ],
     "lat": 33.7521147,
@@ -21193,7 +21117,7 @@ const atlantaData = [
     "slug": "the-record-loft",
     "name": "The Record Loft",
     "vibe": "Vinyl, Retro, Chill, Collector, Music, Laid-Back, Eclectic, Hidden, Lounge, Curated",
-    "type": "random gem",
+    "type": ["lifestyle", "random gem"],
     "lat": 33.73453585,
     "lon": -84.34905613,
     "link": "https://www.instagram.com/recordloftatl/?hl=en",
@@ -21505,7 +21429,7 @@ const atlantaData = [
     "name": "Pata Negra Mezcaleria",
     "vibe": "Mezcal, Mexican, Small-Plates, Intimate, Rustic, Warm, Bar, Cozy, Bold, Craft",
     "type": [
-      "cocktail",
+      "cocktail", "lunch",
       "dinner"
     ],
     "lat": 33.80277748,
@@ -21779,7 +21703,7 @@ const atlantaData = [
     "type": [
       "lunch",
       "dinner",
-      "bar"
+      "bar", "patio"
     ],
     "lat": 33.80292081,
     "lon": -84.39310231,
@@ -21858,7 +21782,7 @@ const atlantaData = [
     "name": "Little Rey",
     "vibe": "Mexican, Pollo, Bright, Fun, Fast-Casual, Family, Flavorful, Urban, Accessible, Youthful",
     "type": [
-      "lunch",
+      "breakfast", "lunch",
       "dinner"
     ],
     "lat": 33.807094,
@@ -21939,7 +21863,7 @@ const atlantaData = [
     "vibe": "Brewery, Rooftop, Taproom, Industrial, Events, Craft, Social, Spacious, Scenic, Energetic",
     "type": [
       "rooftop",
-      "bar"
+      "bar", "brewery"
     ],
     "lat": 33.7690299,
     "lon": -84.36195415,
@@ -22098,7 +22022,7 @@ const atlantaData = [
     "name": "TEN ATL",
     "vibe": "Lounge, Hip-Hop, Urban, Nightlife, Social, Late-Night, Stylish, Local, Energy, Bar",
     "type": [
-      "bar",
+      "bar", "lounge",
       "music"
     ],
     "lat": 33.7403991,
@@ -22250,8 +22174,8 @@ const atlantaData = [
   {
     "slug": "cafe-intermezzo-midtown",
     "name": "Café Intermezzo - Midtown",
-    "vibe": "European, Café, Romantic, Dessert, Cozy, Ambient, Classic, Intimate, Vintage, Refined",
-    "type": "dessert",
+    "vibe": "European, Café, Coffee, Romantic, Dessert, Cozy, Date-Night, Ambient, Classic, Intimate, Vintage, Refined",
+    "type": ["coffee", "dessert", "cocktail"],
     "lat": 33.78354631,
     "lon": -84.38342062,
     "link": "https://www.instagram.com/cafeintermezzo/?hl=en",
@@ -22762,7 +22686,7 @@ const atlantaData = [
     "slug": "the-independent",
     "name": "The Independent",
     "vibe": "analog, gamey, smoky, gritty, nostalgic, hangout, dive, spontaneous",
-    "type": "bar",
+    "type": ["activity", "bar"],
     "lat": 33.7803409,
     "lon": -84.3686685,
     "link": "https://www.instagram.com/independentatlanta/",
@@ -22889,7 +22813,7 @@ const atlantaData = [
     "slug": "wild-leap-atlanta",
     "name": "Wild Leap Atlanta",
     "vibe": "energized, bold, contemporary, experimental, brewhouse, date-friendly, branded, bustling",
-    "type": "bar",
+    "type": ["brewery", "bar"],
     "lat": 33.751177,
     "lon": -84.396962,
     "link": "https://www.instagram.com/wildleapatl/",
@@ -23081,7 +23005,7 @@ const atlantaData = [
     "slug": "star-provisions-market-cafe",
     "name": "Star Provisions Market & Cafe",
     "vibe": "daylight, fragrant, mellow, brunchy, pastry, relaxed, warm, wholesome",
-    "type": "brunch",
+    "type": ["breakfast", "bakery", "lunch"],
     "lat": 33.7948534,
     "lon": -84.42727178,
     "link": "https://www.instagram.com/starprovisions/",
@@ -23796,7 +23720,7 @@ const atlantaData = [
     "slug": "murphys-restaurant",
     "name": "Murphy's Restaurant",
     "vibe": "neighborhood, homey, well-balanced, dependable, legacy, relaxed-upscale, weekend, hearty",
-    "type": "dinner",
+    "type": ["breakfast", "lunch", "dinner"],
     "lat": 33.782121,
     "lon": -84.3548853,
     "link": "https://www.instagram.com/murphysatlanta/",
@@ -23863,7 +23787,7 @@ const atlantaData = [
     "vibe": "neon, upbeat, colorful, vibey, new-school, zesty, group-dining, pop",
     "type": [
       "lunch",
-      "dinner"
+      "dinner", "cocktail"
     ],
     "lat": 33.85989,
     "lon": -84.381567,
@@ -23997,7 +23921,7 @@ const atlantaData = [
     "slug": "jds-summerhill-variety-deli",
     "name": "JDS SUMMERHILL VARIETY DELI",
     "vibe": "corner-shop, wrap-joint, fast-casual, lowkey, gritty, delicious, backdoor, local-vibe",
-    "type": "lunch",
+    "type": ["breakfast", "lunch"],
     "lat": 33.73933505,
     "lon": -84.38424365,
     "link": "https://www.instagram.com/summerhill_variety/",
@@ -24059,7 +23983,7 @@ const atlantaData = [
     "slug": "mannys-grant-park",
     "name": "Manny's Grant Park",
     "vibe": "game-day, old-friend, easygoing, talky, neighborhood-core, shots, unfussy, casual-mood",
-    "type": "bar",
+    "type": ["bar", "sports bar"],
     "lat": 33.745608,
     "lon": -84.3685077,
     "link": "https://www.instagram.com/mannysgrantpark/",
@@ -24123,7 +24047,7 @@ const atlantaData = [
   {
     "slug": "el-ponce",
     "name": "El Ponce",
-    "vibe": "Latin-pop, punchy, flavorful, retro-vibe, salsa, late-bite, neighborhood-joint, festive",
+    "vibe": "Latin-pop, punchy, flavorful, retro-vibe, salsa, authentic, neighborhood-joint, festive",
     "type": [
       "lunch",
       "dinner"
@@ -24190,7 +24114,7 @@ const atlantaData = [
     "name": "Roshambo",
     "vibe": "American, Brunch, Neighborhood, Creative, Casual, Stylish, Family-Friendly, Local, Happy-Hour, Approachable",
     "type": [
-      "lunch",
+      "brunch", "lunch",
       "dinner"
     ],
     "lat": 33.81919459,
@@ -24576,7 +24500,7 @@ const atlantaData = [
     "vibe": "Cocktail, Hidden, Seasonal, Intimate, Dramatic, Cozy, Sophisticated, Underground, Curated, New-American",
     "type": [
       "dinner",
-      "cocktail"
+      "cocktail", "speakeasy"
     ],
     "lat": 33.7797376,
     "lon": -84.3675947,
@@ -24732,9 +24656,9 @@ const atlantaData = [
   {
     "slug": "slingshot-social-game-club",
     "name": "Slingshot Social Game Club",
-    "vibe": "Arcade, Social, Games, Casual, Group, Retro, Cocktails, Fun, Inclusive, Night-Out",
+    "vibe": "Arcade, Social, Games, Casual, Date-Night, Group, Retro, Cocktails, Fun, Inclusive, Night-Out",
     "type": [
-      "bar",
+      "cocktail",
       "activity"
     ],
     "lat": 33.78177753,
@@ -25253,7 +25177,7 @@ const atlantaData = [
     "name": "Reynolds Makery & Pulperia",
     "vibe": "Artistic, Crafty, Creative, Local, Eclectic, Gathering, Quirky, Hub, Offbeat, Hidden",
     "type": [
-      "coffee",
+      "coffee", "tea",
       "lifestyle"
     ],
     "lat": 33.74969185,
@@ -25331,8 +25255,8 @@ const atlantaData = [
   {
     "slug": "flora-fauna",
     "name": "Flora/Fauna",
-    "vibe": "Botanical, Natural, Wine, Cozy, Earthy, Plant-Filled, Social, Mindful, Chill, Light",
-    "type": "random gem",
+    "vibe": "Botanical, Natural, Green, Cozy, Earthy, Plant-Filled, Social, Mindful, Chill, Light",
+    "type": "lifestyle",
     "lat": 33.7480535,
     "lon": -84.3627598,
     "link": "https://www.instagram.com/florafaunaatl/",
@@ -25400,7 +25324,7 @@ const atlantaData = [
     "slug": "tropical-express-atl",
     "name": "Tropical Express Atl",
     "vibe": "Plant, Jungle, Creative, Urban, Cozy, Flori-Art, Escape, Community, Sanctuary, Gathering",
-    "type": "random gem",
+    "type": "lifestyle",
     "lat": 33.7752395,
     "lon": -84.41961189,
     "link": "https://www.instagram.com/tropicalexpressatl/",
@@ -25679,7 +25603,7 @@ const atlantaData = [
     "slug": "smorgasburg-atlanta",
     "name": "Smorgasburg Atlanta",
     "vibe": "Food, Street, Open-Air, Festival, Local, Pop-Ups, Urban, Global, Vibrant, Community",
-    "type": "market",
+    "type": ["market", "lunch"],
     "lat": 33.75003202,
     "lon": -84.39545516,
     "link": "https://www.instagram.com/smorgasburgatlanta/",
@@ -26735,7 +26659,7 @@ const atlantaData = [
     "vibe": "Pub, Patio, Casual, Beer, Family, Local, Burgers, Easygoing, Friendly, Neighborhood",
     "type": [
       "bar",
-      "lunch"
+      "lunch", "patio"
     ],
     "lat": 33.7594521,
     "lon": -84.3030657,
@@ -27089,7 +27013,7 @@ const atlantaData = [
     "name": "Westside Motor Lounge",
     "vibe": "Lounge, Retro, Motor, Drinks, Stylish, Casual, Social, Creative, Outdoor, Festive, Community",
     "type": [
-      "bar",
+      "bar", "lunch",
       "patio"
     ],
     "lat": 33.77475185,
@@ -27323,7 +27247,7 @@ const atlantaData = [
     "slug": "kinjo-room",
     "name": "Kinjo Room",
     "vibe": "Fusion, Japanese, Elegant, Modern, Chic, Cocktails, Upscale, Intimate, Stylish, Refined",
-    "type": "dinner",
+    "type": ["dinner", "cocktail"],
     "lat": 33.7866813,
     "lon": -84.41159442,
     "link": "https://www.instagram.com/kinjoroom/",
@@ -27711,7 +27635,7 @@ const atlantaData = [
     "name": "Necessary Purveyor",
     "vibe": "Market, All-day, Coffee, Casual, Grab-and-go, Bakery, Neighborhood, Fresh, Social, Creative",
     "type": [
-      "coffee",
+      "coffee", "bakery",
       "breakfast",
       "lunch"
     ],
@@ -28396,7 +28320,7 @@ const atlantaData = [
     "slug": "dads-garage-theatre",
     "name": "Dad's Garage Theatre",
     "vibe": "Comedic, Live, Alternative, Social, Edgy, Urban, Spontaneous, Theatrical",
-    "type": "cinema",
+    "type": "show",
     "lat": 33.7531952,
     "lon": -84.3686413,
     "link": "https://www.instagram.com/dadsgarageatl/",
@@ -28623,7 +28547,7 @@ const atlantaData = [
     "vibe": "Upscale, Persian, Patio, Social, Brunchy, Lush, Stylish, Contemporary",
     "type": [
       "brunch",
-      "dinner",
+      "dinner", "cocktail",
       "patio"
     ],
     "lat": 33.7615997,
@@ -28850,7 +28774,7 @@ const atlantaData = [
     "slug": "atkins-park-restaurant-bar-virginia-highland",
     "name": "Atkins Park Restaurant & Bar - Virginia Highland",
     "vibe": "Neighborhood, Classic, Bar, Casual, Friendly, Historic, Southern, Lively, Sports",
-    "type": "bar, patio",
+    "type": ["bar", "sports bar", "patio"],
     "lat": 33.7761465,
     "lon": -84.3527672,
     "link": "https://www.instagram.com/atkinspark/",
@@ -28924,7 +28848,7 @@ const atlantaData = [
     "slug": "close-company-bar",
     "name": "Close Company Bar",
     "vibe": "Cocktail, Unpretentious, Lively, Diner‑Inspired, Welcoming, Retro, Social, Buzzing, Accessible",
-    "type": "bar",
+    "type": ["bar", "cocktail"],
     "lat": 33.7680393,
     "lon": -84.3627275,
     "link": "https://www.instagram.com/closecompanybar/",
@@ -29213,7 +29137,7 @@ const atlantaData = [
   {
     "slug": "shoya-izakaya",
     "name": "Shoya Izakaya",
-    "vibe": "Japanese, Casual, Bar-Food, Spirited, Cultural, Lively, Late-Night, Social",
+    "vibe": "Japanese, Casual, Bar-Food, Spirited, Cultural, Lively, Social",
     "type": "dinner",
     "lat": 33.9078783,
     "lon": -84.2866435,
@@ -29365,7 +29289,7 @@ const atlantaData = [
     "slug": "brush-sushi",
     "name": "Brush Sushi",
     "vibe": "Artistic, Sushi, Avant-Garde, Culinary, Bold, Refined, Fusion, Exclusive",
-    "type": "brunch, lunch, dinner",
+    "type": ["brunch", "lunch", "dinner"],
     "lat": 33.837404,
     "lon": -84.3809233,
     "link": "https://www.instagram.com/brushatl/",
@@ -29442,7 +29366,7 @@ const atlantaData = [
     "slug": "lucky-star",
     "name": "Lucky Star",
     "vibe": "Taiwanese, Cocktail, Cafe, Innovative, Stylish, Elevated, Contemporary, Bold, Coffee‑Bar, Brunch‑Spot",
-    "type": "brunch, lunch, dinner",
+    "type": ["coffee", "brunch", "lunch", "dinner", "cocktail"],
     "lat": 33.7834391,
     "lon": -84.4112678,
     "link": "https://www.instagram.com/luckystaratl/",
@@ -29592,7 +29516,7 @@ const atlantaData = [
     "slug": "rreal-tacos-beltline",
     "name": "Rreal Tacos - Beltline",
     "vibe": "Casual, Bold, Flavorful, Street-Style, Social, Vibrant, Accessible, Fun, Spicy, Crowd-Friendly, Festive, Seasonal, Quick-Bite",
-    "type": "lunch, dinner",
+    "type": ["lunch", "dinner"],
     "lat": 33.7729948,
     "lon": -84.3641301,
     "link": "https://www.instagram.com/rrealtacos/",
@@ -30017,7 +29941,7 @@ const atlantaData = [
   {
     "slug": "firewall",
     "name": "Firewall",
-    "vibe": "Contemporary, Bold, Stylish, Restaurant, Modern, Creative, Intimate, Night‑Out, Tasteful, Welcoming",
+    "vibe": "Contemporary, Bold, Stylish, Restaurant, Modern, Creative, Intimate, Pizza, Tasteful, Welcoming",
     "type": [
       "lunch"
     ],
@@ -30075,7 +29999,7 @@ const atlantaData = [
   {
     "slug": "the-westwood",
     "name": "The Westwood",
-    "vibe": "Casual, Restaurant, Neighborhood, Comfort, Simple, Friendly, Relaxed, Dining, Local, Easygoing",
+    "vibe": "Casual, Pool Table, Neighborhood, Comfort, Simple, Friendly, Relaxed, Dive, Local, Easygoing",
     "type": [
       "bar",
       "lunch"
@@ -30652,7 +30576,6 @@ const atlantaData = [
     "name": "Westside Cultural Arts Center",
     "vibe": "Arts, Creative, Community, Gallery, Cultural, Contemporary, Educational, Inspiring, Social, Artistic",
     "type": [
-      "random gem",
       "lifestyle",
       "gallery"
     ],
@@ -31174,9 +31097,9 @@ const atlantaData = [
   {
     "slug": "finca-to-filter-o4w",
     "name": "FiNCA TO FiLTER O4W",
-    "vibe": "Coffee, Minimalist, Local, Chill, Cozy, Morning, Work‑Friendly, Bright, Neighborhood, Artisan",
+    "vibe": "Coffee, Wine, Minimalist, Local, Chill, Cozy, Morning, Work‑Friendly, Bright, Neighborhood, Artisan",
     "type": [
-      "coffee"
+      "coffee", "wine bar"
     ],
     "lat": 33.7662757,
     "lon": -84.3658041,
@@ -31241,9 +31164,9 @@ const atlantaData = [
   {
     "slug": "finca-to-filter-boho",
     "name": "FiNCA TO FilTER BoHo",
-    "vibe": "Coffee, Bohemian, Cozy, Vintage, Local, Morning, Chill, Creative, Warm, Boutique",
+    "vibe": "Coffee, Wine, Bohemian, Cozy, Vintage, Local, Morning, Chill, Creative, Warm, Boutique",
     "type": [
-      "coffee"
+      "coffee", "wine bar"
     ],
     "lat": 33.7269743,
     "lon": -84.365605,
@@ -31513,7 +31436,7 @@ const atlantaData = [
     "name": "Weezy's ATL",
     "vibe": "Bar, Urban, Loud, Music, Drinks, Nightlife, Trendy, Social, Casual, Crowd‑Pleaser",
     "type": [
-      "lounge"
+      "brunch", "lounge"
     ],
     "lat": 33.8110844,
     "lon": -84.3957996,
@@ -31577,7 +31500,7 @@ const atlantaData = [
     "name": "Seed Atlanta",
     "vibe": "Plants, Boutique, Local, Greenery, Serene, Lifestyle, Nature, Nurturing, Calm, Fresh",
     "type": [
-      "random gem"
+      "lifestyle"
     ],
     "lat": 33.8121338,
     "lon": -84.395189,
@@ -31632,7 +31555,7 @@ const atlantaData = [
     "name": "Little's Food Store",
     "vibe": "Deli, Retro, Local, Casual, Historic, Americana, Grab‑N‑Go, No‑Frills, Comfort, Easygoing",
     "type": [
-      "lunch"
+      "breakfast", "lunch"
     ],
     "lat": 33.7492122,
     "lon": -84.3679703,
@@ -32099,7 +32022,7 @@ const atlantaData = [
     "name": "Three Taverns Imaginarium",
     "vibe": "Brewery, Experimental, Whimsical, Craft, Social, Bold, Modern, Playful, Creative, Lively",
     "type": [
-      "bar"
+      "brewery", "bar"
     ],
     "lat": 33.7456843,
     "lon": -84.3602092,
@@ -32360,7 +32283,7 @@ const atlantaData = [
     "vibe": "Lounge, Nightlife, Bar, Stylish, Modern, Social, Dark‑Chic, Drinks, Trendy, Urban",
     "type": [
       "rooftop",
-      "cocktail"
+      "cocktail", "lounge"
     ],
     "lat": 33.7827168,
     "lon": -84.3898115,
@@ -32422,7 +32345,7 @@ const atlantaData = [
     "vibe": "Persian, Middle‑Eastern, Elegant, Date‑Night, Dining, Flavorful, Warm, Spice, Cultural, Cozy",
     "type": [
       "lunch",
-      "dinner"
+      "dinner", "cocktail"
     ],
     "lat": 33.7867605,
     "lon": -84.3829333,
@@ -32655,7 +32578,7 @@ const atlantaData = [
     "name": "LO KEE",
     "vibe": "Asian‑Fusion, Creative, Modern, Bold, Flavorful, Trendy, Colorful, Stylish, Night‑Out, Experimental",
     "type": [
-      "dinner"
+      "dinner", "cocktail"
     ],
     "lat": 33.7848343,
     "lon": -84.4100733,
@@ -32936,8 +32859,7 @@ const atlantaData = [
     "name": "Bar ANA",
     "vibe": "Dessert‑Bar, Sweet, Cozy, Laid‑Back, Casual, Friendly, Late‑Night, Nostalgic, Comfort, Relaxed",
     "type": [
-      "dinner",
-      "cocktail"
+      "cocktail", "dessert"
     ],
     "lat": 33.7735007,
     "lon": -84.3566349,
@@ -33200,7 +33122,7 @@ const atlantaData = [
     "type": [
       "lunch",
       "dinner",
-      "bar"
+      "bar", "lounge"
     ],
     "lat": 33.7399836,
     "lon": -84.3466965,
@@ -33559,66 +33481,6 @@ const atlantaData = [
     "id": "efa5f195-2902-48df-8ad2-bfd9ffc61abb"
   },
   {
-    "slug": "miracle-bar-atlanta",
-    "name": "Miracle Bar Atlanta",
-    "vibe": "Holiday, Themed, Kitschy, Festive, Novelty, Over‑the‑top, Gimmicky, Pop‑up, Instagrammable, Boozy",
-    "type": [
-      "bar"
-    ],
-    "lat": 33.7788521,
-    "lon": -84.3671595,
-    "link": "https://www.instagram.com/miraclebaratlanta/?hl=en",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: 5:00 PM–12:00 AM",
-      "Monday: Closed",
-      "Tuesday: Closed",
-      "Wednesday: 5:00 PM–12:00 AM",
-      "Thursday: 5:00 PM–12:00 AM",
-      "Friday: 5:00 PM–12:00 AM",
-      "Saturday: 5:00 PM–12:00 AM"
-    ],
-    "hoursNumeric": {
-      "sun": {
-        "open": 17,
-        "close": 24
-      },
-      "mon": null,
-      "tue": null,
-      "wed": {
-        "open": 17,
-        "close": 24
-      },
-      "thu": {
-        "open": 17,
-        "close": 24
-      },
-      "fri": {
-        "open": 17,
-        "close": 24
-      },
-      "sat": {
-        "open": 17,
-        "close": 24
-      }
-    },
-    "dayParts": {
-      "sun": "E",
-      "mon": "—",
-      "tue": "—",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "Evening",
-    "energyRamp": 4,
-    "tags": "Festival, Novelty, Seasonal, Playful, Buzz",
-    "price": "$$",
-    "duration": 1.5,
-    "id": "e8173f58-f6db-405a-8011-c53d1fa18c79"
-  },
-  {
     "slug": "georgia-aquarium",
     "name": "Georgia Aquarium",
     "vibe": "Marine, Interactive, Family, Educational, Majestic, Large, Photogenic, Touristy, Wonder, Immersive",
@@ -33816,72 +33678,6 @@ const atlantaData = [
     "id": "8e223d52-b099-43d9-b4a6-8f5b0c3796ed"
   },
   {
-    "slug": "the-blind-pig-parlour-bar",
-    "name": "The Blind Pig Parlour Bar",
-    "vibe": "Speakeasy, Hidden, Cocktails, Dramatic, Velvet, Prohibition, Sultry, Dark, Creative, Seasonal",
-    "type": [
-      "cocktail"
-    ],
-    "lat": 33.8424254,
-    "lon": -84.3830522,
-    "link": "https://www.instagram.com/theblindpigparlourbar/?hl=en",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: 12:00 PM–11:00 PM",
-      "Monday: 4:00 PM–12:00 AM",
-      "Tuesday: 4:00 PM–12:00 AM",
-      "Wednesday: 4:00 PM–12:00 AM",
-      "Thursday: 9:00 PM–12:00 AM",
-      "Friday: 9:00 PM–12:00 AM",
-      "Saturday: 4:00 PM–12:00 AM"
-    ],
-    "hoursNumeric": {
-      "sun": {
-        "open": 12,
-        "close": 23
-      },
-      "mon": {
-        "open": 16,
-        "close": 24
-      },
-      "tue": {
-        "open": 16,
-        "close": 24
-      },
-      "wed": {
-        "open": 16,
-        "close": 24
-      },
-      "thu": {
-        "open": 21,
-        "close": 24
-      },
-      "fri": {
-        "open": 21,
-        "close": 24
-      },
-      "sat": {
-        "open": 16,
-        "close": 24
-      }
-    },
-    "dayParts": {
-      "sun": "E",
-      "mon": "E",
-      "tue": "E",
-      "wed": "E",
-      "thu": "L",
-      "fri": "L",
-      "sat": "E"
-    },
-    "timeCategory": "Evening, Late",
-    "energyRamp": 3,
-    "tags": "Speakeasy, Prohibition, Creative, Mixology, Dark",
-    "price": "$$",
-    "duration": 1.75,
-    "id": "a4ecdd8e-6a9f-4d78-b3dc-4edbca959f91"
-  },
-  {
     "slug": "atlanta-botanical-garden",
     "name": "Atlanta Botanical Garden",
     "vibe": "Nature, Floral, Tranquil, Walkable, Educational, Sculptural, Seasonal, Outdoor, Family, Scenic",
@@ -33995,8 +33791,1777 @@ const atlantaData = [
     "price": "$$$",
     "duration": 2.5,
     "id": "7ed0b617-fd6f-408b-9b50-79dcb7da6b97"
+  },
+  {
+    "slug": "decatur-square",
+    "name": "Decatur Square",
+    "id": "755fc004-c89b-4f32-8940-1125282b417d",
+"vibe": "Park, Gathering, Historic, Green, Scenic, Walkable, Community, Festive, Outdoor, Social",
+    "type": ["park"],
+    "lat": "33.7747076",
+    "lon": "-84.2961203",
+    "link": "https://www.instagram.com/cityofdecaturga/",
+    "cover": "img/venues/Decatur Square.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 AM–12:00 AM",
+      "Monday: 12:00 AM–12:00 AM",
+      "Tuesday: 12:00 AM–12:00 AM",
+      "Wednesday: 12:00 AM–12:00 AM",
+      "Thursday: 12:00 AM–12:00 AM",
+      "Friday: 12:00 AM–12:00 AM",
+      "Saturday: 12:00 AM–12:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 0, "close": 24 }],
+      "mon": [{ "open": 0, "close": 24 }],
+      "tue": [{ "open": 0, "close": 24 }],
+      "wed": [{ "open": 0, "close": 24 }],
+      "thu": [{ "open": 0, "close": 24 }],
+      "fri": [{ "open": 0, "close": 24 }],
+      "sat": [{ "open": 0, "close": 24 }]
+    },
+    "dayParts": {
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "MD",
+      "sun": "MD"
+    },
+    "timeCategory": "Afternoon, Midday",
+    "energyRamp": 1,
+    "tags": "park, downtown, events, historic, gathering, festival, green, family, plaza, music",
+    "price": "$",
+    "duration": 0.5
+  },
+  {
+    "slug": "thirty",
+    "name": "Thirty",
+    "id": "676adc5c-42d4-4ab6-8226-a6f103fe3661",
+"vibe": "Nightclub, Lounge, Dance, Music, VIP, Trendy, Social, Energetic, Stylish, Bass",
+    "type": ["club"],
+    "lat": "33.841001",
+    "lon": "-84.3803451",
+    "link": "https://www.instagram.com/30barxo/?hl=en",
+    "cover": "img/venues/Thirty.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 8:00 PM–2:30 AM",
+      "Friday: 8:00 PM–2:30 AM",
+      "Saturday: 8:00 PM–2:30 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": [{ "open": 20, "close": 26.5 }],
+      "fri": [{ "open": 20, "close": 26.5 }],
+      "sat": [{ "open": 20, "close": 26.5 }]
+    },
+    "dayParts": {
+      "mon": "—",
+      "tue": "—",
+      "wed": "—",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L",
+      "sun": "—"
+    },
+    "timeCategory": "Late Night",
+    "energyRamp": 5,
+    "tags": "nightclub, dance, club, music, VIP, nightlife, Buckhead, DJ, party, late",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "five-paces-inn",
+    "name": "Five Paces Inn",
+    "id": "47631099-d35c-451a-95a0-89d6578913a0",
+"vibe": "Bar, Dive, Casual, Neighborhood, Beer, Social, Retro, Local, Laid‑back, Friendly",
+    "type": ["bar"],
+    "lat": "33.8414694",
+    "lon": "-84.3801434",
+    "link": "https://www.instagram.com/5pacesatl/?hl=en",
+    "cover": "img/venues/Five Paces Inn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 3:00 PM–2:00 AM",
+      "Tuesday: 3:00 PM–2:00 AM",
+      "Wednesday: 3:00 PM–2:00 AM",
+      "Thursday: 3:00 PM–2:00 AM",
+      "Friday: 3:00 PM–2:00 AM",
+      "Saturday: 3:00 PM–2:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": [{ "open": 15, "close": 26 }],
+      "tue": [{ "open": 15, "close": 26 }],
+      "wed": [{ "open": 15, "close": 26 }],
+      "thu": [{ "open": 15, "close": 26 }],
+      "fri": [{ "open": 15, "close": 26 }],
+      "sat": [{ "open": 15, "close": 26 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "L",
+      "sun": "L"
+    },
+    "timeCategory": "Evening, Late",
+    "energyRamp": 4,
+    "tags": "bar, dive, pub, casual, downtown, beer, local, crowd, laidback, social",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "park-bar",
+    "name": "Park Bar",
+    "id": "df29bb52-ea7c-4654-8df6-538072585be1",
+"vibe": "Pub, Beer, Casual, Sports‑Friendly, Downtown, Local, Burger, Social, Whiskey, Laidback",
+    "type": ["bar", "sports bar"],
+    "lat": "33.7581973",
+    "lon": "-84.3927991",
+    "link": "https://www.instagram.com/parkbaratl/?hl=en",
+    "cover": "img/venues/Park Bar.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:30 AM–12:00 AM",
+      "Monday: 11:30 AM–12:00 AM",
+      "Tuesday: 11:30 AM–12:00 AM",
+      "Wednesday: 11:30 AM–12:00 AM",
+      "Thursday: 11:30 AM–12:00 AM",
+      "Friday: 11:30 AM–12:00 AM",
+      "Saturday: 11:30 AM–12:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11.5, "close": 24 }],
+      "mon": [{ "open": 11.5, "close": 24 }],
+      "tue": [{ "open": 11.5, "close": 24 }],
+      "wed": [{ "open": 11.5, "close": 24 }],
+      "thu": [{ "open": 11.5, "close": 24 }],
+      "fri": [{ "open": 11.5, "close": 24 }],
+      "sat": [{ "open": 11.5, "close": 24 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "E"
+    },
+    "timeCategory": "Evening",
+    "energyRamp": 3,
+    "tags": "pub, sports, beer, burgers, downtown, bar, casual, wings, outdoor, social",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "the-whelan",
+    "name": "The Whelan",
+    "id": "449fb355-5343-4eee-86b9-3b6e0cd919a7",
+"vibe": "Bar, Irish, Live‑Music, Classic, Social, Draft, Neighborhood, Cozy, Friendly, Lively",
+    "type": ["bar"],
+    "lat": "33.7891454",
+    "lon": "-84.4261668",
+    "link": "https://www.instagram.com/thewhelanatl/?hl=en",
+    "cover": "img/venues/The Whelan.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:30 AM–11:30 PM",
+      "Monday: 11:30 AM–2:30 AM",
+      "Tuesday: 11:30 AM–2:30 AM",
+      "Wednesday: 11:30 AM–2:30 AM",
+      "Thursday: 11:30 AM–2:30 AM",
+      "Friday: 11:30 AM–2:30 AM",
+      "Saturday: 11:30 AM–2:30 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11.5, "close": 23.5 }],
+      "mon": [{ "open": 11.5, "close": 26.5 }],
+      "tue": [{ "open": 11.5, "close": 26.5 }],
+      "wed": [{ "open": 11.5, "close": 26.5 }],
+      "thu": [{ "open": 11.5, "close": 26.5 }],
+      "fri": [{ "open": 11.5, "close": 26.5 }],
+      "sat": [{ "open": 11.5, "close": 26.5 }]
+    },
+    "dayParts": {
+      "mon": "L",
+      "tue": "L",
+      "wed": "L",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L",
+      "sun": "E"
+    },
+    "timeCategory": "Evening, Late",
+    "energyRamp": 3,
+    "tags": "bar, Irish, live‑music, patio, downtown, drinks, social, classic, local, cozy",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "zoo-atlanta",
+    "name": "Zoo Atlanta",
+    "id": "460ac57a-bf67-4c61-a983-297d43974dd4",
+"vibe": "Zoo, Family, Animals, Educational, Wild, Outdoor, Kids, Adventure, Interactive, Animal‑Lovers",
+    "type": ["museum"],
+    "lat": "33.732596",
+    "lon": "-84.371458",
+    "link": "https://www.instagram.com/zooatl/",
+    "cover": "img/venues/Zoo Atlanta.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–3:30 PM",
+      "Monday: 10:00 AM–3:30 PM",
+      "Tuesday: 10:00 AM–3:30 PM",
+      "Wednesday: 10:00 AM–3:30 PM",
+      "Thursday: 10:00 AM–3:30 PM",
+      "Friday: 10:00 AM–3:30 PM",
+      "Saturday: 10:00 AM–3:30 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 10, "close": 15.5 }],
+      "mon": [{ "open": 10, "close": 15.5 }],
+      "tue": [{ "open": 10, "close": 15.5 }],
+      "wed": [{ "open": 10, "close": 15.5 }],
+      "thu": [{ "open": 10, "close": 15.5 }],
+      "fri": [{ "open": 10, "close": 15.5 }],
+      "sat": [{ "open": 10, "close": 15.5 }]
+    },
+    "dayParts": {
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD",
+      "sun": "MD"
+    },
+    "timeCategory": "Midday",
+    "energyRamp": 3,
+    "tags": "zoo, animals, family, tickets, aquarium, kids, exhibits, education, safari, tours",
+    "price": "$$",
+    "duration": 3
+  },
+  {
+    "slug": "centennial-olympic-park",
+    "name": "Centennial Olympic Park",
+    "id": "efc200c5-22b6-4f6e-9518-f670944039da",
+"vibe": "Park, Historic, Social, Outdoor, Events, Scenic, Family, Green, Gathering, Photography",
+    "type": ["park"],
+    "lat": "33.760463",
+    "lon": "-84.3930831",
+    "link": "https://www.instagram.com/gaworldcongressctr/",
+    "cover": "img/venues/Centennial Olympic Park.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 AM–10:00 PM",
+      "Monday: 7:00 AM–10:00 PM",
+      "Tuesday: 7:00 AM–10:00 PM",
+      "Wednesday: 7:00 AM–10:00 PM",
+      "Thursday: 7:00 AM–10:00 PM",
+      "Friday: 7:00 AM–10:00 PM",
+      "Saturday: 7:00 AM–10:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 7, "close": 22 }],
+      "mon": [{ "open": 7, "close": 22 }],
+      "tue": [{ "open": 7, "close": 22 }],
+      "wed": [{ "open": 7, "close": 22 }],
+      "thu": [{ "open": 7, "close": 22 }],
+      "fri": [{ "open": 7, "close": 22 }],
+      "sat": [{ "open": 7, "close": 22 }]
+    },
+    "dayParts": {
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon",
+    "energyRamp": 2,
+    "tags": "park, historic, fountain, downtown, events, family, walking, skyline, free, outdoor",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "atlantucky-brewing",
+    "name": "Atlantucky Brewing",
+    "id": "d0513e7e-e531-48b7-b60c-291ab7346af9",
+"vibe": "Brewery, Craft, Beer, Local, Social, Hoppy, Casual, Tasting, Friendly, Fun",
+    "type": ["bar", "lunch", "brewery"],
+    "lat": "33.7500392",
+    "lon": "-84.4033955",
+    "link": "https://www.instagram.com/atlantucky/?hl=en",
+    "cover": "img/venues/Atlantucky Brewing.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–10:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 12:00 PM–10:00 PM",
+      "Thursday: 12:00 PM–10:00 PM",
+      "Friday: 12:00 PM–12:00 AM",
+      "Saturday: 12:00 PM–12:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 12, "close": 22 }],
+      "mon": null,
+      "tue": null,
+      "wed": [{ "open": 12, "close": 22 }],
+      "thu": [{ "open": 12, "close": 22 }],
+      "fri": [{ "open": 12, "close": 24 }],
+      "sat": [{ "open": 12, "close": 24 }]
+    },
+    "dayParts": {
+      "mon": "—",
+      "tue": "—",
+      "wed": "A",
+      "thu": "A",
+      "fri": "E",
+      "sat": "E",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon, Evening",
+    "energyRamp": 3,
+    "tags": "brewery, beer, craft, hops, tasting, taproom, local, pours, casual, suds",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "nest-on-four",
+    "name": "Nest on Four",
+    "id": "2d4e4146-7d00-4e4d-91dc-3bce7c0f9a63",
+"vibe": "Sports, Bar, Social, Games, Casual, Beer, Crowd, Cheers, Friendly, Nightlife",
+    "type": ["bar", "sports bar", "cocktail"],
+    "lat": "33.7585169",
+    "lon": "-84.4007167",
+    "link": "https://www.instagram.com/nestonfour/?hl=en",
+    "cover": "img/venues/Nest on Four.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–11:00 PM",
+      "Monday: 11:00 AM–11:00 PM",
+      "Tuesday: 11:00 AM–11:00 PM",
+      "Wednesday: 11:00 AM–11:00 PM",
+      "Thursday: 11:00 AM–11:00 PM",
+      "Friday: 11:00 AM–11:00 PM",
+      "Saturday: 11:00 AM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 23 }],
+      "mon": [{ "open": 11, "close": 23 }],
+      "tue": [{ "open": 11, "close": 23 }],
+      "wed": [{ "open": 11, "close": 23 }],
+      "thu": [{ "open": 11, "close": 23 }],
+      "fri": [{ "open": 11, "close": 23 }],
+      "sat": [{ "open": 11, "close": 23 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "E"
+    },
+    "timeCategory": "Evening",
+    "energyRamp": 4,
+    "tags": "sports, bar, games, beer, wings, downtown, social, TV, cheers, casual",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "fado-irish-pub-midtown",
+    "name": "Fado Irish Pub - Midtown",
+    "id": "b04d10a0-685c-4e25-bcb5-7213cccb31c3",
+"vibe": "Pub, Irish, Whiskey, Social, Classic, Casual, Live‑Music, Warm, Friendly, Nightlife",
+    "type": ["bar", "sports bar", "lunch"],
+    "lat": "33.7797074",
+    "lon": "-84.3840009",
+    "link": "https://www.instagram.com/fadoirishpub/",
+    "cover": "img/venues/Fado Irish Pub Midtown.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–10:00 PM",
+      "Monday: 11:00 AM–11:00 PM",
+      "Tuesday: 11:00 AM–11:00 PM",
+      "Wednesday: 11:00 AM–11:00 PM",
+      "Thursday: 11:00 AM–12:00 AM",
+      "Friday: 12:00 PM–2:00 AM",
+      "Saturday: 10:00 AM–2:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 10, "close": 22 }],
+      "mon": [{ "open": 11, "close": 23 }],
+      "tue": [{ "open": 11, "close": 23 }],
+      "wed": [{ "open": 11, "close": 23 }],
+      "thu": [{ "open": 11, "close": 24 }],
+      "fri": [{ "open": 12, "close": 26 }],
+      "sat": [{ "open": 10, "close": 26 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon, Evening, Late Night",
+    "energyRamp": 4,
+    "tags": "pub, Irish, whiskey, stout, music, Midtown, bar, social, food, cozy",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "octopus-bar",
+    "name": "Octopus Bar",
+    "id": "d693687e-5bed-4db6-9129-b9f356d72066",
+"vibe": "Late‑Night, Small‑Plates, Cocktails, Asian, Fusion, Trendy, Nightlife, Flavorful, Urban, Hidden",
+    "type": ["cocktail", "late-night"],
+    "lat": "33.739403",
+    "lon": "-84.3456604",
+    "link": "https://www.instagram.com/octopusbareav/?hl=en",
+    "cover": "img/venues/Octopus Bar.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 10:30 PM–2:30 AM",
+      "Wednesday: 10:30 PM–2:30 AM",
+      "Thursday: 10:30 PM–2:30 AM",
+      "Friday: 10:30 PM–2:30 AM",
+      "Saturday: 10:30 PM–2:30 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": [{ "open": 22.5, "close": 26.5 }],
+      "wed": [{ "open": 22.5, "close": 26.5 }],
+      "thu": [{ "open": 22.5, "close": 26.5 }],
+      "fri": [{ "open": 22.5, "close": 26.5 }],
+      "sat": [{ "open": 22.5, "close": 26.5 }]
+    },
+    "dayParts": {
+      "mon": "—",
+      "tue": "L",
+      "wed": "L",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L",
+      "sun": "—"
+    },
+    "timeCategory": "Late Night",
+    "energyRamp": 4,
+    "tags": "late‑night, cocktails, eatery, East Atlanta, small‑plates, nightlife, lounge, drinks, nightlife, creative",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "madeira-park",
+    "name": "Madeira Park",
+    "id": "a1c56aab-0752-44b7-be87-e269238c54ce",
+"vibe": "Wine, Bar, Elegant, Tasting, Social, Cozy, Date‑Night, Charcuterie, Stylish, Relaxed",
+    "type": ["wine bar"],
+    "lat": "33.7718353",
+    "lon": "-84.3526972",
+    "link": "https://www.instagram.com/madeiraparkatl/?hl=en",
+    "cover": "img/venues/Madeira Park.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: 3:00 PM–10:00 PM",
+      "Wednesday: 3:00 PM–10:00 PM",
+      "Thursday: 3:00 PM–10:00 PM",
+      "Friday: 3:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 12, "close": 21 }],
+      "mon": null,
+      "tue": [{ "open": 15, "close": 22 }],
+      "wed": [{ "open": 15, "close": 22 }],
+      "thu": [{ "open": 15, "close": 22 }],
+      "fri": [{ "open": 15, "close": 23 }],
+      "sat": [{ "open": 12, "close": 23 }]
+    },
+    "dayParts": {
+      "mon": "—",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon, Evening",
+    "energyRamp": 3,
+    "tags": "wine, bar, tasting, charcuterie, evening, cozy, date‑night, vineyard, pours, social",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "marcel",
+    "name": "Marcel",
+    "id": "0b52667e-5053-4c17-88be-e23b0f084006",
+"vibe": "Steak, Fine‑Dining, Elegant, Classic, Upscale, Meat, Refined, Dinner, Luxury, Sophisticated",
+    "type": ["dinner"],
+    "lat": "33.7857453",
+    "lon": "-84.4125409",
+    "link": "https://www.instagram.com/marcelatlanta/?hl=en",
+    "cover": "img/venues/Marcel.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:00 PM–10:00 PM",
+      "Monday: 5:00 PM–10:00 PM",
+      "Tuesday: 5:00 PM–10:00 PM",
+      "Wednesday: 5:00 PM–10:00 PM",
+      "Thursday: 5:00 PM–10:00 PM",
+      "Friday: 5:00 PM–11:00 PM",
+      "Saturday: 5:00 PM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 17, "close": 22 }],
+      "mon": [{ "open": 17, "close": 22 }],
+      "tue": [{ "open": 17, "close": 22 }],
+      "wed": [{ "open": 17, "close": 22 }],
+      "thu": [{ "open": 17, "close": 22 }],
+      "fri": [{ "open": 17, "close": 23 }],
+      "sat": [{ "open": 17, "close": 23 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L",
+      "sun": "E"
+    },
+    "timeCategory": "Evening, Late",
+    "energyRamp": 3,
+    "tags": "steakhouse, fine‑dining, steak, luxury, upscale, dinner, wine, date‑night, elegant, prime",
+    "price": "$$$$",
+    "duration": 2.25
+  },
+  {
+    "slug": "lewis-barbecue-atlanta",
+    "name": "Lewis Barbecue Atlanta",
+    "id": "0561c739-2642-456d-903b-8dd8638fcac2",
+"vibe": "Barbecue, Smokehouse, Casual, Southern, Hearty, Flavorful, Social, Comfort, Outdoor, Friendly",
+    "type": ["lunch", "dinner"],
+    "lat": "33.7986057",
+    "lon": "-84.371528",
+    "link": "https://www.instagram.com/lewisbarbecue/",
+    "cover": "img/venues/Lewis Barbecue Atlanta.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: 11:00 AM–10:00 PM",
+      "Wednesday: 11:00 AM–10:00 PM",
+      "Thursday: 11:00 AM–10:00 PM",
+      "Friday: 11:00 AM–10:00 PM",
+      "Saturday: 11:00 AM–10:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 21 }],
+      "mon": null,
+      "tue": [{ "open": 11, "close": 22 }],
+      "wed": [{ "open": 11, "close": 22 }],
+      "thu": [{ "open": 11, "close": 22 }],
+      "fri": [{ "open": 11, "close": 22 }],
+      "sat": [{ "open": 11, "close": 22 }]
+    },
+    "dayParts": {
+      "mon": "—",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon",
+    "energyRamp": 3,
+    "tags": "barbecue, smoked, brisket, southern, Texas, casual, meat, comfort, BBQ, flavor",
+    "price": "$$",
+    "duration": 1.25
+  },
+  {
+    "slug": "fox-bros-bar-b-q",
+    "name": "Fox Bros Bar‑B‑Q",
+    "id": "88871d6f-06d9-48d1-b83c-ccf575236931",
+"vibe": "Barbecue, Southern, Smoke, Casual, Flavorful, Social, Comfort, Family, Classic, Local",
+    "type": ["lunch", "dinner"],
+    "lat": "33.761066",
+    "lon": "-84.347476",
+    "link": "https://www.instagram.com/foxbrosbarbq/",
+    "cover": "img/venues/Fox Bros Bar-B-Q.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–10:00 PM",
+      "Monday: 11:00 AM–10:00 PM",
+      "Tuesday: 11:00 AM–10:00 PM",
+      "Wednesday: 11:00 AM–10:00 PM",
+      "Thursday: 11:00 AM–10:00 PM",
+      "Friday: 11:00 AM–11:00 PM",
+      "Saturday: 11:00 AM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 22 }],
+      "mon": [{ "open": 11, "close": 22 }],
+      "tue": [{ "open": 11, "close": 22 }],
+      "wed": [{ "open": 11, "close": 22 }],
+      "thu": [{ "open": 11, "close": 22 }],
+      "fri": [{ "open": 11, "close": 23 }],
+      "sat": [{ "open": 11, "close": 23 }]
+    },
+    "dayParts": {
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "E",
+      "sat": "E",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon, Evening",
+    "energyRamp": 3,
+    "tags": "barbecue, ribs, southern, bbq, family, sauce, casual, smoked, pig, comfort",
+    "price": "$$",
+    "duration": 1.25
+  },
+  {
+    "slug": "sun-in-my-belly",
+    "name": "Sun in My Belly",
+    "id": "72143ed9-6d5b-4786-a53d-dbd981ac2e18",
+"vibe": "Restaurant, Brunch, Bright, Casual, Comfort, Local, Neighborhood, Spacious, Social, Daytime",
+    "type": ["breakfast", "lunch", "dinner"],
+    "lat": "33.764022",
+    "lon": "-84.316504",
+    "link": "https://www.instagram.com/suninmybelly/?hl=en",
+    "cover": "img/venues/Sun in My Belly.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–3:00 PM",
+      "Monday: 8:00 AM–2:00 PM",
+      "Tuesday: 8:00 AM–2:00 PM",
+      "Wednesday: 8:00 AM–2:00 PM",
+      "Thursday: 8:00 AM–2:00 PM",
+      "Friday: 8:00 AM–2:00 PM",
+      "Saturday: 8:00 AM–2:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 8, "close": 15 }],
+      "mon": [{ "open": 8, "close": 14 }],
+      "tue": [{ "open": 8, "close": 14 }],
+      "wed": [{ "open": 8, "close": 14 }],
+      "thu": [{ "open": 8, "close": 14 }],
+      "fri": [{ "open": 8, "close": 14 }],
+      "sat": [{ "open": 8, "close": 14 }]
+    },
+    "dayParts": {
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD",
+      "sun": "MD"
+    },
+    "timeCategory": "Midday",
+    "energyRamp": 3,
+    "tags": "brunch, breakfast, daytime, café, casual, comfort, local, bright, coffee, crowd",
+    "price": "$$",
+    "duration": 1.25
+  },
+  {
+    "slug": "victory-sandwich-bar-decatur",
+    "name": "Victory Sandwich Bar - Decatur",
+    "id": "83e2c912-bce1-4cc8-9ca5-e908970b6d32",
+"vibe": "Restaurant, Sandwiches, Casual, Quick, Flavorful, Local, Urban, Comfort, Friendly, Daily",
+    "type": ["lunch", "bar", "patio"],
+    "lat": "33.7742026",
+    "lon": "-84.2950238",
+    "link": "https://www.instagram.com/victorysandwichbar/?hl=en",
+    "cover": "img/venues/Victory Sandwich Bar - Decatur.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–12:00 AM",
+      "Monday: Closed",
+      "Tuesday: 11:00 AM–12:00 AM",
+      "Wednesday: 11:00 AM–12:00 AM",
+      "Thursday: 11:00 AM–12:00 AM",
+      "Friday: 11:00 AM–12:00 AM",
+      "Saturday: 11:00 AM–12:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 24 }],
+      "mon": null,
+      "tue": [{ "open": 11, "close": 24 }],
+      "wed": [{ "open": 11, "close": 24 }],
+      "thu": [{ "open": 11, "close": 24 }],
+      "fri": [{ "open": 11, "close": 24 }],
+      "sat": [{ "open": 11, "close": 24 }]
+    },
+    "dayParts": {
+      "mon": "—",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "E"
+    },
+    "timeCategory": "Evening",
+    "energyRamp": 2,
+    "tags": "sandwiches, deli, lunch, quick, local, grab‑and‑go, casual, comfort, classic, subs",
+    "price": "$",
+    "duration": 1.25
+  },
+  {
+    "slug": "ela",
+    "name": "Ela",
+    "id": "ed32d646-e49e-4a27-b2d5-b370389179d5",
+"vibe": "Mediterranean, Elegant, Date‑Night, Small‑Plates, Social, Flavorful, Stylish, Cozy, Dining, Refreshing",
+    "type": ["brunch", "dinner", "happy hour"],
+    "lat": "33.7869124",
+    "lon": "-84.3554583",
+    "link": "https://www.instagram.com/ela.atlanta/?hl=en",
+    "cover": "img/venues/Ela.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–9:00 PM",
+      "Monday: 4:00 PM–9:30 PM",
+      "Tuesday: 4:00 PM–9:30 PM",
+      "Wednesday: 4:00 PM–9:30 PM",
+      "Thursday: 4:00 PM–9:30 PM",
+      "Friday: 4:00 PM–10:00 PM",
+      "Saturday: 11:00 AM–10:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 21 }],
+      "mon": [{ "open": 16, "close": 21.5 }],
+      "tue": [{ "open": 16, "close": 21.5 }],
+      "wed": [{ "open": 16, "close": 21.5 }],
+      "thu": [{ "open": 16, "close": 21.5 }],
+      "fri": [{ "open": 16, "close": 22 }],
+      "sat": [{ "open": 11, "close": 22 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon, Evening",
+    "energyRamp": 3,
+    "tags": "Mediterranean, small‑plates, social, date‑night, wine, tapas, chic, modern, fresh, shared",
+    "price": "$$",
+    "duration": 2
+  },
+  {
+    "slug": "boqueria-colony-square",
+    "name": "Boqueria Colony Sqaure",
+    "id": "12e280bd-7dfa-4578-bfa3-be9ef94fe224",
+"vibe": "Spanish, Tapas, Social, Elegant, Wine, Lively, Brunch, Dinner, Urban, Shared‑Plates",
+    "type": ["brunch", "lunch", "dinner", "cocktails", "happy hour"],
+    "lat": "33.7881477",
+    "lon": "-84.3830177",
+    "link": "https://www.instagram.com/boqueria/?hl=en",
+    "cover": "img/venues/Boqueria Colony Sqaure.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–10:00 PM",
+      "Monday: 11:00 AM–10:00 PM",
+      "Tuesday: 11:00 AM–10:00 PM",
+      "Wednesday: 11:00 AM–10:00 PM",
+      "Thursday: 11:00 AM–10:00 PM",
+      "Friday: 11:00 AM–11:00 PM",
+      "Saturday: 11:00 AM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 22 }],
+      "mon": [{ "open": 11, "close": 22 }],
+      "tue": [{ "open": 11, "close": 22 }],
+      "wed": [{ "open": 11, "close": 22 }],
+      "thu": [{ "open": 11, "close": 22 }],
+      "fri": [{ "open": 11, "close": 23 }],
+      "sat": [{ "open": 11, "close": 23 }]
+    },
+    "dayParts": {
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "E",
+      "sat": "E",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon, Evening",
+    "energyRamp": 4,
+    "tags": "spanish, tapas, wine, brunch, dinner, shared, social, classy, vibrant, mediterranean",
+    "price": "$$$",
+    "duration": 2
+  },
+  {
+    "slug": "5church-midtown",
+    "name": "5Church Midtown",
+    "id": "f3f66972-2c36-4eeb-8fc8-58ba052392cc",
+"vibe": "New‑American, Modern, Elegant, Dinner, Social, Stylish, Urban, Nightlife, Craft, Inspiring",
+    "type": ["brunch", "lunch", "dinner", "happy hour"],
+    "lat": "33.7870834",
+    "lon": "-84.3828185",
+    "link": "https://www.instagram.com/5churchatlanta/?hl=en",
+    "cover": "img/venues/5Church Midtown.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–9:30 PM",
+      "Monday: 11:00 AM–10:00 PM",
+      "Tuesday: 11:00 AM–10:00 PM",
+      "Wednesday: 11:00 AM–10:00 PM",
+      "Thursday: 11:00 AM–10:00 PM",
+      "Friday: 11:00 AM–11:00 PM",
+      "Saturday: 11:00 AM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 21.5 }],
+      "mon": [{ "open": 11, "close": 22 }],
+      "tue": [{ "open": 11, "close": 22 }],
+      "wed": [{ "open": 11, "close": 22 }],
+      "thu": [{ "open": 11, "close": 22 }],
+      "fri": [{ "open": 11, "close": 23 }],
+      "sat": [{ "open": 11, "close": 23 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "E"
+    },
+    "timeCategory": "Evening",
+    "energyRamp": 4,
+    "tags": "new‑american, downtown, stylish, dinner, cocktails, date‑night, upscale, chef, modern, social",
+    "price": "$$$",
+    "duration": 2
+  },
+  {
+    "slug": "holeman-and-finch",
+    "name": "Holeman and Finch",
+    "id": "0fc22acd-7f55-46c0-a5eb-a67fdb452c35",
+"vibe": "Gastropub, Classic, Craft, Social, Urban, Cozy, Elevated, Tasting, Drinks, Comfort",
+    "type": ["brunch", "lunch", "dinner", "cocktail"],
+    "lat": "33.7879305",
+    "lon": "-84.3830763",
+    "link": "https://www.instagram.com/holemanandfinch/",
+    "cover": "img/venues/Holeman and Finch.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–9:00 PM",
+      "Monday: 11:00 AM–10:00 PM",
+      "Tuesday: 11:00 AM–10:00 PM",
+      "Wednesday: 11:00 AM–10:00 PM",
+      "Thursday: 11:00 AM–11:00 PM",
+      "Friday: 11:00 AM–11:00 PM",
+      "Saturday: 11:00 AM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 21 }],
+      "mon": [{ "open": 11, "close": 22 }],
+      "tue": [{ "open": 11, "close": 22 }],
+      "wed": [{ "open": 11, "close": 22 }],
+      "thu": [{ "open": 11, "close": 23 }],
+      "fri": [{ "open": 11, "close": 23 }],
+      "sat": [{ "open": 11, "close": 23 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "E"
+    },
+    "timeCategory": "Evening",
+    "energyRamp": 3,
+    "tags": "gastropub, craft, burgers, stylish, drinks, urban, bar, chef, modern, classic",
+    "price": "$$",
+    "duration": 2
+  },
+  {
+    "slug": "lion-chaser-fitness",
+    "name": "Lion Chaser Fitness",
+    "id": "458b42ca-67f4-4154-a0bc-35bb6da5d4bf",
+"vibe": "Gym, Strong, Training, Energetic, Community, Focused, Fitness, Strength, Health, Modern",
+    "type": ["fitness"],
+    "lat": "33.841929",
+    "lon": "-84.3800362",
+    "link": "https://www.instagram.com/lionchaserlife/?hl=en",
+    "cover": "img/venues/Lion Chaser Fitness.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–1:00 PM",
+      "Monday: 5:00 AM–8:00 PM",
+      "Tuesday: 5:00 AM–8:00 PM",
+      "Wednesday: 5:00 AM–7:00 PM",
+      "Thursday: 5:00 AM–7:00 PM",
+      "Friday: 5:00 AM–6:00 PM",
+      "Saturday: 7:00 AM–1:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 8, "close": 13 }],
+      "mon": [{ "open": 5, "close": 20 }],
+      "tue": [{ "open": 5, "close": 20 }],
+      "wed": [{ "open": 5, "close": 19 }],
+      "thu": [{ "open": 5, "close": 19 }],
+      "fri": [{ "open": 5, "close": 18 }],
+      "sat": [{ "open": 7, "close": 13 }]
+    },
+    "dayParts": {
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M",
+      "sun": "M"
+    },
+    "timeCategory": "Morning",
+    "energyRamp": 4,
+    "tags": "gym, workout, training, strength, fitness, health, cardio, classes, studio, wellness",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "pollo-primo",
+    "name": "Pollo Primo",
+    "id": "cc342bfb-9c98-4a43-bee1-20130098eb95",
+"vibe": "Chicken, Latin, Casual, Quick, Flavorful, Street‑Style, Marinated, Accessible, Local, Comfort",
+    "type": ["lunch", "dinner", "patio"],
+    "lat": "33.73279",
+    "lon": "-84.3489586",
+    "link": "https://www.instagram.com/polloprimoatl/?hl=en",
+    "cover": "img/venues/Pollo Primo.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 1:00 PM–8:00 PM",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–10:00 PM",
+      "Wednesday: 12:00 PM–10:00 PM",
+      "Thursday: 12:00 PM–10:00 PM",
+      "Friday: 12:00 PM–10:00 PM",
+      "Saturday: 12:00 PM–10:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 13, "close": 20 }],
+      "mon": null,
+      "tue": [{ "open": 12, "close": 22 }],
+      "wed": [{ "open": 12, "close": 22 }],
+      "thu": [{ "open": 12, "close": 22 }],
+      "fri": [{ "open": 12, "close": 22 }],
+      "sat": [{ "open": 12, "close": 22 }]
+    },
+    "dayParts": {
+      "mon": "—",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A",
+      "sun": "A"
+    },
+    "timeCategory": "Afternoon",
+    "energyRamp": 3,
+    "tags": "chicken, Latin, grilled, casual, food, quick, tacos, family, comfort, rotisserie",
+    "price": "$",
+    "duration": 1.25
+  },
+  {
+    "slug": "fritti",
+    "name": "Fritti",
+    "id": "7726ad47-9618-40e8-970f-95ad6011a780",
+"vibe": "Italian, Fried, Street‑Food, Casual, Crispy, Flavorful, Trendy, Social, Snack, Comfort",
+    "type": ["lunch", "dinner", "patio"],
+    "lat": "33.7629393",
+    "lon": "-84.3577256",
+    "link": "https://www.instagram.com/frittiatl/?hl=en",
+    "cover": "img/venues/Fritti.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:30 AM–10:00 PM",
+      "Monday: 11:30 AM–11:00 PM",
+      "Tuesday: 11:30 AM–11:00 PM",
+      "Wednesday: 11:30 AM–11:00 PM",
+      "Thursday: Closed",
+      "Friday: 5:00 PM–12:00 AM",
+      "Saturday: 11:30 AM–12:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11.5, "close": 22 }],
+      "mon": [{ "open": 11.5, "close": 23 }],
+      "tue": [{ "open": 11.5, "close": 23 }],
+      "wed": [{ "open": 11.5, "close": 23 }],
+      "thu": null,
+      "fri": [{ "open": 17, "close": 24 }],
+      "sat": [{ "open": 11.5, "close": 24 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "—",
+      "fri": "L",
+      "sat": "L",
+      "sun": "E"
+    },
+    "timeCategory": "Evening, Late",
+    "energyRamp": 3,
+    "tags": "italian, fried, snack, casual, comfort, street‑food, tasty, pizza, local, quick",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "highland-cigar-company",
+    "name": "Highland Cigar Company",
+    "id": "769b3655-f7c7-4550-9775-31e76475e269",
+"vibe": "Cigar, Lounge, Smoky, Relaxed, Whiskey, Classic, Social, Upscale, Comfortable, Ritual",
+    "type": ["lounge"],
+    "lat": "33.7619564",
+    "lon": "-84.3596382",
+    "link": "https://www.instagram.com/highland_cigar/?hl=en",
+    "cover": "img/venues/Highland Cigar Company.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–12:00 AM",
+      "Monday: 12:00 PM–12:00 AM",
+      "Tuesday: 12:00 PM–12:00 AM",
+      "Wednesday: 12:00 PM–12:00 AM",
+      "Thursday: 12:00 PM–1:00 AM",
+      "Friday: 12:00 PM–2:00 AM",
+      "Saturday: 12:00 PM–2:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 12, "close": 24 }],
+      "mon": [{ "open": 12, "close": 24 }],
+      "tue": [{ "open": 12, "close": 24 }],
+      "wed": [{ "open": 12, "close": 24 }],
+      "thu": [{ "open": 12, "close": 25 }],
+      "fri": [{ "open": 12, "close": 26 }],
+      "sat": [{ "open": 12, "close": 26 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L",
+      "sun": "E"
+    },
+    "timeCategory": "Evening, Late",
+    "energyRamp": 3,
+    "tags": "cigars, lounge, smoke, whiskey, humidor, classic, relaxed, patio, old‑school, social",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "boxcar-at-hop-city-west-end",
+    "name": "Boxcar at Hop City West End",
+    "id": "667b133b-9d02-4002-b4b0-167f5dc6d69a",
+"vibe": "Taproom, Beer, Casual, Social, Local, Craft, Games, Hangout, Urban, Laidback",
+    "type": ["brunch", "lunch", "dinner"],
+    "lat": "33.7299531",
+    "lon": "-84.4186258",
+    "link": "https://www.instagram.com/boxcaratl/?hl=en",
+    "cover": "img/venues/Boxcar at Hop City West End.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–10:00 PM",
+      "Monday: 4:00 PM–10:00 PM",
+      "Tuesday: Closed",
+      "Wednesday: 4:00 PM–10:00 PM",
+      "Thursday: 4:00 PM–10:00 PM",
+      "Friday: 11:00 AM–10:00 PM",
+      "Saturday: 11:00 AM–10:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 22 }],
+      "mon": [{ "open": 16, "close": 22 }],
+      "tue": null,
+      "wed": [{ "open": 16, "close": 22 }],
+      "thu": [{ "open": 16, "close": 22 }],
+      "fri": [{ "open": 11, "close": 22 }],
+      "sat": [{ "open": 11, "close": 22 }]
+    },
+    "dayParts": {
+      "mon": "E",
+      "tue": "—",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "E"
+    },
+    "timeCategory": "Evening",
+    "energyRamp": 3,
+    "tags": "taproom, breweries, beer, casual, social, flights, hops, West End, urban, tasting",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "toast-on-lenox-buckhead",
+    "name": "Toast On Lenox - Buckhead",
+    "id": "d9431a0f-eb67-46fb-9131-f0e96e6545e9",
+"vibe": "Brunch, Breakfast, Sweet, Casual, Daytime, Warm, Baked, Friendly, Social, Comfort",
+    "type": ["breakfast", "brunch", "lunch"],
+    "lat": "33.8305078",
+    "lon": "-84.3561561",
+    "link": "https://www.instagram.com/toastonlenox/?hl=en",
+    "cover": "img/venues/Toast On Lenox - Buckhead.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–5:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 9:00 AM–5:00 PM",
+      "Thursday: 9:00 AM–5:00 PM",
+      "Friday: 9:00 AM–5:00 PM",
+      "Saturday: 9:00 AM–5:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 9, "close": 17 }],
+      "mon": null,
+      "tue": null,
+      "wed": [{ "open": 9, "close": 17 }],
+      "thu": [{ "open": 9, "close": 17 }],
+      "fri": [{ "open": 9, "close": 17 }],
+      "sat": [{ "open": 9, "close": 17 }]
+    },
+    "dayParts": { "mon": "—", "tue": "—", "wed": "MD", "thu": "MD", "fri": "MD", "sat": "MD", "sun": "MD" },
+    "timeCategory": "Midday",
+    "energyRamp": 4,
+    "tags": "brunch, breakfast, café, Buckhead, pancakes, daytime, casual, sweet, coffee, waffles",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "the-chastain-restaurant",
+    "name": "THE CHASTAIN – Restaurant",
+    "id": "311dc90f-1706-4685-bf37-b74ed5f194c3",
+"vibe": "Fine‑Dining, Elegant, Upscale, Seasonal, Refined, Classic, Dinner, Sophisticated, Special‑Occasion, Polished",
+    "type": ["bakery", "lunch", "dinner", "cocktail"],
+    "lat": "33.8727778",
+    "lon": "-84.3963889",
+    "link": "https://www.instagram.com/thechastainatl/?hl=en",
+    "cover": "img/venues/THE CHASTAIN - Restaurant.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–2:00 PM; 5:00 PM–9:00 PM",
+      "Monday: 7:00 AM–2:00 PM",
+      "Tuesday: 7:00 AM–2:00 PM; 5:00 PM–9:00 PM",
+      "Wednesday: 7:00 AM–2:00 PM; 5:00 PM–9:00 PM",
+      "Thursday: 7:00 AM–2:00 PM; 5:00 PM–9:00 PM",
+      "Friday: 7:00 AM–2:00 PM; 5:00 PM–10:00 PM",
+      "Saturday: 8:00 AM–2:00 PM; 5:00 PM–10:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 8, "close": 14 }, { "open": 17, "close": 21 }],
+      "mon": [{ "open": 7, "close": 14 }],
+      "tue": [{ "open": 7, "close": 14 }, { "open": 17, "close": 21 }],
+      "wed": [{ "open": 7, "close": 14 }, { "open": 17, "close": 21 }],
+      "thu": [{ "open": 7, "close": 14 }, { "open": 17, "close": 21 }],
+      "fri": [{ "open": 7, "close": 14 }, { "open": 17, "close": 22 }],
+      "sat": [{ "open": 8, "close": 14 }, { "open": 17, "close": 22 }]
+    },
+    "dayParts": { "mon": "E", "tue": "MD", "wed": "E", "thu": "E", "fri": "E", "sat": "E", "sun": "E" },
+    "timeCategory": "Midday, Evening",
+    "energyRamp": 3,
+    "tags": "fine‑dining, upscale, dinner, elegant, special‑occasion, chef, refined, seasonal, chic, date",
+    "price": "$$$",
+    "duration": 2
+  },
+  {
+    "slug": "404-exe",
+    "name": "404.exe",
+    "id": "16747510-35c6-4ccd-a0f3-a4c4affb2d6d",
+"vibe": "Nightclub, Electronic, Dance, Music, Late‑Night, Vibe, Trendy, Bass, Energetic, Dark",
+    "type": ["club"],
+    "lat": "33.7740128",
+    "lon": "-84.3632003",
+    "link": "https://www.instagram.com/atl404exe/?hl=en",
+    "cover": "img/venues/404-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: Closed",
+      "Friday: 10:00 PM–3:00 AM",
+      "Saturday: 10:00 PM–3:00 AM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": null,
+      "fri": [{ "open": 22, "close": 27 }],
+      "sat": [{ "open": 22, "close": 27 }]
+    },
+    "dayParts": { "mon": "—", "tue": "—", "wed": "—", "thu": "—", "fri": "L", "sat": "L", "sun": "—" },
+    "timeCategory": "Late Night",
+    "energyRamp": 5,
+    "tags": "nightclub, electronic, dance, music, late‑night, party, Atlanta, club, rave, DJ",
+    "price": "$$",
+    "duration": 2
+  },
+  {
+    "slug": "wahoo-grill",
+    "name": "Wahoo! Grill",
+    "id": "9adc7cfd-0f7d-4518-a6a5-df1d44a13266",
+"vibe": "Grill, Seafood, Casual, Fresh, Flavorful, Lunch, Dinner, Family, Patio, Laidback",
+    "type": ["dinner", "patio"],
+    "lat": "33.764898",
+    "lon": "-84.310732",
+    "link": "https://www.instagram.com/wahoo_grill/?hl=en",
+    "cover": "img/venues/Wahoo! Grill.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 4:00 PM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: 4:00 PM–9:00 PM",
+      "Wednesday: 4:00 PM–9:00 PM",
+      "Thursday: 4:00 PM–9:00 PM",
+      "Friday: 4:00 PM–10:00 PM",
+      "Saturday: 4:00 PM–10:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 16, "close": 21 }],
+      "mon": null,
+      "tue": [{ "open": 16, "close": 21 }],
+      "wed": [{ "open": 16, "close": 21 }],
+      "thu": [{ "open": 16, "close": 21 }],
+      "fri": [{ "open": 16, "close": 22 }],
+      "sat": [{ "open": 16, "close": 22 }]
+    },
+    "dayParts": { "mon": "—", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E", "sun": "E" },
+    "timeCategory": "Evening",
+    "energyRamp": 3,
+    "tags": "grill, seafood, casual, fresh, lunch, dinner, family, local, coastal, social",
+    "price": "$$",
+    "duration": 2
+  },
+  {
+    "slug": "verdure-kitchen-cocktails",
+    "name": "Verdure Kitchen & Cocktails",
+    "id": "8d2831c9-8791-485d-8d3b-757c4f3dd4e1",
+"vibe": "Fine‑Dining, Farm‑to‑Table, Seasonal, Elegant, Refined, Cocktail, Artistic, Modern, Sophisticated, Intimate",
+    "type": ["brunch", "dinner"],
+    "lat": "33.7923112",
+    "lon": "-84.3693822",
+    "link": "https://www.instagram.com/verdureatlanta/?hl=en",
+    "cover": "img/venues/Verdure Kitchen & Cocktails.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–4:00 PM; 5:00 PM–11:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–11:00 PM",
+      "Friday: 5:00 PM–11:00 PM",
+      "Saturday: 11:00 AM–4:00 PM; 5:00 PM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 11, "close": 16 }, { "open": 17, "close": 23 }],
+      "mon": null,
+      "tue": null,
+      "wed": [{ "open": 17, "close": 23 }],
+      "thu": [{ "open": 17, "close": 23 }],
+      "fri": [{ "open": 17, "close": 23 }],
+      "sat": [{ "open": 11, "close": 16 }, { "open": 17, "close": 23 }]
+    },
+    "dayParts": { "mon": "—", "tue": "—", "wed": "E", "thu": "E", "fri": "E", "sat": "E", "sun": "E" },
+    "timeCategory": "Evening",
+    "energyRamp": 3,
+    "tags": "fine‑dining, farm‑to‑table, seasonal, cocktails, elegant, chef, modern, dinner, refined, tasteful",
+    "price": "$$$$",
+    "duration": 2
+  },
+  {
+    "slug": "souper-jenny-westside",
+    "name": "Souper Jenny Westside",
+    "id": "a97d8a65-0e01-41c4-b2f3-24e7fa3ca7f6",
+"vibe": "Soup, Casual, Healthy, Fresh, Seasonal, Lunch, Quick, Comfort, Local, Family",
+    "type": ["lunch"],
+    "lat": "33.7887844",
+    "lon": "-84.4229099",
+    "link": "https://www.instagram.com/souperjennyatl/",
+    "cover": "img/venues/Souper Jenny Westside.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 11:00 AM–4:00 PM",
+      "Tuesday: 11:00 AM–4:00 PM",
+      "Wednesday: 11:00 AM–4:00 PM",
+      "Thursday: 11:00 AM–4:00 PM",
+      "Friday: 11:00 AM–4:00 PM",
+      "Saturday: 11:00 AM–4:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": [{ "open": 11, "close": 16 }],
+      "tue": [{ "open": 11, "close": 16 }],
+      "wed": [{ "open": 11, "close": 16 }],
+      "thu": [{ "open": 11, "close": 16 }],
+      "fri": [{ "open": 11, "close": 16 }],
+      "sat": [{ "open": 11, "close": 16 }]
+    },
+    "dayParts": { "mon": "MD", "tue": "MD", "wed": "MD", "thu": "MD", "fri": "MD", "sat": "MD", "sun": "—" },
+    "timeCategory": "Midday",
+    "energyRamp": 2,
+    "tags": "soup, lunch, healthy, café, quick, fresh, seasonal, casual, comfort, local",
+    "price": "$",
+    "duration": 0.75
+  },
+  {
+    "slug": "the-village-skatepark-atl",
+    "name": "The Village Skatepark ATL",
+    "id": "1d2a800b-b03e-4718-85ea-e9763f6c923c",
+"vibe": "Skatepark, Active, Urban, Outdoor, Community, Youthful, Energetic, Sport, Social, Freestyle",
+    "type": ["activity"],
+    "lat": "33.7719878",
+    "lon": "-84.4229458",
+    "link": "https://www.instagram.com/villageskateparkatl/?hl=en",
+    "cover": "img/venues/The Village Skatepark ATL.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 3:00 PM–11:00 PM",
+      "Monday: Closed",
+      "Tuesday: 3:00 PM–11:00 PM",
+      "Wednesday: 3:00 PM–11:00 PM",
+      "Thursday: 3:00 PM–11:00 PM",
+      "Friday: 3:00 PM–1:00 AM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 15, "close": 23 }],
+      "mon": null,
+      "tue": [{ "open": 15, "close": 23 }],
+      "wed": [{ "open": 15, "close": 23 }],
+      "thu": [{ "open": 15, "close": 23 }],
+      "fri": [{ "open": 15, "close": 25 }],
+      "sat": [{ "open": 12, "close": 23 }]
+    },
+    "dayParts": { "mon": "—", "tue": "E", "wed": "E", "thu": "E", "fri": "L", "sat": "A", "sun": "E" },
+    "timeCategory": "Afternoon, Evening, Late Night",
+    "energyRamp": 3,
+    "tags": "skatepark, skating, outdoor, sport, ramps, community, youth, active, skate, park",
+    "price": "$",
+    "duration": 2
+  },
+  {
+    "slug": "black-coffee-atl",
+    "name": "Black Coffee ATL",
+    "id": "74c79fc5-3bcf-4b61-99d4-d8420eccb39b",
+"vibe": "Coffee, Minimalist, Local, Cozy, Quick, Specialty, Morning, Chill, Casual, Friendly",
+    "type": ["coffee"],
+    "lat": "33.7208999",
+    "lon": "-84.4108434",
+    "link": "https://www.instagram.com/blackcoffeeatl/?hl=en",
+    "cover": "img/venues/Black Coffee ATL.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–4:00 PM",
+      "Monday: 8:00 AM–8:00 PM",
+      "Tuesday: 8:00 AM–8:00 PM",
+      "Wednesday: 8:00 AM–8:00 PM",
+      "Thursday: 8:00 AM–8:00 PM",
+      "Friday: 8:00 AM–8:00 PM",
+      "Saturday: 8:00 AM–4:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 8, "close": 16 }],
+      "mon": [{ "open": 8, "close": 20 }],
+      "tue": [{ "open": 8, "close": 20 }],
+      "wed": [{ "open": 8, "close": 20 }],
+      "thu": [{ "open": 8, "close": 20 }],
+      "fri": [{ "open": 8, "close": 20 }],
+      "sat": [{ "open": 8, "close": 16 }]
+    },
+    "dayParts": { "mon": "M", "tue": "M", "wed": "M", "thu": "M", "fri": "M", "sat": "M", "sun": "M" },
+    "timeCategory": "Morning",
+    "energyRamp": 2,
+    "tags": "coffee, café, espresso, chill, local, morning, quick, specialty, beans, hood",
+    "price": "$",
+    "duration": 0.75
+  },
+  {
+    "slug": "tuft-rugs-atl",
+    "name": "Tuft Rugs ATL",
+    "id": "dad072fb-fc28-4810-bf41-e549da98e3e0",
+"vibe": "Rugs, Artisan, Design, Stylish, Boutique, Craft, Curated, Home, Textile, Trendy",
+    "type": ["activity"],
+    "lat": "33.7197405",
+    "lon": "-84.3940665",
+    "link": "https://www.instagram.com/tuftrugsatl/?hl=en",
+    "cover": "img/venues/Tuft Rugs ATL.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–8:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: Closed",
+      "Friday: 4:00 PM–8:00 PM",
+      "Saturday: 10:00 AM–8:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 10, "close": 20 }],
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": null,
+      "fri": [{ "open": 16, "close": 20 }],
+      "sat": [{ "open": 10, "close": 20 }]
+    },
+    "dayParts": { "mon": "—", "tue": "—", "wed": "—", "thu": "—", "fri": "E", "sat": "A", "sun": "A" },
+    "timeCategory": "Afternoon, Evening",
+    "energyRamp": 2,
+    "tags": "rugs, interior, design, artisan, home, textiles, custom, workshop, boutique, decor",
+    "price": "$$",
+    "duration": 2
+  },
+  {
+    "slug": "guilty-party",
+    "name": "Guilty Party",
+    "id": "97d1d0bd-63cc-4c1a-927b-c168148714c9",
+"vibe": "Boutique, Fashion, Stylish, Curated, Trendy, Local, Urban, Streetwear, Premium, Community",
+    "type": ["lifestyle"],
+    "lat": "33.746231",
+    "lon": "-84.3731798",
+    "link": "https://www.instagram.com/guiltypartyatl/?hl=en",
+    "cover": "img/venues/Guilty Party.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–5:00 PM",
+      "Monday: 11:00 AM–6:00 PM",
+      "Tuesday: 11:00 AM–6:00 PM",
+      "Wednesday: Closed",
+      "Thursday: 11:00 AM–6:00 PM",
+      "Friday: 11:00 AM–6:00 PM",
+      "Saturday: 11:00 AM–6:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 12, "close": 17 }],
+      "mon": [{ "open": 11, "close": 18 }],
+      "tue": [{ "open": 11, "close": 18 }],
+      "wed": null,
+      "thu": [{ "open": 11, "close": 18 }],
+      "fri": [{ "open": 11, "close": 18 }],
+      "sat": [{ "open": 11, "close": 18 }]
+    },
+    "dayParts": { "mon": "A", "tue": "A", "wed": "—", "thu": "A", "fri": "A", "sat": "A", "sun": "A" },
+    "timeCategory": "Afternoon",
+    "energyRamp": 1,
+    "tags": "boutique, men’s, fashion, style, trendy, streetwear, curated, local, apparel, modern",
+    "price": "$$",
+    "duration": 0.5
+  },
+  {
+    "slug": "storico-fresco-ristorante",
+    "name": "Storico Fresco Ristorante",
+    "id": "40b9272d-3792-4248-83f8-0c16b656934e",
+"vibe": "Italian, Classic, Elegant, Pasta, Dinner, Refined, Charming, Authentic, Cozy, Romantic",
+    "type": ["lunch", "dinner"],
+    "lat": "33.83993",
+    "lon": "-84.3761214",
+    "link": "https://www.instagram.com/storicofresco/",
+    "cover": "img/venues/Storico Fresco Ristorante.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 11:30 AM–9:00 PM",
+      "Tuesday: 11:30 AM–9:00 PM",
+      "Wednesday: 11:30 AM–9:00 PM",
+      "Thursday: 11:30 AM–9:00 PM",
+      "Friday: 11:30 AM–10:00 PM",
+      "Saturday: 11:30 AM–10:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": [{ "open": 11, "close": 21 }],
+      "tue": [{ "open": 11, "close": 21 }],
+      "wed": [{ "open": 11, "close": 21 }],
+      "thu": [{ "open": 11, "close": 21 }],
+      "fri": [{ "open": 11, "close": 22 }],
+      "sat": [{ "open": 11, "close": 22 }]
+    },
+    "dayParts": { "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E", "sun": "—" },
+    "timeCategory": "Evening",
+    "energyRamp": 3,
+    "tags": "italian, pasta, wine, cozy, date‑night, authentic, dinner, classic, refined, trattoria",
+    "price": "$$$",
+    "duration": 2
+  },
+  {
+    "slug": "toast-on-lenox-midtown",
+    "name": "Toast on Lenox - Midtown",
+    "id": "03edf6f3-c7b4-43b1-90d2-8441dc4e550a",
+"vibe": "Brunch, Daytime, Casual, Bright, Social, Comfort, Sweet, Sunny, Relaxed, Popular",
+    "type": ["breakfast", "brunch", "lunch"],
+    "lat": "33.7863015",
+    "lon": "-84.3985756",
+    "link": "https://www.instagram.com/toastonlenox/?hl=en",
+    "cover": "img/venues/Toast on Lenox - Midtown.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–5:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 9:00 AM–5:00 PM",
+      "Thursday: 9:00 AM–5:00 PM",
+      "Friday: 9:00 AM–5:00 PM",
+      "Saturday: 9:00 AM–5:00 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 9, "close": 17 }],
+      "mon": null,
+      "tue": null,
+      "wed": [{ "open": 9, "close": 17 }],
+      "thu": [{ "open": 9, "close": 17 }],
+      "fri": [{ "open": 9, "close": 17 }],
+      "sat": [{ "open": 9, "close": 17 }]
+    },
+    "dayParts": { "mon": "—", "tue": "—", "wed": "MD", "thu": "MD", "fri": "MD", "sat": "MD", "sun": "MD" },
+    "timeCategory": "Midday",
+    "energyRamp": 4,
+    "tags": "brunch, breakfast, café, pancakes, sweet, daytime, casual, coffee, Lenox, social",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "the-clothing-warehouse",
+    "name": "The Clothing Warehouse",
+    "id": "4d381c30-d15e-4b37-9972-448efc2d2c0a",
+"vibe": "Vintage, Thrift, Casual, Bargain, Retro, Streetwear, Find, Local, Eclectic, Classic",
+    "type": ["lifestyle"],
+    "lat": "33.765975",
+    "lon": "-84.3492574",
+    "link": "https://www.instagram.com/clothingwarehouse/?hl=en",
+    "cover": "img/venues/The Clothing Warehouse.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–7:00 PM",
+      "Monday: 11:00 AM–8:00 PM",
+      "Tuesday: 11:00 AM–8:00 PM",
+      "Wednesday: 11:00 AM–8:00 PM",
+      "Thursday: 11:00 AM–8:00 PM",
+      "Friday: 11:00 AM–8:30 PM",
+      "Saturday: 11:00 AM–8:30 PM"
+    ],
+    "dateEvents": [
+      { "date": "-", "title": "-", "time": "-" },
+      { "date": "-", "title": "-", "time": "-" }
+    ],
+    "hoursNumeric": {
+      "sun": [{ "open": 12, "close": 19 }],
+      "mon": [{ "open": 11, "close": 20 }],
+      "tue": [{ "open": 11, "close": 20 }],
+      "wed": [{ "open": 11, "close": 20 }],
+      "thu": [{ "open": 11, "close": 20 }],
+      "fri": [{ "open": 11, "close": 20.5 }],
+      "sat": [{ "open": 11, "close": 20.5 }]
+    },
+    "dayParts": { "mon": "A", "tue": "A", "wed": "A", "thu": "A", "fri": "A", "sat": "A", "sun": "A" },
+    "timeCategory": "Afternoon",
+    "energyRamp": 2,
+    "tags": "thrift, vintage, clothing, bargains, retro, mall, casual, deals, fashion, resale",
+    "price": "$$",
+    "duration": 0.75
   }
 ]
+
 ;
 
 export default atlantaData;
