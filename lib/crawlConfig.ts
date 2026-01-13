@@ -554,11 +554,11 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Solo Explorer",
   description: "Cozy solo spots and hidden gems for wandering.",
   stageFlow: [
-  ["coffee", "cafe", "bakery"],
+  "coffee", "cafe", "bakery",
   "random gem",
-  ["gallery", "museum"],
-  ["lunch", "wine"],
-  ["random gem", "lifestyle", "park"]
+  "gallery", "museum",
+  "lunch", "wine",
+  "random gem", "lifestyle", "park"
 ],
   filters: {
     price: [1, 2, 3, 4],
