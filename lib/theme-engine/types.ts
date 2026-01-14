@@ -1,10 +1,12 @@
 import type { Venue } from "@/types/venue";
+import type { StageFlow } from "@/lib/theme-engine/planner-fixed";
+
 
 export type CrawlTheme = {
   themeId: string;
   name: string;
   description: string;
-  stageFlow: string[]; // Ordered types of venues (e.g., coffee → gallery → dinner)
+  stageFlow?: StageFlow; // Ordered types of venues (e.g., coffee → gallery → dinner)
   filters: {
     vibes?: string[];
     tags?: string[];

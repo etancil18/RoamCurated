@@ -11,13 +11,58 @@ const TYPE_MATCH_MAP: Record<string, string[]> = {
   bar: ["bar", "pub", "tavern", "brewery", "gastropub", "taproom", "sports bar", "happy hour"],
   lounge: ["lounge", "cocktail", "speakeasy", "rooftop bar", "hotel bar"],
   club: ["club", "nightclub", "disco", "dance hall"],
-  cafe: ["cafe", "coffee", "espresso", "bakery", "café"],
-  wine: ["wine", "wine bar", "vintner", "tasting room"],
+  coffee: ["cafe", "coffee", "espresso", "bakery", "café"],
+  "wine bar": ["wine", "wine bar", "somm", "vintner", "tasting room"],
   dessert: ["dessert", "ice cream", "gelato", "pastry", "sweets"],
-  dinner: ["restaurant", "diner", "tapas", "bistro", "brasserie", "grill", "eatery"],
-  lunch: ["lunch spot", "cafe", "deli", "sandwich", "salad", "casual dining"],
+  dinner: ["dinner", "restaurant", "diner", "tapas", "bistro", "brasserie", "grill", "eatery"],
+  lunch: ["lunch", "lunch spot", "cafe", "deli", "sandwich", "salad", "casual dining"],
   cocktail: ["cocktail", "spirit", "mixology", "bar", "speakeasy", "rooftop"],
-  "late-night": ["late night", "after hours", "food truck", "24 hour", "night bite"],
+  "late-night": ["late night", "late", "after hours", "food truck", "24 hour", "night bite"],
+  breakfast: [
+    "breakfast",
+    "brunch",
+    "morning",
+    "brunch spot",
+    "breakfast cafe",
+    "pancakes",
+    "eggs",
+    "brunch restaurant",
+    "all-day breakfast"
+  ],
+
+  brunch: [
+    "brunch",
+    "breakfast",
+    "daytime",
+    "mimosas",
+    "bloody mary",
+    "weekend brunch",
+    "cafe",
+    "bistro"
+  ],
+
+  speakeasy: [
+    "speakeasy",
+    "hidden bar",
+    "secret bar",
+    "password",
+    "underground",
+    "back room",
+    "cocktail den",
+    "prohibition"
+  ],
+
+  "happy hour": [
+    "happy hour",
+    "after work",
+    "drink specials",
+    "bar",
+    "cocktail",
+    "wine bar",
+    "pub",
+    "taproom",
+    "lounge"
+  ],
 
   gallery: ["gallery", "art", "exhibit", "exhibition", "installation"],
   bookstore: ["bookstore", "books", "reading room", "literary"],

@@ -9,13 +9,21 @@ import {
 } from "@/utils/typeUtils";
 
 /**
- * Curved distance scoring — rewards tight clusters, penalizes long jumps
+ * City-specific curved distance scoring
  */
-function distanceScore(meters: number): number {
-  if (meters < 400) return 1;
-  if (meters < 800) return 0.6;
-  if (meters < 1600) return 0.2;
-  return -meters / 1000;
+function distanceScore(city: "nyc" | "atl", meters: number): number {
+  if (city === "nyc") {
+    if (meters < 500) return 1;
+    if (meters < 1000) return 0.6;
+    if (meters < 1500) return 0.2;
+    return -meters / 1000;
+  }
+
+  // Default to ATL
+  if (meters < 1000) return 1;
+  if (meters < 2000) return 0.6;
+  if (meters < 3000) return 0.2;
+  return -meters / 1600;
 }
 
 /**
@@ -27,20 +35,19 @@ export function computeScore(
   theme: CrawlTheme,
   origin: { lat: number; lon: number },
   lastVenue: Venue | null,
+  city: "nyc" | "atl" = "atl",
   weight?: {
     vibe?: number;
     tag?: number;
     keyword?: number;
     dist?: number;
-    energy?: number;
   }
 ): number {
   const {
-    vibe = 2,
+    vibe = 3,
     tag = 1,
     keyword = 2,
     dist = 1,
-    energy = 0.5,
   } = weight || {};
 
   const distMeters = getDistanceMeters(
@@ -53,23 +60,16 @@ export function computeScore(
   // 🎭 Vibe continuity (semantic, normalized)
   const vibeSim = lastVenue
     ? vibeSimilarityVerbose(lastVenue, venue).score
-    : 0.5;
+    : 0.6;
 
   // 🧠 Thematic relevance
   const keywordHits = keywordMatchScore(venue, theme.keywords);
   const vibeHits = theme.filters?.vibes
     ? vibeMatchScore(venue, theme.filters.vibes)
-    : 0;
+    : 2;
   const tagHits = theme.filters?.tags
     ? tagMatchScore(venue, theme.filters.tags)
-    : 0;
-
-  // ⚡ Energy ramp continuity (soft constraint)
-  let energyScore = 0;
-  if (lastVenue?.energyRamp != null && venue.energyRamp != null) {
-    const delta = venue.energyRamp - lastVenue.energyRamp;
-    energyScore = delta >= 0 ? 1 : -Math.abs(delta);
-  }
+    : 1;
 
   // 🎉 Live event bonus logic
   let eventBonus = 0;
@@ -101,9 +101,8 @@ export function computeScore(
     keywordHits * keyword +
     vibeHits * vibe +
     tagHits * tag +
-    energyScore * energy +
     eventBonus +
-    distanceScore(distMeters) * dist;
+    distanceScore(city, distMeters) * dist;
 
   return score;
 }
@@ -116,12 +115,13 @@ export function sortVenuesByScore(
   venues: Venue[],
   theme: CrawlTheme,
   origin: { lat: number; lon: number },
-  lastVenue: Venue | null
+  lastVenue: Venue | null,
+  city: "nyc" | "atl" = "atl"
 ): Venue[] {
   return venues
     .map((v) => ({
       ...v,
-      _score: computeScore(v, theme, origin, lastVenue),
+      _score: computeScore(v, theme, origin, lastVenue, city),
     }))
     .sort((a, b) => (b._score || 0) - (a._score || 0));
 }

@@ -5,26 +5,26 @@
  */
 export const STAGE_GROUPS: string[][] = [
   ["coffee", "bakery"],                              // 0 - Morning
-  ["fitness"],                                       // 1 - Morning Activity
+  ["fitness", "yoga"],                                       // 1 - Morning Activity
   ["market", "breakfast", "brunch"],                 // 2 - Late Morning / Brunch
-  ["park", "bookstore", "gallery"],                  // 3 - Daytime Chill
-  ["lifestyle", "random gem"],                       // 4 - Mid-Afternoon
+  ["park", "bookstore", "gallery", "museum", "tea", "garden"],                  // 3 - Daytime Chill
+  ["lifestyle", "random gem", "activity"],                       // 4 - Mid-Afternoon
   ["lunch"],                                         // 5 - Lunch
   ["activity", "gallery", "park"],                   // 6 - Afternoon Activity
-  ["cocktail", "random gem"],                        // 7 - Pre-Dinner Chill
+  ["cocktail", "wine bar","random gem"],                        // 7 - Pre-Dinner Chill
   ["dinner"],                                        // 8 - Dinner
-  ["bar", "cocktail", "speakeasy", "lounge"],        // 9 - Nightlife
+  ["bar", "cocktail", "speakeasy", "lounge", "club"],        // 9 - Nightlife
 ];
 
 /**
  * Themed stage plans — override default sequence with focused crawl type.
  */
 export const THEME_STAGE_OVERRIDES: Record<string, string[][]> = {
-  romantic: [["gallery"], ["dinner"], ["cocktail", "lounge"]],
-  foodie: [["market"], ["lunch"], ["bakery"], ["dinner"]],
-  nightlife: [["dinner"], ["bar"], ["speakeasy"], ["lounge"]],
-  culture: [["gallery"], ["bookstore"], ["art", "museum"]],
-  chill: [["park"], ["bakery"], ["coffee"], ["cocktail"]],
+  romantic: [["gallery"], ["dinner", "wine bar"], ["cocktail", "lounge"]],
+  foodie: [["breakfast", "brunch"], ["market"], ["lunch"], ["bakery"], ["dinner"]],
+  nightlife: [["dinner"], ["bar"], ["speakeasy"], ["lounge"], ["club"]],
+  culture: [["gallery"], ["bookstore"], ["gallery", "museum"]],
+  chill: [["park", "garden"], ["bakery"], ["cafe", "coffee"], ["cocktail"]],
 };
 
 /**

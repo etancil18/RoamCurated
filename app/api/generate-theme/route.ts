@@ -9,7 +9,7 @@ import type { ThemeRouteOptions } from "@/lib/theme-engine/types";
  * Per‑city distance thresholds for “tightness”
  */
 const CITY_DISTANCE_THRESHOLDS = {
-  atl: { tight: 1200, medium: 2500, loose: 4500 },
+  atl: { tight: 1200, medium: 3000, loose: 4500 },
   nyc: { tight: 850, medium: 1500, loose: 2100 },
 };
 
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       plannedStartAtTop ?? options.plannedStartAt ?? null;
 
     let startTime: Date | undefined;
-    let relaxedTimeFiltering = false;
+    let relaxedTimeFiltering = true;
 
     if (plannedStartAt) {
       const parsed = new Date(plannedStartAt);

@@ -43,10 +43,16 @@ function matchesThemeFilters(loc: any, filters: {
     if (!filters.price.includes(priceVal)) return false;
   }
 
-  if (filters.timeOfDay && loc.timeCategory) {
-    const locTime = loc.timeCategory.toLowerCase();
-    if (!filters.timeOfDay.includes(locTime)) return false;
-  }
+if (filters.timeOfDay && loc.timeCategory) {
+  const locTimes = loc.timeCategory
+    .toLowerCase()
+    .split(',')
+    .map((s: string) => s.trim());
+
+  const hasMatch = locTimes.some((t: string) => filters.timeOfDay!.includes(t));
+  if (!hasMatch) return false;
+}
+
 
   return true;
 }

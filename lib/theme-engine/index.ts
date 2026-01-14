@@ -2,7 +2,7 @@ import type { Venue } from "@/types/venue";
 import { themeById } from "@/lib/crawlConfig";
 import { sortVenuesByScore } from "@/lib/theme-engine/scorer-fixed";
 import { selectCandidates } from "@/lib/theme-engine/selector";
-import { generateStageFlow } from "@/lib/theme-engine/planner-fixed";
+import { generateStageFlow, resolveStageEntry } from "@/lib/theme-engine/planner-fixed";
 import { getDistanceMeters } from "@/utils/geoUtils";
 
 const DEFAULTS = {
@@ -39,13 +39,13 @@ export async function generateThemeRoute({
   themeId,
   venues,
   maxStops = DEFAULTS.maxStops,
-  filterOpen = true,
+  filterOpen = false,
   city = "atl",
   tightness = "medium",
   maxDistanceMeters,
   eventOnly = false,
   startTime = new Date(),
-  relaxedTimeFiltering = false,
+  relaxedTimeFiltering = true,
 }: ThemeRouteOptions): Promise<Venue[]> {
   const theme = themeById[themeId];
   if (!theme) {
@@ -94,7 +94,12 @@ export async function generateThemeRoute({
   let currentTime = startTime instanceof Date ? new Date(startTime) : new Date();
 
   for (let i = 0; i < stageFlow.length && route.length < maxStops; i++) {
-    const desiredType = stageFlow[i];
+    const stageEntry = stageFlow[i];
+    const desiredType = resolveStageEntry(stageEntry);
+    if (!desiredType) {
+      console.warn(`⚠️ Invalid stage entry at index ${i}:`, stageEntry);
+      continue;
+    }
 
     let candidates = selectCandidates({
       venues: pool,

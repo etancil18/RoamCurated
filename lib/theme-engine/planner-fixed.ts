@@ -14,28 +14,75 @@ export const timeOfDayToHours: Record<string, [number, number]> = {
 };
 
 /**
- * Sequence fallback based on timeOfDay slot — used if a theme doesn’t define a stageFlow
+ * StageFlow types
  */
-export const fallbackStageFlows: Record<string, string[]> = {
-  morning: ["fitness", "coffee", "breakfast", "tea", "park", "market", "lunch"],
-  midday: ["lunch", "gallery", "wine bar", "random gem", "park", "bookstore", "dinner"],
-  afternoon: ["lunch", "random gem", "cafe", "lifestyle", "gallery", "bookstore", "dinner"],
-  day: ["lunch", "gallery", "bookstore", "park", "wine bar", "random gem", "dinner"],
-  evening: ["dinner", "wine bar", "cocktail", "activity", "dessert"],
-  night: ["dinner", "club", "rooftop", "speakeasy", "lounge", "wine bar"],
-  "late-night": ["cocktail", "club", "lounge"],
+export type StageFlowEntry =
+  | string
+  | string[]
+  | { optional: true; stage: string };
+
+export type StageFlow = StageFlowEntry[];
+
+/**
+ * Sequence fallback based on timeOfDay slot — used if a theme doesn’t define a stageFlow
+ * (fallbacks remain flat by design)
+ */
+export const fallbackStageFlows: Record<string, StageFlow> = {
+  morning: [
+    "fitness",
+    ["coffee", "tea"],
+    "breakfast",
+    ["park", "market"],
+    "lunch"
+  ],
+  midday: [
+    "lunch",
+    ["gallery", "bookstore"],
+    ["wine", "random gem"],
+    ["park", "market"],
+    "dinner"
+  ],
+  afternoon: [
+    "lunch",
+    ["random gem", "cafe"],
+    ["lifestyle", "gallery", "bookstore"],
+    "dinner"
+  ],
+  day: [
+    "lunch",
+    ["gallery", "bookstore"],
+    ["park", "wine", "random gem"],
+    "dinner"
+  ],
+  evening: [
+    "dinner",
+    ["wine", "cocktail"],
+    "activity",
+    "dessert"
+  ],
+  night: [
+    "dinner",
+    ["wine", "bar"],
+    ["club", "rooftop", "speakeasy", "lounge"]
+  ],
+  "late-night": [
+    ["cocktail", "bar"],
+    ["club", "lounge"]
+  ],
 };
+
 
 /**
  * Produces a stageFlow based on a theme, or generates one via fallback if missing.
+ * NOTE: Returned flow may be structured (branching / optional)
  */
 function generateStageFlow(
   theme: CrawlTheme,
   fallbackTime: "morning" | "midday" | "afternoon" | "evening" | "night" | "late-night" = "evening"
-): { flow: string[]; isFallback: boolean; reason: string } {
+): { flow: StageFlow; isFallback: boolean; reason: string } {
   if (Array.isArray(theme.stageFlow) && theme.stageFlow.length > 0) {
     return {
-      flow: theme.stageFlow,
+      flow: theme.stageFlow as StageFlow,
       isFallback: false,
       reason: "Theme defined stageFlow explicitly.",
     };
@@ -68,6 +115,61 @@ function generateStageFlow(
     isFallback: true,
     reason: `Defaulted to fallbackTime: '${fallbackTime}'`,
   };
+}
+
+/**
+ * Resolves a structured StageFlow into a concrete string[]
+ * - string → included as-is
+ * - string[] → one option selected (random by default)
+ * - { optional } → included based on provided condition
+ */
+export function resolveStageFlow(
+  flow: StageFlow,
+  options?: {
+    includeOptional?: boolean;
+    pick?: (choices: string[]) => string;
+  }
+): string[] {
+  const {
+    includeOptional = true,
+    pick = (choices: string[]) => choices[Math.floor(Math.random() * choices.length)],
+  } = options || {};
+
+  const resolved: string[] = [];
+
+  for (const entry of flow) {
+    if (typeof entry === "string") {
+      resolved.push(entry);
+      continue;
+    }
+
+    if (Array.isArray(entry)) {
+      resolved.push(pick(entry));
+      continue;
+    }
+
+    if (typeof entry === "object" && entry.optional) {
+      if (includeOptional) {
+        resolved.push(entry.stage);
+      }
+    }
+  }
+
+  return resolved;
+}
+
+/**
+ * Resolves a StageFlowEntry into a single string (e.g. for stage-by-stage crawl logic)
+ */
+export function resolveStageEntry(
+  entry: StageFlowEntry,
+  pick: (choices: string[]) => string = (choices) =>
+    choices[Math.floor(Math.random() * choices.length)]
+): string | null {
+  if (typeof entry === "string") return entry;
+  if (Array.isArray(entry)) return pick(entry);
+  if (typeof entry === "object" && entry.optional) return entry.stage;
+  return null;
 }
 
 export { generateStageFlow };
