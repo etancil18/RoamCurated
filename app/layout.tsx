@@ -28,16 +28,17 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // ✅ Create Supabase client (await required since it calls cookies())
   const supabase = await createServerClient()
-
-  // ✅ Fetch the current session securely (SSR-safe)
   const {
     data: { session },
   } = await supabase.auth.getSession()
 
   return (
     <html lang="en">
+      <head>
+        {/* Manually ensure favicon loads in all environments */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body
         className={`min-h-screen bg-white text-black antialiased ${geistSans.variable} ${geistMono.variable}`}
       >

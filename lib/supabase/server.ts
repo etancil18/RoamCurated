@@ -2,12 +2,13 @@
 import { createServerClient as _createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/types/supabase'
+import type { NextResponse } from 'next/server'
 
 /**
  * Server‑side Supabase client (SSR safe).
- * Returns a fully configured Supabase client — MUST be awaited.
+ * Supports cookie persistence in middleware/auth callbacks via optional `res`.
  */
-export async function createServerClient() {
+export async function createServerClient(res?: NextResponse) {
   const cookieStore = await cookies()
 
   return _createServerClient<Database>(
@@ -17,17 +18,25 @@ export async function createServerClient() {
       cookies: {
         get: (name) => cookieStore.get(name)?.value ?? null,
         set: (name, value, options) => {
-          try {
-            cookieStore.set(name, value, options)
-          } catch (err) {
-            console.warn('⚠️ Cookie set failed (read-only context):', err)
+          if (res?.cookies) {
+            res.cookies.set(name, value, options)
+          } else {
+            try {
+              cookieStore.set(name, value, options)
+            } catch (err) {
+              console.warn('⚠️ Cookie set failed (read-only context):', err)
+            }
           }
         },
         remove: (name) => {
-          try {
-            cookieStore.delete(name)
-          } catch {
-            // ignore
+          if (res?.cookies) {
+            res.cookies.set(name, '', { maxAge: -1 })
+          } else {
+            try {
+              cookieStore.delete(name)
+            } catch {
+              // ignore
+            }
           }
         },
       },

@@ -1,7 +1,6 @@
 // app/auth/callback/route.ts
-import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"  // your SSR helper
+import { createServerClient } from "@/lib/supabase/server" // ✅ Your SSR helper
 import type { Database } from "@/types/supabase"
 
 export async function GET(req: Request) {
@@ -14,18 +13,19 @@ export async function GET(req: Request) {
     return NextResponse.redirect(`${origin}/login`)
   }
 
-  const supabase = await createServerClient()
+  // ✅ Prepare redirect response
+  const res = NextResponse.redirect(`${origin}${nextPath}`)
 
-  const { data: sessionData, error } = await supabase.auth.exchangeCodeForSession(code)
+  // ✅ Inject response into Supabase client so cookies can persist
+  const supabase = await createServerClient(res)
+
+  const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
     console.error("[Auth callback] exchangeCodeForSession error:", error)
     return NextResponse.redirect(`${origin}/login?error=auth_failed`)
   }
 
-  // Optional: log session info for debugging
-  console.log("[Auth callback] session:", sessionData.session)
-
-  // Redirect user to intended path after login
-  return NextResponse.redirect(`${origin}${nextPath}`)
+  // ✅ Session now stored in browser — user will stay logged in
+  return res
 }

@@ -18,7 +18,7 @@ export function normalizeTag(tag: string): string {
     intimate: "date night",
     museum: "art",
     gallery: "art",
-    streetwear: "fashion",
+    lifestyle: "fashion",
     karaoke: "music",
     live: "music",
   };

@@ -41,7 +41,6 @@ export function computeScore(
     tag?: number;
     keyword?: number;
     dist?: number;
-    energy?: number;
   }
 ): number {
   const {
@@ -49,7 +48,6 @@ export function computeScore(
     tag = 1,
     keyword = 2,
     dist = 1,
-    energy = 0.5,
   } = weight || {};
 
   const distMeters = getDistanceMeters(

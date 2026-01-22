@@ -1,4 +1,4 @@
-// utils/supabase/middlewareClient.ts
+// lib/supabase/middlewareClient.ts
 import { createServerClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
 import type { NextRequest, NextResponse } from "next/server"

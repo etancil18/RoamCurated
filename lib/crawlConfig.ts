@@ -6,10 +6,10 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Active All Day",
   description: "High-energy city day powered by movement, outdoor play, and physical challenges. For explorers who'd rather sweat than sit.",
   stageFlow: [
-  "fitness",
-  ["breakfast", "market", "park"],
+  ["fitness", "yoga"],
+  ["breakfast", "coffee", "café","market", "park"],
   "activity",
-  ["lunch", "cafe", "rooftop"],
+  ["lunch", "rooftop"],
   "dinner"
 ],
   filters: {
@@ -67,12 +67,70 @@ export const crawlThemes: CrawlTheme[] = [
     "fun", "frolic"
   ]
 },
+{
+  themeId: "beltline-explorer",
+  name: "BeltLine Explorer",
+  description: "A dynamic roam along the Atlanta BeltLine — art, green spaces, local gems, and good vibes from morning to night.",
+  stageFlow: [
+    ["coffee", "tea", "bakery", "café", "brunch"],
+    ["walk", "park", "market"],
+    ["gallery", "lifestyle", "random gem"],
+    ["market", "lunch", "brewery"],
+    ["patio", "wine bar", "lifestyle", "random gem"],
+    "dinner",
+    ["club", "cocktail","rooftop", "bar", "music"]
+  ],
+  filters: {
+    timeOfDay: ["morning", "midday", "afternoon", "evening", "day", "late-night"],
+    price: [1, 2, 3],
+    vibes: [
+  "active", "outdoor", "local", "artsy", "eclectic", "playful", "bikeable", "walkable",
+  "community", "casual", "colorful", "exploratory", "creative", "sunny", "breezy", "green",
+  "spontaneous", "fun", "open", "alive", "vibrant", "unplanned", "serendipity", "neighborhood",
+  "accessible", "relaxed", "friendly", "mural", "trail", "natural", "connected", "refresh",
+  
+  // 🍽️ Eating & Drinking vibes
+  "lunch", "dinner", "brunch", "breakfast", "café", "coffee", "tea", "bakery", "restaurant",
+  "food", "kitchen", "eatery", "cuisine", "bistro",
+  "bar", "cocktail", "pub", "drink", "wine bar", "brewery", "club",
+
+  // 🍷 Mood & ambiance
+  "delicious", "flavorful", "sociable", "buzzing", "chill", "refuel", "energizing", "nightlife",
+  "date-night", "group-friendly", "cozy", "elevated", "festive", "upbeat"
+],
+    tags: [
+      "beltline", "murals", "bike ride", "gallery", "brewery", "coffee",
+      "lunch", "rooftop", "market", "patio", "club", "walk", "park"
+    ],
+    eventCategories: ["art", "local", "pop-up", "music", "community", "outdoor"]
+  },
+  keywords: [
+  "beltline", "trail", "walk", "bike", "ride", "brewery", "gallery", "murals", "art",
+  "community", "neighborhood", "park", "juice", "coffee", "tea", "cafe", "café", "bakery", "brunch",
+  "outdoor", "sunlight", "patio", "casual", "street art", "vibe", "friendly", "music", "pop-up",
+  "hidden", "mellow", "green", "local", "spontaneous", "explore", "color", "breeze", "open", "view",
+  "mixer", "gather", "market", "vendor", "artisan", "pavilion", "connection", "roam", "wander",
+  "discover", "corner", "chill", "hang", "lifestyle", "random gem", "club",
+
+  // 🍽️ Food & Dining
+  "restaurant", "eatery", "kitchen", "bistro", "cuisine", "spot", "plate", "menu", "dishes",
+  "food", "dining", "flavor", "savory", "sweet", "delicious", "meal", "entrée", "snack", "treat",
+  "bite", "appetizer", "tapas", "grill", "kiosk",
+
+  // 🍴 Meals
+  "breakfast", "lunch", "dinner", "late-night",
+
+  // 🍷 Drinks & Social
+  "cocktail", "drink", "bar", "wine", "wine bar", "beer", "pub", "club", "mixology", "spirits",
+  "happy hour", "cheers", "buzz", "nightlife", "social", "hangout"
+]
+},
   {
   "themeId": "cheap-cheerful",
   "name": "Cheap & Cheerful",
   "description": "Low-budget gems, fast bites, and casual fun throughout the city.",
   stageFlow: [
-  ["coffee", "bakery"],
+  ["coffee", "bakery", "café"],
   ["market", "bookstore"],
   ["random gem", "park", "gallery", "lunch"],
   "bar"
@@ -142,10 +200,10 @@ export const crawlThemes: CrawlTheme[] = [
     name: "Chill Hang",
     description: "Coffee → books → bites → easy vibes → nightcap.",
     stageFlow: [
-  ["coffee", "cafe"],
+  ["coffee", "cafe", "café"],
   ["bookstore", "lifestyle", "random gem"],
   "lunch",
-  ["wine", "dessert"]
+  ["wine bar", "dessert"]
 ],
     filters: {
       price: [1, 2, 3],
@@ -189,7 +247,7 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Creative Kickstart",
   description: "Inspiration stops to fuel the imagination.",
   stageFlow: [
-  ["coffee", "bakery"],
+  ["coffee", "bakery", "cafe"],
   ["gallery", "museum", "bookstore"],
   ["gallery", "museum", "garden"],
   "lunch",
@@ -257,16 +315,16 @@ export const crawlThemes: CrawlTheme[] = [
   themeId: "date-night",
   name: "Date Night",
   description: "Romance, dim lights, and dessert to close the evening.",
-  stageFlow: [ "dinner",
-    ["cocktail", "activity", "gallery", "rooftop"],
-    ["wine", "cocktail", "lounge", "speakeasy"],
+  stageFlow: [ ["dinner", "cocktail", "activity","wine bar", "gallery"],
+    ["cocktail", "gallery", "rooftop"],
+    ["cocktail", "lounge", "speakeasy"],
     "dessert"
   ],
   filters: {
     price: [1, 2, 3, 4],
     timeOfDay: ["afternoon", "happy hour", "evening", "night","late-night"],
     vibes: [
-      "romantic", "cocktail", "jazz", "twilight", "wine", "dim", "moody",
+      "romantic", "cocktail", "jazz", "twilight", "wine", "dim", "moody", "wine",
       "candlelit", "intimate", "charming", "flirty", "cozy", "soft",
       "sweet", "elegant", "lush", "quiet", "dreamy", "gentle", "classic",
       "warm", "lowlit", "refined", "stylish", "serene", "sensual",
@@ -410,7 +468,7 @@ export const crawlThemes: CrawlTheme[] = [
   description: "Food → pregame → party → questionable decisions.",
   stageFlow: [
   "dinner",
-  "cocktail",
+  ["cocktail", "wine bar"],
   ["cocktail", "rooftop", "speakeasy", "club"]
 ],
   filters: {
@@ -554,11 +612,11 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Solo Explorer",
   description: "Cozy solo spots and hidden gems for wandering.",
   stageFlow: [
-  "coffee", "cafe", "bakery",
-  "random gem",
-  "gallery", "museum",
-  "lunch", "wine",
-  "random gem", "lifestyle", "park"
+  ["coffee", "cafe", "bakery"],
+  ["random gem", "lifestyle"],
+  ["gallery", "museum"],
+  ["lunch", "wine bar", "bookstore"],
+  ["random gem", "lifestyle", "park"]
 ],
   filters: {
     price: [1, 2, 3, 4],
@@ -714,9 +772,9 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Work Session",
   description: "Power through tasks with caffeine, quiet corners, and a rewarding close.",
   stageFlow: [
-  ["coffee", "workspace"],
+  ["coffee", "workspace", "cafe", "café"],
   ["lunch", "bakery"],
-  ["coffee", "workspace", "happy hour"]
+  ["coffee", "cafe", "café", "workspace", "happy hour"]
 ],
   filters: {
     price: [1, 2, 3],
@@ -910,16 +968,17 @@ export const crawlThemes: CrawlTheme[] = [
   description: "A cozy blend of books, art, and wine-soaked thought.",
   stageFlow: [
   ["bookstore", "gallery"],
+  ["bakery", "cafe"],
   ["bookstore", "gallery"],
   ["coffee", "lunch"],
-  "wine"
+  "wine bar"
 ],
   filters: {
     timeOfDay: ["morning", "midday", "afternoon","day", "evening"],
     price: [1, 2, 3, 4],
     tags: ["bookstore", "gallery", "wine bar", "wine", "coffee", "lounge", "reading", "art"],
     vibes: [
-      "quiet", "cozy", "literary", "analog", "warm", "vintage", "reflective",
+      "quiet", "cozy", "literary", "analog", "warm", "vintage", "reflective", "somm", "tasting", "bookstore",
       "moody", "artsy", "thoughtful", "bookish", "soft", "curated", "charming",
       "elegant", "snug", "relaxed", "dreamy", "writerly", "poetic", "hushed", "peaceful",         // quiet
       "snug", "inviting",           // cozy
@@ -1054,7 +1113,7 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Post‑Work Wind Down",
   description: "Unplug and ease into the evening after a long day.",
   stageFlow: [
-  ["happy hour", "wine", "patio", "cocktail"],
+  ["happy hour", "wine bar", "patio", "cocktail"],
   "dinner"
 ],
   filters: {
@@ -1255,10 +1314,10 @@ export const crawlThemes: CrawlTheme[] = [
   themeId: "midday-recharge",
   name: "Midday Recharge",
   description: "A relaxing midday refresh to reset and recharge before the evening.",
-  stageFlow: [
+  stageFlow: [ "coffee",
   ["walk", "park"],
-  ["lunch", "coffee"],
-  ["fitness", "yoga"]
+  "lunch",
+  ["fitness", "yoga", "coffee"]
 ],
   filters: {
     timeOfDay: ["morning", "midday", "afternoon", "day"],

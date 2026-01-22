@@ -185,15 +185,19 @@ export default function MapWrapper() {
   }
 
   data = await response.json();
+  const { route: primaryRoute, variants: routeVariants } = data;
 
-  if (!Array.isArray(data.route)) {
+  if (!Array.isArray(primaryRoute)) {
     setRoute(undefined);
     setRouteErrorMessage(
       `⚠️ We couldn’t build a route with this theme. Try another one or tweak your inputs.`
     );
     return;
   }
+
+  setRoute(primaryRoute);
 }
+
  else {
         const options: any = {
           maxStops: 6,

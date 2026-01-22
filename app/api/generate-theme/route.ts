@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { themeById } from "@/lib/crawlConfig";
-import { generateThemeRoute } from "@/lib/theme-engine";
+import { generateThemeRoute, generateMultipleThemeRoutes } from "@/lib/theme-engine";
 import { fetchLiveEventsForCity } from "@/lib/events/fetchLiveEvents";
 import type { Venue } from "@/types/venue";
 import type { ThemeRouteOptions } from "@/lib/theme-engine/types";
-
-/**
- * Per‑city distance thresholds for “tightness”
- */
-const CITY_DISTANCE_THRESHOLDS = {
-  atl: { tight: 1200, medium: 3000, loose: 4500 },
-  nyc: { tight: 850, medium: 1500, loose: 2100 },
-};
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,19 +26,10 @@ export async function POST(req: NextRequest) {
       plannedStartAt?: string;
     };
 
-    /** ------------------ Validation ------------------ **/
     if (!themeId || typeof themeId !== "string") {
       return NextResponse.json(
         { error: "Missing or invalid themeId" },
         { status: 400 }
-      );
-    }
-
-    const theme = themeById[themeId];
-    if (!theme) {
-      return NextResponse.json(
-        { error: `Theme not found: ${themeId}` },
-        { status: 404 }
       );
     }
 
@@ -77,49 +59,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /** ------------------ Planned Start / Relaxed Mode ------------------ **/
-    const plannedStartAt =
-      plannedStartAtTop ?? options.plannedStartAt ?? null;
+    const plannedStartAt = plannedStartAtTop ?? options.plannedStartAt ?? null;
 
     let startTime: Date | undefined;
     let relaxedTimeFiltering = true;
 
     if (plannedStartAt) {
       const parsed = new Date(plannedStartAt);
-      if (isNaN(parsed.getTime())) {
-        return NextResponse.json(
-          { error: "Invalid plannedStartAt format" },
-          { status: 400 }
-        );
-      }
-
-      startTime = parsed;
-      if (parsed > new Date()) {
-        relaxedTimeFiltering = true;
+      if (!isNaN(parsed.getTime())) {
+        startTime = parsed;
+        if (parsed > new Date()) relaxedTimeFiltering = true;
       }
     }
 
-    /** ------------------ Tightness → Max Distance ------------------ **/
     const tightness: "tight" | "medium" | "loose" = options.tightness ?? "medium";
-    const maxDistanceMeters =
-      CITY_DISTANCE_THRESHOLDS[city]?.[tightness] ??
-      CITY_DISTANCE_THRESHOLDS[city].medium;
+    const maxDistanceMeters = options.maxDistanceMeters ?? undefined;
 
-    /** ------------------ Custom Start Logic ------------------ **/
     const customLat = options.customStart?.lat;
     const customLon = options.customStart?.lon;
 
     const originLat =
-      typeof customLat === "number" && !isNaN(customLat)
-        ? customLat
-        : userLat;
-
+      typeof customLat === "number" && !isNaN(customLat) ? customLat : userLat;
     const originLon =
-      typeof customLon === "number" && !isNaN(customLon)
-        ? customLon
-        : userLon;
+      typeof customLon === "number" && !isNaN(customLon) ? customLon : userLon;
 
-    /** ------------------ Event Logic ------------------ **/
     const includeEvents: boolean = options.includeEvents ?? true;
     const eventOnly: boolean = options.eventOnly ?? false;
 
@@ -132,24 +95,11 @@ export async function POST(req: NextRequest) {
       }));
     }
 
-    /** ------------------ Merge Venues ------------------ **/
     const allVenuesMap = new Map<string, Venue>();
     venues.forEach((v) => allVenuesMap.set(v.id, v));
     eventVenues.forEach((ev) => allVenuesMap.set(ev.id, ev));
     const mergedVenues = Array.from(allVenuesMap.values());
 
-    /** ------------------ Debug Log ------------------ **/
-    console.log("🎨 Theme crawl input", {
-      theme: theme.name,
-      city,
-      totalVenues: mergedVenues.length,
-      eventCount: eventVenues.length,
-      plannedStartAt,
-      relaxedTimeFiltering,
-      maxDistanceMeters,
-    });
-
-    /** ------------------ Build Route Options ------------------ **/
     const routeOptions: ThemeRouteOptions = {
       themeId,
       venues: mergedVenues,
@@ -160,37 +110,26 @@ export async function POST(req: NextRequest) {
       maxDistanceMeters,
       eventOnly,
       startTime,
-      relaxedTimeFiltering, // 🔑 critical fix
+      relaxedTimeFiltering,
     };
 
-    /** ------------------ Primary Route ------------------ **/
     const route = await generateThemeRoute(routeOptions);
+    const altRoutes = await generateMultipleThemeRoutes(routeOptions);
 
     if (!route || route.length === 0) {
-      const fallbackRoute = await generateThemeRoute({
-        ...routeOptions,
-        filterOpen: false,
-      });
-
-      if (!fallbackRoute || fallbackRoute.length === 0) {
-        return NextResponse.json(
-          {
-            error: "No viable route could be generated.",
-            reason: "This sometimes happens when places matching your theme aren’t open at the time you picked, or your filters are too specific. Try adjusting the crawl time, loosening filters, or picking a different theme to explore more options.",
-          },
-          { status: 422 }
-        );
-      }
-
-      return NextResponse.json({
-        route: fallbackRoute,
-        fallbackUsed: true,
-        plannedStartAt: startTime?.toISOString() ?? null,
-      });
+      return NextResponse.json(
+        {
+          error: "No viable route could be generated.",
+          reason:
+            "This sometimes happens when places matching your theme aren’t open at the time you picked, or your filters are too specific. Try adjusting the crawl time, loosening filters, or picking a different theme to explore more options.",
+        },
+        { status: 422 }
+      );
     }
 
     return NextResponse.json({
       route,
+      alternatives: altRoutes,
       fallbackUsed: false,
       plannedStartAt: startTime?.toISOString() ?? null,
     });
@@ -204,4 +143,8 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 204 });
 }

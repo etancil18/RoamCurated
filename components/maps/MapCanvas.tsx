@@ -77,6 +77,7 @@ const daypartColorMap: Record<string, string> = {
 
 const themeColorMap: Record<string, string> = {
   'cheap-cheerful': 'green',
+  'beltline-explorer': 'lime',
   'chill-hang': 'blue',
   'creative-kickstart': 'orange',
   'date-night': 'purple',

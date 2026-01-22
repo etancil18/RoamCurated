@@ -169,3 +169,44 @@ export async function generateThemeRoute({
 
   return route;
 }
+
+// 🔁 Generate multiple alternative routes with randomization
+export async function generateMultipleThemeRoutes({
+  userLat,
+  userLon,
+  themeId,
+  venues,
+  maxStops = DEFAULTS.maxStops,
+  filterOpen = false,
+  city = "atl",
+  tightness = "medium",
+  maxDistanceMeters,
+  eventOnly = false,
+  startTime = new Date(),
+  relaxedTimeFiltering = true,
+  variants = 5,
+}: ThemeRouteOptions & { variants?: number }): Promise<Venue[][]> {
+  const results: Venue[][] = [];
+
+  for (let i = 0; i < variants; i++) {
+    const shuffledVenues = [...venues].sort(() => Math.random() - 0.5);
+    const route = await generateThemeRoute({
+      userLat,
+      userLon,
+      themeId,
+      venues: shuffledVenues,
+      maxStops,
+      filterOpen,
+      city,
+      tightness,
+      maxDistanceMeters,
+      eventOnly,
+      startTime,
+      relaxedTimeFiltering,
+    });
+
+    if (route.length > 0) results.push(route);
+  }
+
+  return results;
+}
