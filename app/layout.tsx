@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: 'Roam App',
   description: 'Itinerary generator and map for ATL & NYC',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon-new.ico',
   },
 }
 
@@ -37,7 +37,7 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         {/* Manually ensure favicon loads in all environments */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon-new.ico" sizes="any" />
       </head>
       <body
         className={`min-h-screen bg-white text-black antialiased ${geistSans.variable} ${geistMono.variable}`}
