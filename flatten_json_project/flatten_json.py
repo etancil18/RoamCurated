@@ -2,21 +2,27 @@ import json
 import csv
 import re
 import sys
+import unicodedata
 
-# Use command-line argument for input filename, fallback to 'input.json'
-input_file = sys.argv[1] if len(sys.argv) > 1 else "120425atl.json"
+# --- Helper: Slugify venue names ---
+def slugify(value):
+    value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    value = re.sub(r"[^\w\s-]", "", value).strip().lower()
+    return re.sub(r"[-\s]+", "-", value)
 
-# Load JSON data from file
+# --- Input file (default to 'input.json') ---
+input_file = sys.argv[1] if len(sys.argv) > 1 else "input.json"
+
 with open(input_file, "r") as infile:
     data = json.load(infile)
 
-# Define CSV headers
+# --- Define headers (including slug) ---
 headers = [
-    "name", "lat", "lon", "instagram_handle", "tags", "type", "time_category",
+    "name", "slug", "lat", "lon", "instagram_handle", "tags", "type", "time_category",
     "energy_ramp", "price", "duration", "cover", "city"
 ]
 
-# Infer city from filename
+# --- Infer city from filename ---
 def infer_city(filename):
     if "atl" in filename.lower():
         return "atl"
@@ -27,13 +33,15 @@ def infer_city(filename):
 
 city = infer_city(input_file)
 
-# Write to CSV
+# --- Write flattened CSV ---
 with open("flattened_output.csv", "w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
 
     for venue in data:
         name = venue.get("name", "")
+        slug = slugify(name)
+
         lat = venue.get("lat", "")
         lon = venue.get("lon", "")
 
@@ -57,7 +65,7 @@ with open("flattened_output.csv", "w", newline="") as f:
         cover = venue.get("cover", "")
 
         row = [
-            name, lat, lon, instagram_handle, tags, type_str, time_category,
+            name, slug, lat, lon, instagram_handle, tags, type_str, time_category,
             energy_ramp, price, duration, cover, city
         ]
         writer.writerow(row)
