@@ -33059,6 +33059,7 @@ const atlantaData = [
     "lat": 33.8473254,
     "lon": -84.3727523,
     "link": "https://www.instagram.com/rrealtacos/?hl=en",
+    "cover": "img/venues/Rreal Tacos - Buckhead.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 11:00 AM–11:00 PM",
@@ -33127,6 +33128,7 @@ const atlantaData = [
     "lat": 33.7399836,
     "lon": -84.3466965,
     "link": "https://www.instagram.com/elsotanoatl/",
+    "cover": "img/venues/El Sótano.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 7:00 AM–3:00 PM",
@@ -33233,6 +33235,7 @@ const atlantaData = [
     "lat": 33.7700982,
     "lon": -84.3522537,
     "link": "https://www.instagram.com/monksmead/?hl=en",
+    "cover": "img/venues/Monks Meadery.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 1:00 PM–9:00 PM",
@@ -33297,6 +33300,7 @@ const atlantaData = [
     "lat": 33.7872526,
     "lon": -84.382934,
     "link": "https://www.instagram.com/virtuerooftop/?hl=en",
+    "cover": "img/venues/Virtue Rooftop.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 5:00 PM–10:00 PM",
@@ -33364,6 +33368,7 @@ const atlantaData = [
     "lat": 33.7389557,
     "lon": -84.4174261,
     "link": "https://www.instagram.com/jbsrecord/?hl=en",
+    "cover": "img/venues/JB's Record Lounge.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–6:00 PM",
@@ -33424,6 +33429,7 @@ const atlantaData = [
     "lat": 33.7403971,
     "lon": -84.3454547,
     "link": "https://www.instagram.com/east_atlanta_comics/?hl=en",
+    "cover": "img/venues/East Atlanta Comics.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 11:00 AM–8:00 PM",
@@ -33490,6 +33496,7 @@ const atlantaData = [
     "lat": 33.763382,
     "lon": -84.3951098,
     "link": "https://www.instagram.com/georgiaaquarium/?hl=en",
+    "cover": "img/venues/Georgia Aquarium.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–8:00 PM",
@@ -33558,6 +33565,7 @@ const atlantaData = [
     "lat": 33.8466464,
     "lon": -84.3688437,
     "link": "https://www.instagram.com/bistroniko/?hl=en",
+    "cover": "img/venues/Bistro Niko.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 11:30 AM–9:00 PM",
@@ -33624,6 +33632,7 @@ const atlantaData = [
     "lat": 33.7666896,
     "lon": -84.3528699,
     "link": "https://www.instagram.com/eatamoreatl/?hl=en",
+    "cover": "img/venues/Amore e Amore.jpeg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 5:00 PM–10:00 PM",
@@ -33688,6 +33697,7 @@ const atlantaData = [
     "lat": 33.7899568,
     "lon": -84.3725988,
     "link": "https://www.instagram.com/atlbotanical/?hl=en",
+    "cover": "img/venues/Atlanta Botanical Garden.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–3:00 PM; 5:00 PM–10:00 PM",
@@ -33736,6 +33746,7 @@ const atlantaData = [
     "lat": 33.8522067,
     "lon": -84.367243,
     "link": "https://www.instagram.com/missionandmkt/",
+    "cover": "img/venues/Mission + Market.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 11:00 AM–8:00 PM",
