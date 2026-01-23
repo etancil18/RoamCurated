@@ -15,7 +15,7 @@ const CITY_DISTANCE_THRESHOLDS: Record<
   Record<"tight" | "medium" | "loose", number>
 > = {
   atl: { tight: 1000, medium: 2000, loose: 3500 },
-  nyc: { tight: 400, medium: 1200, loose: 2000 },
+  nyc: { tight: 250, medium: 800, loose: 1200 },
 };
 
 export interface ThemeRouteOptions {
