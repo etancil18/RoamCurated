@@ -125,204 +125,53 @@ export const crawlThemes: CrawlTheme[] = [
   "happy hour", "cheers", "buzz", "nightlife", "social", "hangout"
 ]
 },
-  {
-  "themeId": "cheap-cheerful",
-  "name": "Cheap & Cheerful",
-  "description": "Low-budget gems, fast bites, and casual fun throughout the city.",
-  stageFlow: [
-  ["coffee", "bakery", "café"],
-  ["market", "bookstore"],
-  ["random gem", "park", "gallery", "lunch"],
-  "bar"
-],
+{
+  "themeId": "lofi-loop",
+  "name": "Lo-Fi Loop",
+  "description": "Low-stakes, high-vibes. Wander through warm corners, under-the-radar finds, and mood-lifting stops that feel like your own private soundtrack.",
+  "stageFlow": [
+    ["café", "coffee", "bakery"],
+    ["bookstore", "gallery", "lifestyly", "showroom"],
+    "lunch",
+    ["market", "park", "random gem"],
+    ["wine bar", "cocktail", "dessert"]
+  ],
   "filters": {
     "price": [1, 2],
-    "vibes": [
-      "diner", "cheap", "budget", "street", "casual", "$", "bite", "fast", "local",
-      "market", "takeout", "gallery", "food truck", "friendly", "laid-back", "quirky",
-      "no-frills", "unpretentious", "daytime", "fun", "easy", "snappy", "retro", "booth",            // diner
-      "affordable", "bargain",     // cheap
-      "saver", "value",            // budget
-      "curbside", "vendor",        // street
-      "relaxed", "simple",         // casual
-      "bargain", "basic",          // $
-      "snack", "grab",             // bite
-      "quick", "express",          // fast
-      "neighborhood", "familiar",  // local
-      "vendor", "grocer",          // market
-      "boxed", "portable",         // takeout
-      "artsy", "indie",            // gallery
-      "truck", "grub",             // food truck
-      "warm", "inviting",          // friendly
-      "easygoing", "loose",        // laid-back
-      "offbeat", "weird",          // quirky
-      "basic", "barebones",        // no-frills
-      "real", "humble",            // unpretentious
-      "sunny", "light",            // daytime
-      "buzz", "joy",               // fun
-      "breezy", "carefree",        // easy
-      "zippy", "lighthearted"
+    "tags": [
+      "coffee", "café", "bakery", "bookstore", "gallery", "random gem",
+      "market", "lunch", "dessert", "wine bar", "bar", "park", "sidewalk"
     ],
-    "tags": ["coffee", "market", "random gem", "gallery", "dinner", "bar"],
-    "timeOfDay": ["morning", "midday", "afternoon","day", "evening"]
+    "vibes": [
+      "cozy", "lo-fi", "nostalgic", "unfussy", "quirky", "understated", "soft", "casual",
+      "warm", "breezy", "intimate", "quiet", "friendly", "mellow", "budget", "lowkey",
+      "inviting", "slow", "offbeat", "vintage", "neighborhood", "chill", "peaceful",
+      "affordable", "creative", "lighthearted", "playful", "daydreamy", "drifty",
+      "sunny", "cloudy", "retro", "ambient", "low-volume", "unstructured"
+    ],
+    "timeOfDay": ["morning", "midday", "afternoon", "day", "evening"]
   },
   "keywords": [
-    "diner", "cheap", "budget", "street", "casual", "$", "bite", "fast", "local",
-    "market", "takeout", "gallery", "food truck", "friendly", "laid-back", "quirky",
-    "no-frills", "snappy", "easy", "bargain", "hangout", "on-the-go", "lively",
-    "unpretentious", "simple", "affordable", "retro", "booth",              // diner
-    "deal", "discount",            // cheap
-    "save", "value",               // budget
-    "vendor", "curbside",          // street
-    "relaxed", "simple",           // casual
-    "basic", "coins",              // $
-    "snack", "grab",               // bite
-    "quick", "dash",               // fast
-    "community", "familiar",       // local
-    "grocer", "vendor",            // market
-    "boxed", "portable",           // takeout
-    "art", "indie",                // gallery
-    "grub", "truck",               // food truck
-    "welcoming", "kind",           // friendly
-    "easygoing", "loose",          // laid-back
-    "odd", "colorful",             // quirky
-    "simple", "raw",               // no-frills
-    "real", "honest",              // unpretentious
-    "bright", "chill",             // daytime
-    "upbeat", "buzz",              // fun
-    "breezy", "carefree",          // easy
-    "fast", "joyful",              // snappy
-    "value", "casual" 
-  ]
-},
-  {
-    themeId: "chill-hang",
-    name: "Chill Hang",
-    description: "Coffee → books → bites → easy vibes → nightcap.",
-    stageFlow: [
-  ["coffee", "cafe", "café"],
-  ["bookstore", "lifestyle", "random gem"],
-  "lunch",
-  ["wine bar", "dessert"]
-],
-    filters: {
-      price: [1, 2, 3],
-      vibes: ["lounge", "cozy", "relaxed", "intimate", "chill", "sofa", "vintage", "casual", "warm", "neighborhood", "laid-back", "friendly", "comfort", "easygoing", "snack", "small bite", "lowkey", "hangout", "easy", "slow", "conversation", "quiet", "plush", "comfy",            // lounge
-      "snug", "soft",              // cozy
-      "mellow", "unwound",          // relaxed
-      "personal", "close",          // intimate
-      "breezy", "calm",             // chill
-      "cushioned", "loungy",        // sofa
-      "retro", "nostalgic",         // vintage
-      "unfussy", "simple",          // casual
-      "inviting", "toasty",         // warm
-      "local", "familiar",          // neighborhood
-      "loose", "effortless",        // laid-back
-      "welcoming", "kind",          // friendly
-      "cozy", "reassuring",         // comfort
-      "smooth", "natural",          // easygoing
-      "nibbly", "light",            // snack
-      "bite-sized", "shareable",    // small bite
-      "understated", "subtle",      // lowkey
-      "social", "communal",         // hangout
-      "carefree", "fluid",          // easy
-      "leisurely", "unrushed",      // slow
-      "chatty", "thoughtful",       // conversation
-      "peaceful", "hushed"],
-      tags: ["coffee", "bookstore", "random gem", "lunch", "lifestyle", "bar", "dessert"],
-      timeOfDay: ["midday", "afternoon", "happy hour", "day", "evening"],
-    },
-    keywords: [
-      "coffee", "books", "nook", "reading", "wine", "bites", "booth", "window",
-  "conversation", "dessert", "gallery", "sip", "ambient", "vinyl", "poetry",
-  "hideaway", "catchup", "slowdrip", "matcha", "local", "espresso",
-  "indie", "downtime", "candle", "corner", "playlist", "quiet",
-  "journaling", "refill", "latenight", "couch", "fireplace", "scenic",
-  "softserve", "sidewalk", "cupcake", "barstool", "comfort", "shared",
-  "nonfiction", "wifi", "casual", "neon", "barista", "peoplewatch", "lowmusic"
-    ]
-  },
-  {
-  themeId: "creative-kickstart",
-  name: "Creative Kickstart",
-  description: "Inspiration stops to fuel the imagination.",
-  stageFlow: [
-  ["coffee", "bakery", "cafe"],
-  ["gallery", "museum", "bookstore"],
-  ["gallery", "museum", "garden"],
-  "lunch",
-  "park"
-],
-  filters: {
-    price: [1, 2, 3],
-    tags: ["coffee", "gallery", "random gem", "bookstore", "lunch"],
-    vibes: [
-      "studio", "workspace", "atelier",
-      "journal", "scribble", "notepad",
-      "sketch", "doodle", "illustrate",
-      "gallery", "exhibit", "curated",
-      "quiet", "still", "peaceful",
-      "inspiration", "spark", "drip",
-      "café", "espresso", "barista",
-      "bookstore", "pages", "read",
-      "sunny", "glow", "light-filled",
-      "vinyl", "analog", "lo-fi",
-      "art", "canvas", "visual",
-      "notebook", "moleskine", "planner",
-      "design", "blueprint", "layout",
-      "creative space", "open studio", "nook",
-      "makers", "craft", "hands-on",
-      "colorful", "bold", "vibrant",
-      "imaginative", "whimsical", "dreamy",
-      "brainstorm", "ideation", "generate",
-      "cozy", "warm", "welcoming",
-      "thoughtful", "intentional", "reflective",
-      "ideas", "conceptual", "thought",
-      "workspace", "hub", "zone",
-      "open-ended", "freeform", "fluid",
-      "expressive", "emotive", "unfiltered"
-    ],
-    timeOfDay: ["morning", "midday", "day", "afternoon"]
-  },
-  keywords: [
-    "draft", "sketchbook", "ink",
-    "canvas", "notepad", "flow",
-    "muse", "brush", "shade",
-    "read", "prose", "literary",
-    "curate", "detail", "palette",
-    "focus", "quietude", "balance",
-    "zine", "magazine", "print",
-    "coffee", "pour", "drip",
-    "vinyl", "record", "spin",
-    "illustration", "frame", "install",
-    "notion", "moodboard", "plan",
-    "texture", "tone", "linework",
-    "narrative", "expression", "idea",
-    "edit", "compose", "build",
-    "workspace", "spot", "corner",
-    "caffeine", "latte", "brew",
-    "indie", "local", "craft",
-    "media", "digital", "analog",
-    "project", "vision", "goal",
-    "spark", "fire", "impulse",
-    "minimal", "organized", "styled",
-    "drafting", "mark", "gesture",
-    "poetic", "voice", "theme",
-    "thought", "concept", "note"
+    "coffee", "latte", "matcha", "vinyl", "bookstore", "reading", "notebook", "window seat",
+    "pastry", "drip", "gallery", "poetry", "vibe", "corner booth", "random gem",
+    "park bench", "market", "walk", "playlist", "barstool", "lo-fi", "cozy", "quiet",
+    "softserve", "dessert", "local", "budget", "fire escape", "sidewalk", "slowdrip",
+    "ambient", "lowmusic", "sketchbook", "zine", "shared plate", "catchup", "thoughtful",
+    "breezy", "lazy", "indie", "snapshot", "scene", "light meal", "day off"
   ]
 },
   {
   themeId: "date-night",
   name: "Date Night",
   description: "Romance, dim lights, and dessert to close the evening.",
-  stageFlow: [ ["dinner", "cocktail", "activity","wine bar", "gallery"],
+  stageFlow: [ ["dinner", "cocktail", "wine bar", "gallery"],
     ["cocktail", "gallery", "rooftop"],
     ["cocktail", "lounge", "speakeasy"],
     "dessert"
   ],
   filters: {
     price: [1, 2, 3, 4],
-    timeOfDay: ["afternoon", "happy hour", "evening", "night","late-night"],
+    timeOfDay: ["afternoon", "happy hour", "evening", "night", "late-night"],
     vibes: [
       "romantic", "cocktail", "jazz", "twilight", "wine", "dim", "moody", "wine",
       "candlelit", "intimate", "charming", "flirty", "cozy", "soft",
@@ -350,7 +199,7 @@ export const crawlThemes: CrawlTheme[] = [
       "tender", "silken",              // gentle
       "timeless", "vintage"
     ],
-    tags: ["dinner", "cocktail", "dessert", "wine"],
+    tags: ["dinner", "cozy", "dim", "dim lit", "intimate", "cocktail", "dessert", "wine"],
   },
   keywords: [
     "romantic", "cocktail", "jazz", "twilight", "wine", "dim", "moody",
@@ -465,7 +314,7 @@ export const crawlThemes: CrawlTheme[] = [
   {
   themeId: "friends-night-out",
   name: "Friends Night Out",
-  description: "Food → pregame → party → questionable decisions.",
+  description: "Food → drinks → questionable decisions.",
   stageFlow: [
   "dinner",
   ["cocktail", "wine bar"],
@@ -543,77 +392,104 @@ export const crawlThemes: CrawlTheme[] = [
   ]
 },
   {
-    themeId: "gallery-crawl",
-    name: "Gallery Crawl",
-    description: "Galleries and artsy stops with great aesthetics.",
-    stageFlow: ["gallery", "gallery", "lunch", "wine", "music"],
-    filters: {
-      price: [1, 2, 3],
-      vibes: ["gallery", "exhibit", "art", "creative", "museum", "opening", "culture", "fine art", "contemporary", "showcase", "art walk", "curated", "aesthetic", "stylish", "visual", "inspired", "refined", "chic", "trendy", "modern", "buzz"],
-      tags: ["gallery", "gallery", "lunch", "wine bar", "music"],
-      timeOfDay: ["midday", "afternoon","day","evening"],
-    },
-    keywords: [
-      "gallery", "exhibit", "art", "creative", "museum", "opening", "culture", "fine art", "contemporary", "showcase", "art walk", "curated", "aesthetic", "stylish", "visual", "inspired", "refined", "chic", "trendy", "modern", "buzz"
-    ]
+  "themeId": "creative-outlet",
+  "name": "Creative Outlet",
+  "description": "A day designed to both inspire and express—immerse in visual culture, design, and material spaces, then channel the energy into your own creative flow.",
+  "stageFlow": [
+    ["café", "coffee", "bakery", "tea"],
+    ["gallery", "museum", "bookstore"],
+    ["gallery", "showroom", "bookstore"],
+    "lunch",
+    ["gallery", "showroom", "bookstore"],
+    ["music", "park", "wine bar"]
+  ],
+  "filters": {
+    "price": [1, 2, 3],
+    "tags": [
+      "coffee",
+      "gallery",
+      "museum",
+      "bookstore",
+      "showroom",
+      "furniture",
+      "interior design",
+      "design store",
+      "creative space",
+      "studio",
+      "lunch",
+      "wine bar",
+      "music"
+    ],
+    "vibes": [
+      "gallery", "exhibit", "curated", "aesthetic", "fine art", "contemporary", "visual", "modern", "culture",
+      "studio", "workspace", "atelier", "creative space", "makers", "open studio", "hands-on", "craft",
+      "journal", "notepad", "sketch", "doodle", "flow", "inspiration", "spark", "thought", "idea",
+      "coffee", "espresso", "café", "pour-over", "tea", "cozy", "warm", "welcoming",
+      "music", "vibe", "buzz", "stylish", "refined", "chic", "trendy", "lo-fi",
+      "expressive", "unfiltered", "imaginative", "dreamy", "intentional", "reflective", "freeform",
+      "interiors", "design-forward", "materials", "texture", "layout", "spatial",
+      "furniture", "objects", "fixtures", "lighting", "wood", "metal", "ceramic",
+      "minimal", "styled", "considered", "lifestyle"
+    ],
+    "timeOfDay": ["morning", "midday", "day", "afternoon", "evening"]
   },
+  "keywords": [
+    "muse", "canvas", "sketchbook", "idea", "concept", "narrative", "expression", "curate",
+    "brush", "texture", "tone", "shade", "linework", "illustration", "composition",
+    "zine", "print", "notion", "moodboard", "voice", "theme", "focus", "quietude",
+    "drip", "brew", "caffeine", "vinyl", "spin", "vibe", "buzz", "scene",
+    "showcase", "art walk", "install", "gallery", "bookstore", "pages", "read",
+    "draft", "gesture", "build", "workspace", "spot", "corner", "hub",
+    "craft", "media", "analog", "digital", "vision", "project", "plan",
+    "showroom", "interior", "furniture", "fixture", "object",
+    "vignette", "display", "materials", "form", "arrangement",
+    "layout", "spatial design", "decor", "lifestyle", "design language"
+  ]
+},
   {
-    themeId: "saturday-surge",
-    name: "Saturday Surge",
-    description: "Max energy from afternoon to after hours.",
-    stageFlow: ["activity", "bar", "dinner", "bar", "club", "late-night"],
-    filters: {
-      price: [2, 3, 4],
-      vibes: ["dance", "dj", "crowded", "club", "party", "high energy", "beats", "rooftop", "late", "scene", "vibrant", "after hours", "groove", "movement",         // dance
-      "turntables", "mix",           // dj
-      "packed", "swarming",          // crowded
-      "clubhouse", "nocturnal",      // club
-      "celebration", "festive",      // party
-      "charged", "amped",            // highenergy
-      "rhythm", "pulse",             // beats
-      "skyline", "elevated",         // rooftop
-      "midnight", "afterdark",       // late
-      "buzz", "spotlight",           // scene
-      "radiant", "lively",           // vibrant
-      "afterparty", "twilight"],
-      tags: ["activity", "bar", "dinner", "bar", "club", "late-night"],
-      timeOfDay: ["evening","night","late-night"],
-    },
-    keywords: [
-      "dance", "dj", "crowded", "club", "party", "high energy", "beats", "rooftop", "late", "scene", "vibrant", "after hours", "floor", "movement",            // dance context
-    "mixset", "scratch",            // dj context
-    "swarm", "gathering",           // crowd behavior
-    "venue", "spot",                // club context
-    "bash", "shindig",              // party context
-    "momentum", "charge",           // energy vibe
-    "riff", "tempo",                // beats context
-    "view", "terrace",              // rooftop context
-    "midnight", "weehours",         // late timing
-    "vibe", "pulse",                // scene quality
-    "sparkle", "electric",          // vibrant feel
-    "afterparty", "wrap",           // afterhours action
-
-    // extra mood/context words
-    "toast", "cheers",              // celebratory
-    "rhythm", "cadence",            // musical flow
-    "sip", "chug",                  // drink actions
-    "crowdflow", "gather",          // social movement
-    "dancefloor", "lights",         // environment
-    "story", "memory",              // narrative
-    "laugh", "shout",               // social expression
-    "pulse", "beatdrop",            // music emphasis
-    "tempo", "spin",                // set pacing
-    "electric", "charged",          // vibe intensity
-    "vibecheck", "buzz"
+  "themeId": "night-mode",
+  "name": "Night Mode",
+  "description": "Your night ramps up in stages—good energy, bold flavors, loud music, and no curfew.",
+  "stageFlow": [
+    ["dinner", "bar"],
+    ["cocktail", "bar"],
+    "club",
+    "late-night"
+  ],
+  "filters": {
+    "timeOfDay": ["evening", "night", "late-night"],
+    "price": [2, 3, 4],
+    "tags": [
+      "activity", "bar", "dinner", "club", "late-night",
+      "dance", "rooftop", "bottle service", "music", "vibe"
+    ],
+    "vibes": [
+      "rowdy", "flashy", "high-energy", "social", "crowded", "fun", "wild",
+      "buzzing", "pulsing", "neon", "afterdark", "boozy", "bold",
+      "playful", "electric", "vibrant", "charged", "amped", "stylish",
+      "groove", "movement", "beats", "rhythmic", "dancefloor",
+      "elevated", "skyline", "scene", "party", "celebration", "after hours",
+      "twilit", "midnight", "wee-hours", "nocturnal", "afterparty"
     ]
   },
+  "keywords": [
+    "party", "club", "bar", "dance", "dj", "beats", "late", "loud", "friends", "drinks",
+    "pregame", "celebrate", "nightout", "rooftop", "scene", "energy", "vibe",
+    "movement", "floor", "tempo", "pulse", "beatdrop", "mix", "spin", "turntable",
+    "flash", "glow", "radiance", "neon", "signage", "spotlight", "billboard",
+    "crowd", "gathering", "swarm", "crew", "squad", "community", "clique",
+    "cheers", "toast", "shots", "sip", "chug", "venue", "spot", "view", "height",
+    "buzz", "vibecheck", "afterparty", "postgame", "joyride", "wrap", "memory",
+    "shindig", "bash", "fiesta", "lights", "story", "laugh", "shout"
+  ]
+},
   {
   themeId: "solo-explorer",
   name: "Solo Explorer",
   description: "Cozy solo spots and hidden gems for wandering.",
   stageFlow: [
   ["coffee", "cafe", "bakery"],
-  ["random gem", "lifestyle"],
+  ["random gem", "lifestyle", "showroom"],
   ["gallery", "museum"],
   ["lunch", "wine bar", "bookstore"],
   ["random gem", "lifestyle", "park"]
@@ -680,286 +556,43 @@ export const crawlThemes: CrawlTheme[] = [
     "explore", "adventure"  
   ]
 },
-  {
-  themeId: "sunday-reset",
-  name: "Sunday Reset",
-  description: "Restore your soul with quiet spaces, gentle wellness, and cozy comfort.",
-  stageFlow: [
-  "yoga",
-  ["coffee", "bakery"],
-  ["market", "spa"],
-  ["bookstore", "park", "garden"],
-  "dinner"
-],
-  filters: {
-    price: [1, 2, 3, 4],
-    timeOfDay: ["morning", "midday", "afternoon", "day", "evening"],
-    vibes: [
-      "garden", "tea", "spa", "quiet", "book", "relax", "wellness", "reflection",
-      "meditation", "sunlight", "fresh", "slow",
-      "cozy", "warm", "soft", "restful", "breezy", "clean",
-      "mindful", "airy", "simple", "light", "nourish", "glow",
-      "reset", "peaceful", "unwind", "breathe", "verdant", "leafy",            // garden
-      "herbal", "steeping",          // tea
-      "soothing", "restorative",     // spa
-      "hushed", "still",             // quiet
-      "literary", "paperbound",      // book
-      "ease", "loosen",              // relax
-      "holistic", "balanced",        // wellness
-      "introspective", "inward",     // reflection
-      "centered", "grounded",        // meditation
-      "golden", "warmth",            // sunlight
-      "crisp", "renewed",            // fresh
-      "unhurried", "leisurely",      // slow
-      "snug", "inviting",            // cozy
-      "toasty", "comforting",        // warm
-      "gentle", "muted",             // soft
-      "recharging", "calming",       // restful
-      "lightflow", "open",           // breezy
-      "pure", "minimal",             // clean
-      "aware", "intentional",        // mindful
-      "uplifted", "spacious",        // airy
-      "pared", "essential",          // simple
-      "weightless", "easy",          // light
-      "feeding", "wholesome",        // nourish
-      "radiant", "softlit",          // glow
-      "renewal", "refresh",          // reset
-      "tranquil", "placid",          // peaceful
-      "decompress", "release",       // unwind
-      "inhale", "exhale" 
-    ],
-    tags: ["fitness", "market", "lifestyle", "bookstore", "dinner"],
-  },
-  keywords: [
-    "garden", "tea", "spa", "quiet", "book", "relax", "wellness", "reflection",
-    "meditation", "sunlight", "fresh", "slow",
-    "sunday", "reset", "soft", "ritual", "cleanse", "calm",
-    "unwind", "balance", "nourish", "still", "glow", "breathe",
-    "yoga", "journal", "stretch", "flow", "routine", "lowkey", "botanical", "greenery",         // garden context
-    "teacup", "infusion",            // tea action
-    "massage", "sauna",              // spa activity
-    "silence", "pause",              // quiet state
-    "reading", "chapters",           // book usage
-    "rest", "easeoff",               // relax behavior
-    "health", "care",                // wellness framing
-    "journaling", "review",          // reflection action
-    "breathwork", "stillness",       // meditation practice
-    "morninglight", "daybreak",      // sunlight timing
-    "renewal", "clarity",            // fresh effect
-    "downtime", "linger",             // slow pacing
-    "weekend", "closure",            // sunday framing
-    "resetting", "realign",           // reset action
-    "comfort", "tenderness",         // soft feel
-    "ceremony", "habit",              // ritual structure
-    "detox", "purify",                // cleanse framing
-    "serenity", "equanimity",         // calm state
-    "release", "cooldown",            // unwind mechanics
-    "equilibrium", "center",          // balance framing
-    "fuel", "sustain",                // nourish effect
-    "silence", "pause",               // stillness
-    "afterglow", "warmth",            // glow effect
-    "oxygen", "breathing",            // breathe mechanics
-    "asana", "stretching",            // yoga context
-    "notebook", "entries",            // journal usage
-    "mobility", "lengthen",            // stretch mechanics
-    "rhythm", "sequence",             // flow feeling
-    "schedule", "habitual",           // routine framing
-    "gentle", "unrushed" 
-  ]
-},
 {
-  themeId: "work-session",
-  name: "Work Session",
-  description: "Power through tasks with caffeine, quiet corners, and a rewarding close.",
-  stageFlow: [
-  ["coffee", "workspace", "cafe", "café"],
-  ["lunch", "bakery"],
-  ["coffee", "cafe", "café", "workspace", "happy hour"]
-],
-  filters: {
-    price: [1, 2, 3],
-    tags: ["coffee", "lunch", "coffee", "cocktail"],
-    vibes: [
-      "cafe", "wifi", "coffee", "focus", "remote-friendly", "laptop", "casual", "quiet",
-      "workspace", "daytime", "study", "productive", "neighborhood", "light music",
-      "comfortable seating", "independent", "easygoing", "minimal", "energized", "brew", "espresso",            // cafe
-      "connected", "online",         // wifi
-      "latte", "brew",               // coffee
-      "attentive", "sharp",          // focus
-      "flexible", "open",            // remote-friendly
-      "notetaking", "typing",        // laptop
-      "laidback", "unforced",        // casual
-      "silent", "hushed",            // quiet
-      "desk", "booth",               // workspace
-      "sunlit", "bright",            // daytime
-      "read", "analyze",             // study
-      "driven", "goal-oriented",     // productive
-      "local", "community",          // neighborhood
-      "softbeats", "ambient",        // light music
-      "relaxed-seat", "plush",       // comfortable-seating
-      "solo", "self-sufficient",     // independent
-      "mellow", "steady",            // easygoing
-      "clean", "uncluttered",        // minimal
-      "peppy", "lively" 
+  "themeId": "morning-flow",
+  "name": "Morning Flow",
+  "description": "A calm and intentional start that energizes your body, clears your mind, and opens the day with purpose.",
+  "stageFlow": [
+    ["wellness", "yoga", "fitness"],
+    ["tea", "coffee", "bakery", "smoothie"],
+    ["garden", "market", "park"],
+    ["spa", "bookstore"],
+    "lunch"
+  ],
+  "filters": {
+    "timeOfDay": ["morning", "midday", "afternoon", "day"],
+    "price": [1, 2],
+    "tags": [
+      "wellness", "yoga", "fitness", "coffee", "bakery", "tea", "smoothie",
+      "garden", "market", "park", "journal", "spa", "lunch"
     ],
-    timeOfDay: ["morning", "midday", "afternoon", "day", "evening", "happy hour"]
-  },
-  keywords: [
-    "cafe", "wifi", "coffee", "focus", "remote-friendly", "laptop", "casual", "quiet",
-    "workspace", "daytime", "study", "productive", "neighborhood", "light music",
-    "comfortable seating", "outlet", "windows", "concentration", "notebook", "journal",
-    "session", "solo", "sip", "menu", "relaxed", "airiness", "brewspot", "barista",          // cafe context
-    "signal", "router",             // wifi context
-    "mocha", "cappuccino",          // coffee type
-    "clarity", "effort",            // focus outcome
-    "workspace", "huddle",          // remote-friendly setting
-    "keyboard", "trackpad",         // laptop parts
-    "weekend", "weekday",           // casual timing
-    "silence", "pause",             // quiet state
-    "cubicle", "corner",            // workspace location
-    "morninglight", "noon",         // daytime markers
-    "lecture", "readthrough",       // study action
-    "achievement", "milestone",     // productive result
-    "boutique", "walkable",         // neighborhood feel
-    "playlist", "rhythm",           // light music
-    "armrest", "cushion",           // comfortable seating feel
-    "powerpoint", "spreadsheet",    // work tools
-    "expanse", "view",              // windows feel
-    "focusflow", "mindmap",         // concentration technique
-    "scribble", "doodle",           // notebook use
-    "reflection", "entry",          // journal use
-    "block", "sprint",              // session type
-    "solitude", "me-time",          // solo experience
-    "taste", "sipflow",             // sipping action
-    "fare", "entrée",               // menu context
-    "easytempo", "at-ease",         // relaxed state
-    "breeze", "freshair" 
-  ]
-},
-{
-  themeId: "last-call",
-  name: "Last Call",
-  description: "A wild night that doesn’t end when the lights go out.",
-  stageFlow: [
-  ["bar", "club", "lounge", "cocktail"],
-  ["bar", "late-night"]
-],
-  filters: {
-    timeOfDay: ["night", "late-night"],
-    price: [1, 2, 3, 4],
-    tags: ["bar", "club", "late-night", "after hours", "speakeasy", "lounge", "dance"],
-    vibes: [
-      // core
-      "late-night", "after-hours", "rowdy", "gritty", "dark", "boozy",
-      "underground", "unfiltered", "loose", "nocturnal", "wild", "electric",
-
-      // expanded (2 per core)
-      "neon", "shadowy",          // late-night
-      "secretive", "hidden",      // after-hours
-      "chaotic", "reckless",      // rowdy
-      "raw", "edgy",              // gritty
-      "lowlit", "moody",          // dark
-      "sloshed", "tipsy",         // boozy
-      "basement", "backroom",     // underground
-      "uncensored", "unpolished", // unfiltered
-      "carefree", "uninhibited",  // loose
-      "owlish", "sleepless",      // nocturnal
-      "feral", "untamed",         // wild
-      "charged", "pulsing"        // electric
+    "vibes": [
+      "fresh", "early", "sunrise", "light", "warm", "natural", "peaceful", "cozy",
+      "quiet", "calm", "restorative", "energizing", "grounded", "centered", "balanced",
+      "reflective", "soft", "intentional", "mindful", "clear", "serene", "slowness",
+      "slow", "leisurely", "inviting", "open", "breezy", "sunlit", "gentle", "earthy",
+      "routine", "ritual", "purposeful", "settled", "clean", "organic", "tranquil",
+      "harmonized", "uplifting", "present", "aware", "airy", "healing"
     ]
   },
-  keywords: [
-    "late-night", "karaoke", "after hours", "lively", "spontaneous", "gritty",
-    "unfiltered", "nocturnal", "dance", "dark", "shots", "underground",
-    "loose", "unhinged", "boozy", "nightcap", "midnight", "closingtime",   // late-night
-    "mic", "singalong",          // karaoke
-    "lockin", "postclose",       // after-hours
-    "buzzing", "animated",       // lively
-    "impulse", "whim",           // spontaneous
-    "concrete", "industrial",    // gritty
-    "honest", "candid",          // unfiltered
-    "moonlit", "starlit",        // nocturnal
-    "groove", "mosh",            // dance
-    "blackout", "dimness",       // dark
-    "tequila", "whiskey",        // shots
-    "speakeasy", "cellar",       // underground
-    "careless", "easygoing",     // loose
-    "deranged", "chaotic",       // unhinged
-    "intoxicated", "inebriated", // boozy
-    "finale", "sendoff"
-  ]
-},
-{
-  themeId: "mindful-mornings",
-  name: "Mindful Mornings",
-  description: "Ease into the day with peace, balance, and clarity.",
-  stageFlow: [
-  ["wellness", "yoga"],
-  ["tea", "bakery"],
-  ["garden", "park", "market"],
-  ["spa", "lunch"]
-],
-  filters: {
-    timeOfDay: ["morning", "midday", "afternoon", "day"],
-    price: [1, 2],
-    tags: ["wellness", "yoga", "coffee", "garden", "spa", "tea", "market"],
-    vibes: [
-      "calm", "gentle", "quiet", "intentional", "sunlit", "light", "fresh",
-      "reflective", "still", "balanced", "restorative", "centered", "peaceful",
-      "cozy", "soft", "slowness", "natural", "clear", "grounded", "ease", "serene", "placid",          // calm
-      "tender", "delicate",        // gentle
-      "hushed", "silent",          // quiet
-      "purposeful", "deliberate",  // intentional
-      "golden", "radiant",         // sunlit
-      "airy", "featherlight",      // light
-      "crisp", "pure",             // fresh
-      "thoughtful", "pensive",     // reflective
-      "motionless", "settled",     // still
-      "harmonized", "even",        // balanced
-      "healing", "renewing",       // restorative
-      "aligned", "rooted",         // centered
-      "tranquil", "calming",       // peaceful
-      "snug", "inviting",          // cozy
-      "muted", "velvety",          // soft
-      "unhurried", "leisurely",    // slowness
-      "organic", "earthy",         // natural
-      "lucid", "open",             // clear
-      "anchored", "stable",        // grounded
-      "effortless", "smooth" 
-    ]
-  },
-  keywords: [
-    "yoga", "meditation", "spa", "sunlight", "tea", "calm", "minimal",
-    "introspective", "garden", "journal", "wellness", "fresh air", "stretch",
-    "breathe", "ritual", "balance", "clarity", "gentle", "routine", "mindful",
-    "morning", "flow", "reset", "ease", "solo", "cozy", "peace", "light", "asana", "vinyasa",            // yoga
-    "breathwork", "stillness",     // meditation
-    "soak", "sauna",               // spa
-    "daybreak", "dawn",            // sunlight
-    "matcha", "herbal",            // tea
-    "quietude", "composure",       // calm
-    "simplicity", "restraint",     // minimal
-    "selfstudy", "awareness",      // introspective
-    "greenery", "flora",           // garden
-    "notebook", "scribble",        // journal
-    "selfcare", "holistic",        // wellness
-    "oxygen", "outdoors",          // freshair
-    "mobility", "lengthen",        // stretch
-    "inhale", "exhale",            // breathe
-    "ceremony", "practice",        // ritual
-    "equilibrium", "symmetry",     // balance
-    "focus", "insight",            // clarity
-    "kindness", "warmth",          // gentle
-    "habit", "pattern",            // routine
-    "presence", "attention",       // mindful
-    "sunrise", "a.m.",             // morning
-    "sequence", "cadence",         // flow
-    "renewal", "restart",          // reset
-    "comfort", "release",          // ease
-    "alone", "selftime",           // solo
-    "nestled", "homey",            // cozy
-    "harmony", "serenity",         // peace
-    "glow", "brightness"  
+  "keywords": [
+    "yoga", "meditation", "stretch", "wellness", "spa", "calm", "mindful", "clarity",
+    "tea", "coffee", "matcha", "smoothie", "bakery", "brunch", "acai", "café",
+    "sunrise", "daybreak", "morning", "flow", "energy", "balance", "breathe",
+    "sequence", "rhythm", "ritual", "routine", "intentional", "solo", "peace",
+    "reset", "light", "glow", "fresh", "quiet", "cozy", "open", "garden", "flora",
+    "market", "patio", "greenway", "trail", "outdoor", "harmony", "ease", "warmth",
+    "selfcare", "journal", "scribble", "focus", "attention", "clarity", "gentle",
+    "inhale", "exhale", "revive", "refresh", "leisurely", "glow", "clean", "pure",
+    "sunlit", "breeze", "terrace", "courtyard", "moment", "presence"
   ]
 },
 {
@@ -1041,74 +674,6 @@ export const crawlThemes: CrawlTheme[] = [
   ]
 },
 {
-  themeId: "party-time",
-  name: "Party Time",
-  description: "Bring the crew. Tonight, the city is yours.",
-  stageFlow: ["bar", "dinner", "bar", "club", "late-night"],
-  filters: {
-    timeOfDay: ["evening", "night", "late-night"],
-    price: [2, 3, 4],
-    tags: ["bar", "club", "dinner", "late-night", "dance", "rooftop", "bottle service"],
-    vibes: [
-      "rowdy", "flashy", "high-energy", "social", "crowded", "fun", "late", "wild",
-      "buzzing", "glow", "pulsing", "neon", "afterdark", "boozy", "bold",
-      "hype", "intense", "buzzy", "playful", "electric", "raucous", "uproarious",      // rowdy
-      "sparkling", "glittery",      // flashy
-      "charged", "vibrant",         // high-energy
-      "gregarious", "interactive",  // social
-      "packed", "swarming",         // crowded
-      "joyful", "mirthful",         // fun
-      "midnight", "wee-hours",      // late
-      "untamed", "feral",           // wild
-      "alive", "thrumming",         // buzzing
-      "radiant", "shine",           // glow
-      "beat-driven", "rhythmic",    // pulsing
-      "electric", "luminescent",    // neon
-      "twilit", "shadowy",          // afterdark
-      "spirited", "tipsy",          // boozy
-      "audacious", "confident",     // bold
-      "amped", "charged-up",        // hype
-      "fervent", "fevered",         // intense
-      "effervescent", "bouncy",     // buzzy
-      "teasing", "cheery",          // playful
-      "current", "sparked" 
-    ]
-  },
-  keywords: [
-    "club", "dance", "beats", "late", "dj", "loud", "drinks", "bar",
-    "crowded", "energy", "flashy", "afterhours", "party", "scene",
-    "friends", "rowdy", "weekend", "pregame", "lit", "cheers", "social",
-    "shots", "celebrate", "nightout", "hype", "bass", "vibes", "neon", "rooftop", "venue", "hang",               // club context
-    "groove", "movement",          // dance action
-    "tempo", "rhythm",             // beats context
-    "midnight", "curfew",          // late timing
-    "turntable", "mix",            // dj tool
-    "decibel", "amplify",          // loud context
-    "toast", "sip",                // drinks action
-    "pubcrawl", "hangout",         // bar journey
-    "throng", "gathering",         // crowded scene
-    "vigor", "momentum",           // energy feel
-    "sparkle", "flash",            // flashy feel
-    "afterglow", "postgame",       // afterhours vibe
-    "bash", "fiesta",              // party synonyms
-    "view", "spot",                // scene reference
-    "crew", "squad",               // friends group
-    "cheer-up", "shout",           // rowdy action
-    "saturday", "friday",          // weekend markers
-    "warming-up", "eager",         // pregame feel
-    "radiance", "glare",           // lit quality
-    "toastup", "clink",            // cheers action
-    "community", "clique",         // social set
-    "shotglass", "chaser",         // shots tools
-    "joyride", "festivity",        // celebrate meaning
-    "latehours", "moonlight",      // nightout framing
-    "lowend", "subwoofer",         // bass context
-    "feels", "grooves",            // vibes context
-    "signage", "billboard",        // neon imagery
-    "height", "viewpoint" 
-  ]
-},
-{
   themeId: "post-work-wind-down",
   name: "Post‑Work Wind Down",
   description: "Unplug and ease into the evening after a long day.",
@@ -1178,144 +743,11 @@ export const crawlThemes: CrawlTheme[] = [
   ]
 },
 {
-  themeId: "self-care",
-  name: "Self‑Care",
-  description: "Replenish your energy with serene solo stops.",
-  stageFlow: ["fitness", "spa", "tea", "bookstore", "park"],
-  filters: {
-    timeOfDay: ["morning", "midday", "afternoon", "day"],
-    price: [1, 2, 3],
-    tags: ["spa", "tea", "bookstore", "park", "wellness", "yoga", "massage"],
-    vibes: [
-      "calm", "serene", "gentle", "restful", "quiet", "mindful", "soothing",
-      "grounded", "soft", "warm", "peaceful", "healing", "slow", "nourishing",
-      "private", "intentional", "cozy", "balanced", "reflective", "restorative", "placid", "still",               // calm
-      "tranquil", "hushed",            // serene
-      "tender", "delicate",            // gentle
-      "reposing", "sleepy",             // restful
-      "muted", "soundless",             // quiet
-      "aware", "present",               // mindful
-      "comforting", "silken",           // soothing
-      "rooted", "centered",             // grounded
-      "cushioned", "feathered",         // soft
-      "toasty", "glowing",              // warm
-      "harmonious", "settled",          // peaceful
-      "renewing", "mending",            // healing
-      "unhurried", "leisurely",         // slow
-      "fortifying", "wholesome",        // nourishing
-      "secluded", "personal",           // private
-      "purposeful", "deliberate",       // intentional
-      "snug", "inviting",               // cozy
-      "equable", "steady",              // balanced
-      "pensive", "introspective",       // reflective
-      "reviving", "replenishing"
-    ]
-  },
-  keywords: [
-    "spa", "relax", "yoga", "meditation", "serenity", "retreat", "tea",
-    "calm", "detox", "massage", "rejuvenate", "peace",
-    "wellness", "breathe", "stillness", "reset", "balance", "restore",
-    "solo", "gentle", "quiet", "soft", "unwind", "care", "sauna", "steam",                  // spa
-    "pause", "ease",                   // relax
-    "asana", "stretch",                // yoga
-    "mantra", "silence",               // meditation
-    "equanimity", "composure",         // serenity
-    "getaway", "hideaway",             // retreat
-    "herbal", "infusion",              // tea
-    "placidity", "evenness",           // calm
-    "cleanse", "purge",                // detox
-    "bodywork", "kneading",            // massage
-    "revitalize", "renew",             // rejuvenate
-    "harmony", "accord",               // peace
-    "holistic", "selfhood",            // wellness
-    "inhale", "exhale",                // breathe
-    "silence", "pause",                // stillness
-    "reboot", "restart",               // reset
-    "symmetry", "poise",               // balance
-    "repair", "rebuild",               // restore
-    "me-time", "alone",                // solo
-    "kindness", "patience",            // gentle
-    "hush", "mute",                    // quiet
-    "plush", "velour",                 // soft
-    "decompress", "release",           // unwind
-    "nurture", "tend" 
-  ]
-},
-{
-  themeId: "sunrise-start",
-  name: "Sunrise Start",
-  description: "Begin your day grounded and energized.",
-  stageFlow: ["fitness", "bakery", "coffee", "market", "park"],
-  filters: {
-    timeOfDay: ["morning", "midday", "afternoon", "day"],
-    price: [1, 2],
-    tags: ["fitness", "bakery", "coffee", "market", "park", "smoothie", "acai"],
-    vibes: [
-      "fresh", "early", "sunrise", "cozy", "quiet", "mindful", "energizing", "slow",
-      "breezy", "grounded", "warm", "natural", "gentle", "routine", "restorative",
-      "soft", "peaceful", "intentional", "inviting", "morning", "crisp", "clean",              // fresh
-      "dawn", "firstlight",          // early
-      "golden", "rosy",              // sunrise
-      "snug", "comforting",          // cozy
-      "hushed", "still",             // quiet
-      "present", "aware",            // mindful
-      "uplifting", "reviving",       // energizing
-      "unhurried", "leisurely",      // slow
-      "airy", "open",                // breezy
-      "centered", "rooted",          // grounded
-      "toasty", "glowing",           // warm
-      "organic", "earthy",           // natural
-      "tender", "lighthearted",      // gentle
-      "ritual", "habitual",          // routine
-      "renewing", "healing",         // restorative
-      "feathered", "muted",          // soft
-      "serene", "settled",           // peaceful
-      "deliberate", "purposeful",    // intentional
-      "welcoming", "approachable",   // inviting
-      "sunlit", "daybreak" 
-    ]
-  },
-  keywords: [
-    "coffee", "matcha", "sunrise", "morning", "café", "bakery", "brunch", "acai",
-    "patio", "quiet", "fresh", "early", "energizing", "routine", "mindful",
-    "stretch", "wellness", "cozy", "warm", "comforting", "inviting",
-    "breeze", "peaceful", "slow", "outdoor", "daylight", "granola", "leisurely", "reset", "espresso", "pour",             // coffee
-    "latte", "foam",                // matcha
-    "horizon", "skyline",           // sunrise
-    "wake", "rise",                 // morning
-    "barista", "counter",           // café
-    "pastry", "crumb",              // bakery
-    "skillet", "toast",             // brunch
-    "berry", "blend",               // acai
-    "terrace", "courtyard",         // patio
-    "silence", "mute",              // quiet
-    "dew", "clarity",               // fresh
-    "dawnish", "premidday",         // early
-    "charge", "spark",              // energizing
-    "sequence", "rhythm",           // routine
-    "focus", "attention",           // mindful
-    "limber", "warmup",             // stretch
-    "balance", "care",              // wellness
-    "blanket", "corner",            // cozy
-    "steam", "mug",                 // warm
-    "reassuring", "homely",         // comforting
-    "openarms", "approach",         // inviting
-    "airflow", "draft",             // breeze
-    "harmony", "ease",              // peaceful
-    "tempo", "linger",              // slow
-    "greenway", "trail",            // outdoor
-    "glow", "shine",                // daylight
-    "oats", "crunch",               // granola
-    "drift", "meander",             // leisurely
-    "reboot", "refresh" 
-  ]
-},
-{
   themeId: "midday-recharge",
   name: "Midday Recharge",
   description: "A relaxing midday refresh to reset and recharge before the evening.",
   stageFlow: [ "coffee",
-  ["walk", "park"],
+  ["walk", "park", "garden"],
   "lunch",
   ["fitness", "yoga", "coffee"]
 ],

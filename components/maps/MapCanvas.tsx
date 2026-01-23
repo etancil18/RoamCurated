@@ -76,18 +76,18 @@ const daypartColorMap: Record<string, string> = {
 }
 
 const themeColorMap: Record<string, string> = {
-  'cheap-cheerful': 'green',
+  'morning-flow': 'green',
   'beltline-explorer': 'lime',
-  'chill-hang': 'blue',
-  'creative-kickstart': 'orange',
+  'lofi-loop': 'blue',
+  'creative-outlet': 'orange',
   'date-night': 'purple',
   'friends-night-out': 'red',
   'gameday-vibes': 'brown',
-  'saturday-surge': 'gold',
+  'night-mode': 'gold',
   'solo-explorer': 'gray',
   'active-all-day': 'violet',
-  'sunday-reset': 'olive',
-  'work-session': 'cyan',
+  'pages-to-pours': 'olive',
+  'midday-recharge': 'cyan',
 }
 
 const userLocationIcon = L.divIcon({

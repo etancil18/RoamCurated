@@ -30,24 +30,17 @@ interface ControlPanelProps {
 const themes = [
   { id: 'active-all-day', label: 'Active All Day' },
   { id: 'beltline-explorer', label: 'BeltLine Explorer' },
-  { id: 'cheap-cheerful', label: 'Cheap & Cheerful' },
-  { id: 'chill-hang', label: 'Chill Hang' },
-  { id: 'creative-kickstart', label: 'Creative Kickstart' },
+  { id: 'creative-outlet', label: 'Creative Outlet' },
   { id: 'date-night', label: 'Date Night' },
   { id: 'friends-night-out', label: 'Friends Night Out' },
   { id: 'gameday-vibes', label: 'Gameday Vibes' },
-  { id: 'last-call', label: 'Last Call' },
+  { id: 'lofi-loop', label: 'Lofi Loop' },
   { id: 'midday-recharge', label: 'Midday Recharge' },
-  { id: 'mindful-mornings', label: 'Mindful Mornings' },
+  { id: 'morning-flow', label: 'Morning Flow' },
+  { id: 'night-mode', label: 'Night Mode' },
   { id: 'pages-to-pours', label: 'Pages to Pours' },
-  { id: 'party-time', label: 'Party Time' },
   { id: 'post-work-wind-down', label: 'Post-Work Wind Down' },
-  { id: 'saturday-surge', label: 'Saturday Surge' },
-  { id: 'self-care', label: 'Self-Care' },
   { id: 'solo-explorer', label: 'Solo Explorer' },
-  { id: 'sunrise-start', label: 'Sunrise Start' },
-  { id: 'sunday-reset', label: 'Sunday Reset' },
-  { id: 'work-session', label: 'Work Session' },
 ]
 
 const prices = ['', '$', '$$', '$$$', '$$$$']
