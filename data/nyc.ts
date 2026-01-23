@@ -4253,7 +4253,7 @@ const nycData = [
      {
        "slug": "the-noguchi-museum",    "name": "The Noguchi Museum",
     "vibe": "Artistic, Serene, Japanese, Cultural, Sculpture, Meditative, Minimalist, Peaceful, Reflective, Pure",
-    "type": "gallery",
+    "type": ["gallery", "museum"],
         "lat": "40.76699005",
     "lon": "-73.93760723",
     "link": "https://www.instagram.com/noguchimuseum/?hl=en",
@@ -4433,7 +4433,7 @@ const nycData = [
      {
        "slug": "apparatus",    "name": "APPARATUS",
     "vibe": "Sophisticated, Design‑focused, Aesthetic, Showroom, Sleek, Minimalist, Curated, Neutral, Modern",
-    "type": "gallery",
+    "type": ["gallery", "showroom"],
         "lat": "40.7476547",
     "lon": "-73.9907793",
     "link": "https://www.instagram.com/apparatusstudio/?hl=en",
@@ -5340,7 +5340,7 @@ const nycData = [
      {
        "slug": "the-met-cloisters",    "name": "The Met Cloisters",
     "vibe": "Historic, Serene, Cultural, Art, Monastic, Lush, Timeless, Iconic, Reflective",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.8648684",
     "lon": "-73.9319228",
     "link": "https://www.instagram.com/metcloisters/?hl=en",
@@ -6978,7 +6978,7 @@ const nycData = [
      {
        "slug": "sun-at-six-gallery",    "name": "Sun at Six Gallery",
     "vibe": "Artistic, Furniture, Contemporary, Showroom, By Appointment, Clean, Modernist, Bright, Curated",
-    "type": "gallery",
+    "type": "showroom",
         "lat": "40.6742921",
     "lon": "-73.96260438",
     "link": "https://www.instagram.com/sunatsix/?hl=en",
@@ -7023,7 +7023,7 @@ const nycData = [
      {
        "slug": "quarters",    "name": "Quarters",
     "vibe": "Cozy, Warm, Wine, Aesthetic, Hidden, Showroom, Chic, Subtle, Designer, Ambient",
-    "type": ["wine bar", "gallery"],
+    "type": ["wine bar", "gallery", "showroom"],
         "lat": "40.71821778",
     "lon": "-74.00301211",
     "link": "https://www.instagram.com/shopquarters/?hl=en",
@@ -8418,7 +8418,7 @@ const nycData = [
      {
        "slug": "moma-ps1",    "name": "MoMA PS1",
     "vibe": "Artsy, Museum, Concert, Outdoor/Open‑Air, Dynamic, Cultural, Edgy, Expansive, Experimental",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.745568",
     "lon": "-73.946913",
     "link": "https://www.instagram.com/momaps1/?hl=en",
@@ -10668,7 +10668,7 @@ const nycData = [
      {
        "slug": "the-metropolitan-museum-of-art",    "name": "The Metropolitan Museum of Art",
     "vibe": "Cultural, Historic, Iconic, Art, Curated, Classical, Grand, Refined, Architectural",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.7794396",
     "lon": "-73.96338248",
     "link": "https://www.instagram.com/themuseumofmodernart/",
@@ -10713,7 +10713,7 @@ const nycData = [
      {
        "slug": "Solomon-r-guggenheim-museum",    "name": "Solomon R. Guggenheim Museum",
     "vibe": "Modern, Iconic, Cultural, Art, Architectural, Curated, Avant‑garde, Meandering, Museum‑goer",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.78301",
     "lon": "-73.959124",
     "link": "https://www.instagram.com/guggenheim/",
@@ -10758,7 +10758,7 @@ const nycData = [
      {
        "slug": "the-frick-collection",    "name": "The Frick Collection",
     "vibe": "Historic, Cultural, Elegant, Classic Art, Refined, Quiet, Intimate, Stately, Curated",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.7710857",
     "lon": "-73.9673861",
     "link": "https://www.instagram.com/frickcollection/",
@@ -10803,7 +10803,7 @@ const nycData = [
      {
        "slug": "american-museum-of-natural-history",    "name": "American Museum of Natural History",
     "vibe": "Educational, Cultural, Family-friendly, Museum, Artsy, Interactive, Historical, Inspiring",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.7813241",
     "lon": "-73.9739882",
     "link": "https://www.instagram.com/amnh/",
@@ -10848,7 +10848,7 @@ const nycData = [
      {
        "slug": "whitney-museum-of-american-art",    "name": "Whitney Museum of American Art",
     "vibe": "Modern, Iconic, Cultural, Art, Contemporary, Sculptural, Bold, Architectural",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.73964505",
     "lon": "-74.00892095",
     "link": "https://www.instagram.com/whitneymuseum/",
@@ -10983,7 +10983,7 @@ const nycData = [
      {
        "slug": "gagosian",    "name": "Gagosian",
     "vibe": "Prestigious, Modern Art, Iconic Gallery, Curated, Gallery, Luxe, Refined, Contemporary",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.7494423",
     "lon": "-74.0059445",
     "link": "https://www.instagram.com/gagosian/",
@@ -18506,7 +18506,7 @@ const nycData = [
      {
        "slug": "the-morgan-library-museum",    "name": "The Morgan Library & Museum",
     "vibe": "Historic, Elegant, Literary, Cultural, Refined, Classical, Quiet, Museum, Architectural, Serene",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.7492685",
     "lon": "-73.9814652",
     "link": "https://www.instagram.com/themorganlibrary/?hl=en",
@@ -22152,7 +22152,7 @@ const nycData = [
      {
        "slug": "swiss-institute",    "name": "Swiss Institute",
     "vibe": "Artistic, Creative, Cultural Hub, Contemporary, Cool, Gallery, Inspired, Minimal, Intellectual, Refined",
-    "type": "gallery",
+    "type": "museum",
         "lat": "40.7284048",
     "lon": "-73.9875749",
     "link": "https://www.instagram.com/swissinstitute/?hl=en",
@@ -31536,7 +31536,7 @@ const nycData = [
      {
        "slug": "studiotwentyseven",    "name": "StudioTwentySeven",
     "vibe": "contemporary, minimalist, design-driven, intellectual, curated, aesthetic, stylish, modern art, thoughtful, cultural",
-    "type": "gallery",
+    "type": ["gallery", "showroom"],
     "lat": "40.7174008",
     "lon": "-74.0057855",
     "link": "https://www.instagram.com/studiotwentyseven/?hl=en",
