@@ -4,11 +4,8 @@ import { fetchLiveEventsForCity } from "@/lib/events/fetchLiveEvents";
 import type { Venue } from "@/types/venue";
 import { v4 as uuidv4 } from "uuid";
 import { supabaseRouteHandler } from "@/lib/supabase/route-handler";
+import { normalizeStages } from "@/lib/prompt-engine/stageUtils";
 
-/**
- * Map frontend-friendly route “tightness” → backend max allowable distance between stops.
- * Units: meters
- */
 const CITY_DISTANCE_THRESHOLDS = {
   atl: { tight: 1000, medium: 2500, loose: 4500 },
   nyc: { tight: 750, medium: 1400, loose: 2100 },
@@ -20,6 +17,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
+    console.error("❌ JSON parsing error in request body");
     return NextResponse.json({ error: "Invalid JSON format" }, { status: 400 });
   }
 
@@ -29,7 +27,8 @@ export async function POST(req: NextRequest) {
     userLat,
     userLon,
     city,
-    plannedStartAt, // ⬅️ scheduling signal
+    plannedStartAt,
+    stages,
   } = body as {
     venues: Venue[];
     options?: Record<string, any>;
@@ -37,10 +36,11 @@ export async function POST(req: NextRequest) {
     userLon: number;
     city?: "atl" | "nyc";
     plannedStartAt?: string;
+    stages?: any[];
   };
 
-  /** ---------------- Validation ---------------- **/
   if (!Array.isArray(venues) || venues.length === 0) {
+    console.warn("❌ No venues provided in request");
     return NextResponse.json(
       { error: "Venues must be a non-empty array." },
       { status: 400 }
@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
     isNaN(userLat) ||
     isNaN(userLon)
   ) {
+    console.warn("❌ Invalid or missing user coordinates");
     return NextResponse.json(
       { error: "Invalid or missing user location." },
       { status: 400 }
@@ -60,13 +61,15 @@ export async function POST(req: NextRequest) {
   }
 
   if (!city || (city !== "atl" && city !== "nyc")) {
+    console.warn("❌ Invalid or missing city");
     return NextResponse.json(
       { error: "Missing or invalid city." },
       { status: 400 }
     );
   }
 
-  /** ---------------- Planned Start / Relaxed Mode ---------------- **/
+  console.log(`📦 Received ${venues.length} venues`);
+
   let relaxedTimeFiltering = false;
 
   if (plannedStartAt) {
@@ -77,33 +80,37 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  /** ---------------- Custom Start ---------------- **/
-  const customLat = options.customStart?.lat;
-  const customLon = options.customStart?.lon;
-
   const startLat =
-    typeof customLat === "number" && !isNaN(customLat) ? customLat : userLat;
-  const startLon =
-    typeof customLon === "number" && !isNaN(customLon) ? customLon : userLon;
+    typeof options.customStart?.lat === "number"
+      ? options.customStart.lat
+      : userLat;
 
-  /** ---------------- Distance Threshold ---------------- **/
+  const startLon =
+    typeof options.customStart?.lon === "number"
+      ? options.customStart.lon
+      : userLon;
+
   const tightness: "tight" | "medium" | "loose" = options.tightness ?? "medium";
   options.maxDistanceMeters =
     CITY_DISTANCE_THRESHOLDS[city]?.[tightness] ??
     CITY_DISTANCE_THRESHOLDS[city].medium;
 
-  /** ---------------- Events ---------------- **/
   const includeEvents = options.includeEvents ?? true;
   const eventOnly = options.eventOnly ?? false;
 
   let eventVenues: Venue[] = [];
 
   if (includeEvents || eventOnly) {
-    const liveEvents = await fetchLiveEventsForCity(city);
-    eventVenues = liveEvents.map((ev) => ({
-      ...ev,
-      type: ev.type ?? ["event"],
-    }));
+    try {
+      const liveEvents = await fetchLiveEventsForCity(city);
+      eventVenues = liveEvents.map((ev) => ({
+        ...ev,
+        type: ev.type ?? ["event"],
+      }));
+      console.log(`🎟️  Loaded ${eventVenues.length} event venues`);
+    } catch (err) {
+      console.warn("⚠️ Failed to fetch live events", err);
+    }
   }
 
   const mergedVenues = eventOnly
@@ -112,24 +119,49 @@ export async function POST(req: NextRequest) {
         new Map([...venues, ...eventVenues].map((v) => [v.id, v])).values()
       );
 
-  /** ---------------- Debug Input ---------------- **/
-  console.log("🧠 Manual crawl input", {
-    city,
-    venueCount: mergedVenues.length,
-    relaxedTimeFiltering,
-    plannedStartAt: plannedStartAt ?? null,
-    maxDistanceMeters: options.maxDistanceMeters,
-  });
+  console.log(`📊 Final venue pool: ${mergedVenues.length} venues`);
 
-  /** ---------------- Generate Route ---------------- **/
+  const finalStages =
+    Array.isArray(stages) && stages.length > 0
+      ? normalizeStages(stages)
+      : undefined;
+
+  const hasValidStages =
+    Array.isArray(finalStages) &&
+    finalStages.some((s) => Array.isArray(s.type) && s.type.length > 0);
+
+  console.log("🎯 Using stages in crawl:", hasValidStages ? finalStages : "NONE (manual fallback)");
+  if (hasValidStages && finalStages) {
+    finalStages.forEach((stage, idx) => {
+      console.log(`🔎 Stage ${idx}:`, stage);
+    });
+  }
+
   let route: Venue[];
 
   try {
-    route = await generateRoute(mergedVenues, startLat, startLon, {
+    console.log("⚙️ Starting route generation with options:", {
       ...options,
       eventOnly,
-      relaxedTimeFiltering, // 🔑 critical fix
+      relaxedTimeFiltering,
+      forceStageOrder: hasValidStages,
+      disableStageInference: hasValidStages,
+      stages: finalStages,
     });
+
+    route = await generateRoute(
+      mergedVenues,
+      startLat,
+      startLon,
+      {
+        ...options,
+        eventOnly,
+        relaxedTimeFiltering,
+        forceStageOrder: hasValidStages,
+        disableStageInference: hasValidStages,
+      },
+      hasValidStages ? finalStages : undefined
+    );
   } catch (err) {
     console.error("❌ Route generation failed:", err);
     return NextResponse.json(
@@ -139,18 +171,20 @@ export async function POST(req: NextRequest) {
   }
 
   if (!route || route.length === 0) {
+    console.warn("🛑 No viable route found");
     return NextResponse.json(
       {
         error: "No viable route found.",
-        reason: "Filtering too strict or venue pool too small.",
+        reason: hasValidStages
+          ? "AI stages too strict or no matching venues."
+          : "Filtering too strict or venue pool too small.",
       },
       { status: 422 }
     );
   }
 
-  /** --------------------------------------------------
-   * ✅ SCHEDULED ROUTE SAVE (FUTURE ONLY)
-   * -------------------------------------------------- */
+  console.log(`✅ Route generated with ${route.length} stops`);
+
   if (plannedStartAt && relaxedTimeFiltering) {
     try {
       const authHeader = req.headers.get("authorization");
@@ -173,11 +207,9 @@ export async function POST(req: NextRequest) {
 
       console.log("📅 Scheduled crawl saved:", plannedStartAt);
     } catch (err) {
-      // must never break route generation
       console.error("❌ Scheduled crawl save failed:", err);
     }
   }
 
-  /** ---------------- Response ---------------- **/
   return NextResponse.json({ route });
 }

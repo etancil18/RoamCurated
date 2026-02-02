@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -11,6 +11,7 @@ import {
 } from 'react-leaflet';
 import { SponsorVenue } from '@/types/sponsor';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-arrowheads'; // ✅ Import arrowhead plugin
 import L from 'leaflet';
 
 // Fix Leaflet icon issue
@@ -52,19 +53,20 @@ async function fetchStreetPolyline(
 ): Promise<[number, number][]> {
   try {
     const coordsStr = coords.map(([lng, lat]) => `${lng},${lat}`).join(';');
-    const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${coordsStr}?geometries=geojson&access_token=${token}`;
+    const url = `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordsStr}?geometries=geojson&steps=true&access_token=${token}`;
 
     const res = await fetch(url);
     const data = await res.json();
 
-    return (
-      data.routes?.[0]?.geometry?.coordinates.map(
-        ([lng, lat]: [number, number]) => [lat, lng]
-      ) || []
-    );
+    const routeCoords = data.routes?.[0]?.geometry?.coordinates;
+    if (!routeCoords || routeCoords.length <= coords.length) {
+      return coords.map(([lng, lat]) => [lat, lng]); // fallback
+    }
+
+    return routeCoords.map(([lng, lat]: [number, number]) => [lat, lng]);
   } catch (err) {
     console.error('[SponsorMapPreview] Failed to fetch polyline:', err);
-    return [];
+    return coords.map(([lng, lat]) => [lat, lng]); // safe fallback
   }
 }
 
@@ -81,7 +83,7 @@ export default function SponsorMapPreview({
   mapboxAccessToken,
   mapboxStyle,
   heightPx = 300,
-  useStreetPolyline = false,
+  useStreetPolyline = true,
   themeTag = 'Default',
 }: Props) {
   const coords = useMemo(
@@ -93,6 +95,7 @@ export default function SponsorMapPreview({
   );
 
   const [path, setPath] = useState<[number, number][]>([]);
+  const polylineRef = useRef<L.Polyline | null>(null);
 
   useEffect(() => {
     if (useStreetPolyline && mapboxAccessToken && coords.length > 1) {
@@ -102,11 +105,20 @@ export default function SponsorMapPreview({
     }
   }, [coords, useStreetPolyline, mapboxAccessToken]);
 
+  useEffect(() => {
+    if (polylineRef.current) {
+      polylineRef.current.arrowheads({
+        size: '15px',
+        frequency: '100px',
+        color: vibeColorMap[themeTag] || vibeColorMap.Default,
+      });
+    }
+  }, [path, themeTag]);
+
   if (!venues.length || !coords.length) return null;
 
   const tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
   const tileAttribution = '&copy; <a href="https://carto.com/">CARTO</a>';
-
   const routeColor = vibeColorMap[themeTag] || vibeColorMap.Default;
 
   return (
@@ -117,18 +129,20 @@ export default function SponsorMapPreview({
       <MapContainer
         center={[venues[0].lat, venues[0].lon]}
         zoom={13}
-        scrollWheelZoom={false}
-        dragging={false}
-        doubleClickZoom={false}
-        touchZoom={false}
-        boxZoom={false}
-        keyboard={false}
-        zoomControl={false}
+        scrollWheelZoom={true}
+        zoomControl={true}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer url={tileUrl} attribution={tileAttribution} />
         <FitBounds positions={path} />
-        <Polyline positions={path} color={routeColor} weight={4} />
+        <Polyline
+          ref={(ref) => {
+  polylineRef.current = ref;
+}}
+          positions={path}
+          color={routeColor}
+          weight={4}
+        />
 
         {venues.map((v, i) => (
           <Marker key={v.id} position={[v.lat, v.lon]}>

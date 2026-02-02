@@ -10,6 +10,7 @@ export type ValidatedEventsInsert = {
   description: string | null
   tags: string[] | null
   price_info: string | null
+  ticket_link: string | null  
   source_type: string | null
   raw_payload: Json | null
   timezone: string | null
@@ -25,6 +26,7 @@ export type InterestedEventWithVenue = {
   ends_at: string | null
   tags: string[] | null
   price_info: string | null
+  ticket_link: string | null
   venue: {
     id: string
     name: string

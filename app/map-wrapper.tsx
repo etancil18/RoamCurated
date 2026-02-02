@@ -9,7 +9,6 @@ import CrawlControl from '@/components/maps/CrawlControl'
 import { ControlPanel } from '@/components/ControlPanel'
 import { useUser } from '@/hooks/useUser'
 import { supabaseBrowser } from '@/lib/supabase/client'
-import type { Database } from '@/types/supabase'
 
 const MapCanvas = dynamic(() => import('@/components/maps/MapCanvas'), {
   ssr: false,
@@ -60,6 +59,7 @@ export default function MapWrapper() {
   const [routeErrorMessage, setRouteErrorMessage] = useState<string | null>(null)
   const [crawlDate, setCrawlDate] = useState('')
   const [crawlTime, setCrawlTime] = useState('')
+  const [searchPrompt, setSearchPrompt] = useState('')
 
   const { user } = useUser()
   const userId = user?.id
@@ -139,76 +139,41 @@ export default function MapWrapper() {
     const plannedStartAt = computePlannedStartAt()
 
     if (!Array.isArray(visibleVenues) || visibleVenues.length === 0) {
-      setRouteErrorMessage(
-        `🛑 No venues available — adjust filters or search to build a crawl.`
-      )
+      setRouteErrorMessage(`🛑 No venues available — adjust filters or search to build a crawl.`)
       return
     }
 
     try {
-      let data
+  let data: any = null
+  let finalRoute: Venue[] | null = null
 
-      if (selectedThemeId) {
-  const response = await fetch('/api/generate-theme', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      themeId: selectedThemeId,
-      userLat: startLat,
-      userLon: startLon,
-      venues: visibleVenues,
-      city,
-      plannedStartAt,
-      options: {
-        maxStops: 6,
-        filterOpen: true,
-        tightness,
-      },
-    }),
-  });
-
-  if (response.status === 422) {
-    const errorJson = await response.json();
-    setRoute(undefined);
-    setRouteErrorMessage(
-      `⚠️ We couldn’t generate a route with this theme just now. Try adjusting your filters, time, or location for better results.`
-    );
-    return;
+  const options: any = {
+    maxStops: 6,
+    filterOpen: true,
+    customStart: customStart ?? undefined,
+    startTime: plannedStartAt,
+    tightness,
+    city,
   }
 
-  if (!response.ok) {
-    setRoute(undefined);
-    setRouteErrorMessage(
-      `⚠️ Something went wrong on our end. Please try again shortly.`
-    );
-    return;
-  }
+  // ─────────────────────────────
+  // 1) AI PROMPT CRAWL
+  // ─────────────────────────────
+  if (searchPrompt && searchPrompt.trim().length > 0) {
+    try {
+      const parseRes = await fetch('/api/parseprompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: searchPrompt }),
+      })
 
-  data = await response.json();
-  const { route: primaryRoute, variants: routeVariants } = data;
+      const parsed = await parseRes.json()
+      const stages = parsed?.data?.stages
 
-  if (!Array.isArray(primaryRoute)) {
-    setRoute(undefined);
-    setRouteErrorMessage(
-      `⚠️ We couldn’t build a route with this theme. Try another one or tweak your inputs.`
-    );
-    return;
-  }
+      console.log('🎯 Parsed AI stages:', stages)
 
-  setRoute(primaryRoute);
-}
-
- else {
-        const options: any = {
-          maxStops: 6,
-          filterOpen: true,
-          customStart: customStart ?? undefined,
-          startTime: plannedStartAt,
-          tightness,
-          city,
-        }
-
-        const response = await fetch('/api/generate-crawl', {
+      if (Array.isArray(stages) && stages.length > 0) {
+        const aiRes = await fetch('/api/generate-crawl', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -217,129 +182,161 @@ export default function MapWrapper() {
             userLon: startLon,
             city,
             options,
+            stages,
           }),
         })
 
-        data = await response.json()
-
-        if (!response.ok || !Array.isArray(data.route)) {
-          setRoute(undefined)
-          setRouteErrorMessage(
-            `🛑 Couldn’t generate route — crawl API returned no route.`
-          )
-          return
+        data = await aiRes.json()
+        if (aiRes.ok && Array.isArray(data.route)) {
+          finalRoute = data.route
         }
       }
-
-      if (!Array.isArray(data.route) || data.route.length < 2) {
-        const reason =
-          data.reason ||
-          (data.route?.length === 1
-            ? 'Only one stop matched your filters.'
-            : 'No venues matched your filters or location.')
-
-        setRoute(undefined)
-        setRouteErrorMessage(
-          `🛑 Couldn’t build a full route: ${reason} Routes are time-sensitive — try adjusting filters, starting location, or generating earlier in the day when more places are open.`
-        )
-        return
-      }
-
-      setRouteErrorMessage(null)
-      setRoute(data.route)
-
-     if (userId && plannedStartAt) {
-  try {
-    // get the browser Supabase client session token
-    const browserSupabase = supabaseBrowser()
-    const {
-      data: { session },
-    } = await browserSupabase.auth.getSession()
-
-    const accessToken = session?.access_token
-
-    if (!accessToken) {
-      console.warn('No Supabase session token — cannot save scheduled crawl')
-    } else {
-      const saveRes = await fetch('/api/scheduled-routes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          plannedStartAt,
-          route: data.route,
-          name: selectedThemeId
-            ? `${selectedThemeId} @ ${new Date(plannedStartAt).toLocaleString()}`
-            : `Scheduled Crawl @ ${new Date(plannedStartAt).toLocaleString()}`,
-        }),
-      })
-
-      const saved = await saveRes.json()
-
-      if (!saveRes.ok) {
-        console.error('❌ Save scheduled crawl failed:', saved)
-        setRouteErrorMessage(
-          `🛑 Couldn’t save scheduled crawl: ${saved.error || 'Unknown error'}`
-        )
-      } else {
-        console.log('✅ Scheduled crawl saved:', saved)
-      }
-    }
-  } catch (err) {
-    console.error('❌ Scheduled save error:', err)
-    setRouteErrorMessage('🛑 Couldn’t save scheduled crawl — check console for details.')
-  }
-}
-
-
-
-      const ids = data.route.map((v: Venue) => v.id ?? v.name).join(',')
-      const url = new URL(window.location.href)
-      url.searchParams.set('route', ids)
-      window.history.replaceState(null, '', url.toString())
-
-      const origin = { lat: data.route[0].lat, lng: data.route[0].lon }
-      const destination = { lat: data.route[data.route.length - 1].lat, lng: data.route[data.route.length - 1].lon }
-      const waypoints = data.route.slice(1, -1).map((v: Venue) => ({ lat: v.lat, lng: v.lon }))
-
-      if (!userId) {
-        console.warn('No user session found — skipping route log')
-        return
-      }
-
-      const proxyRes = await fetch('/api/mapbox', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ origin, destination, waypoints, travelMode }),
-      })
-
-      const routeData = await proxyRes.json()
-
-      await fetch('/api/logRoute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          crawlTheme: selectedThemeId || 'manual',
-          origin,
-          destination,
-          waypoints,
-          routeDuration: routeData.duration,
-          routeDistance: routeData.distance,
-          routeGeometry: routeData.geometry,
-          routeMetadata: {
-            travelMode,
-            city,
-            stops: data.route.length,
-          },
-        }),
-      })
     } catch (err) {
-      console.error('Generate Crawl Error:', err)
-      alert('Something went wrong. Try again.')
+      console.warn('⚠️ AI crawl failed:', err)
     }
+  }
+
+  // ─────────────────────────────
+  // 2) THEME CRAWL
+  // ─────────────────────────────
+  if (!finalRoute && selectedThemeId) {
+    const response = await fetch('/api/generate-theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        themeId: selectedThemeId,
+        userLat: startLat,
+        userLon: startLon,
+        venues: visibleVenues,
+        city,
+        plannedStartAt,
+        options: {
+          maxStops: 6,
+          filterOpen: true,
+          tightness,
+        },
+      }),
+    })
+
+    if (response.ok) {
+      data = await response.json()
+      if (Array.isArray(data.route)) {
+        finalRoute = data.route
+      }
+    }
+  }
+
+  // ─────────────────────────────
+  // 3) MANUAL FALLBACK
+  // ─────────────────────────────
+  if (!finalRoute) {
+    const fallbackRes = await fetch('/api/generate-crawl', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        venues: visibleVenues,
+        userLat: startLat,
+        userLon: startLon,
+        city,
+        options,
+      }),
+    })
+
+    data = await fallbackRes.json()
+    if (fallbackRes.ok && Array.isArray(data.route)) {
+      finalRoute = data.route
+    }
+  }
+
+  if (!finalRoute) {
+    throw new Error('No route generated')
+  }
+
+  // ─────────────────────────────
+  // 🔥 SHARED POST-PROCESSING
+  // ─────────────────────────────
+
+  setRoute(finalRoute)
+  setRouteErrorMessage(null)
+
+  const ids = finalRoute.map((v: Venue) => v.id ?? v.name).join(',')
+  const url = new URL(window.location.href)
+  url.searchParams.set('route', ids)
+  window.history.replaceState(null, '', url.toString())
+
+  const origin = { lat: finalRoute[0].lat, lng: finalRoute[0].lon }
+  const destination = {
+    lat: finalRoute[finalRoute.length - 1].lat,
+    lng: finalRoute[finalRoute.length - 1].lon,
+  }
+
+  const waypoints = finalRoute
+    .slice(1, -1)
+    .map((v: Venue) => ({ lat: v.lat, lng: v.lon }))
+
+  // Save scheduled crawl
+  if (userId && plannedStartAt) {
+    try {
+      const browserSupabase = supabaseBrowser()
+      const { data: { session } } = await browserSupabase.auth.getSession()
+
+      const accessToken = session?.access_token
+
+      if (accessToken) {
+        await fetch('/api/scheduled-routes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            plannedStartAt,
+            route: finalRoute,
+            name: selectedThemeId
+              ? `${selectedThemeId} @ ${new Date(plannedStartAt).toLocaleString()}`
+              : `Crawl @ ${new Date(plannedStartAt).toLocaleString()}`,
+          }),
+        })
+      }
+    } catch (err) {
+      console.error('❌ Scheduled save error:', err)
+    }
+  }
+
+  if (!userId) return
+
+  const proxyRes = await fetch('/api/mapbox', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ origin, destination, waypoints, travelMode }),
+  })
+
+  const routeData = await proxyRes.json()
+
+  await fetch('/api/logRoute', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId,
+      crawlTheme: selectedThemeId || 'manual',
+      origin,
+      destination,
+      waypoints,
+      routeDuration: routeData.duration,
+      routeDistance: routeData.distance,
+      routeGeometry: routeData.geometry,
+      routeMetadata: {
+        travelMode,
+        city,
+        stops: finalRoute.length,
+      },
+    }),
+  })
+
+} catch (err) {
+  console.error('Generate Crawl Error:', err)
+  alert('Something went wrong. Try again.')
+}
   }
 
   const handleClearRoute = () => {
@@ -366,6 +363,8 @@ export default function MapWrapper() {
           onCityChange={setCity}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          searchPrompt={searchPrompt}
+          setSearchPrompt={setSearchPrompt}
           selectedThemeId={selectedThemeId}
           setSelectedThemeId={setSelectedThemeId}
           selectedPrice={selectedPrice}
@@ -401,16 +400,16 @@ export default function MapWrapper() {
 
       <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
         {typeof window !== 'undefined' && (
-  <MapCanvas
-    venues={visibleVenues ?? []}
-    route={route ?? []}
-    city={city}
-    onMapClick={handleMapClick}
-    themeId={selectedThemeId}
-    travelMode={travelMode}
-    showLiveEventsOnly={showLiveEventsOnly}
-  />
-)}
+          <MapCanvas
+            venues={visibleVenues ?? []}
+            route={route ?? []}
+            city={city}
+            onMapClick={handleMapClick}
+            themeId={selectedThemeId}
+            travelMode={travelMode}
+            showLiveEventsOnly={showLiveEventsOnly}
+          />
+        )}
       </Suspense>
     </main>
   )

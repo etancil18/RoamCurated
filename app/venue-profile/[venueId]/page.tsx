@@ -30,7 +30,8 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       contact,
       hours,
       city,
-      cover
+      cover,
+      address
     `)
     .eq('id', venueId)
     .single()
@@ -45,6 +46,7 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
     description: venue.description ?? null,
     city: venue.city ?? null,
     cover: venue.cover ?? null,
+    address: venue.address ?? null,
     contact: Array.isArray(venue.contact) ? venue.contact : null,
     tags:
       typeof venue.tags === 'string'
@@ -121,6 +123,14 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
           {normalizedVenue.description}
         </p>
       )}
+
+      {normalizedVenue.address && (
+        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+          {normalizedVenue.address}
+        </p>
+      )}
+
+
 
       {liveStatus && <LiveStatusPill status={liveStatus} />}
 

@@ -26,6 +26,7 @@ export type VenueProfileData = {
   name: string
   description?: string | null
   city?: string | null
+  address?: string | null 
   cover?: string | null
   contact?: string[] | null
   tags?: string[] // ✅ must be normalized before passing

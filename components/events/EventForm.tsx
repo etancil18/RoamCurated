@@ -157,6 +157,18 @@ export default function EventForm({
         />
       </div>
 
+      {/* Ticket Link */}
+      <div>
+        <label className="block mb-1 font-medium">Ticket Link (optional)</label>
+        <input
+          type="url"
+          name="ticket_link"
+          defaultValue={event?.ticket_link ?? ''}
+          className="w-full border p-2 rounded"
+          placeholder="https://example.com/tickets"
+        />
+      </div>
+      
       {/* Submit */}
       <button
         type="submit"

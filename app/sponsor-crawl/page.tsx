@@ -135,7 +135,9 @@ export default function SponsorCrawlPage() {
       <div className="space-y-2">
         <Label className="text-gray-700 dark:text-gray-300">Venues</Label>
         <VenueSelector selected={venues} setSelected={setVenues} />
-        <SponsorMapPreview venues={venues} />
+        <SponsorMapPreview venues={venues} 
+        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        />
       </div>
 
       <div className="flex items-center justify-between pt-2">

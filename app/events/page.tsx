@@ -1,8 +1,12 @@
-'use client'
+"use client"
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useEvents } from '@/hooks/useEvents'
+
+type EventWithTicket = ReturnType<typeof useEvents>['events'][number] & {
+  ticket_link?: string | null
+}
 
 const AVAILABLE_CITIES = ['atl', 'nyc']
 const AVAILABLE_TAGS = ['music', 'rooftop', 'gallery', 'food', 'comedy']
@@ -13,6 +17,7 @@ export default function EventsPage() {
   const [interestedIds, setInterestedIds] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery)
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(searchQuery), 300)
@@ -120,7 +125,7 @@ export default function EventsPage() {
         <input
           type="text"
           placeholder="Search by title, venue, description, or tag..."
-          className="w-full border bg-white-900 text-black p-2 rounded"
+          className="w-full border bg-neutral-900 text-white p-2 rounded"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -140,80 +145,107 @@ export default function EventsPage() {
         </div>
       )}
 
-      <div className="space-y-6">
-        {filteredEvents.map((ev) => (
-          <div
-            key={ev.id}
-            className="border rounded-lg p-5 bg-neutral-900 text-neutral-100 shadow-sm"
-          >
-            <h2 className="text-2xl font-semibold mb-1">{ev.title}</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {filteredEvents.map((ev: EventWithTicket) => {
+          const isExpanded = expandedEventId === ev.id
+          return (
+            <div
+              key={ev.id}
+              className="border rounded-lg p-5 bg-neutral-900 text-neutral-100 shadow-sm flex flex-col justify-between"
+            >
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">{ev.title}</h2>
 
-            {ev.starts_at && (
-              <p className="text-sm text-neutral-400 mb-2">
-                {new Date(ev.starts_at).toLocaleString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                })}
-              </p>
-            )}
+                {ev.starts_at && (
+                  <p className="text-sm text-neutral-400 mb-2">
+                    {new Date(ev.starts_at).toLocaleString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                )}
 
-            {ev.description && (
-              <p className="text-sm text-neutral-200 mb-3 whitespace-pre-wrap">
-                {ev.description}
-              </p>
-            )}
+                {ev.description && (
+                  <>
+                    <p
+                      className={`text-sm text-neutral-200 mb-3 whitespace-pre-wrap transition-all duration-300 ease-in-out ${
+                        isExpanded ? '' : 'line-clamp-3'
+                      }`}
+                    >
+                      {ev.description}
+                    </p>
+                    {ev.description.length > 140 && (
+                      <button
+                        className="text-cyan-400 text-sm hover:underline"
+                        onClick={() =>
+                          setExpandedEventId(isExpanded ? null : ev.id)
+                        }
+                      >
+                        {isExpanded ? 'Show Less' : 'More Info'}
+                      </button>
+                    )}
+                  </>
+                )}
 
-            <div className="text-sm text-neutral-300 mb-2">
-              {ev.price_info && <p><strong>Price:</strong> {ev.price_info}</p>}
-              {Array.isArray(ev.tags) && ev.tags.length > 0 && (
-                <p className="text-sm mt-2 text-neutral-400">
-                  <strong>Tags:</strong> {ev.tags.join(', ')}
-                </p>
-              )}
-            </div>
+                <div className="text-sm text-neutral-300 mb-2">
+                  {ev.price_info && <p><strong>Price:</strong> {ev.price_info}</p>}
+                  {Array.isArray(ev.tags) && ev.tags.length > 0 && (
+                    <p className="text-sm mt-2 text-neutral-400">
+                      <strong>Tags:</strong> {ev.tags.join(', ')}
+                    </p>
+                  )}
+                </div>
 
-            {ev.venue && (
-              <div className="flex items-center justify-between text-sm mt-4">
-                <span className="opacity-80">
-                  📍 {ev.venue.name}
-                </span>
-                {ev.venue.link && (
-                  <Link
-                    href={ev.venue.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:underline font-medium"
-                  >
-                    More Info ↗
-                  </Link>
+                {ev.venue && (
+                  <div className="flex items-center justify-between text-sm mt-4">
+                    <Link
+                      href={`/venue-profile/${ev.venue.id}`}
+                      className="text-cyan-400 hover:underline font-medium"
+                    >
+                      📍 {ev.venue.name}
+                    </Link>
+                  </div>
                 )}
               </div>
-            )}
 
-            <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
-              <button
-                className={`text-sm px-4 py-2 rounded font-medium text-white ${
-                  interestedIds.includes(ev.id)
-                    ? 'bg-gray-500 cursor-default'
-                    : 'bg-emerald-600 hover:bg-emerald-700'
-                }`}
-                onClick={() => markInterested(ev.id)}
-                disabled={interestedIds.includes(ev.id)}
-              >
-                {interestedIds.includes(ev.id) ? '⭐ Interested' : '⭐ I\'m Interested'}
-              </button>
+              <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
+                <button
+                  className={`text-sm px-4 py-2 rounded font-medium text-white ${
+                    interestedIds.includes(ev.id)
+                      ? 'bg-gray-500 cursor-default'
+                      : 'bg-emerald-600 hover:bg-emerald-700'
+                  }`}
+                  onClick={() => markInterested(ev.id)}
+                  disabled={interestedIds.includes(ev.id)}
+                >
+                  {interestedIds.includes(ev.id)
+                    ? '⭐ Interested'
+                    : '⭐ I\'m Interested'}
+                </button>
 
-              {typeof ev.interest_count === 'number' && ev.interest_count > 0 && (
-                <p className="text-sm text-neutral-400">
-                  {ev.interest_count} {ev.interest_count === 1 ? 'person is' : 'people are'} interested
-                </p>
-              )}
+                {ev.ticket_link && (
+                  <a
+                    href={ev.ticket_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
+                  >
+                    🎟️ Tickets/RSVP
+                  </a>
+                )}
+
+                {typeof ev.interest_count === 'number' && ev.interest_count > 0 && (
+                  <p className="text-sm text-neutral-400">
+                    {ev.interest_count} {ev.interest_count === 1 ? 'person is' : 'people are'} interested
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

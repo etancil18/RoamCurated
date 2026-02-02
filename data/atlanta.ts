@@ -143,80 +143,6 @@ const atlantaData = [
     "id": "b024dc6b-6936-4d49-9647-3aff25cf16f9"
   },
   {
-    "slug": "alici-oyster-bar",
-    "name": "Alici Oyster Bar",
-    "vibe": "oysters, bright, coastal, elegant, fresh, raw-bar, lunch-friendly, mediterranean, seaside, crisp, airy, refined, light, polished",
-    "type": ["lunch", "dinner"],
-    "lat": 33.7803409,
-    "lon": -84.3686685,
-    "link": "https://www.instagram.com/alicioysterbar/",
-    "cover": "img/venues/Alici Oyster Bar.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 11:30 AM–9:00 PM",
-      "Monday: Closed",
-      "Tuesday: 4:00 PM–9:00 PM",
-      "Wednesday: 4:00 PM–9:00 PM",
-      "Thursday: 4:00 PM–9:00 PM",
-      "Friday: 11:30 AM–10:00 PM",
-      "Saturday: 11:30 AM–10:00 PM"
-    ],
-    "dateEvents": [
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      },
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      }
-    ],
-    "hoursNumeric": {
-      "sun": {
-        "open": 11.5,
-        "close": 21
-      },
-      "mon": null,
-      "tue": {
-        "open": 16,
-        "close": 21
-      },
-      "wed": {
-        "open": 16,
-        "close": 21
-      },
-      "thu": {
-        "open": 16,
-        "close": 21
-      },
-      "fri": {
-        "open": 11.5,
-        "close": 22
-      },
-      "sat": {
-        "open": 11.5,
-        "close": 22
-      }
-    },
-    "dayParts": {
-      "sun": "MD",
-      "mon": "-",
-      "tue": "HH",
-      "wed": "HH",
-      "thu": "HH",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "midday, happy hour, evening",
-    "energyRamp": 2,
-    "tags": "oysters, seafood, fresh, lunch, elegant, raw, coastal, wine, chic, airy",
-    "price": "$$$",
-    "duration": 2,
-    "id": "dc196bda-4505-4bd5-888d-6c1c88c980ac"
-  },
-  {
     "slug": "kr-steakbar",
     "name": "KR SteakBar",
     "vibe": "steak, italian, power-lunch, upscale, wine, quiet, refined, romantic, classic, sophisticated, intimate, indulgent, polished",
@@ -13372,7 +13298,7 @@ const atlantaData = [
   },
   {
     "slug": "monday-night-brewing-west-midtown",
-    "name": "Monday Night Brewing - West Midtown",
+    "name": "Monday Night Brewing - The Grove",
     "vibe": "Brewery, Industrial, Social, Garden, After‑Work, Beer, Polished, Spacious, Modern, Relaxed",
     "type": ["bar", "brewery"],
     "lat": 33.7949288,
@@ -24493,83 +24419,6 @@ const atlantaData = [
     "price": "$",
     "duration": 1,
     "id": "3e6e6190-b1db-4eee-a15f-b48fa4b34938"
-  },
-  {
-    "slug": "bar-pilar",
-    "name": "Bar Pilar",
-    "vibe": "Cocktail, Hidden, Seasonal, Intimate, Dramatic, Cozy, Sophisticated, Underground, Curated, New-American",
-    "type": [
-      "dinner",
-      "cocktail", "speakeasy"
-    ],
-    "lat": 33.7797376,
-    "lon": -84.3675947,
-    "link": "https://www.instagram.com/barpilar_atl/",
-    "cover": "img/venues/Bar Pilar.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 11:30 AM–9:00 PM",
-      "Monday: Closed",
-      "Tuesday: 4:00 PM–9:00 PM",
-      "Wednesday: 4:00 PM–9:00 PM",
-      "Thursday: 4:00 PM–9:00 PM",
-      "Friday: 11:30 AM–10:00 PM",
-      "Saturday: 11:30 AM–10:00 PM"
-    ],
-    "dateEvents": [
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      },
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      }
-    ],
-    "hoursNumeric": {
-      "sun": {
-        "open": 11.5,
-        "close": 21
-      },
-      "mon": null,
-      "tue": {
-        "open": 16,
-        "close": 21
-      },
-      "wed": {
-        "open": 16,
-        "close": 21
-      },
-      "thu": {
-        "open": 16,
-        "close": 21
-      },
-      "fri": {
-        "open": 11.5,
-        "close": 22
-      },
-      "sat": {
-        "open": 11.5,
-        "close": 22
-      }
-    },
-    "dayParts": {
-      "sun": "MD",
-      "mon": "-",
-      "tue": "HH",
-      "wed": "HH",
-      "thu": "HH",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "Midday, Happy Hour, Evening",
-    "energyRamp": 3,
-    "tags": "Cocktails, Hidden, Intimate, Date-night, Seasonal, Cozy, Stylish",
-    "price": "$$",
-    "duration": 1.5,
-    "id": "68172b53-9256-4733-bfeb-93d85ff3997d"
   },
   {
     "slug": "pink-lotus-thai-restaurant",

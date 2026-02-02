@@ -204,6 +204,7 @@ export type Database = {
           source_type: string | null
           starts_at: string | null
           tags: string[] | null
+          ticket_link: string | null
           timezone: string | null
           title: string | null
           updated_at: string | null
@@ -222,6 +223,7 @@ export type Database = {
           source_type?: string | null
           starts_at?: string | null
           tags?: string[] | null
+          ticket_link?: string | null
           timezone?: string | null
           title?: string | null
           updated_at?: string | null
@@ -240,6 +242,7 @@ export type Database = {
           source_type?: string | null
           starts_at?: string | null
           tags?: string[] | null
+          ticket_link?: string | null
           timezone?: string | null
           title?: string | null
           updated_at?: string | null
@@ -949,6 +952,7 @@ export type Database = {
       venues: {
         Row: {
           access_token: string | null
+          address: string | null
           city: string | null
           contact: string[] | null
           cover: string | null
@@ -970,6 +974,7 @@ export type Database = {
         }
         Insert: {
           access_token?: string | null
+          address?: string | null
           city?: string | null
           contact?: string[] | null
           cover?: string | null
@@ -991,6 +996,7 @@ export type Database = {
         }
         Update: {
           access_token?: string | null
+          address?: string | null
           city?: string | null
           contact?: string[] | null
           cover?: string | null

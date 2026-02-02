@@ -11,6 +11,8 @@ interface ControlPanelProps {
   onCityChange: (city: 'atl' | 'nyc') => void
   searchTerm: string
   setSearchTerm: (term: string) => void
+  searchPrompt: string
+  setSearchPrompt: (prompt: string) => void
   selectedThemeId: string
   setSelectedThemeId: (themeId: string) => void
   selectedPrice: string
@@ -50,6 +52,8 @@ export function ControlPanel({
   onCityChange,
   searchTerm,
   setSearchTerm,
+  searchPrompt,
+  setSearchPrompt,
   selectedThemeId,
   setSelectedThemeId,
   selectedPrice,
@@ -73,14 +77,13 @@ export function ControlPanel({
     logEvent('travel_mode_changed', { metadata: { travel_mode: val, city } })
   }
 
-  const handleGenerateClick = () => {
+  const handleGenerateClick = async () => {
     const plannedStartAt =
       isScheduled && crawlDate && crawlTime
         ? (() => {
-            const [year, month, day] = crawlDate.split("-").map(Number)
-            const [hour, minute] = crawlTime.split(":").map(Number)
-            const localDate = new Date(year, month - 1, day, hour, minute)
-            return localDate.toISOString()
+            const [year, month, day] = crawlDate.split('-').map(Number)
+            const [hour, minute] = crawlTime.split(':').map(Number)
+            return new Date(year, month - 1, day, hour, minute).toISOString()
           })()
         : undefined
 
@@ -95,32 +98,42 @@ export function ControlPanel({
 
   return (
     <div className="w-full fixed top-0 left-0 z-[1000] bg-white dark:bg-zinc-950 border-b border-zinc-300 dark:border-zinc-700 px-4 py-2 text-xs grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 items-center rounded-b-xl shadow-sm">
-      {/* City */}
       <div className="flex gap-2">
-        <Button variant={city === 'atl' ? 'default' : 'outline'} onClick={() => onCityChange('atl')} className="h-8 text-sm dark:text-white">ATL</Button>
-        <Button variant={city === 'nyc' ? 'default' : 'outline'} onClick={() => onCityChange('nyc')} className="h-8 text-sm dark:text-white">NYC</Button>
+        <Button variant={city === 'atl' ? 'default' : 'outline'} onClick={() => { onCityChange('atl'); logEvent('city_changed', { metadata: { city: 'atl' } }) }} className="h-8 text-sm dark:text-white">ATL</Button>
+        <Button variant={city === 'nyc' ? 'default' : 'outline'} onClick={() => { onCityChange('nyc'); logEvent('city_changed', { metadata: { city: 'nyc' } }) }} className="h-8 text-sm dark:text-white">NYC</Button>
       </div>
 
-      {/* Travel Mode */}
       <div className="space-y-1">
         <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Mode</Label>
         <ToggleGroup type="single" value={travelMode} onValueChange={handleTravelModeChange} className="w-full gap-2">
           {['walking', 'cycling', 'driving'].map((m, i) => (
-            <ToggleGroupItem key={m} value={m} className="flex-1 h-8 dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">{['🚶', '🚲', '🚗'][i]}</ToggleGroupItem>
+            <ToggleGroupItem key={m} value={m} className="flex-1 h-8 dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
+              {['🚶', '🚲', '🚗'][i]}
+            </ToggleGroupItem>
           ))}
         </ToggleGroup>
       </div>
 
-      {/* Search */}
       <div className="space-y-1">
-        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Search</Label>
-        <input type="text" placeholder="Search vibe or tag…" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={inputBase} />
+        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">AI Prompt</Label>
+        <input
+          type="text"
+          placeholder="What should we do right now?"
+          value={searchPrompt}
+          onChange={(e) => {
+            setSearchPrompt(e.target.value);
+            logEvent('prompt_updated', { metadata: { prompt: e.target.value, city } });
+          }}
+          className={inputBase}
+        />
       </div>
 
-      {/* Theme */}
       <div className="space-y-1">
         <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Theme</Label>
-        <select value={selectedThemeId} onChange={(e) => setSelectedThemeId(e.target.value)} className={inputBase}>
+        <select value={selectedThemeId} onChange={(e) => {
+          setSelectedThemeId(e.target.value);
+          logEvent('theme_selected', { metadata: { themeId: e.target.value, city } })
+        }} className={inputBase}>
           <option value="">Select Theme</option>
           {themes.map((t) => (
             <option key={t.id} value={t.id}>{t.label}</option>
@@ -128,10 +141,12 @@ export function ControlPanel({
         </select>
       </div>
 
-      {/* Price */}
       <div className="space-y-1">
         <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Price</Label>
-        <select value={selectedPrice} onChange={(e) => setSelectedPrice(e.target.value)} className={inputBase}>
+        <select value={selectedPrice} onChange={(e) => {
+          setSelectedPrice(e.target.value);
+          logEvent('price_selected', { metadata: { price: e.target.value, city } })
+        }} className={inputBase}>
           <option value="">Any Price</option>
           {prices.slice(1).map((p) => (
             <option key={p} value={p}>{p}</option>
@@ -139,45 +154,55 @@ export function ControlPanel({
         </select>
       </div>
 
-      {/* Tightness */}
       <div className="space-y-1">
         <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Route Tightness</Label>
-        <select value={tightness} onChange={(e) => setTightness(e.target.value as 'tight' | 'medium' | 'loose')} className={inputBase}>
+        <select value={tightness} onChange={(e) => {
+          setTightness(e.target.value as any);
+          logEvent('tightness_changed', { metadata: { tightness: e.target.value, city } })
+        }} className={inputBase}>
           <option value="tight">Compact</option>
           <option value="medium">Balanced</option>
           <option value="loose">Spread Out</option>
         </select>
       </div>
 
-      {/* Crawl Type Toggle */}
       <div className="space-y-1">
         <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Crawl Mode</Label>
-        <ToggleGroup type="single" value={isScheduled ? 'scheduled' : 'now'} onValueChange={(val) => setIsScheduled(val === 'scheduled')} className="w-full gap-2">
+        <ToggleGroup type="single" value={isScheduled ? 'scheduled' : 'now'} onValueChange={(val) => {
+          setIsScheduled(val === 'scheduled');
+          logEvent('crawl_mode_toggled', { metadata: { mode: val, city } })
+        }} className="w-full gap-2">
           <ToggleGroupItem value="now" className="flex-1 h-8 dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">Now</ToggleGroupItem>
           <ToggleGroupItem value="scheduled" className="flex-1 h-8 dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">Scheduled</ToggleGroupItem>
         </ToggleGroup>
       </div>
 
-      {/* Crawl Date */}
       {isScheduled && (
         <div className="space-y-1">
           <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Crawl Date</Label>
-          <input type="date" value={crawlDate} onChange={(e) => setCrawlDate(e.target.value)} className={inputBase} />
+          <input type="date" value={crawlDate} onChange={(e) => {
+            setCrawlDate(e.target.value);
+            logEvent('crawl_date_selected', { metadata: { date: e.target.value, city } })
+          }} className={inputBase} />
         </div>
       )}
 
-      {/* Crawl Time */}
       {isScheduled && (
         <div className="space-y-1">
           <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Crawl Time</Label>
-          <input type="time" value={crawlTime} onChange={(e) => setCrawlTime(e.target.value)} className={inputBase} />
+          <input type="time" value={crawlTime} onChange={(e) => {
+            setCrawlTime(e.target.value);
+            logEvent('crawl_time_selected', { metadata: { time: e.target.value, city } })
+          }} className={inputBase} />
         </div>
       )}
 
-      {/* Actions */}
       <div className="space-y-1 pt-1">
         <Button className="w-full h-8 text-sm border border-blue-500 bg-blue-600 text-white hover:bg-blue-700" onClick={handleGenerateClick}>Generate Crawl</Button>
-        <Button variant="outline" className="w-full h-8 text-sm border border-zinc-500 dark:border-zinc-600 dark:text-zinc-100" onClick={onClearRoute}>Clear Route</Button>
+        <Button variant="outline" className="w-full h-8 text-sm border border-zinc-500 dark:border-zinc-600 dark:text-zinc-100" onClick={() => {
+          onClearRoute();
+          logEvent('route_cleared', { metadata: { city } });
+        }}>Clear Route</Button>
       </div>
     </div>
   )

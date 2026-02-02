@@ -16,6 +16,7 @@ export default function DashProfilePage() {
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [address, setAddress] = useState('')
   const [tags, setTags] = useState<string[]>([])
   const [customTag, setCustomTag] = useState('')
   const [contact, setContact] = useState('')
@@ -41,13 +42,14 @@ export default function DashProfilePage() {
 
       const { data: venue } = await supabase
         .from('venues')
-        .select('name, description, tags, contact, hours')
+        .select('name, description, address, tags, contact, hours')
         .eq('id', venueUser.venue_id)
         .single()
 
       if (venue) {
         setName(venue.name ?? '')
         setDescription((venue as any).description ?? '')
+        setAddress(venue.address ?? '')
         setTags(venue.tags ?? [])
         setContact(Array.isArray(venue.contact) ? venue.contact.join(', ') : '')
         const rawHours = venue.hours
@@ -102,6 +104,7 @@ export default function DashProfilePage() {
     const payload = {
       name: name.trim() || null,
       description: description.trim() || null,
+      address: address.trim() || null,
       tags: tags.length > 0 ? tags : null,
       contact:
         typeof contact === 'string' && contact.length > 0
@@ -154,6 +157,18 @@ export default function DashProfilePage() {
             onChange={(e) => setDescription(e.target.value)}
             className="w-full rounded-md px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-sm"
             rows={3}
+          />
+        </div>
+
+        {/* Address */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Address</label>
+          <textarea
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full rounded-md px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-sm"
+            rows={2}
+            placeholder={`123 Main St\nAtlanta, GA 30303`}
           />
         </div>
 

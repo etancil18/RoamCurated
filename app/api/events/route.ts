@@ -48,6 +48,7 @@ export async function GET(req: Request) {
       is_active,
       created_at,
       updated_at,
+      ticket_link,
       venue:venues!events_venue_id_fkey (
         id,
         name,
