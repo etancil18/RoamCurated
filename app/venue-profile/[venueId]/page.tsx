@@ -90,28 +90,38 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
     .eq('venue_id', venueId)
 
   const upcomingEvents: VenueEvent[] = [
-    ...(events ?? [])
-      .filter((e) => e.title)
-      .map((e) => ({
-        id: e.id,
-        title: e.title ?? 'Untitled Event',
-        starts_at: e.starts_at ?? undefined,
-        ends_at: e.ends_at ?? undefined,
-        tags: e.tags ?? [],
-      })),
-    ...(recurringEvents ?? [])
-      .filter((e) => e.title)
-      .map((rec) => ({
+  ...(events ?? [])
+    .filter(e => e.title)
+    .map(e => ({
+      id: e.id,
+      title: e.title ?? 'Untitled Event',
+      starts_at: e.starts_at ?? undefined,
+      ends_at: e.ends_at ?? undefined,
+      tags: e.tags ?? [],
+    })),
+  ...(recurringEvents ?? [])
+    .filter(e => e.title)
+    .map(rec => {
+      // Build a synthetic starts_at for the carousel
+      let startsAt: string | undefined = undefined
+      if (rec.starts_on && rec.start_time) {
+        startsAt = `${rec.starts_on}T${rec.start_time}`
+      }
+
+      return {
         id: rec.id,
         title: rec.title ?? 'Recurring Event',
+        starts_at: startsAt,
+        ends_at: undefined,
         start_time: rec.start_time,
         end_time: rec.end_time ?? undefined,
         recurrence_rule: rec.recurrence_rule,
         starts_on: rec.starts_on,
         ends_on: rec.ends_on ?? undefined,
-        isRecurring: true,
-      })),
-  ]
+        isRecurring: true, // include tags if available
+      }
+    }),
+]
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-10">
