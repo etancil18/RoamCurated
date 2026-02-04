@@ -6,9 +6,9 @@ import { createBrowserClient } from '@supabase/ssr'
 import { useUser } from '@/hooks/useUser'
 import type { Database } from '@/types/supabase'
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
+export default function SetPasswordPage() {
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -21,64 +21,40 @@ export default function LoginPage() {
   )
 
   useEffect(() => {
-    if (user) {
-      router.replace('/')
+    if (!user) {
+      router.replace('/login') // redirect unauthenticated users
     }
   }, [user, router])
 
-  async function handleAuth(e: React.FormEvent) {
+  async function handleSetPassword(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setSuccessMessage('')
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+
     setLoading(true)
 
-    if (!email || !password) {
-      setError('Please enter both email and password.')
-      setLoading(false)
-      return
-    }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
+    const { error: updateError } = await supabase.auth.updateUser({
       password,
     })
 
-    if (!signInError) {
-      setLoading(false)
-      router.replace('/')
-      return
-    }
-
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    if (!signUpError) {
-      setLoading(false)
-      router.replace('/')
-      return
-    }
-
-    setError('Invalid login. You may need to set your password below.')
     setLoading(false)
-  }
 
-  // ✅ NEW: Send password reset email with correct redirect
-  async function handleForgotPassword() {
-    if (!email) {
-      setError('Enter your email above first.')
-      return
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://roam-curated.vercel.app/auth/update-password',
-    })
-
-    if (error) {
-      setError(error.message)
+    if (updateError) {
+      setError(updateError.message)
     } else {
-      setSuccessMessage('✅ Reset link sent. Check your email to set a password.')
+      setSuccessMessage('✅ Password updated successfully.')
+      setPassword('')
+      setConfirmPassword('')
     }
   }
 
@@ -86,24 +62,24 @@ export default function LoginPage() {
     <main className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-zinc-900 transition-colors">
       <div className="w-full max-w-md p-8 bg-white dark:bg-zinc-800 rounded-2xl shadow-md border border-gray-200 dark:border-zinc-700">
         <h1 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-white">
-          Login to Roam
+          Set Your Password
         </h1>
 
-        <form onSubmit={handleAuth} className="space-y-4">
+        <form onSubmit={handleSetPassword} className="space-y-4">
           <input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="password"
+            placeholder="New password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
           <input
             type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             required
             className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg bg-white dark:bg-zinc-700 text-black dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -117,18 +93,9 @@ export default function LoginPage() {
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {loading ? 'Processing...' : 'Sign In / Sign Up'}
+            {loading ? 'Updating...' : 'Set Password'}
           </button>
         </form>
-
-        {/* ✅ NEW: Forgot Password */}
-        <button
-          type="button"
-          onClick={handleForgotPassword}
-          className="text-sm text-blue-600 hover:underline mt-4 block mx-auto"
-        >
-          Forgot / Set Password
-        </button>
 
         {error && (
           <p className="text-red-600 dark:text-red-400 text-center mt-4">⚠️ {error}</p>
@@ -141,7 +108,7 @@ export default function LoginPage() {
         )}
 
         <p className="text-center text-gray-500 dark:text-zinc-400 text-sm mt-6">
-          New here? Enter email + password to create an account.
+          Already set a password? You can now log in using your email and password.
         </p>
       </div>
     </main>

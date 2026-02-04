@@ -7074,80 +7074,6 @@ const atlantaData = [
     "id": "5bda0be9-c1a0-48db-a055-7a359190a837"
   },
   {
-    "slug": "bully-boy",
-    "name": "Bully Boy",
-    "vibe": "japanese, chic, fusion, minimalist, date-night, hip, modern, stylish, intimate, refined, creative, curated, upscale",
-    "type": [
-      "dinner",
-      "cocktail"
-    ],
-    "lat": 33.768267,
-    "lon": -84.360439,
-    "link": "https://www.instagram.com/bullyboyatl/",
-    "cover": "img/venues/Bully Boy.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 5:00 PM–10:00 PM",
-      "Monday: Closed",
-      "Tuesday: Closed",
-      "Wednesday: 5:00 PM–10:00 PM",
-      "Thursday: 5:00 PM–10:00 PM",
-      "Friday: 5:00 PM–11:00 PM",
-      "Saturday: 5:00 PM–11:00 PM"
-    ],
-    "dateEvents": [
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      },
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      }
-    ],
-    "hoursNumeric": {
-      "sun": {
-        "open": 17,
-        "close": 22
-      },
-      "mon": null,
-      "tue": null,
-      "wed": {
-        "open": 17,
-        "close": 22
-      },
-      "thu": {
-        "open": 17,
-        "close": 22
-      },
-      "fri": {
-        "open": 17,
-        "close": 23
-      },
-      "sat": {
-        "open": 17,
-        "close": 23
-      }
-    },
-    "dayParts": {
-      "sun": "E",
-      "mon": "-",
-      "tue": "-",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "evening",
-    "energyRamp": 3,
-    "tags": "sake, interiors, groups, plates, balance, modern, cuisine, shared, menu, pairing, elegance, experience",
-    "price": "$$$",
-    "duration": 2,
-    "id": "8528222d-5a33-47de-86cb-9be4330b3b6e"
-  },
-  {
     "slug": "burles-bar",
     "name": "Burle's Bar",
     "vibe": "intimate, cocktails, plants, patio, jazz, music, hidden, lounge",
@@ -17052,87 +16978,6 @@ const atlantaData = [
     "price": "$$",
     "duration": 1.5,
     "id": "5d7f29ee-03af-4c24-b1b2-44e9cfaf85a4"
-  },
-  {
-    "slug": "bulla-gastrobar",
-    "name": "Bulla Gastrobar",
-    "vibe": "Spanish, Tapas, Brunch, Chic, Social, Lively, Patio, Trendy, Shareable",
-    "type": [
-      "lunch",
-      "dinner",
-      "wine bar"
-    ],
-    "lat": 33.7834161,
-    "lon": -84.3847646,
-    "link": "https://www.instagram.com/bullagastrobar/?hl=en",
-    "cover": "img/venues/Bulla Gastrobar.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 11:00 AM–9:00 PM",
-      "Monday: 4:00 PM–10:00 PM",
-      "Tuesday: 4:00 PM–10:00 PM",
-      "Wednesday: 4:00 PM–10:00 PM",
-      "Thursday: 4:00 PM–10:00 PM",
-      "Friday: 4:00 PM–11:00 PM",
-      "Saturday: 11:00 AM–11:00 PM"
-    ],
-    "dateEvents": [
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      },
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      }
-    ],
-    "hoursNumeric": {
-      "sun": {
-        "open": 11,
-        "close": 21
-      },
-      "mon": {
-        "open": 16,
-        "close": 22
-      },
-      "tue": {
-        "open": 16,
-        "close": 22
-      },
-      "wed": {
-        "open": 16,
-        "close": 22
-      },
-      "thu": {
-        "open": 16,
-        "close": 22
-      },
-      "fri": {
-        "open": 16,
-        "close": 23
-      },
-      "sat": {
-        "open": 11,
-        "close": 23
-      }
-    },
-    "dayParts": {
-      "sun": "E",
-      "mon": "E",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "evening",
-    "energyRamp": 3,
-    "tags": "tapas, plates, sangria, evenings, crowds, menus, pours, gatherings, nights, tables, bites, weekends, stylish, lively",
-    "price": "$$",
-    "duration": 2.5,
-    "id": "386cca09-16f5-41b7-8645-46efbd33ca48"
   },
   {
     "slug": "el-valle",
@@ -37084,7 +36929,1503 @@ const atlantaData = [
     "tags": "African, Spices, Dinner, Cuisine, Wine, Plates, Intimate, Cultural, Chefdriven, Flavor, Restaurant, Experience",
     "price": "$$$",
     "duration": 2
-  }
+  },
+  {
+    "slug": "auxiliary-coffee",
+    "name": "Auxiliary Coffee",
+    "id": "afdbc729-f7b4-42e7-9c35-ee0d37d88b03",
+    "vibe": "minimal, cozy, artsy, neutral, warm, curated",
+    "type": ["coffee"],
+    "lat": "33.7294021",
+    "lon": "-84.4138392",
+    "link": "https://www.instagram.com/auxwestend/",
+    "cover": "img/venues/Auxiliary Coffee.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–4:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 8:00 AM–2:00 PM",
+      "Thursday: 8:00 AM–2:00 PM",
+      "Friday: 8:00 AM–2:00 PM",
+      "Saturday: 9:00 AM–4:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": {"open": 9, "close": 16},
+      "mon": null,
+      "tue": null,
+      "wed": {"open": 8, "close": 14},
+      "thu": {"open": 8, "close": 14},
+      "fri": {"open": 8, "close": 14},
+      "sat": {"open": 9, "close": 16}
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "—",
+      "tue": "—",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "MD"
+    },
+    "timeCategory": "Morning, Midday",
+    "energyRamp": 1,
+    "tags": "espresso, café, indie, local, roastery, thirdwave, beans, brew, sip, barista, mellow, nook",
+    "price": "$",
+    "duration": 0.5
+  },
+  {
+    "slug": "barrys-atlanta",
+    "name": "Barry's Atlanta",
+    "id": "01f31d5d-5958-40b3-8c0d-b8675fe5465d",
+    "vibe": "energetic, sculpting, intense, motivating, sonic, pumped",
+    "type": ["fitness"],
+    "lat": "33.8390522",
+    "lon": "-84.3781492",
+    "link": "https://www.instagram.com/barrys/",
+    "cover": "img/venues/Barry’s Atlanta.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:45 AM–2:00 PM",
+      "Monday: 5:00 AM–8:00 PM",
+      "Tuesday: 5:00 AM–8:00 PM",
+      "Wednesday: 5:00 AM–8:00 PM",
+      "Thursday: 5:00 AM–8:00 PM",
+      "Friday: 5:00 AM–7:00 PM",
+      "Saturday: 7:45 AM–2:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": {"open": 7.75, "close": 14},
+      "mon": {"open": 5, "close": 20},
+      "tue": {"open": 5, "close": 20},
+      "wed": {"open": 5, "close": 20},
+      "thu": {"open": 5, "close": 20},
+      "fri": {"open": 5, "close": 19},
+      "sat": {"open": 7.75, "close": 14}
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "Morning",
+    "energyRamp": 3,
+    "tags": "fitness, cardio, strength, interval, treadmill, sweat, coach, grit, burn, team, studio, endurance",
+    "price": "$$",
+    "duration": 1.25
+  },
+  {
+    "slug": "the-path-museum",
+    "name": "The PATH Museum",
+    "id": "e191f3a3-be81-46ad-b1e8-f503ff597460",
+    "vibe": "reflective, historical, solemn, reverent, immersive, contemplative",
+    "type": ["gallery"],
+    "lat": "33.8461161",
+    "lon": "-84.3598334",
+    "link": "https://www.instagram.com/pathartmuseum/?hl=en",
+    "cover": "img/venues/The PATH Museum.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 10:00 AM–5:00 PM",
+      "Tuesday: 10:00 AM–5:00 PM",
+      "Wednesday: 10:00 AM–5:00 PM",
+      "Thursday: 10:00 AM–5:00 PM",
+      "Friday: 10:00 AM–5:00 PM",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": {"open": 10, "close": 17},
+      "tue": {"open": 10, "close": 17},
+      "wed": {"open": 10, "close": 17},
+      "thu": {"open": 10, "close": 17},
+      "fri": {"open": 10, "close": 17},
+      "sat": null
+    },
+    "dayParts": {
+      "sun": "—",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "—"
+    },
+    "timeCategory": "Midday",
+    "energyRamp": 1,
+    "tags": "history, civil, journey, legacy, learning, gallery, exhibit, truth, movement, resilience, archive, monument",
+    "price": "$",
+    "duration": 1
+  },
+{
+"slug": "sculpthouse-buckhead",
+"name": "SculptHouse Buckhead",
+"id": "f7b2f5f3-8443-48e5-b5d2-5d9f6a526193",
+    "vibe": "sleek, sculptural, modern, refined, rhythmic, focused",
+"type": ["fitness"],
+"lat": "33.8400431",
+"lon": "-84.3763726",
+"link": "https://www.instagram.com/sculpthouse/",
+"cover": "img/venues/SculptHouse Buckhead.png",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 8:00 AM–2:00 PM",
+"Monday: 5:30 AM–8:00 PM",
+"Tuesday: 5:30 AM–8:00 PM",
+"Wednesday: 5:30 AM–8:00 PM",
+"Thursday: 5:30 AM–8:00 PM",
+"Friday: 5:30 AM–5:00 PM",
+"Saturday: 7:00 AM–2:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 8, "close": 14},
+"mon": {"open": 5.5, "close": 20},
+"tue": {"open": 5.5, "close": 20},
+"wed": {"open": 5.5, "close": 20},
+"thu": {"open": 5.5, "close": 20},
+"fri": {"open": 5.5, "close": 17},
+"sat": {"open": 7, "close": 14}
+},
+"dayParts": {
+"sun": "M",
+"mon": "M",
+"tue": "M",
+"wed": "M",
+"thu": "M",
+"fri": "M",
+"sat": "M"
+},
+"timeCategory": "Morning",
+"energyRamp": 3,
+"tags": "pilates, core, barre, strength, stretch, tone, reformer, balance, posture, motion, studio, flex",
+"price": "$$",
+"duration": 1.25
+},
+{
+"slug": "tulum-kitchen-and-bar",
+"name": "Tulum Kitchen and Bar",
+"id": "2d0db3bc-3f84-4992-833d-0e5f4bd30a67",
+    "vibe": "coastal, vibrant, tropical, breezy, flavorful, spirited",
+"type": ["dinner", "cocktail"],
+"lat": "33.8415035",
+"lon": "-84.3786546",
+"link": "https://www.instagram.com/tulumatl/?hl=en",
+"cover": "img/venues/Tulum Kitchen and Bar.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 12:00 PM–12:00 AM",
+"Monday: 5:00 PM–12:00 AM",
+"Tuesday: 5:00 PM–12:00 AM",
+"Wednesday: 5:00 PM–12:00 AM",
+"Thursday: 5:00 PM–1:00 AM",
+"Friday: 5:00 PM–2:00 AM",
+"Saturday: 4:00 PM–2:00 AM"
+],
+"hoursNumeric": {
+"sun": {"open": 12, "close": 24},
+"mon": {"open": 17, "close": 24},
+"tue": {"open": 17, "close": 24},
+"wed": {"open": 17, "close": 24},
+"thu": {"open": 17, "close": 25},
+"fri": {"open": 17, "close": 26},
+"sat": {"open": 16, "close": 26}
+},
+"dayParts": {
+"sun": "E",
+"mon": "E",
+"tue": "E",
+"wed": "E",
+"thu": "L",
+"fri": "L",
+"sat": "L"
+},
+"timeCategory": "Evening, Late",
+"energyRamp": 3,
+"tags": "tacos, mezcal, ceviche, grilled, lime, patio, fiesta, chef, fusion, zest, spice, garnish",
+"price": "$$$",
+"duration": 2
+},
+{
+"slug": "chops-and-lobster-bar",
+"name": "Chops & Lobster Bar",
+"id": "a71bcd95-3255-4dd6-9d11-01b5fa61287f",
+    "vibe": "polished, classic, upscale, robust, smoky, refined",
+"type": ["lunch", "dinner"],
+"lat": "33.839865",
+"lon": "-84.3819252",
+"link": "https://www.instagram.com/chopslobsterbar/?hl=en",
+"cover": "img/venues/Chops & Lobster Bar.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 5:30 PM–9:00 PM",
+"Monday: 11:30 AM–2:30 PM; 5:30 PM–9:00 PM",
+"Tuesday: 11:30 AM–2:30 PM; 5:30 PM–9:00 PM",
+"Wednesday: 11:30 AM–2:30 PM; 5:30 PM–9:00 PM",
+"Thursday: 11:30 AM–2:30 PM; 5:30 PM–9:00 PM",
+"Friday: 11:30 AM–2:30 PM; 5:30 PM–10:00 PM",
+"Saturday: 5:30 PM–10:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 17.5, "close": 21},
+"mon": [{"open": 11.5, "close": 14.5}, {"open": 17.5, "close": 21}],
+"tue": [{"open": 11.5, "close": 14.5}, {"open": 17.5, "close": 21}],
+"wed": [{"open": 11.5, "close": 14.5}, {"open": 17.5, "close": 21}],
+"thu": [{"open": 11.5, "close": 14.5}, {"open": 17.5, "close": 21}],
+"fri": [{"open": 11.5, "close": 14.5}, {"open": 17.5, "close": 22}],
+"sat": {"open": 17.5, "close": 22}
+},
+"dayParts": {
+"sun": "E",
+"mon": "HH",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Evening, Happy Hour",
+"energyRamp": 3,
+"tags": "steak, seafood, lobster, prime, grill, wine, dine, cut, aged, pepper, butter, savor",
+"price": "$$$$",
+"duration": 2
+},
+{
+"slug": "red-phone-booth-buckhead",
+"name": "Red Phone Booth - Buckhead",
+"id": "0e27faf9-ca65-424b-964e-26f4a59db47e",
+    "vibe": "secretive, dimmed, jazzy, hidden, swanky, hushed",
+"type": ["speakeasy"],
+"lat": "33.8439094",
+"lon": "-84.3730977",
+"link": "https://www.instagram.com/rpbbuckhead/?hl=en",
+"cover": "img/venues/Red Phone Booth - Buckhead.png",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 5:00 PM–12:00 AM",
+"Monday: 4:00 PM–1:00 AM",
+"Tuesday: 4:00 PM–1:00 AM",
+"Wednesday: 4:00 PM–1:00 AM",
+"Thursday: 4:00 PM–1:00 AM",
+"Friday: 4:00 PM–1:00 AM",
+"Saturday: 5:00 PM–1:00 AM"
+],
+"hoursNumeric": {
+"sun": {"open": 17, "close": 24},
+"mon": {"open": 16, "close": 25},
+"tue": {"open": 16, "close": 25},
+"wed": {"open": 16, "close": 25},
+"thu": {"open": 16, "close": 25},
+"fri": {"open": 16, "close": 25},
+"sat": {"open": 17, "close": 25}
+},
+"dayParts": {
+"sun": "E",
+"mon": "E",
+"tue": "E",
+"wed": "E",
+"thu": "E",
+"fri": "L",
+"sat": "L"
+},
+"timeCategory": "Evening, Late",
+"energyRamp": 4,
+"tags": "cocktail, craft, lounge, mixology, spirits, hush, velvet, whisper, classic, lounge, bottle, sip",
+"price": "$$",
+"duration": 1.5
+},
+{
+"slug": "the-salty-donut-buckhead",
+"name": "The Salty Donut - Buckhead",
+"id": "e0223b8d-c9b3-437e-8fd9-b16f4b2a657c",
+    "vibe": "playful, sweet, artisanal, fresh, bright, indulgent",
+"type": ["bakery", "dessert"],
+"lat": "33.8397384",
+"lon": "-84.380378",
+"link": "https://www.instagram.com/thesaltydonut/",
+"cover": "img/venues/The Salty Donut - Buckhead.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 7:00 AM–7:00 PM",
+"Monday: 7:00 AM–7:00 PM",
+"Tuesday: 7:00 AM–7:00 PM",
+"Wednesday: 7:00 AM–7:00 PM",
+"Thursday: 7:00 AM–7:00 PM",
+"Friday: 7:00 AM–7:00 PM",
+"Saturday: 7:00 AM–7:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 7, "close": 19},
+"mon": {"open": 7, "close": 19},
+"tue": {"open": 7, "close": 19},
+"wed": {"open": 7, "close": 19},
+"thu": {"open": 7, "close": 19},
+"fri": {"open": 7, "close": 19},
+"sat": {"open": 7, "close": 19}
+},
+"dayParts": {
+"sun": "MD",
+"mon": "MD",
+"tue": "MD",
+"wed": "MD",
+"thu": "MD",
+"fri": "MD",
+"sat": "MD"
+},
+"timeCategory": "Midday",
+"energyRamp": 2,
+"tags": "donut, glaze, brioche, gourmet, sugar, batch, chef, quirky, brunch, creamy, local, crisp",
+"price": "$",
+"duration": 0.5
+},
+{
+"slug": "swan-house-atlanta-history-center",
+"name": "Swan House at Atlanta History Center",
+"id": "a45b73e3-166a-4963-a342-80b3e7773de7",
+    "vibe": "grand, elegant, storied, heritage, stately, romantic",
+"type": ["museum", "garden"],
+"lat": "33.8404395",
+"lon": "-84.3875917",
+"link": "https://www.instagram.com/swancoachhouse/?hl=en",
+"cover": "img/venues/Swan House at Atlanta History Center.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 9:00 AM–4:00 PM",
+"Monday: Closed",
+"Tuesday: 9:00 AM–4:00 PM",
+"Wednesday: 9:00 AM–4:00 PM",
+"Thursday: 9:00 AM–4:00 PM",
+"Friday: 9:00 AM–4:00 PM",
+"Saturday: 9:00 AM–4:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 9, "close": 16},
+"mon": null,
+"tue": {"open": 9, "close": 16},
+"wed": {"open": 9, "close": 16},
+"thu": {"open": 9, "close": 16},
+"fri": {"open": 9, "close": 16},
+"sat": {"open": 9, "close": 16}
+},
+"dayParts": {
+"sun": "MD",
+"mon": "—",
+"tue": "MD",
+"wed": "MD",
+"thu": "MD",
+"fri": "MD",
+"sat": "MD"
+},
+"timeCategory": "Midday",
+"energyRamp": 2,
+"tags": "mansion, gardens, tour, estate, architecture, legacy, era, portrait, marble, oak, gala, view",
+"price": "$$",
+"duration": 2.5
+},
+{
+"slug": "swan-coach-house",
+"name": "Swan Coach House",
+"id": "e8dbb993-2cef-403c-90c9-ed9aead008d5",
+    "vibe": "boutique, refined, cultured, graceful, intimate, serene",
+"type": ["lunch", "tea"],
+"lat": "33.8399905",
+"lon": "-84.3859929",
+"link": "https://www.instagram.com/swancoachhouse/?hl=en",
+"cover": "img/venues/Swan Coach House.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: Closed",
+"Monday: Closed",
+"Tuesday: 10:00 AM–4:00 PM",
+"Wednesday: 10:00 AM–4:00 PM",
+"Thursday: 10:00 AM–4:00 PM",
+"Friday: 10:00 AM–4:00 PM",
+"Saturday: 10:00 AM–4:00 PM"
+],
+"hoursNumeric": {
+"sun": null,
+"mon": null,
+"tue": {"open": 10, "close": 16},
+"wed": {"open": 10, "close": 16},
+"thu": {"open": 10, "close": 16},
+"fri": {"open": 10, "close": 16},
+"sat": {"open": 10, "close": 16}
+},
+"dayParts": {
+"sun": "—",
+"mon": "—",
+"tue": "MD",
+"wed": "MD",
+"thu": "MD",
+"fri": "MD",
+"sat": "MD"
+},
+"timeCategory": "Midday",
+"energyRamp": 2,
+"tags": "tea, brunch, gift, boutique, garden, plates, elegant, linen, host, art, classic, retreat",
+"price": "$$",
+"duration": 2
+},
+{
+"slug": "callanwolde-fine-arts-center",
+"name": "Callanwolde Fine Arts Center",
+"id": "dd334a90-dfca-437a-ba45-79d723a99385",
+    "vibe": "creative, historic, eclectic, inspiring, bohemian, textured",
+"type": ["museum"],
+"lat": "33.7818415",
+"lon": "-84.345085",
+"link": "https://www.instagram.com/callanwoldefinearts/?hl=en",
+"cover": "img/venues/Callanwolde Fine Arts Center.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: Closed",
+"Monday: 9:00 AM–5:00 PM",
+"Tuesday: 9:00 AM–5:00 PM",
+"Wednesday: 9:00 AM–5:00 PM",
+"Thursday: 9:00 AM–5:00 PM",
+"Friday: 9:00 AM–5:00 PM",
+"Saturday: Closed"
+],
+"hoursNumeric": {
+"sun": null,
+"mon": {"open": 9, "close": 17},
+"tue": {"open": 9, "close": 17},
+"wed": {"open": 9, "close": 17},
+"thu": {"open": 9, "close": 17},
+"fri": {"open": 9, "close": 17},
+"sat": null
+},
+"dayParts": {
+"sun": "—",
+"mon": "MD",
+"tue": "MD",
+"wed": "MD",
+"thu": "MD",
+"fri": "MD",
+"sat": "—"
+},
+"timeCategory": "Midday",
+"energyRamp": 1,
+"tags": "arts, classes, studio, gallery, theater, craft, sculpt, paint, music, festival, exhibit, workshops",
+"price": "$",
+"duration": 1.5
+},
+{
+"slug": "the-warehouse",
+"name": "The WareHOUSE",
+"id": "87f0da89-0140-4770-aebb-ffa2cf8e1ad2",
+    "vibe": "industrial, cavernous, edgy, raw, collective, gritty",
+"type": ["museum"],
+"lat": "33.813021",
+"lon": "-84.4417996",
+"link": "https://www.instagram.com/thewarehouseatlanta/?hl=en",
+"cover": "img/venues/The WareHOUSE.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: Closed",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: Closed",
+"Thursday: Closed",
+"Friday: Closed",
+"Saturday: Closed"
+],
+"hoursNumeric": {
+"sun": null,
+"mon": null,
+"tue": null,
+"wed": null,
+"thu": null,
+"fri": null,
+"sat": null
+},
+"dayParts": {
+"sun": "—",
+"mon": "—",
+"tue": "—",
+"wed": "—",
+"thu": "—",
+"fri": "—",
+"sat": "—"
+},
+"timeCategory": "Midday",
+"energyRamp": 2,
+"tags": "maker, design, space, event, loft, workshop, creative, build, community, open, studio, modular",
+"price": "$",
+"duration": 1.5
+},
+{
+"slug": "dead-end-drinks",
+"name": "Dead End Drinks",
+"id": "340bb790-8a36-4723-807c-c73dd444ec97",
+    "vibe": "moody, intimate, tucked, smoky, velvety, clandestine",
+"type": ["brunch", "bar"],
+"lat": "33.7586118",
+"lon": "-84.33153",
+"link": "https://www.instagram.com/deadenddrinksatl/?hl=en",
+"cover": "img/venues/Dead End Drinks.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 11:00 AM–4:00 PM",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: 5:00 PM–10:00 PM",
+"Thursday: 5:00 PM–10:00 PM",
+"Friday: 5:00 PM–10:00 PM",
+"Saturday: 11:00 AM–3:30 PM; 5:00 PM–10:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 16},
+"mon": null,
+"tue": null,
+"wed": {"open": 17, "close": 22},
+"thu": {"open": 17, "close": 22},
+"fri": {"open": 17, "close": 22},
+"sat": [{"open": 11, "close": 15.5}, {"open": 17, "close": 22}]
+},
+"dayParts": {
+"sun": "MD",
+"mon": "—",
+"tue": "—",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "HH"
+},
+"timeCategory": "Midday, Happy Hour",
+"energyRamp": 3,
+"tags": "bourbon, rye, cocktail, sip, toast, barrel, bitters, glass, lounge, vibe, hush, late",
+"price": "$$",
+"duration": 1.5
+},
+{
+"slug": "estrellita",
+"name": "Estrellita",
+"id": "ea9ff2d6-b5ae-42de-9a28-4a5f313cb710",
+    "vibe": "colorful, lively, rhythmic, gourmet, festive, playful",
+"type": ["lunch", "dinner"],
+"lat": "33.7455557",
+"lon": "-84.368519",
+"link": "https://www.instagram.com/estrellitafilipino/?hl=en",
+"cover": "img/venues/Estrellita.png",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 12:00 PM–8:00 PM",
+"Monday: 12:00 PM–8:00 PM",
+"Tuesday: 12:00 PM–10:00 PM",
+"Wednesday: 12:00 PM–10:00 PM",
+"Thursday: 12:00 PM–10:00 PM",
+"Friday: 12:00 PM–10:00 PM",
+"Saturday: 12:00 PM–10:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 12, "close": 20},
+"mon": {"open": 12, "close": 20},
+"tue": {"open": 12, "close": 22},
+"wed": {"open": 12, "close": 22},
+"thu": {"open": 12, "close": 22},
+"fri": {"open": 12, "close": 22},
+"sat": {"open": 12, "close": 22}
+},
+"dayParts": {
+"sun": "A",
+"mon": "A",
+"tue": "E",
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Afternoon, Evening",
+"energyRamp": 2,
+"tags": "tacos, tequila, salsa, street, chef, vibrant, fiesta, urban, pinch, zest, grill, share",
+"price": "$$",
+"duration": 2
+},
+{
+"slug": "bloom-coffee-co",
+"name": "Bloom Coffee Co.",
+"id": "20c5ed9b-22c6-42aa-834c-10bdc5d0965e",
+    "vibe": "bright, fresh, floral, inviting, easygoing, sunny",
+"type": ["coffee"],
+"lat": "33.8095955",
+"lon": "-84.3916768",
+"link": "https://www.instagram.com/bloom.coffeeco/?hl=en",
+"cover": "img/venues/Bloom Coffee Co.jpeg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 8:00 AM–3:30 PM",
+"Monday: 8:00 AM–3:30 PM",
+"Tuesday: 8:00 AM–3:30 PM",
+"Wednesday: 8:00 AM–3:30 PM",
+"Thursday: 8:00 AM–3:30 PM",
+"Friday: 8:00 AM–3:30 PM",
+"Saturday: 8:00 AM–3:30 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 8, "close": 15.5},
+"mon": {"open": 8, "close": 15.5},
+"tue": {"open": 8, "close": 15.5},
+"wed": {"open": 8, "close": 15.5},
+"thu": {"open": 8, "close": 15.5},
+"fri": {"open": 8, "close": 15.5},
+"sat": {"open": 8, "close": 15.5}
+},
+"dayParts": {
+"sun": "M",
+"mon": "M",
+"tue": "M",
+"wed": "M",
+"thu": "M",
+"fri": "M",
+"sat": "M"
+},
+"timeCategory": "Morning",
+"energyRamp": 2,
+"tags": "latte, pour, beans, roast, plant, sweet, morning, sip, pastry, community, slow, mellow",
+"price": "$",
+"duration": 0.5
+},
+{
+"slug": "lot-23-chandler-co",
+"name": "Lot 23 Chandler Co.",
+"id": "153d5ac5-5507-4ce3-a0c2-41ac5b7e5465",
+    "vibe": "energetic, indie, nocturnal, vibrant, unruly, bold",
+"type": ["class"],
+"lat": "33.7354309",
+"lon": "-84.4130821",
+"link": "https://www.instagram.com/lot23chandlerco/",
+"cover": "img/venues/Lot 23 Chandler Co.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 12:00 PM–6:00 PM",
+"Monday: Closed",
+"Tuesday: 5:00 PM–7:30 PM",
+"Wednesday: 12:00 PM–7:30 PM",
+"Thursday: 12:00 PM–7:30 PM",
+"Friday: 12:00 PM–7:30 PM",
+"Saturday: 12:00 PM–7:30 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 12, "close": 18},
+"mon": null,
+"tue": {"open": 17, "close": 19.5},
+"wed": {"open": 12, "close": 19.5},
+"thu": {"open": 12, "close": 19.5},
+"fri": {"open": 12, "close": 19.5},
+"sat": {"open": 12, "close": 19.5}
+},
+"dayParts": {
+"sun": "A",
+"mon": "—",
+"tue": "HH",
+"wed": "A",
+"thu": "A",
+"fri": "A",
+"sat": "A"
+},
+"timeCategory": "Afternoon, Happy Hour",
+"energyRamp": 2,
+"tags": "club, beat, groove, DJ, crowd, night, bar, bass, lights, dance, hype, scene",
+"price": "$$",
+"duration": 1.5
+},
+{
+"slug": "avenue-kitchen-and-cocktail",
+"name": "Avenue Kitchen & Cocktail",
+"id": "cd0ebcda-a70e-47ce-ab1a-0bb20a3f6c37",
+    "vibe": "urbane, modern, savory, expressive, refined, polished",
+"type": ["dinner", "cocktail"],
+"lat": "33.7701676",
+"lon": "-84.406703",
+"link": "https://www.instagram.com/avenueatl/?hl=en",
+"cover": "img/venues/Avenue Kitchen & Cocktail.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 5:00 PM–10:30 PM",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: Closed",
+"Thursday: 5:00 PM–10:30 PM",
+"Friday: 5:00 PM–2:00 AM",
+"Saturday: 5:00 PM–2:00 AM"
+],
+"hoursNumeric": {
+"sun": {"open": 17, "close": 22.5},
+"mon": null,
+"tue": null,
+"wed": null,
+"thu": {"open": 17, "close": 22.5},
+"fri": {"open": 17, "close": 26},
+"sat": {"open": 17, "close": 26}
+},
+"dayParts": {
+"sun": "E",
+"mon": "—",
+"tue": "—",
+"wed": "—",
+"thu": "E",
+"fri": "L",
+"sat": "L"
+},
+"timeCategory": "Evening, Late",
+"energyRamp": 4,
+"tags": "plates, chef, seasonal, bar, classic, blend, flavor, toast, dine, crisp, fresh, social",
+"price": "$$$",
+"duration": 2
+},
+{
+"slug": "dr-bombays-underwater-tea-party",
+"name": "Dr. Bombay's Underwater Tea Party",
+"id": "02338188-0573-4353-b626-bb062e52e525",
+    "vibe": "whimsical, surreal, vibrant, playful, curious, eccentric",
+"type": ["tea", "café"],
+"lat": "33.7337966",
+"lon": "-84.3738604",
+"link": "https://www.instagram.com/drbombays/?hl=en",
+"cover": "img/venues/Dr. Bombay's Underwater Tea Party.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 11:00 AM–4:00 PM",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: Closed",
+"Thursday: Closed",
+"Friday: Closed",
+"Saturday: 11:00 AM–4:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 16},
+"mon": null,
+"tue": null,
+"wed": null,
+"thu": null,
+"fri": null,
+"sat": {"open": 11, "close": 16}
+},
+"dayParts": {
+"sun": "MD",
+"mon": "—",
+"tue": "—",
+"wed": "—",
+"thu": "—",
+"fri": "—",
+"sat": "MD"
+},
+"timeCategory": "Midday",
+"energyRamp": 2,
+"tags": "tea, quirky, fusion, stage, costume, fun, magic, menu, surreal, sip, mix, themed",
+"price": "$",
+"duration": 1.5
+},
+{
+"slug": "layaly-mediterranean-restaurant",
+"name": "Layaly Mediterranean Restaurant",
+"id": "d5d4a501-23b4-448f-98a9-6976cbb610f2",
+    "vibe": "aromatic, warm, hospitable, vibrant, rich, cultural",
+"type": ["dinner"],
+"lat": "33.8684472",
+"lon": "-84.3090608",
+"link": "https://www.instagram.com/layalyofficial/?hl=en",
+"cover": "img/venues/Layaly Mediterranean Restaurant.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 5:00 PM–10:00 PM",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: 5:00 PM–10:00 PM",
+"Thursday: 5:00 PM–10:00 PM",
+"Friday: 5:00 PM–11:00 PM",
+"Saturday: 5:00 PM–11:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 17, "close": 22},
+"mon": null,
+"tue": null,
+"wed": {"open": 17, "close": 22},
+"thu": {"open": 17, "close": 22},
+"fri": {"open": 17, "close": 23},
+"sat": {"open": 17, "close": 23}
+},
+"dayParts": {
+"sun": "E",
+"mon": "—",
+"tue": "—",
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Evening",
+"energyRamp": 3,
+"tags": "hummus, lamb, pita, mezze, spice, olive, grill, feast, zest, fresh, chef, herbs",
+"price": "$$",
+"duration": 2
+},
+{
+"slug": "coffee-was-black",
+"name": "COFFEE WAS BLACK",
+"id": "1fb3824a-7a42-4d42-9b58-8f4f920d781e",
+    "vibe": "bold, stark, minimalist, punchy, intense, pure",
+"type": ["coffee"],
+"lat": "33.7557048",
+"lon": "-84.3756566",
+"link": "https://www.instagram.com/coffeewasblack/?hl=en",
+"cover": "img/venues/COFFEE WAS BLACK.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 11:00 AM–5:00 PM",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: 10:00 AM–5:00 PM",
+"Thursday: 10:00 AM–5:00 PM",
+"Friday: 10:00 AM–5:00 PM",
+"Saturday: 11:00 AM–5:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 17},
+"mon": null,
+"tue": null,
+"wed": {"open": 10, "close": 17},
+"thu": {"open": 10, "close": 17},
+"fri": {"open": 10, "close": 17},
+"sat": {"open": 11, "close": 17}
+},
+"dayParts": {
+"sun": "A",
+"mon": "—",
+"tue": "—",
+"wed": "MD",
+"thu": "MD",
+"fri": "MD",
+"sat": "A"
+},
+"timeCategory": "Midday, Afternoon",
+"energyRamp": 2,
+"tags": "drip, roast, beans, dark, craft, mug, bitter, grinder, local, fuel, shot, clean",
+"price": "$",
+"duration": 0.5
+},
+{
+"slug": "the-victorian-atlanta-old-fourth-ward",
+"name": "The Victorian Atlanta - Old Fourth Ward",
+"id": "96e0640c-43c2-41aa-858e-5798ff5858d5",
+    "vibe": "historic, ornate, dramatic, elegant, vintage, theatrical",
+"type": ["lifestyle"],
+"lat": "33.7682069",
+"lon": "-84.3624987",
+"link": "https://www.instagram.com/thevictorianatlanta/?hl=en",
+"cover": "img/venues/The Victorian Atlanta - Old Fourth Ward.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 12:00 PM–8:00 PM",
+"Monday: 12:00 PM–6:00 PM",
+"Tuesday: 12:00 PM–8:00 PM",
+"Wednesday: 12:00 PM–8:00 PM",
+"Thursday: 12:00 PM–8:00 PM",
+"Friday: 12:00 PM–8:00 PM",
+"Saturday: 12:00 PM–8:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 12, "close": 20},
+"mon": {"open": 12, "close": 18},
+"tue": {"open": 12, "close": 20},
+"wed": {"open": 12, "close": 20},
+"thu": {"open": 12, "close": 20},
+"fri": {"open": 12, "close": 20},
+"sat": {"open": 12, "close": 20}
+},
+"dayParts": {
+"sun": "A",
+"mon": "MD",
+"tue": "A",
+"wed": "A",
+"thu": "A",
+"fri": "A",
+"sat": "A"
+},
+"timeCategory": "Midday, Afternoon",
+"energyRamp": 2,
+"tags": "rooms, chandelier, period, luxe, character, gallery, detailed, portrait, era, brick, opulent, charm",
+"price": "$$",
+"duration": 0.5
+},
+{
+"slug": "daily-dose-coffee",
+"name": "Daily Dose Coffee",
+"id": "02873ed9-de44-4752-b511-3bed49d4315c",
+    "vibe": "friendly, brisk, bright, familiar, energetic, warm",
+"type": ["coffee"],
+"lat": "33.7457325",
+"lon": "-84.3579467",
+"link": "https://www.instagram.com/dailydoseatl/?hl=en",
+"cover": "img/venues/Daily Dose Coffee.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 8:00 AM–7:00 PM",
+"Monday: 7:00 AM–8:00 PM",
+"Tuesday: 7:00 AM–8:00 PM",
+"Wednesday: 7:00 AM–8:00 PM",
+"Thursday: 7:00 AM–8:00 PM",
+"Friday: 7:00 AM–8:00 PM",
+"Saturday: 8:00 AM–7:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 8, "close": 19},
+"mon": {"open": 7, "close": 20},
+"tue": {"open": 7, "close": 20},
+"wed": {"open": 7, "close": 20},
+"thu": {"open": 7, "close": 20},
+"fri": {"open": 7, "close": 20},
+"sat": {"open": 8, "close": 19}
+},
+"dayParts": {
+"sun": "MD",
+"mon": "M",
+"tue": "M",
+"wed": "M",
+"thu": "M",
+"fri": "M",
+"sat": "MD"
+},
+"timeCategory": "Morning, Midday",
+"energyRamp": 2,
+"tags": "espresso, latte, beans, quick, sip, morning, counter, local, smile, brew, cozy, fresh",
+"price": "$",
+"duration": 0.5
+},
+{
+"slug": "soul-vegetarian-no-2",
+"name": "Soul Vegetarian No. 2",
+"id": "8affa44a-88ab-4856-8138-0bc9655291cf",
+    "vibe": "soulful, wholesome, generous, comforting, plant‑rich, earthy",
+"type": ["lunch", "dinner"],
+"lat": "33.7722344",
+"lon": "-84.3527325",
+"link": "https://www.instagram.com/soulvegetarian2/?hl=en",
+"cover": "img/venues/Soul Vegetarian No. 2.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 12:00 PM–8:00 PM",
+"Monday: Closed",
+"Tuesday: 1:00 PM–8:00 PM",
+"Wednesday: 1:00 PM–8:00 PM",
+"Thursday: 1:00 PM–8:00 PM",
+"Friday: 1:00 PM–8:00 PM",
+"Saturday: 12:00 PM–8:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 12, "close": 20},
+"mon": null,
+"tue": {"open": 13, "close": 20},
+"wed": {"open": 13, "close": 20},
+"thu": {"open": 13, "close": 20},
+"fri": {"open": 13, "close": 20},
+"sat": {"open": 12, "close": 20}
+},
+"dayParts": {
+"sun": "A",
+"mon": "—",
+"tue": "A",
+"wed": "A",
+"thu": "A",
+"fri": "A",
+"sat": "A"
+},
+"timeCategory": "Afternoon",
+"energyRamp": 2,
+"tags": "vegan, greens, chili, stew, soul, hearty, spice, bowl, fiber, plant, warmth, comfort",
+"price": "$",
+"duration": 0.75
+},
+{
+"slug": "quickshot-shooting-range-atlanta",
+"name": "QuickShot Shooting Range - Atlanta",
+"id": "8313f7ca-f432-4c0b-8a47-902f97626b87",
+    "vibe": "sharp, focused, intense, secure, controlled, charged",
+"type": ["activity"],
+"lat": "33.80574",
+"lon": "-84.340808",
+"link": "https://www.instagram.com/quickshotatlanta/?hl=en",
+"cover": "img/venues/QuickShot Shooting Range - Atlanta.png",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 12:00 PM–6:00 PM",
+"Monday: 11:00 AM–8:00 PM",
+"Tuesday: Closed",
+"Wednesday: Closed",
+"Thursday: 11:00 AM–8:00 PM",
+"Friday: 11:00 AM–8:00 PM",
+"Saturday: 10:00 AM–8:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 12, "close": 18},
+"mon": {"open": 11, "close": 20},
+"tue": null,
+"wed": null,
+"thu": {"open": 11, "close": 20},
+"fri": {"open": 11, "close": 20},
+"sat": {"open": 10, "close": 20}
+},
+"dayParts": {
+"sun": "A",
+"mon": "A",
+"tue": "—",
+"wed": "—",
+"thu": "A",
+"fri": "A",
+"sat": "A"
+},
+"timeCategory": "Afternoon",
+"energyRamp": 4,
+"tags": "fire, aim, target, range, precision, safety, coach, stance, load, grip, focus, skill",
+"price": "$$",
+"duration": 1.5
+},
+{
+"slug": "the-sun-dial-restaurant-bar-view",
+"name": "The Sun Dial Restaurant, Bar & View",
+"id": "8b9cc09a-fb9b-4bd6-9cb5-69227d5afd8c",
+    "vibe": "panoramic, elevated, sleek, luminous, cosmopolitan, refined",
+"type": ["dinner", "cocktail"],
+"lat": "33.7595838",
+"lon": "-84.3885704",
+"link": "https://www.instagram.com/sundialatl/?hl=en",
+"cover": "img/venues/The Sun Dial Restaurant, Bar & View.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 6:00 PM–10:00 PM",
+"Monday: 6:00 PM–10:00 PM",
+"Tuesday: 6:00 PM–10:00 PM",
+"Wednesday: 6:00 PM–10:00 PM",
+"Thursday: 6:00 PM–10:00 PM",
+"Friday: 6:00 PM–11:00 PM",
+"Saturday: 6:00 PM–11:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 18, "close": 22},
+"mon": {"open": 18, "close": 22},
+"tue": {"open": 18, "close": 22},
+"wed": {"open": 18, "close": 22},
+"thu": {"open": 18, "close": 22},
+"fri": {"open": 18, "close": 23},
+"sat": {"open": 18, "close": 23}
+},
+"dayParts": {
+"sun": "E",
+"mon": "E",
+"tue": "E",
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Evening",
+"energyRamp": 3,
+"tags": "skyline, dine, cocktail, orbit, glass, toast, view, chef, luxe, sunset, terrace, swirl",
+"price": "$$$$",
+"duration": 2
+},
+{
+"slug": "colette-bread-and-bakeshop",
+"name": "Colette Bread and Bakeshop",
+"id": "65c947a8-7b96-48c8-ade1-55823aa5e9f2",
+    "vibe": "artisanal, cozy, fragrant, tender, fresh, rustic",
+"type": ["bakery"],
+"lat": "33.771725",
+"lon": "-84.3527696",
+"link": "https://www.instagram.com/colettebread/?hl=en",
+"cover": "img/venues/Colette Bread and Bakeshop.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 8:00 AM–2:00 PM",
+"Monday: Closed",
+"Tuesday: 8:00 AM–2:00 PM",
+"Wednesday: 8:00 AM–2:00 PM",
+"Thursday: 8:00 AM–2:00 PM",
+"Friday: 8:00 AM–2:00 PM",
+"Saturday: 8:00 AM–2:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 8, "close": 14},
+"mon": null,
+"tue": {"open": 8, "close": 14},
+"wed": {"open": 8, "close": 14},
+"thu": {"open": 8, "close": 14},
+"fri": {"open": 8, "close": 14},
+"sat": {"open": 8, "close": 14}
+},
+"dayParts": {
+"sun": "MD",
+"mon": "—",
+"tue": "M",
+"wed": "M",
+"thu": "M",
+"fri": "M",
+"sat": "M"
+},
+"timeCategory": "Morning, Midday",
+"energyRamp": 2,
+"tags": "sourdough, baguette, knead, bake, crumb, oven, pastry, buttery, crust, warm, artisanal, brunch",
+"price": "$",
+"duration": 0.5
+},
+{
+"slug": "whiskey-bird",
+"name": "Whiskey Bird",
+"id": "085b8e76-60d1-4793-b945-a547fa481c50",
+    "vibe": "vibrant, casual, neighborhood, creative, welcoming, flavorful",
+"type": ["lunch", "brunch", "dinner"],
+"lat": "33.792656",
+"lon": "-84.351852",
+"link": "https://www.instagram.com/whiskeybird/?hl=en",
+"cover": "img/venues/Whiskey Bird.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 10:30 AM–8:00 PM",
+"Monday: Closed",
+"Tuesday: 4:00 PM–9:00 PM",
+"Wednesday: 4:00 PM–9:00 PM",
+"Thursday: 4:00 PM–9:00 PM",
+"Friday: 10:30 AM–9:30 PM",
+"Saturday: 10:30 AM–9:30 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 10.5, "close": 20},
+"mon": null,
+"tue": {"open": 16, "close": 21},
+"wed": {"open": 16, "close": 21},
+"thu": {"open": 16, "close": 21},
+"fri": {"open": 10.5, "close": 21.5},
+"sat": {"open": 10.5, "close": 21.5}
+},
+"dayParts": {
+"sun": "A",
+"mon": "—",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "HH"
+},
+"timeCategory": "Afternoon, Happy Hour",
+"energyRamp": 4,
+"tags": "brunch, fusion, tacos, cocktails, patio, shareable, chef, casual, lively, local, inventive",
+"price": "$$",
+"duration": 2
+},
+{
+"slug": "birdcage",
+"name": "Birdcage",
+"id": "769f546c-4cee-4e0b-bd5f-5bd07a76c631",
+    "vibe": "intimate, chic, whimsical, flutter, evening, soft",
+"type": ["brunch", "lunch", "dinner"],
+"lat": "33.746503",
+"lon": "-84.3700533",
+"link": "https://www.instagram.com/birdcageatl/?hl=en",
+"cover": "img/venues/Birdcage.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 11:00 AM–9:00 PM",
+"Monday: 11:00 AM–10:00 PM",
+"Tuesday: 11:00 AM–10:00 PM",
+"Wednesday: 11:00 AM–10:00 PM",
+"Thursday: 11:00 AM–10:00 PM",
+"Friday: 11:00 AM–10:00 PM",
+"Saturday: 11:00 AM–10:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 21},
+"mon": {"open": 11, "close": 22},
+"tue": {"open": 11, "close": 22},
+"wed": {"open": 11, "close": 22},
+"thu": {"open": 11, "close": 22},
+"fri": {"open": 11, "close": 22},
+"sat": {"open": 11, "close": 22}
+},
+"dayParts": {
+"sun": "A",
+"mon": "A",
+"tue": "A",
+"wed": "A",
+"thu": "A",
+"fri": "A",
+"sat": "A"
+},
+"timeCategory": "Afternoon",
+"energyRamp": 3,
+"tags": "dine, cocktail, birdsong, seat, lounge, flutter, toast, mix, vibe, art, cozy, night",
+"price": "$$",
+"duration": 2
+},
+{
+"slug": "tassilis-raw-reality-cafe",
+"name": "Tassili's Raw Reality Café",
+"id": "a3488b9e-5ba1-4985-be25-5f1fd1055fee",
+    "vibe": "earthy, conscious, vibrant, raw, holistic, radiant",
+"type": ["lunch"],
+"lat": "33.7384743",
+"lon": "-84.4224619",
+"link": "https://www.instagram.com/tassilisraw/?hl=en",
+"cover": "img/venues/Tassili's Raw Reality Café.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 11:00 AM–9:00 PM",
+"Monday: 11:00 AM–9:00 PM",
+"Tuesday: 11:00 AM–9:00 PM",
+"Wednesday: 11:00 AM–9:00 PM",
+"Thursday: 11:00 AM–9:00 PM",
+"Friday: 11:00 AM–9:00 PM",
+"Saturday: 11:00 AM–9:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 21},
+"mon": {"open": 11, "close": 21},
+"tue": {"open": 11, "close": 21},
+"wed": {"open": 11, "close": 21},
+"thu": {"open": 11, "close": 21},
+"fri": {"open": 11, "close": 21},
+"sat": {"open": 11, "close": 21}
+},
+"dayParts": {
+"sun": "A",
+"mon": "A",
+"tue": "A",
+"wed": "A",
+"thu": "A",
+"fri": "A",
+"sat": "A"
+},
+"timeCategory": "Afternoon",
+"energyRamp": 2,
+"tags": "vegan, raw, organic, juice, bowl, green, cleanse, plant, holistic, seed, fresh, nurture",
+"price": "$",
+"duration": 0.5
+},
+{
+"slug": "nadair",
+"name": "Nàdair",
+"id": "20ae8f9d-03f5-427c-bb8c-93a78e20664a",
+    "vibe": "sleek, modern, breezy, elevated, refined, coastal",
+"type": ["dinner"],
+"lat": "33.8062057",
+"lon": "-84.3438056",
+"link": "https://www.instagram.com/nadairatl/?hl=en",
+"cover": "img/venues/Nàdair.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: Closed",
+"Monday: Closed",
+"Tuesday: Closed",
+"Wednesday: 6:00 PM–10:00 PM",
+"Thursday: 6:00 PM–10:00 PM",
+"Friday: 6:00 PM–10:00 PM",
+"Saturday: 6:00 PM–10:00 PM"
+],
+"hoursNumeric": {
+"sun": null,
+"mon": null,
+"tue": null,
+"wed": {"open": 18, "close": 22},
+"thu": {"open": 18, "close": 22},
+"fri": {"open": 18, "close": 22},
+"sat": {"open": 18, "close": 22}
+},
+"dayParts": {
+"sun": "—",
+"mon": "—",
+"tue": "—",
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Evening",
+"energyRamp": 3,
+"tags": "seafood, raw, oyster, ceviche, crisp, wine, dine, sea, chef, fresh, citrus, plate",
+"price": "$$$$",
+"duration": 2
+},
+{
+"slug": "leons-full-service",
+"name": "LEON's Full Service",
+"id": "c8c08eca-13c7-4d51-bbe7-cb50681b12e3",
+    "vibe": "laidback, coastal, vintage, spirited, open, warm",
+"type": ["brunch", "lunch", "dinner", "cocktail"],
+"lat": "33.7753818",
+"lon": "-84.2951157",
+"link": "https://www.instagram.com/leonsfullservice/",
+"cover": "img/venues/LEON's Full Service.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 11:30 AM–10:00 PM",
+"Monday: 5:00 PM–10:00 PM",
+"Tuesday: 5:00 PM–10:00 PM",
+"Wednesday: 11:30 AM–10:00 PM",
+"Thursday: 11:30 AM–10:00 PM",
+"Friday: 11:30 AM–11:00 PM",
+"Saturday: 11:30 AM–11:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 11.5, "close": 22},
+"mon": {"open": 17, "close": 22},
+"tue": {"open": 17, "close": 22},
+"wed": {"open": 11.5, "close": 22},
+"thu": {"open": 11.5, "close": 22},
+"fri": {"open": 11.5, "close": 23},
+"sat": {"open": 11.5, "close": 23}
+},
+"dayParts": {
+"sun": "A",
+"mon": "E",
+"tue": "E",
+"wed": "A",
+"thu": "A",
+"fri": "E",
+"sat": "E"
+},
+"timeCategory": "Afternoon, Evening",
+"energyRamp": 4,
+"tags": "fried, oysters, porch, bottle, beer, share, comfort, tang, chef, sunny, plate, casual",
+"price": "$$",
+"duration": 1.75
+},
+{
+"slug": "mothers-best-fried-chicken",
+"name": "Mothers Best Fried Chicken",
+"id": "51193e76-888e-4a42-94ed-52d0d0d3cda4",
+    "vibe": "hearty, nostalgic, lively, soul, crunchy, classic",
+"type": ["lunch", "dinner"],
+"lat": "33.7749186",
+"lon": "-84.2951428",
+"link": "https://www.instagram.com/mothers.best/?hl=en",
+"cover": "img/venues/Mothers Best Fried Chicken.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 11:00 AM–6:00 PM",
+"Monday: 11:00 AM–6:00 PM",
+"Tuesday: Closed",
+"Wednesday: 11:00 AM–10:00 PM",
+"Thursday: 11:00 AM–10:00 PM",
+"Friday: 11:00 AM–10:00 PM",
+"Saturday: 11:00 AM–10:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 11, "close": 18},
+"mon": {"open": 11, "close": 18},
+"tue": null,
+"wed": {"open": 11, "close": 22},
+"thu": {"open": 11, "close": 22},
+"fri": {"open": 11, "close": 22},
+"sat": {"open": 11, "close": 22}
+},
+"dayParts": {
+"sun": "A",
+"mon": "A",
+"tue": "—",
+"wed": "A",
+"thu": "A",
+"fri": "A",
+"sat": "A"
+},
+"timeCategory": "Afternoon",
+"energyRamp": 2,
+"tags": "fried, chicken, batter, sauce, sides, comfort, family, crispy, soul, picnic, plate, hearty",
+"price": "$",
+"duration": 1
+},
+{
+"slug": "kitty-dare",
+"name": "Kitty Dare",
+"id": "df0c618f-6093-49c9-9e07-6cfc60fcf89e",
+    "vibe": "mediterranean, intimate, relaxed, refined, curated, social",
+"type": ["brunch", "dinner"],
+"lat": "33.7571779",
+"lon": "-84.3541609",
+"link": "https://www.instagram.com/kittydareatl/?hl=en",
+"cover": "img/venues/Kitty Dare.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 11:30 AM–2:30 PM; 5:00 PM–9:00 PM",
+"Monday: Closed",
+"Tuesday: 4:00 PM–9:00 PM",
+"Wednesday: 4:00 PM–9:00 PM",
+"Thursday: 4:00 PM–9:00 PM",
+"Friday: 4:00 PM–10:00 PM",
+"Saturday: 4:00 PM–10:00 PM"
+],
+"hoursNumeric": {
+"sun": [{"open": 11.5, "close": 14.5}, {"open": 17, "close": 21}],
+"mon": null,
+"tue": {"open": 16, "close": 21},
+"wed": {"open": 16, "close": 21},
+"thu": {"open": 16, "close": 21},
+"fri": {"open": 16, "close": 22},
+"sat": {"open": 16, "close": 22}
+},
+"dayParts": {
+"sun": "HH",
+"mon": "—",
+"tue": "HH",
+"wed": "HH",
+"thu": "HH",
+"fri": "HH",
+"sat": "HH"
+},
+"timeCategory": "Happy Hour, Evening",
+"energyRamp": 3,
+"tags": "wine, seasonal, tasting, bites, community, elegant, mood, sip, lounge, casual, sunset, gathering",
+"price": "$$",
+"duration": 1.5
+},
+{
+"slug": "east-pole-coffee-co",
+"name": "East Pole Coffee Co.",
+"id": "682ab7fb-7eb7-414c-a471-52064622d15c",
+    "vibe": "bright, clean, refined, minimalist, fresh, smooth",
+"type": ["café", "coffee"],
+"lat": "33.8108168",
+"lon": "-84.378806",
+"link": "https://www.instagram.com/eastpolecoffeeco/?hl=en",
+"cover": "img/venues/East Pole Coffee Co.jpg",
+    "openNow": "TRUE",
+"hours": [
+"Sunday: 8:00 AM–6:00 PM",
+"Monday: 7:00 AM–6:00 PM",
+"Tuesday: 7:00 AM–6:00 PM",
+"Wednesday: 7:00 AM–6:00 PM",
+"Thursday: 7:00 AM–6:00 PM",
+"Friday: 7:00 AM–6:00 PM",
+"Saturday: 8:00 AM–6:00 PM"
+],
+"hoursNumeric": {
+"sun": {"open": 8, "close": 18},
+"mon": {"open": 7, "close": 18},
+"tue": {"open": 7, "close": 18},
+"wed": {"open": 7, "close": 18},
+"thu": {"open": 7, "close": 18},
+"fri": {"open": 7, "close": 18},
+"sat": {"open": 8, "close": 18}
+},
+"dayParts": {
+"sun": "A",
+"mon": "MD",
+"tue": "MD",
+"wed": "MD",
+"thu": "MD",
+"fri": "MD",
+"sat": "A"
+},
+"timeCategory": "Afternoon, Midday",
+"energyRamp": 2,
+"tags": "roast, pour, beans, filter, espresso, light, sip, brunch, mellow, local, grind, warm",
+"price": "$",
+"duration": 0.5
+}
 ]
 
 ;
