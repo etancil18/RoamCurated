@@ -7,7 +7,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { logEvent } from '@/lib/logEvent'
 
 interface ControlPanelProps {
-  city: 'atl' | 'nyc'
+  city: 'atl' | 'nyc' | null
   onCityChange: (city: 'atl' | 'nyc') => void
   searchTerm: string
   setSearchTerm: (term: string) => void
@@ -98,10 +98,6 @@ export function ControlPanel({
 
   return (
     <div className="w-full fixed top-0 left-0 z-[1000] bg-white dark:bg-zinc-950 border-b border-zinc-300 dark:border-zinc-700 px-4 py-2 text-xs grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 items-center rounded-b-xl shadow-sm">
-      <div className="flex gap-2">
-        <Button variant={city === 'atl' ? 'default' : 'outline'} onClick={() => { onCityChange('atl'); logEvent('city_changed', { metadata: { city: 'atl' } }) }} className="h-8 text-sm dark:text-white">ATL</Button>
-        <Button variant={city === 'nyc' ? 'default' : 'outline'} onClick={() => { onCityChange('nyc'); logEvent('city_changed', { metadata: { city: 'nyc' } }) }} className="h-8 text-sm dark:text-white">NYC</Button>
-      </div>
 
       <div className="space-y-1">
         <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Mode</Label>
@@ -115,10 +111,10 @@ export function ControlPanel({
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">AI Prompt</Label>
+        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">"What should we do?"</Label>
         <input
           type="text"
-          placeholder="What should we do right now?"
+          placeholder="dinner then grab drinks, etc"
           value={searchPrompt}
           onChange={(e) => {
             setSearchPrompt(e.target.value);

@@ -18,7 +18,7 @@ export default function VenueAdminPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [selectedVenueId, setSelectedVenueId] = useState<string>('')
 
-  const allowedEmails = ['evantancil@gmail.com', 'otheradmin@example.com']
+  const allowedEmails = ['evantancil@gmail.com', 'evantancil@roamcurated.com', 'fyejono@gmail.com', 'jonathangordon@roamcurated.com']
 
   useEffect(() => {
     async function checkUser() {

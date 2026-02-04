@@ -19,7 +19,7 @@ export type CrawlControlProps = {
   onRoute: (route: Venue[]) => void
   selectedThemeId: string
   customStart?: { lat: number; lon: number } | null
-  city: 'atl' | 'nyc'
+  city: 'atl' | 'nyc' | null
   onGenerateRoute: () => Promise<void>
 }
 
@@ -46,8 +46,14 @@ export default function CrawlControl({
   const [showFavoritesModal, setShowFavoritesModal] = useState(false)
   const [showEventsModal, setShowEventsModal] = useState(false)
   const [showHostModal, setShowHostModal] = useState(false)
+  const [showCrawlInfo, setShowCrawlInfo] = useState(false)
 
-  const { favorites, loading: loadingFavorites } = useFavorites(city)
+
+  const {
+  favorites,
+  loading: loadingFavorites,
+} = useFavorites(city ?? 'atl')
+
   const {
     interested: interestedEvents,
     loading: loadingEvents,
@@ -96,7 +102,7 @@ export default function CrawlControl({
         metadata: {
           num_stops: route.length,
           theme_id: selectedThemeId,
-          city,
+          city: city ?? 'all',
           route_ids: route.map((v) => v.id),
         },
       })
@@ -184,6 +190,7 @@ export default function CrawlControl({
 
   function handleClear() {
     onRoute([])
+    setShowCrawlInfo(false)
     const url = new URL(window.location.href)
     url.searchParams.delete('route')
     window.history.replaceState(null, '', url.toString())
@@ -239,126 +246,69 @@ export default function CrawlControl({
 
 
   return (
-    <div className="absolute bottom-4 left-4 z-[2000] bg-white p-3 rounded-xl shadow-lg w-72 border border-gray-300">
-      <button
-        onClick={handleGenerate}
-        disabled={loading || venues.length === 0}
-        className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
-      >
-        {loading ? 'Generating…' : 'Generate Crawl'}
-      </button>
+  <>
+    {(Array.isArray(route) && route.length > 0) || showCrawlInfo ? (
+      <div className="absolute bottom-5 left-4 z-[2000] bg-black/60 text-white px-3 py-2 rounded-md shadow w-72">
+        <div className="mt-1 space-y-2 text-sm">
+          <h3 className="font-semibold text-white text-base">Your Stops:</h3>
 
-      {themeName && (
-        <p className="text-xs text-gray-600 mt-1 italic text-center">
-          Theme: {themeName}
-        </p>
-      )}
+          {themeName && (
+            <p className="text-xs text-gray-300 italic text-center">
+              Theme: {themeName}
+            </p>
+          )}
 
-      {Array.isArray(route) && route.length > 0 && (
-        <div className="mt-3 space-y-2 text-sm">
-          <h3 className="font-semibold text-gray-800">Your Crawl:</h3>
-          <ol className="list-decimal pl-5 space-y-1 max-h-40 overflow-y-auto">
-            {route.map((stop, i) => (
-              <li key={i} className="flex items-center justify-between">
-                <a
-                  href={stop.link || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                >
-                  {stop.name}
-                </a>
-                <button
-                  onClick={() => handleModifyStop(stop, i)}
-                  className="text-red-500 text-xs hover:text-red-700 ml-2"
-                >
-                  ❌
-                </button>
-              </li>
-            ))}
-          </ol>
+          {Array.isArray(route) && route.length > 0 && (
+            <>
+              <ol className="list-decimal pl-5 space-y-1 max-h-40 overflow-y-auto">
+                {route.map((stop, i) => (
+                  <li key={i} className="flex items-center justify-between">
+                    <a
+                      href={stop.link || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:underline"
+                    >
+                      {stop.name}
+                    </a>
+                    <button
+                      onClick={() => handleModifyStop(stop, i)}
+                      className="text-red-400 text-xs hover:text-red-600 ml-2"
+                    >
+                      ❌
+                    </button>
+                  </li>
+                ))}
+              </ol>
 
-          <div className="pt-2 border-t border-gray-200 space-y-1">
-            <button
-              onClick={handleSaveToCloud}
-              className="w-full bg-blue-500 text-white py-1 rounded hover:bg-blue-600 transition"
-            >
-              💾 Save
-            </button>
-            <button
-              onClick={handleExportToMaps}
-              className="w-full bg-green-500 text-white py-1 rounded hover:bg-green-600 transition"
-            >
-              🌍 Export to Maps
-            </button>
-            <button
-              onClick={() => setShowFavoritesModal(true)}
-              className="w-full bg-yellow-500 text-white py-1 rounded hover:bg-yellow-600 transition"
-            >
-              ➕ Add from Favorites
-            </button>
-            <button
-              onClick={() => setShowEventsModal(true)}
-              className="w-full bg-stone-700 text-white py-1 rounded hover:bg-stone-800 transition"
-            >
-              🎟️ Add from Events
-            </button>
-
-            <button
-              onClick={() => setShowHostModal(true)}
-              className="w-full bg-fuchsia-600 text-white py-1 rounded hover:bg-fuchsia-700 transition"
-            >
-              🏠 Host this Crawl
-            </button>
-
-            <button
-              onClick={handleCopyLink}
-              className="w-full bg-purple-700 text-white py-1 rounded hover:bg-purple-800 transition"
-            >
-              🔗 {copied ? 'Copied!' : 'Copy Link'}
-            </button>
-            <button
-              onClick={handleClear}
-              className="w-full bg-red-500 text-white py-1 rounded hover:bg-red-600 transition"
-            >
-              ❌ Clear Route
-            </button>
-          </div>
+              <div className="pt-2 border-t border-gray-400 space-y-1">
+                <button onClick={handleSaveToCloud} className="w-full bg-blue-500 py-1 rounded">💾 Save</button>
+                <button onClick={handleExportToMaps} className="w-full bg-green-500 py-1 rounded">🌍 Export</button>
+                <button onClick={() => setShowFavoritesModal(true)} className="w-full bg-yellow-500 py-1 rounded">➕ Favorites</button>
+                <button onClick={() => setShowEventsModal(true)} className="w-full bg-stone-700 py-1 rounded">🎟️ Events</button>
+                <button onClick={() => setShowHostModal(true)} className="w-full bg-fuchsia-600 py-1 rounded">🏠 Host</button>
+                <button onClick={handleCopyLink} className="w-full bg-purple-700 py-1 rounded">🔗 {copied ? 'Copied!' : 'Copy Link'}</button>
+                <button onClick={handleClear} className="w-full bg-red-500 py-1 rounded">❌ Clear Route</button>
+              </div>
+            </>
+          )}
         </div>
-      )}
 
-      <ReplaceStopModal
-        modalData={modalData}
-        handleReplaceStop={handleReplaceStop}
-        handleRemoveStop={handleRemoveStop}
-        setModalData={setModalData}
-      />
-
-      <FavoritesModal
-        show={showFavoritesModal}
-        favorites={favorites}
-        loading={loadingFavorites}
-        route={route ?? []}
-        city={city}
-        onInsert={handleInsertFavoriteAt}
-        onClose={() => setShowFavoritesModal(false)}
-      />
-
-      <EventsModal
-        show={showEventsModal}
-        interestedEvents={interestedEvents}
-        loading={loadingEvents}
-        route={route ?? []}
-        city={city}
-        onInsert={handleInsertEventAt}
-        onClose={() => setShowEventsModal(false)}
-      />
-
-      <HostCrawlModal
-        show={showHostModal}
-        route={route ?? []}
-        onClose={() => setShowHostModal(false)}
-      />
-    </div>
-  )
+        <ReplaceStopModal {...{ modalData, handleReplaceStop, handleRemoveStop, setModalData }} />
+        <FavoritesModal show={showFavoritesModal} favorites={favorites} loading={loadingFavorites} route={route ?? []} city={city ?? 'atl'} onInsert={handleInsertFavoriteAt} onClose={() => setShowFavoritesModal(false)} />
+        <EventsModal show={showEventsModal} interestedEvents={interestedEvents} loading={loadingEvents} route={route ?? []} city={city ?? 'atl'} onInsert={handleInsertEventAt} onClose={() => setShowEventsModal(false)} />
+        <HostCrawlModal show={showHostModal} route={route ?? []} onClose={() => setShowHostModal(false)} />
+      </div>
+    ) : (
+      <div className="absolute bottom-10 left-4 z-[2000]">
+        <button
+          onClick={() => setShowCrawlInfo(true)}
+          className="bg-black/80 text-white px-3 py-2 rounded-md shadow"
+        >
+          📋 Show Crawl Info
+        </button>
+      </div>
+    )}
+  </>
+)
 }

@@ -54,7 +54,8 @@ SEQUENCING & INFERENCE
 - If user says "meet up with friends" and no type is clear, fallback to ["activity"]
 - Infer \`timeCategory\` from both explicit time cues and activity norms:
   - "club", "lounge", "bar" → "Late"
-  - "coffee", "brunch", "breakfast" → "Morning"
+  - "coffee", "breakfast" → "Morning"
+  - "brunch", "lunch" → "Midday"
   - "dinner", "cocktails" → "Evening"
 
 ───────────────────────

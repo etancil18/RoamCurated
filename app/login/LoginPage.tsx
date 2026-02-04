@@ -20,49 +20,45 @@ export default function LoginPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  useEffect(() => {
-    if (user) {
-      router.replace('/')
-    }
-  }, [user, router])
 
   async function handleAuth(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setSuccessMessage('')
-    setLoading(true)
+  e.preventDefault()
+  setError('')
+  setSuccessMessage('')
+  setLoading(true)
 
-    if (!email || !password) {
-      setError('Please enter both email and password.')
-      setLoading(false)
-      return
-    }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (!signInError) {
-      setLoading(false)
-      router.replace('/')
-      return
-    }
-
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    if (!signUpError) {
-      setLoading(false)
-      router.replace('/')
-      return
-    }
-
-    setError('Invalid login. You may need to set your password below.')
+  if (!email || !password) {
+    setError('Please enter both email and password.')
     setLoading(false)
+    return
   }
+
+  const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (!signInError && signInData?.session) {
+    setLoading(false)
+    router.replace('/')
+    return
+  }
+
+  const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
+    email,
+    password,
+  })
+
+  if (!signUpError && signUpData?.session) {
+    setLoading(false)
+    router.replace('/')
+    return
+  }
+
+  setError('Invalid login. You may need to set your password below.')
+  setLoading(false)
+}
+
 
   // ✅ NEW: Send password reset email with correct redirect
   async function handleForgotPassword() {

@@ -131,7 +131,7 @@ export const crawlThemes: CrawlTheme[] = [
   "description": "Low-stakes, high-vibes. Wander through warm corners, under-the-radar finds, and mood-lifting stops that feel like your own private soundtrack.",
   "stageFlow": [
     ["café", "coffee", "bakery"],
-    ["bookstore", "gallery", "lifestyly", "showroom"],
+    ["bookstore", "gallery", "lifestyle", "showroom"],
     "lunch",
     ["market", "park", "random gem"],
     ["wine bar", "cocktail", "dessert"]
@@ -144,9 +144,9 @@ export const crawlThemes: CrawlTheme[] = [
     ],
     "vibes": [
       "cozy", "lo-fi", "nostalgic", "unfussy", "quirky", "understated", "soft", "casual",
-      "warm", "breezy", "intimate", "quiet", "friendly", "mellow", "budget", "lowkey",
-      "inviting", "slow", "offbeat", "vintage", "neighborhood", "chill", "peaceful",
-      "affordable", "creative", "lighthearted", "playful", "daydreamy", "drifty",
+      "warm", "breezy", "green", "plants","intimate", "quiet", "friendly", "mellow", "budget", "lowkey",
+      "inviting", "slow", "offbeat", "vintage", "neighborhood", "chill", "peaceful", "analog", "vinyl",
+      "affordable", "creative", "lighthearted", "playful", "daydreamy", "drifty", "listening room", "tea",
       "sunny", "cloudy", "retro", "ambient", "low-volume", "unstructured"
     ],
     "timeOfDay": ["morning", "midday", "afternoon", "day", "evening"]
@@ -397,8 +397,8 @@ export const crawlThemes: CrawlTheme[] = [
   "description": "A day designed to both inspire and express—immerse in visual culture, design, and material spaces, then channel the energy into your own creative flow.",
   "stageFlow": [
     ["café", "coffee", "bakery", "tea"],
-    ["gallery", "museum", "bookstore"],
-    ["gallery", "showroom", "bookstore"],
+    ["gallery", "museum", "bookstore", "library"],
+    ["gallery", "showroom", "bookstore", "class"],
     "lunch",
     ["gallery", "showroom", "bookstore"],
     ["music", "park", "wine bar"]
@@ -488,7 +488,7 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Solo Explorer",
   description: "Cozy solo spots and hidden gems for wandering.",
   stageFlow: [
-  ["coffee", "cafe", "bakery"],
+  ["coffee", "cafe", "bakery", "tea"],
   ["random gem", "lifestyle", "showroom"],
   ["gallery", "museum"],
   ["lunch", "wine bar", "bookstore"],
@@ -600,10 +600,10 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Pages to Pours",
   description: "A cozy blend of books, art, and wine-soaked thought.",
   stageFlow: [
-  ["bookstore", "gallery"],
-  ["bakery", "cafe"],
-  ["bookstore", "gallery"],
-  ["coffee", "lunch"],
+  ["bookstore", "gallery", "library"],
+  ["bakery", "coffee"],
+  ["bookstore", "gallery", "library"],
+  ["cafe", "café", "lunch"],
   "wine bar"
 ],
   filters: {
@@ -749,7 +749,7 @@ export const crawlThemes: CrawlTheme[] = [
   stageFlow: [ "coffee",
   ["walk", "park", "garden"],
   "lunch",
-  ["fitness", "yoga", "coffee"]
+  ["fitness", "yoga", "pilates", "coffee"]
 ],
   filters: {
     timeOfDay: ["morning", "midday", "afternoon", "day"],

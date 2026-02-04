@@ -45,6 +45,11 @@ a {
   }
 }
 
+/* 🚫 Hide directions panel from Leaflet Routing Machine */
+.leaflet-routing-container {
+  display: none !important;
+}
+
 .custom-dot-marker {
   background-color: #007bff; /* blue */
   border: 2px solid white;

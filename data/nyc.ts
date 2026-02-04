@@ -3351,51 +3351,6 @@ const nycData = [
     "id": "3fa99fc1-0da6-415d-9cee-41a47f6747df"
     },
      {
-       "slug": "ponyboy",    "name": "Ponyboy",
-    "vibe": "Hip, Dance Floor, Lively, Social, Disco Ball, DJ, Rowdy, Electric, Flashy, Exciting",
-    "type": ["club", "dj"],
-        "lat": "40.7239657",
-    "lon": "-73.9507806",
-    "link": "https://www.instagram.com/ponyboyny/?hl=en",
-    "cover": "",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 6:00 PM–2:00 AM",
-    "Monday: Closed",
-    "Tuesday: Closed",
-    "Wednesday: Closed",
-    "Thursday: 6:00 PM–2:00 AM",
-    "Friday: 6:00 PM–2:00 AM",
-    "Saturday: 6:00 PM–2:00 AM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 18, "close": 26 },
-  "mon": null,
-  "tue": null,
-  "wed": null,
-  "thu": { "open": 18, "close": 26 },
-  "fri": { "open": 18, "close": 26 },
-  "sat": { "open": 18, "close": 26 } },
-    "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "L",
-    "sat": "L",
-    "sun": "E"
-  },
-  "timeCategory": "happyhour, evening, late",
-    "energyRamp": 3,
-    "tags": "music, dance, cocktails",
-    "price": "$",
-    "duration": 1.75,
-    "id": "291e47c8-5c2a-4f08-a895-c2e59dc8bc34"
-    },
-     {
        "slug": "twins-lounge",    "name": "Twins Lounge",
     "vibe": "Relaxed, Intimate, Neighborhood Bar, Pool Table, Upstairs Patio, Photo Booth, Nostalgic, Comfortable, Local",
     "type": ["bar", "patio", "cocktail"],
@@ -18279,7 +18234,7 @@ const nycData = [
     "id": "b71c82c3-9376-483d-bb44-3a407dea4efa"
     },
      {
-       "slug": "happy-medium",    "name": "Happy Medium",
+       "slug": "happy-medium-wb",    "name": "Happy Medium",
     "vibe": "Vibrant, Artsy, Eclectic, Fun, Casual, Date Night, Colorful, Creative, Playful, Social, Trendy",
     "type": "activity",
         "lat": "40.7332695",
