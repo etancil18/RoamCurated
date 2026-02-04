@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Venue } from "@/types/venue";
+import { inBrowser } from "@/lib/browser"; // ✅ Added import
 
 type CrawlSummaryProps = {
   route: Venue[];
@@ -13,6 +14,8 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
 
   function handleSaveToLocal() {
     if (route.length < 2) return alert("Need at least 2 stops to save.");
+    if (!inBrowser) return;
+
     const existing = localStorage.getItem("savedRoutes");
     const saved = existing ? JSON.parse(existing) : [];
     saved.push([...route]);
@@ -23,13 +26,18 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
   function handleExportToMaps() {
     const base = "https://www.google.com/maps/dir/";
     const waypoints = route.map((v) => `${v.lat},${v.lon}`).join("/");
+    if (!inBrowser) return;
     window.open(`${base}${waypoints}`, "_blank");
   }
 
   function handleCopyLink() {
+    if (!inBrowser) return;
+
     const ids = route.map((v) => v.id ?? v.name).join(",");
-    const url = new URL(window.location.href);
+    const href = window.location.href;
+    const url = new URL(href);
     url.searchParams.set("route", ids);
+
     navigator.clipboard.writeText(url.toString()).then(() => setCopied(true));
   }
 
@@ -40,7 +48,6 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
     }
   }, [copied]);
 
-  // Estimated arrival logic (assumes 75 min per stop)
   const baseTime = new Date();
   const estimateArrival = (index: number) => {
     const t = new Date(baseTime.getTime() + index * 75 * 60 * 1000);

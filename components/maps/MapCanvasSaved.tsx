@@ -16,6 +16,7 @@ import 'leaflet/dist/leaflet.css'
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
 import { logVenueImpression } from '@/lib/logVenue'
+import { inBrowser } from '@/lib/browser' // ✅ Added
 
 const defaultCenter: Record<'atl' | 'nyc', [number, number]> = {
   atl: [33.749, -84.388],
@@ -59,7 +60,6 @@ function numberedMarkerIcon(number: number): L.DivIcon {
   })
 }
 
-// Fetch a route from Mapbox once
 async function fetchRoutePolyline(
   venues: Venue[],
   token: string
@@ -88,7 +88,6 @@ export default function MapCanvasSaved({
   const mapRef = useRef<L.Map | null>(null)
   const [polyline, setPolyline] = useState<[number, number][]>([])
 
-  // fetch once
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
     if (!token) return
@@ -96,7 +95,6 @@ export default function MapCanvasSaved({
     fetchRoutePolyline(venues, token).then(setPolyline).catch(console.error)
   }, [venues])
 
-  // fit bounds
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
@@ -112,7 +110,6 @@ export default function MapCanvasSaved({
     map.fitBounds(bounds, { padding: [50, 50] })
   }, [venues, polyline])
 
-  // ✅ LOG VENUE IMPRESSIONS FOR SAVED CRAWL MAP
   useEffect(() => {
     venues.forEach((v, index) => {
       if (!v?.id) return
@@ -130,80 +127,79 @@ export default function MapCanvasSaved({
 
   const [enableScrollZoom, setEnableScrollZoom] = useState(false)
 
-useEffect(() => {
-  if (typeof window !== 'undefined') {
+  useEffect(() => {
+    if (!inBrowser) return
     setEnableScrollZoom(window.innerWidth >= 768)
-  }
-}, [])
+  }, [])
 
-return (
-  <div className="h-screen w-screen relative">
-    <MapContainer
-      center={defaultCenter[city]}
-      zoom={12}
-      style={{ height: '100vh', width: '100%' }}
-      scrollWheelZoom={enableScrollZoom}
-      dragging
-      zoomControl={false}
-    >
-      <MapRefSetter mapRef={mapRef} />
+  return (
+    <div className="h-screen w-screen relative">
+      <MapContainer
+        center={defaultCenter[city]}
+        zoom={12}
+        style={{ height: '100vh', width: '100%' }}
+        scrollWheelZoom={enableScrollZoom}
+        dragging
+        zoomControl={false}
+      >
+        <MapRefSetter mapRef={mapRef} />
 
-      <TileLayer
-        url={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
-      />
+        <TileLayer
+          url={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+        />
 
-      {polyline.length > 0 && (
-        <Polyline positions={polyline} color="cyan" weight={4} opacity={0.85} />
-      )}
+        {polyline.length > 0 && (
+          <Polyline positions={polyline} color="cyan" weight={4} opacity={0.85} />
+        )}
 
-      {venues.map((v, idx) => (
-        <Marker
-          key={`${v.id}-${idx}`}
-          position={[v.lat, v.lon]}
-          icon={numberedMarkerIcon(idx + 1)}
-        >
-          <Tooltip>{v.name}</Tooltip>
-          <Popup>
-            <div style={{ fontSize: 14 }}>
-              <strong>{v.name}</strong>
-              {v.cover && (
-                <img
-                  src={`/${v.cover}`}
-                  alt={v.name}
-                  style={{
-                    width: '100%',
-                    maxHeight: 140,
-                    objectFit: 'cover',
-                    margin: '6px 0',
-                  }}
-                />
-              )}
-              <div>
-                <a
-                  href={v.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                  onClick={() => {
-                    logVenueImpression('saved_crawl_more_info_click', {
-                      venue_id: v.id,
-                      metadata: {
-                        screen: 'saved_crawl_map',
-                        city,
-                        position_in_crawl: idx,
-                        name: v.name,
-                      },
-                    })
-                  }}
-                >
-                  More Info
-                </a>
+        {venues.map((v, idx) => (
+          <Marker
+            key={`${v.id}-${idx}`}
+            position={[v.lat, v.lon]}
+            icon={numberedMarkerIcon(idx + 1)}
+          >
+            <Tooltip>{v.name}</Tooltip>
+            <Popup>
+              <div style={{ fontSize: 14 }}>
+                <strong>{v.name}</strong>
+                {v.cover && (
+                  <img
+                    src={`/${v.cover}`}
+                    alt={v.name}
+                    style={{
+                      width: '100%',
+                      maxHeight: 140,
+                      objectFit: 'cover',
+                      margin: '6px 0',
+                    }}
+                  />
+                )}
+                <div>
+                  <a
+                    href={v.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                    onClick={() => {
+                      logVenueImpression('saved_crawl_more_info_click', {
+                        venue_id: v.id,
+                        metadata: {
+                          screen: 'saved_crawl_map',
+                          city,
+                          position_in_crawl: idx,
+                          name: v.name,
+                        },
+                      })
+                    }}
+                  >
+                    More Info
+                  </a>
+                </div>
               </div>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
-  </div>
-)
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  )
 }

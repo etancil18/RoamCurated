@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { getOrigin } from '@/lib/browser'
 
 export default function SharePreview() {
   const [copied, setCopied] = useState(false);
@@ -11,16 +12,18 @@ export default function SharePreview() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setShareUrl(`${window.location.origin}${pathname}`);
-    }
-  }, [pathname]);
+  if (typeof window === 'undefined') return;
+  const origin = getOrigin();
+  setShareUrl(`${origin}${pathname}`);
+}, [pathname]);
 
   const handleCopy = async () => {
     if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (typeof window !== 'undefined') {
+  await navigator.clipboard.writeText(shareUrl);
+  setCopied(true);
+  setTimeout(() => setCopied(false), 2000);
+}
   };
 
   return (

@@ -10,6 +10,7 @@ import { useUser } from '@/hooks/useUser'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import type { Venue } from '@/types/venue'
 import LeafletSetup from '@/components/maps/LeafletSetup'
+import { getHref } from '@/lib/browser'
 
 
 
@@ -91,12 +92,13 @@ useEffect(() => {
   setCustomStart(null)
   setRouteErrorMessage(null)
 
-  if (typeof window !== 'undefined') {
-    const url = new URL(window.location.href)
-    url.searchParams.delete('route')
-    window.history.replaceState(null, '', url.toString())
+  if (typeof window === 'undefined') return;
+
+const href = window.location.href;
+const url = new URL(href);
+url.searchParams.delete('route');
+window.history.replaceState(null, '', url.toString());
   }
-}
 
 
   const handleCityChange = useCallback((slug: string | null) => {
@@ -197,11 +199,13 @@ useEffect(() => {
       setRouteErrorMessage(null)
 
       const ids = finalRoute.map((v) => v.id ?? v.name).join(',')
-      if (typeof window !== 'undefined') {
-  const url = new URL(window.location.href)
-  url.searchParams.set('route', ids)
-  window.history.replaceState(null, '', url.toString())
-}
+
+if (typeof window === 'undefined') return;
+
+const href = window.location.href;
+const url = new URL(href);
+url.searchParams.set('route', ids);
+window.history.replaceState(null, '', url.toString());
 
 
       const origin = { lat: finalRoute[0].lat, lng: finalRoute[0].lon }
