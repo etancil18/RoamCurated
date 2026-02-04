@@ -42,6 +42,11 @@ export default function MapWrapper() {
   const [crawlTime, setCrawlTime] = useState('')
   const [searchPrompt, setSearchPrompt] = useState('')
   const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
+
+useEffect(() => {
+  setHasMounted(true)
+}, [])
 
   const { user } = useUser()
   const userId = user?.id
@@ -304,18 +309,17 @@ export default function MapWrapper() {
         onGenerateRoute={handleGenerateRoute}
       />
 
-      <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
-        {typeof window !== 'undefined' && (
-          <MapCanvas
-            route={route}
-            onMapClick={handleMapClick}
-            themeId={selectedThemeId}
-            travelMode={travelMode}
-            showLiveEventsOnly={showLiveEventsOnly}
-            onCityChange={handleCityChange}
-          />
-        )}
-      </Suspense>
+      {hasMounted && (
+  <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
+    <MapCanvas
+      route={route}
+      onMapClick={handleMapClick}
+      themeId={selectedThemeId}
+      travelMode={travelMode}
+      showLiveEventsOnly={showLiveEventsOnly}
+      onCityChange={handleCityChange}
+    />
+  </Suspense>)}
     </main>
   )
 }
