@@ -66,6 +66,7 @@ export default function MapCanvas({
 }: Props) {
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [showCitySelector, setShowCitySelector] = useState(true)
+  const [enableScrollZoom, setEnableScrollZoom] = useState(false) // ✅ Added
 
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, L.Marker>>({})
@@ -91,6 +92,13 @@ export default function MapCanvas({
   const lineColor = THEME_COLORS[themeId ?? ''] ?? 'cyan'
 
   useMapInitialization(mapRef.current)
+
+  // ✅ Safe window usage for scroll zoom
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setEnableScrollZoom(window.innerWidth >= 768)
+    }
+  }, [])
 
   // Only center when city changes
   useEffect(() => {
@@ -127,7 +135,7 @@ export default function MapCanvas({
         zoom={mapZoom}
         style={{ height: '100vh', width: '100vw' }}
         zoomControl={false}
-        scrollWheelZoom={typeof window !== 'undefined' && window.innerWidth >= 768}
+        scrollWheelZoom={enableScrollZoom} // ✅ Safe usage
         dragging={true}
       >
         <MapRefSetter mapRef={mapRef} />
