@@ -128,74 +128,82 @@ export default function MapCanvasSaved({
     })
   }, [venues, city])
 
-  return (
-    <div className="h-screen w-screen relative">
-      <MapContainer
-        center={defaultCenter[city]}
-        zoom={12}
-        style={{ height: '100vh', width: '100%' }}
-        scrollWheelZoom={typeof window !== 'undefined' && window.innerWidth >= 768}
-        dragging
-        zoomControl={false}
-      >
-        <MapRefSetter mapRef={mapRef} />
+  const [enableScrollZoom, setEnableScrollZoom] = useState(false)
 
-        <TileLayer
-          url={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
-        />
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    setEnableScrollZoom(window.innerWidth >= 768)
+  }
+}, [])
 
-        {polyline.length > 0 && (
-          <Polyline positions={polyline} color="cyan" weight={4} opacity={0.85} />
-        )}
+return (
+  <div className="h-screen w-screen relative">
+    <MapContainer
+      center={defaultCenter[city]}
+      zoom={12}
+      style={{ height: '100vh', width: '100%' }}
+      scrollWheelZoom={enableScrollZoom}
+      dragging
+      zoomControl={false}
+    >
+      <MapRefSetter mapRef={mapRef} />
 
-        {venues.map((v, idx) => (
-          <Marker
-            key={`${v.id}-${idx}`}
-            position={[v.lat, v.lon]}
-            icon={numberedMarkerIcon(idx + 1)}
-          >
-            <Tooltip>{v.name}</Tooltip>
-            <Popup>
-              <div style={{ fontSize: 14 }}>
-                <strong>{v.name}</strong>
-                {v.cover && (
-                  <img
-                    src={`/${v.cover}`}
-                    alt={v.name}
-                    style={{
-                      width: '100%',
-                      maxHeight: 140,
-                      objectFit: 'cover',
-                      margin: '6px 0',
-                    }}
-                  />
-                )}
-                <div>
-                  <a
-                    href={v.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                    onClick={() => {
-                      logVenueImpression('saved_crawl_more_info_click', {
-                        venue_id: v.id,
-                        metadata: {
-                          screen: 'saved_crawl_map',
-                          city,
-                          position_in_crawl: idx,
-                          name: v.name,
-                        },
-                      })
-                    }}
-                  >
-                    More Info
-                  </a>
-                </div>
+      <TileLayer
+        url={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+      />
+
+      {polyline.length > 0 && (
+        <Polyline positions={polyline} color="cyan" weight={4} opacity={0.85} />
+      )}
+
+      {venues.map((v, idx) => (
+        <Marker
+          key={`${v.id}-${idx}`}
+          position={[v.lat, v.lon]}
+          icon={numberedMarkerIcon(idx + 1)}
+        >
+          <Tooltip>{v.name}</Tooltip>
+          <Popup>
+            <div style={{ fontSize: 14 }}>
+              <strong>{v.name}</strong>
+              {v.cover && (
+                <img
+                  src={`/${v.cover}`}
+                  alt={v.name}
+                  style={{
+                    width: '100%',
+                    maxHeight: 140,
+                    objectFit: 'cover',
+                    margin: '6px 0',
+                  }}
+                />
+              )}
+              <div>
+                <a
+                  href={v.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                  onClick={() => {
+                    logVenueImpression('saved_crawl_more_info_click', {
+                      venue_id: v.id,
+                      metadata: {
+                        screen: 'saved_crawl_map',
+                        city,
+                        position_in_crawl: idx,
+                        name: v.name,
+                      },
+                    })
+                  }}
+                >
+                  More Info
+                </a>
               </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-    </div>
-  )
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
+  </div>
+)
 }

@@ -1,14 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Copy } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function SharePreview() {
   const [copied, setCopied] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
   const pathname = usePathname();
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}${pathname}` : '';
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setShareUrl(`${window.location.origin}${pathname}`);
+    }
+  }, [pathname]);
 
   const handleCopy = async () => {
     if (!shareUrl) return;
