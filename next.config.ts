@@ -1,6 +1,7 @@
+import path from 'path'
+import type { NextConfig } from 'next'
 
-
-const nextConfig = {
+const nextConfig: NextConfig = {
   reactStrictMode: true,
   typescript: {
     ignoreBuildErrors: true,
@@ -8,7 +9,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
   },
+  outputFileTracingRoot: path.join(__dirname), // ✅ added to fix workspace root issue
 }
 
 export default nextConfig
-
