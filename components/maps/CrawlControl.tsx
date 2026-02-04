@@ -73,46 +73,52 @@ export default function CrawlControl({
   }
 
   async function handleSaveToCloud() {
-    if (!Array.isArray(route) || route.length < 2) {
-      alert('Need at least 2 stops to save.')
-      return
-    }
-
-    const name = prompt('Name this crawl?')
-    if (!name) return
-
-    const slugBase = name.toLowerCase().replace(/\s+/g, '-')
-    const slug = `${slugBase}-${nanoid(6)}`
-    const sourceUrl = `${window.location.origin}/crawl/${slug}`
-
-    try {
-      const res = await fetch('/api/routes/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, stops: route, city, slug, sourceUrl }),
-      })
-
-      if (!res.ok) {
-        const msg = await res.text()
-        console.error('Save failed:', msg)
-        throw new Error(msg)
-      }
-
-      logEvent('crawl_saved', {
-        metadata: {
-          num_stops: route.length,
-          theme_id: selectedThemeId,
-          city: city ?? 'all',
-          route_ids: route.map((v) => v.id),
-        },
-      })
-
-      alert('✅ Saved to your account!')
-    } catch (err: any) {
-      console.error(err)
-      alert('❌ Error saving route.')
-    }
+  if (!Array.isArray(route) || route.length < 2) {
+    alert('Need at least 2 stops to save.')
+    return
   }
+
+  const name = prompt('Name this crawl?')
+  if (!name) return
+
+  const slugBase = name.toLowerCase().replace(/\s+/g, '-')
+  const slug = `${slugBase}-${nanoid(6)}`
+
+  // ✅ SAFE: guard window usage for SSR
+  const sourceUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/crawl/${slug}`
+      : `/crawl/${slug}`
+
+  try {
+    const res = await fetch('/api/routes/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, stops: route, city, slug, sourceUrl }),
+    })
+
+    if (!res.ok) {
+      const msg = await res.text()
+      console.error('Save failed:', msg)
+      throw new Error(msg)
+    }
+
+    logEvent('crawl_saved', {
+      metadata: {
+        num_stops: route.length,
+        theme_id: selectedThemeId,
+        city: city ?? 'all',
+        route_ids: route.map((v) => v.id),
+      },
+    })
+
+    alert('✅ Saved to your account!')
+  } catch (err: any) {
+    console.error(err)
+    alert('❌ Error saving route.')
+  }
+}
+
 
   function handleExportToMaps() {
     if (!Array.isArray(route) || route.length < 2) return

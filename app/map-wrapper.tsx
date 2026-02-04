@@ -87,13 +87,17 @@ useEffect(() => {
   }
 
   const handleClearRoute = () => {
-    setRoute(undefined)
-    setCustomStart(null)
-    setRouteErrorMessage(null)
+  setRoute(undefined)
+  setCustomStart(null)
+  setRouteErrorMessage(null)
+
+  if (typeof window !== 'undefined') {
     const url = new URL(window.location.href)
     url.searchParams.delete('route')
     window.history.replaceState(null, '', url.toString())
   }
+}
+
 
   const handleCityChange = useCallback((slug: string | null) => {
     setSelectedCity(slug)
@@ -193,9 +197,12 @@ useEffect(() => {
       setRouteErrorMessage(null)
 
       const ids = finalRoute.map((v) => v.id ?? v.name).join(',')
-      const url = new URL(window.location.href)
-      url.searchParams.set('route', ids)
-      window.history.replaceState(null, '', url.toString())
+      if (typeof window !== 'undefined') {
+  const url = new URL(window.location.href)
+  url.searchParams.set('route', ids)
+  window.history.replaceState(null, '', url.toString())
+}
+
 
       const origin = { lat: finalRoute[0].lat, lng: finalRoute[0].lon }
       const destination = { lat: finalRoute.at(-1)?.lat ?? 0, lng: finalRoute.at(-1)?.lon ?? 0 }
