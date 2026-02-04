@@ -84,7 +84,8 @@ export default function CrawlControl({
 
     const slugBase = name.toLowerCase().replace(/\s+/g, '-')
     const slug = `${slugBase}-${nanoid(6)}`
-    const sourceUrl = inBrowser ? `${getOrigin()}/crawl/${slug}` : `/crawl/${slug}`
+    const sourceUrl = inBrowser() ? `${getOrigin()}/crawl/${slug}` : `/crawl/${slug}`
+
 
     try {
       const res = await fetch('/api/routes/save', {
