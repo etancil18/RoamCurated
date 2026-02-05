@@ -12,7 +12,7 @@ type Props = {
   onMapClick?: (lat: number, lon: number) => void
   defaultCenter: [number, number]
   setUserPosition: (pos: [number, number]) => void
-  mapRef: React.MutableRefObject<LeafletMap | null> // ✅ added
+  mapRef: React.MutableRefObject<LeafletMap | null>
 }
 
 const USA_CENTER: [number, number] = [37.8, -96.9]
@@ -25,47 +25,44 @@ export default function MapEffectController({
   onMapClick,
   defaultCenter,
   setUserPosition,
-  mapRef, // ✅ added
+  mapRef,
 }: Props) {
   const map = useMap()
 
-  // ✅ store map instance in ref
+  // ✅ Store Leaflet map ref
   useEffect(() => {
     if (map) {
       mapRef.current = map
     }
+
+    return () => {
+      mapRef.current = null
+    }
   }, [map, mapRef])
 
-  /* ------------------------------------------------------------
-     1. Track City Change → Animate from US → City
-  ------------------------------------------------------------- */
+  // ✅ Fly to city or USA fallback
   useEffect(() => {
-  if (!map) return
+    if (!map) return
 
-  if (!city || city === '') {
-    // No city selected → fly out to USA view
-    map.flyTo(USA_CENTER, USA_ZOOM, {
-      animate: true,
-      duration: 1.5,
-    })
-    return
-  }
+    if (!city || city === '') {
+      map.flyTo(USA_CENTER, USA_ZOOM, {
+        animate: true,
+        duration: 1.5,
+      })
+      return
+    }
 
-  // City selected → zoom in
-  const timeout = setTimeout(() => {
-    map.flyTo(defaultCenter, CITY_ZOOM, {
-      animate: true,
-      duration: 1.75,
-    })
-  }, 300)
+    const timeout = setTimeout(() => {
+      map.flyTo(defaultCenter, CITY_ZOOM, {
+        animate: true,
+        duration: 1.75,
+      })
+    }, 300)
 
-  return () => clearTimeout(timeout)
-}, [city, map, defaultCenter])
+    return () => clearTimeout(timeout)
+  }, [city, map, defaultCenter])
 
-
-  /* ------------------------------------------------------------
-     2. Fit Bounds if Route Active
-  ------------------------------------------------------------- */
+  // ✅ Fit bounds if route exists
   useEffect(() => {
     if (!map || !route || route.length < 2) return
 
@@ -73,9 +70,7 @@ export default function MapEffectController({
     map.fitBounds(bounds, { padding: [50, 50] })
   }, [map, route])
 
-  /* ------------------------------------------------------------
-     3. Click Handler Propagation
-  ------------------------------------------------------------- */
+  // ✅ Click handler propagation
   useEffect(() => {
     if (!map || !onMapClick) return
 
@@ -84,22 +79,20 @@ export default function MapEffectController({
     }
 
     map.on('click', handler)
-
     return () => {
       map.off('click', handler)
     }
   }, [map, onMapClick])
 
-  /* ------------------------------------------------------------
-     4. Track User Location
-  ------------------------------------------------------------- */
-    useEffect(() => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
+  // ✅ SSR-safe geolocation
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.navigator?.geolocation) {
       setUserPosition(defaultCenter)
       return
     }
 
-    navigator.geolocation.getCurrentPosition(
+    const geo = window.navigator.geolocation
+    geo.getCurrentPosition(
       (position) => {
         setUserPosition([position.coords.latitude, position.coords.longitude])
       },
@@ -115,10 +108,7 @@ export default function MapEffectController({
     )
   }, [city, defaultCenter, setUserPosition])
 
-
-  /* ------------------------------------------------------------
-     5. Log Analytics Event (On City Change)
-  ------------------------------------------------------------- */
+  // ✅ Log analytics
   useEffect(() => {
     logEvent('map_opened', {
       metadata: {
