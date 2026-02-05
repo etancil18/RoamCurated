@@ -1,4 +1,4 @@
-'use client'
+
 
 import { useEffect } from 'react'
 import L, { Map as LeafletMap } from 'leaflet'

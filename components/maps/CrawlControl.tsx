@@ -1,4 +1,4 @@
-'use client'
+
 
 import { useState } from 'react'
 import type { Venue } from '@/types/venue'
@@ -166,7 +166,7 @@ export default function CrawlControl({
       metadata: { index, city },
     })
   }
-  
+
   function handleCopyLink() {
     if (!Array.isArray(route) || route.length === 0 || !inBrowser()) return
 

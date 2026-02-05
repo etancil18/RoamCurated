@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import VenueSelector from './VenueSelector';
-import SponsorMapPreview from './SponsorMapPreview';
+import { SponsorMapPreview } from '@/components/maps/map-dynamic-wrapper'
+
 
 type Props = {
   title: string;

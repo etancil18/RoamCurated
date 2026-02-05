@@ -1,5 +1,3 @@
-'use client'
-
 import {
   MapContainer,
   TileLayer,
@@ -8,12 +6,15 @@ import {
 import { useEffect, useRef, useState, useCallback } from 'react'
 import L, { Map as LeafletMap } from 'leaflet'
 
-import VenueMarker from './VenueMarker'
-import RouteControl from '@/components/RouteControl'
-import UserLocationMarker from './UserLocationMarker'
-import MapEffectController from './MapEffectController'
+import {
+  VenueMarker,
+  RouteControl,
+  UserLocationMarker,
+  MapEffectController,
+  CityOverviewMarkers,
+} from '@/components/maps/map-dynamic-wrapper'
+
 import CitySelector from './CitySelector'
-import CityOverviewMarkers from './CityOverviewMarkers'
 
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { useMapInitialization } from '@/hooks/useMapInitialization'
@@ -23,6 +24,7 @@ import { CITY_CONFIGS } from '@/config/cities'
 import { THEME_COLORS } from '@/config/themeColors'
 
 import type { Venue } from '@/types/venue'
+
 
 import 'leaflet/dist/leaflet.css'
 delete (L.Icon.Default.prototype as any)._getIconUrl

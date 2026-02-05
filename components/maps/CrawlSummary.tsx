@@ -1,8 +1,8 @@
-'use client'
 
-import { useEffect, useState } from 'react'
+
+import { useState, useEffect } from 'react'
 import type { Venue } from '@/types/venue'
-import { inBrowser, getHref } from '@/lib/browser'
+import { getHref } from '@/lib/browser'
 
 type CrawlSummaryProps = {
   route: Venue[]
@@ -11,11 +11,6 @@ type CrawlSummaryProps = {
 
 export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
   const [copied, setCopied] = useState(false)
-  const [hasMounted, setHasMounted] = useState(false)
-
-  useEffect(() => {
-    setHasMounted(true)
-  }, [])
 
   useEffect(() => {
     if (copied) {
@@ -25,7 +20,7 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
   }, [copied])
 
   function handleSaveToLocal() {
-    if (!hasMounted || route.length < 2 || !inBrowser()) return
+    if (route.length < 2) return
 
     const existing = localStorage.getItem('savedRoutes')
     const saved = existing ? JSON.parse(existing) : []
@@ -35,16 +30,12 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
   }
 
   function handleExportToMaps() {
-    if (!hasMounted || !inBrowser()) return
-
     const base = 'https://www.google.com/maps/dir/'
     const waypoints = route.map((v) => `${v.lat},${v.lon}`).join('/')
     window.open(`${base}${waypoints}`, '_blank')
   }
 
   function handleCopyLink() {
-    if (!hasMounted || !inBrowser()) return
-
     const ids = route.map((v) => v.id ?? v.name).join(',')
     const href = getHref()
     const url = new URL(href)
@@ -95,21 +86,18 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
         <button
           onClick={handleSaveToLocal}
           className="w-full bg-blue-500 text-white py-1 rounded hover:bg-blue-600 transition"
-          disabled={!hasMounted}
         >
           💾 Save
         </button>
         <button
           onClick={handleExportToMaps}
           className="w-full bg-green-500 text-white py-1 rounded hover:bg-green-600 transition"
-          disabled={!hasMounted}
         >
           🌍 Open in Google Maps
         </button>
         <button
           onClick={handleCopyLink}
           className="w-full bg-gray-700 text-white py-1 rounded hover:bg-gray-800 transition"
-          disabled={!hasMounted}
         >
           🔗 {copied ? 'Link Copied!' : 'Copy Share Link'}
         </button>

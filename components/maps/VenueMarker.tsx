@@ -1,4 +1,4 @@
-'use client'
+
 
 import { Marker, Popup, Tooltip } from 'react-leaflet'
 import L from 'leaflet'
@@ -18,10 +18,6 @@ type Props = {
   eventsByVenueId: Record<string, any[]>
 }
 
-/* ============================================================
-   COLOR MAPS (moved out of MapCanvas)
-   ============================================================ */
-
 const daypartColorMap: Record<string, string> = {
   M: 'blue',
   MD: 'green',
@@ -29,26 +25,6 @@ const daypartColorMap: Record<string, string> = {
   HH: 'gold',
   E: 'violet',
   L: 'red',
-}
-
-function numberedMarkerIcon(number: number) {
-  return new L.DivIcon({
-    className: 'numbered-marker',
-    html: `<div style="background:#333;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;">${number}</div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-  })
-}
-
-function coloredMarkerIcon(color: string) {
-  return new L.Icon({
-    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-    iconSize: [18, 30],
-    iconAnchor: [9, 30],
-    popupAnchor: [1, -28],
-    shadowSize: [30, 30],
-  })
 }
 
 export default function VenueMarker({
@@ -59,54 +35,47 @@ export default function VenueMarker({
   markerRefs,
   eventsByVenueId,
 }: Props) {
-  /* ============================================================
-     DERIVED STATE
-     ============================================================ */
-
-  const todayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][
-    new Date().getDay()
-  ]
-
+  const todayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][new Date().getDay()]
   const isOpen = isVenueOpenNow(v)
   const dp = v.dayParts?.[todayKey] || ''
   const color = isOpen ? daypartColorMap[dp] || 'gray' : 'black'
 
   const icon = useMemo(() => {
-    return isRouteMode
-      ? numberedMarkerIcon(index + 1)
-      : coloredMarkerIcon(color)
-  }, [isRouteMode, index, color])
+    if (isRouteMode) {
+      return new L.DivIcon({
+        className: 'numbered-marker',
+        html: `<div style="background:#333;color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;">${index + 1}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
+      })
+    }
+
+    return new L.Icon({
+      iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+      iconSize: [18, 30],
+      iconAnchor: [9, 30],
+      popupAnchor: [1, -28],
+      shadowSize: [30, 30],
+    })
+  }, [index, color, isRouteMode])
 
   const firstCandidate = coverCandidates(v)[0]
   const venueEvents = eventsByVenueId[v.id] ?? []
-
-  /* ============================================================
-     UPCOMING EVENTS
-     ============================================================ */
 
   const upcomingEvents = useMemo(() => {
     const now = Date.now()
     return venueEvents
       .filter((ev) => ev.starts_at && new Date(ev.starts_at).getTime() >= now)
-      .sort(
-        (a, b) =>
-          new Date(a.starts_at).getTime() -
-          new Date(b.starts_at).getTime()
-      )
+      .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
   }, [venueEvents])
 
   const todayHours = useMemo(() => {
     if (!Array.isArray(v.hours)) return 'N/A'
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' })
-    const match = v.hours.find((line: string) =>
-      line.startsWith(today)
-    )
+    const match = v.hours.find((line: string) => line.startsWith(today))
     return match ? match.split(': ').slice(1).join(': ') : 'N/A'
   }, [v.hours])
-
-  /* ============================================================
-     RENDER
-     ============================================================ */
 
   return (
     <Marker

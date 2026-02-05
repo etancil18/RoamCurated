@@ -1,22 +1,20 @@
-// Updated for SSR-safety
 'use client'
-
 
 import dynamic from 'next/dynamic'
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useCityData } from '@/hooks/useCityData'
-import CrawlControl from '@/components/maps/CrawlControl'
 import { ControlPanel } from '@/components/ControlPanel'
 import { useUser } from '@/hooks/useUser'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import type { Venue } from '@/types/venue'
-import LeafletSetup from '@/components/maps/LeafletSetup'
 import { inBrowser, getHref } from '@/lib/browser'
 
-
-const MapCanvas = dynamic(() => import('@/components/maps/MapCanvas'), {
-ssr: false,
-})
+// ✅ SSR-safe dynamic imports from your wrapper
+import {
+  CrawlControl,
+  LeafletSetup,
+  MapCanvas,
+} from '@/components/maps/map-dynamic-wrapper'
 
 
 export default function MapWrapper() {
