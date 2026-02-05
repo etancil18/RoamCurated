@@ -38,7 +38,6 @@ const USA_ZOOM = 4
 function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
   const map = useMap()
 
-  // ✅ Call hook directly — inside a component, top level
   useMapInitialization(map)
 
   useEffect(() => {
@@ -71,7 +70,6 @@ export default function MapCanvas({
 }: Props) {
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [showCitySelector, setShowCitySelector] = useState(true)
-  const [enableScrollZoom, setEnableScrollZoom] = useState(false)
 
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, L.Marker>>({})
@@ -95,12 +93,6 @@ export default function MapCanvas({
 
   const visibleRoute = route?.length && route.length > 1 ? route : []
   const lineColor = THEME_COLORS[themeId ?? ''] ?? 'cyan'
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setEnableScrollZoom(window.innerWidth >= 768)
-    }
-  }, [])
 
   useEffect(() => {
     if (!selectedCity || !mapRef.current) return
@@ -134,7 +126,7 @@ export default function MapCanvas({
         zoom={mapZoom}
         style={{ height: '100vh', width: '100vw' }}
         zoomControl={false}
-        scrollWheelZoom={enableScrollZoom}
+        scrollWheelZoom={typeof window !== 'undefined' && window.innerWidth >= 768}
         dragging={true}
       >
         <MapRefSetter mapRef={mapRef} />
