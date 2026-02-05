@@ -7,13 +7,21 @@ export function useMapInitialization(map: LeafletMap | null) {
   const [hasMounted, setHasMounted] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
 
-  // ✅ Ensure this only runs on the client
   useEffect(() => {
     setHasMounted(true)
-    const update = () => setIsDesktop(window.innerWidth >= 768)
+
+    const update = () => {
+      if (typeof window !== 'undefined') {
+        setIsDesktop(window.innerWidth >= 768)
+      }
+    }
+
     update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', update)
+      return () => window.removeEventListener('resize', update)
+    }
   }, [])
 
   useEffect(() => {

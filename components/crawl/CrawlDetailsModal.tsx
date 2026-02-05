@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { inBrowser, getOrigin } from '@/lib/browser' // ✅ Added for SSR safety
+import { inBrowser, getOrigin } from '@/lib/browser'
 
 type CrawlDetailsModalProps = {
   stops: {
@@ -16,17 +16,20 @@ export default function CrawlDetailsModal({ stops, slug }: CrawlDetailsModalProp
   const [isOpen, setIsOpen] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
 
+  // ✅ Safe URL construction
   useEffect(() => {
-    if (!inBrowser) return
+    if (!inBrowser()) return
     setShareUrl(`${getOrigin()}/crawl/${slug}`)
   }, [slug])
 
   const handleCopy = async () => {
-    if (!inBrowser) return
+    if (typeof window === 'undefined') return
 
     try {
-      await navigator.clipboard.writeText(shareUrl)
-      alert('Link copied!')
+      if (window.navigator?.clipboard) {
+        await window.navigator.clipboard.writeText(shareUrl)
+        alert('Link copied!')
+      }
     } catch {
       alert('Failed to copy link')
     }

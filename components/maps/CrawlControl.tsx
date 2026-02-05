@@ -128,9 +128,9 @@ export default function CrawlControl({
     const base = 'https://www.google.com/maps/dir/'
     const waypoints = route.map((v) => `${v.lat},${v.lon}`).join('/')
 
-    if (inBrowser()) {
-      window.open(`${base}${waypoints}`, '_blank')
-    }
+    if (typeof window !== 'undefined') {
+  window.open(`${base}${waypoints}`, '_blank')
+}
   }
 
   function handleInsertFavoriteAt(newVenue: Venue, index: number) {
@@ -168,14 +168,15 @@ export default function CrawlControl({
   }
 
   function handleCopyLink() {
-    if (!Array.isArray(route) || route.length === 0 || !inBrowser()) return
+  if (!Array.isArray(route) || route.length === 0 || typeof window === 'undefined') return
 
-    const ids = route.map((v) => v.id ?? v.name).join(',')
-    const href = getHref()
-    const url = new URL(href)
-    url.searchParams.set('route', ids)
+  const ids = route.map((v) => v.id ?? v.name).join(',')
+  const href = getHref()
+  const url = new URL(href)
+  url.searchParams.set('route', ids)
 
-    navigator.clipboard.writeText(url.toString()).then(() => {
+  if (window.navigator?.clipboard) {
+    window.navigator.clipboard.writeText(url.toString()).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
@@ -187,6 +188,8 @@ export default function CrawlControl({
       },
     })
   }
+}
+
 
   function handleClear() {
     onRoute([])
@@ -196,7 +199,9 @@ export default function CrawlControl({
       const href = getHref()
       const url = new URL(href)
       url.searchParams.delete('route')
-      window.history.replaceState(null, '', url.toString())
+      if (typeof window !== 'undefined') {
+  window.history.replaceState(null, '', url.toString())
+}
     }
 
     setCopied(false)

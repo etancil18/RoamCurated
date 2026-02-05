@@ -27,14 +27,7 @@ import { THEME_COLORS } from '@/config/themeColors'
 
 import type { Venue } from '@/types/venue'
 
-
 import 'leaflet/dist/leaflet.css'
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
-})
 
 const USA_CENTER: [number, number] = [37.8, -96.9]
 const USA_ZOOM = 4
@@ -79,6 +72,18 @@ export default function MapCanvas({
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, L.Marker>>({})
 
+  // ✅ Moved SSR-unsafe Leaflet icon config into useEffect
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    delete (L.Icon.Default.prototype as any)._getIconUrl
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+    })
+  }, [])
+
   const handleSelectCity = useCallback((slug: string | null) => {
     setSelectedCity(slug)
     setShowCitySelector(false)
@@ -115,7 +120,6 @@ export default function MapCanvas({
 
   return (
     <div className="h-screen w-screen relative">
-
       <div className="absolute bottom-11 right-4 z-[1100]">
         <button
           onClick={() => setShowCitySelector(prev => !prev)}

@@ -10,7 +10,8 @@ type UseUserLocationOptions = {
 }
 
 /**
- * Handles geolocation logic and fallback to city center if unavailable
+ * Handles geolocation logic and fallback to city center if unavailable.
+ * Fully SSR-safe for Next.js / Vercel.
  */
 export function useUserLocation(options: UseUserLocationOptions = {}) {
   const { fallback = [37.8, -96.9], enabled = true } = options
@@ -20,13 +21,19 @@ export function useUserLocation(options: UseUserLocationOptions = {}) {
   useEffect(() => {
     if (!enabled) return
 
-    if (!navigator.geolocation) {
+    // ✅ CRITICAL SSR GUARD
+    if (typeof window === 'undefined') {
+      setPosition(fallback)
+      return
+    }
+
+    if (!window.navigator?.geolocation) {
       console.warn('[useUserLocation] Geolocation not supported')
       setPosition(fallback)
       return
     }
 
-    navigator.geolocation.getCurrentPosition(
+    window.navigator.geolocation.getCurrentPosition(
       (pos) => {
         setPosition([pos.coords.latitude, pos.coords.longitude])
       },

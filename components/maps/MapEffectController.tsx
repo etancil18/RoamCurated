@@ -93,8 +93,8 @@ export default function MapEffectController({
   /* ------------------------------------------------------------
      4. Track User Location
   ------------------------------------------------------------- */
-  useEffect(() => {
-    if (!navigator.geolocation) {
+    useEffect(() => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
       setUserPosition(defaultCenter)
       return
     }
@@ -114,6 +114,7 @@ export default function MapEffectController({
       }
     )
   }, [city, defaultCenter, setUserPosition])
+
 
   /* ------------------------------------------------------------
      5. Log Analytics Event (On City Change)

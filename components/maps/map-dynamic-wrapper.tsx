@@ -26,11 +26,6 @@ export const CrawlControl = dynamic(
   { ssr: false }
 )
 
-export const CrawlSummary = dynamic(
-  () => import('@/components/maps/CrawlSummary'),
-  { ssr: false }
-)
-
 export const LeafletSetup = dynamic(
   () => import('@/components/maps/LeafletSetup'),
   { ssr: false }

@@ -19,10 +19,16 @@ export default function SharePreview() {
 
   const handleCopy = async () => {
     if (!shareUrl) return
-    if (inBrowser()) {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+
+    // ✅ Safely access clipboard API
+    if (typeof window !== 'undefined' && window.navigator?.clipboard) {
+      try {
+        await window.navigator.clipboard.writeText(shareUrl)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      } catch (err) {
+        console.error('[SharePreview] Copy failed:', err)
+      }
     }
   }
 
