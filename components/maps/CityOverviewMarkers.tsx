@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { Marker, Tooltip } from 'react-leaflet'
 import L from 'leaflet'
