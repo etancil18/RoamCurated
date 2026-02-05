@@ -1,4 +1,4 @@
-
+'use client'
 
 import { CITY_CONFIGS } from '@/config/cities'
 
