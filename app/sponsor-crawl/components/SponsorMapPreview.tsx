@@ -1,113 +1,14 @@
 'use client'
 
-import { useMemo, useEffect, useRef, useState } from 'react'
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-} from 'react-leaflet'
-import { SponsorVenue } from '@/types/sponsor'
-import 'leaflet/dist/leaflet.css'
-import 'leaflet-arrowheads'
-import L from 'leaflet'
-
-// Fix Leaflet icon issue
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-
-const DefaultIcon = L.icon({
-  iconUrl: (markerIcon as any).src ?? markerIcon,
-  shadowUrl: (markerShadow as any).src ?? markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-})
-L.Marker.prototype.options.icon = DefaultIcon
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { SponsorVenue } from '@/types/sponsor'
 
 type Props = {
   venues: SponsorVenue[]
   mapboxAccessToken?: string
-  mapboxStyle?: string
   heightPx?: number
   useStreetPolyline?: boolean
   themeTag?: string
-}
-
-function FitBounds({ positions }: { positions: [number, number][] }) {
-  const map = useMap()
-  useEffect(() => {
-    if (positions.length === 0) return
-    const bounds = L.latLngBounds(positions)
-    map.fitBounds(bounds, { padding: [40, 40] })
-  }, [positions, map])
-  return null
-}
-
-function ArrowheadPolyline({
-  positions,
-  color,
-}: {
-  positions: [number, number][]
-  color: string
-}) {
-  const map = useMap()
-  const polylineRef = useRef<L.Polyline | null>(null)
-
-  useEffect(() => {
-    if (!map || !positions.length) return
-
-    // Remove previous line
-    if (polylineRef.current) {
-      map.removeLayer(polylineRef.current)
-    }
-
-    const polyline = L.polyline(positions, {
-      color,
-      weight: 4,
-    }).addTo(map)
-
-    polyline.arrowheads({
-      size: '15px',
-      frequency: '100px',
-      color,
-    })
-
-    polylineRef.current = polyline
-
-    return () => {
-      if (polylineRef.current) {
-        map.removeLayer(polylineRef.current)
-      }
-    }
-  }, [map, positions, color])
-
-  return null
-}
-
-async function fetchStreetPolyline(
-  coords: [number, number][],
-  token: string
-): Promise<[number, number][]> {
-  try {
-    const coordsStr = coords.map(([lng, lat]) => `${lng},${lat}`).join(';')
-    const url = `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordsStr}?geometries=geojson&steps=true&access_token=${token}`
-
-    const res = await fetch(url)
-    const data = await res.json()
-
-    const routeCoords = data.routes?.[0]?.geometry?.coordinates
-    if (!routeCoords || routeCoords.length <= coords.length) {
-      return coords.map(([lng, lat]) => [lat, lng])
-    }
-
-    return routeCoords.map(([lng, lat]: [number, number]) => [lat, lng])
-  } catch (err) {
-    console.error('[SponsorMapPreview] Failed to fetch polyline:', err)
-    return coords.map(([lng, lat]) => [lat, lng])
-  }
 }
 
 const vibeColorMap: Record<string, string> = {
@@ -121,70 +22,130 @@ const vibeColorMap: Record<string, string> = {
 export default function SponsorMapPreview({
   venues,
   mapboxAccessToken,
-  mapboxStyle,
   heightPx = 300,
   useStreetPolyline = true,
   themeTag = 'Default',
 }: Props) {
+  const [mounted, setMounted] = useState(false)
+  const [Leaflet, setLeaflet] = useState<any>(null)
+  const [RL, setRL] = useState<any>(null)
+  const [path, setPath] = useState<[number, number][]>([])
+
   const coords = useMemo(
     () =>
       venues
-        .filter((v) => typeof v.lat === 'number' && typeof v.lon === 'number')
-        .map((v) => [v.lon, v.lat] as [number, number]),
+        .filter(v => typeof v.lat === 'number' && typeof v.lon === 'number')
+        .map(v => [v.lon, v.lat] as [number, number]),
     [venues]
   )
 
-  const [path, setPath] = useState<[number, number][]>([])
-
   useEffect(() => {
-    if (useStreetPolyline && mapboxAccessToken && coords.length > 1) {
-      fetchStreetPolyline(coords, mapboxAccessToken).then(setPath)
-    } else {
-      setPath(coords.map(([lng, lat]) => [lat, lng]))
+    setMounted(true)
+  }, [])
+
+  // 🔒 Load Leaflet ONLY on client
+  useEffect(() => {
+    if (!mounted) return
+
+    let active = true
+
+    async function load() {
+      const L = (await import('leaflet')).default
+      await import('leaflet-arrowheads')
+      const RL = await import('react-leaflet')
+
+      if (!active) return
+
+      // Fix default marker icons
+      delete (L.Icon.Default.prototype as any)._getIconUrl
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl:
+          'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl:
+          'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl:
+          'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      })
+
+      setLeaflet(L)
+      setRL(RL)
     }
-  }, [coords, useStreetPolyline, mapboxAccessToken])
 
-  if (!venues.length || !coords.length) return null
+    load()
+    return () => {
+      active = false
+    }
+  }, [mounted])
 
-  const tileUrl =
-    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-  const tileAttribution = '&copy; <a href="https://carto.com/">CARTO</a>'
-  const routeColor = vibeColorMap[themeTag] || vibeColorMap.Default
+  // Polyline logic
+  useEffect(() => {
+    if (!useStreetPolyline || !mapboxAccessToken || coords.length < 2) {
+      setPath(coords.map(([lng, lat]) => [lat, lng]))
+      return
+    }
+
+    async function fetchPolyline() {
+      try {
+        const coordStr = coords.map(([lng, lat]) => `${lng},${lat}`).join(';')
+        const res = await fetch(
+          `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordStr}?geometries=geojson&access_token=${mapboxAccessToken}`
+        )
+        const json = await res.json()
+        const g = json.routes?.[0]?.geometry?.coordinates
+        if (g?.length) {
+          setPath(g.map(([lng, lat]: [number, number]) => [lat, lng]))
+        }
+      } catch {
+        setPath(coords.map(([lng, lat]) => [lat, lng]))
+      }
+    }
+
+    fetchPolyline()
+  }, [coords, mapboxAccessToken, useStreetPolyline])
+
+  if (!mounted || !Leaflet || !RL || !coords.length) return null
+
+  const {
+    MapContainer,
+    TileLayer,
+    Marker,
+    Popup,
+    Polyline,
+    useMap,
+  } = RL
+
+  const routeColor = vibeColorMap[themeTag] ?? vibeColorMap.Default
+
+  function FitBounds() {
+    const map = useMap()
+    useEffect(() => {
+      if (!path.length) return
+      map.fitBounds(path, { padding: [40, 40] })
+    }, [map])
+    return null
+  }
 
   return (
-    <div
-      className="relative w-full overflow-hidden rounded-xl border shadow"
-      style={{ height: heightPx }}
-    >
+    <div style={{ height: heightPx }} className="rounded-xl overflow-hidden border">
       <MapContainer
         center={[venues[0].lat, venues[0].lon]}
         zoom={13}
-        scrollWheelZoom={true}
-        zoomControl={true}
         style={{ height: '100%', width: '100%' }}
       >
-        <TileLayer url={tileUrl} attribution={tileAttribution} />
-        <FitBounds positions={path} />
-        <ArrowheadPolyline positions={path} color={routeColor} />
+        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+        <FitBounds />
+        <Polyline positions={path} color={routeColor} weight={4} />
 
         {venues.map((v, i) => (
           <Marker key={v.id} position={[v.lat, v.lon]}>
             <Popup>
-              <strong>
-                {i + 1}. {v.name}
-              </strong>
+              <strong>{i + 1}. {v.name}</strong>
               <br />
               {v.city}
             </Popup>
           </Marker>
         ))}
       </MapContainer>
-
-      {themeTag && (
-        <div className="absolute top-2 right-2 bg-white bg-opacity-80 px-3 py-1 rounded text-xs shadow">
-          Theme: {themeTag}
-        </div>
-      )}
     </div>
   )
 }

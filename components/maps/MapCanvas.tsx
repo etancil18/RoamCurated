@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   MapContainer,
@@ -6,7 +6,7 @@ import {
   useMap,
 } from 'react-leaflet'
 import { useEffect, useRef, useState, useCallback } from 'react'
-import L, { Map as LeafletMap } from 'leaflet'
+import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
 
 import {
   VenueMarker,
@@ -34,7 +34,6 @@ const USA_ZOOM = 4
 
 function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
   const map = useMap()
-
   useMapInitialization(map)
 
   useEffect(() => {
@@ -70,12 +69,13 @@ export default function MapCanvas({
   const [enableScrollZoom, setEnableScrollZoom] = useState(false)
 
   const mapRef = useRef<LeafletMap | null>(null)
-  const markerRefs = useRef<Record<string, L.Marker>>({})
+  const markerRefs = useRef<Record<string, LeafletMarker>>({})
 
-  // ✅ Moved SSR-unsafe Leaflet icon config into useEffect
+  // ✅ SSR-safe Leaflet icon patch
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    const L = require('leaflet')
     delete (L.Icon.Default.prototype as any)._getIconUrl
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',

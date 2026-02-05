@@ -1,7 +1,6 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react'
-import L, { Map as LeafletMap } from 'leaflet'
+import { useEffect, useRef, useState } from 'react'
 import { useMap } from 'react-leaflet'
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
@@ -12,7 +11,7 @@ type Props = {
   onMapClick?: (lat: number, lon: number) => void
   defaultCenter: [number, number]
   setUserPosition: (pos: [number, number]) => void
-  mapRef: React.MutableRefObject<LeafletMap | null>
+  mapRef: React.MutableRefObject<any>
 }
 
 const USA_CENTER: [number, number] = [37.8, -96.9]
@@ -28,21 +27,26 @@ export default function MapEffectController({
   mapRef,
 }: Props) {
   const map = useMap()
+  const leafletRef = useRef<any>(null)
 
-  // ✅ Store Leaflet map ref
+  // Dynamically load Leaflet
+  useEffect(() => {
+    import('leaflet').then((L) => {
+      leafletRef.current = L
+    })
+  }, [])
+
   useEffect(() => {
     if (map) {
       mapRef.current = map
     }
-
     return () => {
       mapRef.current = null
     }
   }, [map, mapRef])
 
-  // ✅ Fly to city or USA fallback
   useEffect(() => {
-    if (!map) return
+    if (!map || !leafletRef.current) return
 
     if (!city || city === '') {
       map.flyTo(USA_CENTER, USA_ZOOM, {
@@ -62,19 +66,19 @@ export default function MapEffectController({
     return () => clearTimeout(timeout)
   }, [city, map, defaultCenter])
 
-  // ✅ Fit bounds if route exists
   useEffect(() => {
-    if (!map || !route || route.length < 2) return
+    if (!map || !route || route.length < 2 || !leafletRef.current) return
 
-    const bounds = L.latLngBounds(route.map((v) => [v.lat, v.lon]))
+    const L = leafletRef.current
+    const bounds = L.latLngBounds(route.map((v: Venue) => [v.lat, v.lon]))
     map.fitBounds(bounds, { padding: [50, 50] })
   }, [map, route])
 
-  // ✅ Click handler propagation
   useEffect(() => {
-    if (!map || !onMapClick) return
+    if (!map || !onMapClick || !leafletRef.current) return
 
-    const handler = (e: L.LeafletMouseEvent) => {
+    const L = leafletRef.current
+    const handler = (e: (typeof L)['LeafletMouseEvent']) => {
       onMapClick(e.latlng.lat, e.latlng.lng)
     }
 
@@ -84,7 +88,6 @@ export default function MapEffectController({
     }
   }, [map, onMapClick])
 
-  // ✅ SSR-safe geolocation
   useEffect(() => {
     if (typeof window === 'undefined' || !window.navigator?.geolocation) {
       setUserPosition(defaultCenter)
@@ -108,7 +111,6 @@ export default function MapEffectController({
     )
   }, [city, defaultCenter, setUserPosition])
 
-  // ✅ Log analytics
   useEffect(() => {
     logEvent('map_opened', {
       metadata: {
