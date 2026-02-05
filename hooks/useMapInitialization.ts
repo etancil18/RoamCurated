@@ -4,24 +4,21 @@ import { useEffect, useState } from 'react'
 import { Map as LeafletMap } from 'leaflet'
 
 export function useMapInitialization(map: LeafletMap | null) {
+  const [hasMounted, setHasMounted] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
 
+  // ✅ Ensure this only runs on the client
   useEffect(() => {
-    // ✅ Guard for SSR
-    if (typeof window === 'undefined') return
-
+    setHasMounted(true)
     const update = () => setIsDesktop(window.innerWidth >= 768)
     update()
-
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
 
   useEffect(() => {
-    if (!map) return
+    if (!map || !hasMounted) return
 
-    // ✅ Do not assume window APIs are always available
-    // Assume `isDesktop` is false by default
     if (isDesktop) {
       map.scrollWheelZoom.enable()
       map.doubleClickZoom.enable()
@@ -32,5 +29,5 @@ export function useMapInitialization(map: LeafletMap | null) {
 
     map.dragging.enable()
     map.touchZoom.enable()
-  }, [map, isDesktop])
+  }, [map, hasMounted, isDesktop])
 }

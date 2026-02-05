@@ -16,7 +16,6 @@ import 'leaflet/dist/leaflet.css'
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
 import { logVenueImpression } from '@/lib/logVenue'
-import { inBrowser } from '@/lib/browser'
 
 const defaultCenter: Record<'atl' | 'nyc', [number, number]> = {
   atl: [33.749, -84.388],
@@ -85,12 +84,19 @@ export default function MapCanvasSaved({
   const mapRef = useRef<L.Map | null>(null)
   const [polyline, setPolyline] = useState<[number, number][]>([])
   const [enableScrollZoom, setEnableScrollZoom] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
+  const [tileToken, setTileToken] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-    if (!token) return
+    setHasMounted(true)
+    setEnableScrollZoom(window.innerWidth >= 768)
 
-    fetchRoutePolyline(venues, token).then(setPolyline).catch(console.error)
+    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+    if (token) setTileToken(token)
+
+    if (venues.length && token) {
+      fetchRoutePolyline(venues, token).then(setPolyline).catch(console.error)
+    }
   }, [venues])
 
   useEffect(() => {
@@ -123,12 +129,7 @@ export default function MapCanvasSaved({
     })
   }, [venues, city])
 
-  // ✅ Safe window guard
-  useEffect(() => {
-    if (inBrowser()) {
-      setEnableScrollZoom(window.innerWidth >= 768)
-    }
-  }, [])
+  if (!hasMounted || !tileToken) return null
 
   return (
     <div className="h-screen w-screen relative">
@@ -143,7 +144,7 @@ export default function MapCanvasSaved({
         <MapRefSetter mapRef={mapRef} />
 
         <TileLayer
-          url={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+          url={`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${tileToken}`}
         />
 
         {polyline.length > 0 && (

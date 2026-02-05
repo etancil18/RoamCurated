@@ -83,7 +83,7 @@ export default function CrawlControl({
 
     const slugBase = name.toLowerCase().replace(/\s+/g, '-')
     const slug = `${slugBase}-${nanoid(6)}`
-    const sourceUrl = inBrowser() ? `${getOrigin()}/crawl/${slug}` : `/crawl/${slug}`
+    const sourceUrl = inBrowser() ? `${getOrigin()}/crawl/${slug}` : ''
 
     try {
       const res = await fetch('/api/routes/save', {
@@ -168,8 +168,7 @@ export default function CrawlControl({
   }
 
   function handleCopyLink() {
-    if (!Array.isArray(route) || route.length === 0) return
-    if (!inBrowser()) return
+    if (!Array.isArray(route) || route.length === 0 || !inBrowser()) return
 
     const ids = route.map((v) => v.id ?? v.name).join(',')
     const href = getHref()
@@ -260,40 +259,36 @@ export default function CrawlControl({
               </p>
             )}
 
-            {Array.isArray(route) && route.length > 0 && (
-              <>
-                <ol className="list-decimal pl-5 space-y-1 max-h-40 overflow-y-auto">
-                  {route.map((stop, i) => (
-                    <li key={i} className="flex items-center justify-between">
-                      <a
-                        href={stop.link || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline"
-                      >
-                        {stop.name}
-                      </a>
-                      <button
-                        onClick={() => handleModifyStop(stop, i)}
-                        className="text-red-400 text-xs hover:text-red-600 ml-2"
-                      >
-                        ❌
-                      </button>
-                    </li>
-                  ))}
-                </ol>
+            <ol className="list-decimal pl-5 space-y-1 max-h-40 overflow-y-auto">
+              {route?.map((stop, i) => (
+                <li key={i} className="flex items-center justify-between">
+                  <a
+                    href={stop.link || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:underline"
+                  >
+                    {stop.name}
+                  </a>
+                  <button
+                    onClick={() => handleModifyStop(stop, i)}
+                    className="text-red-400 text-xs hover:text-red-600 ml-2"
+                  >
+                    ❌
+                  </button>
+                </li>
+              ))}
+            </ol>
 
-                <div className="pt-2 border-t border-gray-400 space-y-1">
-                  <button onClick={handleSaveToCloud} className="w-full bg-blue-500 py-1 rounded">💾 Save</button>
-                  <button onClick={handleExportToMaps} className="w-full bg-green-500 py-1 rounded">🌍 Export</button>
-                  <button onClick={() => setShowFavoritesModal(true)} className="w-full bg-yellow-500 py-1 rounded">➕ Favorites</button>
-                  <button onClick={() => setShowEventsModal(true)} className="w-full bg-stone-700 py-1 rounded">🎟️ Events</button>
-                  <button onClick={() => setShowHostModal(true)} className="w-full bg-fuchsia-600 py-1 rounded">🏠 Host</button>
-                  <button onClick={handleCopyLink} className="w-full bg-purple-700 py-1 rounded">🔗 {copied ? 'Copied!' : 'Copy Link'}</button>
-                  <button onClick={handleClear} className="w-full bg-red-500 py-1 rounded">❌ Clear Route</button>
-                </div>
-              </>
-            )}
+            <div className="pt-2 border-t border-gray-400 space-y-1">
+              <button onClick={handleSaveToCloud} className="w-full bg-blue-500 py-1 rounded">💾 Save</button>
+              <button onClick={handleExportToMaps} className="w-full bg-green-500 py-1 rounded">🌍 Export</button>
+              <button onClick={() => setShowFavoritesModal(true)} className="w-full bg-yellow-500 py-1 rounded">➕ Favorites</button>
+              <button onClick={() => setShowEventsModal(true)} className="w-full bg-stone-700 py-1 rounded">🎟️ Events</button>
+              <button onClick={() => setShowHostModal(true)} className="w-full bg-fuchsia-600 py-1 rounded">🏠 Host</button>
+              <button onClick={handleCopyLink} className="w-full bg-purple-700 py-1 rounded">🔗 {copied ? 'Copied!' : 'Copy Link'}</button>
+              <button onClick={handleClear} className="w-full bg-red-500 py-1 rounded">❌ Clear Route</button>
+            </div>
           </div>
 
           <ReplaceStopModal {...{ modalData, handleReplaceStop, handleRemoveStop, setModalData }} />

@@ -44,9 +44,8 @@ export default function MapWrapper() {
     setHasMounted(true)
   }, [])
 
-  // 🧠 NEW: Parse `?route=` from URL and match to venue list
   useEffect(() => {
-    if (!venues.length || typeof window === 'undefined') return
+    if (!venues.length || !hasMounted) return
     const params = new URLSearchParams(window.location.search)
     const routeParam = params.get('route')
     if (!routeParam) return
@@ -59,7 +58,7 @@ export default function MapWrapper() {
     if (matched.length > 0) {
       setRoute(matched)
     }
-  }, [venues])
+  }, [venues, hasMounted])
 
   const filteredVenues = useMemo(() => {
     return venues.filter((v) => {
@@ -102,7 +101,7 @@ export default function MapWrapper() {
     setCustomStart(null)
     setRouteErrorMessage(null)
 
-    if (typeof window !== 'undefined') {
+    if (hasMounted) {
       const href = window.location.href
       const url = new URL(href)
       url.searchParams.delete('route')
@@ -206,7 +205,7 @@ export default function MapWrapper() {
 
       const ids = finalRoute.map((v) => v.id ?? v.name).join(',')
 
-      if (typeof window !== 'undefined') {
+      if (hasMounted) {
         const href = window.location.href
         const url = new URL(href)
         url.searchParams.set('route', ids)
