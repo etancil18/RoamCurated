@@ -31,10 +31,6 @@ export default function MapWrapper() {
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
 
-  useEffect(() => {
-    setHasMounted(true)
-  }, [])
-
   const { user } = useUser()
   const userId = user?.id
   const supabase = supabaseBrowser()
@@ -43,6 +39,27 @@ export default function MapWrapper() {
     venues = [],
     eventsByVenueId = {},
   } = useCityData(selectedCity ?? '', { showLiveEventsOnly })
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
+
+  // 🧠 NEW: Parse `?route=` from URL and match to venue list
+  useEffect(() => {
+    if (!venues.length || typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const routeParam = params.get('route')
+    if (!routeParam) return
+
+    const ids = routeParam.split(',')
+    const matched = ids
+      .map((id) => venues.find((v) => v.id === id || v.name === id))
+      .filter((v): v is Venue => !!v)
+
+    if (matched.length > 0) {
+      setRoute(matched)
+    }
+  }, [venues])
 
   const filteredVenues = useMemo(() => {
     return venues.filter((v) => {
@@ -54,10 +71,8 @@ export default function MapWrapper() {
         String(v.type ?? '').toLowerCase().includes(searchTerm.toLowerCase())
 
       const priceRank: Record<string, number> = { '$': 1, '$$': 2, '$$$': 3, '$$$$': 4 }
-
       const venuePriceRank = v.price && priceRank[v.price] ? priceRank[v.price] : Infinity
       const selectedPriceRank = selectedPrice && priceRank[selectedPrice] ? priceRank[selectedPrice] : Infinity
-
       const matchesPrice = !selectedPrice || venuePriceRank <= selectedPriceRank
 
       return matchesSearch && matchesPrice
