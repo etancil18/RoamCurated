@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Map as LeafletMap } from 'leaflet'
+import type { Map as LeafletMap } from 'leaflet'
+
 
 export function useMapInitialization(map: LeafletMap | null) {
   const [hasMounted, setHasMounted] = useState(false)
