@@ -1,4 +1,4 @@
-
+'use client'
 
 import { Polyline } from 'react-leaflet'
 import type { LatLngExpression } from 'leaflet'
