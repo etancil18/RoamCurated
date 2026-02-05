@@ -1,5 +1,3 @@
-// /lib/browser.ts
-
 import { useEffect, useState } from 'react'
 
 /**
@@ -9,32 +7,27 @@ export const inBrowser = (): boolean => typeof window !== 'undefined'
 
 /**
  * ✅ Safe wrapper for window.location.href
- *    Returns '' on server
  */
 export const getHref = (): string => {
-  if (!inBrowser()) return ''
-  return window.location.href
+  return inBrowser() ? window.location.href : ''
 }
 
 /**
  * ✅ Safe wrapper for window.location.origin
- *    Returns '' on server
  */
 export const getOrigin = (): string => {
-  if (!inBrowser()) return ''
-  return window.location.origin
+  return inBrowser() ? window.location.origin : ''
 }
 
 /**
- * ✅ Returns search params object or empty if not in browser
+ * ✅ Always-safe search param getter
  */
-export const getSearchParams = (): URLSearchParams | null => {
-  if (!inBrowser()) return null
-  return new URLSearchParams(window.location.search)
+export const getSearchParams = (): URLSearchParams => {
+  return inBrowser() ? new URLSearchParams(window.location.search) : new URLSearchParams()
 }
 
 /**
- * ✅ React hook to detect client-side mount (hydration-safe)
+ * ✅ Hook for SSR-safe client detection
  */
 export function useIsClient(): boolean {
   const [isClient, setIsClient] = useState(false)

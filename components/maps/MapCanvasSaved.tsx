@@ -15,7 +15,7 @@ import 'leaflet/dist/leaflet.css'
 
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
-import { logVenueImpression } from '@/lib/logVenue'
+import { inBrowser } from '@/lib/browser'
 
 const defaultCenter: Record<'atl' | 'nyc', [number, number]> = {
   atl: [33.749, -84.388],
@@ -87,15 +87,23 @@ export default function MapCanvasSaved({
   const [hasMounted, setHasMounted] = useState(false)
   const [tileToken, setTileToken] = useState<string | null>(null)
 
+  // ✅ Hydration-safe mount detection
   useEffect(() => {
     setHasMounted(true)
+  }, [])
+
+  // ✅ All browser-only logic lives here
+  useEffect(() => {
+    if (!inBrowser()) return
+
     setEnableScrollZoom(window.innerWidth >= 768)
 
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-    if (token) setTileToken(token)
-
-    if (venues.length && token) {
-      fetchRoutePolyline(venues, token).then(setPolyline).catch(console.error)
+    if (token) {
+      setTileToken(token)
+      if (venues.length) {
+        fetchRoutePolyline(venues, token).then(setPolyline).catch(console.error)
+      }
     }
   }, [venues])
 
@@ -129,6 +137,7 @@ export default function MapCanvasSaved({
     })
   }, [venues, city])
 
+  // ✅ Prevent SSR render of Leaflet entirely
   if (!hasMounted || !tileToken) return null
 
   return (

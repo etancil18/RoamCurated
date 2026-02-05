@@ -1,3 +1,4 @@
+// Updated for SSR-safety
 'use client'
 
 
@@ -10,6 +11,7 @@ import { useUser } from '@/hooks/useUser'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import type { Venue } from '@/types/venue'
 import LeafletSetup from '@/components/maps/LeafletSetup'
+import { inBrowser, getHref } from '@/lib/browser'
 
 
 const MapCanvas = dynamic(() => import('@/components/maps/MapCanvas'), {
@@ -52,7 +54,7 @@ setHasMounted(true)
 
 
 useEffect(() => {
-if (!venues.length || typeof window === 'undefined') return
+if (!venues.length || !inBrowser()) return
 const params = new URLSearchParams(window.location.search)
 const routeParam = params.get('route')
 if (!routeParam) return
@@ -118,8 +120,8 @@ setCustomStart(null)
 setRouteErrorMessage(null)
 
 
-if (typeof window !== 'undefined') {
-const href = window.location.href
+if (inBrowser()) {
+const href = getHref()
 const url = new URL(href)
 url.searchParams.delete('route')
 window.history.replaceState(null, '', url.toString())
