@@ -66,14 +66,14 @@ export default function MapCanvas({
 }: Props) {
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [showCitySelector, setShowCitySelector] = useState(true)
-  const [enableScrollZoom, setEnableScrollZoom] = useState(false) // ✅ Added
+  const [enableScrollZoom, setEnableScrollZoom] = useState(false)
 
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, L.Marker>>({})
 
   const handleSelectCity = useCallback((slug: string | null) => {
     setSelectedCity(slug)
-    setShowCitySelector(false) // ✅ auto-hide after selection
+    setShowCitySelector(false)
     onCityChange?.(slug)
   }, [onCityChange])
 
@@ -91,7 +91,12 @@ export default function MapCanvas({
   const visibleRoute = route?.length && route.length > 1 ? route : []
   const lineColor = THEME_COLORS[themeId ?? ''] ?? 'cyan'
 
-  useMapInitialization(mapRef.current)
+  // ✅ Move SSR-sensitive hook inside useEffect
+  useEffect(() => {
+    if (mapRef.current) {
+      useMapInitialization(mapRef.current)
+    }
+  }, [mapRef.current])
 
   // ✅ Safe window usage for scroll zoom
   useEffect(() => {
@@ -100,7 +105,6 @@ export default function MapCanvas({
     }
   }, [])
 
-  // Only center when city changes
   useEffect(() => {
     if (!selectedCity || !mapRef.current) return
     const config = CITY_CONFIGS[selectedCity]
@@ -122,7 +126,6 @@ export default function MapCanvas({
         </button>
       </div>
 
-      {/* 🌆 City Selector (collapsible) */}
       {showCitySelector && (
         <CitySelector
           selectedCity={selectedCity}
@@ -135,7 +138,7 @@ export default function MapCanvas({
         zoom={mapZoom}
         style={{ height: '100vh', width: '100vw' }}
         zoomControl={false}
-        scrollWheelZoom={enableScrollZoom} // ✅ Safe usage
+        scrollWheelZoom={enableScrollZoom}
         dragging={true}
       >
         <MapRefSetter mapRef={mapRef} />

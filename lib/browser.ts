@@ -1,13 +1,22 @@
 // /lib/browser.ts
 
-export const inBrowser = () => typeof window !== 'undefined'
+/**
+ * ✅ Returns true if running in the browser environment.
+ */
+export const inBrowser = (): boolean => typeof window !== 'undefined'
 
-export const getHref = () => {
-  if (typeof window === 'undefined') return ''
-  return window.location.href
+/**
+ * ✅ Safe wrapper for window.location.href
+ *    Returns '' on server
+ */
+export const getHref = (): string => {
+  return inBrowser() ? window.location.href : ''
 }
 
-export const getOrigin = () => {
-  if (typeof window === 'undefined') return ''
-  return window.location.origin
+/**
+ * ✅ Safe wrapper for window.location.origin
+ *    Returns '' on server
+ */
+export const getOrigin = (): string => {
+  return inBrowser() ? window.location.origin : ''
 }

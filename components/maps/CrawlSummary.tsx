@@ -1,66 +1,73 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from "react";
-import type { Venue } from "@/types/venue";
-import { inBrowser } from "@/lib/browser"; // ✅ Added import
+import { useEffect, useState } from 'react'
+import type { Venue } from '@/types/venue'
+import { inBrowser, getHref } from '@/lib/browser'
 
 type CrawlSummaryProps = {
-  route: Venue[];
-  onClose: () => void;
-};
+  route: Venue[]
+  onClose: () => void
+}
 
 export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false)
 
   function handleSaveToLocal() {
-    if (route.length < 2) return alert("Need at least 2 stops to save.");
-    if (!inBrowser) return;
+    if (route.length < 2) {
+      alert('Need at least 2 stops to save.')
+      return
+    }
 
-    const existing = localStorage.getItem("savedRoutes");
-    const saved = existing ? JSON.parse(existing) : [];
-    saved.push([...route]);
-    localStorage.setItem("savedRoutes", JSON.stringify(saved));
-    alert("Saved to local favorites.");
+    if (!inBrowser()) return
+
+    const existing = localStorage.getItem('savedRoutes')
+    const saved = existing ? JSON.parse(existing) : []
+    saved.push([...route])
+    localStorage.setItem('savedRoutes', JSON.stringify(saved))
+    alert('Saved to local favorites.')
   }
 
   function handleExportToMaps() {
-    const base = "https://www.google.com/maps/dir/";
-    const waypoints = route.map((v) => `${v.lat},${v.lon}`).join("/");
-    if (!inBrowser) return;
-    window.open(`${base}${waypoints}`, "_blank");
+    if (!inBrowser()) return
+
+    const base = 'https://www.google.com/maps/dir/'
+    const waypoints = route.map((v) => `${v.lat},${v.lon}`).join('/')
+    window.open(`${base}${waypoints}`, '_blank')
   }
 
   function handleCopyLink() {
-    if (!inBrowser) return;
+    if (!inBrowser()) return
 
-    const ids = route.map((v) => v.id ?? v.name).join(",");
-    const href = window.location.href;
-    const url = new URL(href);
-    url.searchParams.set("route", ids);
+    const ids = route.map((v) => v.id ?? v.name).join(',')
+    const href = getHref()
+    const url = new URL(href)
+    url.searchParams.set('route', ids)
 
-    navigator.clipboard.writeText(url.toString()).then(() => setCopied(true));
+    navigator.clipboard
+      .writeText(url.toString())
+      .then(() => setCopied(true))
   }
 
   useEffect(() => {
     if (copied) {
-      const timeout = setTimeout(() => setCopied(false), 2000);
-      return () => clearTimeout(timeout);
+      const timeout = setTimeout(() => setCopied(false), 2000)
+      return () => clearTimeout(timeout)
     }
-  }, [copied]);
+  }, [copied])
 
-  const baseTime = new Date();
+  const baseTime = new Date()
   const estimateArrival = (index: number) => {
-    const t = new Date(baseTime.getTime() + index * 75 * 60 * 1000);
-    return t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+    const t = new Date(baseTime.getTime() + index * 75 * 60 * 1000)
+    return t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
 
   return (
     <aside className="absolute right-4 top-16 z-[2000] bg-white shadow-lg rounded-lg w-80 p-4 space-y-3 border border-gray-300">
       <h2 className="text-lg font-bold text-gray-900">Your Crawl</h2>
 
       <p className="text-sm text-gray-600">
-        {route.length} stops — starting near{" "}
-        <strong>{route[0].neighborhood || "unknown"}</strong> at{" "}
+        {route.length} stops — starting near{' '}
+        <strong>{route[0].neighborhood || 'unknown'}</strong> at{' '}
         <strong>{estimateArrival(0)}</strong>
       </p>
 
@@ -69,7 +76,8 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
           <li key={i} className="leading-tight">
             <div className="font-semibold">{stop.name}</div>
             <div className="text-xs text-gray-500">
-              {estimateArrival(i)} • {stop.vibe || stop.tags} • {stop.neighborhood || "Unknown"}
+              {estimateArrival(i)} • {stop.vibe || stop.tags} •{' '}
+              {stop.neighborhood || 'Unknown'}
             </div>
             {stop.link && (
               <a
@@ -102,7 +110,7 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
           onClick={handleCopyLink}
           className="w-full bg-gray-700 text-white py-1 rounded hover:bg-gray-800 transition"
         >
-          🔗 {copied ? "Link Copied!" : "Copy Share Link"}
+          🔗 {copied ? 'Link Copied!' : 'Copy Share Link'}
         </button>
         <button
           onClick={onClose}
@@ -112,5 +120,5 @@ export default function CrawlSummary({ route, onClose }: CrawlSummaryProps) {
         </button>
       </div>
     </aside>
-  );
+  )
 }

@@ -6,27 +6,31 @@ import { Map as LeafletMap } from 'leaflet'
 export function useMapInitialization(map: LeafletMap | null) {
   const [isDesktop, setIsDesktop] = useState(false)
 
-  // ✅ Safe window usage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsDesktop(window.innerWidth >= 768)
+    // ✅ Guard for SSR
+    if (typeof window === 'undefined') return
 
-      const handleResize = () => {
-        setIsDesktop(window.innerWidth >= 768)
-      }
+    const update = () => setIsDesktop(window.innerWidth >= 768)
+    update()
 
-      window.addEventListener('resize', handleResize)
-      return () => window.removeEventListener('resize', handleResize)
-    }
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
   }, [])
 
   useEffect(() => {
     if (!map) return
 
-    // Enable/disable controls based on device
-    isDesktop ? map.scrollWheelZoom.enable() : map.scrollWheelZoom.disable()
+    // ✅ Do not assume window APIs are always available
+    // Assume `isDesktop` is false by default
+    if (isDesktop) {
+      map.scrollWheelZoom.enable()
+      map.doubleClickZoom.enable()
+    } else {
+      map.scrollWheelZoom.disable()
+      map.doubleClickZoom.disable()
+    }
+
     map.dragging.enable()
     map.touchZoom.enable()
-    isDesktop ? map.doubleClickZoom.enable() : map.doubleClickZoom.disable()
   }, [map, isDesktop])
 }

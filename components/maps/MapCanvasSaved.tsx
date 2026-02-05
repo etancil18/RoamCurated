@@ -16,7 +16,7 @@ import 'leaflet/dist/leaflet.css'
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
 import { logVenueImpression } from '@/lib/logVenue'
-import { inBrowser } from '@/lib/browser' // ✅ Added
+import { inBrowser } from '@/lib/browser'
 
 const defaultCenter: Record<'atl' | 'nyc', [number, number]> = {
   atl: [33.749, -84.388],
@@ -64,10 +64,7 @@ async function fetchRoutePolyline(
   venues: Venue[],
   token: string
 ): Promise<[number, number][]> {
-  const coords = venues
-    .map((v) => `${v.lon},${v.lat}`)
-    .join(';')
-
+  const coords = venues.map((v) => `${v.lon},${v.lat}`).join(';')
   const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${coords}?geometries=geojson&access_token=${token}`
 
   const res = await fetch(url)
@@ -87,6 +84,7 @@ export default function MapCanvasSaved({
 }) {
   const mapRef = useRef<L.Map | null>(null)
   const [polyline, setPolyline] = useState<[number, number][]>([])
+  const [enableScrollZoom, setEnableScrollZoom] = useState(false)
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
@@ -125,11 +123,11 @@ export default function MapCanvasSaved({
     })
   }, [venues, city])
 
-  const [enableScrollZoom, setEnableScrollZoom] = useState(false)
-
+  // ✅ Safe window guard
   useEffect(() => {
-    if (!inBrowser) return
-    setEnableScrollZoom(window.innerWidth >= 768)
+    if (inBrowser()) {
+      setEnableScrollZoom(window.innerWidth >= 768)
+    }
   }, [])
 
   return (
@@ -180,17 +178,6 @@ export default function MapCanvasSaved({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 underline"
-                    onClick={() => {
-                      logVenueImpression('saved_crawl_more_info_click', {
-                        venue_id: v.id,
-                        metadata: {
-                          screen: 'saved_crawl_map',
-                          city,
-                          position_in_crawl: idx,
-                          name: v.name,
-                        },
-                      })
-                    }}
                   >
                     More Info
                   </a>

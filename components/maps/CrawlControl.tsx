@@ -14,7 +14,6 @@ import HostCrawlModal from '@/components/modals/HostCrawlModal'
 import { logEvent } from '@/lib/logEvent'
 import { getHref, getOrigin, inBrowser } from '@/lib/browser'
 
-
 export type CrawlControlProps = {
   venues: Venue[]
   route?: Venue[]
@@ -86,7 +85,6 @@ export default function CrawlControl({
     const slug = `${slugBase}-${nanoid(6)}`
     const sourceUrl = inBrowser() ? `${getOrigin()}/crawl/${slug}` : `/crawl/${slug}`
 
-
     try {
       const res = await fetch('/api/routes/save', {
         method: 'POST',
@@ -129,8 +127,10 @@ export default function CrawlControl({
 
     const base = 'https://www.google.com/maps/dir/'
     const waypoints = route.map((v) => `${v.lat},${v.lon}`).join('/')
-    if (!inBrowser) return
-    window.open(`${base}${waypoints}`, '_blank')
+
+    if (inBrowser()) {
+      window.open(`${base}${waypoints}`, '_blank')
+    }
   }
 
   function handleInsertFavoriteAt(newVenue: Venue, index: number) {
@@ -146,10 +146,7 @@ export default function CrawlControl({
 
     logEvent('favorite_added_to_crawl', {
       venue_id: newVenue.id,
-      metadata: {
-        index,
-        city,
-      },
+      metadata: { index, city },
     })
   }
 
@@ -159,27 +156,24 @@ export default function CrawlControl({
       alert('This venue is already in your crawl.')
       return
     }
+
     const updated = [...route.slice(0, index), newVenue, ...route.slice(index)]
     onRoute(updated)
     setShowEventsModal(false)
 
     logEvent('event_added_to_crawl', {
       venue_id: newVenue.id,
-      metadata: {
-        index,
-        city,
-      },
+      metadata: { index, city },
     })
   }
 
   function handleCopyLink() {
     if (!Array.isArray(route) || route.length === 0) return
-    if (!inBrowser) return
+    if (!inBrowser()) return
 
     const ids = route.map((v) => v.id ?? v.name).join(',')
     const href = getHref()
     const url = new URL(href)
-
     url.searchParams.set('route', ids)
 
     navigator.clipboard.writeText(url.toString()).then(() => {
@@ -198,13 +192,13 @@ export default function CrawlControl({
   function handleClear() {
     onRoute([])
     setShowCrawlInfo(false)
-    if (!inBrowser) return
 
-    const href = getHref()
-    const url = new URL(href)
-
-    url.searchParams.delete('route')
-    window.history.replaceState(null, '', url.toString())
+    if (inBrowser()) {
+      const href = getHref()
+      const url = new URL(href)
+      url.searchParams.delete('route')
+      window.history.replaceState(null, '', url.toString())
+    }
 
     setCopied(false)
 
@@ -230,10 +224,7 @@ export default function CrawlControl({
 
     logEvent('stop_replaced', {
       venue_id: newVenue.id,
-      metadata: {
-        index,
-        city,
-      },
+      metadata: { index, city },
     })
   }
 

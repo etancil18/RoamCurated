@@ -1,4 +1,3 @@
-// ✅ Final Refactored MapWrapper.tsx with full crawl logic
 'use client'
 
 import dynamic from 'next/dynamic'
@@ -10,10 +9,6 @@ import { useUser } from '@/hooks/useUser'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import type { Venue } from '@/types/venue'
 import LeafletSetup from '@/components/maps/LeafletSetup'
-import { getHref } from '@/lib/browser'
-
-
-
 
 const MapCanvas = dynamic(() => import('@/components/maps/MapCanvas'), {
   ssr: false,
@@ -36,9 +31,9 @@ export default function MapWrapper() {
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
 
-useEffect(() => {
-  setHasMounted(true)
-}, [])
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
 
   const { user } = useUser()
   const userId = user?.id
@@ -88,18 +83,17 @@ useEffect(() => {
   }
 
   const handleClearRoute = () => {
-  setRoute(undefined)
-  setCustomStart(null)
-  setRouteErrorMessage(null)
+    setRoute(undefined)
+    setCustomStart(null)
+    setRouteErrorMessage(null)
 
-  if (typeof window === 'undefined') return;
-
-const href = window.location.href;
-const url = new URL(href);
-url.searchParams.delete('route');
-window.history.replaceState(null, '', url.toString());
+    if (typeof window !== 'undefined') {
+      const href = window.location.href
+      const url = new URL(href)
+      url.searchParams.delete('route')
+      window.history.replaceState(null, '', url.toString())
+    }
   }
-
 
   const handleCityChange = useCallback((slug: string | null) => {
     setSelectedCity(slug)
@@ -132,7 +126,6 @@ window.history.replaceState(null, '', url.toString());
         city: selectedCity,
       }
 
-      // 1) AI PROMPT
       if (searchPrompt?.trim()) {
         try {
           const parseRes = await fetch('/api/parseprompt', {
@@ -157,7 +150,6 @@ window.history.replaceState(null, '', url.toString());
         }
       }
 
-      // 2) THEME CRAWL
       if (!finalRoute && selectedThemeId) {
         const response = await fetch('/api/generate-theme', {
           method: 'POST',
@@ -182,7 +174,6 @@ window.history.replaceState(null, '', url.toString());
         }
       }
 
-      // 3) FALLBACK
       if (!finalRoute) {
         const fallbackRes = await fetch('/api/generate-crawl', {
           method: 'POST',
@@ -200,13 +191,12 @@ window.history.replaceState(null, '', url.toString());
 
       const ids = finalRoute.map((v) => v.id ?? v.name).join(',')
 
-if (typeof window === 'undefined') return;
-
-const href = window.location.href;
-const url = new URL(href);
-url.searchParams.set('route', ids);
-window.history.replaceState(null, '', url.toString());
-
+      if (typeof window !== 'undefined') {
+        const href = window.location.href
+        const url = new URL(href)
+        url.searchParams.set('route', ids)
+        window.history.replaceState(null, '', url.toString())
+      }
 
       const origin = { lat: finalRoute[0].lat, lng: finalRoute[0].lon }
       const destination = { lat: finalRoute.at(-1)?.lat ?? 0, lng: finalRoute.at(-1)?.lon ?? 0 }
@@ -219,11 +209,16 @@ window.history.replaceState(null, '', url.toString());
           if (accessToken) {
             await fetch('/api/scheduled-routes', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`,
+              },
               body: JSON.stringify({
                 plannedStartAt,
                 route: finalRoute,
-                name: selectedThemeId ? `${selectedThemeId} @ ${new Date(plannedStartAt).toLocaleString()}` : `Crawl @ ${new Date(plannedStartAt).toLocaleString()}`,
+                name: selectedThemeId
+                  ? `${selectedThemeId} @ ${new Date(plannedStartAt).toLocaleString()}`
+                  : `Crawl @ ${new Date(plannedStartAt).toLocaleString()}`,
               }),
             })
           }
@@ -254,10 +249,13 @@ window.history.replaceState(null, '', url.toString());
           routeDuration: routeData.duration,
           routeDistance: routeData.distance,
           routeGeometry: routeData.geometry,
-          routeMetadata: { travelMode, city: selectedCity, stops: finalRoute.length },
+          routeMetadata: {
+            travelMode,
+            city: selectedCity,
+            stops: finalRoute.length,
+          },
         }),
       })
-
     } catch (err) {
       console.error('Generate Crawl Error:', err)
       alert('Something went wrong. Try again.')
@@ -266,7 +264,7 @@ window.history.replaceState(null, '', url.toString());
 
   return (
     <main className="h-screen w-screen relative overflow-hidden">
-        <LeafletSetup />
+      <LeafletSetup />
       <button onClick={() => setIsPanelOpen(!isPanelOpen)} className="absolute top-2 left-2 z-[1100] bg-white px-3 py-1 rounded shadow text-sm">
         {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
       </button>
@@ -313,16 +311,17 @@ window.history.replaceState(null, '', url.toString());
       />
 
       {hasMounted && (
-  <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
-    <MapCanvas
-      route={route}
-      onMapClick={handleMapClick}
-      themeId={selectedThemeId}
-      travelMode={travelMode}
-      showLiveEventsOnly={showLiveEventsOnly}
-      onCityChange={handleCityChange}
-    />
-  </Suspense>)}
+        <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>
+          <MapCanvas
+            route={route}
+            onMapClick={handleMapClick}
+            themeId={selectedThemeId}
+            travelMode={travelMode}
+            showLiveEventsOnly={showLiveEventsOnly}
+            onCityChange={handleCityChange}
+          />
+        </Suspense>
+      )}
     </main>
   )
 }
