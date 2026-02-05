@@ -37,6 +37,10 @@ const USA_ZOOM = 4
 
 function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
   const map = useMap()
+
+  // ✅ Call hook directly — inside a component, top level
+  useMapInitialization(map)
+
   useEffect(() => {
     mapRef.current = map
     setTimeout(() => map.invalidateSize(), 300)
@@ -44,6 +48,7 @@ function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | 
       mapRef.current = null
     }
   }, [map])
+
   return null
 }
 
@@ -91,14 +96,6 @@ export default function MapCanvas({
   const visibleRoute = route?.length && route.length > 1 ? route : []
   const lineColor = THEME_COLORS[themeId ?? ''] ?? 'cyan'
 
-  // ✅ Move SSR-sensitive hook inside useEffect
-  useEffect(() => {
-    if (mapRef.current) {
-      useMapInitialization(mapRef.current)
-    }
-  }, [mapRef.current])
-
-  // ✅ Safe window usage for scroll zoom
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setEnableScrollZoom(window.innerWidth >= 768)
@@ -116,7 +113,6 @@ export default function MapCanvas({
   return (
     <div className="h-screen w-screen relative">
 
-      {/* 🌆 Toggle Button */}
       <div className="absolute bottom-11 right-4 z-[1100]">
         <button
           onClick={() => setShowCitySelector(prev => !prev)}

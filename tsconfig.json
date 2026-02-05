@@ -24,7 +24,8 @@
     },
     "plugins": [
       { "name": "next" }
-    ]
+    ],
+    "types": ["node", "@supabase/auth-helpers-nextjs"]
   },
   "include": [
     "next-env.d.ts",
