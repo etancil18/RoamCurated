@@ -1,5 +1,12 @@
 'use client'
 
+// 🚨 Tripwire: fail immediately if this file is ever imported on the server
+if (typeof window === 'undefined') {
+  throw new Error(
+    'Map.tsx was imported during SSR. This file MUST be loaded via next/dynamic({ ssr: false }).'
+  )
+}
+
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -10,13 +17,14 @@ export default function Map() {
     <MapContainer
       center={position}
       zoom={13}
-      scrollWheelZoom={true}
+      scrollWheelZoom
       style={{ height: '100vh', width: '100%' }}
     >
       <TileLayer
-        attribution='&copy; OpenStreetMap contributors'
+        attribution="&copy; OpenStreetMap contributors"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
       <Marker position={position}>
         <Popup>
           Welcome to Roam ATL x NYC.

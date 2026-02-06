@@ -11,8 +11,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { createSlug } from '@/utils/slug';
 import VenueSelector from './components/VenueSelector';
-import SponsorMapPreview from './components/SponsorMapPreview';
+import { SponsorMapPreview } from '@/components/maps/map-dynamic-wrapper';
 import clsx from 'clsx';
+
+const MAPBOX_TOKEN: string = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? '';
+
 
 export default function SponsorCrawlPage() {
   const router = useRouter();
@@ -136,7 +139,7 @@ export default function SponsorCrawlPage() {
         <Label className="text-gray-700 dark:text-gray-300">Venues</Label>
         <VenueSelector selected={venues} setSelected={setVenues} />
         <SponsorMapPreview venues={venues} 
-        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapboxAccessToken={MAPBOX_TOKEN}
         />
       </div>
 

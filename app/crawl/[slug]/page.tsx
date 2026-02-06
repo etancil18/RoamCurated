@@ -1,7 +1,7 @@
 // app/crawl/[slug]/page.tsx
 import { notFound } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
-import MapCanvasSaved from "@/components/maps/MapCanvasSaved"
+import { MapCanvasSaved } from "@/components/maps/map-dynamic-wrapper"
 import CrawlDetailsClientWrapper from "@/components/crawl/CrawlDetailsClientWrapper"
 import type { Venue } from "@/types/venue"
 import type { Database } from "@/types/supabase"

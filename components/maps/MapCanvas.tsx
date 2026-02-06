@@ -32,17 +32,22 @@ import 'leaflet/dist/leaflet.css'
 const USA_CENTER: [number, number] = [37.8, -96.9]
 const USA_ZOOM = 4
 
-function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<LeafletMap | null> }) {
+function MapRefSetter({
+  mapRef,
+}: {
+  mapRef: React.MutableRefObject<LeafletMap | null>
+}) {
   const map = useMap()
   useMapInitialization(map)
 
   useEffect(() => {
     mapRef.current = map
     setTimeout(() => map.invalidateSize(), 300)
+
     return () => {
       mapRef.current = null
     }
-  }, [map])
+  }, [map, mapRef])
 
   return null
 }
@@ -78,17 +83,23 @@ export default function MapCanvas({
     const L = require('leaflet')
     delete (L.Icon.Default.prototype as any)._getIconUrl
     L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+      iconRetinaUrl:
+        'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png',
+      iconUrl:
+        'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
+      shadowUrl:
+        'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
     })
   }, [])
 
-  const handleSelectCity = useCallback((slug: string | null) => {
-    setSelectedCity(slug)
-    setShowCitySelector(false)
-    onCityChange?.(slug)
-  }, [onCityChange])
+  const handleSelectCity = useCallback(
+    (slug: string | null) => {
+      setSelectedCity(slug)
+      setShowCitySelector(false)
+      onCityChange?.(slug)
+    },
+    [onCityChange]
+  )
 
   const cityConfig = selectedCity ? CITY_CONFIGS[selectedCity] : null
   const mapCenter = cityConfig?.center ?? USA_CENTER
@@ -101,8 +112,11 @@ export default function MapCanvas({
 
   const userPosition = useUserLocation({ fallback: mapCenter })
 
-  const visibleRoute = route?.length && route.length > 1 ? route : []
-  const lineColor = THEME_COLORS[themeId ?? ''] ?? 'cyan'
+  const visibleRoute =
+    route && route.length > 1 ? route : []
+
+  const lineColor =
+    THEME_COLORS[themeId ?? ''] ?? 'cyan'
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -142,7 +156,7 @@ export default function MapCanvas({
         style={{ height: '100vh', width: '100vw' }}
         zoomControl={false}
         scrollWheelZoom={enableScrollZoom}
-        dragging={true}
+        dragging
       >
         <MapRefSetter mapRef={mapRef} />
 
@@ -167,24 +181,28 @@ export default function MapCanvas({
           />
         )}
 
-        {selectedCity && (
-          (visibleRoute.length > 1 ? visibleRoute : venues).map((venue: Venue, idx: number) => (
-            <VenueMarker
-              key={venue.id}
-              venue={venue}
-              index={idx}
-              city={selectedCity}
-              isRouteMode={visibleRoute.length > 0}
-              markerRefs={markerRefs}
-              eventsByVenueId={eventsByVenueId}
-            />
-          ))
+        {selectedCity &&
+          (visibleRoute.length > 1 ? visibleRoute : venues).map(
+            (venue: Venue, idx: number) => (
+              <VenueMarker
+                key={venue.id}
+                venue={venue}
+                index={idx}
+                city={selectedCity}
+                isRouteMode={visibleRoute.length > 0}
+                markerRefs={markerRefs}
+                eventsByVenueId={eventsByVenueId}
+              />
+            )
+          )}
+
+        {userPosition && (
+          <UserLocationMarker position={userPosition} />
         )}
 
-        {userPosition && <UserLocationMarker position={userPosition} />}
-
-        {visibleRoute.length > 1 && (
+        {visibleRoute.length > 1 && mapRef.current && (
           <RouteControl
+            map={mapRef.current}
             route={visibleRoute}
             travelMode={travelMode}
             color={lineColor}

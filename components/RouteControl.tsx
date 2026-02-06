@@ -1,14 +1,22 @@
 'use client'
 
+// 🚨 Tripwire — this file must never be evaluated during SSR
+if (typeof window === 'undefined') {
+  throw new Error(
+    'RouteControl.tsx must only be imported via dynamic({ ssr: false })'
+  )
+}
+
 import { useEffect, useRef, useState } from 'react'
-import { useMap } from 'react-leaflet'
-import type { LatLngExpression } from 'leaflet'
+import type { LatLngExpression, Map as LeafletMap } from 'leaflet'
+import { Polyline } from 'react-leaflet'
 
 import type { Venue } from '@/types/venue'
 import RoutePolyline from './RoutePolyline'
 import { logEvent } from '@/lib/logEvent'
 
 type RouteControlProps = {
+  map: LeafletMap
   route: Venue[]
   color?: string
   travelMode: 'walking' | 'cycling' | 'driving'
@@ -20,22 +28,21 @@ function normalizeCoords(lat: number, lon: number): [number, number] {
 }
 
 export default function RouteControl({
+  map,
   route,
   color = 'cyan',
   travelMode,
 }: RouteControlProps) {
-  const map = useMap()
   const controlRef = useRef<any>(null)
   const [polylineCoords, setPolylineCoords] = useState<LatLngExpression[]>([])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
     if (!map || route.length < 2) return
 
     let L: any
 
     async function initRouting() {
-      // 🔒 Dynamically import Leaflet + plugins
+      // 🔒 Runtime-only imports (no SSR side effects)
       const leaflet = await import('leaflet')
       await import('leaflet-routing-machine')
       await import('lrm-mapbox')
@@ -49,7 +56,7 @@ export default function RouteControl({
         controlRef.current = null
       }
 
-      const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      const MAPBOX_TOKEN: string = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? ''
       if (!MAPBOX_TOKEN) {
         console.error('❌ Missing Mapbox token')
         return
@@ -58,6 +65,8 @@ export default function RouteControl({
       const validWaypoints = route
         .map((v) => normalizeCoords(v.lat, v.lon))
         .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon))
+
+      if (validWaypoints.length < 2) return
 
       const latLngs = validWaypoints.map(([lat, lon]) =>
         L.latLng(lat, lon)
@@ -124,5 +133,16 @@ export default function RouteControl({
 
   if (polylineCoords.length === 0) return null
 
-  return <RoutePolyline coords={polylineCoords} color={color} />
+  return (
+    <RoutePolyline
+      coords={polylineCoords}
+      color={color}
+      render={({ positions, color }) => (
+        <Polyline
+          positions={positions}
+          pathOptions={{ color, weight: 5, opacity: 0.9 }}
+        />
+      )}
+    />
+  )
 }
