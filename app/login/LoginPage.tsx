@@ -20,11 +20,25 @@ export default function LoginPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // 🔥 Redirect once user is actually available
   useEffect(() => {
     if (user) {
       router.replace('/')
     }
   }, [user, router])
+
+  // 🔥 Listen for auth state change (this fixes the race condition)
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        router.replace('/')
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase, router])
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault()
@@ -43,28 +57,13 @@ export default function LoginPage() {
       password,
     })
 
-    if (!signInError) {
-      setLoading(false)
-      router.replace('/')
-      return
+    if (signInError) {
+      setError(signInError.message)
     }
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-
-    if (!signUpError) {
-      setLoading(false)
-      router.replace('/')
-      return
-    }
-
-    setError('Invalid login. You may need to set your password below.')
     setLoading(false)
   }
 
-  // ✅ NEW: Send password reset email with correct redirect
   async function handleForgotPassword() {
     if (!email) {
       setError('Enter your email above first.')
@@ -117,11 +116,10 @@ export default function LoginPage() {
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {loading ? 'Processing...' : 'Sign In / Sign Up'}
+            {loading ? 'Processing...' : 'Sign In'}
           </button>
         </form>
 
-        {/* ✅ NEW: Forgot Password */}
         <button
           type="button"
           onClick={handleForgotPassword}
@@ -139,10 +137,6 @@ export default function LoginPage() {
             {successMessage}
           </p>
         )}
-
-        <p className="text-center text-gray-500 dark:text-zinc-400 text-sm mt-6">
-          New here? Enter email + password to create an account.
-        </p>
       </div>
     </main>
   )

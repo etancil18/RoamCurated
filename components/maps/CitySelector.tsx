@@ -21,45 +21,48 @@ export default function CitySelector({
         border border-neutral-700
         rounded-xl shadow-xl
         px-4 py-3
-        flex gap-2 items-center
+        max-w-screen w-[95%] sm:w-auto
+        overflow-x-auto
       "
     >
-      <span className="text-sm text-neutral-400 mr-2">
-        Select a city:
-      </span>
+      <div className="flex gap-2 items-center flex-nowrap min-w-max">
+        <span className="text-sm text-neutral-400 whitespace-nowrap mr-2">
+          Select a city:
+        </span>
 
-      {/* 🔁 All Cities Button */}
-      <button
-        onClick={() => onSelectCity(null)}
-        className={`
-          px-3 py-1.5 rounded-lg text-sm transition
-          ${selectedCity === null
-            ? 'bg-white text-black font-semibold'
-            : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}
-        `}
-      >
-        🗺️ All Cities
-      </button>
+        {/* 🔁 All Cities Button */}
+        <button
+          onClick={() => onSelectCity(null)}
+          className={`
+            px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition
+            ${selectedCity === null
+              ? 'bg-white text-black font-semibold'
+              : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}
+          `}
+        >
+          🗺️ All Cities
+        </button>
 
-      {/* 🔁 Per-City Buttons */}
-      {cities.map(([slug, city]) => {
-        const isActive = slug === selectedCity
+        {/* 🔁 Per-City Buttons */}
+        {cities.map(([slug, city]) => {
+          const isActive = slug === selectedCity
 
-        return (
-          <button
-            key={slug}
-            onClick={() => onSelectCity(slug)}
-            className={`
-              px-3 py-1.5 rounded-lg text-sm transition
-              ${isActive
-                ? 'bg-white text-black font-semibold'
-                : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}
-            `}
-          >
-            {city.name}
-          </button>
-        )
-      })}
+          return (
+            <button
+              key={slug}
+              onClick={() => onSelectCity(slug)}
+              className={`
+                px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition
+                ${isActive
+                  ? 'bg-white text-black font-semibold'
+                  : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}
+              `}
+            >
+              {city.name}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
