@@ -123,7 +123,7 @@ export function ControlPanel({
               metadata: { value: val },
             })
           }}
-          className="w-full h-8 px-2 py-1 border rounded text-sm"
+          className={inputBase + ' placeholder-zinc-500 dark:placeholder-zinc-400'}
         />
       </div>
 
