@@ -111,6 +111,23 @@ export function ControlPanel({
       </div>
 
       <div className="space-y-1">
+        <Label className="text-xs font-semibold">Search</Label>
+        <input
+          type="text"
+          placeholder="search locations, cuisines, vibes..."
+          value={searchTerm}
+          onChange={(e) => {
+            const val = e.target.value
+            setSearchTerm(val)
+            logEvent('search_updated', {
+              metadata: { value: val },
+            })
+          }}
+          className="w-full h-8 px-2 py-1 border rounded text-sm"
+        />
+      </div>
+
+      <div className="space-y-1">
         <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">"What should we do?"</Label>
         <input
           type="text"

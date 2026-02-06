@@ -5096,6 +5096,75 @@ const atlantaData = [
     "id": "7ef1d1a8-d7b4-4a00-8f7f-352ff7497112"
   },
   {
+    "slug": "buteco-eav",
+    "name": "Buteco EAV",
+    "vibe": "brazilian, music, bar, latin, vibrant, social",
+    "type": [
+      "music",
+      "cocktail",
+      "lunch", "dinner"
+    ],
+    "lat": 33.7400183,
+    "lon": -84.3466872,
+    "link": "https://www.instagram.com/butecoatl/",
+    "cover": "img/venues/Buteco EAV.jpg",
+    "openNow": true,
+    "hours": [
+      "Sunday: 11:00 AM–12:00 AM",
+      "Monday: 11:00 AM–12:00 AM",
+      "Tuesday: 11:00 AM–12:00 AM",
+      "Wednesday: 11:00 AM–12:00 AM",
+      "Thursday: 11:00 AM–12:00 AM",
+      "Friday: 11:00 AM–2:30 AM",
+      "Saturday: 11:00 AM–2:30 AM"
+    ],
+    "hoursNumeric": {
+      "sun": {
+        "open": 11,
+        "close": 24
+      },
+      "mon": {
+        "open": 11,
+        "close": 24
+      },
+      "tue": {
+        "open": 11,
+        "close": 24
+      },
+      "wed": {
+        "open": 11,
+        "close": 24
+      },
+      "thu": {
+        "open": 11,
+        "close": 24
+      },
+      "fri": {
+        "open": 11,
+        "close": 26.5
+      },
+      "sat": {
+        "open": 11,
+        "close": 26.5
+      }
+    },
+    "dayParts": {
+      "mon": "HH",
+      "tue": "HH",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L",
+      "sun": "E"
+    },
+    "timeCategory": "happy hour, evening, late",
+    "energyRamp": 4,
+    "tags": "Brazilian, live, music, Latin, low, key, café, vibe, culture, sip, smooth, social",
+    "price": "$",
+    "duration": 1.75,
+    "id": "dc1cddbf-dcc8-4f07-b558-bf7e86623a91"
+  },
+  {
     "slug": "zibas-bistro-and-wine-bar",
     "name": "Ziba's Bistro and Wine Bar",
     "vibe": "wine, cozy, european, low-light, casual, intimate, charming",

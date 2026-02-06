@@ -5,7 +5,7 @@ import {
   TileLayer,
   useMap,
 } from 'react-leaflet'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
 
 import {
@@ -56,6 +56,7 @@ type Props = {
   route?: Venue[]
   travelMode: 'walking' | 'cycling' | 'driving'
   themeId?: string
+  searchTerm?: string
   showLiveEventsOnly?: boolean
   onCityChange?: (city: string | null) => void
   onMapClick?: (lat: number, lon: number) => void
@@ -65,6 +66,7 @@ export default function MapCanvas({
   route,
   travelMode,
   themeId,
+  searchTerm = '',
   showLiveEventsOnly = false,
   onCityChange,
   onMapClick,
@@ -106,6 +108,7 @@ export default function MapCanvas({
   const mapZoom = cityConfig?.zoom ?? USA_ZOOM
 
   const {
+    allVenues = [],
     venues = [],
     eventsByVenueId = {},
   } = useCityData(selectedCity, { showLiveEventsOnly })
@@ -131,6 +134,40 @@ export default function MapCanvas({
       mapRef.current.setView(config.center, config.zoom)
     }
   }, [selectedCity])
+
+  // 🔥 SEARCH FIX (ONLY CHANGE IS HERE)
+  const filteredVenues = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+
+    if (!term) return venues
+
+    return allVenues.filter((venue) => {
+      const nameMatch = venue.name?.toLowerCase().includes(term)
+      const vibeMatch = venue.vibe?.toLowerCase().includes(term)
+
+      const typeArray = Array.isArray(venue.type)
+        ? venue.type
+        : typeof venue.type === 'string'
+          ? venue.type.split(',').map((t) => t.trim())
+          : []
+
+      const typeMatch = typeArray.some((t) =>
+        t.toLowerCase().includes(term)
+      )
+
+      const tagsArray = Array.isArray(venue.tags)
+        ? venue.tags
+        : typeof venue.tags === 'string'
+          ? venue.tags.split(',').map((t) => t.trim())
+          : []
+
+      const tagsMatch = tagsArray.some((tag) =>
+        tag.toLowerCase().includes(term)
+      )
+
+      return nameMatch || vibeMatch || typeMatch || tagsMatch
+    })
+  }, [allVenues, venues, searchTerm]) // ✅ FIXED DEPENDENCIES ONLY
 
   return (
     <div className="h-screen w-screen relative">
@@ -182,7 +219,7 @@ export default function MapCanvas({
         )}
 
         {selectedCity &&
-          (visibleRoute.length > 1 ? visibleRoute : venues).map(
+          (visibleRoute.length > 1 ? visibleRoute : filteredVenues).map(
             (venue: Venue, idx: number) => (
               <VenueMarker
                 key={venue.id}

@@ -355,6 +355,7 @@ themeId={selectedThemeId}
 travelMode={travelMode}
 showLiveEventsOnly={showLiveEventsOnly}
 onCityChange={handleCityChange}
+ searchTerm={searchTerm}
 />
 </Suspense>
 )}
