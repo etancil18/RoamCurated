@@ -488,7 +488,7 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Solo Explorer",
   description: "Cozy solo spots and hidden gems for wandering.",
   stageFlow: [
-  ["coffee", "cafe", "bakery", "tea"],
+  ["coffee", "cafe", "café", "bakery", "tea"],
   ["random gem", "lifestyle", "showroom"],
   ["gallery", "museum"],
   ["lunch", "wine bar", "bookstore"],
@@ -561,8 +561,8 @@ export const crawlThemes: CrawlTheme[] = [
   "name": "Morning Flow",
   "description": "A calm and intentional start that energizes your body, clears your mind, and opens the day with purpose.",
   "stageFlow": [
-    ["wellness", "yoga", "fitness"],
-    ["tea", "coffee", "bakery", "smoothie"],
+    ["pilates", "yoga", "fitness"],
+    ["tea", "coffee", "cafe", "café", "bakery", "smoothie"],
     ["garden", "market", "park"],
     ["spa", "bookstore"],
     "lunch"
