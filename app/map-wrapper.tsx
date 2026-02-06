@@ -297,9 +297,13 @@ setCustomStart(null)
   return (
 <main className="h-screen w-screen relative overflow-hidden">
 <LeafletSetup />
-<button onClick={() => setIsPanelOpen(!isPanelOpen)} className="absolute top-2 left-2 z-[1100] bg-white px-3 py-1 rounded shadow text-sm">
-{isPanelOpen ? 'Hide Panel' : 'Show Panel'}
+<button
+  onClick={() => setIsPanelOpen(!isPanelOpen)}
+  className="absolute bottom-[80px] right-4 z-[1100] bg-black/80 text-white px-3 py-1 rounded-md shadow"
+>
+  {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
 </button>
+
 
 
 {isPanelOpen && (
