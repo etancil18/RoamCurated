@@ -1,5 +1,6 @@
 import type { Venue } from "@/types/venue";
 import type { Stage } from "@/lib/prompt-engine/types";
+import { throwIfDisallowedDynamic } from "next/dist/server/app-render/dynamic-rendering";
 
 /**
  * Synonym map
@@ -19,10 +20,26 @@ const TYPE_SYNONYMS: Record<string, string[]> = {
   reading: ["bookstore"],
   read: ["bookstore"],
   sandwich: ["lunch"],
-  beer: ["bar"],
+  beer: ["bar", "brewery"],
   cocktail: ["cocktails", "rooftop"],
   outside: ["park", "garden"],
+  outdoor: ["park", "garden"],
   nightcap: ["bar", "lounge"],
+  design: ["showroom"],
+  shopping: ["lifestyle"],
+  dancing: ["club"],
+  dance: ["club"],
+  drinks: ["bar", "cocktails"],
+  afterparty: ["club"],
+  thrift: ["market", "lifestyle"],
+  thrifting: ["market", "lifestyle"],
+  tapas: ["dinner"],
+  burgers: ["lunch", "dinner"],
+  pizza: ["lunch", "dinner"],
+  exercise: ["fitness"],
+  workout: ["fitness"],
+  gym: ["fitness"],
+  meditation: ["yoga"],
 };
 
 /**
@@ -101,20 +118,24 @@ export function semanticMatchScore(
   }
 
   /* ---------------- VIBE ---------------- */
-  const venueVibe =
-    typeof venue.vibe === "string"
-      ? venue.vibe.toLowerCase()
-      : "";
+ const venueVibes =
+  typeof venue.vibe === "string"
+    ? venue.vibe.split(",").map((s) => s.trim().toLowerCase())
+    : [];
 
-  if (
-    venueVibe &&
-    Array.isArray(stage.vibe_keywords) &&
-    stage.vibe_keywords.some((kw) =>
-      venueVibe.includes(kw.toLowerCase())
-    )
-  ) {
-    score += WEIGHTS.vibe;
-  }
+const stageVibes = Array.isArray(stage.vibe)
+  ? stage.vibe.map((s) => s.toLowerCase())
+  : [];
+
+if (
+  venueVibes.length > 0 &&
+  stageVibes.some((kw) =>
+    venueVibes.some((vv) => vv.includes(kw) || kw.includes(vv))
+  )
+) {
+  score += WEIGHTS.vibe;
+}
+
 
   /* ---------------- TIME CATEGORY ---------------- */
   if (

@@ -1,7 +1,7 @@
 import type { Venue } from "@/types/venue";
 import { _intervalsForDate, daypartAllowedAtTime } from "@/utils/timeUtils";
 import { vibeSimilarity } from "@/utils/vibeUtils";
-import { hasType, isMealType } from "@/utils/typeUtils";
+import { isMealType } from "@/utils/typeUtils";
 import { sequencedStagesForNow } from "@/utils/stageUtils";
 import { getDistanceMeters } from "@/utils/geoUtils";
 import { looseHasType } from "@/lib/prompt-engine/semanticUtils";
@@ -22,13 +22,14 @@ export interface RouteOptions {
   relaxedTimeFiltering?: boolean;
   forceStageOrder?: boolean;
   disableStageInference?: boolean;
+  confidenceTier?: "commit" | "constrain";
 }
 
 interface Stage {
   type: string[];
   tags?: string[];
   timeCategory?: string;
-  vibe_keywords?: string[];
+  vibe?: string[];
   __stageIndex?: number;
 }
 
@@ -41,6 +42,35 @@ const DEFAULTS = {
 const CITY_DISTANCE_THRESHOLDS = {
   atl: { tight: 800, medium: 1600, loose: 2500 },
   nyc: { tight: 400, medium: 1200, loose: 2000 },
+};
+
+/**
+ * 🔒 STRICT TYPES
+ * These MUST match semantically — vibe/activity is not enough
+ */
+const STRICT_TYPES = new Set([
+  "breakfast",
+  "brunch",
+  "lunch",
+  "dinner",
+  "cocktails",
+  "wine bar",
+  "pilates",
+  "yoga",
+  "class",
+]);
+
+const MEAL_EQUIVALENTS: Record<string, string[]> = {
+  lunch: ["lunch", "sandwich", "deli", "salad", "cafe", "café"],
+  dinner: ["dinner"],
+  brunch: ["brunch", "cafe", "café"],
+};
+
+const DRINK_EQUIVALENTS: Record<string, string[]> = {
+  cocktails: ["cocktails", "bar", "lounge", "speakeasy", "rooftop"],
+  wine: ["wine bar"],
+  bar: ["bar", "cocktails", "lounge", "speakeasy"],
+  beer: ["bar", "brewery", "beer garden"],
 };
 
 function normalizeStagePlan(groups: string[][]): Stage[] {
@@ -77,12 +107,15 @@ export async function generateRoute(
     disableStageInference,
   } = opts;
 
+  const confidenceTier: "commit" | "constrain" =
+    opts.confidenceTier === "constrain" ? "constrain" : "commit";
+
   const cityThresholds =
     CITY_DISTANCE_THRESHOLDS[city] ?? CITY_DISTANCE_THRESHOLDS.atl;
 
-  const maxDistance = cityThresholds[tightness];
-  const MAX_MEAL_DISTANCE = maxDistMeal ?? maxDistance;
-  const MAX_OTHER_DISTANCE = maxDistOther ?? maxDistance;
+  const baseMaxDistance = cityThresholds[tightness];
+  const MAX_MEAL_DISTANCE = maxDistMeal ?? baseMaxDistance;
+  const MAX_OTHER_DISTANCE = maxDistOther ?? baseMaxDistance;
 
   const originLat = customStart?.lat ?? userLat;
   const originLon = customStart?.lon ?? userLon;
@@ -95,22 +128,25 @@ export async function generateRoute(
   // ---------------- STAGE PLAN ----------------
   let stagePlan: Stage[];
 
-  const isAIFlow = Boolean(stages?.[0]?.__stageIndex !== undefined);
-
-  if (forceStageOrder && Array.isArray(stages)) {
-    // ✅ AI flow: trust parseprompt output ONLY
+  if (forceStageOrder && Array.isArray(stages) && stages.length > 0) {
     stagePlan = stages;
   } else if (!disableStageInference) {
-    // 🧠 Fallback system stages
-    stagePlan = normalizeStagePlan(
-      sequencedStagesForNow(startTime, {
-        durationHours: maxStops,
-        latestEndHour,
-        theme,
-      })
-    );
+    stagePlan =
+      Array.isArray(stages) && stages.length > 0
+        ? stages
+        : normalizeStagePlan(
+            sequencedStagesForNow(startTime, {
+              durationHours: maxStops,
+              latestEndHour,
+              theme,
+            })
+          );
   } else {
-    stagePlan = [];
+    stagePlan = Array.isArray(stages) && stages.length > 0 ? stages : [];
+  }
+
+  if (!stagePlan.length) {
+    stagePlan = [{ type: ["activity"] }];
   }
 
   const route: Venue[] = [];
@@ -124,7 +160,7 @@ export async function generateRoute(
   const latestEndTime = new Date(startTime);
   latestEndTime.setHours(endHour, 0, 0, 0);
 
-  // ---------------- MAIN LOOP ----------------
+  // ---------------- ROUTING LOOP ----------------
   for (let i = 0; i < stagePlan.length && route.length < maxStops; i++) {
     const stage = stagePlan[i];
     if (!stage.type?.length) continue;
@@ -134,47 +170,82 @@ export async function generateRoute(
     );
     if (arrival > latestEndTime) break;
 
+    const isStrictStage = stage.type.some((t) => STRICT_TYPES.has(t));
+    const isActivityStage = stage.type.includes("activity");
+
     const candidates = pool
       .map((v) => {
         if (route.includes(v)) return null;
 
-        const venueTypes = Array.isArray(v.type) ? v.type : [v.type].filter(Boolean);
+        const venueTypes = Array.isArray(v.type)
+          ? v.type
+          : [v.type].filter(Boolean);
 
         const venueTags =
           typeof v.tags === "string"
             ? v.tags.split(",").map((t) => t.trim().toLowerCase())
             : [];
 
-        // ---------- MATCHING ----------
-        const exactTypeMatch =
-          stage.type.some((t) => venueTypes.includes(t));
+        const venueVibes =
+          typeof v.vibe === "string"
+            ? v.vibe.split(",").map((s) => s.trim().toLowerCase())
+            : [];
+
+        const stageVibes = Array.isArray(stage.vibe)
+          ? stage.vibe.map((s) => s.toLowerCase())
+          : [];
+
+        const exactTypeMatch = stage.type.some((t) => {
+          if (venueTypes.includes(t)) return true;
+          if (MEAL_EQUIVALENTS[t]) {
+            return MEAL_EQUIVALENTS[t].some((alt) =>
+              venueTypes.includes(alt)
+            );
+          }
+          if (DRINK_EQUIVALENTS[t]) {
+            return DRINK_EQUIVALENTS[t].some((alt) =>
+              venueTypes.includes(alt)
+            );
+          }
+          return false;
+        });
 
         const looseTypeMatch = looseHasType(v, stage.type);
 
         const tagMatch =
-          stage.tags?.some((tag) => venueTags.includes(tag.toLowerCase())) ??
-          false;
+          stage.tags?.some((tag) =>
+            venueTags.includes(tag.toLowerCase())
+          ) ?? false;
 
         const vibeMatch =
-          typeof v.vibe === "string" &&
-          stage.vibe_keywords?.some((kw) =>
-            v.vibe!.toLowerCase().includes(kw.toLowerCase())
+          stageVibes.length > 0 &&
+          stageVibes.some((kw) =>
+            venueVibes.some((vv) => vv.includes(kw) || kw.includes(vv))
           );
 
-        if (isAIFlow) {
-          // ✅ AI logic: type FIRST, tags secondary
-          if (!exactTypeMatch && !looseTypeMatch && !tagMatch) return null;
-        } else {
-          // legacy behavior
-          if (!hasType(v, stage.type) && !tagMatch && !vibeMatch) return null;
+        // ---------------- MATCHING RULES ----------------
+        if (isStrictStage) {
+          if (!exactTypeMatch && !looseTypeMatch) return null;
+        } else if (
+          !exactTypeMatch &&
+          !looseTypeMatch &&
+          !tagMatch &&
+          !vibeMatch &&
+          !isActivityStage
+        ) {
+          return null;
         }
 
-        // ---------- DISTANCE ----------
         const dist = getDistanceMeters(lastLat, lastLon, v.lat, v.lon);
-        const maxDist = isMealType(v) ? MAX_MEAL_DISTANCE : MAX_OTHER_DISTANCE;
-        if (dist > maxDist) return null;
+        const maxDist = isMealType(v)
+          ? MAX_MEAL_DISTANCE
+          : MAX_OTHER_DISTANCE;
 
-        // ---------- TIME ----------
+        // 🔒 UPDATED: hard distance cap EVEN IN COMMIT
+        const hardCapMultiplier = confidenceTier === "commit" ? 1.25 : 1.0;
+        const hardCap = maxDist * hardCapMultiplier;
+        if (dist > hardCap) return null;
+
         if (!relaxedTimeFiltering) {
           if (filterOpen && !_isOpenAt(v, arrival)) {
             if (!(v as any).liveEvent) return null;
@@ -185,20 +256,39 @@ export async function generateRoute(
         const similarity = lastVenue ? vibeSimilarity(lastVenue, v) : 1;
         if (lastVenue && similarity < minVibeSimilarity) return null;
 
-        // ---------- SCORING ----------
+        // ---------------- SCORING ----------------
         let score = 0;
-        if (exactTypeMatch) score += 3; // 🔥 explicit intent match
-        if (tagMatch) score += 2;
-        if (vibeMatch) score += 2;
 
-        (v as any).__score = score * 1000 + similarity * 500 - dist;
+        if (exactTypeMatch) score += 8;
+        if (looseTypeMatch) score += 3;
+        if (tagMatch) score += 3;
+        if (vibeMatch && !isStrictStage) score += 4;
+
+        if (isActivityStage && !isStrictStage) {
+          score += 2;
+          if (route.length === 0) score += 3;
+        }
+
+        const distancePenalty =
+          route.length === 0 ? dist * 0.0006 : dist * 0.0012;
+
+        (v as any).__score =
+          score * 1000 + similarity * 500 - distancePenalty;
+
         if ((v as any).liveEvent) (v as any).__score += 500;
 
         return v;
       })
       .filter(Boolean) as Venue[];
 
-    if (!candidates.length) continue;
+    if (!candidates.length) {
+      if (confidenceTier === "constrain") {
+        stage.type = ["activity"];
+        i--;
+        continue;
+      }
+      continue;
+    }
 
     candidates.sort((a, b) => (b as any).__score - (a as any).__score);
     const next = candidates[0];

@@ -1,3 +1,5 @@
+import { appendSegmentCacheKeyPart } from "next/dist/shared/lib/segment-cache/segment-value-encoding";
+
 export function vibesArray(input?: unknown): string[] {
   if (typeof input !== "string") return [];
   const trimmed = input.trim();
@@ -25,6 +27,12 @@ export function normalizeTag(tag: string): string {
     lifestyle: "fashion",
     karaoke: "music",
     live: "music",
+    cozy: "date night",
+    aesthetic: "vibe",
+    fashion: "lifestyle",
+    trendy: "hip",
+    chill: "relaxed",
+
   };
 
   return synonymMap[t] ?? t;

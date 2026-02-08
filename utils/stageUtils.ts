@@ -1,35 +1,57 @@
-// utils/stageUtils.ts
-
 /**
  * Defines stage groupings for sequential venue types throughout the day.
+ * All values must match canonical stage types.
  */
 export const STAGE_GROUPS: string[][] = [
-  ["coffee", "bakery"],                              // 0 - Morning
-  ["fitness", "yoga"],                                       // 1 - Morning Activity
-  ["market", "breakfast", "brunch"],                 // 2 - Late Morning / Brunch
-  ["park", "bookstore", "gallery", "museum", "tea", "garden"],                  // 3 - Daytime Chill
-  ["lifestyle", "random gem", "activity"],                       // 4 - Mid-Afternoon
-  ["lunch"],                                         // 5 - Lunch
-  ["activity", "gallery", "park"],                   // 6 - Afternoon Activity
-  ["cocktail", "wine bar","random gem"],                        // 7 - Pre-Dinner Chill
-  ["dinner"],                                        // 8 - Dinner
-  ["bar", "cocktail", "speakeasy", "lounge", "club"],        // 9 - Nightlife
+  ["coffee", "bakery", "tea"],                                       // 0 - Morning
+  ["fitness", "yoga", "pilates", "breakfast"],                                          // 1 - Morning Activity
+  ["breakfast", "brunch"],                                      // 2 - Late Morning / Brunch
+  ["gallery", "lifestyle", "activity", "bookstore", "library", "showroom"],                              // 3 - Daytime Chill
+  ["activity", "gallery", "shop", "lunch", "museum", "class"],                              // 4 - Mid-Afternoon
+  ["lunch", "cafe", "café"],                                                    // 5 - Lunch
+  ["activity", "gallery", "lifestyle"],                                      // 6 - Afternoon Activity
+  ["cocktails", "wine bar", "class"],                                    // 7 - Pre-Dinner Chill
+  ["dinner", "wine bar", "cocktails", "tea"],                                                   // 8 - Dinner
+  ["bar", "dessert", "cocktails", "lounge", "speakeasy", "club"],                       // 9 - Nightlife
 ];
 
 /**
  * Themed stage plans — override default sequence with focused crawl type.
+ * All types must be schema-compliant.
  */
 export const THEME_STAGE_OVERRIDES: Record<string, string[][]> = {
-  romantic: [["gallery"], ["dinner", "wine bar"], ["cocktail", "lounge"]],
-  foodie: [["breakfast", "brunch"], ["market"], ["lunch"], ["bakery"], ["dinner"]],
-  nightlife: [["dinner"], ["bar"], ["speakeasy"], ["lounge"], ["club"]],
-  culture: [["gallery"], ["bookstore"], ["gallery", "museum"]],
-  chill: [["park", "garden"], ["bakery"], ["cafe", "coffee"], ["cocktail"]],
+  romantic: [["gallery"], ["dinner", "wine bar"], ["cocktails", "lounge"]],
+  foodie: [["breakfast", "brunch"], ["shop"], ["lunch"], ["dessert"], ["dinner"]],
+  nightlife: [["dinner"], ["bar"], ["cocktails"], ["lounge"], ["club"]],
+  culture: [["gallery", "showroom"], ["gallery", "museum"], ["wine bar"]],
+  chill: [["gallery"], ["bookstore"], ["coffee", "tea", "cafe"], ["park", "garden"]],
+};
+
+/**
+ * Semantic fallback mapping for each canonical type.
+ * Should only contain schema-approved types.
+ */
+const FALLBACK_EQUIVALENTS: Record<string, string[]> = {
+  lunch: ["cafe", "coffee", "café"],
+  dinner: ["dinner"],
+  brunch: ["cafe", "café"],
+  cocktails: ["cocktails", "lounge", "speakeasy"],
+  bar: ["cocktails", "lounge"],
+  wine: ["wine bar", "cocktails"],
+  coffee: ["cafe", "café", "breakfast"],
+  dessert: ["bakery", "dessert"],
+  activity: ["park", "class"],
+  gallery: ["showroom", "museum"],
+  fitness: ["yoga", "pilates"],
+  yoga: ["yoga"],
+  club: ["lounge"],
+  lounge: ["speakeasy"],
+  shop: ["lifestyle"],
 };
 
 /**
  * Returns a fallback sequence of stage types based on a failed stage type.
- * Prioritizes the same group, then expands.
+ * Prioritizes the same group, then expands with semantic equivalents.
  */
 export function getSimilarStageTypes(stageType: string): string[] {
   for (const group of STAGE_GROUPS) {
@@ -42,9 +64,13 @@ export function getSimilarStageTypes(stageType: string): string[] {
 
 /**
  * Returns a short list of fallback types to try when a stage type fails.
+ * Combines group-based similarity with semantic equivalents.
  */
-export function fallbackFlowFromStage(stageType: string, limit: number = 3): string[] {
-  return [stageType, ...getSimilarStageTypes(stageType)].slice(0, limit);
+export function fallbackFlowFromStage(stageType: string, limit: number = 4): string[] {
+  const groupFallbacks = getSimilarStageTypes(stageType);
+  const semanticFallbacks = FALLBACK_EQUIVALENTS[stageType] ?? [];
+  const deduped = Array.from(new Set([stageType, ...groupFallbacks, ...semanticFallbacks]));
+  return deduped.slice(0, limit);
 }
 
 /**

@@ -24,7 +24,7 @@ export interface Stage {
    * Optional vibe / mood keywords
    * Examples: ["romantic"], ["casual"], ["high energy"]
    */
-  vibe_keywords?: string[];
+  vibe?: string[];
 
   /**
    * Optional coarse time bucket

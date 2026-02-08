@@ -40,7 +40,7 @@ export function normalizeStages(raw: any[]): Stage[] {
   return raw.map((s, index) => ({
     type: Array.isArray(s.type) ? s.type.map((t: string) => t.toLowerCase()) : [],
     tags: Array.isArray(s.tags) ? s.tags.map((t: string) => t.toLowerCase()) : [],
-    vibe_keywords: Array.isArray(s.vibe_keywords) ? s.vibe_keywords.map((v: string) => v.toLowerCase()) : [],
+    vibe: Array.isArray(s.vibe) ? s.vibe.map((v: string) => v.toLowerCase()) : [],
     timeCategory: typeof s.timeCategory === "string" ? s.timeCategory.toLowerCase() : undefined,
     __stageIndex: index,
   }));

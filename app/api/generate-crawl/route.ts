@@ -11,13 +11,14 @@ const CITY_DISTANCE_THRESHOLDS = {
   nyc: { tight: 750, medium: 1400, loose: 2100 },
 };
 
+type Tier = "commit" | "constrain" | "clarify";
+
 export async function POST(req: NextRequest) {
   let body: any;
 
   try {
     body = await req.json();
   } catch {
-    console.error("❌ JSON parsing error in request body");
     return NextResponse.json({ error: "Invalid JSON format" }, { status: 400 });
   }
 
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
     city,
     plannedStartAt,
     stages,
+    tier,
   } = body as {
     venues: Venue[];
     options?: Record<string, any>;
@@ -37,10 +39,19 @@ export async function POST(req: NextRequest) {
     city?: "atl" | "nyc";
     plannedStartAt?: string;
     stages?: any[];
+    tier: Tier;
   };
 
+  // ---------------- VALIDATION ----------------
+
+  if (!tier || !["commit", "constrain", "clarify"].includes(tier)) {
+    return NextResponse.json(
+      { error: "Missing or invalid tier" },
+      { status: 400 }
+    );
+  }
+
   if (!Array.isArray(venues) || venues.length === 0) {
-    console.warn("❌ No venues provided in request");
     return NextResponse.json(
       { error: "Venues must be a non-empty array." },
       { status: 400 }
@@ -53,7 +64,6 @@ export async function POST(req: NextRequest) {
     isNaN(userLat) ||
     isNaN(userLon)
   ) {
-    console.warn("❌ Invalid or missing user coordinates");
     return NextResponse.json(
       { error: "Invalid or missing user location." },
       { status: 400 }
@@ -61,14 +71,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (!city || (city !== "atl" && city !== "nyc")) {
-    console.warn("❌ Invalid or missing city");
     return NextResponse.json(
       { error: "Missing or invalid city." },
       { status: 400 }
     );
   }
 
-  console.log(`📦 Received ${venues.length} venues`);
+  // ---------------- TIME HANDLING ----------------
 
   let relaxedTimeFiltering = false;
 
@@ -80,6 +89,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ---------------- START LOCATION ----------------
+
   const startLat =
     typeof options.customStart?.lat === "number"
       ? options.customStart.lat
@@ -90,10 +101,14 @@ export async function POST(req: NextRequest) {
       ? options.customStart.lon
       : userLon;
 
+  // ---------------- DISTANCE ----------------
+
   const tightness: "tight" | "medium" | "loose" = options.tightness ?? "medium";
   options.maxDistanceMeters =
     CITY_DISTANCE_THRESHOLDS[city]?.[tightness] ??
     CITY_DISTANCE_THRESHOLDS[city].medium;
+
+  // ---------------- EVENTS ----------------
 
   const includeEvents = options.includeEvents ?? true;
   const eventOnly = options.eventOnly ?? false;
@@ -107,9 +122,8 @@ export async function POST(req: NextRequest) {
         ...ev,
         type: ev.type ?? ["event"],
       }));
-      console.log(`🎟️  Loaded ${eventVenues.length} event venues`);
-    } catch (err) {
-      console.warn("⚠️ Failed to fetch live events", err);
+    } catch {
+      // events are optional
     }
   }
 
@@ -119,36 +133,39 @@ export async function POST(req: NextRequest) {
         new Map([...venues, ...eventVenues].map((v) => [v.id, v])).values()
       );
 
-  console.log(`📊 Final venue pool: ${mergedVenues.length} venues`);
+  // ---------------- STAGES ----------------
 
-  const finalStages =
+  let normalizedStages =
     Array.isArray(stages) && stages.length > 0
       ? normalizeStages(stages)
-      : undefined;
+      : [];
 
-  const hasValidStages =
-    Array.isArray(finalStages) &&
-    finalStages.some((s) => Array.isArray(s.type) && s.type.length > 0);
-
-  console.log("🎯 Using stages in crawl:", hasValidStages ? finalStages : "NONE (manual fallback)");
-  if (hasValidStages && finalStages) {
-    finalStages.forEach((stage, idx) => {
-      console.log(`🔎 Stage ${idx}:`, stage);
-    });
+  // Guarantee at least one stage
+  if (normalizedStages.length === 0) {
+    normalizedStages = [{ type: ["activity"], tags: [], vibe: [] }];
   }
+
+  // ---------------- EFFECTIVE TIER ----------------
+  // clarify = constrain (low confidence, never blocking)
+
+  const effectiveTier: "commit" | "constrain" =
+    tier === "commit" && normalizedStages.length > 1
+      ? "commit"
+      : "constrain";
+
+  // ---------------- TIER ENFORCEMENT ----------------
+
+  if (effectiveTier === "constrain") {
+    options.maxStops = 2;
+  } else {
+    options.maxStops = Math.min(6, normalizedStages.length);
+  }
+
+  // ---------------- ROUTE GENERATION ----------------
 
   let route: Venue[];
 
   try {
-    console.log("⚙️ Starting route generation with options:", {
-      ...options,
-      eventOnly,
-      relaxedTimeFiltering,
-      forceStageOrder: hasValidStages,
-      disableStageInference: hasValidStages,
-      stages: finalStages,
-    });
-
     route = await generateRoute(
       mergedVenues,
       startLat,
@@ -157,45 +174,51 @@ export async function POST(req: NextRequest) {
         ...options,
         eventOnly,
         relaxedTimeFiltering,
-        forceStageOrder: hasValidStages,
-        disableStageInference: hasValidStages,
+        forceStageOrder: effectiveTier === "commit",
+        disableStageInference: effectiveTier === "commit",
+        confidenceTier: effectiveTier,
       },
-      hasValidStages ? finalStages : undefined
+      normalizedStages
     );
-  } catch (err) {
-    console.error("❌ Route generation failed:", err);
+  } catch {
     return NextResponse.json(
       { error: "Route generation failed." },
       { status: 500 }
     );
   }
 
+  // ---------------- GUARANTEES ----------------
+
   if (!route || route.length === 0) {
-    console.warn("🛑 No viable route found");
     return NextResponse.json(
-      {
-        error: "No viable route found.",
-        reason: hasValidStages
-          ? "AI stages too strict or no matching venues."
-          : "Filtering too strict or venue pool too small.",
-      },
+      { error: "No viable route found." },
       { status: 422 }
     );
   }
 
-  console.log(`✅ Route generated with ${route.length} stops`);
+  // If commit failed to fully satisfy, downgrade silently
+  if (
+    effectiveTier === "commit" &&
+    route.length < Math.min(4, normalizedStages.length)
+  ) {
+    return NextResponse.json({
+      route,
+      tier: "constrain",
+    });
+  }
+
+  // ---------------- SCHEDULING ----------------
 
   if (plannedStartAt && relaxedTimeFiltering) {
     try {
       const authHeader = req.headers.get("authorization");
-      if (!authHeader) throw new Error("Missing auth header");
+      if (!authHeader) throw new Error("Missing auth");
 
       const token = authHeader.replace("Bearer ", "").trim();
       const supabase = supabaseRouteHandler(req);
-      const { data: authData, error: authError } =
-        await supabase.auth.getUser(token);
+      const { data: authData } = await supabase.auth.getUser(token);
 
-      if (authError || !authData?.user) throw new Error("Unauthorized");
+      if (!authData?.user) throw new Error("Unauthorized");
 
       await supabase.from("scheduled_routes").insert({
         id: uuidv4(),
@@ -204,12 +227,15 @@ export async function POST(req: NextRequest) {
         route_data: route,
         status: "scheduled",
       });
-
-      console.log("📅 Scheduled crawl saved:", plannedStartAt);
-    } catch (err) {
-      console.error("❌ Scheduled crawl save failed:", err);
+    } catch {
+      // non-blocking
     }
   }
 
-  return NextResponse.json({ route });
+  // ---------------- RESPONSE ----------------
+
+  return NextResponse.json({
+    route,
+    tier: effectiveTier,
+  });
 }
