@@ -196,6 +196,64 @@ export function ControlPanel({
         </select>
       </div>
 
+      {/* Crawl Mode Toggle */}
+      <div className="space-y-0.5">
+        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Crawl</Label>
+        <ToggleGroup
+          type="single"
+          value={isScheduled ? 'scheduled' : 'now'}
+          onValueChange={(val) => {
+            if (!val) return
+            setIsScheduled(val === 'scheduled')
+            logEvent('crawl_mode_toggled', { metadata: { mode: val, city } })
+          }}
+          className="w-full gap-1"
+        >
+          <ToggleGroupItem
+            value="now"
+            className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+          >
+            Now
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="scheduled"
+            className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+          >
+            Scheduled
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      {isScheduled && (
+        <>
+          <div className="space-y-0.5">
+            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Date</Label>
+            <input
+              type="date"
+              value={crawlDate}
+              onChange={(e) => {
+                setCrawlDate(e.target.value)
+                logEvent('crawl_date_selected', { metadata: { date: e.target.value, city } })
+              }}
+              className={inputBase}
+            />
+          </div>
+
+          <div className="space-y-0.5">
+            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Time</Label>
+            <input
+              type="time"
+              value={crawlTime}
+              onChange={(e) => {
+                setCrawlTime(e.target.value)
+                logEvent('crawl_time_selected', { metadata: { time: e.target.value, city } })
+              }}
+              className={inputBase}
+            />
+          </div>
+        </>
+      )}
+
       <div className="space-y-1">
         <Button
           className="w-full h-8 text-xs border border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
