@@ -20,11 +20,25 @@ type SavedRouteResponse = {
   city: string | null
 }
 
-function normalizeCity(value: string | null): "atl" | "nyc" {
+function normalizeCity(
+  value: string | null
+): "atl" | "nyc" | "lisbon" | "porto" {
   if (!value) return "nyc"
+
   const v = value.toLowerCase()
+
+  // 🇺🇸 Atlanta
   if (v === "atl" || v === "atlanta") return "atl"
+
+  // 🇺🇸 New York
   if (["nyc", "new-york", "newyork", "ny"].includes(v)) return "nyc"
+
+  // 🇵🇹 Lisbon
+  if (["lis", "lisbon", "lx", "lisboa"].includes(v)) return "lisbon"
+
+  // 🇵🇹 Porto
+  if (["porto", "opo"].includes(v)) return "porto"
+
   return "nyc"
 }
 

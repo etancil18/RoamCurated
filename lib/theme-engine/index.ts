@@ -4,6 +4,7 @@ import { sortVenuesByScore } from "@/lib/theme-engine/scorer-fixed";
 import { selectCandidates } from "@/lib/theme-engine/selector";
 import { generateStageFlow, resolveStageEntry } from "@/lib/theme-engine/planner-fixed";
 import { getDistanceMeters } from "@/utils/geoUtils";
+import { DateTime } from "luxon";
 
 const DEFAULTS = {
   maxStops: 6,
@@ -11,11 +12,13 @@ const DEFAULTS = {
 };
 
 const CITY_DISTANCE_THRESHOLDS: Record<
-  "atl" | "nyc",
+  "atl" | "nyc" | "lisbon" | "porto",
   Record<"tight" | "medium" | "loose", number>
 > = {
   atl: { tight: 1000, medium: 2000, loose: 3500 },
   nyc: { tight: 250, medium: 800, loose: 1200 },
+  lisbon: { tight: 200, medium: 650, loose: 1000 },
+  porto: { tight: 175, medium: 550, loose: 850 },
 };
 
 export interface ThemeRouteOptions {
@@ -25,11 +28,11 @@ export interface ThemeRouteOptions {
   venues: Venue[];
   maxStops?: number;
   filterOpen?: boolean;
-  city?: "atl" | "nyc";
+  city?: "atl" | "nyc" | "lisbon" | "porto";
   tightness?: "tight" | "medium" | "loose";
   maxDistanceMeters?: number;
   eventOnly?: boolean;
-  startTime?: Date;
+  startTime?: DateTime;
   relaxedTimeFiltering?: boolean;
 }
 
@@ -44,7 +47,7 @@ export async function generateThemeRoute({
   tightness = "medium",
   maxDistanceMeters,
   eventOnly = false,
-  startTime = new Date(),
+  startTime,
   relaxedTimeFiltering = true,
 }: ThemeRouteOptions): Promise<Venue[]> {
   const theme = themeById[themeId];
@@ -91,7 +94,7 @@ export async function generateThemeRoute({
   const route: Venue[] = [];
   let lastLat = userLat;
   let lastLon = userLon;
-  let currentTime = startTime instanceof Date ? new Date(startTime) : new Date();
+  let currentTime = startTime ?? DateTime.now();
 
   for (let i = 0; i < stageFlow.length && route.length < maxStops; i++) {
     const stageEntry = stageFlow[i];
@@ -106,7 +109,7 @@ export async function generateThemeRoute({
       stageType: desiredType,
       selected: new Set(route.map((v) => v.id ?? v.name)),
       theme,
-      stageArrivalTime: new Date(currentTime),
+      stageArrivalTime: currentTime, // 🔥 Luxon-native
       relaxedMode: relaxedTimeFiltering,
       windowMinutes: DEFAULTS.fallbackWindowMinutes,
     });
@@ -158,9 +161,9 @@ export async function generateThemeRoute({
 
     lastLat = next.lat;
     lastLon = next.lon;
-    currentTime = new Date(
-      currentTime.getTime() + (next.duration || 1) * 60 * 60 * 1000
-    );
+    currentTime = currentTime.plus({
+      hours: next.duration || 1,
+    });
   }
 
   console.log(
@@ -182,7 +185,7 @@ export async function generateMultipleThemeRoutes({
   tightness = "medium",
   maxDistanceMeters,
   eventOnly = false,
-  startTime = new Date(),
+  startTime,
   relaxedTimeFiltering = true,
   variants = 5,
 }: ThemeRouteOptions & { variants?: number }): Promise<Venue[][]> {

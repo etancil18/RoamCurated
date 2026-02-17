@@ -9,6 +9,8 @@ import { normalizeStages } from "@/lib/prompt-engine/stageUtils";
 const CITY_DISTANCE_THRESHOLDS = {
   atl: { tight: 1000, medium: 2500, loose: 4500 },
   nyc: { tight: 750, medium: 1400, loose: 2100 },
+  lisbon: { tight: 800, medium: 1600, loose: 2600 },
+  porto: { tight: 700, medium: 1300, loose: 2000 },
 };
 
 type Tier = "commit" | "constrain" | "clarify";
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
     options?: Record<string, any>;
     userLat: number;
     userLon: number;
-    city?: "atl" | "nyc";
+    city?: "atl" | "nyc" | "lisbon" | "porto";
     plannedStartAt?: string;
     stages?: any[];
     tier: Tier;

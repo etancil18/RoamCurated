@@ -9,7 +9,7 @@ export type EventsModalProps = {
   interestedEvents: (InterestedEvent | null | undefined)[]
   loading: boolean
   route: Venue[]
-  city: 'atl' | 'nyc'
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto'
   onInsert: (venue: Venue, index: number) => void
   onClose: () => void
 }

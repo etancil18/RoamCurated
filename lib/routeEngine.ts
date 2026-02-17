@@ -5,9 +5,10 @@ import { isMealType } from "@/utils/typeUtils";
 import { sequencedStagesForNow } from "@/utils/stageUtils";
 import { getDistanceMeters } from "@/utils/geoUtils";
 import { looseHasType } from "@/lib/prompt-engine/semanticUtils";
+import { DateTime } from "luxon";
 
 export interface RouteOptions {
-  startTime?: Date | string;
+  startTime?: DateTime | Date | string;
   maxStops?: number;
   filterOpen?: boolean;
   customStart?: { lat: number; lon: number };
@@ -18,7 +19,7 @@ export interface RouteOptions {
   tightness?: "tight" | "medium" | "loose";
   maxDistMeal?: number;
   maxDistOther?: number;
-  city?: "atl" | "nyc";
+  city?: "atl" | "nyc" | "lisbon" | "porto";
   relaxedTimeFiltering?: boolean;
   forceStageOrder?: boolean;
   disableStageInference?: boolean;
@@ -42,12 +43,10 @@ const DEFAULTS = {
 const CITY_DISTANCE_THRESHOLDS = {
   atl: { tight: 800, medium: 1600, loose: 2500 },
   nyc: { tight: 400, medium: 1200, loose: 2000 },
+  lisbon: { tight: 300, medium: 900, loose: 1500 },
+  porto: { tight: 300, medium: 700, loose: 1300 },
 };
 
-/**
- * 🔒 STRICT TYPES
- * These MUST match semantically — vibe/activity is not enough
- */
 const STRICT_TYPES = new Set([
   "breakfast",
   "brunch",
@@ -84,12 +83,16 @@ export async function generateRoute(
   opts: RouteOptions = {},
   stages?: Stage[]
 ): Promise<Venue[]> {
-  const startTime =
-    opts.startTime instanceof Date
+  const startTimeLuxon =
+    opts.startTime instanceof DateTime
       ? opts.startTime
+      : opts.startTime instanceof Date
+      ? DateTime.fromJSDate(opts.startTime)
       : typeof opts.startTime === "string"
-      ? new Date(opts.startTime)
-      : new Date();
+      ? DateTime.fromISO(opts.startTime)
+      : DateTime.now();
+
+  const startTime = startTimeLuxon.toJSDate();
 
   const {
     maxStops = DEFAULTS.maxStops,
@@ -125,7 +128,6 @@ export async function generateRoute(
   );
   if (!pool.length) return [];
 
-  // ---------------- STAGE PLAN ----------------
   let stagePlan: Stage[];
 
   if (forceStageOrder && Array.isArray(stages) && stages.length > 0) {
@@ -160,7 +162,6 @@ export async function generateRoute(
   const latestEndTime = new Date(startTime);
   latestEndTime.setHours(endHour, 0, 0, 0);
 
-  // ---------------- ROUTING LOOP ----------------
   for (let i = 0; i < stagePlan.length && route.length < maxStops; i++) {
     const stage = stagePlan[i];
     if (!stage.type?.length) continue;
@@ -168,7 +169,10 @@ export async function generateRoute(
     const arrival = new Date(
       currentTime.getTime() + DEFAULTS.bufferHours * 3600 * 1000
     );
+
     if (arrival > latestEndTime) break;
+
+    const arrivalLuxon = DateTime.fromJSDate(arrival);
 
     const isStrictStage = stage.type.some((t) => STRICT_TYPES.has(t));
     const isActivityStage = stage.type.includes("activity");
@@ -223,7 +227,6 @@ export async function generateRoute(
             venueVibes.some((vv) => vv.includes(kw) || kw.includes(vv))
           );
 
-        // ---------------- MATCHING RULES ----------------
         if (isStrictStage) {
           if (!exactTypeMatch && !looseTypeMatch) return null;
         } else if (
@@ -241,22 +244,20 @@ export async function generateRoute(
           ? MAX_MEAL_DISTANCE
           : MAX_OTHER_DISTANCE;
 
-        // 🔒 UPDATED: hard distance cap EVEN IN COMMIT
         const hardCapMultiplier = confidenceTier === "commit" ? 1.25 : 1.0;
         const hardCap = maxDist * hardCapMultiplier;
         if (dist > hardCap) return null;
 
         if (!relaxedTimeFiltering) {
-          if (filterOpen && !_isOpenAt(v, arrival)) {
+          if (filterOpen && !_isOpenAt(v, arrivalLuxon)) {
             if (!(v as any).liveEvent) return null;
           }
-          if (!daypartAllowedAtTime(v, arrival)) return null;
+          if (!daypartAllowedAtTime(v, arrivalLuxon)) return null;
         }
 
         const similarity = lastVenue ? vibeSimilarity(lastVenue, v) : 1;
         if (lastVenue && similarity < minVibeSimilarity) return null;
 
-        // ---------------- SCORING ----------------
         let score = 0;
 
         if (exactTypeMatch) score += 8;
@@ -307,7 +308,11 @@ export async function generateRoute(
   return route;
 }
 
-function _isOpenAt(venue: Venue, when: Date): boolean {
+function _isOpenAt(venue: Venue, when: DateTime): boolean {
   const intervals = _intervalsForDate(when, venue.hoursNumeric || {});
-  return intervals.some(([open, close]) => when >= open && when < close);
+  const whenMillis = when.toMillis();
+
+  return intervals.some(([open, close]) => {
+    return whenMillis >= open.toMillis() && whenMillis < close.toMillis();
+  });
 }

@@ -7,9 +7,9 @@ import type { Database } from "@/types/supabase"
 type VenueRow = Database["public"]["Tables"]["venues"]["Row"]
 
 /**
- * ✅ Fetches all venues for a given city (ATL / NYC)
+ * ✅ Fetches all venues for a given city (ATL / NYC / LISBON / PORTO)
  */
-export async function getVenuesByCity(city: "atl" | "nyc"): Promise<VenueRow[]> {
+export async function getVenuesByCity(city: "atl" | "nyc" | "lisbon" | "porto"): Promise<VenueRow[]> {
   const supabase = await createServerClient() as SupabaseClient<Database>
 
   const { data: rawData, error } = await supabase

@@ -185,7 +185,7 @@ Return ONLY valid JSON:
   "tier": "commit" | "constrain" | "clarify",
   "stages": [
     {
-      "type": ["coffee","cafe","café","breakfast","brunch","lunch","dinner","cocktails","bar","wine bar","lounge","club","dessert","lifestyle","gallery","class","pilates","showroom","fitness","activity","yoga"],
+      "type": ["coffee","cafe","café","breakfast","brunch","lunch","dinner","cocktail","bar","wine bar","lounge","club","dessert","lifestyle","gallery","class","pilates","showroom","fitness","activity","yoga"],
       "tags": ["string"],
       "timeCategory": "Morning" | "Afternoon" | "Midday" | "Day" | "Evening" | "Late",
       "vibe": ["string"]

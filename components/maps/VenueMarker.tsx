@@ -8,11 +8,15 @@ import { coverCandidates } from '@/utils/imageUtils'
 import { logVenueImpression } from '@/lib/logVenue'
 import { FavoritesButton } from '@/components/FavoritesButton'
 import type { Marker as LeafletMarker, Icon, DivIcon } from 'leaflet'
+import type { DateTime } from 'luxon'
+import { DateTime as LuxonDateTime } from 'luxon'
+import { CITY_CONFIGS } from '@/config/cities'
 
 type Props = {
   venue: Venue
   index: number
   city: string
+  nowForCity: DateTime
   isRouteMode: boolean
   markerRefs: React.MutableRefObject<Record<string, LeafletMarker>>
   eventsByVenueId: Record<string, any[]>
@@ -31,21 +35,37 @@ export default function VenueMarker({
   venue: v,
   index,
   city,
+  nowForCity,
   isRouteMode,
   markerRefs,
   eventsByVenueId,
 }: Props) {
-  const isOpen = isVenueOpenNow(v)
+  const isOpen = useMemo(
+    () => isVenueOpenNow(v, nowForCity),
+    [v, nowForCity]
+  )
+
+  // ✅ Today’s hours (city-aware)
+  const todayHours = useMemo(() => {
+    if (!Array.isArray(v.hours)) return null
+
+    const today = nowForCity.setLocale('en-US').toFormat('cccc') // Monday, Tuesday, etc.
+    const match = v.hours.find((line: string) =>
+      line.toLowerCase().startsWith(today.toLowerCase())
+    )
+
+    return match ? match.split(': ').slice(1).join(': ') : null
+  }, [v.hours, nowForCity])
 
   const icon = useMemo<Icon | DivIcon | null>(() => {
     if (typeof window === 'undefined') return null
 
-    // ⛑️ Import Leaflet ONLY on the client
     const L = require('leaflet')
 
-    const todayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][
-      new Date().getDay()
-    ]
+    const weekdayIndex = nowForCity.weekday % 7
+    const todayKey =
+      ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][weekdayIndex]
+
     const dp = v.dayParts?.[todayKey] || ''
     const color = isOpen ? daypartColorMap[dp] || 'gray' : 'black'
 
@@ -80,22 +100,27 @@ export default function VenueMarker({
       popupAnchor: [1, -28],
       shadowSize: [30, 30],
     })
-  }, [index, isRouteMode, v.dayParts, isOpen])
+  }, [index, isRouteMode, v.dayParts, isOpen, nowForCity])
 
   const venueEvents = eventsByVenueId[v.id] ?? []
 
   const upcomingEvents = useMemo(() => {
-    const now = Date.now()
+    const nowMillis = nowForCity.toMillis()
+
     return venueEvents
-      .filter((ev) => ev.starts_at && new Date(ev.starts_at).getTime() >= now)
+      .filter((ev) => {
+        if (!ev.starts_at) return false
+        return LuxonDateTime.fromISO(ev.starts_at).toMillis() >= nowMillis
+      })
       .sort(
         (a, b) =>
-          new Date(a.starts_at).getTime() -
-          new Date(b.starts_at).getTime()
+          LuxonDateTime.fromISO(a.starts_at).toMillis() -
+          LuxonDateTime.fromISO(b.starts_at).toMillis()
       )
-  }, [venueEvents])
+  }, [venueEvents, nowForCity])
 
   const firstCandidate = coverCandidates(v)[0]
+  const timezone = CITY_CONFIGS[city]?.timezone ?? 'UTC'
 
   if (!icon) return null
 
@@ -150,6 +175,13 @@ export default function VenueMarker({
             </span>
           </div>
 
+          {/* 🔥 Today’s Hours */}
+          {todayHours && (
+            <div>
+              <em>Hours:</em> {todayHours}
+            </div>
+          )}
+
           {v.id && (
             <a
               href={`/venue-profile/${v.id}`}
@@ -169,12 +201,9 @@ export default function VenueMarker({
               <ul style={{ marginTop: 6, paddingLeft: 16 }}>
                 {upcomingEvents.map((ev) => (
                   <li key={ev.id}>
-                    {new Date(ev.starts_at).toLocaleString('en-US', {
-                      month: 'numeric',
-                      day: 'numeric',
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}{' '}
+                    {LuxonDateTime.fromISO(ev.starts_at)
+                      .setZone(timezone)
+                      .toFormat('M/d h:mm a')}{' '}
                     — {ev.title}
                   </li>
                 ))}

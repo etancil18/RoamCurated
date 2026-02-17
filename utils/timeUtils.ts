@@ -1,13 +1,12 @@
-// utils/timeUtils.ts
-
 import type { Venue } from "@/types/venue";
+import { DateTime } from "luxon";
 
 /** --------------------------------------------------
  * Helpers
  * -------------------------------------------------- */
 
-export function _dayKey(d: Date): string {
-  return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][d.getDay()];
+export function _dayKey(d: DateTime): string {
+  return ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][d.weekday % 7];
 }
 
 export function _ranges(x: any): any[] {
@@ -16,42 +15,39 @@ export function _ranges(x: any): any[] {
 }
 
 /** --------------------------------------------------
- * Open hours resolution (future‑aware)
+ * Open hours resolution (FULLY TZ-SAFE — Luxon native)
  * -------------------------------------------------- */
 
 export function _intervalsForDate(
-  d: Date,
+  atTime: DateTime,
   hours: Record<string, any>
-): [Date, Date][] {
-  const y = d.getFullYear();
-  const m = d.getMonth();
-  const day = d.getDate();
+): [DateTime, DateTime][] {
 
-  const zero = new Date(y, m, day);
-  zero.setHours(0, 0, 0, 0);
+  const startOfDay = atTime.startOf("day");
+  const out: [DateTime, DateTime][] = [];
 
-  const at = (h: number) => new Date(zero.getTime() + h * 3600 * 1000);
-  const out: [Date, Date][] = [];
+  const at = (h: number) =>
+    startOfDay.plus({ hours: h });
 
-  // Same‑day intervals
-  _ranges(hours[_dayKey(d)] || []).forEach((r: any) => {
+  // Same-day intervals
+  _ranges(hours[_dayKey(atTime)] || []).forEach((r: any) => {
     if (r?.open != null && r?.close != null) {
-      out.push([at(r.open), at(r.close)]);
+      out.push([
+        at(r.open),
+        at(r.close),
+      ]);
     }
   });
 
-  // Previous‑day spillover (e.g. closes at 26 = 2am)
-  const yst = new Date(zero);
-  yst.setDate(zero.getDate() - 1);
+  // Previous-day spillover (e.g. closes at 26 = 2am)
+  const yesterday = atTime.minus({ days: 1 });
+  const startOfYesterday = yesterday.startOf("day");
 
-  _ranges(hours[_dayKey(yst)] || []).forEach((r: any) => {
+  _ranges(hours[_dayKey(yesterday)] || []).forEach((r: any) => {
     if (r?.close > 24) {
-      const yz = new Date(yst);
-      yz.setHours(0, 0, 0, 0);
-
       out.push([
-        new Date(yz.getTime() + r.open * 3600 * 1000),
-        new Date(yz.getTime() + r.close * 3600 * 1000),
+        startOfYesterday.plus({ hours: r.open }),
+        startOfYesterday.plus({ hours: r.close }),
       ]);
     }
   });
@@ -60,13 +56,14 @@ export function _intervalsForDate(
 }
 
 /** --------------------------------------------------
- * Daypart filtering — FUTURE‑SAFE
+ * Daypart filtering — FUTURE-SAFE (Luxon)
  * -------------------------------------------------- */
 
 export function daypartAllowedAtTime(
   loc: { dayParts?: Record<string, string> | null },
-  atTime: Date
+  atTime: DateTime
 ): boolean {
+
   const dp =
     typeof loc.dayParts === "object" &&
     loc.dayParts !== null &&
@@ -76,16 +73,16 @@ export function daypartAllowedAtTime(
 
   if (!dp || dp === "-") return true;
 
-  const hour = atTime.getHours() + atTime.getMinutes() / 60;
+  const hour = atTime.hour + atTime.minute / 60;
   const letter = String(dp).toUpperCase();
 
   const windowByLetter: Record<string, [number, number]> = {
-    M: [5, 12],     // Morning
-    MD: [10, 15],   // Midday
-    A: [12, 17],    // Afternoon
-    HH: [16, 19],   // Happy Hour
-    E: [17, 24],    // Evening
-    L: [22, 28],    // Late night (→ 4am)
+    M: [5, 12],
+    MD: [10, 15],
+    A: [12, 17],
+    HH: [16, 19],
+    E: [17, 24],
+    L: [22, 28],
   };
 
   const w = windowByLetter[letter];
@@ -93,38 +90,44 @@ export function daypartAllowedAtTime(
 
   const [start, end] = w;
 
-  // Handles windows that pass midnight
   return end <= 24
     ? hour >= start && hour < end
     : hour >= start || hour < end - 24;
 }
 
 /** --------------------------------------------------
- * Venue open checks (future‑aware)
+ * Venue open checks (STRICT LUXON INJECTION)
  * -------------------------------------------------- */
 
+/**
+ * Canonical open check.
+ * Must pass Luxon DateTime.
+ */
 export function isVenueOpenNow(
   venue: Venue,
-  atTime: Date = new Date()
+  atTime: DateTime
 ): boolean {
   const intervals = _intervalsForDate(atTime, venue.hoursNumeric || {});
-  return intervals.some(([open, close]) => atTime >= open && atTime < close);
+  return intervals.some(
+    ([open, close]) => atTime >= open && atTime < close
+  );
 }
 
 export function isVenueOpenAtTime(
   venue: Venue,
-  atTime: Date
+  atTime: DateTime
 ): boolean {
   return isVenueOpenNow(venue, atTime);
 }
 
 export function isVenueOpenWithinWindow(
   venue: Venue,
-  atTime: Date,
+  atTime: DateTime,
   windowMinutes: number
 ): boolean {
+
   const intervals = _intervalsForDate(atTime, venue.hoursNumeric || {});
-  const windowEnd = new Date(atTime.getTime() + windowMinutes * 60 * 1000);
+  const windowEnd = atTime.plus({ minutes: windowMinutes });
 
   return intervals.some(
     ([open]) => open >= atTime && open <= windowEnd
@@ -132,13 +135,12 @@ export function isVenueOpenWithinWindow(
 }
 
 /** --------------------------------------------------
- * ⚠️ Legacy compatibility (DO NOT USE FOR NEW CODE)
+ * ⚠️ Legacy compatibility (avoid new usage)
  * -------------------------------------------------- */
 
 export function daypartAllowedForNow(
   loc: { dayParts?: Record<string, string> | null },
-  now: Date
+  now: DateTime
 ): boolean {
-  // Delegate to future‑safe version
   return daypartAllowedAtTime(loc, now);
 }

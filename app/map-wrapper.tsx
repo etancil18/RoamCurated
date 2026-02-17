@@ -129,6 +129,8 @@ export default function MapWrapper() {
   const fallbackCoords: Record<string, { lat: number; lon: number }> = {
     atl: { lat: 33.749, lon: -84.388 },
     nyc: { lat: 40.73061, lon: -73.935242 },
+    lisbon: { lat: 38.7223, lon: -9.1393 },
+    porto: { lat: 41.1579, lon: -8.6291 },
   }
 
   const startLat = customStart?.lat ?? fallbackCoords[selectedCity]?.lat ?? 37.8
@@ -316,7 +318,7 @@ export default function MapWrapper() {
 
       {isPanelOpen && (
         <ControlPanel
-          city={selectedCity as 'atl' | 'nyc' | null}
+          city={selectedCity as 'atl' | 'nyc' | 'lisbon' | 'porto' | null}
           onCityChange={setSelectedCity}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -351,7 +353,7 @@ export default function MapWrapper() {
         onRoute={setRoute}
         selectedThemeId={selectedThemeId}
         customStart={customStart}
-        city={selectedCity as 'atl' | 'nyc' | null}
+        city={selectedCity as 'atl' | 'nyc' | 'lisbon' | 'porto' | null}
         onGenerateRoute={handleGenerateRoute}
       />
 

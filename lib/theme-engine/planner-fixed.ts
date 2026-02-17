@@ -29,44 +29,43 @@ export type StageFlow = StageFlowEntry[];
  */
 export const fallbackStageFlows: Record<string, StageFlow> = {
   morning: [
-    "fitness",
+    ["fitness", "yoga", "pilates"],
     ["coffee", "tea"],
-    "breakfast",
-    ["park", "market"],
+    ["breakfast", "brunch", "cafe", "café"],
+    ["park", "market", "lifestyle", "gallery", "bookstore", "showroom"],
     "lunch"
   ],
   midday: [
     "lunch",
-    ["gallery", "bookstore"],
+    ["gallery", "bookstore", "showroom", "lifestyle"],
     ["wine bar", "random gem"],
-    ["park", "market"],
-    "dinner"
+    ["park", "market", "lifestyle"],
+    ["dinner", "wine bar"]
   ],
   afternoon: [
     "lunch",
-    ["random gem", "cafe"],
+    ["random gem", "cafe", "café"],
     ["lifestyle", "gallery", "bookstore"],
     "dinner"
   ],
   day: [
     "lunch",
-    ["gallery", "bookstore"],
+    ["gallery", "bookstore", "showroom", "lifestyle"],
     ["park", "wine bar", "random gem"],
     "dinner"
   ],
   evening: [
     "dinner",
-    ["wine bar", "cocktail"],
-    "activity",
-    "dessert"
+    ["wine bar", "cocktail", "speakeasy", "dessert"],
+    "cocktail"
   ],
   night: [
     "dinner",
-    ["wine bar", "bar"],
-    ["club", "rooftop", "speakeasy", "lounge"]
+    ["wine bar", "bar", "cocktail"],
+    ["club", "rooftop", "speakeasy", "lounge", "bar"]
   ],
   "late-night": [
-    ["cocktail", "bar"],
+    ["cocktail", "bar", "club"],
     ["club", "lounge"]
   ],
 };

@@ -1,5 +1,6 @@
 import type { Venue } from "@/types/venue";
 import type { StageFlow } from "@/lib/theme-engine/planner-fixed";
+import { DateTime } from "luxon";
 
 
 export type CrawlTheme = {
@@ -33,12 +34,13 @@ export type ThemeRouteOptions = {
   userLat: number;
   userLon: number;
   customStart?: { lat: number; lon: number };
-  startTime?: Date;
+  startTime?: DateTime;
   maxStops?: number;
   filterOpen?: boolean; // true = strict (must be open at arrival), false = relaxed (can open within 90 mins)
   maxDistanceMeters?: number;
   eventOnly?: boolean;
   relaxedTimeFiltering?: boolean;
+  city?: "atl" | "nyc" | "lisbon" | "porto";
 };
 
 export type Stage = {

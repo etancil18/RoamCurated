@@ -20,25 +20,12 @@ export default function LoginPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // 🔥 Redirect once user is actually available
+  // ✅ Single redirect source: derived user state
   useEffect(() => {
     if (user) {
       router.replace('/')
     }
   }, [user, router])
-
-  // 🔥 Listen for auth state change (this fixes the race condition)
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        router.replace('/')
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase, router])
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault()
@@ -52,13 +39,21 @@ export default function LoginPage() {
       return
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error: signInError, data } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
     if (signInError) {
       setError(signInError.message)
+      setLoading(false)
+      return
+    }
+
+    // ✅ Explicit redirect on success
+    if (data.session) {
+      router.replace('/')
     }
 
     setLoading(false)

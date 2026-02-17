@@ -1,5 +1,6 @@
 import type { CrawlTheme } from "@/lib/theme-engine/types";
 import type { Venue } from "@/types/venue";
+import { DateTime } from "luxon";
 import { matchesThemeFilters } from "../../utils/typeUtils";
 import {
   isVenueOpenAtTime,
@@ -112,11 +113,13 @@ export function selectCandidates({
   stageType: string;
   selected: Set<string>;
   theme: CrawlTheme;
-  stageArrivalTime: Date;
+  stageArrivalTime: DateTime;
   relaxedMode?: boolean;
   windowMinutes?: number;
 }): Venue[] {
-  const isFutureCrawl = stageArrivalTime.getTime() > Date.now();
+  const now = DateTime.now().setZone(stageArrivalTime.zone);
+  const isFutureCrawl = stageArrivalTime.toMillis() > now.toMillis();
+
 
   return venues.filter((v) => {
     const venueId = v.id || v.name;
@@ -139,7 +142,12 @@ export function selectCandidates({
 
     // Time gating (open now, opens soon, relaxed future crawl)
     const openNow = isVenueOpenAtTime(v, stageArrivalTime);
-    const opensSoon = isVenueOpenWithinWindow(v, stageArrivalTime, windowMinutes);
+    const opensSoon = isVenueOpenWithinWindow(
+      v,
+      stageArrivalTime,
+      windowMinutes
+    );
+    
     if (!(openNow || opensSoon || (relaxedMode && isFutureCrawl))) return false;
 
     if (!daypartAllowedAtTime(v, stageArrivalTime)) return false;

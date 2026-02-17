@@ -11,7 +11,11 @@ import {
 /**
  * City-specific curved distance scoring
  */
-function distanceScore(city: "nyc" | "atl", meters: number): number {
+function distanceScore(
+  city: "nyc" | "atl" | "lisbon" | "porto",
+  meters: number
+): number {
+  // 🇺🇸 New York (very dense)
   if (city === "nyc") {
     if (meters < 500) return 1;
     if (meters < 1000) return 0.6;
@@ -19,7 +23,23 @@ function distanceScore(city: "nyc" | "atl", meters: number): number {
     return -meters / 1000;
   }
 
-  // Default to ATL
+  // 🇵🇹 Porto (compact but slightly looser than NYC)
+  if (city === "porto") {
+    if (meters < 600) return 1;
+    if (meters < 1200) return 0.6;
+    if (meters < 1800) return 0.2;
+    return -meters / 1200;
+  }
+
+  // 🇵🇹 Lisbon (dense but hill friction + broader sprawl)
+  if (city === "lisbon") {
+    if (meters < 700) return 1;
+    if (meters < 1400) return 0.6;
+    if (meters < 2200) return 0.2;
+    return -meters / 1400;
+  }
+
+  // 🇺🇸 Atlanta (default — sprawled)
   if (meters < 1000) return 1;
   if (meters < 2000) return 0.6;
   if (meters < 3000) return 0.2;
@@ -35,7 +55,7 @@ export function computeScore(
   theme: CrawlTheme,
   origin: { lat: number; lon: number },
   lastVenue: Venue | null,
-  city: "nyc" | "atl" = "atl",
+  city: "nyc" | "atl" | "lisbon" | "porto" = "atl",
   weight?: {
     vibe?: number;
     tag?: number;
@@ -116,7 +136,7 @@ export function sortVenuesByScore(
   theme: CrawlTheme,
   origin: { lat: number; lon: number },
   lastVenue: Venue | null,
-  city: "nyc" | "atl" = "atl"
+  city: "nyc" | "atl" | "lisbon" | "porto" = "atl"
 ): Venue[] {
   return venues
     .map((v) => ({

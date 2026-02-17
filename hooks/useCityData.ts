@@ -6,11 +6,15 @@ import type { Venue } from '@/types/venue'
 // Import raw city data (not typed yet)
 import atlantaData from '@/data/atlanta'
 import nycData from '@/data/nyc'
+import portoData from '@/data/porto'
+import lisbonData from '@/data/lisbon'
 
 // Raw data type — unknown or loosely typed
 const RAW_CITY_DATA: Record<string, any[]> = {
   atl: atlantaData,
   nyc: nycData,
+  porto: portoData,
+  lisbon: lisbonData,
 }
 
 type Event = {

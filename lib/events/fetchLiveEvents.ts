@@ -16,7 +16,7 @@ type EventRecord = {
  * and return them as enriched Venue objects for crawl logic.
  */
 export async function fetchLiveEventsForCity(
-  city: "atl" | "nyc"
+  city: "atl" | "nyc" | "lisbon" | "porto"
 ): Promise<Venue[]> {
   const supabase = await supabaseServerApi();
 

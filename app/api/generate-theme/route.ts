@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DateTime } from "luxon";
 import { generateThemeRoute, generateMultipleThemeRoutes } from "@/lib/theme-engine";
 import { fetchLiveEventsForCity } from "@/lib/events/fetchLiveEvents";
 import type { Venue } from "@/types/venue";
 import type { ThemeRouteOptions } from "@/lib/theme-engine/types";
+import { CITY_CONFIGS } from "@/config/cities";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +24,7 @@ export async function POST(req: NextRequest) {
       userLat: number;
       userLon: number;
       options?: Record<string, any>;
-      city?: "atl" | "nyc";
+      city?: "atl" | "nyc" | "lisbon" | "porto";
       plannedStartAt?: string;
     };
 
@@ -52,43 +54,70 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!city || (city !== "atl" && city !== "nyc")) {
+    if (
+      !city ||
+      (city !== "atl" &&
+        city !== "nyc" &&
+        city !== "lisbon" &&
+        city !== "porto")
+    ) {
       return NextResponse.json(
-        { error: "Missing or invalid city (must be atl or nyc)." },
+        {
+          error:
+            "Missing or invalid city (must be atl, nyc, lisbon, or porto).",
+        },
         { status: 400 }
       );
     }
 
-    const plannedStartAt = plannedStartAtTop ?? options.plannedStartAt ?? null;
+    const timezone = CITY_CONFIGS[city].timezone;
 
-    let startTime: Date | undefined;
+    const plannedStartAt =
+      plannedStartAtTop ?? options.plannedStartAt ?? null;
+
+    let startTime: DateTime | undefined;
     let relaxedTimeFiltering = true;
 
     if (plannedStartAt) {
-      const parsed = new Date(plannedStartAt);
-      if (!isNaN(parsed.getTime())) {
+      const parsed = DateTime.fromISO(plannedStartAt, {
+        zone: timezone,
+      });
+
+      if (parsed.isValid) {
         startTime = parsed;
-        if (parsed > new Date()) relaxedTimeFiltering = true;
+
+        if (parsed > DateTime.now().setZone(timezone)) {
+          relaxedTimeFiltering = true;
+        }
       }
     }
 
-    const tightness: "tight" | "medium" | "loose" = options.tightness ?? "medium";
+    const tightness: "tight" | "medium" | "loose" =
+      options.tightness ?? "medium";
+
     const maxDistanceMeters = options.maxDistanceMeters ?? undefined;
 
     const customLat = options.customStart?.lat;
     const customLon = options.customStart?.lon;
 
     const originLat =
-      typeof customLat === "number" && !isNaN(customLat) ? customLat : userLat;
+      typeof customLat === "number" && !isNaN(customLat)
+        ? customLat
+        : userLat;
+
     const originLon =
-      typeof customLon === "number" && !isNaN(customLon) ? customLon : userLon;
+      typeof customLon === "number" && !isNaN(customLon)
+        ? customLon
+        : userLon;
 
     const includeEvents: boolean = options.includeEvents ?? true;
     const eventOnly: boolean = options.eventOnly ?? false;
 
     let eventVenues: Venue[] = [];
+
     if (includeEvents || eventOnly) {
       const liveEvents = await fetchLiveEventsForCity(city);
+
       eventVenues = liveEvents.map((ev) => ({
         ...ev,
         type: ev.type ?? ["event"],
@@ -109,6 +138,7 @@ export async function POST(req: NextRequest) {
       filterOpen: options.filterOpen ?? true,
       maxDistanceMeters,
       eventOnly,
+      city,
       startTime,
       relaxedTimeFiltering,
     };
@@ -131,10 +161,11 @@ export async function POST(req: NextRequest) {
       route,
       alternatives: altRoutes,
       fallbackUsed: false,
-      plannedStartAt: startTime?.toISOString() ?? null,
+      plannedStartAt: startTime?.toISO() ?? null,
     });
   } catch (err: any) {
     console.error("❌ Theme route generation failed:", err);
+
     return NextResponse.json(
       {
         error: "Route generation failed.",

@@ -24,6 +24,7 @@ import { useCityData } from '@/hooks/useCityData'
 
 import { CITY_CONFIGS } from '@/config/cities'
 import { THEME_COLORS } from '@/config/themeColors'
+import { getCityNow } from '@/lib/getCityNow'
 
 import type { Venue } from '@/types/venue'
 
@@ -75,8 +76,24 @@ export default function MapCanvas({
   const [showCitySelector, setShowCitySelector] = useState(true)
   const [enableScrollZoom, setEnableScrollZoom] = useState(false)
 
+  // 🔥 Live minute tick for real-time marker updates
+  const [minuteTick, setMinuteTick] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMinuteTick((prev) => prev + 1)
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [])
+
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, LeafletMarker>>({})
+
+  // ✅ Canonical city-relative time (single source of truth)
+  const nowForCity = useMemo(() => {
+    return selectedCity ? getCityNow(selectedCity) : null
+  }, [selectedCity, minuteTick])
 
   // ✅ SSR-safe Leaflet icon patch
   useEffect(() => {
@@ -102,6 +119,7 @@ export default function MapCanvas({
     },
     [onCityChange]
   )
+
 
   const cityConfig = selectedCity ? CITY_CONFIGS[selectedCity] : null
   const mapCenter = cityConfig?.center ?? USA_CENTER
@@ -135,10 +153,8 @@ export default function MapCanvas({
     }
   }, [selectedCity])
 
-  // 🔥 SEARCH FIX (ONLY CHANGE IS HERE)
   const filteredVenues = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
-
     if (!term) return venues
 
     return allVenues.filter((venue) => {
@@ -167,7 +183,7 @@ export default function MapCanvas({
 
       return nameMatch || vibeMatch || typeMatch || tagsMatch
     })
-  }, [allVenues, venues, searchTerm]) // ✅ FIXED DEPENDENCIES ONLY
+  }, [allVenues, venues, searchTerm])
 
   return (
     <div className="h-screen w-screen relative">
@@ -219,6 +235,7 @@ export default function MapCanvas({
         )}
 
         {selectedCity &&
+          nowForCity &&
           (visibleRoute.length > 1 ? visibleRoute : filteredVenues).map(
             (venue: Venue, idx: number) => (
               <VenueMarker
@@ -226,6 +243,7 @@ export default function MapCanvas({
                 venue={venue}
                 index={idx}
                 city={selectedCity}
+                nowForCity={nowForCity}
                 isRouteMode={visibleRoute.length > 0}
                 markerRefs={markerRefs}
                 eventsByVenueId={eventsByVenueId}

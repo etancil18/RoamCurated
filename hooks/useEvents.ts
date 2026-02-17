@@ -7,7 +7,7 @@ type Event = {
   ends_at: string | null
   tags: string[] | null
   price_info: string | null
-  description?: string | null;
+  description?: string | null
   is_active: boolean
   interest_count?: number
   venue: {
@@ -18,12 +18,12 @@ type Event = {
     lon: number
     city: string
     cover: string | null
-    link?: string | null;
+    link?: string | null
   } | null
 }
 
 export function useEvents(
-  city: 'atl' | 'nyc',
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | null,
   daysAhead = 7,
   tags?: string[],
   activeOnly = true,
@@ -34,16 +34,23 @@ export function useEvents(
   const [error, setError] = useState<Error | null>(null)
 
   const fetchEvents = useCallback(async () => {
+    // 🔥 Do not fetch without a valid city
+    if (!city) {
+      setEvents([])
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     const from = new Date()
-    from.setUTCHours(0, 0, 0, 0) // ✅ Include all of today
+    from.setUTCHours(0, 0, 0, 0)
+
     const to = new Date()
     to.setDate(to.getDate() + daysAhead)
 
     const params = new URLSearchParams({
-      city,
+      city, // now guaranteed non-null
       from: from.toISOString(),
       to: to.toISOString(),
       limit: limit.toString(),
@@ -61,7 +68,9 @@ export function useEvents(
       const res = await fetch(`/api/events?${params.toString()}`)
       const json = await res.json()
 
-      if (!res.ok) throw new Error(json.error || 'Failed to fetch events')
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to fetch events')
+      }
 
       console.log(
         `🎟️ useEvents fetched ${json.events?.length ?? 0} events for city: ${city}`
