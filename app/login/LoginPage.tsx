@@ -1,9 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { useUser } from '@/hooks/useUser'
 import type { Database } from '@/types/supabase'
 
 export default function LoginPage() {
@@ -12,20 +10,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-  const router = useRouter()
-  const { user } = useUser()
 
   const supabase = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
-
-  // ✅ Single redirect source: derived user state
-  useEffect(() => {
-    if (user) {
-      router.replace('/')
-    }
-  }, [user, router])
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault()
@@ -39,7 +28,7 @@ export default function LoginPage() {
       return
     }
 
-    const { error: signInError, data } =
+    const { error: signInError } =
       await supabase.auth.signInWithPassword({
         email,
         password,
@@ -51,12 +40,13 @@ export default function LoginPage() {
       return
     }
 
-    // ✅ Explicit redirect on success
-    if (data.session) {
-      router.replace('/')
-    }
+    // 🔥 Force cookie/session write
+    await supabase.auth.getSession()
 
     setLoading(false)
+
+    // 🔥 Hard redirect so middleware immediately sees auth
+    window.location.href = '/'
   }
 
   async function handleForgotPassword() {
@@ -124,7 +114,9 @@ export default function LoginPage() {
         </button>
 
         {error && (
-          <p className="text-red-600 dark:text-red-400 text-center mt-4">⚠️ {error}</p>
+          <p className="text-red-600 dark:text-red-400 text-center mt-4">
+            ⚠️ {error}
+          </p>
         )}
 
         {successMessage && (
