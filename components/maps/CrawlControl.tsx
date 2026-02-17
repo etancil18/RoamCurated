@@ -253,7 +253,7 @@ export default function CrawlControl({
   return (
     <>
       {(Array.isArray(route) && route.length > 0) || showCrawlInfo ? (
-        <div className="fixed bottom-3 left-3 z-[2000] max-w-[85vw] bg-black/70 backdrop-blur-sm text-white px-2 py-2 rounded-lg shadow-lg text-xs">
+        <div className="fixed bottom-3 left-3 z-[2000] w-[45vw] max-w-xs bg-black/70 backdrop-blur-sm text-white px-2 py-2 rounded-lg shadow-lg text-xs">
           <div className="space-y-1">
             <h3 className="font-medium uppercase tracking-wide opacity-80">
               Your Stops:

@@ -309,11 +309,11 @@ export default function MapWrapper() {
     <main className="h-screen w-screen relative overflow-hidden">
       <LeafletSetup />
       <button
-        onClick={() => setIsPanelOpen(!isPanelOpen)}
-        className="absolute bottom-[80px] right-4 z-[1100] bg-black/80 text-white px-3 py-1 rounded-md shadow"
-      >
-        {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
-      </button>
+  onClick={() => setIsPanelOpen(!isPanelOpen)}
+  className="fixed bottom-12 right-3 z-[2000] bg-black/80 text-white px-2 py-1 rounded text-xs shadow backdrop-blur-sm"
+>
+  {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
+</button>
 
 
       {isPanelOpen && (

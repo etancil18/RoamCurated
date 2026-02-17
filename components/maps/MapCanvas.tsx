@@ -187,14 +187,14 @@ export default function MapCanvas({
 
   return (
     <div className="h-screen w-screen relative">
-      <div className="absolute bottom-11 right-4 z-[1100]">
-        <button
-          onClick={() => setShowCitySelector(prev => !prev)}
-          className="bg-black/80 text-white px-3 py-1 rounded-md shadow"
-        >
-          {showCitySelector ? 'Hide Cities' : '🌆 Choose City'}
-        </button>
-      </div>
+      <div className="fixed bottom-3 right-3 z-[2000]">
+  <button
+    onClick={() => setShowCitySelector(prev => !prev)}
+    className="bg-black/80 text-white px-2 py-1 rounded text-xs shadow backdrop-blur-sm"
+  >
+    {showCitySelector ? 'Hide Cities' : '🌆 Choose City'}
+  </button>
+</div>
 
       {showCitySelector && (
         <CitySelector

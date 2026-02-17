@@ -92,9 +92,9 @@ export function ControlPanel({
   }
 
   const inputBase =
-    'w-full h-9 px-2 py-1 border rounded-md text-sm bg-white text-zinc-900 ' +
+    'w-full h-8 px-2 border rounded text-xs bg-white text-zinc-900 ' +
     'dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-600 ' +
-    'focus:outline-none focus:ring-2 focus:ring-blue-500'
+    'focus:outline-none focus:ring-1 focus:ring-blue-500'
 
   return (
     <div
@@ -102,30 +102,28 @@ export function ControlPanel({
         w-full fixed top-0 left-0 z-[1000]
         bg-white dark:bg-zinc-950
         border-b border-zinc-300 dark:border-zinc-700
-        px-3 py-3
+        px-3 py-2
         text-xs
-        grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6
-        gap-4
-        items-start
+        grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6
+        gap-2
+        items-center
         rounded-b-xl
         shadow-sm
-        max-h-[85vh]
-        overflow-y-auto
       "
     >
-      <div className="space-y-1">
-        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Mode</Label>
+      <div className="space-y-0.5">
+        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Mode</Label>
         <ToggleGroup
           type="single"
           value={travelMode}
           onValueChange={handleTravelModeChange}
-          className="w-full gap-2"
+          className="w-full gap-1"
         >
           {['walking', 'cycling', 'driving'].map((m, i) => (
             <ToggleGroupItem
               key={m}
               value={m}
-              className="flex-1 h-9 dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+              className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
             >
               {['🚶', '🚲', '🚗'][i]}
             </ToggleGroupItem>
@@ -133,23 +131,23 @@ export function ControlPanel({
         </ToggleGroup>
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Search</Label>
+      <div className="space-y-0.5">
+        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Search</Label>
         <input
           type="text"
-          placeholder="search locations, cuisines, vibes..."
+          placeholder="search..."
           value={searchTerm}
           onChange={(e) => {
             const val = e.target.value
             setSearchTerm(val)
             logEvent('search_updated', { metadata: { value: val } })
           }}
-          className={inputBase + ' placeholder-zinc-500 dark:placeholder-zinc-400'}
+          className={inputBase}
         />
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Theme</Label>
+      <div className="space-y-0.5">
+        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Theme</Label>
         <select
           value={selectedThemeId}
           onChange={(e) => {
@@ -158,15 +156,15 @@ export function ControlPanel({
           }}
           className={inputBase}
         >
-          <option value="">Select Theme</option>
+          <option value="">Theme</option>
           {themes.map((t) => (
             <option key={t.id} value={t.id}>{t.label}</option>
           ))}
         </select>
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Price</Label>
+      <div className="space-y-0.5">
+        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Price</Label>
         <select
           value={selectedPrice}
           onChange={(e) => {
@@ -175,15 +173,15 @@ export function ControlPanel({
           }}
           className={inputBase}
         >
-          <option value="">Any Price</option>
+          <option value="">Any</option>
           {prices.slice(1).map((p) => (
             <option key={p} value={p}>{p}</option>
           ))}
         </select>
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Route Tightness</Label>
+      <div className="space-y-0.5">
+        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Tight</Label>
         <select
           value={tightness}
           onChange={(e) => {
@@ -194,77 +192,27 @@ export function ControlPanel({
         >
           <option value="tight">Compact</option>
           <option value="medium">Balanced</option>
-          <option value="loose">Spread Out</option>
+          <option value="loose">Loose</option>
         </select>
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Crawl Mode</Label>
-        <ToggleGroup
-          type="single"
-          value={isScheduled ? 'scheduled' : 'now'}
-          onValueChange={(val) => {
-            setIsScheduled(val === 'scheduled')
-            logEvent('crawl_mode_toggled', { metadata: { mode: val, city } })
-          }}
-          className="w-full gap-2"
-        >
-          <ToggleGroupItem value="now" className="flex-1 h-9 dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
-            Now
-          </ToggleGroupItem>
-          <ToggleGroupItem value="scheduled" className="flex-1 h-9 dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
-            Scheduled
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
-
-      {isScheduled && (
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Crawl Date</Label>
-          <input
-            type="date"
-            value={crawlDate}
-            onChange={(e) => {
-              setCrawlDate(e.target.value)
-              logEvent('crawl_date_selected', { metadata: { date: e.target.value, city } })
-            }}
-            className={inputBase}
-          />
-        </div>
-      )}
-
-      {isScheduled && (
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Crawl Time</Label>
-          <input
-            type="time"
-            value={crawlTime}
-            onChange={(e) => {
-              setCrawlTime(e.target.value)
-              logEvent('crawl_time_selected', { metadata: { time: e.target.value, city } })
-            }}
-            className={inputBase}
-          />
-        </div>
-      )}
-
-      <div className="space-y-2 pt-1 sm:col-span-2 md:col-span-3 lg:col-span-1">
         <Button
-          className="w-full h-9 text-sm border border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
+          className="w-full h-8 text-xs border border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
           onClick={handleGenerateClick}
         >
-          Generate Crawl
+          Generate
         </Button>
 
         <Button
           variant="outline"
-          className="w-full h-9 text-sm border border-zinc-500 dark:border-zinc-600 dark:text-zinc-100"
+          className="w-full h-8 text-xs border border-zinc-500 dark:border-zinc-600 dark:text-zinc-100"
           onClick={() => {
             onClearRoute()
             logEvent('route_cleared', { metadata: { city } })
           }}
         >
-          Clear Route
+          Clear
         </Button>
       </div>
     </div>
