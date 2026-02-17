@@ -20,7 +20,7 @@ export type CrawlControlProps = {
   onRoute: (route: Venue[]) => void
   selectedThemeId: string
   customStart?: { lat: number; lon: number } | null
-  city: 'atl' | 'nyc' | null
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | null
   onGenerateRoute: () => Promise<void>
 }
 
@@ -129,8 +129,8 @@ export default function CrawlControl({
     const waypoints = route.map((v) => `${v.lat},${v.lon}`).join('/')
 
     if (typeof window !== 'undefined') {
-  window.open(`${base}${waypoints}`, '_blank')
-}
+      window.open(`${base}${waypoints}`, '_blank')
+    }
   }
 
   function handleInsertFavoriteAt(newVenue: Venue, index: number) {
@@ -168,28 +168,27 @@ export default function CrawlControl({
   }
 
   function handleCopyLink() {
-  if (!Array.isArray(route) || route.length === 0 || typeof window === 'undefined') return
+    if (!Array.isArray(route) || route.length === 0 || typeof window === 'undefined') return
 
-  const ids = route.map((v) => v.id ?? v.name).join(',')
-  const href = getHref()
-  const url = new URL(href)
-  url.searchParams.set('route', ids)
+    const ids = route.map((v) => v.id ?? v.name).join(',')
+    const href = getHref()
+    const url = new URL(href)
+    url.searchParams.set('route', ids)
 
-  if (window.navigator?.clipboard) {
-    window.navigator.clipboard.writeText(url.toString()).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    if (window.navigator?.clipboard) {
+      window.navigator.clipboard.writeText(url.toString()).then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
 
-    logEvent('crawl_link_copied', {
-      metadata: {
-        num_stops: route.length,
-        city,
-      },
-    })
+      logEvent('crawl_link_copied', {
+        metadata: {
+          num_stops: route.length,
+          city,
+        },
+      })
+    }
   }
-}
-
 
   function handleClear() {
     onRoute([])
@@ -200,8 +199,8 @@ export default function CrawlControl({
       const url = new URL(href)
       url.searchParams.delete('route')
       if (typeof window !== 'undefined') {
-  window.history.replaceState(null, '', url.toString())
-}
+        window.history.replaceState(null, '', url.toString())
+      }
     }
 
     setCopied(false)
@@ -254,30 +253,32 @@ export default function CrawlControl({
   return (
     <>
       {(Array.isArray(route) && route.length > 0) || showCrawlInfo ? (
-        <div className="absolute bottom-5 left-4 z-[2000] bg-black/60 text-white px-3 py-2 rounded-md shadow w-72">
-          <div className="mt-1 space-y-2 text-sm">
-            <h3 className="font-semibold text-white text-base">Your Stops:</h3>
+        <div className="fixed bottom-3 left-3 z-[2000] max-w-[85vw] bg-black/70 backdrop-blur-sm text-white px-2 py-2 rounded-lg shadow-lg text-xs">
+          <div className="space-y-1">
+            <h3 className="font-medium uppercase tracking-wide opacity-80">
+              Your Stops:
+            </h3>
 
             {themeName && (
-              <p className="text-xs text-gray-300 italic text-center">
+              <p className="text-[10px] text-gray-300 italic">
                 Theme: {themeName}
               </p>
             )}
 
-            <ol className="list-decimal pl-5 space-y-1 max-h-40 overflow-y-auto">
+            <ol className="list-decimal pl-4 space-y-0.5 max-h-32 overflow-y-auto">
               {route?.map((stop, i) => (
-                <li key={i} className="flex items-center justify-between">
+                <li key={i} className="flex items-center justify-between gap-1 text-xs">
                   <a
                     href={stop.link || '#'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:underline"
+                    className="text-blue-400 truncate max-w-[140px]"
                   >
                     {stop.name}
                   </a>
                   <button
                     onClick={() => handleModifyStop(stop, i)}
-                    className="text-red-400 text-xs hover:text-red-600 ml-2"
+                    className="text-red-400 text-[10px] ml-1"
                   >
                     ❌
                   </button>
@@ -285,14 +286,16 @@ export default function CrawlControl({
               ))}
             </ol>
 
-            <div className="pt-2 border-t border-gray-400 space-y-1">
-              <button onClick={handleSaveToCloud} className="w-full bg-blue-500 py-1 rounded">💾 Save</button>
-              <button onClick={handleExportToMaps} className="w-full bg-green-500 py-1 rounded">🌍 Export</button>
-              <button onClick={() => setShowFavoritesModal(true)} className="w-full bg-yellow-500 py-1 rounded">➕ Favorites</button>
-              <button onClick={() => setShowEventsModal(true)} className="w-full bg-stone-700 py-1 rounded">🎟️ Events</button>
-              <button onClick={() => setShowHostModal(true)} className="w-full bg-fuchsia-600 py-1 rounded">🏠 Host</button>
-              <button onClick={handleCopyLink} className="w-full bg-purple-700 py-1 rounded">🔗 {copied ? 'Copied!' : 'Copy Link'}</button>
-              <button onClick={handleClear} className="w-full bg-red-500 py-1 rounded">❌ Clear Route</button>
+            <div className="pt-2 border-t border-white/20 flex flex-wrap gap-1">
+              <button onClick={handleSaveToCloud} className="px-2 py-1 bg-blue-500 rounded text-[10px]">Save</button>
+              <button onClick={handleExportToMaps} className="px-2 py-1 bg-green-500 rounded text-[10px]">Maps</button>
+              <button onClick={() => setShowFavoritesModal(true)} className="px-2 py-1 bg-yellow-500 rounded text-[10px]">Fav</button>
+              <button onClick={() => setShowEventsModal(true)} className="px-2 py-1 bg-stone-700 rounded text-[10px]">Events</button>
+              <button onClick={() => setShowHostModal(true)} className="px-2 py-1 bg-fuchsia-600 rounded text-[10px]">Host</button>
+              <button onClick={handleCopyLink} className="px-2 py-1 bg-purple-700 rounded text-[10px]">
+                {copied ? 'Copied' : 'Link'}
+              </button>
+              <button onClick={handleClear} className="px-2 py-1 bg-red-500 rounded text-[10px]">Clear</button>
             </div>
           </div>
 
@@ -302,12 +305,12 @@ export default function CrawlControl({
           <HostCrawlModal show={showHostModal} route={route ?? []} onClose={() => setShowHostModal(false)} />
         </div>
       ) : (
-        <div className="absolute bottom-10 left-4 z-[2000]">
+        <div className="fixed bottom-3 left-3 z-[2000]">
           <button
             onClick={() => setShowCrawlInfo(true)}
-            className="bg-black/80 text-white px-3 py-2 rounded-md shadow"
+            className="bg-black/80 text-white px-2 py-1 rounded text-xs shadow"
           >
-            📋 Show Crawl Info
+            📋 Crawl
           </button>
         </div>
       )}
