@@ -28,19 +28,35 @@ export default function LoginPage() {
       return
     }
 
+    // 🔹 Try existing user login first
     const { error: signInError } =
       await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-    if (signInError) {
-      setError(signInError.message)
+    // 🔹 If login succeeds → proceed exactly as before
+    if (!signInError) {
+      await supabase.auth.getSession()
+      setLoading(false)
+      window.location.href = '/'
+      return
+    }
+
+    // 🔹 If login fails → attempt instant signup
+    const { error: signUpError } =
+      await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+    if (signUpError) {
+      setError(signUpError.message)
       setLoading(false)
       return
     }
 
-    // 🔥 Force cookie/session write
+    // 🔥 Force cookie/session write for new user
     await supabase.auth.getSession()
 
     setLoading(false)
