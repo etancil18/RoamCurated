@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 
 import HeroBanner from '@/components/venue-profile/HeroBanner'
@@ -90,44 +91,57 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
     .eq('venue_id', venueId)
 
   const upcomingEvents: VenueEvent[] = [
-  ...(events ?? [])
-    .filter(e => e.title)
-    .map(e => ({
-      id: e.id,
-      title: e.title ?? 'Untitled Event',
-      starts_at: e.starts_at ?? undefined,
-      ends_at: e.ends_at ?? undefined,
-      tags: e.tags ?? [],
-    })),
-  ...(recurringEvents ?? [])
-    .filter(e => e.title)
-    .map(rec => {
-      // Build a synthetic starts_at for the carousel
-      let startsAt: string | undefined = undefined
-      if (rec.starts_on && rec.start_time) {
-        startsAt = `${rec.starts_on}T${rec.start_time}`
-      }
+    ...(events ?? [])
+      .filter(e => e.title)
+      .map(e => ({
+        id: e.id,
+        title: e.title ?? 'Untitled Event',
+        starts_at: e.starts_at ?? undefined,
+        ends_at: e.ends_at ?? undefined,
+        tags: e.tags ?? [],
+      })),
+    ...(recurringEvents ?? [])
+      .filter(e => e.title)
+      .map(rec => {
+        let startsAt: string | undefined = undefined
+        if (rec.starts_on && rec.start_time) {
+          startsAt = `${rec.starts_on}T${rec.start_time}`
+        }
 
-      return {
-        id: rec.id,
-        title: rec.title ?? 'Recurring Event',
-        starts_at: startsAt,
-        ends_at: undefined,
-        start_time: rec.start_time,
-        end_time: rec.end_time ?? undefined,
-        recurrence_rule: rec.recurrence_rule,
-        starts_on: rec.starts_on,
-        ends_on: rec.ends_on ?? undefined,
-        isRecurring: true, // include tags if available
-      }
-    }),
-]
+        return {
+          id: rec.id,
+          title: rec.title ?? 'Recurring Event',
+          starts_at: startsAt,
+          ends_at: undefined,
+          start_time: rec.start_time,
+          end_time: rec.end_time ?? undefined,
+          recurrence_rule: rec.recurrence_rule,
+          starts_on: rec.starts_on,
+          ends_on: rec.ends_on ?? undefined,
+          isRecurring: true,
+        }
+      }),
+  ]
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-10">
+
+      {/* 🔙 Back to Map */}
+      <div>
+        <Link
+          href={
+            normalizedVenue.city
+              ? `/?city=${normalizedVenue.city}`
+              : '/'
+          }
+          className="inline-block text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          ← Back to {normalizedVenue.city ?? 'Map'}
+        </Link>
+      </div>
+
       <HeroBanner venue={normalizedVenue} />
 
-      {/* ✅ Venue Description */}
       {normalizedVenue.description && (
         <p className="text-base text-gray-700 dark:text-gray-300">
           {normalizedVenue.description}
@@ -139,8 +153,6 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
           {normalizedVenue.address}
         </p>
       )}
-
-
 
       {liveStatus && <LiveStatusPill status={liveStatus} />}
 
