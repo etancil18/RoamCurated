@@ -92,7 +92,7 @@ export function ControlPanel({
   }
 
   const inputBase =
-    'w-full h-8 px-2 border rounded text-xs bg-white text-zinc-900 ' +
+    'w-full h-8 px-2 border rounded text-base md:text-xs scale-[0.97] origin-left bg-white text-zinc-900 ' +
     'dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-600 ' +
     'focus:outline-none focus:ring-1 focus:ring-blue-500'
 
