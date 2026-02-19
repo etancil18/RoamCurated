@@ -32,7 +32,37 @@ export default function VenueHours({ hours, isOpen }: Props) {
   }
 
   const renderLine = (day: string) => {
-    const slot = hours[day]
+    // type slot as a flexible object to allow open1/close1 keys
+    const slot: Record<string, string> | undefined = hours[day] as any
+
+    if (!slot || Object.keys(slot).length === 0) {
+      return (
+        <li
+          key={day}
+          className={`flex justify-between text-sm ${
+            day === today
+              ? 'font-semibold text-blue-600 dark:text-blue-400'
+              : 'text-gray-700 dark:text-gray-300'
+          }`}
+        >
+          <span className="capitalize">{day}</span>
+          <span>Closed</span>
+        </li>
+      )
+    }
+
+    // Collect all open/close pairs dynamically
+    const pairs: string[] = []
+    Object.keys(slot).forEach((key) => {
+      if (key.startsWith('open')) {
+        const index = key.replace('open', '')
+        const closeKey = `close${index}`
+        if (slot[closeKey]) {
+          pairs.push(`${formatTime(slot[key])} – ${formatTime(slot[closeKey])}`)
+        }
+      }
+    })
+
     return (
       <li
         key={day}
@@ -43,11 +73,7 @@ export default function VenueHours({ hours, isOpen }: Props) {
         }`}
       >
         <span className="capitalize">{day}</span>
-        <span>
-          {slot?.open && slot?.close
-            ? `${formatTime(slot.open)} – ${formatTime(slot.close)}`
-            : 'Closed'}
-        </span>
+        <span>{pairs.length > 0 ? pairs.join(', ') : 'Closed'}</span>
       </li>
     )
   }
