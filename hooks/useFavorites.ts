@@ -17,12 +17,34 @@ export function useFavorites(city: 'atl' | 'nyc' | 'lisbon' | 'porto') {
 
   useEffect(() => {
     async function fetchFavorites() {
+      setLoading(true)
+
+      // 🔐 Get authenticated user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabaseBrowser.auth.getUser()
+
+      if (userError || !user) {
+        console.error('[useFavorites] No authenticated user:', userError)
+        setFavorites([])
+        setLoading(false)
+        return
+      }
+
+      // ✅ Filter by BOTH city AND user_id
       const { data, error } = await supabaseBrowser
         .from('favorites')
         .select('data, city')
         .eq('city', city)
+        .eq('user_id', user.id)
 
-      console.log('[useFavorites] fetched rows for city:', city, data)
+      console.log(
+        '[useFavorites] fetched rows for user + city:',
+        user.id,
+        city,
+        data
+      )
 
       if (error) {
         console.error('[useFavorites] Error fetching favorites:', error)

@@ -25,50 +25,50 @@ const HostCrawlModal: React.FC<HostCrawlModalProps> = ({ show, route, onClose })
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[2200] px-4">
-      <div
-        className="
-          w-full max-w-md
-          bg-white dark:bg-zinc-900
-          text-gray-900 dark:text-gray-100
-          rounded-xl
-          p-5
-          shadow-2xl
-          border border-gray-200 dark:border-zinc-700
-        "
-      >
-        <h2 className="text-lg font-semibold mb-3">
-          Host this Crawl?
-        </h2>
+    <div
+      className="
+        fixed bottom-16 left-3 right-3
+        max-w-md mx-auto
+        bg-white dark:bg-zinc-900
+        text-gray-900 dark:text-gray-100
+        border border-gray-300 dark:border-zinc-700
+        rounded-xl shadow-2xl
+        p-4
+        z-[2200]
+      "
+    >
+      <h2 className="text-base font-semibold mb-3">
+        Host this Crawl?
+      </h2>
 
-        <p className="mb-5 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-          You’re about to host a crawl with <span className="font-medium">{route.length}</span> stops.
-          The venue list will be pre-filled on the host page.
-        </p>
+      <p className="mb-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+        You’re about to host a crawl with{' '}
+        <span className="font-medium">{route.length}</span> stops.
+        The venue list will be pre-filled on the host page.
+      </p>
 
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="
-              px-4 py-2 rounded-lg text-sm
-              border border-gray-300 dark:border-zinc-600
-              hover:bg-gray-100 dark:hover:bg-zinc-800
-            "
-          >
-            Cancel
-          </button>
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={onClose}
+          className="
+            px-3 py-1.5 rounded-lg text-sm
+            border border-gray-300 dark:border-zinc-600
+            hover:bg-gray-100 dark:hover:bg-zinc-800
+          "
+        >
+          Cancel
+        </button>
 
-          <button
-            onClick={handleHost}
-            className="
-              px-4 py-2 rounded-lg text-sm
-              bg-indigo-600 hover:bg-indigo-700
-              text-white
-            "
-          >
-            Host Crawl
-          </button>
-        </div>
+        <button
+          onClick={handleHost}
+          className="
+            px-3 py-1.5 rounded-lg text-sm
+            bg-indigo-600 hover:bg-indigo-700
+            text-white
+          "
+        >
+          Host Crawl
+        </button>
       </div>
     </div>
   )
