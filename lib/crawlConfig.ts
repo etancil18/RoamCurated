@@ -740,10 +740,10 @@ export const crawlThemes: CrawlTheme[] = [
   "description": "A calm and intentional start that energizes your body, clears your mind, and opens the day with purpose.",
   "stageFlow": [
     ["pilates", "yoga", "fitness"],
-    ["tea", "coffee", "cafe", "café", "bakery", "smoothie"],
+    ["tea", "coffee", "cafe", "café", "bakery", "smoothie", "breakfast"],
     ["garden", "market", "park"],
-    ["spa", "bookstore"],
-    "lunch"
+    ["spa", "bookstore", "library"],
+    ["lunch", "cafe", "café"]
   ],
   "filters": {
     "timeOfDay": ["morning", "midday", "afternoon", "day"],

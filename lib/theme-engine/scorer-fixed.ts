@@ -65,7 +65,7 @@ export function computeScore(
 ): number {
   const {
     vibe = 3,
-    tag = 1,
+    tag = 2,
     keyword = 2,
     dist = 1,
   } = weight || {};

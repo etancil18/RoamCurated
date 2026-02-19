@@ -29266,7 +29266,7 @@ const nycData = [
       "mon": "MD",
       "tue": "MD",
       "wed": "–",
-      "thu": "–",
+      "thu": "MD",
       "fri": "MD",
       "sat": "MD",
       "sun": "MD"

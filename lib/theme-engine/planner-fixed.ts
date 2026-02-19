@@ -36,17 +36,19 @@ export const fallbackStageFlows: Record<string, StageFlow> = {
     "lunch"
   ],
   midday: [
-    "lunch",
+    ["gallery", "museum", "bookstore", "showroom", "lifestyle"],
+    ["lunch", "brunch"],
     ["gallery", "bookstore", "showroom", "lifestyle"],
     ["wine bar", "random gem"],
     ["park", "market", "lifestyle"],
-    ["dinner", "wine bar"]
+    ["dinner", "wine bar", "cocktail"]
   ],
   afternoon: [
     "lunch",
-    ["random gem", "cafe", "café"],
-    ["lifestyle", "gallery", "bookstore"],
-    "dinner"
+    ["random gem", "coffee", "cafe", "café", "park", "showroom"],
+    ["lifestyle", "gallery", "bookstore", "wine bar"],
+    "dinner",
+    ["bar", "cocktail", "rooftop", "speakeasy", "lounge", "dessert"]
   ],
   day: [
     "lunch",
@@ -57,7 +59,7 @@ export const fallbackStageFlows: Record<string, StageFlow> = {
   evening: [
     "dinner",
     ["wine bar", "cocktail", "speakeasy", "dessert"],
-    "cocktail"
+    ["cocktail", "bar", "lounge", "club"],
   ],
   night: [
     "dinner",
@@ -66,7 +68,7 @@ export const fallbackStageFlows: Record<string, StageFlow> = {
   ],
   "late-night": [
     ["cocktail", "bar", "club"],
-    ["club", "lounge"]
+    ["club", "lounge", "bar"]
   ],
 };
 

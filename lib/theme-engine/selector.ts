@@ -13,10 +13,10 @@ const TYPE_MATCH_MAP: Record<string, string[]> = {
   lounge: ["lounge", "cocktail", "speakeasy", "rooftop bar", "hotel bar"],
   club: ["club", "nightclub", "disco", "dance hall"],
   coffee: ["cafe", "coffee", "espresso", "bakery", "café"],
-  "wine bar": ["wine", "wine bar", "somm", "vintner", "tasting room"],
+  "wine bar": ["wine", "wine bar", "somm", "vintner", "tasting room", "naturalwine", "vines", "grapes"],
   dessert: ["dessert", "ice cream", "gelato", "pastry", "sweets"],
   dinner: ["dinner", "restaurant", "diner", "tapas", "bistro", "brasserie", "grill", "eatery"],
-  lunch: ["lunch", "lunch spot", "cafe", "deli", "sandwich", "salad", "casual dining"],
+  lunch: ["lunch", "lunch spot", "cafe", "deli", "sandwich", "salad", "casual dining", "pizza"],
   cocktail: ["cocktail", "spirit", "mixology", "bar", "speakeasy", "rooftop"],
   "late-night": ["late night", "late", "after hours", "food truck", "24 hour", "night bite"],
   breakfast: [
@@ -71,7 +71,7 @@ const TYPE_MATCH_MAP: Record<string, string[]> = {
   lifestyle: ["boutique", "clothing", "fashion", "records", "vinyl", "home goods", "concept store", "retail", "design"],
   random: ["hidden gem", "quirky", "unexpected", "eclectic", "offbeat"],
 
-  park: ["park", "green space", "botanical", "garden", "outdoor"],
+  park: ["park", "nature", "green space", "botanical", "garden", "outdoor"],
   market: ["market", "farmers market", "bazaar", "flea market", "street market"],
   rooftop: ["rooftop", "viewpoint", "skyline", "terrace", "high-rise"],
 
@@ -147,7 +147,7 @@ export function selectCandidates({
       stageArrivalTime,
       windowMinutes
     );
-    
+
     if (!(openNow || opensSoon || (relaxedMode && isFutureCrawl))) return false;
 
     if (!daypartAllowedAtTime(v, stageArrivalTime)) return false;

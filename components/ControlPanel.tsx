@@ -181,7 +181,7 @@ export function ControlPanel({
       </div>
 
       <div className="space-y-0.5">
-        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Tight</Label>
+        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Distance</Label>
         <select
           value={tightness}
           onChange={(e) => {
@@ -192,7 +192,7 @@ export function ControlPanel({
         >
           <option value="tight">Compact</option>
           <option value="medium">Balanced</option>
-          <option value="loose">Loose</option>
+          <option value="loose">Spread Out</option>
         </select>
       </div>
 
