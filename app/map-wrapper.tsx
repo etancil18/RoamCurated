@@ -88,9 +88,8 @@ export default function MapWrapper() {
   }, [filteredVenues, showLiveEventsOnly, eventsByVenueId])
 
   const handleMapClick = (lat: number, lon: number) => {
-    setCustomStart({ lat, lon })
-    alert('Custom start location set. Generate your crawl when ready.')
-  }
+  setCustomStart({ lat, lon })
+}
 
   const computePlannedStartAt = () => {
     if (crawlDate && crawlTime) {
@@ -246,6 +245,13 @@ export default function MapWrapper() {
 
     // ───────────────── APPLY ROUTE ─────────────────
     setRoute(finalRoute)
+    // Sync customStart to actual route origin
+if (finalRoute?.length) {
+  setCustomStart({
+    lat: finalRoute[0].lat,
+    lon: finalRoute[0].lon,
+  })
+}
     setRouteErrorMessage(null)
     setConfidenceTier(tierUsed)
 
@@ -362,6 +368,7 @@ export default function MapWrapper() {
           <MapCanvas
             route={route}
             onMapClick={handleMapClick}
+            customStart={customStart}
             themeId={selectedThemeId}
             travelMode={travelMode}
             showLiveEventsOnly={showLiveEventsOnly}

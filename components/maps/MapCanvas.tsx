@@ -4,6 +4,7 @@ import {
   MapContainer,
   TileLayer,
   useMap,
+  Marker,
 } from 'react-leaflet'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
@@ -61,6 +62,7 @@ type Props = {
   showLiveEventsOnly?: boolean
   onCityChange?: (city: string | null) => void
   onMapClick?: (lat: number, lon: number) => void
+  customStart?: { lat: number; lon: number } | null
 }
 
 export default function MapCanvas({
@@ -71,6 +73,7 @@ export default function MapCanvas({
   showLiveEventsOnly = false,
   onCityChange,
   onMapClick,
+  customStart,
 }: Props) {
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [showCitySelector, setShowCitySelector] = useState(true)
@@ -94,6 +97,19 @@ export default function MapCanvas({
   const nowForCity = useMemo(() => {
     return selectedCity ? getCityNow(selectedCity) : null
   }, [selectedCity, minuteTick])
+
+  // ✅ Custom Start Icon (hydration-safe)
+  const customStartIcon = useMemo(() => {
+    if (typeof window === 'undefined') return undefined
+    const L = require('leaflet')
+
+    return L.divIcon({
+      className: '',
+      html: `<div style="font-size: 28px;">📍</div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+    })
+  }, [])
 
   // ✅ SSR-safe Leaflet icon patch
   useEffect(() => {
@@ -255,6 +271,19 @@ export default function MapCanvas({
           <UserLocationMarker position={userPosition} />
         )}
 
+        {customStart && customStartIcon && (
+  <Marker
+    position={[customStart.lat, customStart.lon]}
+    icon={customStartIcon}
+    draggable
+    eventHandlers={{
+      dragend: (e) => {
+        const { lat, lng } = e.target.getLatLng()
+        onMapClick?.(lat, lng)
+      },
+    }}
+  />
+)}
         {visibleRoute.length > 1 && mapRef.current && (
           <RouteControl
             map={mapRef.current}

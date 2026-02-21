@@ -22,9 +22,11 @@ export function coverCandidates(ev: Venue): string[] {
   const guesses = [
     ev.cover || null,
     `img/venues/${s}/cover.jpg`,
+    `img/venues/${s}/cover.jpeg`,
     `img/venues/${s}/cover.webp`,
     `img/venues/${s}/cover.png`,
     `img/venues/${s}.jpg`,
+    `img/venues/${s}.jpeg`,
     `img/venues/${s}.webp`,
     `img/venues/${s}.png`,
   ].filter(Boolean) as string[];

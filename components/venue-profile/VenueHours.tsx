@@ -17,22 +17,22 @@ export default function VenueHours({ hours, isOpen }: Props) {
     weekday: 'long',
   }).toLowerCase()
 
+  // format time string like "14:00" or "2:00" into proper 12-hour with AM/PM
   const formatTime = (time: string) => {
     if (!time) return 'Closed'
     const [hourStr, minStr] = time.split(':')
-    const hour = parseInt(hourStr, 10)
-    const min = parseInt(minStr, 10)
+    let hour = parseInt(hourStr, 10)
+    const min = parseInt(minStr || '0', 10)
     if (isNaN(hour) || isNaN(min)) return 'Invalid'
-    const date = new Date()
-    date.setHours(hour, min)
-    return date.toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-    })
+
+    // adjust for 24-hour to 12-hour format
+    const ampm = hour >= 12 ? 'PM' : 'AM'
+    hour = hour % 12
+    if (hour === 0) hour = 12
+    return `${hour}:${min.toString().padStart(2, '0')} ${ampm}`
   }
 
   const renderLine = (day: string) => {
-    // type slot as a flexible object to allow open1/close1 keys
     const slot: Record<string, string> | undefined = hours[day] as any
 
     if (!slot || Object.keys(slot).length === 0) {
@@ -51,17 +51,49 @@ export default function VenueHours({ hours, isOpen }: Props) {
       )
     }
 
-    // Collect all open/close pairs dynamically
+    const now = new Date()
     const pairs: string[] = []
-    Object.keys(slot).forEach((key) => {
-      if (key.startsWith('open')) {
-        const index = key.replace('open', '')
-        const closeKey = `close${index}`
-        if (slot[closeKey]) {
-          pairs.push(`${formatTime(slot[key])} – ${formatTime(slot[closeKey])}`)
-        }
-      }
-    })
+
+// handle single-slot (open/close)
+if (slot.open && slot.close) {
+  pairs.push(`${formatTime(slot.open)} – ${formatTime(slot.close)}`)
+
+  if (day === today) {
+    const [openH, openM] = slot.open.split(':').map(Number)
+    const [closeH, closeM] = slot.close.split(':').map(Number)
+    const now = new Date()
+    const openDate = new Date()
+    openDate.setHours(openH, openM, 0, 0)
+    const closeDate = new Date()
+    closeDate.setHours(closeH, closeM, 0, 0)
+    if (closeDate <= openDate) closeDate.setDate(closeDate.getDate() + 1)
+    if (now >= openDate && now <= closeDate) isOpen = true
+  }
+}
+
+// handle multi-slot (open1/close1, open2/close2...)
+Object.keys(slot).forEach((key) => {
+  if (key.startsWith('open') && key !== 'open') {
+    const index = key.replace('open', '')
+    const closeKey = `close${index}`
+    const openTime = slot[key]
+    const closeTime = slot[closeKey]
+    if (!openTime || !closeTime) return
+    pairs.push(`${formatTime(openTime)} – ${formatTime(closeTime)}`)
+
+    if (day === today) {
+      const [openH, openM] = openTime.split(':').map(Number)
+      const [closeH, closeM] = closeTime.split(':').map(Number)
+      const now = new Date()
+      const openDate = new Date()
+      openDate.setHours(openH, openM, 0, 0)
+      const closeDate = new Date()
+      closeDate.setHours(closeH, closeM, 0, 0)
+      if (closeDate <= openDate) closeDate.setDate(closeDate.getDate() + 1)
+      if (now >= openDate && now <= closeDate) isOpen = true
+    }
+  }
+})
 
     return (
       <li
@@ -78,6 +110,9 @@ export default function VenueHours({ hours, isOpen }: Props) {
     )
   }
 
+  // Get the correct line for today before expanding
+  const todayLine = renderLine(today)
+
   return (
     <div className="space-y-2">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Hours</h2>
@@ -89,7 +124,7 @@ export default function VenueHours({ hours, isOpen }: Props) {
       )}
 
       {!expanded ? (
-        <ul>{renderLine(today)}</ul>
+        <ul>{todayLine}</ul>
       ) : (
         <ul className="space-y-1">
           {Object.keys(hours).map((day) => renderLine(day))}

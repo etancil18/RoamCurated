@@ -37611,7 +37611,7 @@ const atlantaData = [
 },
 "timeCategory": "Afternoon, Evening",
 "energyRamp": 2,
-"tags": "tacos, tequila, salsa, street, chef, vibrant, fiesta, urban, pinch, zest, grill, share",
+"tags": "phillipines, filipino, culture, chef, vibrant, urban, pinch, zest, grill, share",
 "price": "$$",
 "duration": 2
 },
