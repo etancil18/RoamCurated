@@ -3,10 +3,10 @@ console.log("Loaded nyc.ts");
 const nycData = [
   {
     "slug": "steight-behind-kuniya-hair",    "name": "StEight(behind KUNIYA HAIR)",
-    "vibe": "Speakeasy, Japanese, Jazz, Eclectic, Cozy, Moody, Hidden, Niche, Lowkey",
+    "vibe": "Speakeasy, Japanese, Jazz, Eclectic, Cozy, Snug",
     "type": "speakeasy",
-        "lat": "40.718182",
-    "lon": "-73.991684",
+        "lat": "40.7182225",
+    "lon": "-73.9917547",
     "link": "https://www.instagram.com/steightnyc?igsh=MXR2eDdyOGNvNTF0cA==",
     "cover": "img/venues/StEight.jpg",
     "openNow": "TRUE",
@@ -41,7 +41,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 2,
-    "tags": "hidden gem, speakeasy",
+    "tags": "lounge, hidden, mixology, whiskey, vinyl, lowlight, cocktailbar, listeningroom, nightspot, downtown, reservation, ambiance",
     "price": "$$",
     "duration": 1.25,
     "id": "a17a855f-6ff1-4893-bfc8-650d3a8190c5"
@@ -50,8 +50,8 @@ const nycData = [
        "slug": "doris",    "name": "Doris",
     "vibe": "Hip, Patio, Neighborhood Spot, Vinyl, Dimly Lit, Retro, Stylish, Intimate, Groovy, Lounge",
     "type": "bar",
-        "lat": "40.68121",
-    "lon": "-73.957443",
+        "lat": "40.6813263",
+    "lon": "-73.957368",
     "link": "https://www.instagram.com/dorisbedstuy/?hl=en",
     "cover": "img/venues/Doris.jpg",
     "openNow": "TRUE",
@@ -86,7 +86,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "neighborhood bar",
+    "tags": "dive, backyard, records, jukebox, hangout, craftbeer, naturalwine, eastvillage, barroom, casualdrinks, community, nightlife",
     "price": "$$",
     "duration": 1.25,
     "id": "776dbb21-813c-41d5-a73d-0d02c213cfcd"
@@ -95,8 +95,8 @@ const nycData = [
        "slug": "abes-pagoda-bar",    "name": "Abe's Pagoda Bar",
     "vibe": "Laid-back, Quirky, Pool Table, Disco Ball, DJ, Playful, Funky, Nostalgic, Boozy, Energetic",
     "type": "bar",
-        "lat": "40.703831",
-    "lon": "-73.918953",
+        "lat": "40.7039262",
+    "lon": "-73.9188272",
     "link": "https://www.instagram.com/abes_pagoda_bar/?hl=en",
     "cover": "img/venues/Abe's Pagoda Bar.jpg",
     "openNow": "TRUE",
@@ -131,7 +131,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "dive, chill",
+    "tags": "billiards, danceparty, turntables, highballs, neon, kitsch, divebar, weekend, grooves, latehours, crowd, musicroom",
     "price": "$$",
     "duration": 1.5,
     "id": "2f5969f8-cf6b-4ab8-96ba-3d930d51bd78"
@@ -176,62 +176,17 @@ const nycData = [
   },
   "timeCategory": "late, evening",
     "energyRamp": 1,
-    "tags": "Italian, romantic",
+    "tags": "divebar, regulars, jukebox, beers, shots, lowlight, socialclub, afterwork, hangout, brooklyn, tavern, gathering",
     "price": "$",
     "duration": 1.5,
     "id": "e7950649-3113-4bf7-923c-c943d9521faf"
     },
      {
-       "slug": "saturdays-nyc-crosby-st",    "name": "Saturdays NYC Crosby St",
-    "vibe": "Modern, Stylish, Lifestyle, Patio, Curated, Sunny, Trendy, Minimal, Urban",
-    "type": "lifestyle",
-        "lat": "40.7207453",
-    "lon": "-73.9993515",
-    "link": "https://www.instagram.com/saturdaysnyc/?hl=en",
-    "cover": "img/venues/Saturdays NYC Crosby St.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 9:00 AM–6:00 PM",
-    "Monday: 8:00 AM–7:00 PM",
-    "Tuesday: 8:00 AM–7:00 PM",
-    "Wednesday: 8:00 AM–7:00 PM",
-    "Thursday: 8:00 AM–7:00 PM",
-    "Friday: 8:00 AM–7:00 PM",
-    "Saturday: 9:00 AM–7:00 PM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 9, "close": 18 },
-  "mon": { "open": 8, "close": 19 },
-  "tue": { "open": 8, "close": 19 },
-  "wed": { "open": 8, "close": 19 },
-  "thu": { "open": 8, "close": 19 },
-  "fri": { "open": 8, "close": 19 },
-  "sat": { "open": 9, "close": 19 } },
-    "dayParts": {
-    "mon": "MD",
-    "tue": "MD",
-    "wed": "MD",
-    "thu": "MD",
-    "fri": "MD",
-    "sat": "MD",
-    "sun": "MD"
-  },
-  "timeCategory": "midday",
-    "energyRamp": 1,
-    "tags": "coffee, menswear",
-    "price": "$$$",
-    "duration": 0.5,
-    "id": "aaea43be-c1b8-4b56-a1dd-4186726bead7"
-    },
-     {
        "slug": "honeys",    "name": "Honey's",
     "vibe": "Vibrant, Chic, Social, Cocktails, Dance Floor, Rooftop, Electric, Glam, Bubbly, Party, Elevated",
     "type": ["rooftop", "cocktail"],
-        "lat": "40.710449",
-    "lon": "-73.9231575",
+        "lat": "40.7105931",
+    "lon": "-73.9232201",
     "link": "https://www.instagram.com/honeysbrooklyn/?hl=en",
     "cover": "img/venues/Honey's.jpg",
     "openNow": "TRUE",
@@ -266,7 +221,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "distillery, alt-vibe",
+    "tags": "terrace, nightlife, djset, bottle, reservations, sunset, rooftopbar, dancing, party, cocktailscene, downtown, weekend",
     "price": "$$",
     "duration": 2,
     "id": "c3e25412-9ce9-42b4-8bd0-12db6168f196"
@@ -311,7 +266,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "café, bakery",
+    "tags": "roastery, nordic, bakerycase, pastries, minimalist, cafe, brunch, takeaway, latte, designforward, daylight, seating",
     "price": "$",
     "duration": 0.5,
     "id": "fcdc2be7-1669-4e70-bd31-7089e095438c"
@@ -320,8 +275,8 @@ const nycData = [
        "slug": "freemans",    "name": "Freemans",
     "vibe": "Rustic, Intimate, Hidden Gem, Woodsy, Historic, Dim, Romantic, Timeless",
     "type": ["brunch", "lunch", "dinner"],
-        "lat": "40.7219458",
-    "lon": "-73.9924678",
+        "lat": "40.7220379",
+    "lon": "-73.9924233",
     "link": "https://www.instagram.com/freemansrestaurant/?hl=en",
     "cover": "img/venues/Freemans.jpg",
     "openNow": "TRUE",
@@ -356,7 +311,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "rustic brunch/dinner",
+    "tags": "american, fireplace, brunch, tavern, dinnerdate, alleyway, colonial, comfortfood, cocktails, candlelight, nolita, reservations",
     "price": "$$$",
     "duration": 1.5,
     "id": "5296ab8d-f67c-48d7-b9fc-ab249720eea4"
@@ -365,8 +320,8 @@ const nycData = [
        "slug": "blue-sun-record-store",    "name": "Blue-Sun Record Store",
     "vibe": "Vintage, Vinyl, Lifestyle, Music, Dusty, Eclectic, Indie, Curated, Nostalgic",
     "type": ["music", "lifestyle"],
-        "lat": "40.7093019",
-    "lon": "-73.9516441",
+        "lat": "40.7093375",
+    "lon": "-73.9515512",
     "link": "https://www.instagram.com/bluesun_nyc/?hl=en",
     "cover": "img/venues/Blue-Sun Record Store.jpg",
     "openNow": "TRUE",
@@ -401,7 +356,7 @@ const nycData = [
   },
   "timeCategory": "afternoon, midday",
     "energyRamp": 1,
-    "tags": "music, browsing",
+    "tags": "records, crates, collectors, turntable, rarepressings, listening, shopkeeper, independent, eastvillage, browsing, sound, culture",
     "price": "$",
     "duration": 0.5,
     "id": "8b94c394-4bba-4331-bd04-dc247f760860"
@@ -444,9 +399,9 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "happyhour, evening, late",
+  "timeCategory": "afternoon, evening, late",
     "energyRamp": 1,
-    "tags": "speakeasy",
+    "tags": "divebar, danceparty, turntables, beers, highballs, neon, brooklyn, latehours, regulars, jukebox, gathering, nightlife, crowd, weekend, musicroom, barroom, socialclub, downtown, afterdark, drinks, entertainment",
     "price": "$$",
     "duration": 1.5,
     "id": "b5b9f911-fd2c-43b8-82ac-64817ab767d0"
@@ -491,7 +446,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 1,
-    "tags": "sushi, upscale",
+    "tags": "sushi, tastingmenu, reservation, eastvillage, nigiri, sashimi, counter, seafood, kaiseki, diningroom, premium, service, courses, culinary, hospitality, specialty, craftsmanship, plating",
     "price": "$$$$",
     "duration": 1.5,
     "id": "32fddf85-754e-40d2-bf6a-d8cfd183c40e"
@@ -500,8 +455,8 @@ const nycData = [
        "slug": "waiting-on-a-friend",    "name": "Waiting on a Friend",
     "vibe": "Lively, Eclectic, Aesthetic, Social, Disco Ball, Cocktails, Vintage, Flirty, Art-scene, Buzzy, Playful",
     "type": ["cocktail", "lounge"],
-        "lat": "40.7294609",
-    "lon": "-73.9807284",
+        "lat": "40.7294639",
+    "lon": "-73.980738",
     "link": "https://www.instagram.com/waitingonafriend/?hl=en",
     "cover": "img/venues/Waiting on a Friend.jpg",
     "openNow": "TRUE",
@@ -536,7 +491,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 2,
-    "tags": "small plates, vinyl",
+    "tags": "naturalwine, smallplates, barroom, gathering, nightlife, brooklyn, highballs, turntables, weekend, party, drinks, neighborhood, reservations, crowd, ambiance, celebration, dining, hospitality",
     "price": "$$",
     "duration": 1.5,
     "id": "115ce204-d3bb-4a2a-b666-4f0579846231"
@@ -545,8 +500,8 @@ const nycData = [
        "slug": "bakeri",    "name": "Bakeri",
     "vibe": "Cozy, Bakery, European, Café, Homey, Aromatic, Sunlit, Soft, Handcrafted",
     "type": "bakery",
-        "lat": "40.7200222",
-    "lon": "-73.96010291",
+        "lat": "40.7200227",
+    "lon": "-73.9601227",
     "link": "https://www.instagram.com/bakeribrooklyn/?hl=en",
     "cover": "img/venues/Bakeri.jpg",
     "openNow": "TRUE",
@@ -581,7 +536,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "Nordic bakery",
+    "tags": "sourdough, pastries, cardamom, brunch, coffeehouse, scandinavian, bread, counterservice, sweets, neighborhood, takeaway, morning",
     "price": "$",
     "duration": 0.5,
     "id": "9c3a32ac-cb49-4fff-ab52-7b7aa82f9360"
@@ -590,8 +545,8 @@ const nycData = [
        "slug": "red-sorghum",    "name": "Red Sorghum 夜宴",
     "vibe": "Dimly Lit, Intimate, Szechuan, Authentic, Spicy, Moody, Bold, Sultry, Textured",
     "type": "dinner",
-        "lat": "40.7484928",
-    "lon": "-73.9390719",
+        "lat": "40.7485024",
+    "lon": "-73.9390416",
     "link": "https://www.instagram.com/redsorghumlic/?hl=en",
     "cover": "img/venues/Red Sorghum.jpg",
     "openNow": "TRUE",
@@ -626,7 +581,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 2,
-    "tags": "modern Chinese, late",
+    "tags": "chinese, spice, chilies, hotpot, dinner, sichuanpepper, communal, flavorite, dumplings, noodles, diningroom, cuisine",
     "price": "$$",
     "duration": 1.75,
     "id": "c303ddbb-f6ce-4270-9892-bd066934aa3c"
@@ -634,9 +589,9 @@ const nycData = [
      {
        "slug": "rucola",    "name": "Rucola",
     "vibe": "Italian, Rustic, Sunday Dinner, Wine, Hearty, Timeless, Homestyle, Soothing",
-    "type": ["lunch", "dinner", "cocktail"],
-        "lat": "40.6856132",
-    "lon": "-73.9858591",
+    "type": ["brunch", "lunch", "dinner", "cocktail"],
+        "lat": "40.6856111",
+    "lon": "-73.9858917",
     "link": "https://www.instagram.com/rucolanyc/?hl=en",
     "cover": "img/venues/Rucola.jpg",
     "openNow": "TRUE",
@@ -693,7 +648,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "brunch, cozy",
+    "tags": "pasta, brunch, brooklyn, candlelight, seasonal, antipasti, bottles, neighborhood, hospitality, reservation, dinnerdate, cuisine",
     "price": "$$",
     "duration": 1.5,
     "id": "20f57772-b42b-450a-b67f-a2e3038cda25"
@@ -701,7 +656,7 @@ const nycData = [
      {
        "slug": "dead-letter-no-9",    "name": "Dead Letter No. 9",
     "vibe": "Speakeasy, Intimate, Cocktails, Social, Theatrical, After-Hours, Dramatic, Edgy, Whispered, Hidden, Vintage",
-    "type": ["cocktail", "dj"],
+    "type": ["cocktail"],
         "lat": "40.716096",
     "lon": "-73.964839",
     "link": "https://www.instagram.com/no9nyc/?hl=en",
@@ -738,7 +693,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "cocktail, hidden",
+    "tags": "lounge, hidden, performance, costumes, reservations, nightlife, downtown, exclusivity, barroom, drinks, latehours, ambiance, immersive, experience, entertainment, craftspirits, secretive, gathering",
     "price": "$$",
     "duration": 1.5,
     "id": "c12ba2df-be75-4d21-ab0c-8e07ed743da6"
@@ -783,7 +738,7 @@ const nycData = [
   },
   "timeCategory": "afternoon, midday",
     "energyRamp": 1,
-    "tags": "vintage retail",
+    "tags": "retail, apparel, streetwear, boutique, design, culture, shopping, limited, drop, accessories, brooklyn, brand",
     "price": "$$",
     "duration": 0.5,
     "id": "917ad732-c0d1-4f7c-90b5-11fab4c2066f"
@@ -828,7 +783,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, afternoon",
     "energyRamp": 1,
-    "tags": "plant, design, Mexican",
+    "tags": "tequila, mezcal, lounge, backyard, cocktails, reservations, nightlife, agave, music, downtown, drinks, ambiance, exclusive, barroom, secretive",
     "price": "$$",
     "duration": 1,
     "id": "17fd9950-6b75-4d31-b14d-eba1d5f4b545"
@@ -873,7 +828,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "poster art, gallery",
+    "tags": "prints, typography, ephemera, collectibles, midcentury, browsing, framing, artspace, nyc, memorabilia, showroom, culture, heritage, display, visual",
     "price": "$",
     "duration": 0.75,
     "id": "ea0682aa-65a8-457f-9dce-5507907f9df0"
@@ -925,7 +880,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "speakeasy, velvet vibe",
+    "tags": "speakeasy, reservation, candlelight, diningroom, brooklyn, hospitality, cuisine, date, seasonal, service, evening, gathering, comfort, chef",
     "price": "$$$",
     "duration": 1.5,
     "id": "08dde047-f823-4d9b-b3a6-758a03dc4668"
@@ -970,7 +925,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 2,
-    "tags": "wine bar, edgy",
+    "tags": "lounge, reservations, craftspirits, drinks, barroom, party, music, gathering, ambiance, service",
     "price": "$$",
     "duration": 1,
     "id": "76fb8cec-8901-434d-8399-108fc478b290"
@@ -1015,7 +970,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 2,
-    "tags": "Chinese, late night",
+    "tags": "chinatown, noodles, dumplings, basement, banquet, heritage, cuisine, crowd",
     "price": "$",
     "duration": 1.25,
     "id": "9f06dc30-9e26-488b-a083-d1acb03b624e"
@@ -1073,7 +1028,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "French bakery, luxe",
+    "tags": "pastries, sourdough, croissants, brooklyn, cafe, brunch, counterservice, neighborhood, takeaway, confections, espresso, sweets, artisan, hospitality, morning",
     "price": "$",
     "duration": 0.75,
     "id": "448747fd-e448-447e-b3cb-67f4e045956b"
@@ -1118,7 +1073,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "brunch, Moroccan",
+    "tags": "tagine, couscous, patio, williamsburg, mediterranean, eggs, minttea, reservations, dinner, spices, hospitality, neighborhood",
     "price": "$$",
     "duration": 1.25,
     "id": "95d3ba4b-5893-4634-9492-125462aab38b"
@@ -1163,7 +1118,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "art, high-end",
+    "tags": "exhibition, collectors, chelsea, paintings, sculpture, artworld, investment, showroom, installation",
     "price": "$",
     "duration": 0.75,
     "id": "38d24dba-e730-42c6-b79e-5460b50b9154"
@@ -1208,7 +1163,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 2,
-    "tags": "jazz, immersive",
+    "tags": "brownstone, concert, tickets, musicians, liveperformance, byob, residency, evening, culture, gathering, stage",
     "price": "$",
     "duration": 1.75,
     "id": "4b87bb85-70c4-454f-8077-3af4364fadd3"
@@ -1253,7 +1208,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "niche retail, concept",
+    "tags": "naturalwine, brooklyn, barroom, retail, turntables, nightlife, backyard, bottles, shopping, gathering, drinks, weekend, fashion, culture, party, reservations, neighborhood, ambiance, hospitality, lounge, music",
     "price": "$$",
     "duration": 1.5,
     "id": "2159a333-6d56-424a-bc9a-693d7821b92e"
@@ -1298,7 +1253,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "tapas, wine bar",
+    "tags": "tapas, conservas, winebar, reservations, brooklyn, smallplates, tinnedfish, dinner, cava, hospitality, diningroom, neighborhood, chefdriven, cuisine, date, mariscos, barseating, evening",
     "price": "$$",
     "duration": 1.25,
     "id": "826f038b-04ca-4477-a2f9-f4ae218ed900"
@@ -1343,7 +1298,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 2,
-    "tags": "nightlife, exclusive",
+    "tags": "nightlife, reservations, bottle, djset, drinks, manhattan, seating, party, gathering, ambiance, cocktails, weekend, service, crowd, music",
     "price": "$$",
     "duration": 1.5,
     "id": "4f184137-4dcd-4f59-bad2-fd03f0da16a3"
@@ -1388,7 +1343,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 3,
-    "tags": "mixology, speakeasy",
+    "tags": "speakeasy, lowereastside, reservations, lounge, bartenders, nightlife, drinks, performance, turntables, hidden, evening, craftspirits, barroom, ambiance, music",
     "price": "$$",
     "duration": 1.75,
     "id": "d6e7f231-bf23-47a1-a371-c9d095845a5f"
@@ -1433,7 +1388,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "music, cozy bar",
+    "tags": "singalong, westvillage, drinks, regulars, nightlife, reservations, lounge, performance, crowd, gathering, cocktails, evening, musicians, hospitality, neighborhood",
     "price": "$$",
     "duration": 1.5,
     "id": "f049e720-d9f6-45c1-b8bb-71fc8186cc32"
@@ -1478,7 +1433,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "jazz, wine",
+    "tags": "brooklyn, concert, tickets, cocktails, stage, musicians, performance, nightlife, reservations, gathering, jazz, wine, culture",
     "price": "$$",
     "duration": 1.5,
     "id": "1adcab70-f07c-4ff8-816e-5d98b4ebf940"
@@ -1523,7 +1478,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "gallery, avant-garde",
+    "tags": "collectible, furniture, sculpture, investment, artfair, collectors, display, installation, craftsmanship, contemporary, culture",
     "price": "",
     "duration": 0.75,
     "id": "7c6b4112-971c-48b9-ac02-122a788ed712"
@@ -1568,7 +1523,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 1,
-    "tags": "cocktail, dark vibe",
+    "tags": "seafood, reservations, lounge, drinks, diningroom, manhattan, nightlife, shellfish, hospitality, barroom, smallplates, ambiance, crowd, service, evening, wine",
     "price": "$$$",
     "duration": 1.5,
     "id": "c1f9d570-47d6-4c1f-89c4-8cba90f46fd8"
@@ -1613,7 +1568,7 @@ const nycData = [
   },
   "timeCategory": "midday, afternoon",
     "energyRamp": 2,
-    "tags": "coffee, literary",
+    "tags": "books, reading, cafe, brooklyn, pastries, authors, community, shelves, study, neighborhood, takeaway, culture",
     "price": "$",
     "duration": 0.5,
     "id": "2e18e313-02ab-41a7-9822-9f786c44af8f"
@@ -1658,7 +1613,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "art, edgy, exhibit",
+    "tags": "lower east side, installation, paintings, sculpture, emerging, artspace, collectors, culture, display",
     "price": "",
     "duration": 0.75,
     "id": "1d36d634-cac8-4840-93ca-4103d0036a9a"
@@ -1703,7 +1658,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "dive, alt-classic",
+    "tags": "dive, nightlife, drinks, brooklyn, plants, turntables, party, cocktails, ambiance, weekend",
     "price": "$",
     "duration": 1.25,
     "id": "c432cc41-2866-4e51-bc67-2543b130d97e"
@@ -1748,7 +1703,7 @@ const nycData = [
   },
   "timeCategory": "midday, afternoon",
     "energyRamp": 2,
-    "tags": "cafe, minimalism, books",
+    "tags": "winebar, books, brooklyn, pastries, bottles, reading, culture",
     "price": "$$$",
     "duration": 1,
     "id": "84fff17c-01fa-487a-aaa2-73979a5a455c"
@@ -1793,7 +1748,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "coffee, sleek",
+    "tags": "roastery, beans, design, global, cafe, shopping, baristas, retail",
     "price": "$",
     "duration": 0.5,
     "id": "5ecf49be-f469-41ae-ac9e-12d7806611c9"
@@ -1838,7 +1793,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "wine, cheese, patio",
+    "tags": "backyard, brooklyn, drinks, neighborhood, beer, cocktails, evening, hospitality, wine, seating, weekend, ambiance",
     "price": "$$",
     "duration": 1.25,
     "id": "77fbe35c-0438-4585-b459-fe231f78492c"
@@ -1883,7 +1838,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 2,
-    "tags": "date night, French",
+    "tags": "french, winebar, romantic, candlelit, intimate, chic, parisian, datenight, moody, refined, stylish, cozy",
     "price": "$$",
     "duration": 1.5,
     "id": "4cce3696-1baf-4e55-8fcd-7ff45fe96617"
@@ -1928,7 +1883,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "modern Mexican, vibrant",
+    "tags": "mexican, mezcal, tequila, agave, lively, playful, vibrant, cocktails, festive, latin, energetic, modern",
     "price": "$$",
     "duration": 1.5,
     "id": "6dedf982-b762-4c4e-a9fa-05029064e525"
@@ -1973,7 +1928,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "intimate, Euro vibe",
+    "tags": "italian, aperitivo, trattoria, cozy, casual, wine, neighborhood, relaxed, classic",
     "price": "$$$",
     "duration": 1.5,
     "id": "d4b3bdf7-4358-4a3e-ab00-fd034fdcdf07"
@@ -2018,7 +1973,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "casual, nightlife",
+    "tags": "tavern, classic, cocktails, martinis, nostalgic, lively, energetic, timeless, casual",
     "price": "$$",
     "duration": 1.25,
     "id": "2138ac7d-33fc-4898-bf54-745f290efe27"
@@ -2063,7 +2018,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "Italian, quick bite",
+    "tags": "italian, trattoria, comfort, rustic, casual, pasta, traditional, hearty, classic, cozy, family, relaxed",
     "price": "$$",
     "duration": 1.25,
     "id": "8e0bb8a4-3192-484f-a58c-188c34f32c41"
@@ -2108,7 +2063,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "cocktail, timeless",
+    "tags": "cocktails, upscale, refined, mixology, classic, elegant, polished, sophisticated, intimate",
     "price": "$$",
     "duration": 1,
     "id": "cb73bba1-3691-4482-9580-659c78a91425"
@@ -2153,7 +2108,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "retro, local",
+    "tags": "beer, craft, cocktails, patio, speakeasy, casual, hoppy, relaxed, courtyard, lively, draft, hidden",
     "price": "$$",
     "duration": 1,
     "id": "c602af3f-02e5-4cb3-a111-2dcf873dba7f"
@@ -2198,7 +2153,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 1,
-    "tags": "indie, underground",
+    "tags": "japanese, speakeasy, creative, eclectic, cocktails, intimate, cozy, tokyo, inventive, underground",
     "price": "$$",
     "duration": 1.25,
     "id": "21e70039-5014-49f1-9fc8-be460dd6dcce"
@@ -2243,7 +2198,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "natural wine, rustic",
+    "tags": "italian, wine, natural, trattoria, romantic, patio, cozy, rustic, dinner, biodynamic, intimate, classic",
     "price": "$$$",
     "duration": 1.5,
     "id": "291012b5-50f2-4775-b37b-62ba27f9fb69"
@@ -2288,7 +2243,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 2,
-    "tags": "wine, hidden gem",
+    "tags": "chinese, sichuan, cocktails, spicy, intimate, romantic, hidden, sophisticated, upscale, moody, datenight, refined",
     "price": "$$",
     "duration": 1.5,
     "id": "3faa0395-5c81-431e-ad55-3bdb4152db2b"
@@ -2333,7 +2288,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "sake, underground",
+    "tags": "japanese, sake, izakaya, hidden, intimate, authentic, underground, cozy, cocktails, traditional, nightlife",
     "price": "$$",
     "duration": 1.25,
     "id": "7d01e4dd-9ef3-4292-918f-981bb3dc2987"
@@ -2378,7 +2333,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "Japanese comfort",
+    "tags": "japanese, udon, noodles, traditional, casual, cozy, romantic, comfort, classic, authentic",
     "price": "$$",
     "duration": 1.5,
     "id": "832cf6b9-3381-4785-80ec-79ee816f48e2"
@@ -2423,7 +2378,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 1,
-    "tags": "izakaya, late night",
+    "tags": "japanese, izakaya, comfort, casual, nostalgic, cozy, homestyle, tavern, hearty, late-night",
     "price": "$$",
     "duration": 1.5,
     "id": "31db0c44-4a73-4846-a2a4-d8751189db5e"
@@ -2458,17 +2413,17 @@ const nycData = [
   "fri": { "open": 17, "close": 26 },
   "sat": { "open": 17, "close": 26 } },
     "dayParts": {
-    "mon": "HH",
-    "tue": "HH",
-    "wed": "HH",
+    "mon": "E",
+    "tue": "E",
+    "wed": "E",
     "thu": "E",
-    "fri": "E",
+    "fri": "L",
     "sat": "L",
-    "sun": "HH"
+    "sun": "E"
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 1,
-    "tags": "wine, natural, small plates",
+    "tags": "speakeasy, pizza, cocktails, intimate, hidden, trendy, smallplates, nightlife, cozy, datenight",
     "price": "$$",
     "duration": 1.5,
     "id": "31a0ea8f-a6ab-4189-ab50-96069d492e19"
@@ -2513,7 +2468,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 1,
-    "tags": "art bar, social",
+    "tags": "wine, natural, patio, social, casual, lively, cozy, courtyard, celebratory, intimate",
     "price": "$$$",
     "duration": 1.5,
     "id": "9d6f68ff-092c-4ac5-b014-d83f34cd8312"
@@ -2580,7 +2535,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "ramen, cozy",
+    "tags": "japanese, udon, noodles, comfort, cozy, casual, traditional, hearty, authentic",
     "price": "$$",
     "duration": 1,
     "id": "c40c103e-e7fb-439e-af82-b7b43742d75f"
@@ -2625,7 +2580,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "Sichuan, modern",
+    "tags": "sichuan, chinese, spicy, communal, groupdining, lively, authentic, dinner, sharable",
     "price": "$$",
     "duration": 1.5,
     "id": "347674a0-be6a-4b12-8423-4b2f58e7eed7"
@@ -2670,7 +2625,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "ceramics, peaceful",
+    "tags": "japanese, plantbased, healthy, patio, casual, comfort, wholesome, vegetarian, nourishing",
     "price": "$$",
     "duration": 1.25,
     "id": "80b29de5-5419-4453-a171-65a955ca64c3"
@@ -2715,7 +2670,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 2,
-    "tags": "jazz, historic",
+    "tags": "jazz, livemusic, intimate, soulful, underground, performance, nightlife, classic",
     "price": "$$",
     "duration": 2,
     "id": "ecdbb628-1e6a-4d87-a306-4909f085f204"
@@ -2760,7 +2715,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 2,
-    "tags": "jazz, intimate",
+    "tags": "jazz, livemusic, creative, artistic, improvisation, laidback, performance, nightlife",
     "price": "$$",
     "duration": 1,
     "id": "83c9f800-826a-4feb-be79-fb2de4d5fc16"
@@ -2805,7 +2760,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 2,
-    "tags": "speakeasy, high-end",
+    "tags": "cocktails, speakeasy, intimate, hidden, upscale, refined, romantic, exclusive, mixology",
     "price": "$$$",
     "duration": 1.25,
     "id": "d0f866ec-e9c2-4cf5-b7ff-6172f8319930"
@@ -2850,7 +2805,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "Mediterranean, romantic",
+    "tags": "european, wine, cocktails, romantic, patio, cozy, stylish, intimate, continental",
     "price": "$$$",
     "duration": 1.5,
     "id": "1dff1384-0375-4cb5-b388-d952a30cb65b"
@@ -2895,7 +2850,7 @@ const nycData = [
   },
   "timeCategory": "midday",
     "energyRamp": 1,
-    "tags": "tacos, casual",
+    "tags": "mexican, tacos, casual, authentic, streetfood, vibrant, traditional, lively, unfussy",
     "price": "$",
     "duration": 0.75,
     "id": "16188655-d38f-4399-9a09-b548549ea42a"
@@ -2940,7 +2895,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 2,
-    "tags": "cocktails, stylish",
+    "tags": "martinis, elegant, refined, intimate, aesthetic, cozy, classic, polished, cocktailbar",
     "price": "$$",
     "duration": 1.5,
     "id": "431834fb-b17c-4c6c-98f1-e2b7e8a51993"
@@ -2985,7 +2940,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 1,
-    "tags": "Korean jazz, lounge",
+    "tags": "korean, vinyl, friedchicken, cozy, romantic, chic, nightlife, soju, datenight",
     "price": "$$$",
     "duration": 1.5,
     "id": "87377759-2fa6-48cc-a4b2-ff27b7619381"
@@ -3030,7 +2985,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "moody bar, date spot",
+    "tags": "cocktails, moody, redlit, eclectic, relaxed, nightlife, intimate, lounge, vibey",
     "price": "$$",
     "duration": 1.25,
     "id": "98db0aa5-cfd4-4c9d-be3c-817f8e79dec5"
@@ -3075,7 +3030,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "café, zen minimal",
+    "tags": "french, brunch, bistro, wine, parisian, cozy, relaxed, daytime, romantic, classic",
     "price": "$$",
     "duration": 1.25,
     "id": "2d461dd5-5d8c-4f17-bcc4-9d3c4b302290"
@@ -3120,7 +3075,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "cocktail, piano bar",
+    "tags": "cocktails, livemusic, intimate, dimlylit, jazz, cozy, romantic, mixology, performance",
     "price": "$$",
     "duration": 1.25,
     "id": "3b714883-62c2-45db-9f06-bb088798106c"
@@ -3165,7 +3120,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 3,
-    "tags": "cinema, underground",
+    "tags": "cinema, arthouse, indie, films, intimate, hidden, screenings, cult, underground",
     "price": "$",
     "duration": 1.5,
     "id": "446c1e80-07d5-46e8-b21e-930df672b38e"
@@ -3210,7 +3165,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 3,
-    "tags": "deep house, late night",
+    "tags": "nightclub, disco, dancing, dj, nightlife, hidden, party, vibrant, late-night",
     "price": "$$",
     "duration": 1.5,
     "id": "be9e991f-d003-45ab-8b19-3cb2530fae0b"
@@ -3255,7 +3210,7 @@ const nycData = [
   },
   "timeCategory": "afternoon, happyhour, evening",
     "energyRamp": 2,
-    "tags": "beerhall, social",
+    "tags": "biergarten, beerhall, communal, lively, steins, casual, outdoor, festive",
     "price": "$$",
     "duration": 1.75,
     "id": "84f66602-b7af-4145-b15d-bdec6dc76e66"
@@ -3300,7 +3255,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "speakeasy, moody",
+    "tags": "martinis, chic, intimate, cozy, romantic, polished, cocktailbar, stylish",
     "price": "$$$",
     "duration": 1.5,
     "id": "0f02b310-bc40-4517-931a-9dc27d5fb057"
@@ -3345,7 +3300,7 @@ const nycData = [
   },
   "timeCategory": "afternoon, happyhour, evening",
     "energyRamp": 1,
-    "tags": "natural wine, fun vibe",
+    "tags": "winebar, patio, dj, cozy, lively, naturalwine, terrace, social, spacious",
     "price": "$$",
     "duration": 1.5,
     "id": "3fa99fc1-0da6-415d-9cee-41a47f6747df"
@@ -3390,7 +3345,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "dive, artsy",
+    "tags": "divebar, billiards, photobooth, patio, relaxed, intimate, casual, nostalgic",
     "price": "$$",
     "duration": 1.25,
     "id": "3e5e9c5b-3d40-4766-9000-a7a6ffcbeed4"
@@ -3435,7 +3390,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "cocktail, old world",
+    "tags": "cocktails, romantic, intimate, refined, datenight, classic, polished, lounge",
     "price": "$$",
     "duration": 1.5,
     "id": "49847526-a027-4b0d-b97a-063976c37dec"
@@ -3480,7 +3435,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 3,
-    "tags": "sushi, DJ, small bites",
+    "tags": "sushi, speakeasy, vinyl, omakase, hidden, dj, intimate, nightlife",
     "price": "$$$$",
     "duration": 1.25,
     "id": "a19aefb1-a0e0-49c5-907f-27bea01780d9"
@@ -3525,7 +3480,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 3,
-    "tags": "retro, immersive, dance",
+    "tags": "disco, dancing, throwback, nightlife, party, vibrant, nostalgic, dj",
     "price": "$$",
     "duration": 1.5,
     "id": "6696bbe0-baca-47ab-8e67-17d5ee178def"
@@ -3570,7 +3525,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 1,
-    "tags": "cocktail, serious bar",
+    "tags": "cocktails, creative, relaxed, intimate, datenight, mixology, romantic",
     "price": "$$",
     "duration": 1.5,
     "id": "10207b14-ed96-48a9-9bac-388018f13f97"
@@ -3615,7 +3570,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 2,
-    "tags": "scenic, upscale",
+    "tags": "rooftop, cocktails, skyline, chic, panoramic, elevated, romantic, sunset",
     "price": "$$$",
     "duration": 1.25,
     "id": "a3213aad-b0c9-4b07-8166-909283afb901"
@@ -3660,7 +3615,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "rooftop, intimate",
+    "tags": "rooftop, relaxed, cozy, casual, sunset, nightlife, neighborhood, laidback",
     "price": "$",
     "duration": 1.25,
     "id": "d40b5f3b-c546-40e2-91a4-4b2ef0771d7e"
@@ -3705,7 +3660,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 3,
-    "tags": "nightlife, queer-forward",
+    "tags": "coffee, cafe, plants, cozy, relaxed, espresso, greenery, casual, daylight",
     "price": "$",
     "duration": 0.5,
     "id": "6a84ed13-9601-4957-b817-4fadc3e85087"
@@ -3750,7 +3705,7 @@ const nycData = [
   },
   "timeCategory": "afternoon, evening",
     "energyRamp": 1,
-    "tags": "Italian, dinner spot",
+    "tags": "italian, trattoria, terrace, scenic, romantic, rustic, dinner, wine, family",
     "price": "$$",
     "duration": 1.25,
     "id": "d8c6e856-830c-47e6-912d-10815a73c5a3"
@@ -3795,7 +3750,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 1,
-    "tags": "cocktail, edge",
+    "tags": "coffee, cafe, artistic, eclectic, plants, creative, cozy, indie",
     "price": "$",
     "duration": 0.5,
     "id": "2f7a7e06-99d2-4836-b6a3-d1c6af83ed62"
@@ -3840,7 +3795,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "casual, post-drink",
+    "tags": "taiwanese, asian, comfort, streetfood, playful, casual, noodles, rice, creative",
     "price": "$$",
     "duration": 1,
     "id": "95fdb21c-ce7b-4ab4-9289-14da3de2aa67"
@@ -3885,7 +3840,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "culture, print",
+    "tags": "magazines, bookstore, vintage, print, retro, indie, browsing, archival",
     "price": "$",
     "duration": 0.5,
     "id": "fbefaf54-e7bd-467b-b6b5-60678e175ff9"
@@ -3930,7 +3885,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday, happyhour, evening",
     "energyRamp": 2,
-    "tags": "cafe by day, bar by night",
+    "tags": "coffee, cafe, plants, cozy, lofi, espresso, relaxed, intimate",
     "price": "$",
     "duration": 0.5,
     "id": "63f5df34-c371-4633-8873-3c45f9890491"
@@ -3975,7 +3930,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 1,
-    "tags": "fine dining, hidden",
+    "tags": "brazilian, finedining, tastingmenu, gallery, chef, intimate, upscale, immersive, artistic",
     "price": "$$$$",
     "duration": 1.5,
     "id": "bfcc4ada-611f-4e60-9d3b-d768490804b1"
@@ -4020,7 +3975,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 2,
-    "tags": "indulgent burger, upscale",
+    "tags": "american, diner, burger, cocktails, classic, trendy, lively, indulgent",
     "price": "$$$",
     "duration": 1.5,
     "id": "f8b45cbc-640d-441f-994c-b8d2ee023e24"
@@ -4065,7 +4020,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "Spanish, wine, intimate",
+    "tags": "spanish, tapas, michelin, wine, upscale, refined, intimate, finedining",
     "price": "$$$",
     "duration": 1.5,
     "id": "0f0d2a5c-410a-4849-ac2d-4c1d60efa40e"
@@ -4110,7 +4065,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "small plates, date night",
+    "tags": "cocktails, chic, romantic, intimate, polished, datenight, lounge, stylish",
     "price": "$$",
     "duration": 1.5,
     "id": "61d29096-63e9-4a35-83b9-d270703c0d9e"
@@ -4155,7 +4110,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "rooftop, wine",
+    "tags": "wine, rooftop, natural, cozy, elevated, intimate, sunset",
     "price": "$",
     "duration": 1.25,
     "id": "b2e8c4fa-6a67-4f7b-ac34-f03866155fb8"
@@ -4200,7 +4155,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 1,
-    "tags": "arthouse cinema, curated",
+    "tags": "jazz, livemusic, intimate, vibrant, performance, nightlife, improvisation",
     "price": "$$",
     "duration": 1.75,
     "id": "91496971-6ff9-4992-b81d-dd5542ef2651"
@@ -4245,7 +4200,7 @@ const nycData = [
   },
   "timeCategory": "midday",
     "energyRamp": 1,
-    "tags": "art, sculpture, contemplative",
+    "tags": "museum, sculpture, japanese, minimalist, serene, cultural, modernism, contemplative",
     "price": "$",
     "duration": 1,
     "id": "f03e57ba-0901-4186-9e4e-cbd2ea51b5e7"
@@ -4290,7 +4245,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "art, conceptual",
+    "tags": "gallery, sculpture, contemporary, experimental, avantgarde, exhibitions",
     "price": "$",
     "duration": 0.75,
     "id": "4a1644f7-536c-4d1b-b610-0a0f0df8200c"
@@ -4335,7 +4290,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "hidden art studio",
+    "tags": "sculpture, gallery, studio, handcrafted, expressive, contemporary",
     "price": "$",
     "duration": 0.75,
     "id": "d8455c50-2db2-49a9-9d49-21314cb940c7"
@@ -4380,7 +4335,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "contemporary gallery",
+    "tags": "gallery, contemporary, upscale, curated, refined, exhibitions, collectors",
     "price": "$",
     "duration": 0.5,
     "id": "9f8ba657-f7ed-4d5f-bb43-f0a298f8be32"
@@ -4425,7 +4380,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "design, lighting, showroom",
+    "tags": "design, showroom, lighting, furniture, sculptural, luxury, interiors",
     "price": "$",
     "duration": 0.75,
     "id": "47cf9198-196d-4226-bd62-5baaea86056c"
@@ -4470,7 +4425,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "antique, eclectic",
+    "tags": "antique, jewelry, vintage, watches, estate, heirloom, luxury, elegant, collectibles",
     "price": "",
     "duration": 0.5,
     "id": "4e9c3113-7575-40e5-8fb1-a446d2813ae6"
@@ -4515,7 +4470,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "spiritual, mystic",
+    "tags": "crystals, mystical, spiritual, aura, tarot, jewelry, metaphysical, gifts, witchy",
     "price": "$",
     "duration": 0.5,
     "id": "03682c04-0999-462a-89b4-5235c5f506a0"
@@ -4560,7 +4515,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "vintage posters, discovery",
+    "tags": "posters, vintage, collectibles, prints, retro, art, graphic, memorabilia",
     "price": "",
     "duration": 0.5,
     "id": "184d3b3c-b4f9-424e-9bd8-e0d6308459f4"
@@ -4605,7 +4560,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "bookstore, literary escape",
+    "tags": "books, rare, used, bookstore, vintage, browsing, literature, collectibles",
     "price": "$",
     "duration": 0.5,
     "id": "a3989791-f497-440b-bdea-25548e4bcb07"
@@ -4650,7 +4605,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "Japanese stationery, kawaii",
+    "tags": "stationery, japanese, gifts, whimsical, cute, kawaii, pens, paper, unique",
     "price": "$",
     "duration": 0.5,
     "id": "b1107fe0-2387-4b59-bc0f-7ae81db60096"
@@ -4695,7 +4650,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 2,
-    "tags": "magazine store, hidden media",
+    "tags": "magazines, artbooks, indie, coffee, creative, bookstore, rare, publishing",
     "price": "$",
     "duration": 0.5,
     "id": "6f0c29bc-331d-46c2-b795-874b1c959f64"
@@ -4740,7 +4695,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 1,
-    "tags": "cocktails, dark, refined",
+    "tags": "whiskey, spirits, cocktails, refined, intimate, tasting, upscale, lounge",
     "price": "$$$",
     "duration": 1,
     "id": "748a0d27-01c0-4414-9109-73927bd2316c"
@@ -4785,7 +4740,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday, happyhour, late",
     "energyRamp": 4,
-    "tags": "cafe by day, music garden by night",
+    "tags": "jazz, dancing, cocktails, lively, music, hip, nightlife, social",
     "price": "$",
     "duration": 2,
     "id": "98820398-a7cf-4a1a-96ed-4c107b770bcb"
@@ -4830,7 +4785,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 3,
-    "tags": "bar, vibe spot",
+    "tags": "audiophile, hi-fi, grooves, selector, turntables, analog, immersive, curated",
     "price": "$$",
     "duration": 1.25,
     "id": "a91d271b-e5e4-4303-b9a5-1aa1e397add9"
@@ -4875,7 +4830,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "cozy fusion, quiet luxury",
+    "tags": "scandinavian, fusion, minimalism, wellness, matcha, serene, garden, daylight",
     "price": "$$",
     "duration": 1,
     "id": "c601b6df-bfc8-4f81-a2b1-330c04b5d825"
@@ -4920,7 +4875,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 2,
-    "tags": "romantic, Euro garden",
+    "tags": "candlelight, courtyard, farmhouse, twinkle, acoustic, winecentric, rusticity, romance",
     "price": "$$",
     "duration": 1.5,
     "id": "751a5ec9-a145-4d8a-a90a-2f4ce12bdf46"
@@ -4965,7 +4920,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "plant house, design",
+    "tags": "botanical, desert, terracotta, planters, earthy, greenery, sunlit, succulents",
     "price": "$$",
     "duration": 0.5,
     "id": "e3643671-ba9f-4c61-b97f-775f7e67d63a"
@@ -5010,7 +4965,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "cocktail institution",
+    "tags": "velvet, bespoke, theatrical, darkwood, swanky, craft, luxe, dramatic",
     "price": "$$$",
     "duration": 1.5,
     "id": "387603e2-6758-40e0-9298-e49840307e08"
@@ -5055,7 +5010,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 2,
-    "tags": "sultry bar, ambient",
+    "tags": "crooners, saxophone, standards, nightcaps, dimglow, velvet, crooning, bluesy",
     "price": "$$$",
     "duration": 1.75,
     "id": "0875770f-dcd5-49f1-aed9-c452092e7c35"
@@ -5100,7 +5055,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 2,
-    "tags": "immersive tasting, speakeasy",
+    "tags": "omakase, noren, backroom, secrecy, curated, artful, exclusivity, izakaya",
     "price": "$$$$",
     "duration": 1.5,
     "id": "1e523667-145b-4a2c-b223-037f8dffd8aa"
@@ -5145,7 +5100,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 1,
-    "tags": "intimate, high-end",
+    "tags": "terroir, pairings, sommelier, vintages, seasonal, curated, counterseat, oenophile",
     "price": "$$",
     "duration": 1.25,
     "id": "f61d0d53-5b3a-4248-8267-315fae94bc5a"
@@ -5190,7 +5145,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "vinyl, crate digging",
+    "tags": "digging, pressings, collectors, crates, rare, oldschool, analog, vinyl",
     "price": "$",
     "duration": 0.5,
     "id": "5d978207-1bff-44ab-9251-42cb61609580"
@@ -5235,7 +5190,7 @@ const nycData = [
   },
   "timeCategory": "afternoon, happyhour, evening",
     "energyRamp": 3,
-    "tags": "music, outdoor, community",
+    "tags": "broadcast, music, openair, booth, subculture, backyard, dayparty, livestream, underground",
     "price": "$",
     "duration": 1,
     "id": "e3e7e57d-c3a3-4074-8e8e-51366a652736"
@@ -5287,7 +5242,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "Japanese, design-forward",
+    "tags": "izakaya, shareable, woodfire, seasonal, communal, modernist, authentic, inventive",
     "price": "$$$",
     "duration": 1.5,
     "id": "7f83c18d-74d7-4579-bab7-83cce4c2d5f4"
@@ -5332,7 +5287,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "museum, sacred calm",
+    "tags": "medieval, monastery, gothic, tapestries, architecture, cloistered, monastic, gardens",
     "price": "$",
     "duration": 2,
     "id": "6ab21f06-e705-49f1-a7c3-8314b12b2cd3"
@@ -5377,7 +5332,7 @@ const nycData = [
   },
   "timeCategory": "midday",
     "energyRamp": 1,
-    "tags": "vintage soda fountain",
+    "tags": "milkshakes, soda, luncheonette, counter, retro, jukebox, comfort, oldschool",
     "price": "$",
     "duration": 0.5,
     "id": "94d841fc-1798-45ae-a817-865e51c71fde"
@@ -5441,7 +5396,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 1,
-    "tags": "omakase, quiet craft",
+    "tags": "nigiri, sashimi, counter, chef, tasting, seasonal, minimalist, refined",
     "price": "$$$",
     "duration": 1.5,
     "id": "d5d7f7be-8794-4511-bd0e-1037aac4a1d0"
@@ -5486,7 +5441,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 1,
-    "tags": "tiny trattoria, date fuel",
+    "tags": "trattoria, intimate, rustic, candlelight, byob, pasta, romantic, tuckedaway",
     "price": "$$",
     "duration": 1.5,
     "id": "cbc64a3c-3c31-4cbb-ba81-a3f9cde5ec0a"
@@ -5531,7 +5486,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "Chinatown essentials",
+    "tags": "groceries, produce, seafood, imported, pantry, asian, market, specialty",
     "price": "$$",
     "duration": 0.5,
     "id": "135533ae-64fb-482a-b63c-09643daba52c"
@@ -5576,7 +5531,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 1,
-    "tags": "cheap eats, late cravings",
+    "tags": "dumplings, handmade, noodles, casual, traditional, comfort, chinese, steamed",
     "price": "$",
     "duration": 0.5,
     "id": "4ffbae28-208d-4b45-96f8-0242b4f10c38"
@@ -5633,7 +5588,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 1,
-    "tags": "classic French, timeless",
+    "tags": "parisian, bistro, fine, candlelit, heritage, wine, classic, formal",
     "price": "$$$$",
     "duration": 1.5,
     "id": "db80e05f-41d4-43f0-8815-249cdc190669"
@@ -5678,7 +5633,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "tiny Euro café",
+    "tags": "espresso, croissants, intimate, european, sidewalk, pastries, cozy, local",
     "price": "$",
     "duration": 0.75,
     "id": "13ab145c-06db-4c45-bd1a-e082eebd77d4"
@@ -5723,7 +5678,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 1,
-    "tags": "conceptual, niche retail",
+    "tags": "speakeasy, vinyl, moody, intimate, mixology, hidden, dimmed, lounge",
     "price": "$$",
     "duration": 1.5,
     "id": "a78bdf18-7de6-4109-8c3e-2e68133d4dcb"
@@ -5768,7 +5723,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "hands-on workshops, DIY",
+    "tags": "workshop, woodworking, handmade, artisan, crafting, experiential, diy, rustic",
     "price": "",
     "duration": 1.5,
     "id": "ee409c1d-c382-4495-a103-e460619e7381"
@@ -5813,7 +5768,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "majestic, garden escape",
+    "tags": "conservatory, fountains, landscapes, historic, gardens, scenic, architecture, tranquil",
     "price": "$",
     "duration": 3,
     "id": "592be948-3e6c-44fd-8acd-85393b4bd842"
@@ -5858,7 +5813,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "plant jungle, immersive",
+    "tags": "houseplants, greenery, pots, botanical, foliage, gardening, tropical, nursery",
     "price": "$",
     "duration": 0.5,
     "id": "07d0706f-49a1-46c7-b2a9-4334e0608fee"
@@ -5925,7 +5880,7 @@ const nycData = [
   },
   "timeCategory": "midday, evening",
     "energyRamp": 2,
-    "tags": "Vietnamese, backyard feel",
+    "tags": "vietnamese, fusion, gastropub, creative, bold, contemporary, flavorful, vibrant",
     "price": "$$$",
     "duration": 1.5,
     "id": "a4c3d53f-ceda-4379-a411-e0bf1bb0b582"
@@ -5970,7 +5925,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 1,
-    "tags": "sleek, design-forward café bar",
+    "tags": "minimalist, vinyl, cocktails, chic, curated, sleek, modern, intimate",
     "price": "$$",
     "duration": 1.25,
     "id": "3c92780c-2146-4d81-88e9-b218667bc53f"
@@ -6025,7 +5980,7 @@ const nycData = [
   },
   "timeCategory": "midday, afternoon, late",
     "energyRamp": 3,
-    "tags": "music, design, café/bar hybrid",
+    "tags": "hifi, dancefloor, electronic, lounge, immersive, sound, nightlife, curated",
     "price": "$$",
     "duration": 2,
     "id": "a932cdd4-010e-4dbd-934d-67133e8c7017"
@@ -6070,7 +6025,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 4,
-    "tags": "bold, postmodern nightlife",
+    "tags": "cocktails, intimate, trendy, romantic, moody, chic, stylish, upscale",
     "price": "$$$",
     "duration": 1.5,
     "id": "08cb4d14-77be-4e15-96ff-b27d73ec7140"
@@ -6115,7 +6070,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "men’s boutique, aesthetic retail",
+    "tags": "menswear, heritage, tailoring, artisanal, luxury, curated, vintage, fashion",
     "price": "$$",
     "duration": 0.5,
     "id": "c2671b57-5709-468e-8333-bba2b403f602"
@@ -6160,7 +6115,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "curated vintage, art-wear",
+    "tags": "vintage, curated, resale, rare, fashion, designer, bohemian, collectible",
     "price": "$$",
     "duration": 0.5,
     "id": "9454bae7-b334-44a0-adb9-37b3fca1d5c0"
@@ -6205,7 +6160,7 @@ const nycData = [
   },
   "timeCategory": "midday",
     "energyRamp": 1,
-    "tags": "Italian deli, nostalgia chic",
+    "tags": "sandwiches, italian, deli, casual, takeout, subs, classic, comfort",
     "price": "$",
     "duration": 0.5,
     "id": "22aaf5a6-ed8d-4546-9a50-730a85888bde"
@@ -6250,7 +6205,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 5,
-    "tags": "salsa energy, open air",
+    "tags": "latin, streetwear, vibrant, culture, apparel, bold, expressive, fashion",
     "price": "",
     "duration": 0,
     "id": "fd8d5918-862b-475d-9750-0f39a7e785c0"
@@ -6295,7 +6250,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "wine bar, grounded elegance",
+    "tags": "popup, events, tasting, curated, experiential, intimate, wine, gathering",
     "price": "",
     "duration": 0,
     "id": "7f4f429b-e6e8-41ba-be7b-363fc159d437"
@@ -6340,7 +6295,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 2,
-    "tags": "analog nostalgia shot",
+    "tags": "photobooth, portraits, analog, novelty, playful, keepsakes, retro, snapshots",
     "price": "$",
     "duration": 0.5,
     "id": "ef9eeb41-ba0e-4c10-b837-5b6b648b1ae9"
@@ -6385,7 +6340,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 2,
-    "tags": "hidden cocktail bar",
+    "tags": "backroom, hidden",
     "price": "$$",
     "duration": 1.25,
     "id": "ea59a9c3-50a8-44b8-9500-fda73924fab1"
@@ -6430,7 +6385,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 2,
-    "tags": "under-the-radar wine bar",
+    "tags": "biodynamic, oenophile, vintages, terroir, corkage, sommelier, pairings",
     "price": "$$",
     "duration": 1.5,
     "id": "a8528dd5-4772-4cd8-9c28-14eb958cf0f8"
@@ -6475,7 +6430,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "fitness, rooftop, activity",
+    "tags": "futbol, watchparty, tailgate, jerseys, pints, rivalry, matchday, supporters",
     "price": "$",
     "duration": 1.25,
     "id": "67521ae4-0139-4731-8ba1-859370b0bfed"
@@ -6520,7 +6475,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 3,
-    "tags": "games, social, casual energy",
+    "tags": "games, social, casual, dive, cue, eightball, racks, league, hustlers, felt, tournaments, chalk",
     "price": "$$",
     "duration": 1.5,
     "id": "fbb84dda-5d62-4fe5-a125-519557955e8b"
@@ -6565,7 +6520,7 @@ const nycData = [
   },
   "timeCategory": "afternoon, midday",
     "energyRamp": 1,
-    "tags": "fashion, culture",
+    "tags": "conceptstore, streetwear, recordshop, espresso, merch, capsule, racks, edit",
     "price": "$$",
     "duration": 0.5,
     "id": "e43b505c-2bfa-46f0-9ce3-96099318c572"
@@ -6610,7 +6565,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "minimalist tea & sound ritual",
+    "tags": "sencha, hojicha, tatami, teaware, meditation, steeping, zen, wabi",
     "price": "$$",
     "duration": 1,
     "id": "ad1e994a-7c00-4aac-8dbd-778de379f43d"
@@ -6655,7 +6610,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 1,
-    "tags": "espresso bar, minimal",
+    "tags": "petnat, spritz, smallplates, sidewalk, amaro, pastries, barseats, daydrinks",
     "price": "$$",
     "duration": 0.5,
     "id": "992a24b6-d936-4a29-b237-ddf3bdc455f0"
@@ -6700,7 +6655,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "vintage, lifestyle curation",
+    "tags": "consignments, archival, racks, sourced, preowned, garments, collectors, edit",
     "price": "$",
     "duration": 0.5,
     "id": "0f405351-c662-475d-9b5d-ead6509d8706"
@@ -6745,7 +6700,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 2,
-    "tags": "niche music venue",
+    "tags": "furnishings, objects, installation, interiors, vintagepieces, modernist, salvage, decor",
     "price": "$$$",
     "duration": 0.5,
     "id": "6cea8f53-bfcd-48f1-8c9d-dfad6e260f85"
@@ -6790,7 +6745,7 @@ const nycData = [
   },
   "timeCategory": "midday",
     "energyRamp": 2,
-    "tags": "Spanish vermouth bar",
+    "tags": "matcha, hojicha, pastries, ceramics, greenery, daylight, herbal, slowliving",
     "price": "$",
     "duration": 1,
     "id": "7f275431-cfce-4703-a0e7-917b7e84d064"
@@ -6835,7 +6790,7 @@ const nycData = [
   },
   "timeCategory": "evening",
     "energyRamp": 1,
-    "tags": "cocktails, minimal chic",
+    "tags": "hi-fi, turntables, izakaya, raregrooves, highballs, audiophile, backroom, selector",
     "price": "$$",
     "duration": 1.5,
     "id": "b517d690-7d36-4135-be7e-06a6338b49a0"
@@ -6880,7 +6835,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening, late",
     "energyRamp": 2,
-    "tags": "sake, hidden bar",
+    "tags": "izakaya, arcade, nintendo, highballs, karaage, nostalgia, kanpai, late-night",
     "price": "$$",
     "duration": 1.5,
     "id": "0042eef3-a4a9-4828-bb09-09c35fd3447e"
@@ -6925,7 +6880,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 1,
-    "tags": "jazz, intimate",
+    "tags": "pianobar, standards, trio, bebop, basement, late-set, crooners, bluehour",
     "price": "$$",
     "duration": 1.75,
     "id": "43cafaea-cee1-45f0-862c-ebbdd5de1dc3"
@@ -6970,7 +6925,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "furniture as art, slow design",
+    "tags": "danish, design, craftsmanship, woodworking, minimalist, modernism, teak, interiors, collectible",
     "price": "",
     "duration": 0.5,
     "id": "ac53fc26-1d5e-4542-b2ad-8d5f51d59b3a"
@@ -7013,9 +6968,9 @@ const nycData = [
     "sat": "HH",
     "sun": "-"
   },
-  "timeCategory": "afternoon, happyhour",
+  "timeCategory": "afternoon, midday",
     "energyRamp": 3,
-    "tags": "wine & snacks, mellow",
+    "tags": "vintages, oenophile, tasting, corkage, sommelier, retail, curated, design",
     "price": "$$",
     "duration": 1,
     "id": "0b75812b-72f1-409b-b27e-8afc4c22d20b"
@@ -7060,7 +7015,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "wine bar meets bookstore",
+    "tags": "wine, focaccia, bookstore, books, aperitivo, espresso, designbooks, panini, cornetti, italy, neighborhoodspot",
     "price": "$$",
     "duration": 1,
     "id": "6e0ffff2-ab05-46e9-a22e-b84abaf0d9f4"
@@ -7105,7 +7060,7 @@ const nycData = [
   },
   "timeCategory": "happyhour, evening",
     "energyRamp": 1,
-    "tags": "natural wine, low-key cool",
+    "tags": "natural wine, natural, petnat, orange, smallbatch, bistro, sidewalk, pours, somms",
     "price": "$$",
     "duration": 1.5,
     "id": "e86c9333-81d1-4735-9214-593e74e55e7c"
@@ -7150,7 +7105,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 3,
-    "tags": "late bites, neon chaos",
+    "tags": "late bites, neon",
     "price": "$$",
     "duration": 1.5,
     "id": "ff011790-e93e-4ef6-8201-1ebe8ce46ff4"
@@ -7195,7 +7150,7 @@ const nycData = [
   },
   "timeCategory": "evening, late",
     "energyRamp": 2,
-    "tags": "mystic retail + spiritual layer",
+    "tags": "afrobeat, rum, dancefloor, grooves, selectors, latehours, underground, dimlylit",
     "price": "$$$",
     "duration": 1.75,
     "id": "c50edd27-185e-4bf6-a803-f147be330051"
@@ -7240,7 +7195,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "elite art gallery",
+    "tags": "bluechip, collectors, exhibitions, museumquality, secondarymarket, investment, modernism, estates",
     "price": "$",
     "duration": 0.5,
     "id": "f6712658-9503-45f5-90ce-765781a9ff71"
@@ -7285,7 +7240,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 2,
-    "tags": "absurdist retail, brainy oddball",
+    "tags": "midcentury, oddities, vinyl, retro, furniture, foundobjects, collectors, design, eclectic",
     "price": "$",
     "duration": 0.5,
     "id": "b73ca620-e04f-456c-9719-1ccecd991302"
@@ -7330,7 +7285,7 @@ const nycData = [
   },
   "timeCategory": "afternoon",
     "energyRamp": 1,
-    "tags": "conceptual tea bar",
+    "tags": "audiophile, peaceful, listening bar, tatami, analog, sound, incense, slowbar, vinyl, culture",
     "price": "$",
     "duration": 1.25,
     "id": "64ea5678-8c85-4b5a-813b-715b410d6c5b"
@@ -7375,7 +7330,7 @@ const nycData = [
   },
   "timeCategory": "morning, midday",
     "energyRamp": 2,
-    "tags": "scent & concept retail",
+    "tags": "espresso, housemusic, dayparty, naturals, courtyard, baristas, lateafternoon, creatives",
     "price": "$",
     "duration": 0.5,
     "id": "88685ae2-1d97-4a4f-8188-7bbe2640ae9a"
