@@ -235,7 +235,7 @@ export const crawlThemes: CrawlTheme[] = [
     price: [1, 2, 3, 4],
     timeOfDay: ["afternoon", "happy hour", "evening", "night", "late-night"],
     vibes: [
-      "romantic", "cocktail", "jazz", "twilight", "wine", "dim", "moody", "wine",
+      "romantic", "cocktail", "winebar", "jazz", "twilight", "wine", "dim", "moody", "wine",
       "candlelit", "intimate", "charming", "flirty", "cozy", "soft",
       "sweet", "elegant", "lush", "quiet", "dreamy", "gentle", "classic",
       "warm", "lowlit", "refined", "stylish", "serene", "sensual",
@@ -261,7 +261,7 @@ export const crawlThemes: CrawlTheme[] = [
       "tender", "silken",              // gentle
       "timeless", "vintage"
     ],
-    tags: ["dinner", "cozy", "dim", "dim lit", "intimate", "cocktail", "dessert", "wine", "speakeasy",
+    tags: ["dinner", "winebar", "cozy", "dim", "dim lit", "intimate", "cocktail", "dessert", "wine", "speakeasy",
   "lounge",
   "bistro",
   "brasserie",
@@ -459,7 +459,7 @@ export const crawlThemes: CrawlTheme[] = [
       "careless", "wild",               // reckless
       "unfiltered", "uninhibited"
     ],
-    tags: ["dinner", "bar", "bar", "club", "late-night", "gastropub",
+    tags: ["dinner", "bar", "winebar", "bar", "club", "late-night", "gastropub",
   "beerhall",
   "taproom",
   "sportsbar",
@@ -551,6 +551,7 @@ export const crawlThemes: CrawlTheme[] = [
       "bookstore",
       "showroom",
       "furniture",
+      "winebar",
       "interior design",
       "design store",
       "creative space",
@@ -787,7 +788,7 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["morning", "midday", "afternoon","day", "evening"],
     price: [1, 2, 3, 4],
-    tags: ["bookstore", "gallery", "wine bar", "wine", "coffee", "lounge", "reading", "art", "readingroom",
+    tags: ["bookstore", "gallery", "wine bar", "winebar", "wine", "coffee", "lounge", "reading", "art", "readingroom",
   "circulation",
   "stacks",
   "archives",
@@ -901,7 +902,7 @@ export const crawlThemes: CrawlTheme[] = [
   filters: {
     timeOfDay: ["afternoon", "evening", "night"],
     price: [1, 2, 3],
-    tags: ["bar", "cocktail", "dinner", "lounge", "patio", "happy hour", "wine bar", "wine", "gastropub",
+    tags: ["bar", "cocktail", "dinner", "lounge", "patio", "happy hour", "wine bar", "winebar", "wine", "gastropub",
   "taproom",
   "beerhall",
   "brasserie",
