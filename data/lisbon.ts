@@ -8750,7 +8750,8 @@ const lisbonData = [
       "fri": { "open": 18, "close": 26 },
       "sat": { "open": 18, "close": 26 }
     },
-    "timeCategory": "late",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "L", "fri": "L", "sat": "L" },
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "cocktails, mixology, omakase, japanese, sushi, bartenders, reservations, downtown, spirits, nightlife",
     "price": "$$",
@@ -8806,7 +8807,8 @@ const lisbonData = [
         { "open": 13, "close": 24 }
       ]
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "morning, midday, evening",
     "energyRamp": 3,
     "tags": "rooftop, hotel, seafood, brunch, cocktails, terrace, chiado, views, dining, sunset, reservations",
     "price": "$$$$",
@@ -8841,6 +8843,7 @@ const lisbonData = [
       "fri": { "open": 18.5, "close": 26 },
       "sat": { "open": 18.5, "close": 26 }
     },
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "L", "sat": "L" },
     "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "rooftop, steakhouse, sushi, cocktails, fine, dining, reservations, skyline, nightlife, chefdriven",
@@ -8876,6 +8879,7 @@ const lisbonData = [
       "fri": { "open": 18, "close": 25 },
       "sat": { "open": 18, "close": 25 }
     },
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "L", "sat": "L" },
     "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "cocktails, experimental, bartenders, signatures, downtown, nightlife, smallplates, spirits, late, mixology",
@@ -8911,7 +8915,8 @@ const lisbonData = [
       "fri": { "open": 13, "close": 24 },
       "sat": { "open": 13, "close": 24 }
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "wine, naturalwine, portuguese, bottles, tastings, charcuterie, bairroalto, pairings, bar, grapes",
     "price": "$$",
@@ -8946,7 +8951,8 @@ const lisbonData = [
       "fri": { "open": 19, "close": 27 },
       "sat": { "open": 19, "close": 27 }
     },
-    "timeCategory": "late",
+    "dayParts": { "sun": "L", "mon": "L", "tue": "L", "wed": "L", "thu": "L", "fri": "L", "sat": "L" },
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "tastingmenu, chef, molecular, fine, dining, michelin, reservations, gastronomy, courses, creative",
     "price": "$$$$",
@@ -8981,6 +8987,7 @@ const lisbonData = [
       "fri": { "open": 19, "close": 25 },
       "sat": { "open": 19, "close": 25 }
     },
+    "dayParts": { "sun": "E", "mon": "-", "tue": "L", "wed": "L", "thu": "L", "fri": "L", "sat": "L" },
     "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "cocktails, mixology, signatures, dj, nightlife, smallplates, bartenders, downtown, late, bar",
@@ -9016,6 +9023,7 @@ const lisbonData = [
       "fri": { "open": 20, "close": 26 },
       "sat": { "open": 20, "close": 26 }
     },
+    "dayParts": { "sun": "L", "mon": "L", "tue": "L", "wed": "L", "thu": "L", "fri": "L", "sat": "L" },
     "timeCategory": "late",
     "energyRamp": 3,
     "tags": "cocktails, mixology, hotel, bartenders, reservations, spirits, downtown, signatures, lounge, nightlife",
@@ -9051,7 +9059,8 @@ const lisbonData = [
       "fri": { "open": 18, "close": 25.5 },
       "sat": { "open": 18, "close": 25.5 }
     },
-    "timeCategory": "late",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "-", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "cocktails, mixology, dj, nightlife, bairroalto, late, spirits, bartenders, bar, music",
     "price": "$$",
@@ -9086,6 +9095,7 @@ const lisbonData = [
       "fri": { "open": 19, "close": 23.5 },
       "sat": { "open": 19, "close": 23.5 }
     },
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "wine, naturalwine, bottles, tastings, portuguese, bairroalto, grapes, pairings, bar, independent",
@@ -9124,6 +9134,7 @@ const lisbonData = [
         { "open": 20, "close": 23 }
       ]
     },
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "portuguese, seafood, grilled, meats, lunch, dinner, wine, neighborhood, specialties, family",
@@ -9159,7 +9170,8 @@ const lisbonData = [
       "fri": { "open": 9, "close": 18 },
       "sat": { "open": 9, "close": 18 }
     },
-    "timeCategory": "midday",
+    "dayParts": { "sun": "MD", "mon": "MD", "tue": "MD", "wed": "-", "thu": "MD", "fri": "MD", "sat": "MD" },
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "café, coffee, brunch, pastries, neighborhood, arroios, breakfast, espresso, bistro, daytime",
     "price": "$$",
@@ -9209,7 +9221,8 @@ const lisbonData = [
       ],
       "sat": { "open": 12.5, "close": 24 }
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "seafood, sushi, portuguese, fish, oysters, chiado, reservations, dining, wine, shellfish",
     "price": "$$$$",
@@ -9244,7 +9257,8 @@ const lisbonData = [
       "fri": { "open": 19, "close": 26 },
       "sat": { "open": 19, "close": 26 }
     },
-    "timeCategory": "late",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "L", "sat": "L" },
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "portuguese, seasonal, tastingmenu, chefdriven, winepairing, reservations, contemporary, downtown, dining, gastronomy",
     "price": "$$$",
@@ -9291,6 +9305,7 @@ const lisbonData = [
         { "open": 19, "close": 22.5 }
       ]
     },
+    "dayParts": { "sun": "A", "mon": "-", "tue": "A", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "afternoon, evening",
     "energyRamp": 3,
     "tags": "sandwiches, lunch, takeaway, casual, ingredients, bread, neighborhood, affordable, daytime, comfort",
@@ -9326,6 +9341,7 @@ const lisbonData = [
       "fri": null,
       "sat": { "open": 12, "close": 19 }
     },
+    "dayParts": { "sun": "A", "mon": "-", "tue": "-", "wed": "-", "thu": "-", "fri": "-", "sat": "A" },
     "timeCategory": "afternoon",
     "energyRamp": 3,
     "tags": "gelato, icecream, cones, scoops, flavors, desserts, sugar, bairroalto, treats, takeaway",
@@ -9361,6 +9377,7 @@ const lisbonData = [
       "fri": { "open": 19.5, "close": 23 },
       "sat": { "open": 19.5, "close": 23 }
     },
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "tastingmenu, seasonal, chefdriven, gastronomy, winepairing, courses, fine, dining, creative, ingredients",
@@ -9402,7 +9419,8 @@ const lisbonData = [
       ],
       "sat": { "open": 18, "close": 22 }
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "japanese, sushi, sashimi, robata, cocktails, lunch, dinner, terrace, cocktails, asianfusion",
     "price": "$$$",
@@ -9437,6 +9455,7 @@ const lisbonData = [
       "fri": { "open": 19, "close": 24 },
       "sat": { "open": 19, "close": 24 }
     },
+    "dayParts": { "sun": "E", "mon": "E", "tue": "-", "wed": "-", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "pizza, naturalwine, sourdough, cocktails, slices, sharing, casual, crust, toppings, bar",
@@ -9472,6 +9491,7 @@ const lisbonData = [
       "fri": { "open": 18, "close": 22 },
       "sat": { "open": 18, "close": 22 }
     },
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "-", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "piri, chicken, takeaway, grilled, charcoal, fries, dinner, local, counter, roast",
@@ -9525,7 +9545,8 @@ const lisbonData = [
         { "open": 19, "close": 25 }
       ]
     },
-    "timeCategory": "evening, late",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "L", "sat": "L" },
+    "timeCategory": "midday, evening, late",
     "energyRamp": 3,
     "tags": "japanese, izakaya, sake, ramen, skewers, sushi, smallplates, lunch, dinner, asian",
     "price": "$$$$",
@@ -9560,7 +9581,8 @@ const lisbonData = [
       "fri": { "open": 12.5, "close": 23 },
       "sat": { "open": 12.5, "close": 23 }
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "E", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 3,
     "tags": "chef, seafood, meats, plates, naturalwine, dining, contemporary, lisbon, bistro, ingredients",
     "price": "$$$$",
@@ -9610,7 +9632,8 @@ const lisbonData = [
         { "open": 20, "close": 23 }
       ]
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "italian, pasta, wine, trattoria, lunch, dinner, antipasti, sharing, casual, plates",
     "price": "$$",
@@ -9645,6 +9668,7 @@ const lisbonData = [
       "fri": { "open": 19, "close": 24 },
       "sat": { "open": 19, "close": 24 }
     },
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "seasonal, smallplates, winepairing, gastronomy, tastingmenu, ingredients, chef, dining, creative, modern",
@@ -9680,6 +9704,7 @@ const lisbonData = [
       "fri": { "open": 19, "close": 24 },
       "sat": { "open": 19, "close": 24 }
     },
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "omakase, sushi, sashimi, japanese, nigiri, chef, courses, seafood, fine, dining",
@@ -9715,6 +9740,7 @@ const lisbonData = [
       "fri": { "open": 18, "close": 23 },
       "sat": { "open": 18, "close": 23 }
     },
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "fine, dining, cocktails, terrace, chefdriven, contemporary, lisbon, seafood, meats, wine",
@@ -9750,7 +9776,8 @@ const lisbonData = [
       "fri": { "open": 19.5, "close": 25 },
       "sat": { "open": 19.5, "close": 25 }
     },
-    "timeCategory": "evening, late",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "chef, tastingmenu, creative, dining, experimental, winepairing, gastronomy, modern, courses, ingredients",
     "price": "$$$",
@@ -9785,6 +9812,7 @@ const lisbonData = [
       "fri": { "open": 12, "close": 25 },
       "sat": { "open": 12, "close": 25 }
     },
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "L", "sat": "L" },
     "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "burgers, tacos, cocktails, comfort, fries, lunch, dinner, bar, terrace, american, craftbeer",
@@ -9820,7 +9848,8 @@ const lisbonData = [
       "fri": { "open": 12, "close": 23 },
       "sat": { "open": 12, "close": 23 }
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 3,
     "tags": "seafood, grilled, bacalhau, wine, lunch, dinner, specials, comfort, tasca, dishes",
     "price": "$$",
@@ -9855,7 +9884,8 @@ const lisbonData = [
       "fri": { "open": 7, "close": 24 },
       "sat": { "open": 7, "close": 24 }
     },
-    "timeCategory": "afternoon, evening",
+    "dayParts": { "sun": "MD", "mon": "MD", "tue": "MD", "wed": "MD", "thu": "MD", "fri": "MD", "sat": "MD" },
+    "timeCategory": "afternoon, morning, midday",
     "energyRamp": 3,
     "tags": "lawns, pond, benches, basilica, picnics, playground, strolls, greenery, trees, locals",
     "price": "$",
@@ -9890,6 +9920,7 @@ const lisbonData = [
       "fri": { "open": 12, "close": 24 },
       "sat": { "open": 12, "close": 24 }
     },
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
     "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "asian, sushi, dimsum, fine, dining, fashion, avenida, seafood, steak, wine",
@@ -9928,7 +9959,8 @@ const lisbonData = [
       "fri": { "open": 10, "close": 18 },
       "sat": { "open": 10, "close": 18 }
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "A", "mon": "A", "tue": "A", "wed": "A", "thu": "A", "fri": "MD", "sat": "MD" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "books, coffee, espresso, pastries, readings, independent, culture, café, shelves, gatherings",
     "price": "$",
@@ -9963,7 +9995,8 @@ const lisbonData = [
       "fri": { "open": 12, "close": 19 },
       "sat": { "open": 14, "close": 19 }
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "A", "wed": "A", "thu": "A", "fri": "A", "sat": "A" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "exhibitions, contemporary, artists, installations, collectors, artfair, lisbon, visual, modern, programming",
     "price": "$",
@@ -9998,7 +10031,8 @@ const lisbonData = [
       "fri": { "open": 11, "close": 19 },
       "sat": { "open": 15, "close": 19 }
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "A", "wed": "A", "thu": "A", "fri": "A", "sat": "A" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "bluechip, artists, exhibitions, collectors, artbasel, contemporary, lisbon, installations, international, representation",
     "price": "$",
@@ -10033,7 +10067,8 @@ const lisbonData = [
       "fri": { "open": 14.5, "close": 19 },
       "sat": { "open": 14.5, "close": 19 }
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "-", "wed": "-", "thu": "A", "fri": "A", "sat": "A" },
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "foundation, photography, archives, research, exhibitions, collection, legacy, documentation, programming, visual",
     "price": "$",
@@ -10068,7 +10103,8 @@ const lisbonData = [
       "fri": { "open": 14, "close": 19 },
       "sat": { "open": 10, "close": 19 }
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "A", "wed": "A", "thu": "A", "fri": "A", "sat": "A" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "contemporary, artists, installations, exhibitions, collectors, artfair, lisbon, visual, experimental, curators",
     "price": "$",
@@ -10124,7 +10160,8 @@ const lisbonData = [
         { "open": 14, "close": 19 }
       ]
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "A", "mon": "A", "tue": "A", "wed": "A", "thu": "A", "fri": "A", "sat": "A" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "contemporary, artists, exhibitions, collectors, installations, visual, programming, lisbon, newmedia, artfair",
     "price": "$",
@@ -10159,6 +10196,7 @@ const lisbonData = [
       "fri": null,
       "sat": null
     },
+    "dayParts": { "sun": "-", "mon": "-", "tue": "-", "wed": "-", "thu": "-", "fri": "-", "sat": "-" },
     "timeCategory": "",
     "energyRamp": 3,
     "tags": "dj, electronic, dancing, nightlife, music, cocktails, late, sound, crowd, events",
@@ -10194,6 +10232,7 @@ const lisbonData = [
       "fri": { "open": 18, "close": 26 },
       "sat": { "open": 18, "close": 26 }
     },
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "L", "sat": "L" },
     "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "cocktails, naturalwine, dj, vinyl, bar, tastings, music, downtown, spirits, lounge",
@@ -10229,7 +10268,8 @@ const lisbonData = [
       "fri": { "open": 12, "close": 24 },
       "sat": { "open": 12, "close": 24 }
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "burgers, fries, american, comfort, craftbeer, pinkstreet, lunch, dinner, takeaway, sauces",
     "price": "$$",
@@ -10264,7 +10304,8 @@ const lisbonData = [
       "fri": { "open": 10, "close": 20 },
       "sat": { "open": 10, "close": 20 }
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "MD", "mon": "MD", "tue": "MD", "wed": "MD", "thu": "MD", "fri": "MD", "sat": "MD" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "spa, massage, sauna, treatments, therapy, skincare, relaxation, detox, wellness, bodywork",
     "price": "$$",
@@ -10314,7 +10355,8 @@ const lisbonData = [
         { "open": 19.5, "close": 22.5 }
       ]
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "-", "mon": "-", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "portuguese, seafood, wine, tasca, lunch, dinner, classic, dishes, comfort, local",
     "price": "$",
@@ -10349,7 +10391,8 @@ const lisbonData = [
       "fri": { "open": 18, "close": 26 },
       "sat": { "open": 18, "close": 26 }
     },
-    "timeCategory": "late",
+    "dayParts": { "sun": "M", "mon": "M", "tue": "M", "wed": "M", "thu": "M", "fri": "M", "sat": "M" },
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "cocktails, oysters, seafood, mixology, bar, spirits, downtown, wine, smallplates, nightlife",
     "price": "$$",
@@ -10384,6 +10427,7 @@ const lisbonData = [
       "fri": { "open": 7, "close": 22 },
       "sat": { "open": 9, "close": 21 }
     },
+    "dayParts": { "sun": "M", "mon": "M", "tue": "M", "wed": "M", "thu": "M", "fri": "M", "sat": "M" },
     "timeCategory": "morning",
     "energyRamp": 3,
     "tags": "yoga, pilates, breathwork, fitness, mobility, strength, studio, classes, movement, wellness",
@@ -10419,7 +10463,8 @@ const lisbonData = [
       "fri": { "open": 7.5, "close": 19.5 },
       "sat": { "open": 9.5, "close": 12.5 }
     },
-    "timeCategory": "morning",
+    "dayParts": { "sun": "M", "mon": "M", "tue": "M", "wed": "M", "thu": "M", "fri": "M", "sat": "M" },
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "fitness, training, strength, conditioning, classes, coaching, gym, mobility, endurance, workouts",
     "price": "$",
@@ -10454,7 +10499,8 @@ const lisbonData = [
       "fri": { "open": 8, "close": 22 },
       "sat": null
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "-", "mon": "A", "tue": "A", "wed": "A", "thu": "A", "fri": "A", "sat": "-" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "coworking, workspace, community, wellness, desks, networking, entrepreneurs, productivity, studio, events",
     "price": "$",
@@ -10510,7 +10556,8 @@ const lisbonData = [
         { "open": 19, "close": 25 }
       ]
     },
-    "timeCategory": "late",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "E", "wed": "E", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "steakhouse, beef, traditional, wine, dinner, lunch, madeira, tableservice, chiado, meat",
     "price": "$$$$",
@@ -10545,7 +10592,8 @@ const lisbonData = [
       "fri": { "open": 9, "close": 17 },
       "sat": null
     },
-    "timeCategory": "morning",
+    "dayParts": { "sun": "-", "mon": "M", "tue": "M", "wed": "M", "thu": "M", "fri": "M", "sat": "-" },
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "fitness, membership, classes, gym, yoga, pilates, crossfit, training, partners, wellness",
     "price": "$",
@@ -10600,7 +10648,8 @@ const lisbonData = [
       ],
       "sat": { "open": 8.5, "close": 13.5 }
     },
-    "timeCategory": "morning",
+    "dayParts": { "sun": "M", "mon": "M", "tue": "M", "wed": "M", "thu": "M", "fri": "M", "sat": "M" },
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "cycling, spin, cardio, endurance, studio, instructors, workouts, playlists, strength, community",
     "price": "$",
@@ -10635,7 +10684,8 @@ const lisbonData = [
       "fri": { "open": 10, "close": 17 },
       "sat": { "open": 10, "close": 17 }
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "MD", "mon": "MD", "tue": "MD", "wed": "MD", "thu": "MD", "fri": "MD", "sat": "MD" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "plants, greenhouse, biodiversity, tropical, pathways, nature, trees, research, conservation, landscapes",
     "price": "$",
@@ -10670,7 +10720,8 @@ const lisbonData = [
       "fri": { "open": 10, "close": 19 },
       "sat": { "open": 10, "close": 19 }
     },
-    "timeCategory": "afternoon",
+    "dayParts": { "sun": "MD", "mon": "MD", "tue": "MD", "wed": "MD", "thu": "MD", "fri": "MD", "sat": "MD" },
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "museum, contemporary, collection, exhibitions, sculpture, painting, hotel, artspace, lisbon, programming",
     "price": "$",
@@ -10705,6 +10756,7 @@ const lisbonData = [
       "fri": { "open": 10, "close": 18 },
       "sat": { "open": 10, "close": 18 }
     },
+    "dayParts": { "sun": "-", "mon": "A", "tue": "A", "wed": "-", "thu": "A", "fri": "A", "sat": "A" },
     "timeCategory": "afternoon",
     "energyRamp": 3,
     "tags": "ceramics, pottery, workshops, studio, crafts, classes, design, handmade, clay, community",
@@ -10758,7 +10810,8 @@ const lisbonData = [
         { "open": 19, "close": 23.5 }
       ]
     },
-    "timeCategory": "evening",
+    "dayParts": { "sun": "-", "mon": "MD", "tue": "MD", "wed": "MD", "thu": "E", "fri": "E", "sat": "E" },
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "seafood, oysters, shellfish, wine, petiscos, lunch, dinner, coastal, terrace, plates",
     "price": "$$",
@@ -10793,6 +10846,7 @@ const lisbonData = [
       "fri": { "open": 20.5, "close": 30 },
       "sat": { "open": 20.5, "close": 30 }
     },
+    "dayParts": { "sun": "L", "mon": "L", "tue": "L", "wed": "L", "thu": "L", "fri": "L", "sat": "L" },
     "timeCategory": "late",
     "energyRamp": 3,
     "tags": "bakery, pastries, cakes, pão, sugar, espresso, sweets, counter, confections, desserts",
@@ -10837,7 +10891,8 @@ const lisbonData = [
         { "open": 19, "close": 26 }
       ]
     },
-    "timeCategory": "evening, late",
+    "dayParts": { "sun": "E", "mon": "E", "tue": "-", "wed": "-", "thu": "L", "fri": "L", "sat": "L" },
+    "timeCategory": "midday, evening, late",
     "energyRamp": 3,
     "tags": "naturalwine, smallplates, bar, sharing, organic, brunch, cocktails, ingredients, lisbon, seasonal",
     "price": "$$",
