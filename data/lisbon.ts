@@ -8720,6 +8720,2128 @@ const lisbonData = [
     "tags": "espresso, pastries, brunch, terrace, bowls, bakery",
     "price": "$$",
     "duration": 1.5
+  },
+  {
+    "slug": "uni",
+    "name": "UNI",
+    "id": "05c549fd-1e18-4bfa-bd3c-b239b47fdc64",
+    "vibe": "sleek, intimate, refined, moody, polished, contemporary",
+    "type": ["cocktail"],
+    "lat": "38.715458",
+    "lon": "-9.1476693",
+    "link": "https://www.instagram.com/tocaraposa.cocktail/",
+    "cover": "img/venues/UNI.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 PM–2:00 AM",
+      "Monday: 6:00 PM–2:00 AM",
+      "Tuesday: 6:00 PM–2:00 AM",
+      "Wednesday: 6:00 PM–2:00 AM",
+      "Thursday: 6:00 PM–2:00 AM",
+      "Friday: 6:00 PM–2:00 AM",
+      "Saturday: 6:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18, "close": 26 },
+      "mon": { "open": 18, "close": 26 },
+      "tue": { "open": 18, "close": 26 },
+      "wed": { "open": 18, "close": 26 },
+      "thu": { "open": 18, "close": 26 },
+      "fri": { "open": 18, "close": 26 },
+      "sat": { "open": 18, "close": 26 }
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "cocktails, mixology, omakase, japanese, sushi, bartenders, reservations, downtown, spirits, nightlife",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "bahr-terrace",
+    "name": "BAHR & Terrace",
+    "id": "1e7e8210-1cb9-4b1a-ab29-41ef0db838c1",
+    "vibe": "panoramic, vibrant, elevated, stylish, sunlit, cosmopolitan",
+    "type": ["brunch", "lunch", "dinner", "rooftop", "cocktail"],
+    "lat": "38.7103192",
+    "lon": "-9.1433236",
+    "link": "https://www.instagram.com/bahrterrace/?hl=en",
+    "cover": "img/venues/BAHR & Terrace.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:30 AM–11:30 AM; 1:00 PM–12:00 AM",
+      "Monday: 7:30 AM–11:30 AM; 12:30 PM–12:00 AM",
+      "Tuesday: 7:30 AM–11:30 AM; 12:30 PM–12:00 AM",
+      "Wednesday: 7:30 AM–11:30 AM; 12:30 PM–12:00 AM",
+      "Thursday: 7:30 AM–11:30 AM; 12:30 PM–12:00 AM",
+      "Friday: 7:30 AM–11:30 AM; 12:30 PM–12:00 AM",
+      "Saturday: 7:30 AM–11:30 AM; 1:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 7.5, "close": 11.5 },
+        { "open": 13, "close": 24 }
+      ],
+      "mon": [
+        { "open": 7.5, "close": 11.5 },
+        { "open": 12.5, "close": 24 }
+      ],
+      "tue": [
+        { "open": 7.5, "close": 11.5 },
+        { "open": 12.5, "close": 24 }
+      ],
+      "wed": [
+        { "open": 7.5, "close": 11.5 },
+        { "open": 12.5, "close": 24 }
+      ],
+      "thu": [
+        { "open": 7.5, "close": 11.5 },
+        { "open": 12.5, "close": 24 }
+      ],
+      "fri": [
+        { "open": 7.5, "close": 11.5 },
+        { "open": 12.5, "close": 24 }
+      ],
+      "sat": [
+        { "open": 7.5, "close": 11.5 },
+        { "open": 13, "close": 24 }
+      ]
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "rooftop, hotel, seafood, brunch, cocktails, terrace, chiado, views, dining, sunset, reservations",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "seen-by-olivier-lisboa",
+    "name": "SEEN by Olivier - Lisboa",
+    "id": "c882e7d4-b74a-4a5c-a566-77f3532ceeb5",
+    "vibe": "glamorous, dramatic, upscale, seductive, lavish, magnetic",
+    "type": ["dinner"],
+    "lat": "38.7210514",
+    "lon": "-9.1472844",
+    "link": "https://www.instagram.com/seenlisboa/",
+    "cover": "img/venues/SEEN by Olivier - Lisboa.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:30 PM–1:00 AM",
+      "Monday: 6:30 PM–1:00 AM",
+      "Tuesday: 6:30 PM–1:00 AM",
+      "Wednesday: 6:30 PM–1:00 AM",
+      "Thursday: 6:30 PM–1:00 AM",
+      "Friday: 6:30 PM–2:00 AM",
+      "Saturday: 6:30 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18.5, "close": 25 },
+      "mon": { "open": 18.5, "close": 25 },
+      "tue": { "open": 18.5, "close": 25 },
+      "wed": { "open": 18.5, "close": 25 },
+      "thu": { "open": 18.5, "close": 25 },
+      "fri": { "open": 18.5, "close": 26 },
+      "sat": { "open": 18.5, "close": 26 }
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "rooftop, steakhouse, sushi, cocktails, fine, dining, reservations, skyline, nightlife, chefdriven",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "quattro-teste",
+    "name": "Quattro Teste",
+    "id": "76f83d97-d315-4486-b464-b32cd6b251c8",
+    "vibe": "playful, quirky, artistic, irreverent, bold, eclectic",
+    "type": ["cocktail"],
+    "lat": "38.7132532",
+    "lon": "-9.1356876",
+    "link": "https://www.instagram.com/quattro.teste/?hl=en",
+    "cover": "img/venues/Quattro Teste.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 PM–12:00 AM",
+      "Monday: 6:00 PM–12:00 AM",
+      "Tuesday: 6:00 PM–12:00 AM",
+      "Wednesday: 6:00 PM–12:00 AM",
+      "Thursday: 6:00 PM–12:00 AM",
+      "Friday: 6:00 PM–1:00 AM",
+      "Saturday: 6:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18, "close": 24 },
+      "mon": { "open": 18, "close": 24 },
+      "tue": { "open": 18, "close": 24 },
+      "wed": { "open": 18, "close": 24 },
+      "thu": { "open": 18, "close": 24 },
+      "fri": { "open": 18, "close": 25 },
+      "sat": { "open": 18, "close": 25 }
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "cocktails, experimental, bartenders, signatures, downtown, nightlife, smallplates, spirits, late, mixology",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "pinot-bar-de-vinhos",
+    "name": "Pinot Bar de Vinhos",
+    "id": "7253597d-ee7b-4f02-92ed-7c2ebc19d973",
+    "vibe": "relaxed, curated, cozy, conversational, authentic, understated",
+    "type": ["wine bar"],
+    "lat": "38.7153414",
+    "lon": "-9.157562",
+    "link": "https://www.instagram.com/pinot.bar/?hl=en",
+    "cover": "img/venues/Pinot Bar de Vinhos.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 1:00 PM–11:00 PM",
+      "Monday: 4:00 PM–11:00 PM",
+      "Tuesday: 4:00 PM–11:00 PM",
+      "Wednesday: 4:00 PM–11:00 PM",
+      "Thursday: 4:00 PM–11:00 PM",
+      "Friday: 1:00 PM–12:00 AM",
+      "Saturday: 1:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 13, "close": 23 },
+      "mon": { "open": 16, "close": 23 },
+      "tue": { "open": 16, "close": 23 },
+      "wed": { "open": 16, "close": 23 },
+      "thu": { "open": 16, "close": 23 },
+      "fri": { "open": 13, "close": 24 },
+      "sat": { "open": 13, "close": 24 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "wine, naturalwine, portuguese, bottles, tastings, charcuterie, bairroalto, pairings, bar, grapes",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "mini-bar-jose-avillez",
+    "name": "Mini Bar - José Avillez",
+    "id": "5b341054-2d20-4e3f-a51e-cdfc131cb55c",
+    "vibe": "theatrical, imaginative, immersive, avantgarde, experiential, refined",
+    "type": ["dinner"],
+    "lat": "38.7122668",
+    "lon": "-9.1424025",
+    "link": "https://www.instagram.com/mini_bar_joseavillez/",
+    "cover": "img/venues/Mini Bar - José Avillez.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 PM–2:00 AM",
+      "Monday: 7:00 PM–2:00 AM",
+      "Tuesday: 7:00 PM–2:00 AM",
+      "Wednesday: 7:00 PM–2:00 AM",
+      "Thursday: 7:00 PM–3:00 AM",
+      "Friday: 7:00 PM–3:00 AM",
+      "Saturday: 7:00 PM–3:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 19, "close": 26 },
+      "mon": { "open": 19, "close": 26 },
+      "tue": { "open": 19, "close": 26 },
+      "wed": { "open": 19, "close": 26 },
+      "thu": { "open": 19, "close": 27 },
+      "fri": { "open": 19, "close": 27 },
+      "sat": { "open": 19, "close": 27 }
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "tastingmenu, chef, molecular, fine, dining, michelin, reservations, gastronomy, courses, creative",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "liquid-love-cocktails-and-food",
+    "name": "Liquid Love Cocktails and Food",
+    "id": "d9caa63b-459f-4d5f-9922-4d08a5bd5d30",
+    "vibe": "vibrant, energetic, modern, lively, magnetic, social",
+    "type": ["cocktail"],
+    "lat": "38.7194927",
+    "lon": "-9.1370663",
+    "link": "https://www.instagram.com/liquidlove.lx/?hl=en",
+    "cover": "img/venues/Liquid Love Cocktails and Food.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 PM–12:00 AM",
+      "Monday: Closed",
+      "Tuesday: 7:00 PM–1:00 AM",
+      "Wednesday: 7:00 PM–1:00 AM",
+      "Thursday: 7:00 PM–1:00 AM",
+      "Friday: 7:00 PM–1:00 AM",
+      "Saturday: 7:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 19, "close": 24 },
+      "mon": null,
+      "tue": { "open": 19, "close": 25 },
+      "wed": { "open": 19, "close": 25 },
+      "thu": { "open": 19, "close": 25 },
+      "fri": { "open": 19, "close": 25 },
+      "sat": { "open": 19, "close": 25 }
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "cocktails, mixology, signatures, dj, nightlife, smallplates, bartenders, downtown, late, bar",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "cinco-lounge",
+    "name": "CINCO lounge",
+    "id": "f23d6966-104a-40f6-ae4e-d1f3248621a4",
+    "vibe": "classic, intimate, sophisticated, warm, elegant, polished",
+    "type": ["cocktail", "lounge"],
+    "lat": "38.7141649",
+    "lon": "-9.1497258",
+    "link": "https://www.instagram.com/cincolounge/?hl=en",
+    "cover": "img/venues/CINCO lounge.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 PM–2:00 AM",
+      "Monday: 8:00 PM–2:00 AM",
+      "Tuesday: 8:00 PM–2:00 AM",
+      "Wednesday: 8:00 PM–2:00 AM",
+      "Thursday: 8:00 PM–2:00 AM",
+      "Friday: 8:00 PM–2:00 AM",
+      "Saturday: 8:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 20, "close": 26 },
+      "mon": { "open": 20, "close": 26 },
+      "tue": { "open": 20, "close": 26 },
+      "wed": { "open": 20, "close": 26 },
+      "thu": { "open": 20, "close": 26 },
+      "fri": { "open": 20, "close": 26 },
+      "sat": { "open": 20, "close": 26 }
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "cocktails, mixology, hotel, bartenders, reservations, spirits, downtown, signatures, lounge, nightlife",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "catfish-cocktail-bar",
+    "name": "Catfish Cocktail Bar",
+    "id": "66bbef86-11b0-4aa5-bc25-97c3fdf211ce",
+    "vibe": "edgy, rebellious, underground, raw, alternative, gritty",
+    "type": ["cocktail"],
+    "lat": "38.7181247",
+    "lon": "-9.1457486",
+    "link": "https://www.instagram.com/catfishbar.lx/?hl=en",
+    "cover": "img/venues/Catfish Cocktail Bar.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 6:00 PM–1:00 AM",
+      "Thursday: 6:00 PM–1:00 AM",
+      "Friday: 6:00 PM–1:30 AM",
+      "Saturday: 6:00 PM–1:30 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 18, "close": 25 },
+      "thu": { "open": 18, "close": 25 },
+      "fri": { "open": 18, "close": 25.5 },
+      "sat": { "open": 18, "close": 25.5 }
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "cocktails, mixology, dj, nightlife, bairroalto, late, spirits, bartenders, bar, music",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "black-sheep-lisboa",
+    "name": "Black Sheep Lisboa",
+    "id": "def04aac-a82f-4559-9591-839d421cf19f",
+    "vibe": "minimalist, focused, contemporary, niche, refined, curated",
+    "type": ["wine bar"],
+    "lat": "38.7151861",
+    "lon": "-9.1511329",
+    "link": "https://www.instagram.com/blacksheeplisboa/?hl=en",
+    "cover": "img/venues/Black Sheep Lisboa.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 PM–12:00 AM",
+      "Monday: 6:00 PM–12:00 AM",
+      "Tuesday: 7:00 PM–11:30 PM",
+      "Wednesday: 7:00 PM–11:30 PM",
+      "Thursday: 7:00 PM–11:30 PM",
+      "Friday: 7:00 PM–11:30 PM",
+      "Saturday: 7:00 PM–11:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18, "close": 24 },
+      "mon": { "open": 18, "close": 24 },
+      "tue": { "open": 19, "close": 23.5 },
+      "wed": { "open": 19, "close": 23.5 },
+      "thu": { "open": 19, "close": 23.5 },
+      "fri": { "open": 19, "close": 23.5 },
+      "sat": { "open": 19, "close": 23.5 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "wine, naturalwine, bottles, tastings, portuguese, bairroalto, grapes, pairings, bar, independent",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "cerqueira-restaurant",
+    "name": "Cerqueira Restaurant",
+    "id": "559df33d-ea2f-414b-93e8-8bc7431b2f32",
+    "vibe": "traditional, welcoming, hearty, authentic, unpretentious, local",
+    "type": ["lunch", "dinner"],
+    "lat": "38.715853",
+    "lon": "-9.138511",
+    "link": "https://www.instagram.com/restaurante.cerqueira/",
+    "cover": "img/venues/Cerqueira Restaurant.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 6:30 PM–11:00 PM",
+      "Wednesday: 6:30 PM–11:00 PM",
+      "Thursday: 6:30 PM–11:00 PM",
+      "Friday: 6:30 PM–11:00 PM",
+      "Saturday: 12:30 PM–3:00 PM; 8:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 18.5, "close": 23 },
+      "wed": { "open": 18.5, "close": 23 },
+      "thu": { "open": 18.5, "close": 23 },
+      "fri": { "open": 18.5, "close": 23 },
+      "sat": [
+        { "open": 12.5, "close": 15 },
+        { "open": 20, "close": 23 }
+      ]
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "portuguese, seafood, grilled, meats, lunch, dinner, wine, neighborhood, specialties, family",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "pequeno-cafe-e-bistro-arroios",
+    "name": "Pequeno Café e Bistrô - Arroios",
+    "id": "1d71909d-698c-4fef-9a67-2e8781cd1cf6",
+    "vibe": "cozy, charming, relaxed, inviting, quaint, friendly",
+    "type": ["café"],
+    "lat": "38.7354666",
+    "lon": "-9.1329545",
+    "link": "https://www.instagram.com/pequeno.cafebistro/",
+    "cover": "img/venues/Pequeno Café e Bistrô - Arroios.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–3:30 PM",
+      "Monday: 9:00 AM–6:00 PM",
+      "Tuesday: 9:00 AM–3:30 PM",
+      "Wednesday: Closed",
+      "Thursday: 9:00 AM–6:00 PM",
+      "Friday: 9:00 AM–6:00 PM",
+      "Saturday: 9:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 15.5 },
+      "mon": { "open": 9, "close": 18 },
+      "tue": { "open": 9, "close": 15.5 },
+      "wed": null,
+      "thu": { "open": 9, "close": 18 },
+      "fri": { "open": 9, "close": 18 },
+      "sat": { "open": 9, "close": 18 }
+    },
+    "timeCategory": "midday",
+    "energyRamp": 3,
+    "tags": "café, coffee, brunch, pastries, neighborhood, arroios, breakfast, espresso, bistro, daytime",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "sea-me-peixaria-moderna",
+    "name": "Sea Me Peixaria Moderna",
+    "id": "24f72c6b-e4ec-4593-adec-40edcca12dcc",
+    "vibe": "lively, contemporary, fresh, bustling, maritime, dynamic",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7106384",
+    "lon": "-9.1443596",
+    "link": "https://www.instagram.com/seame.peixariamoderna/?hl=en",
+    "cover": "img/venues/Sea Me Peixaria Moderna.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:30 PM–12:00 AM",
+      "Monday: 12:30 PM–3:30 PM; 7:00 PM–12:00 AM",
+      "Tuesday: 12:30 PM–3:30 PM; 7:00 PM–12:00 AM",
+      "Wednesday: 12:30 PM–3:30 PM; 7:00 PM–12:00 AM",
+      "Thursday: 12:30 PM–3:30 PM; 7:00 PM–12:00 AM",
+      "Friday: 12:30 PM–3:30 PM; 7:00 PM–12:00 AM",
+      "Saturday: 12:30 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12.5, "close": 24 },
+      "mon": [
+        { "open": 12.5, "close": 15.5 },
+        { "open": 19, "close": 24 }
+      ],
+      "tue": [
+        { "open": 12.5, "close": 15.5 },
+        { "open": 19, "close": 24 }
+      ],
+      "wed": [
+        { "open": 12.5, "close": 15.5 },
+        { "open": 19, "close": 24 }
+      ],
+      "thu": [
+        { "open": 12.5, "close": 15.5 },
+        { "open": 19, "close": 24 }
+      ],
+      "fri": [
+        { "open": 12.5, "close": 15.5 },
+        { "open": 19, "close": 24 }
+      ],
+      "sat": { "open": 12.5, "close": 24 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "seafood, sushi, portuguese, fish, oysters, chiado, reservations, dining, wine, shellfish",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "gancho",
+    "name": "Gancho",
+    "id": "7f145458-0ec2-494a-bf15-cab0377063a8",
+    "vibe": "intimate, modern, refined, stylish, welcoming, polished",
+    "type": ["dinner"],
+    "lat": "38.7126389",
+    "lon": "-9.1274085",
+    "link": "https://www.instagram.com/gancho.lx/?hl=en",
+    "cover": "img/venues/Gancho.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 7:00 PM–2:00 AM",
+      "Wednesday: 7:00 PM–2:00 AM",
+      "Thursday: 7:00 PM–2:00 AM",
+      "Friday: 7:00 PM–2:00 AM",
+      "Saturday: 7:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 19, "close": 26 },
+      "wed": { "open": 19, "close": 26 },
+      "thu": { "open": 19, "close": 26 },
+      "fri": { "open": 19, "close": 26 },
+      "sat": { "open": 19, "close": 26 }
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "portuguese, seasonal, tastingmenu, chefdriven, winepairing, reservations, contemporary, downtown, dining, gastronomy",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "tosta-sandwich-kitchen",
+    "name": "TOSTA Sandwich Kitchen",
+    "id": "83a05966-5b23-489c-9f98-7aa7e94565a4",
+    "vibe": "casual, bright, approachable, quick, relaxed, youthful",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7252058",
+    "lon": "-9.133585",
+    "link": "https://www.instagram.com/tosta.sandwich.kitchen/?hl=en",
+    "cover": "img/venues/TOSTA Sandwich Kitchen.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–3:30 PM",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–3:30 PM",
+      "Wednesday: 12:00 PM–3:30 PM; 7:00 PM–10:30 PM",
+      "Thursday: 12:00 PM–3:30 PM; 7:00 PM–10:30 PM",
+      "Friday: 12:00 PM–3:30 PM; 7:00 PM–10:30 PM",
+      "Saturday: 12:00 PM–3:30 PM; 7:00 PM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 15.5 },
+      "mon": null,
+      "tue": { "open": 12, "close": 15.5 },
+      "wed": [
+        { "open": 12, "close": 15.5 },
+        { "open": 19, "close": 22.5 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15.5 },
+        { "open": 19, "close": 22.5 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15.5 },
+        { "open": 19, "close": 22.5 }
+      ],
+      "sat": [
+        { "open": 12, "close": 15.5 },
+        { "open": 19, "close": 22.5 }
+      ]
+    },
+    "timeCategory": "afternoon, evening",
+    "energyRamp": 3,
+    "tags": "sandwiches, lunch, takeaway, casual, ingredients, bread, neighborhood, affordable, daytime, comfort",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "geladaria-chantilly",
+    "name": "Geladaria Chantilly",
+    "id": "c9e83c7a-821a-44a7-8e8c-0201da0702dc",
+    "vibe": "sweet, nostalgic, cheerful, creamy, classic, indulgent",
+    "type": ["dessert"],
+    "lat": "38.733572",
+    "lon": "-9.1514119",
+    "link": "https://www.instagram.com/chantilly.geladaria/?__d=1",
+    "cover": "img/venues/Geladaria Chantilly.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–7:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: Closed",
+      "Friday: Closed",
+      "Saturday: 12:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 19 },
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": null,
+      "fri": null,
+      "sat": { "open": 12, "close": 19 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "gelato, icecream, cones, scoops, flavors, desserts, sugar, bairroalto, treats, takeaway",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "entropia",
+    "name": "Entropia",
+    "id": "2c46ed1e-1919-4781-aa9a-b79e000ee8cc",
+    "vibe": "contemporary, intimate, refined, thoughtful, modern, elevated",
+    "type": ["dinner"],
+    "lat": "38.7107078",
+    "lon": "-9.1457667",
+    "link": "https://www.instagram.com/entropia.bica/?hl=en",
+    "cover": "img/venues/Entropia.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 7:30 PM–11:00 PM",
+      "Wednesday: 7:30 PM–11:00 PM",
+      "Thursday: 7:30 PM–11:00 PM",
+      "Friday: 7:30 PM–11:00 PM",
+      "Saturday: 7:30 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 19.5, "close": 23 },
+      "wed": { "open": 19.5, "close": 23 },
+      "thu": { "open": 19.5, "close": 23 },
+      "fri": { "open": 19.5, "close": 23 },
+      "sat": { "open": 19.5, "close": 23 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "tastingmenu, seasonal, chefdriven, gastronomy, winepairing, courses, fine, dining, creative, ingredients",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "sakemico",
+    "name": "Sakemico",
+    "id": "7a434265-7e21-411a-8ee8-254685215844",
+    "vibe": "sleek, lively, vibrant, polished, energetic, stylish",
+    "type": ["lunch", "dinner"],
+    "lat": "38.716041",
+    "lon": "-9.1569828",
+    "link": "https://www.instagram.com/sakemico/?hl=en",
+    "cover": "img/venues/Sakemico.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–3:00 PM; 6:00 PM–10:00 PM",
+      "Wednesday: 6:00 PM–10:00 PM",
+      "Thursday: 6:00 PM–10:00 PM",
+      "Friday: 12:00 PM–3:00 PM; 6:00 PM–10:00 PM",
+      "Saturday: 6:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 22 }
+      ],
+      "wed": { "open": 18, "close": 22 },
+      "thu": { "open": 18, "close": 22 },
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 22 }
+      ],
+      "sat": { "open": 18, "close": 22 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "japanese, sushi, sashimi, robata, cocktails, lunch, dinner, terrace, cocktails, asianfusion",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "maluca",
+    "name": "Maluca",
+    "id": "6236094e-5c93-430d-83e0-4b837bac70ba",
+    "vibe": "trendy, bold, playful, energetic, youthful, social",
+    "type": ["dinner"],
+    "lat": "38.7085504",
+    "lon": "-9.1542031",
+    "link": "https://www.instagram.com/maluca.lisbon/?hl=en",
+    "cover": "img/venues/Maluca.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 PM–12:00 AM",
+      "Monday: 7:00 PM–12:00 AM",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 7:00 PM–12:00 AM",
+      "Friday: 7:00 PM–12:00 AM",
+      "Saturday: 7:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 19, "close": 24 },
+      "mon": { "open": 19, "close": 24 },
+      "tue": null,
+      "wed": null,
+      "thu": { "open": 19, "close": 24 },
+      "fri": { "open": 19, "close": 24 },
+      "sat": { "open": 19, "close": 24 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "pizza, naturalwine, sourdough, cocktails, slices, sharing, casual, crust, toppings, bar",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "frangasqueira-nacional",
+    "name": "Frangasqueira Nacional",
+    "id": "9d276df6-00ee-4c22-9758-0a8cbe742e82",
+    "vibe": "traditional, bustling, aromatic, casual, unfussy, authentic",
+    "type": ["dinner"],
+    "lat": "38.7167034",
+    "lon": "-9.1504705",
+    "link": "",
+    "cover": "img/venues/Frangasqueira Nacional.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 6:00 PM–10:00 PM",
+      "Wednesday: 6:00 PM–10:00 PM",
+      "Thursday: Closed",
+      "Friday: 6:00 PM–10:00 PM",
+      "Saturday: 6:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 18, "close": 22 },
+      "wed": { "open": 18, "close": 22 },
+      "thu": null,
+      "fri": { "open": 18, "close": 22 },
+      "sat": { "open": 18, "close": 22 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "piri, chicken, takeaway, grilled, charcoal, fries, dinner, local, counter, roast",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "izakaya-lisboa-principe-real",
+    "name": "Izakaya Lisboa - Príncipe Real",
+    "id": "4f5fda2b-dc39-4ca3-b563-4c2c3c6ab53b",
+    "vibe": "cozy, spirited, warm, lively, relaxed, inviting",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7156413",
+    "lon": "-9.1469674",
+    "link": "https://www.instagram.com/izakaya.portugal/",
+    "cover": "img/venues/Izakaya Lisboa - Príncipe Real.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 PM–12:00 AM",
+      "Monday: 12:30 PM–3:00 PM; 7:00 PM–12:00 AM",
+      "Tuesday: 12:30 PM–3:00 PM; 7:00 PM–12:00 AM",
+      "Wednesday: 12:30 PM–3:00 PM; 7:00 PM–12:00 AM",
+      "Thursday: 12:30 PM–3:00 PM; 7:00 PM–12:00 AM",
+      "Friday: 12:30 PM–3:00 PM; 7:00 PM–1:00 AM",
+      "Saturday: 12:30 PM–3:00 PM; 7:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 19, "close": 24 },
+      "mon": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 24 }
+      ],
+      "tue": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 24 }
+      ],
+      "wed": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 24 }
+      ],
+      "thu": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 24 }
+      ],
+      "fri": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 25 }
+      ],
+      "sat": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 25 }
+      ]
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "japanese, izakaya, sake, ramen, skewers, sushi, smallplates, lunch, dinner, asian",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "canalha",
+    "name": "Canalha",
+    "id": "c29ecca7-4228-4838-8cfd-4bf259e79d74",
+    "vibe": "edgy, expressive, creative, daring, modern, vibrant",
+    "type": ["lunch", "dinner"],
+    "lat": "38.6974816",
+    "lon": "-9.1932242",
+    "link": "https://www.instagram.com/paradigmapt/",
+    "cover": "img/venues/Canalha.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:30 PM–11:00 PM",
+      "Monday: Closed",
+      "Tuesday: 12:30 PM–11:00 PM",
+      "Wednesday: 12:30 PM–11:00 PM",
+      "Thursday: 12:30 PM–11:00 PM",
+      "Friday: 12:30 PM–11:00 PM",
+      "Saturday: 12:30 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12.5, "close": 23 },
+      "mon": null,
+      "tue": { "open": 12.5, "close": 23 },
+      "wed": { "open": 12.5, "close": 23 },
+      "thu": { "open": 12.5, "close": 23 },
+      "fri": { "open": 12.5, "close": 23 },
+      "sat": { "open": 12.5, "close": 23 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "chef, seafood, meats, plates, naturalwine, dining, contemporary, lisbon, bistro, ingredients",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "tasca-baldracca",
+    "name": "Tasca Baldracca",
+    "id": "70b23fef-5391-447c-9f60-3db4a16c523d",
+    "vibe": "rustic, convivial, hearty, nostalgic, welcoming, unfussy",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7134108",
+    "lon": "-9.1357804",
+    "link": "https://www.instagram.com/tascabaldracca/?hl=en",
+    "cover": "img/venues/Tasca Baldracca.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 12:30 PM–3:00 PM; 8:00 PM–11:00 PM",
+      "Wednesday: 12:30 PM–3:00 PM; 8:00 PM–11:00 PM",
+      "Thursday: 12:30 PM–3:00 PM; 8:00 PM–11:00 PM",
+      "Friday: 12:30 PM–3:00 PM; 8:00 PM–11:00 PM",
+      "Saturday: 12:30 PM–3:00 PM; 8:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": [
+        { "open": 12.5, "close": 15 },
+        { "open": 20, "close": 23 }
+      ],
+      "wed": [
+        { "open": 12.5, "close": 15 },
+        { "open": 20, "close": 23 }
+      ],
+      "thu": [
+        { "open": 12.5, "close": 15 },
+        { "open": 20, "close": 23 }
+      ],
+      "fri": [
+        { "open": 12.5, "close": 15 },
+        { "open": 20, "close": 23 }
+      ],
+      "sat": [
+        { "open": 12.5, "close": 15 },
+        { "open": 20, "close": 23 }
+      ]
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "italian, pasta, wine, trattoria, lunch, dinner, antipasti, sharing, casual, plates",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "salta",
+    "name": "Salta",
+    "id": "3200954e-4621-4662-8287-be67832810b0",
+    "vibe": "refined, minimalist, intimate, polished, understated, contemporary",
+    "type": ["dinner"],
+    "lat": "38.7243184",
+    "lon": "-9.1543168",
+    "link": "https://www.instagram.com/salta.pt/?hl=en",
+    "cover": "img/venues/Salta.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 PM–12:00 AM",
+      "Monday: 7:00 PM–12:00 AM",
+      "Tuesday: 7:00 PM–12:00 AM",
+      "Wednesday: 7:00 PM–12:00 AM",
+      "Thursday: 7:00 PM–12:00 AM",
+      "Friday: 7:00 PM–12:00 AM",
+      "Saturday: 7:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 19, "close": 24 },
+      "mon": { "open": 19, "close": 24 },
+      "tue": { "open": 19, "close": 24 },
+      "wed": { "open": 19, "close": 24 },
+      "thu": { "open": 19, "close": 24 },
+      "fri": { "open": 19, "close": 24 },
+      "sat": { "open": 19, "close": 24 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "seasonal, smallplates, winepairing, gastronomy, tastingmenu, ingredients, chef, dining, creative, modern",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "omakase-ri",
+    "name": "Omakase Ri",
+    "id": "a8549d17-b895-4d79-815a-e172324f9d83",
+    "vibe": "immersive, meticulous, serene, disciplined, focused, elegant",
+    "type": ["dinner"],
+    "lat": "38.7069568",
+    "lon": "-9.1609955",
+    "link": "https://www.instagram.com/omakase.ri/?hl=en",
+    "cover": "img/venues/Omakase Ri.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 7:00 PM–12:00 AM",
+      "Wednesday: 7:00 PM–12:00 AM",
+      "Thursday: 7:00 PM–12:00 AM",
+      "Friday: 7:00 PM–12:00 AM",
+      "Saturday: 7:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 19, "close": 24 },
+      "wed": { "open": 19, "close": 24 },
+      "thu": { "open": 19, "close": 24 },
+      "fri": { "open": 19, "close": 24 },
+      "sat": { "open": 19, "close": 24 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "omakase, sushi, sashimi, japanese, nigiri, chef, courses, seafood, fine, dining",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "santa-joana",
+    "name": "Santa Joana",
+    "id": "12240aef-4f8b-4930-b7da-ec55924823a5",
+    "vibe": "glamorous, dramatic, upscale, magnetic, stylish, cosmopolitan",
+    "type": ["dinner", "cocktail"],
+    "lat": "38.7255142",
+    "lon": "-9.1472517",
+    "link": "https://www.instagram.com/santajoanalisboa/",
+    "cover": "img/venues/Santa Joana.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 6:00 PM–11:00 PM",
+      "Wednesday: 6:00 PM–11:00 PM",
+      "Thursday: 6:00 PM–11:00 PM",
+      "Friday: 6:00 PM–11:00 PM",
+      "Saturday: 6:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 18, "close": 23 },
+      "wed": { "open": 18, "close": 23 },
+      "thu": { "open": 18, "close": 23 },
+      "fri": { "open": 18, "close": 23 },
+      "sat": { "open": 18, "close": 23 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "fine, dining, cocktails, terrace, chefdriven, contemporary, lisbon, seafood, meats, wine",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "polemico",
+    "name": "Polémico",
+    "id": "2083b446-671c-4e49-bbbe-afdc99ecdb18",
+    "vibe": "rebellious, bold, artistic, unconventional, vibrant, eclectic",
+    "type": ["dinner"],
+    "lat": "38.7199694",
+    "lon": "-9.160488",
+    "link": "https://www.instagram.com/polemico.lx/?hl=en",
+    "cover": "img/venues/Polémico.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 7:30 PM–12:00 AM",
+      "Wednesday: 7:30 PM–12:00 AM",
+      "Thursday: 7:30 PM–12:00 AM",
+      "Friday: 7:30 PM–1:00 AM",
+      "Saturday: 7:30 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 19.5, "close": 24 },
+      "wed": { "open": 19.5, "close": 24 },
+      "thu": { "open": 19.5, "close": 24 },
+      "fri": { "open": 19.5, "close": 25 },
+      "sat": { "open": 19.5, "close": 25 }
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "chef, tastingmenu, creative, dining, experimental, winepairing, gastronomy, modern, courses, ingredients",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "duro-de-matar",
+    "name": "Duro De Matar",
+    "id": "d94a9d02-bd1c-4d05-a13c-5dd6885f2676",
+    "vibe": "relaxed, lively, colorful, spirited, welcoming, casual",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7318266",
+    "lon": "-9.1053237",
+    "link": "https://www.instagram.com/durodematar.pt/",
+    "cover": "img/venues/Duro De Matar.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–12:00 AM",
+      "Monday: 12:00 PM–12:00 AM",
+      "Tuesday: 12:00 PM–12:00 AM",
+      "Wednesday: 12:00 PM–12:00 AM",
+      "Thursday: 12:00 PM–12:00 AM",
+      "Friday: 12:00 PM–1:00 AM",
+      "Saturday: 12:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 24 },
+      "mon": { "open": 12, "close": 24 },
+      "tue": { "open": 12, "close": 24 },
+      "wed": { "open": 12, "close": 24 },
+      "thu": { "open": 12, "close": 24 },
+      "fri": { "open": 12, "close": 25 },
+      "sat": { "open": 12, "close": 25 }
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "burgers, tacos, cocktails, comfort, fries, lunch, dinner, bar, terrace, american, craftbeer",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "taberna-os-papagaios",
+    "name": "Taberna Os Papagaios",
+    "id": "06a6e871-1c70-466c-b50b-1b469672b059",
+    "vibe": "charming, traditional, cozy, rustic, warm, intimate",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7354071",
+    "lon": "-9.1319615",
+    "link": "https://www.instagram.com/os_papagaios/?hl=en",
+    "cover": "img/venues/Taberna Os Papagaios.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:30 PM–11:00 PM",
+      "Monday: 12:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12.5, "close": 23 },
+      "mon": { "open": 12, "close": 23 },
+      "tue": { "open": 12, "close": 23 },
+      "wed": { "open": 12, "close": 23 },
+      "thu": { "open": 12, "close": 23 },
+      "fri": { "open": 12, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "seafood, grilled, bacalhau, wine, lunch, dinner, specials, comfort, tasca, dishes",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "jardim-da-estrela",
+    "name": "Jardim da Estrela",
+    "id": "44537c07-fc58-40f9-b332-55c0a145f050",
+    "vibe": "tranquil, leafy, openair, peaceful, familyfriendly, picturesque",
+    "type": ["park"],
+    "lat": "38.714765",
+    "lon": "-9.1592575",
+    "link": "lisbonportugaltourism.com/guide/jardim-da-estrela.html",
+    "cover": "img/venues/Jardim da Estrela.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 AM–12:00 AM",
+      "Monday: 7:00 AM–12:00 AM",
+      "Tuesday: 7:00 AM–12:00 AM",
+      "Wednesday: 7:00 AM–12:00 AM",
+      "Thursday: 7:00 AM–12:00 AM",
+      "Friday: 7:00 AM–12:00 AM",
+      "Saturday: 7:00 AM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 7, "close": 24 },
+      "mon": { "open": 7, "close": 24 },
+      "tue": { "open": 7, "close": 24 },
+      "wed": { "open": 7, "close": 24 },
+      "thu": { "open": 7, "close": 24 },
+      "fri": { "open": 7, "close": 24 },
+      "sat": { "open": 7, "close": 24 }
+    },
+    "timeCategory": "afternoon, evening",
+    "energyRamp": 3,
+    "tags": "lawns, pond, benches, basilica, picnics, playground, strolls, greenery, trees, locals",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "jncquoi-asia",
+    "name": "JNcQUOI Asia",
+    "id": "87a5beda-ce16-4809-8bd2-096111c0f7d5",
+    "vibe": "opulent, theatrical, lavish, grand, dramatic, luxurious",
+    "type": ["lunch", "dinner"],
+    "lat": "38.719472",
+    "lon": "-9.1441149",
+    "link": "https://www.instagram.com/jncquoi.asia/?hl=en",
+    "cover": "img/venues/JNcQUOI Asia.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–12:00 AM",
+      "Monday: 12:00 PM–12:00 AM",
+      "Tuesday: 12:00 PM–12:00 AM",
+      "Wednesday: 12:00 PM–12:00 AM",
+      "Thursday: 12:00 PM–12:00 AM",
+      "Friday: 12:00 PM–12:00 AM",
+      "Saturday: 12:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 24 },
+      "mon": { "open": 12, "close": 24 },
+      "tue": { "open": 12, "close": 24 },
+      "wed": { "open": 12, "close": 24 },
+      "thu": { "open": 12, "close": 24 },
+      "fri": { "open": 12, "close": 24 },
+      "sat": { "open": 12, "close": 24 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "asian, sushi, dimsum, fine, dining, fashion, avenida, seafood, steak, wine",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "fable-bookshop-coffee",
+    "name": "Fable Bookshop + Coffee",
+    "id": "371d30ca-962e-45dd-9745-0368cca5658f",
+    "vibe": "literary, cozy, curated, thoughtful, inviting, warm",
+    "type": ["bookstore", "coffee"],
+    "lat": "38.7146365",
+    "lon": "-9.1525531",
+    "link": "https://www.instagram.com/fablelisbon/?hl=en",
+    "cover": "img/venues/Fable Bookshop + Coffee.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–6:00 PM",
+      "Monday: 10:00 AM–6:00 PM",
+      "Tuesday: 10:00 AM–6:00 PM; 6:30 PM–7:30 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 18 },
+      "mon": { "open": 10, "close": 18 },
+      "tue": [
+        { "open": 10, "close": 18 },
+        { "open": 18.5, "close": 19.5 }
+      ],
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "books, coffee, espresso, pastries, readings, independent, culture, café, shelves, gatherings",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "galeria-francisco-fino",
+    "name": "Galeria Francisco Fino",
+    "id": "6d1da293-4d7d-4ae7-be8b-b42acf36a510",
+    "vibe": "conceptual, minimalist, intellectual, experimental, refined, curatorial",
+    "type": ["gallery"],
+    "lat": "38.7384901",
+    "lon": "-9.1053759",
+    "link": "https://www.instagram.com/galeriafranciscofino/",
+    "cover": "img/venues/Galeria Francisco Fino.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–7:00 PM",
+      "Wednesday: 12:00 PM–7:00 PM",
+      "Thursday: 12:00 PM–7:00 PM",
+      "Friday: 12:00 PM–7:00 PM",
+      "Saturday: 2:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 12, "close": 19 },
+      "wed": { "open": 12, "close": 19 },
+      "thu": { "open": 12, "close": 19 },
+      "fri": { "open": 12, "close": 19 },
+      "sat": { "open": 14, "close": 19 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "exhibitions, contemporary, artists, installations, collectors, artfair, lisbon, visual, modern, programming",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "cristina-guerra-contemporary-art",
+    "name": "Cristina Guerra Contemporary Art",
+    "id": "cfab052d-0168-4abd-9b7a-d6f75f1487cd",
+    "vibe": "established, polished, influential, sophisticated, global, prestigious",
+    "type": ["gallery"],
+    "lat": "38.7128896",
+    "lon": "-9.164188",
+    "link": "https://www.instagram.com/cristinaguerra_gallery/?hl=en",
+    "cover": "img/venues/Cristina Guerra Contemporary Art.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 11:00 AM–7:00 PM",
+      "Wednesday: 11:00 AM–7:00 PM",
+      "Thursday: 11:00 AM–7:00 PM",
+      "Friday: 11:00 AM–7:00 PM",
+      "Saturday: 3:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 11, "close": 19 },
+      "wed": { "open": 11, "close": 19 },
+      "thu": { "open": 11, "close": 19 },
+      "fri": { "open": 11, "close": 19 },
+      "sat": { "open": 15, "close": 19 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "bluechip, artists, exhibitions, collectors, artbasel, contemporary, lisbon, installations, international, representation",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "flr-leal-rios-foundation",
+    "name": "FLR - Leal Rios Foundation",
+    "id": "58503e40-2a67-448b-ae64-21dd8389edd3",
+    "vibe": "archival, cultural, scholarly, heritagefocused, contemplative, historic",
+    "type": ["gallery"],
+    "lat": "38.7562257",
+    "lon": "-9.1419798",
+    "link": "https://www.instagram.com/fundacaolealrios/?hl=en",
+    "cover": "img/venues/FLR - Leal Rios Foundation.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 2:30 PM–7:00 PM",
+      "Friday: 2:30 PM–7:00 PM",
+      "Saturday: 2:30 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": { "open": 14.5, "close": 19 },
+      "fri": { "open": 14.5, "close": 19 },
+      "sat": { "open": 14.5, "close": 19 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "foundation, photography, archives, research, exhibitions, collection, legacy, documentation, programming, visual",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "galeria-vera-cortes",
+    "name": "Galeria Vera Cortês",
+    "id": "acc8c2da-ed7c-4926-a259-03828f1e8717",
+    "vibe": "avantgarde, progressive, bold, intellectual, serious, rigorous",
+    "type": ["gallery"],
+    "lat": "38.7569035",
+    "lon": "-9.1420008",
+    "link": "https://www.instagram.com/galeriaveracortes/",
+    "cover": "img/venues/Galeria Vera Cortês.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 2:00 PM–7:00 PM",
+      "Wednesday: 2:00 PM–7:00 PM",
+      "Thursday: 2:00 PM–7:00 PM",
+      "Friday: 2:00 PM–7:00 PM",
+      "Saturday: 10:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 14, "close": 19 },
+      "wed": { "open": 14, "close": 19 },
+      "thu": { "open": 14, "close": 19 },
+      "fri": { "open": 14, "close": 19 },
+      "sat": { "open": 10, "close": 19 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "contemporary, artists, installations, exhibitions, collectors, artfair, lisbon, visual, experimental, curators",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "galeria-miguel-nabinho",
+    "name": "Galeria Miguel Nabinho",
+    "id": "15c75857-528f-44ac-bb10-d25d9b67de3e",
+    "vibe": "emerging, fresh, exploratory, cuttingedge, dynamic, expressive",
+    "type": ["gallery"],
+    "lat": "38.718736",
+    "lon": "-9.16737",
+    "link": "https://www.instagram.com/galeriamiguelnabinho/",
+    "cover": "img/venues/Galeria Miguel Nabinho.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:30 AM–1:00 PM; 2:00 PM–7:00 PM",
+      "Monday: 10:30 AM–1:00 PM; 2:00 PM–7:00 PM",
+      "Tuesday: 10:30 AM–1:00 PM; 2:00 PM–7:00 PM",
+      "Wednesday: 10:30 AM–1:00 PM; 2:00 PM–7:00 PM",
+      "Thursday: 10:30 AM–1:00 PM; 2:00 PM–7:00 PM",
+      "Friday: 10:30 AM–1:00 PM; 2:00 PM–7:00 PM",
+      "Saturday: 10:30 AM–1:00 PM; 2:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 10.5, "close": 13 },
+        { "open": 14, "close": 19 }
+      ],
+      "mon": [
+        { "open": 10.5, "close": 13 },
+        { "open": 14, "close": 19 }
+      ],
+      "tue": [
+        { "open": 10.5, "close": 13 },
+        { "open": 14, "close": 19 }
+      ],
+      "wed": [
+        { "open": 10.5, "close": 13 },
+        { "open": 14, "close": 19 }
+      ],
+      "thu": [
+        { "open": 10.5, "close": 13 },
+        { "open": 14, "close": 19 }
+      ],
+      "fri": [
+        { "open": 10.5, "close": 13 },
+        { "open": 14, "close": 19 }
+      ],
+      "sat": [
+        { "open": 10.5, "close": 13 },
+        { "open": 14, "close": 19 }
+      ]
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "contemporary, artists, exhibitions, collectors, installations, visual, programming, lisbon, newmedia, artfair",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "those-who-dance",
+    "name": "Those Who Dance",
+    "id": "2ffac142-1a33-4269-84da-8af974ce278c",
+    "vibe": "underground, hedonistic, electric, nocturnal, immersive, raw",
+    "type": ["lounge", "club"],
+    "lat": "38.7410112",
+    "lon": "-9.101299",
+    "link": "https://www.instagram.com/thosewhodance__/?hl=en",
+    "cover": "img/venues/Those Who Dance.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: Closed",
+      "Friday: Closed",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": null,
+      "fri": null,
+      "sat": null
+    },
+    "timeCategory": "",
+    "energyRamp": 3,
+    "tags": "dj, electronic, dancing, nightlife, music, cocktails, late, sound, crowd, events",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "cabal-cocktails-wine-music",
+    "name": "cabal: cocktails * wine * music",
+    "id": "ad0c7648-0d0a-4343-8d87-91d99e800e10",
+    "vibe": "intimate, eclectic, moody, social, vibey, cultured",
+    "type": ["cocktail", "wine bar"],
+    "lat": "38.7151528",
+    "lon": "-9.1386535",
+    "link": "https://www.instagram.com/cabal.cafe/?hl=en",
+    "cover": "img/venues/cabal- cocktails .jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 PM–12:00 AM",
+      "Monday: 6:00 PM–12:00 AM",
+      "Tuesday: 6:00 PM–12:00 AM",
+      "Wednesday: 6:00 PM–12:00 AM",
+      "Thursday: 6:00 PM–12:00 AM",
+      "Friday: 6:00 PM–2:00 AM",
+      "Saturday: 6:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18, "close": 24 },
+      "mon": { "open": 18, "close": 24 },
+      "tue": { "open": 18, "close": 24 },
+      "wed": { "open": 18, "close": 24 },
+      "thu": { "open": 18, "close": 24 },
+      "fri": { "open": 18, "close": 26 },
+      "sat": { "open": 18, "close": 26 }
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "cocktails, naturalwine, dj, vinyl, bar, tastings, music, downtown, spirits, lounge",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "dallas-burger-joint-pink-street",
+    "name": "Dallas Burger Joint - Pink Street",
+    "id": "46bc2e13-f2a8-4b7a-a954-2950fa9a316b",
+    "vibe": "casual, lively, unfussy, energetic, playful, bold",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7075851",
+    "lon": "-9.1440299",
+    "link": "https://www.instagram.com/dallasburgerjoint.lisboa/",
+    "cover": "img/venues/Dallas Burger Joint - Pink Street.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–12:00 AM",
+      "Monday: 12:00 PM–12:00 AM",
+      "Tuesday: 12:00 PM–12:00 AM",
+      "Wednesday: 12:00 PM–12:00 AM",
+      "Thursday: 12:00 PM–12:00 AM",
+      "Friday: 12:00 PM–12:00 AM",
+      "Saturday: 12:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 24 },
+      "mon": { "open": 12, "close": 24 },
+      "tue": { "open": 12, "close": 24 },
+      "wed": { "open": 12, "close": 24 },
+      "thu": { "open": 12, "close": 24 },
+      "fri": { "open": 12, "close": 24 },
+      "sat": { "open": 12, "close": 24 }
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "burgers, fries, american, comfort, craftbeer, pinkstreet, lunch, dinner, takeaway, sauces",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "the-retreat-wellness-spa",
+    "name": "THE ReTREAT - WELLNESS & SPA",
+    "id": "bd640b8b-1f78-41f8-b16b-d1a765d9bc51",
+    "vibe": "tranquil, restorative, serene, holistic, calming, nurturing",
+    "type": ["spa"],
+    "lat": "38.7231757",
+    "lon": "-9.1456112",
+    "link": "https://www.instagram.com/theretreatspa/reels/?__d=1",
+    "cover": "img/venues/THE ReTREAT - WELLNESS & SPA.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–8:00 PM",
+      "Monday: 10:00 AM–8:00 PM",
+      "Tuesday: 10:00 AM–8:00 PM",
+      "Wednesday: 10:00 AM–8:00 PM",
+      "Thursday: 10:00 AM–8:00 PM",
+      "Friday: 10:00 AM–8:00 PM",
+      "Saturday: 10:00 AM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 20 },
+      "mon": { "open": 10, "close": 20 },
+      "tue": { "open": 10, "close": 20 },
+      "wed": { "open": 10, "close": 20 },
+      "thu": { "open": 10, "close": 20 },
+      "fri": { "open": 10, "close": 20 },
+      "sat": { "open": 10, "close": 20 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "spa, massage, sauna, treatments, therapy, skincare, relaxation, detox, wellness, bodywork",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "o-velho-eurico",
+    "name": "O Velho Eurico",
+    "id": "d77ea4e4-23b8-4026-b672-a192b3c013d8",
+    "vibe": "nostalgic, traditional, bustling, authentic, convivial, warm",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7127355",
+    "lon": "-9.1353776",
+    "link": "https://www.instagram.com/ovelhoeurico/?hl=en",
+    "cover": "img/venues/O Velho Eurico.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–3:00 PM; 7:30 PM–10:30 PM",
+      "Wednesday: 12:00 PM–3:00 PM; 7:30 PM–10:30 PM",
+      "Thursday: 12:00 PM–3:00 PM; 7:30 PM–10:30 PM",
+      "Friday: 12:00 PM–3:00 PM; 7:30 PM–10:30 PM",
+      "Saturday: 12:00 PM–3:00 PM; 7:30 PM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": [
+        { "open": 12, "close": 15 },
+        { "open": 19.5, "close": 22.5 }
+      ],
+      "wed": [
+        { "open": 12, "close": 15 },
+        { "open": 19.5, "close": 22.5 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 19.5, "close": 22.5 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 19.5, "close": 22.5 }
+      ],
+      "sat": [
+        { "open": 12, "close": 15 },
+        { "open": 19.5, "close": 22.5 }
+      ]
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "portuguese, seafood, wine, tasca, lunch, dinner, classic, dishes, comfort, local",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "imprensa-cocktail-and-oyster-bar",
+    "name": "Imprensa Cocktail and Oyster Bar",
+    "id": "28777b1c-64be-4e22-96b6-f710e520f5cc",
+    "vibe": "elegant, refined, intimate, polished, stylish, upscale",
+    "type": ["cocktail"],
+    "lat": "38.7163242",
+    "lon": "-9.1531433",
+    "link": "https://www.instagram.com/imprensa_/?hl=en",
+    "cover": "img/venues/Imprensa Cocktail and Oyster Bar.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 PM–2:00 AM",
+      "Monday: 6:00 PM–2:00 AM",
+      "Tuesday: 6:00 PM–2:00 AM",
+      "Wednesday: 6:00 PM–2:00 AM",
+      "Thursday: 6:00 PM–2:00 AM",
+      "Friday: 6:00 PM–2:00 AM",
+      "Saturday: 6:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18, "close": 26 },
+      "mon": { "open": 18, "close": 26 },
+      "tue": { "open": 18, "close": 26 },
+      "wed": { "open": 18, "close": 26 },
+      "thu": { "open": 18, "close": 26 },
+      "fri": { "open": 18, "close": 26 },
+      "sat": { "open": 18, "close": 26 }
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "cocktails, oysters, seafood, mixology, bar, spirits, downtown, wine, smallplates, nightlife",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "aimara-studio",
+    "name": "aimara.studio",
+    "id": "ebb9f713-5ad7-48aa-8e40-c282cb5e458a",
+    "vibe": "mindful, balanced, grounding, intentional, focused, restorative",
+    "type": ["spa", "fitness", "yoga"],
+    "lat": "38.7127973",
+    "lon": "-9.157366",
+    "link": "https://www.instagram.com/aimarastudio/?hl=en",
+    "cover": "img/venues/.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–9:00 PM",
+      "Monday: 7:00 AM–10:00 PM",
+      "Tuesday: 7:00 AM–10:00 PM",
+      "Wednesday: 7:00 AM–10:00 PM",
+      "Thursday: 7:00 AM–10:00 PM",
+      "Friday: 7:00 AM–10:00 PM",
+      "Saturday: 9:00 AM–9:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 21 },
+      "mon": { "open": 7, "close": 22 },
+      "tue": { "open": 7, "close": 22 },
+      "wed": { "open": 7, "close": 22 },
+      "thu": { "open": 7, "close": 22 },
+      "fri": { "open": 7, "close": 22 },
+      "sat": { "open": 9, "close": 21 }
+    },
+    "timeCategory": "morning",
+    "energyRamp": 3,
+    "tags": "yoga, pilates, breathwork, fitness, mobility, strength, studio, classes, movement, wellness",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "mvmt-studio",
+    "name": "MVMT Studio",
+    "id": "9e0f7ef4-2451-487c-8f92-5a322c72be1e",
+    "vibe": "highenergy, disciplined, motivating, structured, modern, performanceoriented",
+    "type": ["fitness", "spa"],
+    "lat": "38.7048635",
+    "lon": "-9.1619504",
+    "link": "https://www.instagram.com/mvmtstudio_/?hl=en",
+    "cover": "img/venues/MVMT Studio.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:30 AM–12:30 PM",
+      "Monday: 7:30 AM–7:30 PM",
+      "Tuesday: 7:30 AM–7:30 PM",
+      "Wednesday: 7:30 AM–7:30 PM",
+      "Thursday: 7:30 AM–7:30 PM",
+      "Friday: 7:30 AM–7:30 PM",
+      "Saturday: 9:30 AM–12:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9.5, "close": 12.5 },
+      "mon": { "open": 7.5, "close": 19.5 },
+      "tue": { "open": 7.5, "close": 19.5 },
+      "wed": { "open": 7.5, "close": 19.5 },
+      "thu": { "open": 7.5, "close": 19.5 },
+      "fri": { "open": 7.5, "close": 19.5 },
+      "sat": { "open": 9.5, "close": 12.5 }
+    },
+    "timeCategory": "morning",
+    "energyRamp": 3,
+    "tags": "fitness, training, strength, conditioning, classes, coaching, gym, mobility, endurance, workouts",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "wheelhouse",
+    "name": "Wheelhouse",
+    "id": "0a99db8f-d001-4756-b3a1-aad490e49dbc",
+    "vibe": "flexible, productive, collaborative, modern, intentional, dynamic",
+    "type": ["wellness", "workspace"],
+    "lat": "38.7056686",
+    "lon": "-9.1618344",
+    "link": "https://www.instagram.com/wheelhouse.lisboa/?hl=en",
+    "cover": "img/venues/Wheelhouse.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 8:00 AM–10:00 PM",
+      "Tuesday: 8:00 AM–10:00 PM",
+      "Wednesday: 8:00 AM–10:00 PM",
+      "Thursday: 8:00 AM–10:00 PM",
+      "Friday: 8:00 AM–10:00 PM",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 8, "close": 22 },
+      "tue": { "open": 8, "close": 22 },
+      "wed": { "open": 8, "close": 22 },
+      "thu": { "open": 8, "close": 22 },
+      "fri": { "open": 8, "close": 22 },
+      "sat": null
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "coworking, workspace, community, wellness, desks, networking, entrepreneurs, productivity, studio, events",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "cafe-de-sao-bento",
+    "name": "Café de São Bento",
+    "id": "0dcf2dc4-46b0-4a45-8af5-3c6425df19b6",
+    "vibe": "classic, refined, intimate, timeless, candlelit, discreet",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7133124",
+    "lon": "-9.1531372",
+    "link": "https://www.instagram.com/cafedesaobento/?hl=en",
+    "cover": "img/venues/Café de São Bento.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–3:00 PM; 7:00 PM–1:00 AM",
+      "Monday: 12:00 PM–3:00 PM; 7:00 PM–1:00 AM",
+      "Tuesday: 12:00 PM–3:00 PM; 7:00 PM–1:00 AM",
+      "Wednesday: 12:00 PM–3:00 PM; 7:00 PM–1:00 AM",
+      "Thursday: 12:00 PM–3:00 PM; 7:00 PM–1:00 AM",
+      "Friday: 12:00 PM–3:00 PM; 7:00 PM–1:00 AM",
+      "Saturday: 12:00 PM–3:00 PM; 7:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 25 }
+      ],
+      "mon": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 25 }
+      ],
+      "tue": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 25 }
+      ],
+      "wed": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 25 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 25 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 25 }
+      ],
+      "sat": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 25 }
+      ]
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "steakhouse, beef, traditional, wine, dinner, lunch, madeira, tableservice, chiado, meat",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "urban-sports-club-portugal",
+    "name": "Urban Sports Club Portugal",
+    "id": "774e5cb9-b8c4-44ba-bf79-5b6b40569d61",
+    "vibe": "flexible, energetic, accessible, modern, versatile, motivating",
+    "type": ["fitness"],
+    "lat": "38.7043825",
+    "lon": "-9.1610819",
+    "link": "https://www.instagram.com/urbansportsclub",
+    "cover": "img/venues/Urban Sports Club Portugal.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 9:00 AM–5:00 PM",
+      "Tuesday: 9:00 AM–5:00 PM",
+      "Wednesday: 9:00 AM–5:00 PM",
+      "Thursday: 9:00 AM–5:00 PM",
+      "Friday: 9:00 AM–5:00 PM",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 9, "close": 17 },
+      "tue": { "open": 9, "close": 17 },
+      "wed": { "open": 9, "close": 17 },
+      "thu": { "open": 9, "close": 17 },
+      "fri": { "open": 9, "close": 17 },
+      "sat": null
+    },
+    "timeCategory": "morning",
+    "energyRamp": 3,
+    "tags": "fitness, membership, classes, gym, yoga, pilates, crossfit, training, partners, wellness",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "studiorise-cycling",
+    "name": "Studiorise Cycling",
+    "id": "094e29d7-4d0e-43ce-a916-284b920161c1",
+    "vibe": "highintensity, rhythmic, immersive, performancefocused, dynamic, empowering",
+    "type": ["fitness"],
+    "lat": "38.7193733",
+    "lon": "-9.1651057",
+    "link": "https://www.instagram.com/wearestudiorise/",
+    "cover": "img/venues/Studiorise Cycling.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:30 AM–1:30 PM",
+      "Monday: 8:15 AM–10:00 AM; 12:00 PM–2:00 PM; 5:30 PM–9:30 PM",
+      "Tuesday: 7:15 AM–10:00 AM; 12:00 PM–2:00 PM; 5:30 PM–9:30 PM",
+      "Wednesday: 7:15 AM–10:00 AM; 12:00 PM–2:00 PM; 5:30 PM–9:30 PM",
+      "Thursday: 7:15 AM–9:00 AM; 12:00 PM–2:00 PM; 5:30 PM–9:30 PM",
+      "Friday: 7:15 AM–10:00 AM; 12:00 PM–2:00 PM; 6:00 PM–8:00 PM",
+      "Saturday: 8:30 AM–1:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8.5, "close": 13.5 },
+      "mon": [
+        { "open": 8.25, "close": 10 },
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.5 }
+      ],
+      "tue": [
+        { "open": 7.25, "close": 10 },
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.5 }
+      ],
+      "wed": [
+        { "open": 7.25, "close": 10 },
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.5 }
+      ],
+      "thu": [
+        { "open": 7.25, "close": 9 },
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.5 }
+      ],
+      "fri": [
+        { "open": 7.25, "close": 10 },
+        { "open": 12, "close": 14 },
+        { "open": 18, "close": 20 }
+      ],
+      "sat": { "open": 8.5, "close": 13.5 }
+    },
+    "timeCategory": "morning",
+    "energyRamp": 3,
+    "tags": "cycling, spin, cardio, endurance, studio, instructors, workouts, playlists, strength, community",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "botanical-garden-of-lisbon",
+    "name": "Botanical Garden of Lisbon",
+    "id": "2b740d07-ec52-474b-8f1d-33776ba711f0",
+    "vibe": "tranquil, historic, lush, contemplative, shaded, expansive",
+    "type": ["garden"],
+    "lat": "38.7184392",
+    "lon": "-9.1487544",
+    "link": "https://www.instagram.com/popular/botanical-garden-lisbon/",
+    "cover": "img/venues/Botanical Garden of Lisbon.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–5:00 PM",
+      "Monday: 10:00 AM–5:00 PM",
+      "Tuesday: 10:00 AM–5:00 PM",
+      "Wednesday: 10:00 AM–5:00 PM",
+      "Thursday: 10:00 AM–5:00 PM",
+      "Friday: 10:00 AM–5:00 PM",
+      "Saturday: 10:00 AM–5:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 17 },
+      "mon": { "open": 10, "close": 17 },
+      "tue": { "open": 10, "close": 17 },
+      "wed": { "open": 10, "close": 17 },
+      "thu": { "open": 10, "close": 17 },
+      "fri": { "open": 10, "close": 17 },
+      "sat": { "open": 10, "close": 17 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "plants, greenhouse, biodiversity, tropical, pathways, nature, trees, research, conservation, landscapes",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "macam-museu-de-arte-contemporanea-armando-martins",
+    "name": "MACAM - Museu de Arte Contemporânea Armando Martins",
+    "id": "c40d4ee4-7916-4ee9-92ab-09165bc6a71f",
+    "vibe": "ambitious, cultural, immersive, curated, visionary, elevated",
+    "type": ["museum"],
+    "lat": "38.700449",
+    "lon": "-9.1833449",
+    "link": "https://www.instagram.com/macam.museum_hotel?hl=en",
+    "cover": "img/venues/MACAM - Museu de Arte Contemporânea Armando Martins.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–7:00 PM",
+      "Monday: 10:00 AM–7:00 PM",
+      "Tuesday: Closed",
+      "Wednesday: 10:00 AM–7:00 PM",
+      "Thursday: 10:00 AM–7:00 PM",
+      "Friday: 10:00 AM–7:00 PM",
+      "Saturday: 10:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 19 },
+      "mon": { "open": 10, "close": 19 },
+      "tue": null,
+      "wed": { "open": 10, "close": 19 },
+      "thu": { "open": 10, "close": 19 },
+      "fri": { "open": 10, "close": 19 },
+      "sat": { "open": 10, "close": 19 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "museum, contemporary, collection, exhibitions, sculpture, painting, hotel, artspace, lisbon, programming",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "clay-lisboa",
+    "name": "Clay Lisboa",
+    "id": "c2c657ea-cb74-418c-a9f6-c1b7a2e0c65a",
+    "vibe": "tactile, creative, hands-on, mindful, artistic, expressive",
+    "type": ["lifestyle"],
+    "lat": "38.7111496",
+    "lon": "-9.1430446",
+    "link": "https://www.instagram.com/claylisboa/?hl=en",
+    "cover": "img/venues/Clay Lisboa.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 10:00 AM–6:00 PM",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: Closed",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 10, "close": 18 },
+      "tue": { "open": 10, "close": 18 },
+      "wed": null,
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "ceramics, pottery, workshops, studio, crafts, classes, design, handmade, clay, community",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "copo-de-mar",
+    "name": "Copo de Mar",
+    "id": "8e2c949b-fc83-4e3e-a16a-03ef2968a3b1",
+    "vibe": "breezy, casual, maritime, relaxed, inviting, fresh",
+    "type": ["lunch", "dinner"],
+    "lat": "38.739801",
+    "lon": "-9.1491026",
+    "link": "https://www.instagram.com/copodemar.pt/?hl=en",
+    "cover": "img/venues/Copo de Mar.jpeg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 12:00 PM–3:00 PM; 7:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–3:00 PM; 7:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–3:00 PM; 7:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–3:00 PM; 7:00 PM–11:00 PM",
+      "Friday: 12:00 PM–3:00 PM; 7:00 PM–11:00 PM",
+      "Saturday: 1:00 PM–4:00 PM; 7:00 PM–11:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 23 }
+      ],
+      "tue": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 23 }
+      ],
+      "wed": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 23 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 23 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 23 }
+      ],
+      "sat": [
+        { "open": 13, "close": 16 },
+        { "open": 19, "close": 23.5 }
+      ]
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "seafood, oysters, shellfish, wine, petiscos, lunch, dinner, coastal, terrace, plates",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "fabrica-dos-bolos-do-chile",
+    "name": "Fábrica dos Bolos do Chile",
+    "id": "4e3c3a48-6967-46a7-b7f8-3211aa141045",
+    "vibe": "nostalgic, sweet, traditional, bustling, comforting, authentic",
+    "type": ["bakery"],
+    "lat": "38.733166",
+    "lon": "-9.1344633",
+    "link": "https://www.instagram.com/fabricaboloschile/?hl=en",
+    "cover": "img/venues/Fábrica dos Bolos do Chile.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:30 PM–6:00 AM",
+      "Monday: 8:30 PM–6:00 AM",
+      "Tuesday: 8:30 PM–6:00 AM",
+      "Wednesday: 8:30 PM–6:00 AM",
+      "Thursday: 8:30 PM–6:00 AM",
+      "Friday: 8:30 PM–6:00 AM",
+      "Saturday: 8:30 PM–6:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 20.5, "close": 30 },
+      "mon": { "open": 20.5, "close": 30 },
+      "tue": { "open": 20.5, "close": 30 },
+      "wed": { "open": 20.5, "close": 30 },
+      "thu": { "open": 20.5, "close": 30 },
+      "fri": { "open": 20.5, "close": 30 },
+      "sat": { "open": 20.5, "close": 30 }
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "bakery, pastries, cakes, pão, sugar, espresso, sweets, counter, confections, desserts",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "sem-codea",
+    "name": "Sem Côdea",
+    "id": "6d491729-d361-4ad8-a094-75fa730d0ea8",
+    "vibe": "modern, minimalist, relaxed, stylish, unfussy, airy",
+    "type": ["lunch", "bar"],
+    "lat": "38.7087296",
+    "lon": "-9.1437048",
+    "link": "https://www.instagram.com/semcodea.lisbon/",
+    "cover": "img/venues/Sem Côdea.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–12:00 AM",
+      "Monday: 12:00 PM–12:00 AM",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 12:00 PM–3:00 PM; 7:00 PM–2:00 AM",
+      "Friday: 12:00 PM–3:00 PM; 7:00 PM–2:00 AM",
+      "Saturday: 12:00 PM–3:00 PM; 7:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 24 },
+      "mon": { "open": 12, "close": 24 },
+      "tue": null,
+      "wed": null,
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 26 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 26 }
+      ],
+      "sat": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 26 }
+      ]
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "naturalwine, smallplates, bar, sharing, organic, brunch, cocktails, ingredients, lisbon, seasonal",
+    "price": "$$",
+    "duration": 1.5
   }
 ]
 

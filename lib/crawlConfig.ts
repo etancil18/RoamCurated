@@ -601,13 +601,13 @@ export const crawlThemes: CrawlTheme[] = [
     "price": [2, 3, 4],
     "tags": [
       "activity", "bar", "dinner", "club", "late-night",
-      "dance", "rooftop", "bottle service", "music", "vibe"
+      "dance", "rooftop", "bottle service", "music", "vibe", "latehours", "dj"
     ],
     "vibes": [
       "rowdy", "flashy", "high-energy", "social", "crowded", "fun", "wild",
       "buzzing", "pulsing", "neon", "afterdark", "boozy", "bold",
       "playful", "electric", "vibrant", "charged", "amped", "stylish",
-      "groove", "movement", "beats", "rhythmic", "dancefloor",
+      "groove", "movement", "beats", "rhythmic", "dancefloor", "dj",
       "elevated", "skyline", "scene", "party", "celebration", "after hours",
       "twilit", "midnight", "wee-hours", "nocturnal", "afterparty"
     ]
@@ -631,7 +631,7 @@ export const crawlThemes: CrawlTheme[] = [
   ["coffee", "cafe", "café", "bakery", "tea"],
   ["random gem", "lifestyle", "gallery", "showroom"],
   ["gallery", "museum", "park", "garden"],
-  ["lunch", "wine bar", "bookstore"],
+  ["lunch", "wine bar", "dessert", "bookstore"],
   ["random gem", "lifestyle", "park"]
 ],
   filters: {
