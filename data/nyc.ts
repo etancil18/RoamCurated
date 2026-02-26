@@ -84,7 +84,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "happyhour, evening, late",
+  "timeCategory": "afternoon, evening, late",
     "energyRamp": 2,
     "tags": "dive, backyard, records, jukebox, hangout, craftbeer, naturalwine, eastvillage, barroom, casualdrinks, community, nightlife",
     "price": "$$",
@@ -129,7 +129,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "happyhour, evening, late",
+  "timeCategory": "afternoon, evening, late",
     "energyRamp": 2,
     "tags": "billiards, danceparty, turntables, highballs, neon, kitsch, divebar, weekend, grooves, latehours, crowd, musicroom",
     "price": "$$",
@@ -174,7 +174,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "late, evening",
+  "timeCategory": "afternoon, late, evening",
     "energyRamp": 1,
     "tags": "divebar, regulars, jukebox, beers, shots, lowlight, socialclub, afterwork, hangout, brooklyn, tavern, gathering",
     "price": "$",
@@ -489,7 +489,7 @@ const nycData = [
     "sat": "E",
     "sun": "HH"
   },
-  "timeCategory": "happyhour, evening",
+  "timeCategory": "afternoon, evening, late",
     "energyRamp": 2,
     "tags": "naturalwine, smallplates, barroom, gathering, nightlife, brooklyn, highballs, turntables, weekend, party, drinks, neighborhood, reservations, crowd, ambiance, celebration, dining, hospitality",
     "price": "$$",
@@ -579,7 +579,7 @@ const nycData = [
     "sat": "E",
     "sun": "E"
   },
-  "timeCategory": "evening",
+  "timeCategory": "midday, evening",
     "energyRamp": 2,
     "tags": "chinese, spice, chilies, hotpot, dinner, sichuanpepper, communal, flavorite, dumplings, noodles, diningroom, cuisine",
     "price": "$$",
@@ -646,7 +646,7 @@ const nycData = [
     "sat": "E",
     "sun": "E"
   },
-  "timeCategory": "midday, evening",
+  "timeCategory": "morning, midday, evening",
     "energyRamp": 1,
     "tags": "pasta, brunch, brooklyn, candlelight, seasonal, antipasti, bottles, neighborhood, hospitality, reservation, dinnerdate, cuisine",
     "price": "$$",
@@ -36727,7 +36727,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "bookstore, art, zines, prints, publishing, indie, design, culture, shop, collect, rare, reading",
     "price": "$",
@@ -36771,7 +36771,7 @@ const nycData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "coffee, espresso, brew, beans, morning, casual, latte, sip, neighborhood, sweet, cozy, chats",
     "price": "$",
@@ -36991,7 +36991,7 @@ const nycData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "lunch, dinner, pizza, casual, cheese, slices, craft, outdoor, midday, evening, crowd, trendy",
     "price": "$$",
@@ -37079,7 +37079,7 @@ const nycData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "lunch, dinner, italian, pasta, rustic, sauce, herbs, casual, family, midday, evening, friendly",
     "price": "$$",
@@ -37211,7 +37211,7 @@ const nycData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "late",
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "bar, drinks, ale, spirits, crowd, casual, hangout, local, afterwork, social, mellow, night",
     "price": "$",
@@ -37255,7 +37255,7 @@ const nycData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "lunch, dinner, modern, comfort, plates, brunch, urban, flavorful, relaxed, midday, evening, local",
     "price": "$$",
@@ -37343,7 +37343,7 @@ const nycData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "dinner, american, modern, shared, plates, fine, chef, menu, drinks, evening, quality, seasonal",
     "price": "$$$$",
@@ -37386,7 +37386,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "late",
+  "timeCategory": "evening, late",
   "energyRamp": 3,
   "tags": "lunch, dinner, waterfront, casual, seasonal, plates, social, midday, evening, community, fresh, relaxed",
   "price": "$$",
@@ -37606,7 +37606,7 @@ const nycData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "afternoon, evening, late",
     "energyRamp": 3,
     "tags": "lunch, dinner, italian, seafood, pasta, fine, wine, date, cozy, midday, evening, refined",
     "price": "$$$$",
@@ -37914,7 +37914,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "fitness, climbing, workout, bouldering, rope, strength, cardio, gym, training, trails, active, sport",
     "price": "$$",
@@ -38046,7 +38046,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "breakfast, brunch, lunch, dinner, cocktails, terrace, skyline, outdoor, evening, daytime, chill, refined",
     "price": "$$$$",
@@ -38266,7 +38266,7 @@ const nycData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "breakfast, lunch, tacos, burritos, mexican, casual, midday, street, savory, bowls, urban, quick",
     "price": "$",
@@ -38486,7 +38486,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "lifestyle, thrift, resell, vinyl, retro, vintage, bargains, finds, oddities, quirky, casual, browse",
     "price": "$",
@@ -38574,7 +38574,7 @@ const nycData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "coffee, cafe, espresso, beans, pour, morning, chill, slow, casual, sip, indie, local",
     "price": "$",
@@ -38662,7 +38662,7 @@ const nycData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 3,
     "tags": "coffee, espresso, brew, beans, morning, midday, latte, quick, caffeine, crew, casual, shop",
     "price": "$",
@@ -38750,7 +38750,7 @@ const nycData = [
       "sat": "E",
       "sun": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "afternoon, evening",
     "energyRamp": 3,
     "tags": "wine, bottles, smallplates, sommelier, toast, red, white, pairing, cellar, mood, sip, grape",
     "price": "$$",
@@ -38926,7 +38926,7 @@ const nycData = [
       "sat": "A",
       "sun": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "chai, masala, tea, blend, spice, latte, warm, slow, sip, serene, cup, calm",
     "price": "$$",
@@ -39017,7 +39017,7 @@ const nycData = [
       "sat": "A",
       "sun": "—"
     },
-    "timeCategory": "evening, late, afternoon",
+    "timeCategory": "evening, midday",
     "energyRamp": 3,
     "tags": "mezzes, wine, share, hummus, pita, grill, herb, rooftop, gather, spice, fresh, savory",
     "price": "$$$",
@@ -39105,7 +39105,7 @@ const nycData = [
       "sat": "A",
       "sun": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "books, archive, reading, study, research, gallery, quiet, culture, knowledge, shelves, scrolls, history",
     "price": "$",
@@ -39149,7 +39149,7 @@ const nycData = [
       "sat": "A",
       "sun": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "books, reading, garden, history, children, fiction, shelves, calm, browse, local, quiet, heritage",
     "price": "$",
@@ -39193,7 +39193,7 @@ const nycData = [
 "sat": "A",
 "sun": "—"
 },
-"timeCategory": "afternoon",
+"timeCategory": "midday, afternoon",
 "energyRamp": 3,
 "tags": "archive, documents, exhibit, history, research, papers, heritage, culture, Brooklyn, memory, civic, legacy",
 "price": "$",
@@ -39325,7 +39325,7 @@ const nycData = [
 "sat": "A",
 "sun": "MD"
 },
-"timeCategory": "midday, afternoon",
+"timeCategory": "midday, afternoon, evening",
 "energyRamp": 3,
 "tags": "wine, list, glass, pairing, cheese, appetizer, toast, red, white, chat, alight, sip",
 "price": "$$$",
@@ -39369,7 +39369,7 @@ const nycData = [
 "sat": "L",
 "sun": "—"
 },
-"timeCategory": "late",
+"timeCategory": "evening, late",
 "energyRamp": 3,
 "tags": "cocktail, gin, bitters, shake, lounge, bar, spirit, mood, neat, sip, toast, blend",
 "price": "$$$",
@@ -39498,10 +39498,10 @@ const nycData = [
 "wed": "MD",
 "thu": "MD",
 "fri": "MD",
-"sat": "A",
-"sun": "A"
+"sat": "MD",
+"sun": "MD"
 },
-"timeCategory": "afternoon, midday",
+"timeCategory": "morning, midday",
 "energyRamp": 3,
 "tags": "coffee, drip, beans, banhmi, sandwich, sip, casual, roast, tea, brunch, mellow, local",
 "price": "$",
@@ -39545,7 +39545,7 @@ const nycData = [
 "sat": "E",
 "sun": "E"
 },
-"timeCategory": "evening",
+"timeCategory": "midday, evening",
 "energyRamp": 3,
 "tags": "breakfast, brunch, lunch, dinner, patio, fresh, plates, toast, eggs, crisp, cafe, share",
 "price": "$$$",
@@ -39721,7 +39721,7 @@ const nycData = [
 "sat": "HH",
 "sun": "MD"
 },
-"timeCategory": "midday, happy hour",
+"timeCategory": "midday, evening",
 "energyRamp": 3,
 "tags": "sushi, sashimi, bento, rice, seaweed, lunch, dinner, quick, savory, light, chef, umami",
 "price": "$$$",
@@ -39765,7 +39765,7 @@ const nycData = [
 "sat": "L",
 "sun": "L"
 },
-"timeCategory": "late",
+"timeCategory": "evening, late",
 "energyRamp": 3,
 "tags": "mixology, craft, spirits, aroma, smoke, ice, technique, shake, sip, bar, blend, twist",
 "price": "$$$",
@@ -39809,7 +39809,7 @@ const nycData = [
 "sat": "MD",
 "sun": "MD"
 },
-"timeCategory": "midday",
+"timeCategory": "morning, midday",
 "energyRamp": 3,
 "tags": "matcha, tea, latte, sip, workspace, study, calm, laptop, pour, green, mellow, gentle",
 "price": "$",
@@ -39853,7 +39853,7 @@ const nycData = [
 "sat": "A",
 "sun": "A"
 },
-"timeCategory": "afternoon, evening",
+"timeCategory": "morning, midday, evening",
 "energyRamp": 3,
 "tags": "pizza, pasta, espresso, brunch, dinner, wine, patio, oven, fresh, relaxed, cozy, savor",
 "price": "$$",
@@ -39897,7 +39897,7 @@ const nycData = [
 "sat": "HH",
 "sun": "E"
 },
-"timeCategory": "evening, midday, happy hour",
+"timeCategory": "evening, midday, morning",
 "energyRamp": 3,
 "tags": "bakery, bread, pastries, breakfast, lunch, dinner, brunch, roast, warm, crumb, sweet, crust",
 "price": "$$$$",
@@ -39941,7 +39941,7 @@ const nycData = [
 "sat": "M",
 "sun": "M"
 },
-"timeCategory": "morning",
+"timeCategory": "morning, midday",
 "energyRamp": 3,
 "tags": "coffee, latte, blooms, café, floral, espresso, bouquet, garden, sip, slow, cozy, aesthetic",
 "price": "$",
@@ -39985,7 +39985,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "evening, late",
+  "timeCategory": "midday, evening, late",
   "energyRamp": 3,
   "tags": "brunch, dinner, cocktail, share, bold, fresh, plates, toast, cheers, vibe, urban, vibrant",
   "price": "$$",
@@ -40029,7 +40029,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "late",
+  "timeCategory": "evening, late",
   "energyRamp": 3,
   "tags": "cocktail, gin, rye, bitters, lounge, bar, neat, shake, clink, spirit, toast, mood",
   "price": "$$$",
@@ -40117,7 +40117,7 @@ const nycData = [
 "sat": "L",
 "sun": "MD"
 },
-"timeCategory": "midday, late",
+"timeCategory": "evnening, late",
 "energyRamp": 3,
 "tags": "cocktail, barber, shave, lounge, spirits, invite, hidden, craft, neat, sip, buzz, witty",
 "price": "$$",
@@ -40161,7 +40161,7 @@ const nycData = [
 "sat": "L",
 "sun": "L"
 },
-"timeCategory": "late",
+"timeCategory": "evening, late",
 "energyRamp": 3,
 "tags": "fried, chicken, beer, brunch, dinner, bar, casual, crowd, toast, craft, plates, crisp",
 "price": "$$",
@@ -40205,7 +40205,7 @@ const nycData = [
 "sat": "A",
 "sun": "A"
 },
-"timeCategory": "afternoon",
+"timeCategory": "midday, afternoon",
 "energyRamp": 3,
 "tags": "tea, herbal, steep, cups, jasmine, oolong, calm, slow, sip, zen, serene, gentle",
 "price": "$$",
@@ -40293,7 +40293,7 @@ const nycData = [
 "sat": "A",
 "sun": "A"
 },
-"timeCategory": "afternoon",
+"timeCategory": "midday, afternoon",
 "energyRamp": 3,
 "tags": "books, reading, print, browse, art, collect, design, station, calm, vibe, culture, texture",
 "price": "$$",
@@ -40337,7 +40337,7 @@ const nycData = [
 "sat": "L",
 "sun": "L"
 },
-"timeCategory": "late",
+"timeCategory": "evening, late",
 "energyRamp": 3,
 "tags": "cocktail, spirits, ice, toast, mix, bar, sip, blend, mood, night, shaken, glass",
 "price": "$$",
@@ -40381,7 +40381,7 @@ const nycData = [
 "sat": "E",
 "sun": "E"
 },
-"timeCategory": "evening",
+"timeCategory": "midday, evening",
 "energyRamp": 3,
 "tags": "coffee, brunch, beer, wine, toast, sip, local, mixer, chill, relaxed, casual, cafe",
 "price": "$",
@@ -40425,7 +40425,7 @@ const nycData = [
 "sat": "A",
 "sun": "A"
 },
-"timeCategory": "afternoon",
+"timeCategory": "midday, afternoon",
 "energyRamp": 3,
 "tags": "coffee, workspace, laptop, sip, latte, brunch, casual, chat, study, fresh, mellow, urban",
 "price": "$",
@@ -40513,7 +40513,7 @@ const nycData = [
 "sat": "A",
 "sun": "—"
 },
-"timeCategory": "afternoon",
+"timeCategory": "midday, afternoon",
 "energyRamp": 3,
 "tags": "art, design, furniture, showroom, curated, pieces, gallery, luxe, taste, space, rare, aesthetic",
 "price": "$$$",
@@ -40601,7 +40601,7 @@ const nycData = [
 "sat": "A",
 "sun": "A"
 },
-"timeCategory": "afternoon",
+"timeCategory": "midday, afternoon",
 "energyRamp": 3,
 "tags": "sandwiches, bowls, quick, lunch, fresh, chef, daily, crisp, savory, bread, grab, local",
 "price": "$",
@@ -40645,7 +40645,7 @@ const nycData = [
 "sat": "A",
 "sun": "A"
 },
-"timeCategory": "afternoon",
+"timeCategory": "morning, midday, afternoon",
 "energyRamp": 3,
 "tags": "espresso, pour, pastry, relaxed, sip, soft, mural, chat, nook, sweet, gather, breeze",
 "price": "$",
@@ -40689,7 +40689,7 @@ const nycData = [
 "sat": "L",
 "sun": "L"
 },
-"timeCategory": "late",
+"timeCategory": "evening, late",
 "energyRamp": 3,
 "tags": "spirits, share, chef, menu, toast, blend, glass, urban, loud, lively, pair, taste",
 "price": "$$$",
@@ -40733,7 +40733,7 @@ const nycData = [
 "sat": "A",
 "sun": "A"
 },
-"timeCategory": "afternoon, midday",
+"timeCategory": "morning, afternoon, midday",
 "energyRamp": 3,
 "tags": "beans, micro, filter, singleorigin, aroma, sip, barista, neat, fresh, method, grind, smallbatch",
 "price": "$",
@@ -40997,7 +40997,7 @@ const nycData = [
 "sat": "A",
 "sun": "A"
 },
-"timeCategory": "afternoon",
+"timeCategory": "morning, midday, afternoon",
 "energyRamp": 3,
 "tags": "calm, relax, breathe, reset, therapy, soak, glide, drift, wellness, float, still, unwind",
 "price": "$$",
@@ -41041,7 +41041,7 @@ const nycData = [
 "sat": "L",
 "sun": "L"
 },
-"timeCategory": "late",
+"timeCategory": "afternoon, late",
 "energyRamp": 3,
 "tags": "pints, screens, cheers, draft, crowd, game, chat, clink, booth, booth, match, refills",
 "price": "$$",
@@ -41349,7 +41349,7 @@ const nycData = [
 "fri": "A",
 "sat": "A"
 },
-"timeCategory": "afternoon",
+"timeCategory": "morning, midday, afternoon",
 "energyRamp": 3,
 "tags": "rooftop, bowl, view, blast, fresh, casual, light, sunny, leaf, afternoon, fusion, glass",
 "price": "$$",
@@ -41388,12 +41388,12 @@ const nycData = [
 "sun": "-",
 "mon": "-",
 "tue": "-",
-"wed": "HH",
-"thu": "HH",
-"fri": "HH",
-"sat": "HH"
+"wed": "E",
+"thu": "E",
+"fri": "E",
+"sat": "E"
 },
-"timeCategory": "happy hour",
+"timeCategory": "evening",
 "energyRamp": 3,
 "tags": "hidden, shake, spirits, craft, neat, lounge, retro, toast, hush, plush, pour, velvet",
 "price": "$$",
@@ -41437,7 +41437,7 @@ const nycData = [
 "fri": "A",
 "sat": "A"
 },
-"timeCategory": "afternoon, midday",
+"timeCategory": "morning, afternoon, midday",
 "energyRamp": 3,
 "tags": "pour, sit, book, warm, slow, mellow, browse, chat, sweet, focus, page, corner",
 "price": "$",
@@ -41481,7 +41481,7 @@ const nycData = [
 "fri": "L",
 "sat": "L"
 },
-"timeCategory": "evening, late",
+"timeCategory": "evening, afternoon",
 "energyRamp": 3,
 "tags": "share, grill, bowl, quick, fresh, tasty, fun, side, savory, combo, bites, dish",
 "price": "$$",
@@ -41657,7 +41657,7 @@ const nycData = [
       "fri": "MD",
       "sat": "A"
     },
-    "timeCategory": "afternoon, midday",
+    "timeCategory": "morning, afternoon, midday",
     "energyRamp": 3,
     "tags": "pour, pastry, chat, sit, brunch, garden, bloom, treat, ease, plate, leafy, nook",
     "price": "$",
@@ -41701,7 +41701,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "vinyl, spin, browse, press, sleeve, store, vibe, tone, shelf, track, record, crate",
     "price": "$",
@@ -41756,7 +41756,7 @@ const nycData = [
     "name": "Breeze",
     "id": "04d5f8fb-0fcb-4e65-ba90-d7513f7806af",
     "vibe": "fresh, quiet, deliberate, grounded, flowing, airy",
-    "type": ["pilateso"],
+    "type": ["pilates"],
     "lat": "40.7230018",
     "lon": "-73.9506149",
     "link": "https://www.instagram.com/breezehexu/?hl=en",
@@ -41789,7 +41789,7 @@ const nycData = [
       "fri": "HH",
       "sat": "HH"
     },
-    "timeCategory": "afternoon, happy hour",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "balance, inhale, stretch, pose, ease, align, flow, reach, pulse, studio, control, core",
     "price": "$$",
@@ -41833,7 +41833,7 @@ const nycData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "afternoon, evening",
     "energyRamp": 3,
     "tags": "ceviche, shrimp, lime, zest, salsa, crunch, plate, dine, zest, sauce, bowl, dip",
     "price": "$$",
@@ -41921,7 +41921,7 @@ const nycData = [
       "fri": "MD",
       "sat": "A"
     },
-    "timeCategory": "afternoon, midday",
+    "timeCategory": "morning, afternoon, midday",
     "energyRamp": 3,
     "tags": "beans, roast, sip, steam, table, cup, pour, grind, sit, session, pause, barista",
     "price": "$",
@@ -41965,7 +41965,7 @@ const nycData = [
       "fri": "HH",
       "sat": "HH"
     },
-    "timeCategory": "afternoon, happy hour",
+    "timeCategory": "morning, midday, afternoon, happy hour",
     "energyRamp": 3,
     "tags": "snack, sip, table, booth, chat, pastry, nook, sit, simple, light, snack, smile",
     "price": "$",
@@ -42009,7 +42009,7 @@ const nycData = [
       "fri": "MD",
       "sat": "A"
     },
-    "timeCategory": "afternoon, midday",
+    "timeCategory": "morning, afternoon, midday",
     "energyRamp": 3,
     "tags": "paint, glaze, studio, brush, snack, blend, art, dish, color, hands, plate, flavor",
     "price": "$",
@@ -42141,7 +42141,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "browse, spine, page, zine, print, stool, sit, art, note, shelf, word, detail",
     "price": "$",
@@ -42185,7 +42185,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon, midday",
+    "timeCategory": "morning, afternoon, midday",
     "energyRamp": 3,
     "tags": "fiction, chapter, page, shelf, story, nook, light, spine, prose, curl, read, browse",
     "price": "$",
@@ -42229,7 +42229,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "herb, bloom, sip, bowl, dip, stem, brunch, sprout, root, green, flower, plate",
     "price": "$",
@@ -42273,7 +42273,7 @@ const nycData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "morning, midday, evening, late",
     "energyRamp": 3,
     "tags": "toast, pour, chat, view, sit, sip, jam, mood, snack, mellow, brunch, stool",
     "price": "$",
@@ -42317,7 +42317,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "cocktail, plate, booth, sip, gather, pour, talk, light, seat, serve, late, vibe",
     "price": "$",
@@ -42361,7 +42361,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "grab, bag, loaf, snack, spread, shelf, wrap, dip, local, pack, staple, daily",
     "price": "$",
@@ -42449,7 +42449,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "monologue, line, act, scene, page, spine, stage, cast, script, shelf, prose, quote",
     "price": "$",
@@ -42493,7 +42493,7 @@ const nycData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "afternoon, evening, late",
     "energyRamp": 3,
     "tags": "taco, salsa, spice, dip, zest, plate, bite, share, lime, toast, flavor, edge",
     "price": "$",
@@ -42537,7 +42537,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "crate, sleeve, press, groove, browse, classic, stack, album, tune, jacket, vibe, spin",
     "price": "$$",
@@ -42581,7 +42581,7 @@ const nycData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 3,
     "tags": "shelf, vase, lounge, neutral, layout, accent, sit, tone, edge, chair, vibe, space",
     "price": "$",

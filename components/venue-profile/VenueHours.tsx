@@ -19,18 +19,23 @@ export default function VenueHours({ hours, isOpen }: Props) {
 
   // format time string like "14:00" or "2:00" into proper 12-hour with AM/PM
   const formatTime = (time: string) => {
-    if (!time) return 'Closed'
-    const [hourStr, minStr] = time.split(':')
-    let hour = parseInt(hourStr, 10)
-    const min = parseInt(minStr || '0', 10)
-    if (isNaN(hour) || isNaN(min)) return 'Invalid'
+  if (!time) return 'Closed'
 
-    // adjust for 24-hour to 12-hour format
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    hour = hour % 12
-    if (hour === 0) hour = 12
-    return `${hour}:${min.toString().padStart(2, '0')} ${ampm}`
+  // If already contains AM/PM, just normalize spacing
+  if (/AM|PM/i.test(time)) {
+    return time.replace(/\s+/, ' ').toUpperCase()
   }
+
+  // fallback: parse "HH:MM" 24-hour numeric strings
+  const [hourStr, minStr] = time.split(':')
+  let hour = parseInt(hourStr, 10)
+  const min = parseInt(minStr || '0', 10)
+  if (isNaN(hour) || isNaN(min)) return 'Invalid'
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  hour = hour % 12
+  if (hour === 0) hour = 12
+  return `${hour}:${min.toString().padStart(2, '0')} ${ampm}`
+}
 
   const renderLine = (day: string) => {
     const slot: Record<string, string> | undefined = hours[day] as any
