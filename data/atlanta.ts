@@ -592,7 +592,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "midday, evening",
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 3,
     "tags": "middleeastern, modern, garden, flavors, romantic, chic, mediterranean, patio, lush, floral",
     "price": "$$$",
@@ -734,7 +734,7 @@ const atlantaData = [
       "sat": "E",
       "sun": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 4,
     "tags": "dive, artsy, indie, casual, murals, beer, lowkey, patio, classic, relaxed",
     "price": "$",
@@ -808,7 +808,7 @@ const atlantaData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "midday, evening",
     "energyRamp": 5,
     "tags": "retro, creative, diner, cocktails, quirky, colorful, playful, easy, fun, local",
     "price": "$$",
@@ -885,7 +885,7 @@ const atlantaData = [
       "sat": "E",
       "sun": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "afternoon, evening",
     "energyRamp": 3,
     "tags": "beer, cozy, pub, local, classic, plates, chill, craft, belgian, nerd",
     "price": "$$",
@@ -1198,7 +1198,7 @@ const atlantaData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "shaded, mellow, serene, clean, open, trek, river, overlook, cliffs, breathing, climb, wilds, view, walk",
     "price": "$",
@@ -1359,7 +1359,7 @@ const atlantaData = [
       "sat": "L",
       "sun": "E"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "midday, evening, late",
     "energyRamp": 4,
     "tags": "electric, rugged, funky, jammed, wild, shadowy, casual, scene, stage, riffs, whiskey, late, amps, show",
     "price": "$",
@@ -1584,7 +1584,7 @@ const atlantaData = [
       "sat": "HH",
       "sun": "HH"
     },
-    "timeCategory": "happy hour",
+    "timeCategory": "happy hour, evening",
     "energyRamp": 3,
     "tags": "dark, rich, refined, plush, oak, intimate, sleek, moody, gold, sultry, reserved, stylish, exclusive, bourbon, tailored, lounge, sipping, heritage, quiet, smooth, amber, glass",
     "price": "$$",
@@ -1738,7 +1738,7 @@ const atlantaData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday, happy hour",
+    "timeCategory": "midday, afternoon, happy hour",
     "energyRamp": 5,
     "tags": "high-energy, lively, patio, bold, busy, upbeat, relaxed, gamey, screenlit, tower, pints, crowd, match, team, friends, taproom, nachos, booth",
     "price": "$$",
@@ -2096,7 +2096,7 @@ const atlantaData = [
       "sat": "HH",
       "sun": "A"
     },
-    "timeCategory": "happy hour",
+    "timeCategory": "happy hour, evening",
     "energyRamp": 2,
     "tags": "curated, polished, smart, creative, chic, bold, expressive, cultured, modernist, architectural, spirits, exhibit, space, taste, pour, art, event, studio, flavor",
     "price": "$$",
@@ -2173,7 +2173,7 @@ const atlantaData = [
       "sat": "E",
       "sun": "MD"
     },
-    "timeCategory": "midday, evening",
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 2,
     "tags": "wine, vibe, charm, sips, taste, booth, city, pour, bar",
     "price": "$",
@@ -2318,7 +2318,7 @@ const atlantaData = [
       "sat": "A",
       "sun": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 1,
     "tags": "focused, peaceful, ambient, graceful, light, meditative, contemplative, teahouse, leaves, pour, steam, culture, moment, sip, warmth, herbs",
     "price": "$",
@@ -2833,7 +2833,7 @@ const atlantaData = [
       "sat": "E",
       "sun": "E"
     },
-    "timeCategory": "afternoon, evening",
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 3,
     "tags": "Negroni, burrata, spritz, pasta, rooftop, crowd-pleaser, zest, sauce, share, crisp, herb, dine",
     "price": "$$",
@@ -3135,7 +3135,7 @@ const atlantaData = [
       "sat": "E",
       "sun": "MD"
     },
-    "timeCategory": "midday, evening",
+    "timeCategory": "midday, evening, late",
     "energyRamp": 4,
     "tags": "vinyl, DJ, cocktail, beat, analog, crafted, sip, oak, amber, depth, mellow, night",
     "price": "$$",
@@ -3212,7 +3212,7 @@ const atlantaData = [
       "sat": "HH",
       "sun": "HH"
     },
-    "timeCategory": "evening, happy hour",
+    "timeCategory": "evening, midday, afternoon, happy hour",
     "energyRamp": 3,
     "tags": "unpretentious, quick-bite, ironic, chill, fun, casual, offbeat, lunch, boozy, slushies, casual, cheap, eat, hearty, crisp, playful, edge, grab",
     "price": "$",
@@ -3600,7 +3600,7 @@ const atlantaData = [
       "sat": "E",
       "sun": "E"
     },
-    "timeCategory": "happy hour, evening",
+    "timeCategory": "happy hour, afternoon, evening",
     "energyRamp": 3,
     "tags": "euro, beer, retro, branding, outdoor, hang, brew, crisp, relax, pint, palette, hops",
     "price": "$",
@@ -3831,7 +3831,7 @@ const atlantaData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "evening, midday",
+    "timeCategory": "evening, midday, afternoon",
     "energyRamp": 3,
     "tags": "beer, garden, crowd, menu, outdoor, pint, skyline, friends, cheer, snack, sun, vibe",
     "price": "$$",
@@ -4134,7 +4134,7 @@ const atlantaData = [
       "sat": "L",
       "sun": "-"
     },
-    "timeCategory": "late",
+    "timeCategory": "evening, late",
     "energyRamp": 5,
     "tags": "craft, cocktail, den, tight, speakeasy, date, avant, sip, twist, shake, urban, vibe",
     "price": "$$",
@@ -4480,7 +4480,7 @@ const atlantaData = [
       "sat": "A",
       "sun": "-"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 1,
     "tags": "emerging, experimental, works, events, critical, artist, gallery, scene, show, vision, install, edge",
     "price": "$",
@@ -4853,7 +4853,7 @@ const atlantaData = [
       "sat": "E",
       "sun": "A"
     },
-    "timeCategory": "afternoon, evening",
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 4,
     "tags": "pickleball, social, club, games, play, energy, day, night, rally, serve, vibe, sport",
     "price": "$$",
@@ -5613,7 +5613,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "M"
     },
-    "timeCategory": "morning, midday, evening",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "French, pastry, morning, ritual, aesthetic, croissant, coffee, spot, early, smell, treat, chic",
     "price": "$",
@@ -6116,7 +6116,7 @@ const atlantaData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "pantry, market, café, local, hybrid, neighborhood, curated, shelf, sip, bite, charm, scene",
     "price": "$$",
@@ -6273,7 +6273,7 @@ const atlantaData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "dog, coffee, neighborhood, fenced, pup, run, laptop, sip, patio, brew, bark, spot",
     "price": "$",
@@ -6424,7 +6424,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "midday, evening",
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 2,
     "tags": "taco, sun, counter, service, burrito, hype, brunch, café, eat, lime, day, seat",
     "price": "$$",
@@ -6692,7 +6692,7 @@ const atlantaData = [
     "name": "Park Tavern",
     "vibe": "patio, casual, ice skate, group-friendly, sports, social, lively, outdoors, festive, holiday, seasonal, laid-back",
     "type": [
-      "bar",
+      "bar", "sports bar",
       "activity",
       "brunch", "patio"
     ],
@@ -7209,7 +7209,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "midday, evening, happy hour",
+    "timeCategory": "midday, evening, afternoon, happy hour",
     "energyRamp": 3,
     "tags": "lounge, intimate, cozy, moody, sultry, lowlit, relaxed, easygoing, unhurried, botanical, lush, verdant, midcentury",
     "price": "$$",
@@ -8015,7 +8015,7 @@ const atlantaData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday, evening",
     "energyRamp": 1,
     "tags": "market, chef, pastries, mornings, coffee, plates, dates, bakery, display, quality, simplicity, refinement",
     "price": "$$",
@@ -8748,7 +8748,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "midday, evening",
+    "timeCategory": "morning, midday, evening",
     "energyRamp": 5,
     "tags": "vinyl, listening, analog, sound, DJs, acoustics, sessions, room, fidelity, programming, culture, depth, global",
     "price": "$$",
@@ -9095,7 +9095,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "midday, evening",
     "energyRamp": 2,
     "tags": "chef, theater, sushi, luxury, experience, plating, course, tasting, precision, atmosphere, rice, upscale",
     "price": "$$$",
@@ -9175,7 +9175,7 @@ const atlantaData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "afternoon, evening, late",
     "energyRamp": 4,
     "tags": "outdoor, lodge, BeltLine, brunch, southern, gatherings, plates, fried, picnic, weekend, BBQ, chill",
     "price": "$$",
@@ -9249,7 +9249,7 @@ const atlantaData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "afternoon, evening, late",
     "energyRamp": 3,
     "tags": "beer, weekend, group, vibe, gathering, park, chill, crowd, lawn, casual",
     "price": "$$",
@@ -9406,7 +9406,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "midday, evening",
+    "timeCategory": "midday, afternoon, evening",
     "energyRamp": 3,
     "tags": "oysters, lobster, tower, Buckhead, cocktails, shellfish, plates, rawbar, seafoodie, date, flavor",
     "price": "$$$",
@@ -9635,7 +9635,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "evening",
+    "timeCategory": "evening, late",
     "energyRamp": 4,
     "tags": "retro, nostalgic, kitschy, cheeky, expressive, maximalist, colorful, throwback, playful, cinematic, themed, curated",
     "price": "$$",
@@ -9712,7 +9712,7 @@ const atlantaData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "afternoon, evening, late",
     "energyRamp": 3,
     "tags": "porch, pitchers, wings, beer, game, staple, hangout, college, lunch, ATL, tavern",
     "price": "$",
@@ -10544,7 +10544,7 @@ const atlantaData = [
       "fri": "A",
       "sat": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "afternoon, evening",
     "energyRamp": 1,
     "tags": "tasting, sip, BeltLine, ATL, crowd, corks, shelf, toast, grape, bottle, pour, talk",
     "price": "$$",
@@ -10621,7 +10621,7 @@ const atlantaData = [
       "fri": "HH",
       "sat": "A"
     },
-    "timeCategory": "afternoon, happy hour",
+    "timeCategory": "afternoon, evening, happy hour",
     "energyRamp": 2,
     "tags": "tasting, pour, wine, literary, book, books, bookshelf, pages, riesling, band, seating, dogs, champagne, edition, somm, patio",
     "price": "$",
@@ -11091,7 +11091,7 @@ const atlantaData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "espresso, cafe, wifi, laptop, barista, roast, beans, mug, workspace, design, pour, sip",
     "price": "$",
@@ -11529,7 +11529,7 @@ const atlantaData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "evening, happy hour",
+    "timeCategory": "evening, afternoon, happy hour",
     "energyRamp": 2,
     "tags": "gelato, dessert stop, date night, European sweets, sweet tooth fix",
     "price": "$",
@@ -12568,7 +12568,7 @@ const atlantaData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "French cafe, crepes, breakfast + lunch, neighborhood spot, euro-vibe brunch",
     "price": "$",
