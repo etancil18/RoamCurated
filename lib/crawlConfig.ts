@@ -591,9 +591,9 @@ export const crawlThemes: CrawlTheme[] = [
   "name": "Night Mode",
   "description": "Your night ramps up in stages—good energy, bold flavors, loud music, and no curfew.",
   "stageFlow": [
-    ["dinner", "bar"],
-    ["cocktail", "bar"],
-    "club",
+    ["dinner", "cocktail"],
+    ["lounge", "bar"],
+    ["club", "bar"],
     "late-night"
   ],
   "filters": {
