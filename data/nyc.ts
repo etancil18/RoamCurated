@@ -18938,9 +18938,9 @@ const nycData = [
     "fri": { "open": 17, "close": 23 },
     "sat": { "open": 14, "close": 23 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "-",
+    "mon": "HH",
+    "tue": "HH",
+    "wed": "HH",
     "thu": "E",
     "fri": "E",
     "sat": "E",
@@ -19028,15 +19028,15 @@ const nycData = [
     "fri": { "open": 8, "close": 15 },
     "sat": { "open": 8, "close": 15 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
+    "mon": "M",
+    "tue": "M",
     "wed": "HH",
     "thu": "E",
     "fri": "E",
     "sat": "E",
     "sun": "HH"
   },
-  "timeCategory": "evening",
+  "timeCategory": "morning, midday,evening",
     "energyRamp": 2,
     "tags": "tropical, intimate, niche",
     "price": "$",
@@ -19081,7 +19081,7 @@ const nycData = [
     "sat": "E",
     "sun": "MD"
   },
-  "timeCategory": "afternoon, evening",
+  "timeCategory": "late, evening",
     "energyRamp": 3,
     "tags": "Mexican, festive, dinner",
     "price": "$$",
@@ -19344,8 +19344,8 @@ const nycData = [
     "sat": { "open": 12, "close": 19 } },
     "dayParts": {
     "mon": "-",
-    "tue": "-",
-    "wed": "HH",
+    "tue": "E",
+    "wed": "E",
     "thu": "E",
     "fri": "E",
     "sat": "E",
@@ -19396,7 +19396,7 @@ const nycData = [
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "night",
+  "timeCategory": "evening, late",
     "energyRamp": 5,
     "tags": "luxe, lounge, bottle scene",
     "price": "$$",
@@ -19486,7 +19486,7 @@ const nycData = [
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "evening, night",
+  "timeCategory": "evening, late",
     "energyRamp": 5,
     "tags": "western, rowdy, neon",
     "price": "$$",
@@ -19525,13 +19525,13 @@ const nycData = [
     "dayParts": {
     "mon": "-",
     "tue": "-",
-    "wed": "HH",
+    "wed": "-",
     "thu": "E",
     "fri": "E",
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "night",
+  "timeCategory": "evening, late",
     "energyRamp": 4,
     "tags": "Latin, party, dance",
     "price": "$$$",
@@ -19576,7 +19576,7 @@ const nycData = [
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "evening, night",
+  "timeCategory": "evening, late",
     "energyRamp": 4,
     "tags": "playful, vibey, danceable",
     "price": "$$",
@@ -19613,15 +19613,15 @@ const nycData = [
     "fri": { "open": 8, "close": 14 },
     "sat": { "open": 8, "close": 16 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E",
+    "mon": "MD",
+    "tue": "MD",
+    "wed": "E",
+    "thu": "MD",
+    "fri": "MD",
+    "sat": "MD",
     "sun": "MD"
   },
-  "timeCategory": "evening",
+  "timeCategory": "morning, midday, evening",
     "energyRamp": 3,
     "tags": "sleek, intimate, date-night",
     "price": "$",
@@ -19666,7 +19666,7 @@ const nycData = [
     "sat": "L",
     "sun": ""
   },
-  "timeCategory": "night",
+  "timeCategory": "late",
     "energyRamp": 5,
     "tags": "chaotic, dance, wild",
     "price": "$$$",
@@ -19705,13 +19705,13 @@ const nycData = [
     "dayParts": {
     "mon": "-",
     "tue": "-",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "E",
+    "wed": "-",
+    "thu": "L",
+    "fri": "L",
     "sat": "L",
-    "sun": "E"
+    "sun": "-"
   },
-  "timeCategory": "evening, night",
+  "timeCategory": "evening, late",
     "energyRamp": 4,
     "tags": "throwback, jazz, speakeasy",
     "price": "$$",
@@ -19793,13 +19793,13 @@ const nycData = [
     "fri": { "open": 8, "close": 26 },
     "sat": { "open": 8, "close": 26 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
+    "mon": "M",
+    "tue": "M",
     "wed": "HH",
     "thu": "E",
     "fri": "L",
     "sat": "L",
-    "sun": "L"
+    "sun": "MD"
   },
   "timeCategory": "night",
     "energyRamp": 5,
@@ -19920,13 +19920,24 @@ const nycData = [
   { "date": "-", "title": "-", "time": "-" },
   { "date": "-", "title": "-", "time": "-" }
 ],
-  "hoursNumeric": {"sun": { "open": 10, "close": 15 },
-    "mon": null,
-    "tue": null,
-    "wed": { "open": 10, "close": 15 },
-    "thu": { "open": 10, "close": 15 },
-    "fri": { "open": 10, "close": 27 },
-    "sat": { "open": 10, "close": 27 } },
+  "hoursNumeric": {
+  "sun": [
+    { "open": 10, "close": 15 },
+    { "open": 18, "close": 23 }
+  ],
+  "mon": null,
+  "tue": null,
+  "wed": { "open": 10, "close": 15 },
+  "thu": { "open": 10, "close": 15 },
+  "fri": [
+    { "open": 10, "close": 15 },
+    { "open": 18, "close": 23 }
+  ],
+  "sat": [
+    { "open": 10, "close": 15 },
+    { "open": 18, "close": 23 }
+  ]
+},
     "dayParts": {
     "mon": "-",
     "tue": "-",
@@ -19981,7 +19992,7 @@ const nycData = [
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "night",
+  "timeCategory": "late",
     "energyRamp": 5,
     "tags": "DJ-driven, niche, underground",
     "price": "$$",
@@ -20199,15 +20210,15 @@ const nycData = [
     "fri": { "open": 13, "close": 28 },
     "sat": { "open": 13, "close": 28 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
+    "mon": "HH",
+    "tue": "HH",
     "wed": "HH",
     "thu": "E",
     "fri": "L",
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "night",
+  "timeCategory": "late",
     "energyRamp": 4,
     "tags": "divey, karaoke, rowdy",
     "price": "$$",
@@ -20244,15 +20255,15 @@ const nycData = [
     "fri": { "open": 17, "close": 28.5 },
     "sat": { "open": 16.5, "close": 28.5 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "HH",
+    "mon": "E",
+    "tue": "E",
+    "wed": "E",
     "thu": "E",
     "fri": "L",
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "night",
+  "timeCategory": "late",
     "energyRamp": 5,
     "tags": "K-pop, karaoke, group, LED-lit",
     "price": "$$",
@@ -20297,7 +20308,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "evening",
+  "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "pop-up, artsy, hidden",
     "price": "$$",
@@ -20334,15 +20345,15 @@ const nycData = [
     "fri": { "open": 11, "close": 25 },
     "sat": { "open": 11, "close": 25 } },
     "dayParts": {
-    "mon": "M",
-    "tue": "M",
-    "wed": "M",
+    "mon": "HH",
+    "tue": "HH",
+    "wed": "HH",
     "thu": "E",
     "fri": "E",
     "sat": "E",
-    "sun": "M"
+    "sun": "HH"
   },
-  "timeCategory": "midday, afternoon",
+  "timeCategory": "midday, afternoon, evening",
     "energyRamp": 2,
     "tags": "historic, Irish, communal",
     "price": "$",
@@ -20387,7 +20398,7 @@ const nycData = [
     "sat": "MD",
     "sun": "M"
   },
-  "timeCategory": "midday",
+  "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "design, niche, quiet",
     "price": "$",
@@ -20432,7 +20443,7 @@ const nycData = [
     "sat": "MD",
     "sun": "MD"
   },
-  "timeCategory": "afternoon",
+  "timeCategory": "afternoon, evening",
     "energyRamp": 1,
     "tags": "dessert, casual, family",
     "price": "$",
@@ -20469,13 +20480,13 @@ const nycData = [
     "fri": { "open": 12, "close": 19.25 },
     "sat": { "open": 12, "close": 19.25 } },
     "dayParts": {
-    "mon": "M",
-    "tue": "M",
-    "wed": "M",
-    "thu": "M",
-    "fri": "M",
-    "sat": "M",
-    "sun": "M"
+    "mon": "MD",
+    "tue": "MD",
+    "wed": "MD",
+    "thu": "MD",
+    "fri": "MD",
+    "sat": "MD",
+    "sun": "MD"
   },
   "timeCategory": "midday",
     "energyRamp": 1,
@@ -20522,7 +20533,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "night",
+  "timeCategory": "evening, late",
     "energyRamp": 4,
     "tags": "dancey, moody, DJ bar",
     "price": "$",
@@ -20559,15 +20570,15 @@ const nycData = [
     "fri": { "open": 16,  "close": 25 },
     "sat": { "open": 13,  "close": 25 } },
     "dayParts": {
-    "mon": "M",
-    "tue": "M",
-    "wed": "M",
-    "thu": "M",
-    "fri": "M",
-    "sat": "M",
-    "sun": "M"
+    "mon": "E",
+    "tue": "E",
+    "wed": "E",
+    "thu": "E",
+    "fri": "L",
+    "sat": "L",
+    "sun": "E"
   },
-  "timeCategory": "midday, evening",
+  "timeCategory": "late",
     "energyRamp": 2,
     "tags": "casual, quick-bite, delicious",
     "price": "$",
@@ -20606,13 +20617,13 @@ const nycData = [
     "dayParts": {
     "mon": "HH",
     "tue": "HH",
-    "wed": "HH",
+    "wed": "E",
     "thu": "E",
-    "fri": "E",
-    "sat": "E",
+    "fri": "L",
+    "sat": "L",
     "sun": "HH"
   },
-  "timeCategory": "evening",
+  "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "divey, fried chicken, vibey",
     "price": "$$",
@@ -20622,7 +20633,7 @@ const nycData = [
      {
        "slug": "roebling-sporting-club",    "name": "Roebling Sporting Club",
     "vibe": "Sports Bar, Lively, Fun Atmosphere, Active, Social, Loud, Night, Game",
-    "type": "bar",
+    "type": ["bar", "sports bar"],
         "lat": "40.7169763",
     "lon": "-73.9546566",
     "link": "https://www.instagram.com/roeblingnyc/",
@@ -20657,9 +20668,9 @@ const nycData = [
     "sat": "E",
     "sun": "E"
   },
-  "timeCategory": "evening",
+  "timeCategory": "afternoon, evening",
     "energyRamp": 3,
-    "tags": "pool table, TV, lowkey",
+    "tags": "TV, lowkey",
     "price": "$$",
     "duration": 1.5,
     "id": "40d7abe2-be87-45b4-b59f-3560255ab077"
@@ -20755,51 +20766,6 @@ const nycData = [
     "id": "86aa771c-dcf6-4a1b-ade5-d070ff92c95b"
     },
      {
-       "slug": "tba-brooklyn",    "name": "TBA Brooklyn",
-    "vibe": "Hidden Gem, DJ, Dance, Nightlife, Cocktails, Underground, Pulse, Vibrant, Late‑Night, Hype",
-    "type": ["club", "late-night"],
-        "lat": "40.7111986",
-    "lon": "-73.9663773",
-    "link": "https://www.instagram.com/tbabrooklyn/",
-    "cover": "",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 10:00 PM–4:00 AM",
-    "Monday: Closed",
-    "Tuesday: Closed",
-    "Wednesday: 10:00 PM–4:00 AM",
-    "Thursday: 10:00 PM–4:00 AM",
-    "Friday: 10:00 PM–4:00 AM",
-    "Saturday: 10:00 PM–4:00 AM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 22,  "close": 28 },
-    "mon": null,
-    "tue": null,
-    "wed": { "open": 22,  "close": 28 },
-    "thu": { "open": 22,  "close": 28 },
-    "fri": { "open": 22,  "close": 28 },
-    "sat": { "open": 22,  "close": 28 } },
-    "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "-",
-    "thu": "L",
-    "fri": "L",
-    "sat": "L",
-    "sun": "L"
-  },
-  "timeCategory": "late night",
-    "energyRamp": 5,
-    "tags": "warehouse, after-hours, dance",
-    "price": "$$",
-    "duration": 2,
-    "id": "d5272fde-9ca9-42a7-9615-b3e2fc893501"
-    },
-     {
        "slug": "lucali",    "name": "Lucali",
     "vibe": "Cozy, Casual, Wood‑fired Pizza, Neighborhood Staple, Trendy, Comforting, Rustic, Warm, Local, Laid‑Back",
     "type": "dinner",
@@ -20829,9 +20795,9 @@ const nycData = [
     "fri": { "open": 17,  "close": 23 },
     "sat": { "open": 17,  "close": 23 } },
     "dayParts": {
-    "mon": "-",
+    "mon": "E",
     "tue": "-",
-    "wed": "-",
+    "wed": "E",
     "thu": "E",
     "fri": "E",
     "sat": "E",
@@ -20919,9 +20885,9 @@ const nycData = [
     "fri": { "open": 17,  "close": 25 },
     "sat": { "open": 18,  "close": 25 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "-",
+    "mon": "HH",
+    "tue": "HH",
+    "wed": "HH",
     "thu": "E",
     "fri": "L",
     "sat": "L",
@@ -20972,7 +20938,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "night",
+  "timeCategory": "late",
     "energyRamp": 5,
     "tags": "indie, music-heavy, underground",
     "price": "$$",
@@ -21010,14 +20976,14 @@ const nycData = [
     "sat": { "open": 13,  "close": 28 } },
     "dayParts": {
     "mon": "-",
-    "tue": "-",
-    "wed": "-",
+    "tue": "E",
+    "wed": "E",
     "thu": "E",
     "fri": "L",
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "night",
+  "timeCategory": "evening, late",
     "energyRamp": 5,
     "tags": "tropical, flashy, party vibes",
     "price": "$$",
@@ -21062,7 +21028,7 @@ const nycData = [
     "sat": "E",
     "sun": "MD"
   },
-  "timeCategory": "evening",
+  "timeCategory": "afternoon, evening",
     "energyRamp": 2,
     "tags": "waterfront, chill, picnic-style",
     "price": "$$",
@@ -21191,13 +21157,13 @@ const nycData = [
     "dayParts": {
     "mon": "-",
     "tue": "-",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E",
-    "sun": "HH"
+    "wed": "E",
+    "thu": "L",
+    "fri": "L",
+    "sat": "L",
+    "sun": "E"
   },
-  "timeCategory": "evening",
+  "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "posh, cocktail-first, date-night",
     "price": "$$$",
@@ -21332,7 +21298,7 @@ const nycData = [
     "sat": "E",
     "sun": "E"
   },
-  "timeCategory": "evening",
+  "timeCategory": "evening, late",
     "energyRamp": 2,
     "tags": "Irish pub, neighborhood, sports",
     "price": "$",
@@ -21342,7 +21308,7 @@ const nycData = [
      {
        "slug": "legends",    "name": "Legends",
     "vibe": "Sports Bar, Lively, Classic, Casual, High‑energy, Crowded, Game‑day, Loud, Social, Exciting",
-    "type": "bar",
+    "type": ["bar", "sports bar"],
         "lat": "40.7479631",
     "lon": "-73.9857839",
     "link": "https://www.instagram.com/legendsnyc/",
@@ -21377,7 +21343,7 @@ const nycData = [
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "night",
+  "timeCategory": "midday, afternoon",
     "energyRamp": 4,
     "tags": "sports, kitschy, energetic",
     "price": "$$",
@@ -21467,7 +21433,7 @@ const nycData = [
     "sat": "MD",
     "sun": "MD"
   },
-  "timeCategory": "daytime",
+  "timeCategory": "midday, afternoon",
     "energyRamp": 1,
     "tags": "outdoor, art walk, mellow",
     "price": "$",
@@ -21512,7 +21478,7 @@ const nycData = [
     "sat": "MD",
     "sun": "MD"
   },
-  "timeCategory": "daytime",
+  "timeCategory": "midday, afternoon",
     "energyRamp": 1,
     "tags": "waterfront, green, active",
     "price": "$",
@@ -21549,8 +21515,8 @@ const nycData = [
     "fri": { "open": 11,  "close": 23 },
     "sat": { "open": 11,  "close": 23 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
+    "mon": "HH",
+    "tue": "HH",
     "wed": "HH",
     "thu": "E",
     "fri": "L",
@@ -21602,7 +21568,7 @@ const nycData = [
     "sat": "E",
     "sun": "HH"
   },
-  "timeCategory": "evening",
+  "timeCategory": "afternoon",
     "energyRamp": 2,
     "tags": "seafood, games, sunset spot",
     "price": "$$",
@@ -21692,7 +21658,7 @@ const nycData = [
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "night",
+  "timeCategory": "evening, late",
     "energyRamp": 4,
     "tags": "curated crowd, fashion-forward",
     "price": "$",
@@ -21737,7 +21703,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "night",
+  "timeCategory": "late",
     "energyRamp": 4,
     "tags": "underground, cocktails, sleek",
     "price": "$$$",
@@ -21872,7 +21838,7 @@ const nycData = [
     "sat": "E",
     "sun": "HH"
   },
-  "timeCategory": "evening",
+  "timeCategory": "afternoon, evening",
     "energyRamp": 2,
     "tags": "cozy, modern, low-profile",
     "price": "$$$",
@@ -21917,7 +21883,7 @@ const nycData = [
     "sat": "MD",
     "sun": "MD"
   },
-  "timeCategory": "midday",
+  "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "serene, aesthetic, tea sanctuary",
     "price": "$",
@@ -22044,15 +22010,15 @@ const nycData = [
     "fri": { "open": 17, "close": 24 },
     "sat": { "open": 15, "close": 24 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "-",
-    "thu": "HH",
-    "fri": "L",
-    "sat": "L",
-    "sun": "E"
+    "mon": "HH",
+    "tue": "HH",
+    "wed": "E",
+    "thu": "E",
+    "fri": "E",
+    "sat": "E",
+    "sun": "HH"
   },
-  "timeCategory": "night",
+  "timeCategory": "evening",
     "energyRamp": 4,
     "tags": "irreverent, artsy, music-oriented",
     "price": "$$",
@@ -22137,12 +22103,12 @@ const nycData = [
     "mon": "-",
     "tue": "-",
     "wed": "-",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E",
-    "sun": "E"
+    "thu": "-",
+    "fri": "-",
+    "sat": "-",
+    "sun": "-"
   },
-  "timeCategory": "evening",
+  "timeCategory": "midday",
     "energyRamp": 2,
     "tags": "private, artistic, sake-focused",
     "price": "",
@@ -22180,14 +22146,14 @@ const nycData = [
     "sat": { "open": 14, "close": 24 } },
     "dayParts": {
     "mon": "-",
-    "tue": "-",
-    "wed": "-",
+    "tue": "E",
+    "wed": "E",
     "thu": "L",
     "fri": "L",
     "sat": "L",
-    "sun": "L"
+    "sun": "E"
   },
-  "timeCategory": "night",
+  "timeCategory": "late",
     "energyRamp": 5,
     "tags": "party bar, loud, end-of-night vibe",
     "price": "$",
@@ -22225,14 +22191,14 @@ const nycData = [
     "sat": { "open": 17, "close": 25.5 } },
     "dayParts": {
     "mon": "-",
-    "tue": "-",
-    "wed": "HH",
+    "tue": "E",
+    "wed": "E",
     "thu": "E",
     "fri": "L",
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "evening to night",
+  "timeCategory": "evening",
     "energyRamp": 5,
     "tags": "experiential, world-class cocktails",
     "price": "$$$",
@@ -22322,7 +22288,7 @@ const nycData = [
     "sat": "E",
     "sun": "HH"
   },
-  "timeCategory": "evening",
+  "timeCategory": "evening to night",
     "energyRamp": 2,
     "tags": "oldest gay bar, historic, local vibe",
     "price": "$",
@@ -22367,7 +22333,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "all-day",
+  "timeCategory": "evening",
     "energyRamp": 4,
     "tags": "punk, yoga by day, rock show by night",
     "price": "$",
@@ -22449,15 +22415,15 @@ const nycData = [
     "fri": { "open": 17, "close": 26 },
     "sat": { "open": 17, "close": 26 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "HH",
-    "wed": "HH",
+    "mon": "E",
+    "tue": "E",
+    "wed": "E",
     "thu": "E",
     "fri": "E",
     "sat": "E",
-    "sun": "HH"
+    "sun": "-"
   },
-  "timeCategory": "evening",
+  "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "tucked away, vibey, plant-filled",
     "price": "$$",
@@ -22547,7 +22513,7 @@ const nycData = [
     "sat": "MD",
     "sun": "MD"
   },
-  "timeCategory": "morning to midday",
+  "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "Parisian, charming, offbeat",
     "price": "$",
@@ -22592,7 +22558,7 @@ const nycData = [
     "sat": "MD",
     "sun": "MD"
   },
-  "timeCategory": "daytime",
+  "timeCategory": "morning, midday, afternoon",
     "energyRamp": 1,
     "tags": "peaceful, hidden, communal green",
     "price": "$",
@@ -22629,7 +22595,7 @@ const nycData = [
     "fri": { "open": 10, "close": 18 },
     "sat": { "open": 10, "close": 18 } },
     "dayParts": {
-    "mon": "MD",
+    "mon": "-",
     "tue": "MD",
     "wed": "MD",
     "thu": "MD",
@@ -22637,7 +22603,7 @@ const nycData = [
     "sat": "MD",
     "sun": "MD"
   },
-  "timeCategory": "daytime",
+  "timeCategory": "midday, afternoon",
     "energyRamp": 1,
     "tags": "iconic, floral immersion",
     "price": "$",
@@ -22743,15 +22709,15 @@ const nycData = [
     ]
 },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
+    "mon": "MD",
+    "tue": "MD",
     "wed": "HH",
     "thu": "E",
     "fri": "E",
     "sat": "E",
     "sun": "HH"
   },
-  "timeCategory": "evening",
+  "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "upscale, gilded, dramatic",
     "price": "$$$$",
@@ -22833,15 +22799,15 @@ const nycData = [
     "fri": { "open": 15, "close": 28 },
     "sat": { "open": 14, "close": 28 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E",
+    "mon": "HH",
+    "tue": "HH",
+    "wed": "E",
+    "thu": "L",
+    "fri": "L",
+    "sat": "L",
     "sun": "HH"
   },
-  "timeCategory": "evening",
+  "timeCategory": "evening, late",
     "energyRamp": 2,
     "tags": "natural wine, sleek, warm lighting",
     "price": "$$$",
@@ -22878,15 +22844,15 @@ const nycData = [
     "fri": { "open": 16, "close": 27 },
     "sat": { "open": 16, "close": 27 } },
     "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "HH",
+    "mon": "HH",
+    "tue": "HH",
+    "wed": "E",
     "thu": "E",
     "fri": "L",
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "night",
+  "timeCategory": "evening, late",
     "energyRamp": 4,
     "tags": "dim, experimental, mixed crowd",
     "price": "$$",
@@ -22896,7 +22862,7 @@ const nycData = [
      {
        "slug": "rockaway-brewing-company",    "name": "Rockaway Brewing Company",
     "vibe": "Craft Beer, Fun, Social, Brewery, Local, Laid‑back, Coastal, Taproom, Friendly, Cheerful",
-    "type": "bar",
+    "type": "brewery",
         "lat": "40.7471977",
     "lon": "-73.9549525",
     "link": "https://www.instagram.com/rockawaybrewco/?hl=en",
@@ -22931,7 +22897,7 @@ const nycData = [
     "sat": "E",
     "sun": "HH"
   },
-  "timeCategory": "afternoon-evening",
+  "timeCategory": "afternoon, evening",
     "energyRamp": 2,
     "tags": "craft brew, beachy, casual",
     "price": "$",
@@ -22941,7 +22907,7 @@ const nycData = [
      {
        "slug": "fifth-hammer-brewing-company",    "name": "Fifth Hammer Brewing Company",
     "vibe": "Craft Beer, Fun, Lively, Brewery, Neighborhood Spot, Rustic, Communal, Local, Easygoing, Buzzing",
-    "type": "bar",
+    "type": "brewery",
         "lat": "40.7464921",
     "lon": "-73.9515404",
     "link": "https://www.instagram.com/fifthhammerbeer/?hl=en",
@@ -22976,7 +22942,7 @@ const nycData = [
     "sat": "E",
     "sun": "HH"
   },
-  "timeCategory": "afternoon-evening",
+  "timeCategory": "afternoon, evening",
     "energyRamp": 3,
     "tags": "industrial, live music, rotating taps",
     "price": "$",
@@ -22984,56 +22950,9 @@ const nycData = [
     "id": "5662c8ae-eae8-4913-bfc1-5d336993be9c"
     },
      {
-       "slug": "achilles-heel",    "name": "Achilles Heel",
-    "vibe": "Cozy, Trendy, Wine, Casual Drinks, Scenic, Laid‑back, Local, Date Night, Charming",
-    "type": ["cocktail", "dinner"],
-        "lat": 40.7331765,
-    "lon": -73.9596929,
-    "link": "https://www.instagram.com/achillesheelbk/?hl=en",
-    "cover": "img/venues/Achilles Heel.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 4:00 PM–12:00 AM",
-      "Monday: 5:00 PM–12:00 AM",
-      "Tuesday: 5:00 PM–12:00 AM",
-      "Wednesday: 5:00 PM–12:00 AM",
-      "Thursday: 5:00 PM–12:00 AM",
-      "Friday: 5:00 PM–1:00 AM",
-      "Saturday: 4:00 PM–1:00 AM"
-    ],
-    "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {
-      "sun": { "open": 16, "close": 24 },
-      "mon": { "open": 17, "close": 24 },
-      "tue": { "open": 17, "close": 24 },
-      "wed": { "open": 17, "close": 24 },
-      "thu": { "open": 17, "close": 24 },
-      "fri": { "open": 17, "close": 25 },
-      "sat": { "open": 16, "close": 25 }
-    },
-    "dayParts": {
-      "mon": "E",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E",
-      "sun": "E"
-    },
-    "timeCategory": "evening",
-    "energyRamp": 2,
-    "tags": "wine bar, dockside, BK night scene",
-    "price": "$$",
-    "duration": 1.75,
-    "id": "47cf8c4f-9384-4fb4-9a00-aa810ac6937a"
-    },
-     {
        "slug": "saint-james-libations",    "name": "Saint James Libations",
     "vibe": "Stylish, Cozy, Cocktail Bar, Date Spot, Elegant, Low‑key, Romantic, Polished, Soft",
-    "type": "cocktail",
+    "type": "wine bar",
         "lat": 40.701737,
     "lon": -73.9195609,
     "link": "https://www.instagram.com/saintjameslibations/?hl=en",
@@ -23070,7 +22989,7 @@ const nycData = [
       "sat": "L",
       "sun": "E"
     },
-    "timeCategory": "evening, late night",
+    "timeCategory": "evening, late",
     "energyRamp": 2,
     "tags": "hidden gem, cocktails, stylish",
     "price": "$$",
@@ -23162,7 +23081,7 @@ const nycData = [
     "sat": "L",
     "sun": "E"
   },
-  "timeCategory": "evening, late night",
+  "timeCategory": "evening, late",
   "energyRamp": 3,
   "tags": "chill rooftop, neighborhood bar, BK nights",
     "price": "$",
@@ -23254,7 +23173,7 @@ const nycData = [
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "late night",
+  "timeCategory": "late",
   "energyRamp": 2,
   "tags": "cocktails, moody, nightcap",
     "price": "$",
@@ -23346,7 +23265,7 @@ const nycData = [
     "sat": "L",
     "sun": "L"
   },
-  "timeCategory": "late night",
+  "timeCategory": "evening, late",
   "energyRamp": 4,
   "tags": "rowdy, sports, late crowd",
     "price": "$",
@@ -23392,7 +23311,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "late night",
+  "timeCategory": "late",
   "energyRamp": 3,
   "tags": "live music, casual hang, neighborhood bar",
     "price": "$",
@@ -23530,7 +23449,7 @@ const nycData = [
     "fri": "MD",
     "sat": "MD"
   },
-  "timeCategory": "midday",
+  "timeCategory": "midday, afternoon",
   "energyRamp": 1,
   "tags": "pizza, no-res, casual bite",
     "price": "$",
@@ -23576,7 +23495,7 @@ const nycData = [
     "fri": "MD",
     "sat": "MD"
   },
-  "timeCategory": "daytime",
+  "timeCategory": "morning, midday, afternoon",
   "energyRamp": 1,
   "tags": "coffee, casual, retro aesthetic",
     "price": "$",
