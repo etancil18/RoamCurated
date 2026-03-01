@@ -23587,7 +23587,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "evening, late night",
+  "timeCategory": "evening, late",
   "energyRamp": 2,
   "tags": "speakeasy vibes, cocktails, upper east chill",
     "price": "$$",
@@ -23868,7 +23868,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "evening, late night",
+  "timeCategory": "evening, late",
   "energyRamp": 2,
   "tags": "latin energy, upscale cocktails",
     "price": "$$",
@@ -23914,7 +23914,7 @@ const nycData = [
     "fri": "MD",
     "sat": "MD"
   },
-  "timeCategory": "daytime",
+  "timeCategory": "midday",
   "energyRamp": 1,
   "tags": "coffee cocktails, artsy vibe",
     "price": "$",
@@ -24052,7 +24052,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "evening, late night",
+  "timeCategory": "evening, late",
   "energyRamp": 1.5,
   "tags": "creative cocktails, hideaway",
     "price": "$",
@@ -24098,7 +24098,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "late night",
+  "timeCategory": "late",
   "energyRamp": 4,
   "tags": "dive, sports bar, chaotic fun",
     "price": "$",
@@ -24144,7 +24144,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "evening, late night",
+  "timeCategory": "evening, late",
   "energyRamp": 3,
   "tags": "hidden, chic, high-end",
     "price": "$$$",
@@ -24190,7 +24190,7 @@ const nycData = [
     "fri": "A",
     "sat": "A"
   },
-  "timeCategory": "afternoon",
+  "timeCategory": "midday, afternoon",
   "energyRamp": 1.25,
   "tags": "scenic, relaxing, urban escape, green space",
     "price": "$",
@@ -24228,7 +24228,7 @@ const nycData = [
     "fri": { "open": 17, "close": 26 },
     "sat": { "open": 17, "close": 26 } },
   "dayParts": {
-    "sun": "L",
+    "sun": "E",
     "mon": "-",
     "tue": "-",
     "wed": "E",
@@ -24236,7 +24236,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "evening, late night",
+  "timeCategory": "evening, late",
   "energyRamp": 3,
   "tags": "craft cocktails, upscale, elegant",
     "price": "$$$$",
@@ -24328,7 +24328,7 @@ const nycData = [
     "fri": "MD",
     "sat": "MD"
   },
-  "timeCategory": "morning, midday",
+  "timeCategory": "morning, midday, afternoon",
   "energyRamp": 1,
   "tags": "artsy, boutique, cozy",
     "price": "$",
@@ -24374,7 +24374,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "late night",
+  "timeCategory": "evening, late",
   "energyRamp": 2,
   "tags": "casual drinks, chill, eclectic",
     "price": "$",
@@ -24512,7 +24512,7 @@ const nycData = [
     "fri": "HH",
     "sat": "A"
   },
-  "timeCategory": "afternoon",
+  "timeCategory": "midday, afternoon",
   "energyRamp": 1,
   "tags": "green space, relaxing, nature",
     "price": "$",
@@ -24558,7 +24558,7 @@ const nycData = [
     "fri": "L",
     "sat": "L"
   },
-  "timeCategory": "evening, late night",
+  "timeCategory": "evening, late",
   "energyRamp": 2,
   "tags": "lounge, trendy, artistic",
     "price": "$",
@@ -24614,7 +24614,7 @@ const nycData = [
      {
        "slug": "rose-marie",    "name": "Rose Marie",
     "vibe": "Cozy, Intimate, Relaxed, Artistic, Trendy, Modern Design, Chill Vibes",
-    "type": ["cocktail", "lunch", "dinner"],
+    "type": ["cocktail", "dinner"],
         "lat": 40.7125159,
     "lon": -73.9490142,
     "link": "https://www.instagram.com/rosemariebk/",
@@ -24742,7 +24742,7 @@ const nycData = [
     "fri": "L",
     "sat": "A"
   },
-  "timeCategory": "evening, late night",
+  "timeCategory": "midday, evening",
   "energyRamp": 3,
   "tags": "artsy, cozy, relaxed",
     "price": "$$$",
@@ -24834,7 +24834,7 @@ const nycData = [
     "fri": "MD",
     "sat": "MD"
   },
-  "timeCategory": "daytime, wellness",
+  "timeCategory": "morning, midday",
   "energyRamp": 1,
   "tags": "cozy, unique, wellness",
     "price": "$",
@@ -24843,8 +24843,8 @@ const nycData = [
     },
      {
        "slug": "oh-mercy",    "name": "OH MERCY",
-    "vibe": "Cozy, Warm, Trendy, Casual Bar, Relaxed Vibes, Quirky, Intimate Cocktails",
-    "type": "cocktail",
+    "vibe": "Cozy, Warm, Trendy, Casual, Sandwich, Relaxed",
+    "type": "cafe",
         "lat": 40.7292924,
     "lon": -73.95735,
     "link": "https://www.instagram.com/ohmercycafe/",
@@ -25018,7 +25018,7 @@ const nycData = [
     "fri": "-",
     "sat": "-"
   },
-  "timeCategory": "late night",
+  "timeCategory": "late",
   "energyRamp": 4,
   "tags": "club, DJ, dance",
     "price": "$$",
@@ -25156,7 +25156,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "Italian trattoria, pasta & wine, neighborhood dinner",
     "price": "$",
@@ -25202,7 +25202,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "specialty coffee, cozy café, community brunch",
     "price": "$",
@@ -25406,9 +25406,9 @@ const nycData = [
       "Sunday: 9:30 AM–5:30 PM",
       "Monday: Closed",
       "Tuesday: 10:00 AM–6:00 PM",
-      "Wednesday: 10:00 AM–5:45:00 PM",
-      "Thursday: 10:00 AM–5:45:00 PM",
-      "Friday: 10:00 AM–5:45:00 PM",
+      "Wednesday: 10:00 AM–5:45 PM",
+      "Thursday: 10:00 AM–5:45 PM",
+      "Friday: 10:00 AM–5:45 PM",
       "Saturday: 9:30 AM–5:30 PM"
     ],
     "dateEvents": [
@@ -25432,7 +25432,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 1,
     "tags": "vintage decor, collectible finds, niche antiques",
     "price": "$",
@@ -25470,9 +25470,9 @@ const nycData = [
     "sat": { "open": 17, "close": 26 }
 },
     "dayParts": {
-      "sun": "L",
+      "sun": "-",
       "mon": "-",
-      "tue": "-",
+      "tue": "E",
       "wed": "E",
       "thu": "E",
       "fri": "L",
@@ -26307,7 +26307,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "coffee, bakery, French, breakfast",
     "price": "$$",
@@ -26905,7 +26905,7 @@ const nycData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "Turkish coffee, global café, brunch favorite",
     "price": "$",
@@ -26951,7 +26951,7 @@ const nycData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "third‑wave coffee, High Line brunch, architectural café",
     "price": "$",
@@ -27089,7 +27089,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "stationery shop, Japanese paper goods, designer notebooks",
     "price": "$$",
@@ -27273,7 +27273,7 @@ const nycData = [
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "midday, evening",
+    "timeCategory": "morning, midday, evening",
     "energyRamp": 3,
     "tags": "wine bar café, morning espresso, evening rosé",
     "price": "$$",
@@ -27329,7 +27329,7 @@ const nycData = [
      {
        "slug": "the-swan",    "name": "The Swan",
     "vibe": "Sports Bar, Lively, Soccer, Fun, Energetic",
-    "type": "bar",
+    "type": ["bar", "sports bar"],
     "lat": 40.6890943,
     "lon": -73.9552778,
     "link": "https://www.instagram.com/theswanbk/",
@@ -27932,7 +27932,7 @@ const nycData = [
       "fri": "HH",
       "sat": "HH"
     },
-    "timeCategory": "happy hour",
+    "timeCategory": "midday, evening",
     "energyRamp": 2,
     "tags": "Thai bites, neighborhood eatery, cozy evening",
     "price": "$$",
@@ -28162,7 +28162,7 @@ const nycData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "espresso lab, specialty coffee, local favorite",
     "price": "$",
@@ -28249,12 +28249,12 @@ const nycData = [
       "sun": "HH",
       "mon": "-",
       "tue": "-",
-      "wed": "HH",
-      "thu": "HH",
+      "wed": "E",
+      "thu": "E",
       "fri": "E",
       "sat": "E"
     },
-    "timeCategory": "happy hour, evening",
+    "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "pasta bar, neighborhood favorite, date night restaurant",
     "price": "$$",
@@ -28392,7 +28392,7 @@ const nycData = [
       "fri": "M",
       "sat": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "laptop friendly, casual cafe, long hours",
     "price": "$",
@@ -28438,7 +28438,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "Latin café, neighborhood brunch, coffee & empanadas",
     "price": "$",
@@ -28668,7 +28668,7 @@ const nycData = [
       "fri": "MD",
       "sat": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "sauna, hot tubs, quiet time, couples retreat",
     "price": "$$$",
@@ -28852,7 +28852,7 @@ const nycData = [
       "fri": "L",
       "sat": "HH"
     },
-    "timeCategory": "happy hour, late",
+    "timeCategory": "happy hour, evening, late",
     "energyRamp": 4,
     "tags": "speakeasy vibe, rooftop adjacent, stylish cocktails",
     "price": "$$$",
@@ -29145,7 +29145,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "warm nostalgia, small-batch charm, slow mornings, cozy retreat, heartfelt simplicity",
     "price": "$",
@@ -29380,7 +29380,7 @@ const nycData = [
       "sat": "L",
       "sun": "L"
     },
-    "timeCategory": "late",
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "artsy landmark, cultural hotspot, historic bohemia, intimate lounge, literary spirit",
     "price": "$$$",
@@ -29662,7 +29662,7 @@ const nycData = [
       "sat": "L",
       "sun": "L"
     },
-    "timeCategory": "late",
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "old-world romance, vintage charm, jazz hideaway, candlelit vibe, sultry setting",
     "price": "$$",
@@ -29756,7 +29756,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "artsy nook, modern coffeehouse, Brooklyn-friendly, warm vibe, intimate charm",
     "price": "$",
@@ -29936,15 +29936,15 @@ const nycData = [
       "sat": { "open": 10, "close": 20 }
     },
     "dayParts": {
-      "mon": "E",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E",
-      "sun": "E"
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD",
+      "sun": "MD"
     },
-    "timeCategory": "evening",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "indie bookstore, playful spirit, quirky cultural, literary niche, whimsical vibes",
     "price": "$",
@@ -29983,15 +29983,15 @@ const nycData = [
       "sat": { "open": 8, "close": 20 }
     },
     "dayParts": {
-      "mon": "E",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E",
-      "sun": "E"
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "M",
+      "sun": "M"
     },
-    "timeCategory": "evening",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "hidden oasis, city calm, meditative space, waterfall serenity, pocket retreat",
     "price": "$",
@@ -30038,7 +30038,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 1,
     "tags": "secret Midtown, lush urban, water feature, reflective hideaway, quiet charm",
     "price": "$",
@@ -30082,10 +30082,10 @@ const nycData = [
       "wed": "E",
       "thu": "E",
       "fri": "E",
-      "sat": "L",
-      "sun": "L"
+      "sat": "E",
+      "sun": "E"
     },
-    "timeCategory": "evening, late",
+    "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "romantic garden, stylish West Village, chic French, elegant hideaway, intimate dining",
     "price": "$$$",
@@ -30267,13 +30267,13 @@ const nycData = [
     "dayParts": {
       "mon": "MD",
       "tue": "E",
-      "wed": "L",
-      "thu": "L",
-      "fri": "L",
-      "sat": "L",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
       "sun": "MD"
     },
-    "timeCategory": "midday, evening, late",
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "chic café, brunch hotspot, stylish corner, airy social, modern neighborhood",
     "price": "$$",
@@ -30406,15 +30406,15 @@ const nycData = [
       "sat": { "open": 8, "close": 16 }
     },
     "dayParts": {
-      "mon": "MD",
-      "tue": "MD",
-      "wed": "MD",
-      "thu": "MD",
-      "fri": "MD",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "indie coffeehouse, creative nook, peaceful corner, minimalist energy, community-driven",
     "price": "$",
@@ -30455,13 +30455,13 @@ const nycData = [
     "dayParts": {
       "mon": "MD",
       "tue": "MD",
-      "wed": "MD",
-      "thu": "MD",
-      "fri": "MD",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "West Village icon, cozy dining, rustic chic, foodie favorite, intimate charm",
     "price": "$$$",
@@ -30508,7 +30508,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 3,
     "tags": "historic-inspired, minimalist dining, thoughtful concept, upscale rustic, contemplative vibe",
     "price": "$$$",
@@ -30555,7 +30555,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday, happyhour",
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "authentic Spanish, tapas haven, lively bar, cozy eatery, Chelsea gem",
     "price": "$$$",
@@ -30659,7 +30659,7 @@ const nycData = [
      {
        "slug": "happy-medium-bk",    "name": "Happy Medium",
     "vibe": "artsy, experimental, café-gallery hybrid, playful, creative hub, community-oriented, indie, colorful, modern, cozy",
-    "type": ["activity", "random gem"],
+    "type": ["activity", "random gem", "class"],
     "lat": "40.7119043",
     "lon": "-73.9944565",
     "link": "https://www.instagram.com/gethappymedium/",
@@ -30692,11 +30692,11 @@ const nycData = [
       "tue": "–",
       "wed": "–",
       "thu": "HH",
-      "fri": "L",
+      "fri": "HH",
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday, late",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 2,
     "tags": "whimsical, creative lab, niche hangout, vibrant, DIY vibes",
     "price": "$$",
@@ -30735,15 +30735,15 @@ const nycData = [
       "sat": { "open": 16, "close": 25 }
     },
     "dayParts": {
-      "mon": "L",
-      "tue": "L",
-      "wed": "L",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
       "thu": "L",
       "fri": "L",
       "sat": "L",
-      "sun": "L"
+      "sun": "E"
     },
-    "timeCategory": "late",
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "panoramic, luxury, cocktail temple, glamorous, refined",
     "price": "$$$",
@@ -30790,7 +30790,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "indie charm, cultural cafe, slow-living, neighborhood favorite, artisan-driven",
     "price": "$",
@@ -30931,7 +30931,7 @@ const nycData = [
       "sat": "HH",
       "sun": "–"
     },
-    "timeCategory": "happy hour",
+    "timeCategory": "evening",
     "energyRamp": 3,
     "tags": "earthy, modern rustic, lounge vibe, approachable luxury, warm energy",
     "price": "$$",
@@ -31018,15 +31018,15 @@ const nycData = [
       "sat": { "open": 16, "close": 23.5 }
     },
     "dayParts": {
-      "mon": "L",
-      "tue": "L",
-      "wed": "L",
-      "thu": "L",
-      "fri": "L",
-      "sat": "L",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "HH",
+      "fri": "HH",
+      "sat": "E",
       "sun": "–"
     },
-    "timeCategory": "late",
+    "timeCategory": "afternoon, evening",
     "energyRamp": 3,
     "tags": "cultured, polished, European lounge, wine library, chic escape",
     "price": "$$$",
@@ -31073,7 +31073,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "midday, evening",
     "energyRamp": 2,
     "tags": "boutique, luxury dessert, sleek design, foodie niche, quiet indulgence",
     "price": "$",
@@ -31120,7 +31120,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "artisanal, charming, nostalgic bakery, sweet escape, warm authenticity",
     "price": "$",
@@ -31159,15 +31159,15 @@ const nycData = [
       "sat": { "open": 11, "close": 24 }
     },
     "dayParts": {
-      "mon": "L",
-      "tue": "L",
-      "wed": "L",
-      "thu": "L",
-      "fri": "L",
-      "sat": "L",
-      "sun": "L"
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "E"
     },
-    "timeCategory": "late",
+    "timeCategory": "midday, evening",
     "energyRamp": 3,
     "tags": "festive, flavorful, wine-social, casual-elegant, intimate dining",
     "price": "$$",
@@ -31214,7 +31214,7 @@ const nycData = [
       "sat": "L",
       "sun": "L"
     },
-    "timeCategory": "late",
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "no-frills, relaxed, warm social, local regulars, friendly casual",
     "price": "$$",
@@ -31253,15 +31253,15 @@ const nycData = [
       "sat": { "open": 8, "close": 23 }
     },
     "dayParts": {
-      "mon": "E",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E",
-      "sun": "E"
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "MD",
+      "sun": "MD"
     },
-    "timeCategory": "evening",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 3,
     "tags": "everyday comfort, weekend vibe, wholesome, easygoing, social brunch",
     "price": "$$",
@@ -31300,15 +31300,15 @@ const nycData = [
       "sat": { "open": 7, "close": 20 }
     },
     "dayParts": {
-      "mon": "MD",
-      "tue": "L",
-      "wed": "L",
-      "thu": "L",
-      "fri": "L",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday, late",
+    "timeCategory": "morning, midday",
     "energyRamp": 2,
     "tags": "boutique fitness, serious training, clean design, wellness-forward, tight-knit",
     "price": "$$",
@@ -31402,7 +31402,7 @@ const nycData = [
       "sat": "–",
       "sun": "–"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 1,
     "tags": "design-centric, architectural, high-end, modernist, curated",
     "price": "$",
@@ -31684,7 +31684,7 @@ const nycData = [
       "sat": "MD",
       "sun": "–"
     },
-    "timeCategory": "midday",
+    "timeCategory": "midday, afternoon",
     "energyRamp": 1,
     "tags": "iconic, purist, art-historical, timeless, landmark",
     "price": "$",
@@ -32013,7 +32013,7 @@ const nycData = [
       "sat": "M",
       "sun": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 1,
     "tags": "family-friendly, historic vibe, gathering space, lively greenery, cultural hub",
     "price": "$",
@@ -32060,7 +32060,7 @@ const nycData = [
       "sat": "M",
       "sun": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 1,
     "tags": "iconic NYC, outdoorsy, waterfront leisure, tourist draw, vibrant culture",
     "price": "$",
@@ -32107,7 +32107,7 @@ const nycData = [
       "sat": "M",
       "sun": "M"
     },
-    "timeCategory": "morning",
+    "timeCategory": "morning, midday",
     "energyRamp": 1,
     "tags": "colorful, fresh vibes, youthful energy, cheerful, health scene",
     "price": "$",
@@ -32212,7 +32212,7 @@ const nycData = [
        "slug": "madame-george",
     "name": "Madame George",
     "vibe": "Cocktail, Irish‑Inspired, Elegant, Floral, Social, Chic, Nightlife, Spirited, Stylish, Vintage",
-    "type": ["cocktail","music"],
+    "type": ["cocktail", "music"],
     "lat": 40.76714,
     "lon": -73.9690482,
     "link": "https://www.instagram.com/madamegeorgenyc/?hl=en",
@@ -32333,7 +32333,7 @@ const nycData = [
       "fri": "L",
       "sat": "L"
     },
-    "timeCategory": "afternoon, late",
+    "timeCategory": "evening, late",
     "energyRamp": 3,
     "tags": "Rum‑Bar, Tropical, Lush, Cocktails, Social, Vibrant",
     "price": "$$",
@@ -32344,7 +32344,7 @@ const nycData = [
        "slug": "coby-club",
     "name": "Coby Club",
     "vibe": "Lounge, Plush, Social, Night‑Life, Happy‑Hour, VIP, Trendy, Stylish, Chic",
-    "type": ["Local lounge"],
+    "type": ["lounge"],
     "lat": "40.7419989",
     "lon": "-73.9975642",
     "link": "https://www.instagram.com/cobyclubnyc/?hl=en",
@@ -32465,7 +32465,7 @@ const nycData = [
       "sat": "HH",
       "sun": "MD"
     },
-    "timeCategory": "midday, happyhour",
+    "timeCategory": "midday, dinner",
     "energyRamp": 3,
     "tags": "Craft‑Spirits, Elevated, Mixology, Late‑Night, Sleek",
     "price": "$$$",
@@ -32905,7 +32905,7 @@ const nycData = [
       "sat": "MD",
       "sun": "MD"
     },
-    "timeCategory": "midday",
+    "timeCategory": "midday, evening",
     "energyRamp": 2,
     "tags": "Parisian, Day‑Brunch, Art‑Deco, Stylish, Cozy",
     "price": "$$",
@@ -32988,12 +32988,12 @@ const nycData = [
       "mon": "MD",
       "tue": "E",
       "wed": "E",
-      "thu": "L",
-      "fri": "L",
-      "sat": "L",
-      "sun": "midday, evening"
+      "thu": "E",
+      "fri": "E",
+      "sat": "E",
+      "sun": "MD"
     },
-    "timeCategory": "midday, evening, late",
+    "timeCategory": "midday, evening",
     "energyRamp": 2,
     "tags": "Wine‑Cellar, Italian, Romantic, Urban, Chic",
     "price": "$$",
@@ -33037,7 +33037,7 @@ const nycData = [
       "sat": "E",
       "sun": "A"
     },
-    "timeCategory": "afternoon, evening",
+    "timeCategory": "morning, midday, afternoon",
     "energyRamp": 2,
     "tags": "Minimalist, Plant‑Based, Day‑Spot, Instagram‑Friendly, Modern",
     "price": "$",
@@ -33091,8 +33091,8 @@ const nycData = [
      {
        "slug": "horse-with-no-name",
     "name": "horse with no name",
-    "vibe": "Cocktail, Hidden‑Bar, Desert‑Inspired, Social, Trendy, Late‑Night, Chic, Adventure, Mysterious, Stylish",
-    "type": ["bar"],
+    "vibe": "Wine, Social, Trendy, Late‑Night, Chic, Adventure, Mysterious, Stylish",
+    "type": ["wine bar"],
     "lat": "40.7274248",
     "lon": "-73.9899482",
     "link": "https://www.instagram.com/horsewithnoname/?hl=en",
@@ -33120,12 +33120,12 @@ const nycData = [
       "mon": "A",
       "tue": "-",
       "wed": "-",
-      "thu": "A",
-      "fri": "A",
+      "thu": "E",
+      "fri": "E",
       "sat": "A",
       "sun": "A"
     },
-    "timeCategory": "afternoon",
+    "timeCategory": "afternoon, evening",
     "energyRamp": 4,
     "tags": "Speakeasy, Desert‑Inspired, Hidden‑Door, Trendy",
     "price": "$$",
