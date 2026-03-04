@@ -21,7 +21,7 @@ export default function SharePreview({ title, city, slug }: Props) {
     const origin = getOrigin()
 
     // ✅ Use invite route (future deep link ready)
-    setShareUrl(`${origin}/invite/${slug}`)
+    setShareUrl(`${origin}/sponsor/${slug}`)
   }, [slug])
 
   const handleShare = async () => {
