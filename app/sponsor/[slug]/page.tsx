@@ -2,10 +2,10 @@ import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import SponsorDetail from './components/SponsorDetail';
 import SharePreview from './components/SharePreview';
-import SponsorChat from './components/SponsorChat'; 
+import SponsorChat from './components/SponsorChat';
 import { SponsorCrawlWithAttendees } from '@/types/sponsor';
 
-export const dynamic = 'force-dynamic'; // Ensures fresh SSR per request
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Crawl | Roam',
@@ -41,7 +41,7 @@ export default async function SponsorPage({ params }: PageProps) {
     );
   }
 
-  // 2️⃣ Fetch attendees via RPC
+  // 2️⃣ Fetch attendees
   const { data: attendees, error: rsvpError } = await supabase.rpc(
     'get_crawl_with_attendees',
     { input_crawl_id: crawl.id }
@@ -51,7 +51,7 @@ export default async function SponsorPage({ params }: PageProps) {
     console.warn('RSVP fetch error:', rsvpError);
   }
 
-  // 🔐 3️⃣ Determine if current user is RSVP'd as "going"
+  // 3️⃣ Determine if current user is RSVP'd
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -70,7 +70,7 @@ export default async function SponsorPage({ params }: PageProps) {
     isGoing = !!rsvp;
   }
 
-  // 4️⃣ Enrich with metadata from crawl
+  // 4️⃣ Enrich data
   const enriched: SponsorCrawlWithAttendees[] = (attendees || []).map((a) => ({
     ...a,
     title: crawl.title ?? '',
@@ -88,16 +88,31 @@ export default async function SponsorPage({ params }: PageProps) {
   }));
 
   return (
-    <main className="max-w-3xl mx-auto p-4 space-y-8">
+    <main
+      className="
+        max-w-3xl
+        mx-auto
+        p-4
+        space-y-8
+        min-h-screen
+        overscroll-y-auto
+        scroll-smooth
+      "
+    >
       <SponsorDetail crawl={enriched} />
+
       <SharePreview
-  title={crawl.title ?? ''}
-  city={crawl.city ?? ''}
-  slug={crawl.slug ?? ''}
-/>
+        title={crawl.title ?? ''}
+        city={crawl.city ?? ''}
+        slug={crawl.slug ?? ''}
+      />
 
       {/* 💬 Chat only visible to RSVP'd users */}
-      {isGoing && <SponsorChat crawlId={crawl.id} />}
+      {isGoing && (
+        <div className="scroll-mt-24">
+          <SponsorChat crawlId={crawl.id} />
+        </div>
+      )}
     </main>
   );
 }

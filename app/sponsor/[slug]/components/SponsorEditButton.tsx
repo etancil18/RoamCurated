@@ -1,44 +1,53 @@
-// app/sponsor/[slug]/components/SponsorEditButton.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 
 interface Props {
   creatorId: string;
-  slug: string;
+  onToggleEdit: () => void;
+  isEditing: boolean;
 }
 
-export default function SponsorEditButton({ creatorId, slug }: Props) {
-  const [canEdit, setCanEdit] = useState(false);
-  const router = useRouter();
+export default function SponsorEditButton({
+  creatorId,
+  onToggleEdit,
+  isEditing,
+}: Props) {
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkUser = async () => {
+    const checkOwnership = async () => {
       const supabase = supabaseBrowser();
+
       const {
         data: { user },
-        error,
       } = await supabase.auth.getUser();
 
-      if (error) {
-        console.error('[SponsorEditButton] auth error:', error);
+      if (!user) {
+        setIsOwner(false);
         return;
       }
-      if (user?.id === creatorId) {
-        setCanEdit(true);
-      }
+
+      setIsOwner(user.id === creatorId);
     };
-    checkUser();
+
+    checkOwnership();
   }, [creatorId]);
 
-  if (!canEdit) return null;
+  // prevent UI flicker while auth check runs
+  if (isOwner === null) return null;
+
+  // hide button for non-creators
+  if (!isOwner) return null;
 
   return (
-    <Button onClick={() => router.push(`/sponsor/${slug}/edit`)}>
-      Edit Crawl
+    <Button
+      variant={isEditing ? 'secondary' : 'default'}
+      onClick={onToggleEdit}
+    >
+      {isEditing ? 'Cancel Editing' : 'Edit Crawl'}
     </Button>
   );
 }

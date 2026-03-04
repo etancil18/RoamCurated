@@ -23,6 +23,7 @@ export type SponsorCrawlPayload = {
   max_capacity?: number | null;
   is_sponsored?: boolean;
   sponsor_name?: string | null; // ✅ For sponsored crawls
+  is_public: boolean;
 };
 
 // 📋 A crawl fetched from Supabase
@@ -42,6 +43,7 @@ export type SponsorCrawl = {
   slug: string;
   created_at: string;
   updated_at: string;
+  is_public: boolean;
 };
 
 // 👥 RSVP record returned by Supabase

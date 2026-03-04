@@ -87,17 +87,19 @@ export default function SponsorMapPreview({
 
   function FitBounds() {
     const map = useMap()
+    const didFitRef = useRef(false)
 
     useEffect(() => {
-      if (!path.length) return
+      if (!path.length || didFitRef.current) return
 
       const timeout = setTimeout(() => {
         map.invalidateSize()
         map.fitBounds(path, { padding: [40, 40] })
+        didFitRef.current = true
       }, 200)
 
       return () => clearTimeout(timeout)
-    }, [map, path])
+    }, [map])
 
     return null
   }
@@ -113,6 +115,7 @@ export default function SponsorMapPreview({
       <MapContainer
         center={[venues[0].lat, venues[0].lon]}
         zoom={13}
+        scrollWheelZoom={false}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />

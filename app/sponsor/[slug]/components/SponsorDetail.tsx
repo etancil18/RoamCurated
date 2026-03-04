@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { SponsorCrawlWithAttendees, SponsorVenue } from '@/types/sponsor';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import SponsorMapPreview from '@/app/sponsor-crawl/components/SponsorMapPreview';
 import RSVPButton from './RSVPButton';
 import SponsorEditButton from './SponsorEditButton';
 import { supabaseBrowser } from '@/lib/supabase/client';
 
-// 🆕 Fix for missing attendee details
 async function fetchAttendeeDetails(userIds: string[]) {
   const supabase = supabaseBrowser();
   const { data, error } = await supabase
@@ -53,12 +53,23 @@ export default function SponsorDetail({ crawl }: Props) {
   const [userId, setUserId] = useState<string | null>(null);
   const [attendeesWithDetails, setAttendeesWithDetails] = useState<any[]>([]);
 
+  /* 🆕 Edit state */
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
+
   if (!crawl || crawl.length === 0) {
     console.warn('[SponsorDetail] No crawl data passed');
     return <p>No crawl found.</p>;
   }
 
   const meta = crawl[0];
+
+  /* initialize edit fields */
+  useEffect(() => {
+    setEditedTitle(meta.title ?? '');
+    setEditedDescription(meta.description ?? '');
+  }, [meta.title, meta.description]);
 
   if (!meta.venue_ids || !Array.isArray(meta.venue_ids)) {
     console.error('[SponsorDetail] Invalid or missing venue_ids:', meta.venue_ids);
@@ -73,64 +84,64 @@ export default function SponsorDetail({ crawl }: Props) {
   const maxCapacity = (meta as any).max_capacity ?? 0;
 
   useEffect(() => {
-  const preloadProfiles = async () => {
-    const validIds = attendees
-      .map((a) => a.rsvp_user_id)
-      .filter((id): id is string => !!id);
+    const preloadProfiles = async () => {
+      const validIds = attendees
+        .map((a) => a.rsvp_user_id)
+        .filter((id): id is string => !!id);
 
-    if (validIds.length === 0) {
-      setAttendeesWithDetails([]);
-      return;
-    }
+      if (validIds.length === 0) {
+        setAttendeesWithDetails([]);
+        return;
+      }
 
-    const profiles = await fetchAttendeeDetails(validIds);
+      const profiles = await fetchAttendeeDetails(validIds);
 
-    const enriched = attendees.map((a) => {
-      const profile = profiles.find((p) => p.id === a.rsvp_user_id);
-      return {
-        ...a,
-        full_name: profile?.full_name ?? 'anonymous',
-        instagram_handle: profile?.instagram_handle ?? null,
-        personality_style: profile?.personality_style ?? null,
-      };
-    });
+      const enriched = attendees.map((a) => {
+        const profile = profiles.find((p) => p.id === a.rsvp_user_id);
+        return {
+          ...a,
+          full_name: profile?.full_name ?? 'anonymous',
+          instagram_handle: profile?.instagram_handle ?? null,
+          personality_style: profile?.personality_style ?? null,
+        };
+      });
 
-    setAttendeesWithDetails(enriched);
-  };
+      setAttendeesWithDetails(enriched);
+    };
 
-  if (attendees.length > 0) preloadProfiles();
-}, [attendees]);
+    if (attendees.length > 0) preloadProfiles();
+  }, [attendees]);
 
-useEffect(() => {
-  if (!meta.datetime) return;
+  useEffect(() => {
+    if (!meta.datetime) return;
 
-  const target = new Date(meta.datetime).getTime();
+    const target = new Date(meta.datetime).getTime();
 
-  const update = () => {
-    const diff = target - Date.now();
+    const update = () => {
+      const diff = target - Date.now();
 
-    if (diff <= 0) {
-      setTimeLeft('Event started');
-      return;
-    }
+      if (diff <= 0) {
+        setTimeLeft('Event started');
+        return;
+      }
 
-    const totalMinutes = Math.floor(diff / 60000);
-    const days = Math.floor(totalMinutes / (60 * 24));
-    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
-    const minutes = totalMinutes % 60;
+      const totalMinutes = Math.floor(diff / 60000);
+      const days = Math.floor(totalMinutes / (60 * 24));
+      const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+      const minutes = totalMinutes % 60;
 
-    const parts = [];
-    if (days > 0) parts.push(`${days}d`);
-    if (hours > 0 || days > 0) parts.push(`${hours}h`);
-    parts.push(`${minutes}m`);
+      const parts = [];
+      if (days > 0) parts.push(`${days}d`);
+      if (hours > 0 || days > 0) parts.push(`${hours}h`);
+      parts.push(`${minutes}m`);
 
-    setTimeLeft(parts.join(' '));
-  };
+      setTimeLeft(parts.join(' '));
+    };
 
-  update();
-  const timer = setInterval(update, 60000); // update every minute
-  return () => clearInterval(timer);
-}, [meta.datetime]);
+    update();
+    const timer = setInterval(update, 60000);
+    return () => clearInterval(timer);
+  }, [meta.datetime]);
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -190,29 +201,51 @@ useEffect(() => {
     let updated: number[];
 
     if (alreadyChecked) {
-      const { error } = await supabase
+      await supabase
         .from('crawl_progress')
         .delete()
         .eq('crawl_id', meta.crawl_id)
         .eq('user_id', userId)
         .eq('stop_index', index);
-      if (error) console.error('Delete error:', error);
       updated = checkedStops.filter((i) => i !== index);
     } else {
-      const { error } = await supabase.from('crawl_progress').insert({
+      await supabase.from('crawl_progress').insert({
         crawl_id: meta.crawl_id,
         user_id: userId,
         stop_index: index,
       });
-      if (error) console.error('Insert error:', error);
       updated = [...checkedStops, index];
     }
 
     setCheckedStops(updated);
   };
 
+  /* 🆕 Save edits */
+  const handleSave = async () => {
+    const supabase = supabaseBrowser();
+
+    const { error } = await supabase
+      .from('crawl_events')
+      .update({
+        title: editedTitle,
+        description: editedDescription,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', meta.crawl_id)
+      .eq('creator_id', meta.creator_id);
+
+    if (error) {
+      alert('Failed to update crawl.');
+      return;
+    }
+
+    setIsEditing(false);
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto p-4">
+
       {meta.is_sponsored && (
         <div className="p-4 bg-orange-50 border-l-4 border-orange-400 rounded-md">
           <h2 className="text-lg font-semibold">🍹 Hosted Crawl</h2>
@@ -223,10 +256,54 @@ useEffect(() => {
       )}
 
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold">{meta.title ?? 'Untitled Crawl'}</h1>
-        <p className="text-muted-foreground whitespace-pre-line">
-  {meta.description ?? ''}
-</p>
+
+        {isEditing ? (
+          <input
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+            className="w-full border rounded px-3 py-2 text-2xl font-bold"
+          />
+        ) : (
+          <h1 className="text-2xl font-bold">
+            {meta.title ?? 'Untitled Crawl'}
+          </h1>
+        )}
+
+        {isEditing ? (
+          <textarea
+            value={editedDescription}
+            onChange={(e) => setEditedDescription(e.target.value)}
+            className="w-full border rounded px-3 py-2 whitespace-pre-line"
+          />
+        ) : (
+          <p className="text-muted-foreground whitespace-pre-line">
+            {meta.description ?? ''}
+          </p>
+        )}
+
+        <SponsorEditButton
+          creatorId={meta.creator_id}
+          isEditing={isEditing}
+          onToggleEdit={() => setIsEditing((prev) => !prev)}
+        />
+
+        {isEditing && (
+          <div className="flex gap-2 pt-2">
+            <Button onClick={handleSave}>
+              Save Changes
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEditedTitle(meta.title ?? '');
+                setEditedDescription(meta.description ?? '');
+                setIsEditing(false);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
 
         {meta.sponsor_name && (
           <p className="text-sm text-purple-600 font-semibold">
@@ -235,20 +312,19 @@ useEffect(() => {
         )}
 
         {meta.datetime && (
-  <div className="text-sm text-muted-foreground">
-    📅{' '}
-    {new Date(meta.datetime).toLocaleString(undefined, {
-      month: 'numeric',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })}
-    &nbsp;•&nbsp; ⏳ Starts in:{' '}
-    <strong>{timeLeft}</strong>
-  </div>
-)}
+          <div className="text-sm text-muted-foreground">
+            📅{' '}
+            {new Date(meta.datetime).toLocaleString(undefined, {
+              month: 'numeric',
+              day: 'numeric',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+            })}
+            &nbsp;•&nbsp; ⏳ Starts in: <strong>{timeLeft}</strong>
+          </div>
+        )}
 
         {maxCapacity > 0 && (
           <div className="pt-2">
@@ -275,54 +351,55 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* ---------- EXISTING UI BELOW UNCHANGED ---------- */}
+
       <div className="space-y-3">
-  <h3 className="text-sm font-semibold">🗺️ Itinerary:</h3>
+        <h3 className="text-sm font-semibold">🗺️ Itinerary:</h3>
 
-  {venues.length === 0 ? (
-    <div className="text-sm text-muted-foreground">
-      Loading itinerary...
-    </div>
-  ) : (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {venues.map((v) => (
-          <Card key={v.id} className="p-3 flex items-center space-x-3">
-            <div className="text-2xl">{getEmojiForVenue(v.name)}</div>
-            <div>
-              <div className="font-medium">
-                {v.instagram_handle ? (
-                  <a
-                    href={`https://instagram.com/${v.instagram_handle.replace(/^@/, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {v.name}
-                  </a>
-                ) : (
-                  v.name
-                )}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {v.city}
-              </div>
+        {venues.length === 0 ? (
+          <div className="text-sm text-muted-foreground">
+            Loading itinerary...
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {venues.map((v) => (
+                <Card key={v.id} className="p-3 flex items-center space-x-3">
+                  <div className="text-2xl">{getEmojiForVenue(v.name)}</div>
+                  <div>
+                    <div className="font-medium">
+                      {v.instagram_handle ? (
+                        <a
+                          href={`https://instagram.com/${v.instagram_handle.replace(/^@/, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {v.name}
+                        </a>
+                      ) : (
+                        v.name
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {v.city}
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
-          </Card>
-        ))}
-      </div>
 
-      {/* 🔥 Keep map stable with consistent key */}
-      <div className="mt-2">
-        <SponsorMapPreview
-          key={`map-${meta.crawl_id}`}
-          venues={venues}
-          useStreetPolyline
-          heightPx={300}
-        />
+            <div className="mt-2">
+              <SponsorMapPreview
+                key={`map-${meta.crawl_id}`}
+                venues={venues}
+                useStreetPolyline
+                heightPx={300}
+              />
+            </div>
+          </>
+        )}
       </div>
-    </>
-  )}
-</div>
 
       {venues.length > 0 && (
         <div className="p-4 border rounded-md bg-gray-50">
@@ -344,10 +421,9 @@ useEffect(() => {
       )}
 
       <RSVPButton
-  crawlId={meta.crawl_id}
-  slug={meta.slug ?? ''}
-/>
-      <SponsorEditButton creatorId={meta.creator_id} slug={meta.slug ?? ''} />
+        crawlId={meta.crawl_id}
+        slug={meta.slug ?? ''}
+      />
 
       {attendeesWithDetails.length > 0 && (
         <div className="space-y-2 pt-4">

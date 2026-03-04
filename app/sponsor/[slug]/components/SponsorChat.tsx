@@ -130,22 +130,19 @@ export default function SponsorChat({ crawlId }: Props) {
   }, [crawlId, supabase, ensureNames]);
 
   // 🧠 Track whether user is near bottom
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
 
-    const handleScroll = () => {
-      const threshold = 80;
-      const isNearBottom =
-        container.scrollHeight - container.scrollTop - container.clientHeight <
-        threshold;
+    const scrollTop = el.scrollTop;
+    const scrollHeight = el.scrollHeight;
+    const clientHeight = el.clientHeight;
 
-      shouldAutoScrollRef.current = isNearBottom;
-    };
+    const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+    const threshold = 100;
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
+    shouldAutoScrollRef.current = distanceFromBottom <= threshold;
+  };
 
   // 📜 Smart auto-scroll
   useEffect(() => {
@@ -153,6 +150,32 @@ export default function SponsorChat({ crawlId }: Props) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // 🖱️ Scroll escape when chat pinned at bottom
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const wheelHandler = (e: WheelEvent) => {
+      const delta = e.deltaY;
+
+      const atBottom =
+        el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+
+      // If chat is pinned at bottom and user scrolls UP,
+      // prevent chat from moving and scroll the page instead.
+      if (atBottom && delta < 0) {
+        e.preventDefault();
+        window.scrollBy({ top: delta });
+      }
+    };
+
+    el.addEventListener('wheel', wheelHandler, { passive: false });
+
+    return () => {
+      el.removeEventListener('wheel', wheelHandler);
+    };
+  }, []);
 
   // ✉️ Send
   async function sendMessage() {
@@ -188,7 +211,8 @@ export default function SponsorChat({ crawlId }: Props) {
 
       <div
         ref={containerRef}
-        className="max-h-64 overflow-y-auto space-y-2 text-sm"
+        onScroll={handleScroll}
+        className="max-h-[40vh] overflow-y-auto space-y-2 text-sm"
       >
         {loading && (
           <p className="text-muted-foreground dark:text-neutral-400">

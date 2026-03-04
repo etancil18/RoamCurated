@@ -22,6 +22,7 @@ export type Database = {
           datetime: string | null
           description: string | null
           id: string
+          is_public: boolean
           is_sponsored: boolean | null
           max_capacity: number | null
           rsvp_enabled: boolean | null
@@ -39,6 +40,7 @@ export type Database = {
           datetime?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           is_sponsored?: boolean | null
           max_capacity?: number | null
           rsvp_enabled?: boolean | null
@@ -56,6 +58,7 @@ export type Database = {
           datetime?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           is_sponsored?: boolean | null
           max_capacity?: number | null
           rsvp_enabled?: boolean | null

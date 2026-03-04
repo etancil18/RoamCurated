@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { createSlug } from '@/utils/slug';
 import VenueSelector from './components/VenueSelector';
 import { SponsorMapPreview } from '@/components/maps/map-dynamic-wrapper';
+import CrawlSearch from './components/CrawlSearch';
 import clsx from 'clsx';
 
 const MAPBOX_TOKEN: string = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? '';
@@ -30,6 +31,7 @@ export default function SponsorCrawlPage() {
   const [isSponsored, setIsSponsored] = useState(false);
   const [sponsorName, setSponsorName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
 
   // ✅ Pre-populate venues from slug query param
   useEffect(() => {
@@ -79,6 +81,7 @@ export default function SponsorCrawlPage() {
         max_capacity: maxCapacity === '' ? undefined : Number(maxCapacity),
         is_sponsored: isSponsored,
         sponsor_name: isSponsored ? sponsorName : undefined,
+        is_public: isPublic,
       };
 
       const { data, error } = await createSponsorCrawl(payload);
@@ -99,11 +102,36 @@ export default function SponsorCrawlPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-md sm:p-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Host a Crawl</h1>
+  <div className="max-w-3xl mx-auto p-4 space-y-10">
+
+    {/* 🔎 SEARCH SECTION */}
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          🔎 Discover Crawls
+        </h2>
+        <p className="text-sm text-muted-foreground dark:text-neutral-400">
+          Search for previously published crawls in your city.
+        </p>
+      </div>
+
+      <CrawlSearch />
+    </section>
+
+    {/* Divider */}
+    <div className="border-t border-gray-200 dark:border-neutral-700" />
+
+    {/* 🧱 CREATE SECTION */}
+    <section className="space-y-6 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-lg shadow-md sm:p-6 p-4">
+
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        Host a Crawl
+      </h2>
 
       <div className="space-y-2">
-        <Label htmlFor="title" className="text-gray-700 dark:text-gray-300">Title</Label>
+        <Label htmlFor="title" className="text-gray-700 dark:text-gray-300">
+          Title
+        </Label>
         <Input
           id="title"
           value={title}
@@ -114,7 +142,9 @@ export default function SponsorCrawlPage() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="text-gray-700 dark:text-gray-300">Description</Label>
+        <Label htmlFor="description" className="text-gray-700 dark:text-gray-300">
+          Description
+        </Label>
         <Textarea
           id="description"
           value={description}
@@ -125,7 +155,9 @@ export default function SponsorCrawlPage() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="datetime" className="text-gray-700 dark:text-gray-300">Date & Time (optional)</Label>
+        <Label htmlFor="datetime" className="text-gray-700 dark:text-gray-300">
+          Date & Time (optional)
+        </Label>
         <Input
           id="datetime"
           type="datetime-local"
@@ -136,15 +168,20 @@ export default function SponsorCrawlPage() {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-gray-700 dark:text-gray-300">Venues</Label>
+        <Label className="text-gray-700 dark:text-gray-300">
+          Venues
+        </Label>
         <VenueSelector selected={venues} setSelected={setVenues} />
-        <SponsorMapPreview venues={venues} 
-        mapboxAccessToken={MAPBOX_TOKEN}
+        <SponsorMapPreview
+          venues={venues}
+          mapboxAccessToken={MAPBOX_TOKEN}
         />
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <Label htmlFor="rsvp" className="text-gray-700 dark:text-gray-300">Allow RSVPs?</Label>
+        <Label htmlFor="rsvp" className="text-gray-700 dark:text-gray-300">
+          Allow RSVPs?
+        </Label>
         <Switch
           id="rsvp"
           checked={rsvpEnabled}
@@ -160,7 +197,9 @@ export default function SponsorCrawlPage() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="maxCapacity" className="text-gray-700 dark:text-gray-300">Max Attendees (optional)</Label>
+        <Label htmlFor="maxCapacity" className="text-gray-700 dark:text-gray-300">
+          Max Attendees (optional)
+        </Label>
         <Input
           id="maxCapacity"
           type="number"
@@ -175,7 +214,37 @@ export default function SponsorCrawlPage() {
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <Label htmlFor="isSponsored" className="text-gray-700 dark:text-gray-300">Is this crawl sponsored?</Label>
+  <Label
+    htmlFor="isPublic"
+    className="text-gray-700 dark:text-gray-300"
+  >
+    Make this crawl public?
+  </Label>
+
+  <Switch
+    id="isPublic"
+    checked={isPublic}
+    onCheckedChange={setIsPublic}
+    className={clsx(
+      'bg-gray-300 dark:bg-gray-700 data-[state=checked]:bg-indigo-600',
+      'transition-colors relative',
+      'after:content-[""] after:block after:absolute after:bg-white after:rounded-full after:h-4 after:w-4 after:top-0.5 after:left-0.5',
+      'data-[state=checked]:after:translate-x-5 after:transition-transform after:duration-200',
+      'w-10 h-6 rounded-full'
+    )}
+  />
+</div>
+
+<p className="text-xs text-muted-foreground dark:text-neutral-400">
+  {isPublic
+    ? 'Visible to everyone in search and discovery.'
+    : 'Only accessible via direct link.'}
+</p>
+
+      <div className="flex items-center justify-between pt-2">
+        <Label htmlFor="isSponsored" className="text-gray-700 dark:text-gray-300">
+          Is this crawl sponsored?
+        </Label>
         <Switch
           id="isSponsored"
           checked={isSponsored}
@@ -192,7 +261,9 @@ export default function SponsorCrawlPage() {
 
       {isSponsored && (
         <div className="space-y-2">
-          <Label htmlFor="sponsorName" className="text-gray-700 dark:text-gray-300">Sponsor Name</Label>
+          <Label htmlFor="sponsorName" className="text-gray-700 dark:text-gray-300">
+            Sponsor Name
+          </Label>
           <Input
             id="sponsorName"
             value={sponsorName}
@@ -210,6 +281,8 @@ export default function SponsorCrawlPage() {
       >
         {submitting ? 'Publishing...' : 'Publish Crawl'}
       </Button>
-    </div>
-  );
+
+    </section>
+  </div>
+);
 }
