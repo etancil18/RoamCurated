@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import {
   MapContainer,
   TileLayer,
@@ -29,17 +30,6 @@ const vibeColorMap: Record<string, string> = {
   Default: '#6366f1',
 }
 
-// Fix marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
-
 export default function SponsorMapPreview({
   venues,
   mapboxAccessToken,
@@ -50,6 +40,23 @@ export default function SponsorMapPreview({
   const [path, setPath] = useState<[number, number][]>([])
   const containerRef = useRef<HTMLDivElement | null>(null)
 
+  /* ----------------------------------------------------------
+     SAFE LEAFLET ICON FIX (CLIENT-ONLY)
+  ----------------------------------------------------------- */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    delete (L.Icon.Default.prototype as any)._getIconUrl
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    })
+  }, [])
+
   const coords = useMemo(
     () =>
       venues
@@ -58,11 +65,21 @@ export default function SponsorMapPreview({
     [venues]
   )
 
+  /* ----------------------------------------------------------
+     MAPBOX POLYLINE FETCH
+  ----------------------------------------------------------- */
   useEffect(() => {
+    if (!coords.length) {
+      setPath([])
+      return
+    }
+
     if (!useStreetPolyline || !mapboxAccessToken || coords.length < 2) {
       setPath(coords.map(([lng, lat]) => [lat, lng]))
       return
     }
+
+    let cancelled = false
 
     async function fetchPolyline() {
       try {
@@ -72,15 +89,22 @@ export default function SponsorMapPreview({
         )
         const json = await res.json()
         const g = json.routes?.[0]?.geometry?.coordinates
-        if (g?.length) {
+
+        if (!cancelled && g?.length) {
           setPath(g.map(([lng, lat]: [number, number]) => [lat, lng]))
         }
       } catch {
-        setPath(coords.map(([lng, lat]) => [lat, lng]))
+        if (!cancelled) {
+          setPath(coords.map(([lng, lat]) => [lat, lng]))
+        }
       }
     }
 
     fetchPolyline()
+
+    return () => {
+      cancelled = true
+    }
   }, [coords, mapboxAccessToken, useStreetPolyline])
 
   const routeColor = vibeColorMap[themeTag] ?? vibeColorMap.Default
@@ -94,7 +118,7 @@ export default function SponsorMapPreview({
       const timeout = setTimeout(() => {
         map.invalidateSize()
         map.fitBounds(path, { padding: [40, 40] })
-      }, 200)
+      }, 250)
 
       return () => clearTimeout(timeout)
     }, [map, path])
@@ -104,6 +128,8 @@ export default function SponsorMapPreview({
 
   if (!coords.length) return null
 
+  const safeCenter: [number, number] = [coords[0][1], coords[0][0]]
+
   return (
     <div
       ref={containerRef}
@@ -111,22 +137,30 @@ export default function SponsorMapPreview({
       className="rounded-xl overflow-hidden border"
     >
       <MapContainer
-        center={[venues[0].lat, venues[0].lon]}
+        center={safeCenter}
         zoom={13}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
         <FitBounds />
-        <Polyline positions={path} color={routeColor} weight={4} />
+
+        {path.length > 1 && (
+          <Polyline positions={path} color={routeColor} weight={4} />
+        )}
 
         {venues.map((v, i) => (
-          <Marker key={v.id} position={[v.lat, v.lon]}>
-            <Popup>
-              <strong>{i + 1}. {v.name}</strong>
-              <br />
-              {v.city}
-            </Popup>
-          </Marker>
+          typeof v.lat === 'number' &&
+          typeof v.lon === 'number' && (
+            <Marker key={v.id} position={[v.lat, v.lon]}>
+              <Popup>
+                <strong>
+                  {i + 1}. {v.name}
+                </strong>
+                <br />
+                {v.city}
+              </Popup>
+            </Marker>
+          )
         ))}
       </MapContainer>
     </div>
