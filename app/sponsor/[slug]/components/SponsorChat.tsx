@@ -23,6 +23,8 @@ export default function SponsorChat({ crawlId }: Props) {
   const [nameByUserId, setNameByUserId] = useState<Record<string, string>>({});
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
 
   // 🔐 Current user
   useEffect(() => {
@@ -50,13 +52,10 @@ export default function SponsorChat({ crawlId }: Props) {
     fetchHost();
   }, [crawlId, supabase]);
 
-  // 👤 Ensure names (stable with useCallback)
+  // 👤 Ensure names
   const ensureNames = useCallback(
     async (userIds: string[]) => {
-      const idsToFetch = userIds.filter(
-        (id) => id && !nameByUserId[id]
-      );
-
+      const idsToFetch = userIds.filter((id) => id && !nameByUserId[id]);
       if (!idsToFetch.length) return;
 
       const { data } = await supabase
@@ -130,9 +129,29 @@ export default function SponsorChat({ crawlId }: Props) {
     };
   }, [crawlId, supabase, ensureNames]);
 
-  // 📜 Auto scroll
+  // 🧠 Track whether user is near bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const threshold = 80;
+      const isNearBottom =
+        container.scrollHeight - container.scrollTop - container.clientHeight <
+        threshold;
+
+      shouldAutoScrollRef.current = isNearBottom;
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 📜 Smart auto-scroll
+  useEffect(() => {
+    if (shouldAutoScrollRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   // ✉️ Send
@@ -167,7 +186,10 @@ export default function SponsorChat({ crawlId }: Props) {
         Group Chat
       </h3>
 
-      <div className="max-h-64 overflow-y-auto space-y-2 text-sm">
+      <div
+        ref={containerRef}
+        className="max-h-64 overflow-y-auto space-y-2 text-sm"
+      >
         {loading && (
           <p className="text-muted-foreground dark:text-neutral-400">
             Loading chat...
