@@ -1,10 +1,9 @@
-// app/sponsor/[slug]/page.tsx
-
 import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import SponsorDetail from './components/SponsorDetail';
 import SharePreview from './components/SharePreview';
-import { SponsorCrawl, SponsorCrawlWithAttendees } from '@/types/sponsor';
+import SponsorChat from './components/SponsorChat'; 
+import { SponsorCrawlWithAttendees } from '@/types/sponsor';
 
 export const dynamic = 'force-dynamic'; // Ensures fresh SSR per request
 
@@ -52,7 +51,26 @@ export default async function SponsorPage({ params }: PageProps) {
     console.warn('RSVP fetch error:', rsvpError);
   }
 
-  // 3️⃣ Enrich with metadata from crawl
+  // 🔐 3️⃣ Determine if current user is RSVP'd as "going"
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let isGoing = false;
+
+  if (user) {
+    const { data: rsvp } = await supabase
+      .from('crawl_rsvps')
+      .select('id')
+      .eq('crawl_id', crawl.id)
+      .eq('user_id', user.id)
+      .eq('status', 'Confirmed')
+      .maybeSingle();
+
+    isGoing = !!rsvp;
+  }
+
+  // 4️⃣ Enrich with metadata from crawl
   const enriched: SponsorCrawlWithAttendees[] = (attendees || []).map((a) => ({
     ...a,
     title: crawl.title ?? '',
@@ -72,7 +90,14 @@ export default async function SponsorPage({ params }: PageProps) {
   return (
     <main className="max-w-3xl mx-auto p-4 space-y-8">
       <SponsorDetail crawl={enriched} />
-      <SharePreview />
+      <SharePreview
+  title={crawl.title ?? ''}
+  city={crawl.city ?? ''}
+  slug={crawl.slug ?? ''}
+/>
+
+      {/* 💬 Chat only visible to RSVP'd users */}
+      {isGoing && <SponsorChat crawlId={crawl.id} />}
     </main>
   );
 }

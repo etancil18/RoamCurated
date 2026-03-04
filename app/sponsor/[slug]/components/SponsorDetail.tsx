@@ -101,24 +101,36 @@ export default function SponsorDetail({ crawl }: Props) {
   if (attendees.length > 0) preloadProfiles();
 }, [attendees]);
 
+useEffect(() => {
+  if (!meta.datetime) return;
 
-  useEffect(() => {
-    if (!meta.datetime) return;
-    const target = new Date(meta.datetime).getTime();
+  const target = new Date(meta.datetime).getTime();
 
-    const update = () => {
-      const diff = target - Date.now();
-      if (diff <= 0) setTimeLeft('Event started');
-      else {
-        const hrs = Math.floor(diff / 3600000);
-        const mins = Math.floor((diff % 3600000) / 60000);
-        setTimeLeft(`${hrs}h ${mins}m`);
-      }
-    };
-    update();
-    const timer = setInterval(update, 1000);
-    return () => clearInterval(timer);
-  }, [meta.datetime]);
+  const update = () => {
+    const diff = target - Date.now();
+
+    if (diff <= 0) {
+      setTimeLeft('Event started');
+      return;
+    }
+
+    const totalMinutes = Math.floor(diff / 60000);
+    const days = Math.floor(totalMinutes / (60 * 24));
+    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+    const minutes = totalMinutes % 60;
+
+    const parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0 || days > 0) parts.push(`${hours}h`);
+    parts.push(`${minutes}m`);
+
+    setTimeLeft(parts.join(' '));
+  };
+
+  update();
+  const timer = setInterval(update, 60000); // update every minute
+  return () => clearInterval(timer);
+}, [meta.datetime]);
 
   useEffect(() => {
     const fetchVenues = async () => {
@@ -212,7 +224,9 @@ export default function SponsorDetail({ crawl }: Props) {
 
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">{meta.title ?? 'Untitled Crawl'}</h1>
-        <p className="text-muted-foreground">{meta.description ?? ''}</p>
+        <p className="text-muted-foreground whitespace-pre-line">
+  {meta.description ?? ''}
+</p>
 
         {meta.sponsor_name && (
           <p className="text-sm text-purple-600 font-semibold">
@@ -221,11 +235,20 @@ export default function SponsorDetail({ crawl }: Props) {
         )}
 
         {meta.datetime && (
-          <div className="text-sm text-muted-foreground">
-            📅 {new Date(meta.datetime).toLocaleString()} &nbsp;•&nbsp; ⏳ Starts in:{' '}
-            <strong>{timeLeft}</strong>
-          </div>
-        )}
+  <div className="text-sm text-muted-foreground">
+    📅{' '}
+    {new Date(meta.datetime).toLocaleString(undefined, {
+      month: 'numeric',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })}
+    &nbsp;•&nbsp; ⏳ Starts in:{' '}
+    <strong>{timeLeft}</strong>
+  </div>
+)}
 
         {maxCapacity > 0 && (
           <div className="pt-2">
@@ -252,37 +275,54 @@ export default function SponsorDetail({ crawl }: Props) {
         </div>
       </div>
 
-      {venues.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold">🗺️ Itinerary:</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {venues.map((v) => (
-              <Card key={v.id} className="p-3 flex items-center space-x-3">
-                <div className="text-2xl">{getEmojiForVenue(v.name)}</div>
-                <div>
-                  <div className="font-medium">
-                    {v.instagram_handle ? (
-                      <a
-                        href={`https://instagram.com/${v.instagram_handle.replace(/^@/, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
-                      >
-                        {v.name}
-                      </a>
-                    ) : (
-                      v.name
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground">{v.city}</div>
-                </div>
-              </Card>
-            ))}
-          </div>
+      <div className="space-y-3">
+  <h3 className="text-sm font-semibold">🗺️ Itinerary:</h3>
 
-          <SponsorMapPreview venues={venues} useStreetPolyline heightPx={300} />
-        </div>
-      )}
+  {venues.length === 0 ? (
+    <div className="text-sm text-muted-foreground">
+      Loading itinerary...
+    </div>
+  ) : (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {venues.map((v) => (
+          <Card key={v.id} className="p-3 flex items-center space-x-3">
+            <div className="text-2xl">{getEmojiForVenue(v.name)}</div>
+            <div>
+              <div className="font-medium">
+                {v.instagram_handle ? (
+                  <a
+                    href={`https://instagram.com/${v.instagram_handle.replace(/^@/, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {v.name}
+                  </a>
+                ) : (
+                  v.name
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {v.city}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* 🔥 Keep map stable with consistent key */}
+      <div className="mt-2">
+        <SponsorMapPreview
+          key={`map-${meta.crawl_id}`}
+          venues={venues}
+          useStreetPolyline
+          heightPx={300}
+        />
+      </div>
+    </>
+  )}
+</div>
 
       {venues.length > 0 && (
         <div className="p-4 border rounded-md bg-gray-50">
@@ -303,7 +343,10 @@ export default function SponsorDetail({ crawl }: Props) {
         </div>
       )}
 
-      <RSVPButton crawlId={meta.crawl_id} />
+      <RSVPButton
+  crawlId={meta.crawl_id}
+  slug={meta.slug ?? ''}
+/>
       <SponsorEditButton creatorId={meta.creator_id} slug={meta.slug ?? ''} />
 
       {attendeesWithDetails.length > 0 && (

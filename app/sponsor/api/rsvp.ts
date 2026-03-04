@@ -1,131 +1,142 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServerApi } from '@/lib/supabase/server-api';
 
+function isValidUUID(value: string) {
+  return /^[0-9a-fA-F-]{36}$/.test(value);
+}
+
+/**
+ * JOIN CRAWL
+ */
 export async function POST(req: NextRequest) {
   const supabase = await supabaseServerApi();
+
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
 
   if (authError) {
-    console.error('[RSVP] Auth error:', authError);
+    console.error('[RSVP][POST] Auth error:', authError);
   }
 
   if (!user) {
-    console.warn('[RSVP] Unauthorized request');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
   const { crawl_id } = body;
 
-  if (!crawl_id || typeof crawl_id !== 'string' || !crawl_id.match(/^[0-9a-fA-F-]{36}$/)) {
-    console.error('[RSVP] Invalid or missing crawl_id:', crawl_id);
+  if (!crawl_id || typeof crawl_id !== 'string' || !isValidUUID(crawl_id)) {
     return NextResponse.json({ error: 'Invalid crawl_id' }, { status: 400 });
   }
 
-  console.log('[RSVP] POST /api/rsvp', {
+  console.log('[RSVP][POST]', {
     user_id: user.id,
     crawl_id,
-    timestamp: new Date().toISOString(),
   });
 
+  // Check if already RSVP'd
   const { data: existing, error: existingErr } = await supabase
     .from('crawl_rsvps')
-    .select('id')
+    .select('id, status')
     .eq('crawl_id', crawl_id)
     .eq('user_id', user.id)
     .maybeSingle();
 
   if (existingErr) {
-    console.error('[RSVP] Existing check error:', existingErr);
+    console.error('[RSVP][POST] Existing check error:', existingErr);
+    return NextResponse.json({ error: 'RSVP check failed' }, { status: 500 });
   }
 
   if (existing) {
-    console.log('[RSVP] User already joined crawl:', crawl_id);
-    return NextResponse.json({ message: 'Already joined' }, { status: 200 });
+    return NextResponse.json(
+      {
+        message: 'Already joined',
+        rsvpStatus: existing.status ?? 'going',
+      },
+      { status: 200 }
+    );
   }
 
-  const rpcPayload = { input_crawl_id: crawl_id };
-  console.log('[RSVP] Calling join_crawl RPC with payload:', rpcPayload);
-
-  const { data, error, status } = await supabase.rpc('join_crawl', rpcPayload);
-
-  console.log('[RSVP] RPC join_crawl response:', {
-    status,
-    data,
-    error,
-    user_id: user.id,
-    crawl_id,
+  // Use RPC to join
+  const { error } = await supabase.rpc('join_crawl', {
+    input_crawl_id: crawl_id,
   });
 
   if (error) {
-    console.error('[RSVP] ❌ RPC join_crawl failed:', error);
+    console.error('[RSVP][POST] join_crawl failed:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to RSVP',
-        details: error.message || error,
-      },
+      { error: 'Failed to RSVP', details: error.message },
       { status: 500 }
     );
   }
 
-  console.log('[RSVP] ✅ RSVP successful for crawl:', crawl_id);
-  return NextResponse.json({ message: 'RSVP successful' }, { status: 200 });
+  return NextResponse.json(
+    {
+      message: 'RSVP successful',
+      rsvpStatus: 'going',
+    },
+    { status: 200 }
+  );
 }
 
+/**
+ * LEAVE CRAWL
+ */
 export async function DELETE(req: NextRequest) {
   const supabase = await supabaseServerApi();
+
   const {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser();
 
   if (authError) {
-    console.error('[RSVP] Auth error:', authError);
+    console.error('[RSVP][DELETE] Auth error:', authError);
   }
 
   if (!user) {
-    console.warn('[RSVP] Unauthorized DELETE request');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const body = await req.json().catch(() => ({}));
   const { crawl_id } = body;
 
-  if (!crawl_id || typeof crawl_id !== 'string' || !crawl_id.match(/^[0-9a-fA-F-]{36}$/)) {
-    console.error('[RSVP] Invalid or missing crawl_id in DELETE:', crawl_id);
+  if (!crawl_id || typeof crawl_id !== 'string' || !isValidUUID(crawl_id)) {
     return NextResponse.json({ error: 'Invalid crawl_id' }, { status: 400 });
   }
 
-  console.log('[RSVP] DELETE /api/rsvp', {
-    user_id: user.id,
-    crawl_id,
-    timestamp: new Date().toISOString(),
-  });
-
-  const { data, error, status } = await supabase.rpc('leave_crawl', { crawl_id });
-
-  console.log('[RSVP] RPC leave_crawl response:', {
-    status,
-    data,
-    error,
+  console.log('[RSVP][DELETE]', {
     user_id: user.id,
     crawl_id,
   });
+
+  /**
+   * 🚨 IMPORTANT:
+   * Do NOT rely solely on RPC for delete.
+   * Delete explicitly scoped to user_id.
+   * This prevents RLS ambiguity.
+   */
+  const { error } = await supabase
+    .from('crawl_rsvps')
+    .delete()
+    .eq('crawl_id', crawl_id)
+    .eq('user_id', user.id);
 
   if (error) {
-    console.error('[RSVP] ❌ RPC leave_crawl failed:', error);
+    console.error('[RSVP][DELETE] Failed to leave crawl:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to leave crawl',
-        details: error.message || error,
-      },
+      { error: 'Failed to leave crawl', details: error.message },
       { status: 500 }
     );
   }
 
-  console.log('[RSVP] ✅ Successfully left crawl:', crawl_id);
-  return NextResponse.json({ message: 'Left crawl' }, { status: 200 });
+  return NextResponse.json(
+    {
+      message: 'Left crawl',
+      rsvpStatus: null,
+    },
+    { status: 200 }
+  );
 }

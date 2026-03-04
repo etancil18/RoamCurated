@@ -101,3 +101,34 @@ export type CrawlProgress = {
   completed: boolean;
   updated_at: string;
 };
+
+// 💬 Crawl message (chat system)
+export type SponsorChatMessage = {
+  id: string;
+  crawl_id: string;
+  user_id: string;
+  message: string;
+  created_at: string;
+};
+
+// 📊 Sponsor crawl state returned from /api/getsponsorcrawl
+export type SponsorCrawlState = {
+  crawl: SponsorCrawl;
+  attendees: {
+    rsvp_user_id: string;
+    full_name: string | null;
+    instagram_handle: string | null;
+    personality_style: string | null;
+  }[];
+  attendeeCount: number;
+  remainingCapacity: number | null;
+  isGoing: boolean;
+  chatEnabled: boolean;
+};
+
+// 🔁 RSVP API response
+export type SponsorRSVPResponse = {
+  message?: string;
+  error?: string;
+  rsvpStatus: 'going' | null;
+};

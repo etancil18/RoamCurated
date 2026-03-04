@@ -629,9 +629,9 @@ export const crawlThemes: CrawlTheme[] = [
   description: "Cozy solo spots and hidden gems for wandering.",
   stageFlow: [
   ["coffee", "cafe", "café", "bakery", "tea"],
-  ["random gem", "lifestyle", "gallery", "showroom"],
+  ["random gem", "lifestyle", "gallery", "bookstore", "showroom"],
   ["gallery", "museum", "park", "garden"],
-  ["lunch", "wine bar", "dessert", "bookstore"],
+  ["lunch", "wine bar", "dessert", "class", "random gem"],
   ["random gem", "lifestyle", "park"]
 ],
   filters: {

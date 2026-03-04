@@ -68,6 +68,38 @@ export type Database = {
         }
         Relationships: []
       }
+      crawl_messages: {
+        Row: {
+          crawl_id: string
+          created_at: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          crawl_id: string
+          created_at?: string
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          crawl_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_messages_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "crawl_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crawl_progress: {
         Row: {
           completed_at: string | null
@@ -306,6 +338,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_admins: {
+        Row: {
+          email: string
+        }
+        Insert: {
+          email: string
+        }
+        Update: {
+          email?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

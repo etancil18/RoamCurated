@@ -1,6 +1,16 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+  useMap,
+} from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import type { SponsorVenue } from '@/types/sponsor'
 
 type Props = {
@@ -19,6 +29,17 @@ const vibeColorMap: Record<string, string> = {
   Default: '#6366f1',
 }
 
+// Fix marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl:
+    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl:
+    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+})
+
 export default function SponsorMapPreview({
   venues,
   mapboxAccessToken,
@@ -26,10 +47,8 @@ export default function SponsorMapPreview({
   useStreetPolyline = true,
   themeTag = 'Default',
 }: Props) {
-  const [mounted, setMounted] = useState(false)
-  const [Leaflet, setLeaflet] = useState<any>(null)
-  const [RL, setRL] = useState<any>(null)
   const [path, setPath] = useState<[number, number][]>([])
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   const coords = useMemo(
     () =>
@@ -39,45 +58,6 @@ export default function SponsorMapPreview({
     [venues]
   )
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // 🔒 Load Leaflet ONLY on client
-  useEffect(() => {
-    if (!mounted) return
-
-    let active = true
-
-    async function load() {
-      const L = (await import('leaflet')).default
-      await import('leaflet-arrowheads')
-      const RL = await import('react-leaflet')
-
-      if (!active) return
-
-      // Fix default marker icons
-      delete (L.Icon.Default.prototype as any)._getIconUrl
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl:
-          'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl:
-          'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl:
-          'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      })
-
-      setLeaflet(L)
-      setRL(RL)
-    }
-
-    load()
-    return () => {
-      active = false
-    }
-  }, [mounted])
-
-  // Polyline logic
   useEffect(() => {
     if (!useStreetPolyline || !mapboxAccessToken || coords.length < 2) {
       setPath(coords.map(([lng, lat]) => [lat, lng]))
@@ -103,30 +83,33 @@ export default function SponsorMapPreview({
     fetchPolyline()
   }, [coords, mapboxAccessToken, useStreetPolyline])
 
-  if (!mounted || !Leaflet || !RL || !coords.length) return null
-
-  const {
-    MapContainer,
-    TileLayer,
-    Marker,
-    Popup,
-    Polyline,
-    useMap,
-  } = RL
-
   const routeColor = vibeColorMap[themeTag] ?? vibeColorMap.Default
 
   function FitBounds() {
     const map = useMap()
+
     useEffect(() => {
       if (!path.length) return
-      map.fitBounds(path, { padding: [40, 40] })
-    }, [map])
+
+      const timeout = setTimeout(() => {
+        map.invalidateSize()
+        map.fitBounds(path, { padding: [40, 40] })
+      }, 200)
+
+      return () => clearTimeout(timeout)
+    }, [map, path])
+
     return null
   }
 
+  if (!coords.length) return null
+
   return (
-    <div style={{ height: heightPx }} className="rounded-xl overflow-hidden border">
+    <div
+      ref={containerRef}
+      style={{ height: heightPx }}
+      className="rounded-xl overflow-hidden border"
+    >
       <MapContainer
         center={[venues[0].lat, venues[0].lon]}
         zoom={13}

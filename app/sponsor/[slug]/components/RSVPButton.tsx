@@ -1,50 +1,50 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // ✅ Added
 import { Button } from '@/components/ui/button';
 import {
   joinSponsorCrawl,
   leaveSponsorCrawl,
-  getSponsorCrawlWithAttendees,
 } from '@/lib/supabase/sponsor';
 import { useUser } from '@/hooks/useUser';
 
 type Props = {
   crawlId: string;
+  slug: string; // ✅ Needed for API state fetch
 };
 
-export default function RSVPButton({ crawlId }: Props) {
+export default function RSVPButton({ crawlId, slug }: Props) {
   const { user } = useUser();
+  const router = useRouter(); // ✅ Added
   const [isJoined, setIsJoined] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Load RSVP status once user + crawlId are valid
+  // ✅ Load RSVP status via API (single source of truth)
   useEffect(() => {
-    if (!user?.id || !crawlId) return;
+    if (!user?.id || !slug) return;
 
     const fetchStatus = async () => {
       try {
-        const { data, error } = await getSponsorCrawlWithAttendees(crawlId);
+        const res = await fetch(
+          `/api/getsponsorcrawl?slug=${slug}`,
+          { credentials: 'include' }
+        );
 
-        if (error) {
-          console.error('[RSVPButton] ❌ Failed to fetch RSVP status:', error.message || error);
+        if (!res.ok) {
+          console.error('[RSVPButton] ❌ Failed to fetch crawl state');
           return;
         }
 
-        if (!data || !Array.isArray(data)) {
-          console.warn('[RSVPButton] ⚠️ Invalid attendee data');
-          return;
-        }
-
-        const joined = data.some((r) => r.rsvp_user_id === user.id);
-        setIsJoined(joined);
+        const json = await res.json();
+        setIsJoined(json.isGoing ?? false);
       } catch (err) {
         console.error('[RSVPButton] 🚨 Unexpected error:', err);
       }
     };
 
     fetchStatus();
-  }, [user?.id, crawlId]);
+  }, [user?.id, slug]);
 
   const handleClick = async () => {
     if (!user?.id) {
@@ -62,19 +62,23 @@ export default function RSVPButton({ crawlId }: Props) {
     try {
       if (isJoined) {
         const { error } = await leaveSponsorCrawl(crawlId);
+
         if (error) {
           console.error('[RSVPButton] ❌ Leave failed:', error);
           alert('Failed to leave crawl.');
         } else {
           setIsJoined(false);
+          router.refresh(); // ✅ Force SSR re-evaluation (chat hides instantly)
         }
       } else {
         const { error } = await joinSponsorCrawl(crawlId);
+
         if (error) {
           console.error('[RSVPButton] ❌ Join failed:', error);
           alert('Failed to join crawl.');
         } else {
           setIsJoined(true);
+          router.refresh(); // ✅ Force SSR re-evaluation (chat appears instantly)
         }
       }
     } catch (err) {
