@@ -20,29 +20,42 @@ export default async function SponsorPage({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createServerClient();
 
-  // 1️⃣ Get crawl metadata (SAFE VERSION)
-const { data, error } = await supabase
-  .from('crawl_events')
-  .select(
-    'id, title, description, datetime, venue_ids, city, vibe_tags, is_sponsored, sponsor_name, max_capacity, rsvp_enabled, slug, creator_id'
-  )
-  .eq('slug', slug)
-  .limit(1);
+  // 1️⃣ Get crawl metadata (FIXED + SAFE)
+  const { data, error } = await supabase
+    .from('crawl_events')
+    .select(`
+      id,
+      crawl_id:id,
+      title,
+      description,
+      datetime,
+      venue_ids,
+      city,
+      vibe_tags,
+      is_sponsored,
+      sponsor_name,
+      max_capacity,
+      rsvp_enabled,
+      slug,
+      creator_id
+    `)
+    .eq('slug', slug)
+    .limit(1);
 
-const crawl = data?.[0] ?? null;
+  const crawl = data?.[0] ?? null;
 
-if (error || !crawl) {
-  console.error('Crawl fetch error:', error);
+  if (error || !crawl) {
+    console.error('Crawl fetch error:', error);
 
-  return (
-    <div className="max-w-2xl mx-auto text-center p-6">
-      <h2 className="text-xl font-bold">Crawl not found</h2>
-      <p className="text-muted-foreground">
-        It may have been removed, is private, or doesn’t exist.
-      </p>
-    </div>
-  );
-}
+    return (
+      <div className="max-w-2xl mx-auto text-center p-6">
+        <h2 className="text-xl font-bold">Crawl not found</h2>
+        <p className="text-muted-foreground">
+          It may have been removed, is private, or doesn’t exist.
+        </p>
+      </div>
+    );
+  }
 
   // 2️⃣ Fetch attendees
   const { data: attendees, error: rsvpError } = await supabase.rpc(
