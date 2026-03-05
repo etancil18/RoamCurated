@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js"
 import { createServerClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
-export const runtime = "nodejs" // Stripe SDK needs Node (not Edge)
+export const runtime = "nodejs"
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -14,10 +14,16 @@ function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY)
 }
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabaseAdmin() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase environment variables are not set")
+  }
+
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
 
 function mustGetEnv(name: string) {
   const v = process.env[name]
@@ -27,10 +33,9 @@ function mustGetEnv(name: string) {
 
 async function getBaseUrlFromHeaders() {
   const h = await headers()
+
   const proto = h.get("x-forwarded-proto") ?? "https"
-  const host =
-    h.get("x-forwarded-host") ??
-    h.get("host")
+  const host = h.get("x-forwarded-host") ?? h.get("host")
 
   if (!host) throw new Error("Unable to determine host for base URL")
 
@@ -40,8 +45,8 @@ async function getBaseUrlFromHeaders() {
 export async function POST() {
   try {
     const stripe = getStripe()
+    const supabaseAdmin = getSupabaseAdmin()
 
-    // 1) Authenticated user (cookie-based)
     const supabase = await createServerClient()
     const {
       data: { user },
@@ -52,7 +57,6 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // 2) Load your application user record (service role to avoid RLS issues)
     const { data: appUser, error: userErr } = await supabaseAdmin
       .from("users")
       .select(
@@ -66,15 +70,10 @@ export async function POST() {
       return NextResponse.json({ error: "User record not found" }, { status: 500 })
     }
 
-    // 3) Prevent duplicate active subscriptions
     if (appUser.subscription_status === "active" && appUser.subscription_tier === "pro") {
-      return NextResponse.json(
-        { error: "Already subscribed" },
-        { status: 409 }
-      )
+      return NextResponse.json({ error: "Already subscribed" }, { status: 409 })
     }
 
-    // If there is an existing Stripe subscription id, verify it isn't active/trialing.
     if (appUser.stripe_subscription_id) {
       try {
         const sub = await stripe.subscriptions.retrieve(appUser.stripe_subscription_id)
@@ -90,7 +89,6 @@ export async function POST() {
       }
     }
 
-    // 4) Reuse or create Stripe customer
     let customerId = appUser.stripe_customer_id ?? null
 
     if (!customerId) {
@@ -100,6 +98,7 @@ export async function POST() {
           supabase_uid: user.id,
         },
       })
+
       customerId = customer.id
 
       const { error: updateErr } = await supabaseAdmin
@@ -116,7 +115,6 @@ export async function POST() {
       }
     }
 
-    // 5) Create checkout session
     const priceId = mustGetEnv("STRIPE_PRO_PRICE_ID")
     const baseUrl = await getBaseUrlFromHeaders()
 
