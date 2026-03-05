@@ -8,7 +8,7 @@ type EventWithTicket = ReturnType<typeof useEvents>['events'][number] & {
   ticket_link?: string | null
 }
 
-const AVAILABLE_CITIES = ['atl', 'nyc']
+const AVAILABLE_CITIES = ['atl', 'nyc', 'lisbon', 'porto']
 const AVAILABLE_TAGS = ['music', 'rooftop', 'gallery', 'food', 'comedy']
 
 export default function EventsPage() {
@@ -36,7 +36,7 @@ export default function EventsPage() {
   }, [city])
 
   const { events, loading, error, refetch } = useEvents(
-    city as 'atl' | 'nyc',
+    city as 'atl' | 'nyc' | 'lisbon' | 'porto',
     7,
     selectedTags,
     true,
