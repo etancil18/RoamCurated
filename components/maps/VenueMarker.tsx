@@ -45,10 +45,11 @@ export default function VenueMarker({
     [v, nowForCity]
   )
 
+  // ✅ Today’s hours (city-aware)
   const todayHours = useMemo(() => {
     if (!Array.isArray(v.hours)) return null
 
-    const today = nowForCity.setLocale('en-US').toFormat('cccc')
+    const today = nowForCity.setLocale('en-US').toFormat('cccc') // Monday, Tuesday, etc.
     const match = v.hours.find((line: string) =>
       line.toLowerCase().startsWith(today.toLowerCase())
     )
@@ -119,56 +120,61 @@ export default function VenueMarker({
   }, [venueEvents, nowForCity])
 
   const firstCandidate = coverCandidates(v)[0]
-  const timezone = CITY_CONFIGS[city]?.timezone ?? 'UTC'
+const timezone = CITY_CONFIGS[city]?.timezone ?? 'UTC'
 
-  if (!icon) return null
+// Deterministic primary image from slug
+const primaryImage = v.slug
+  ? `/img/venues/${v.slug}.jpg`
+  : firstCandidate
 
-  return (
-    <Marker
-      position={[v.lat, v.lon]}
-      icon={icon}
-      ref={(ref) => {
-        if (v.slug && ref) markerRefs.current[v.slug] = ref
-      }}
-      eventHandlers={{
-        click: () => {
-          if (v?.id) {
-            logVenueImpression('map_marker_click', {
-              venue_id: v.id,
-              metadata: {
-                screen: 'map_marker',
-                city,
-                name: v.name,
-              },
-            })
-          }
-        },
-      }}
-    >
-      <Tooltip>{v.name}</Tooltip>
+if (!icon) return null
 
-      <Popup>
-        <div style={{ fontSize: 14 }}>
-          <strong>{v.name}</strong>
+return (
+  <Marker
+    position={[v.lat, v.lon]}
+    icon={icon}
+    ref={(ref) => {
+      if (v.slug && ref) markerRefs.current[v.slug] = ref
+    }}
+    eventHandlers={{
+      click: () => {
+        if (v?.id) {
+          logVenueImpression('map_marker_click', {
+            venue_id: v.id,
+            metadata: {
+              screen: 'map_marker',
+              city,
+              name: v.name,
+            },
+          })
+        }
+      },
+    }}
+  >
+    <Tooltip>{v.name}</Tooltip>
 
-          {(v.cover || firstCandidate) && (
-            <img
-              src={v.cover ? (v.cover.startsWith('/') ? v.cover : `/${v.cover}`) : firstCandidate}
-              alt={v.name}
-              style={{
-                width: '100%',
-                maxHeight: 140,
-                objectFit: 'cover',
-                margin: '6px 0',
-              }}
-              onError={(e) => {
-                const img = e.currentTarget
-                if (firstCandidate && img.src !== firstCandidate) {
-                  img.src = firstCandidate
-                }
-              }}
-            />
-          )}
+    <Popup>
+      <div style={{ fontSize: 14 }}>
+        <strong>{v.name}</strong>
+
+        {primaryImage && (
+          <img
+            src={primaryImage}
+            alt={v.name}
+            style={{
+              width: '100%',
+              maxHeight: 140,
+              objectFit: 'cover',
+              margin: '6px 0',
+            }}
+            onError={(e) => {
+              const img = e.currentTarget
+              if (firstCandidate && img.src !== firstCandidate) {
+                img.src = firstCandidate
+              }
+            }}
+          />
+        )}
 
           <div><em>Vibe:</em> {v.vibe}</div>
           {v.price && <div><em>Price:</em> {v.price}</div>}
@@ -180,6 +186,7 @@ export default function VenueMarker({
             </span>
           </div>
 
+          {/* 🔥 Today’s Hours */}
           {todayHours && (
             <div>
               <em>Hours:</em> {todayHours}
