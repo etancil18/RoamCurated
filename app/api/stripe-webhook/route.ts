@@ -5,7 +5,13 @@ import { createClient } from "@supabase/supabase-js"
 
 export const dynamic = "force-dynamic"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not set")
+  }
+
+  return new Stripe(process.env.STRIPE_SECRET_KEY)
+}
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
@@ -15,6 +21,9 @@ const supabase = createClient(
 )
 
 export async function POST(req: Request) {
+
+  const stripe = getStripe()
+
   const body = await req.text()
 
   const headersList = await headers()
@@ -38,6 +47,20 @@ export async function POST(req: Request) {
   }
 
   try {
+    const eventId = event.id
+
+    // ✅ Idempotency protection: check if this event was already processed
+    const { data: existingEvent } = await supabase
+      .from("stripe_webhook_events")
+      .select("id")
+      .eq("id", eventId)
+      .maybeSingle()
+
+    if (existingEvent) {
+      console.log("Duplicate Stripe webhook ignored:", eventId)
+      return NextResponse.json({ received: true })
+    }
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
@@ -97,6 +120,11 @@ export async function POST(req: Request) {
       default:
         console.log(`Unhandled event type ${event.type}`)
     }
+
+    // ✅ Record processed event (prevents duplicate handling)
+    await supabase
+      .from("stripe_webhook_events")
+      .insert({ id: eventId })
 
     return NextResponse.json({ received: true })
   } catch (err) {
