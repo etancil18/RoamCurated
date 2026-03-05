@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
 export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -13,16 +14,22 @@ function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY)
 }
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+function getSupabaseAdmin() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase environment variables are not set")
+  }
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
 
 export async function POST(req: Request) {
-
   const stripe = getStripe()
+  const supabase = getSupabaseAdmin()
+
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
   const body = await req.text()
 
@@ -49,7 +56,6 @@ export async function POST(req: Request) {
   try {
     const eventId = event.id
 
-    // ✅ Idempotency protection: check if this event was already processed
     const { data: existingEvent } = await supabase
       .from("stripe_webhook_events")
       .select("id")
@@ -121,7 +127,6 @@ export async function POST(req: Request) {
         console.log(`Unhandled event type ${event.type}`)
     }
 
-    // ✅ Record processed event (prevents duplicate handling)
     await supabase
       .from("stripe_webhook_events")
       .insert({ id: eventId })
