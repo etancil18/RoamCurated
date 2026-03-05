@@ -13,6 +13,7 @@ import EventsModal from '@/components/modals/EventsModal'
 import HostCrawlModal from '@/components/modals/HostCrawlModal'
 import { logEvent } from '@/lib/logEvent'
 import { getHref, getOrigin, inBrowser } from '@/lib/browser'
+import ExternalLink from '@/components/ExternalLink'
 
 export type CrawlControlProps = {
   venues: Venue[]
@@ -129,7 +130,7 @@ export default function CrawlControl({
     const waypoints = route.map((v) => `${v.lat},${v.lon}`).join('/')
 
     if (typeof window !== 'undefined') {
-      window.open(`${base}${waypoints}`, '_blank')
+      window.open(`${base}${waypoints}`, '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -268,14 +269,12 @@ export default function CrawlControl({
             <ol className="list-decimal pl-4 space-y-0.5 max-h-32 overflow-y-auto">
               {route?.map((stop, i) => (
                 <li key={i} className="flex items-center justify-between gap-1 text-xs">
-                  <a
+                  <ExternalLink
                     href={stop.link || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="text-blue-400 truncate max-w-[140px]"
                   >
                     {stop.name}
-                  </a>
+                  </ExternalLink>
                   <button
                     onClick={() => handleModifyStop(stop, i)}
                     className="text-red-400 text-[10px] ml-1"

@@ -737,18 +737,33 @@ export type Database = {
       users: {
         Row: {
           created_at: string | null
+          current_period_end: string | null
           email: string | null
           id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string
+          subscription_tier: string
         }
         Insert: {
           created_at?: string | null
+          current_period_end?: string | null
           email?: string | null
           id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string
+          subscription_tier?: string
         }
         Update: {
           created_at?: string | null
+          current_period_end?: string | null
           email?: string | null
           id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string
+          subscription_tier?: string
         }
         Relationships: []
       }
