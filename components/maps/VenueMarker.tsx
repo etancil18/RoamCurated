@@ -45,11 +45,10 @@ export default function VenueMarker({
     [v, nowForCity]
   )
 
-  // ✅ Today’s hours (city-aware)
   const todayHours = useMemo(() => {
     if (!Array.isArray(v.hours)) return null
 
-    const today = nowForCity.setLocale('en-US').toFormat('cccc') // Monday, Tuesday, etc.
+    const today = nowForCity.setLocale('en-US').toFormat('cccc')
     const match = v.hours.find((line: string) =>
       line.toLowerCase().startsWith(today.toLowerCase())
     )
@@ -154,13 +153,19 @@ export default function VenueMarker({
 
           {(v.cover || firstCandidate) && (
             <img
-              src={`/${v.cover || firstCandidate}`}
+              src={v.cover ? (v.cover.startsWith('/') ? v.cover : `/${v.cover}`) : firstCandidate}
               alt={v.name}
               style={{
                 width: '100%',
                 maxHeight: 140,
                 objectFit: 'cover',
                 margin: '6px 0',
+              }}
+              onError={(e) => {
+                const img = e.currentTarget
+                if (firstCandidate && img.src !== firstCandidate) {
+                  img.src = firstCandidate
+                }
               }}
             />
           )}
@@ -175,7 +180,6 @@ export default function VenueMarker({
             </span>
           </div>
 
-          {/* 🔥 Today’s Hours */}
           {todayHours && (
             <div>
               <em>Hours:</em> {todayHours}
