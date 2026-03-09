@@ -26,29 +26,40 @@ export function _intervalsForDate(
   const startOfDay = atTime.startOf("day");
   const out: [DateTime, DateTime][] = [];
 
-  const at = (h: number) =>
-    startOfDay.plus({ hours: h });
+  // 🔧 Hardened hour resolver (prevents Luxon crashes)
+  const at = (h: number | any) => {
+    if (typeof h !== "number" || Number.isNaN(h)) return null;
+    return startOfDay.plus({ hours: h });
+  };
 
-  // Same-day intervals
+  /** Same-day intervals */
   _ranges(hours[_dayKey(atTime)] || []).forEach((r: any) => {
     if (r?.open != null && r?.close != null) {
-      out.push([
-        at(r.open),
-        at(r.close),
-      ]);
+      const open = at(r.open);
+      const close = at(r.close);
+
+      if (open && close) {
+        out.push([open, close]);
+      }
     }
   });
 
-  // Previous-day spillover (e.g. closes at 26 = 2am)
+  /** Previous-day spillover (e.g. closes at 26 = 2am) */
   const yesterday = atTime.minus({ days: 1 });
   const startOfYesterday = yesterday.startOf("day");
 
   _ranges(hours[_dayKey(yesterday)] || []).forEach((r: any) => {
-    if (r?.close > 24) {
-      out.push([
-        startOfYesterday.plus({ hours: r.open }),
-        startOfYesterday.plus({ hours: r.close }),
-      ]);
+    if (
+      typeof r?.open === "number" &&
+      typeof r?.close === "number" &&
+      r.close > 24
+    ) {
+      const open = startOfYesterday.plus({ hours: r.open });
+      const close = startOfYesterday.plus({ hours: r.close });
+
+      if (open && close) {
+        out.push([open, close]);
+      }
     }
   });
 
@@ -99,10 +110,6 @@ export function daypartAllowedAtTime(
  * Venue open checks (STRICT LUXON INJECTION)
  * -------------------------------------------------- */
 
-/**
- * Canonical open check.
- * Must pass Luxon DateTime.
- */
 export function isVenueOpenNow(
   venue: Venue,
   atTime: DateTime
