@@ -19,6 +19,7 @@ export default function ProfileForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const [fullName, setFullName] = useState<string>("")
   const [instagramHandle, setInstagramHandle] = useState<string>("")
@@ -36,6 +37,7 @@ export default function ProfileForm() {
   useEffect(() => {
     const loadProfile = async () => {
       setLoading(true)
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
@@ -61,6 +63,7 @@ export default function ProfileForm() {
         setSocialComfort(data.social_comfort ?? "")
         setDaysOut(data.days_out ?? [])
       }
+
       setLoading(false)
     }
 
@@ -72,6 +75,7 @@ export default function ProfileForm() {
     setError(null)
 
     const { data: { user } } = await supabase.auth.getUser()
+
     if (!user) {
       setError("User not authenticated")
       setLoading(false)
@@ -105,9 +109,37 @@ export default function ProfileForm() {
     setLoading(false)
   }
 
+  // 🗑️ Confirmed deletion
+  const deleteProfile = async () => {
+    setLoading(true)
+    setError(null)
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      setError("User not authenticated")
+      setLoading(false)
+      return
+    }
+
+   const { error } = await supabase.rpc("anonymize_profile", {
+  target_user: user.id,
+})
+
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    await supabase.auth.signOut()
+    router.push("/")
+  }
+
   return (
     <Card>
       <CardContent className="space-y-6 py-6">
+
         <section className="space-y-2">
           <label className="text-base font-medium">Full Name</label>
           <Input
@@ -116,6 +148,7 @@ export default function ProfileForm() {
             placeholder="e.g. Jordan Smith"
           />
         </section>
+
         <section className="space-y-2">
           <label className="text-base font-medium">Instagram Handle</label>
           <Input
@@ -124,12 +157,14 @@ export default function ProfileForm() {
             placeholder="@yourhandle"
           />
         </section>
+
         <PreferredVibes value={preferredVibes} onChange={setPreferredVibes} />
         <InterestCategories value={interests} onChange={setInterests} />
         <Frequency value={frequency} onChange={setFrequency} />
         <AgeRange value={ageRange} onChange={setAgeRange} />
         <PersonalityStyle value={personality} onChange={setPersonality} />
         <CrawlType value={crawlType} onChange={setCrawlType} />
+
         <section className="space-y-2">
           <label className="text-base font-medium">
             Home Neighborhood / Base Area
@@ -140,8 +175,10 @@ export default function ProfileForm() {
             placeholder="e.g. Midtown, East Atlanta, etc."
           />
         </section>
+
         <IntentLevel value={intentLevel} onChange={setIntentLevel} />
         <DaysOut value={daysOut} onChange={setDaysOut} />
+
         <section className="space-y-2">
           <label className="text-base font-medium">Social Comfort Level</label>
           <div className="flex flex-wrap gap-2">
@@ -156,10 +193,59 @@ export default function ProfileForm() {
             ))}
           </div>
         </section>
+
         {error && <p className="text-red-600">{error}</p>}
-        <Button className="w-full mt-4" onClick={onSave} disabled={loading}>
+
+        <Button
+          className="w-full mt-4"
+          onClick={onSave}
+          disabled={loading}
+        >
           {loading ? "Saving..." : "Save Profile"}
         </Button>
+
+        {/* Delete Profile */}
+        <div className="pt-6 border-t space-y-3">
+
+          {!confirmDelete && (
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => setConfirmDelete(true)}
+            >
+              Delete Profile
+            </Button>
+          )}
+
+          {confirmDelete && (
+            <div className="space-y-3">
+              <p className="text-sm text-red-600 font-medium">
+                Are you sure? This action cannot be undone.
+              </p>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={deleteProfile}
+                  disabled={loading}
+                >
+                  Yes, delete my profile
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+        </div>
+
       </CardContent>
     </Card>
   )
