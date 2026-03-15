@@ -360,6 +360,7 @@ export type Database = {
           crawl_type: string | null
           created_at: string | null
           days_out: string[] | null
+          deleted_at: string | null
           frequency: string | null
           full_name: string | null
           home_neighborhood: string | null
@@ -377,6 +378,7 @@ export type Database = {
           crawl_type?: string | null
           created_at?: string | null
           days_out?: string[] | null
+          deleted_at?: string | null
           frequency?: string | null
           full_name?: string | null
           home_neighborhood?: string | null
@@ -394,6 +396,7 @@ export type Database = {
           crawl_type?: string | null
           created_at?: string | null
           days_out?: string[] | null
+          deleted_at?: string | null
           frequency?: string | null
           full_name?: string | null
           home_neighborhood?: string | null
@@ -407,6 +410,109 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string | null
+          approved: boolean | null
+          city: string
+          created_at: string | null
+          featured: boolean | null
+          host_name: string | null
+          host_type: string | null
+          id: string
+          lat: number
+          lon: number
+          name: string
+          slug: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          approved?: boolean | null
+          city: string
+          created_at?: string | null
+          featured?: boolean | null
+          host_name?: string | null
+          host_type?: string | null
+          id?: string
+          lat: number
+          lon: number
+          name: string
+          slug: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          approved?: boolean | null
+          city?: string
+          created_at?: string | null
+          featured?: boolean | null
+          host_name?: string | null
+          host_type?: string | null
+          id?: string
+          lat?: number
+          lon?: number
+          name?: string
+          slug?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      property_favorites: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          label: string | null
+          priority: number | null
+          property_id: string
+          venue_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label?: string | null
+          priority?: number | null
+          property_id: string
+          venue_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label?: string | null
+          priority?: number | null
+          property_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_favorites_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_favorites_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "property_favorites_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recurring_events: {
         Row: {
@@ -644,6 +750,21 @@ export type Database = {
           proj4text?: string | null
           srid?: number
           srtext?: string | null
+        }
+        Relationships: []
+      }
+      stripe_webhook_events: {
+        Row: {
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
         }
         Relationships: []
       }
@@ -1279,6 +1400,7 @@ export type Database = {
             }
             Returns: string
           }
+      anonymize_profile: { Args: { target_user: string }; Returns: undefined }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
@@ -1310,6 +1432,7 @@ export type Database = {
           }
         | { Args: { schema_name: string; table_name: string }; Returns: string }
         | { Args: { table_name: string }; Returns: string }
+      earth: { Args: never; Returns: number }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       geometry: { Args: { "": string }; Returns: unknown }
@@ -1430,6 +1553,74 @@ export type Database = {
           venue_ids: string[]
           vibe_tags: string[]
         }[]
+      }
+      get_nearby_crawls: {
+        Args: {
+          property_lat: number
+          property_lon: number
+          radius_meters?: number
+        }
+        Returns: {
+          city: string
+          datetime: string
+          id: string
+          slug: string
+          title: string
+        }[]
+      }
+      get_nearby_events: {
+        Args: {
+          property_lat: number
+          property_lon: number
+          radius_meters?: number
+        }
+        Returns: {
+          description: string
+          ends_at: string
+          id: string
+          starts_at: string
+          title: string
+          venue_id: string
+          venue_lat: number
+          venue_lon: number
+          venue_name: string
+          venue_slug: string
+        }[]
+      }
+      get_nearby_venues: {
+        Args: {
+          property_lat: number
+          property_lon: number
+          radius_meters?: number
+        }
+        Returns: {
+          access_token: string | null
+          address: string | null
+          city: string | null
+          contact: string[] | null
+          cover: string | null
+          description: string | null
+          duration: number | null
+          energy_ramp: number | null
+          hours: Json | null
+          id: string
+          instagram_handle: string | null
+          lat: number | null
+          lon: number | null
+          name: string | null
+          price: string | null
+          slug: string | null
+          tags: string[] | null
+          tier: string | null
+          time_category: string | null
+          type: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "venues"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       gettransactionid: { Args: never; Returns: unknown }
       join_crawl: { Args: { input_crawl_id: string }; Returns: undefined }

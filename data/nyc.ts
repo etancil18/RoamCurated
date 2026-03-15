@@ -26369,7 +26369,7 @@ const nycData = [
   { "date": "-", "title": "-", "time": "-" },
   { "date": "-", "title": "-", "time": "-" }
 ],
-  "hoursNumeric": { "sun": { "open": closed, "close": closed },
+  "hoursNumeric": { "sun": null,
     "mon": { "open": 11, "close": 21 },
     "tue": { "open": 11, "close": 21 },
     "wed": { "open": 11, "close": 21 },

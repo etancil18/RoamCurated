@@ -19,7 +19,7 @@ export type Venue = {
   type?: string | string[];
   cover?: string;
   instagram_handle?: string;
-  tags?: string
+  tags?: string;
   tier?: string;
   city?: string;
   neighborhood?: string;
@@ -40,24 +40,36 @@ export type Venue = {
   dateEvents?: DateEvent[];
   _has_upcoming_events?: boolean;
 
-  // ✅ Dynamic event crawl enhancements
-  liveEvent?: boolean;        // True if flagged as an active/ongoing event
-  event_id?: string;          // Underlying event record ID (for analytics & dedupe)
-  eventCategory?: string;     // Category of event (music, art, food, etc.)
-  starts_at?: string;         // ISO timestamp for event start
-  ends_at?: string;           // ISO timestamp for event end
+  // Dynamic event crawl enhancements
+  liveEvent?: boolean;       
+  event_id?: string;         
+  eventCategory?: string;    
+  starts_at?: string;        
+  ends_at?: string;          
 
-  // ✅ Scoring / logic helpers
-  _score?: number;            // Used internally during crawl sorting
-  _eventBoost?: number;       // Additional score weight for event relevance
-  scoreBoost?: number;        // Configurable per-venue weighting multiplier
+  // Scoring / logic helpers
+  _score?: number;           
+  _eventBoost?: number;      
+  scoreBoost?: number;       
 };
 
-// StaticVenue extends Venue with guaranteed fields from static data
-export type StaticVenue = Omit<Venue, "id"> & {
+/* ------------------------------------------------ */
+/* StaticVenue                                      */
+/* ------------------------------------------------ */
+
+/*
+Static venue records originate from data/*.ts files.
+
+They share the same canonical UUID as the Supabase venue
+table and therefore MUST include `id`.
+
+We allow lat/lon to be string because many static datasets
+store them that way and they are normalized later.
+*/
+
+export type StaticVenue = Omit<Venue, "lat" | "lon"> & {
+  id: string;
   slug: string;
-  name: string;
-  lat: number;
-  lon: number;
-  link: string;
+  lat: number | string;
+  lon: number | string;
 };
