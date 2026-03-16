@@ -124,7 +124,9 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
   ]
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-10">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-10
+                    bg-white text-gray-900
+                    dark:bg-neutral-950 dark:text-gray-100">
 
       {/* 🔙 Back to Map */}
       <div>
@@ -134,7 +136,9 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
               ? `/?city=${normalizedVenue.city}`
               : '/'
           }
-          className="inline-block text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          className="inline-block text-sm font-medium
+                     text-blue-600 hover:text-blue-800
+                     dark:text-blue-400 dark:hover:text-blue-300"
         >
           ← Back to {normalizedVenue.city ?? 'Map'}
         </Link>
@@ -143,7 +147,7 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       <HeroBanner venue={normalizedVenue} />
 
       {normalizedVenue.description && (
-        <p className="text-base text-gray-700 dark:text-gray-300">
+        <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
           {normalizedVenue.description}
         </p>
       )}
