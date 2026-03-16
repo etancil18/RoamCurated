@@ -34,13 +34,20 @@ function formatCountdown(datetime: string | null) {
 }
 
 export default function UserCrawls() {
+
   const [hosted, setHosted] = useState<Crawl[]>([])
   const [upcoming, setUpcoming] = useState<Crawl[]>([])
   const [past, setPast] = useState<Crawl[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [showAllHosted,setShowAllHosted] = useState(false)
+  const [showAllUpcoming,setShowAllUpcoming] = useState(false)
+  const [showAllPast,setShowAllPast] = useState(false)
+
   useEffect(() => {
+
     async function loadCrawls() {
+
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -48,16 +55,14 @@ export default function UserCrawls() {
       if (!user) return
 
       const today = new Date()
-      today.setHours(0, 0, 0, 0)
+      today.setHours(0,0,0,0)
 
-      // Hosted Crawls
       const { data: hostedData } = await supabase
         .from('crawl_events')
         .select('id, title, slug, datetime, city')
         .eq('creator_id', user.id)
-        .order('datetime', { ascending: true })
+        .order('datetime',{ ascending:true })
 
-      // RSVP’d Crawls
       const { data: rsvpData } = await supabase
         .from('crawl_rsvps')
         .select(`
@@ -73,29 +78,31 @@ export default function UserCrawls() {
         .eq('user_id', user.id)
 
       const formattedRsvps =
-        rsvpData?.map((r: any) => r.crawl_events).filter(Boolean) ?? []
+        rsvpData?.map((r:any)=>r.crawl_events).filter(Boolean) ?? []
 
-      const upcomingCrawls: Crawl[] = []
-      const pastCrawls: Crawl[] = []
+      const upcomingCrawls:Crawl[] = []
+      const pastCrawls:Crawl[] = []
 
-      formattedRsvps.forEach((crawl) => {
-        if (!crawl.datetime) {
+      formattedRsvps.forEach((crawl)=>{
+
+        if(!crawl.datetime){
           upcomingCrawls.push(crawl)
-        } else if (new Date(crawl.datetime) >= today) {
+        } else if(new Date(crawl.datetime) >= today){
           upcomingCrawls.push(crawl)
         } else {
           pastCrawls.push(crawl)
         }
+
       })
 
       upcomingCrawls.sort(
-        (a, b) =>
+        (a,b)=>
           new Date(a.datetime ?? '').getTime() -
           new Date(b.datetime ?? '').getTime()
       )
 
       pastCrawls.sort(
-        (a, b) =>
+        (a,b)=>
           new Date(b.datetime ?? '').getTime() -
           new Date(a.datetime ?? '').getTime()
       )
@@ -104,95 +111,145 @@ export default function UserCrawls() {
       setUpcoming(upcomingCrawls)
       setPast(pastCrawls)
       setLoading(false)
+
     }
 
     loadCrawls()
-  }, [])
 
-  // ✅ Remove RSVP
-  const removeRsvp = async (crawlId: string) => {
+  },[])
+
+  const removeRsvp = async (crawlId:string) => {
+
     const {
-      data: { user },
+      data:{ user },
     } = await supabase.auth.getUser()
 
-    if (!user) return
+    if(!user) return
 
     const { error } = await supabase
       .from('crawl_rsvps')
       .delete()
-      .eq('crawl_id', crawlId)
-      .eq('user_id', user.id)
+      .eq('crawl_id',crawlId)
+      .eq('user_id',user.id)
 
-    if (error) {
-      console.error('Failed to remove RSVP:', error)
+    if(error){
+      console.error('Failed to remove RSVP:',error)
       return
     }
 
-    // Update UI immediately
-    setUpcoming((prev) => prev.filter((c) => c.id !== crawlId))
+    setUpcoming(prev => prev.filter(c => c.id !== crawlId))
+
   }
 
-  if (loading) return <p>Loading crawls...</p>
+  if(loading){
+    return (
+      <p className="text-sm text-muted-foreground">
+        Loading your crawls…
+      </p>
+    )
+  }
 
   const nextCrawl = upcoming[0]
 
+  const hostedVisible = showAllHosted ? hosted : hosted.slice(0,3)
+  const upcomingVisible = showAllUpcoming ? upcoming : upcoming.slice(0,3)
+  const pastVisible = showAllPast ? past : past.slice(0,3)
+
   return (
-    <div className="space-y-10">
+
+    <div className="space-y-12">
 
       {/* Hosted */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">🎉 Hosted Crawls</h2>
+
+      <section className="space-y-4">
+
+        <h2 className="text-lg font-semibold">
+          🎉 Hosted Crawls
+        </h2>
 
         {hosted.length === 0 && (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             You haven’t hosted any crawls yet.
           </p>
         )}
 
         <div className="grid gap-3">
-          {hosted.map((crawl) => (
+
+          {hostedVisible.map((crawl)=>(
             <Link key={crawl.id} href={`/sponsor/${crawl.slug}`}>
+
               <Card className="hover:shadow-md transition cursor-pointer">
+
                 <CardContent className="p-4">
-                  <p className="font-medium">{crawl.title}</p>
+
+                  <p className="font-medium text-foreground">
+                    {crawl.title}
+                  </p>
+
                   <p className="text-xs text-muted-foreground">
                     {crawl.city} •{' '}
                     {crawl.datetime
                       ? new Date(crawl.datetime).toLocaleDateString()
                       : 'No date'}
                   </p>
+
                 </CardContent>
+
               </Card>
+
             </Link>
           ))}
+
         </div>
+
+        {hosted.length > 3 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={()=>setShowAllHosted(!showAllHosted)}
+          >
+            {showAllHosted ? 'Show less' : 'See more'}
+          </Button>
+        )}
+
       </section>
 
-      {/* Upcoming Crawls */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">🗓️ Upcoming Crawls</h2>
+      {/* Upcoming */}
+
+      <section className="space-y-4">
+
+        <h2 className="text-lg font-semibold">
+          🗓️ Upcoming Crawls
+        </h2>
 
         {upcoming.length === 0 && (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             You haven’t joined any upcoming crawls.
           </p>
         )}
 
         <div className="grid gap-3">
-          {upcoming.map((crawl) => {
+
+          {upcomingVisible.map((crawl)=>{
+
             const isNext = nextCrawl?.id === crawl.id
             const countdown = formatCountdown(crawl.datetime)
 
             return (
+
               <Link key={crawl.id} href={`/sponsor/${crawl.slug}`}>
+
                 <Card
-                  className={`hover:shadow-md transition cursor-pointer ${
-                    isNext ? 'border-blue-500 border-2' : ''
+                  className={`transition cursor-pointer hover:shadow-md ${
+                    isNext ? 'border-primary' : ''
                   }`}
                 >
-                  <CardContent className="p-4 space-y-2">
 
-                    <p className="font-medium">{crawl.title}</p>
+                  <CardContent className="p-4 space-y-1">
+
+                    <p className="font-medium text-foreground">
+                      {crawl.title}
+                    </p>
 
                     <p className="text-xs text-muted-foreground">
                       {crawl.city} •{' '}
@@ -202,23 +259,22 @@ export default function UserCrawls() {
                     </p>
 
                     {countdown && (
-                      <p className="text-xs text-blue-600">
+                      <p className="text-xs text-primary">
                         Starts in {countdown}
                       </p>
                     )}
 
                     {isNext && (
-                      <p className="text-xs font-semibold text-blue-600">
+                      <p className="text-xs font-semibold text-primary">
                         Your next crawl
                       </p>
                     )}
 
-                    {/* ✅ RSVP Removal */}
                     <Button
                       size="sm"
                       variant="outline"
                       className="mt-2"
-                      onClick={(e) => {
+                      onClick={(e)=>{
                         e.preventDefault()
                         e.stopPropagation()
                         removeRsvp(crawl.id)
@@ -228,40 +284,82 @@ export default function UserCrawls() {
                     </Button>
 
                   </CardContent>
+
                 </Card>
+
               </Link>
+
             )
+
           })}
+
         </div>
+
+        {upcoming.length > 3 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={()=>setShowAllUpcoming(!showAllUpcoming)}
+          >
+            {showAllUpcoming ? 'Show less' : 'See more'}
+          </Button>
+        )}
+
       </section>
 
-      {/* Past Crawls */}
-      <section>
-        <h2 className="text-xl font-semibold mb-3">📜 Past Crawls</h2>
+      {/* Past */}
+
+      <section className="space-y-4">
+
+        <h2 className="text-lg font-semibold">
+          📜 Past Crawls
+        </h2>
 
         {past.length === 0 && (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             No past crawls yet.
           </p>
         )}
 
         <div className="grid gap-3">
-          {past.map((crawl) => (
+
+          {pastVisible.map((crawl)=>(
             <Link key={crawl.id} href={`/sponsor/${crawl.slug}`}>
+
               <Card className="hover:shadow-md transition cursor-pointer opacity-80">
+
                 <CardContent className="p-4">
-                  <p className="font-medium">{crawl.title}</p>
+
+                  <p className="font-medium text-foreground">
+                    {crawl.title}
+                  </p>
+
                   <p className="text-xs text-muted-foreground">
                     {crawl.city} •{' '}
                     {crawl.datetime
                       ? new Date(crawl.datetime).toLocaleDateString()
                       : 'No date'}
                   </p>
+
                 </CardContent>
+
               </Card>
+
             </Link>
           ))}
+
         </div>
+
+        {past.length > 3 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={()=>setShowAllPast(!showAllPast)}
+          >
+            {showAllPast ? 'Show less' : 'See more'}
+          </Button>
+        )}
+
       </section>
 
     </div>

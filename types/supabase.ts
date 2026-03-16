@@ -652,6 +652,33 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_properties: {
+        Row: {
+          city: string
+          created_at: string | null
+          id: string
+          property_id: string
+          slug: string
+          user_id: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          id?: string
+          property_id: string
+          slug: string
+          user_id?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          id?: string
+          property_id?: string
+          slug?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       saved_routes: {
         Row: {
           city: string | null

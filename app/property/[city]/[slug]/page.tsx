@@ -8,6 +8,7 @@ import { CITY_CONFIGS } from '@/config/cities'
 import PropertyCrawls from '@/app/property/components/PropertyCrawls'
 import { venueMatchesAnyType } from '@/lib/venues/typeMatching'
 import { loadCityVenues } from '@/lib/venues/loadCityVenues'
+import SavePropertyButton from '../../components/SavePropertyButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -231,32 +232,46 @@ export default async function PropertyPage({ params }: PageProps) {
 
     <main className="max-w-5xl mx-auto p-6 space-y-10">
 
-      {/* Hero */}
+     {/* Hero */}
 
-      <section>
+<section>
 
-        <Card>
+  <Card>
 
-          <CardContent className="p-6 space-y-2">
+    <CardContent className="p-6 space-y-3">
 
-            <h1 className="text-3xl font-semibold">
-              {property.name}
-            </h1>
+      <div className="flex items-start justify-between gap-4">
 
-            <p className="text-muted-foreground">
-              {property.city}
-              {property.host_name && ` • Hosted by ${property.host_name}`}
-            </p>
+        <div className="space-y-2">
 
-            <p className="text-sm text-muted-foreground">
-              Discover coffee, dining, nightlife, and hidden gems within walking distance.
-            </p>
+          <h1 className="text-3xl font-semibold">
+            {property.name}
+          </h1>
 
-          </CardContent>
+          <p className="text-muted-foreground">
+            {property.city}
+            {property.host_name && ` • Hosted by ${property.host_name}`}
+          </p>
 
-        </Card>
+          <p className="text-sm text-muted-foreground">
+            Discover coffee, dining, nightlife, and hidden gems within walking distance.
+          </p>
 
-      </section>
+        </div>
+
+        <SavePropertyButton
+          propertyId={property.id}
+          city={property.city}
+          slug={property.slug}
+        />
+
+      </div>
+
+    </CardContent>
+
+  </Card>
+
+</section>
 
       {/* Map */}
 
