@@ -53,7 +53,7 @@ const lisbonData = [
     "lat": "38.7113519",
     "lon": "-9.1424033",
     "link": "https://www.instagram.com/rumu_______/?hl=en",
-    "cover": "img/venues/Rūmu.jpg",
+    "cover": "img/venues/rumu.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -141,7 +141,7 @@ const lisbonData = [
     "lat": "38.7108489",
     "lon": "-9.1509367",
     "link": "https://www.instagram.com/incognito.lx/?hl=en",
-    "cover": "img/venues/Incógnito.jpg",
+    "cover": "img/venues/incognito.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -185,7 +185,7 @@ const lisbonData = [
     "lat": "38.7218374",
     "lon": "-9.1551333",
     "link": "https://www.instagram.com/procopiolisboa/?hl=en",
-    "cover": "img/venues/Procópio.jpg",
+    "cover": "img/venues/procopio.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -549,7 +549,7 @@ const lisbonData = [
     "lat": "38.7116043",
     "lon": "-9.133973",
     "link": "https://www.instagram.com/chapitoamesa/",
-    "cover": "img/venues/Chapitô à Mesa.jpg",
+    "cover": "img/venues/chapito-a-mesa.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–5:30 PM; 6:30 PM–1:00 AM",
@@ -790,7 +790,7 @@ const lisbonData = [
     "lat": "38.715784",
     "lon": "-9.146719",
     "link": "https://www.instagram.com/p/CpioHZjIipq/",
-    "cover": "img/venues/Pavilhão Chinês.jpg",
+    "cover": "img/venues/pavilhao-chines.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 PM–2:00 AM",
@@ -1274,7 +1274,7 @@ const lisbonData = [
     "lat": "38.7175766",
     "lon": "-9.147371",
     "link": "https://www.instagram.com/amago.restaurante/",
-    "cover": "img/venues/Âmago.jpg",
+    "cover": "img/venues/amago.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 8:00 PM–11:30 PM",
@@ -1582,7 +1582,7 @@ const lisbonData = [
     "lat": "38.7112878",
     "lon": "-9.1526249",
     "link": "https://www.instagram.com/furia.lisboa/?hl=en",
-    "cover": "img/venues/Fúria.jpg",
+    "cover": "img/venues/furia.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 6:00 PM–2:00 AM",
@@ -2038,7 +2038,7 @@ const lisbonData = [
     "lat": "38.7148373",
     "lon": "-9.1328792",
     "link": "https://www.instagram.com/cafe.dagaragem/?hl=en",
-    "cover": "img/venues/Café da Garagem.jpg",
+    "cover": "img/venues/cafe-da-garagem.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 10:30 AM–8:00 PM",
@@ -3388,7 +3388,7 @@ const lisbonData = [
     "lat": "38.7176058",
     "lon": "-9.1474468",
     "link": "https://www.instagram.com/dramatico.lisboa/?hl=en",
-    "cover": "img/venues/Dramático.jpg",
+    "cover": "img/venues/dramatico.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -3652,7 +3652,7 @@ const lisbonData = [
     "lat": "38.7109263",
     "lon": "-9.1404735",
     "link": "https://www.instagram.com/castro_atelier_lisboa/?hl=en",
-    "cover": "img/venues/Castro - Atelier de Pastéis de Nata.jpg",
+    "cover": "img/venues/castro-atelier-de-pasteis-de-nata.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 8:30 AM–10:00 PM",
@@ -3696,7 +3696,7 @@ const lisbonData = [
     "lat": "38.7107392",
     "lon": "-9.1405479",
     "link": "https://www.instagram.com/alcoa_pastelaria/?hl=en",
-    "cover": "img/venues/Alcôa.jpg",
+    "cover": "img/venues/alcoa.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 10:00 AM–8:00 PM",
@@ -3740,7 +3740,7 @@ const lisbonData = [
     "lat": "38.713472",
     "lon": "-9.1340115",
     "link": "https://www.instagram.com/1147.lisboa/?hl=en",
-    "cover": "img/venues/1147 Restaurante - Castelo de São Jorge.png",
+    "cover": "img/venues/1147-restaurante-castelo-de-sao-jorge.png",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–6:00 PM",
@@ -4004,7 +4004,7 @@ const lisbonData = [
     "lat": "38.7073563",
     "lon": "-9.1435333",
     "link": "https://www.instagram.com/obomomaueovilao/?hl=en",
-    "cover": "img/venues/O Bom O Mau e O Vilão.jpg",
+    "cover": "img/venues/o-bom-o-mau-e-o-vilao.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 7:00 PM–2:00 AM",
@@ -4312,7 +4312,7 @@ const lisbonData = [
     "lat": "38.7072702",
     "lon": "-9.1436737",
     "link": "https://www.instagram.com/pensaoamor/?hl=en",
-    "cover": "img/venues/Pensão Amor.jpg",
+    "cover": "img/venues/pensao-amor.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–3:00 AM",
@@ -4356,7 +4356,7 @@ const lisbonData = [
     "lat": "38.7139722",
     "lon": "-9.144013",
     "link": "https://www.instagram.com/marrecreo_pizzeria/?hl=en",
-    "cover": "img/venues/M’arrecreo Pizzeria.jpg",
+    "cover": "img/venues/marrecreo-pizzeria.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:30 PM–11:30 PM",
@@ -4553,7 +4553,7 @@ const lisbonData = [
     "lat": "38.7099691",
     "lon": "-9.1587335",
     "link": "https://www.instagram.com/filtro.creativelab/?hl=en",
-    "cover": "img/venues/Filtrô - Creative Lab.jpg",
+    "cover": "img/venues/filtro-creative-lab.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -4729,7 +4729,7 @@ const lisbonData = [
     "lat": "38.7135024",
     "lon": "-9.1647181",
     "link": "https://www.instagram.com/baraparodia/?hl=en",
-    "cover": "img/venues/Bar A Paródia.jpg",
+    "cover": "img/venues/bar-a-parodia.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -4817,7 +4817,7 @@ const lisbonData = [
     "lat": "38.7319952",
     "lon": "-9.1547552",
     "link": "https://www.instagram.com/linhadagua/?hl=en",
-    "cover": "img/venues/Linha d'Água.jpg",
+    "cover": "img/venues/linha-dagua.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–12:00 AM",
@@ -5490,7 +5490,7 @@ const lisbonData = [
     "lat": "38.7233349",
     "lon": "-9.1458092",
     "link": "https://www.instagram.com/cervejacanil/?hl=en",
-    "cover": "img/venues/Canil Marquês.jpg",
+    "cover": "img/venues/canil-marques.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–12:00 AM",
@@ -6012,7 +6012,7 @@ const lisbonData = [
     "lat": "38.7108872",
     "lon": "-9.1449601",
     "link": "https://www.instagram.com/sobrio_lx/?hl=en",
-    "cover": "img/venues/SÓBRIO LX.jpg",
+    "cover": "img/venues/sobrio-lx.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "7:00 PM–2:00 AM",
@@ -6336,7 +6336,7 @@ const lisbonData = [
     "lat": "38.7117856",
     "lon": "-9.1445953",
     "link": "https://www.instagram.com/galeriazedosbois/?hl=en",
-    "cover": "img/venues/Zé dos Bois gallery.jpg",
+    "cover": "img/venues/ze-dos-bois-gallery.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",
@@ -6804,7 +6804,7 @@ const lisbonData = [
     "lat": "38.7184808",
     "lon": "-9.1363981",
     "link": "https://www.instagram.com/carpintarias_sl/?hl=en",
-    "cover": "img/venues/Carpintarias de São Lázaro.jpg",
+    "cover": "img/venues/carpintarias-de-sao-lazaro.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–6:00 PM",
@@ -7308,7 +7308,7 @@ const lisbonData = [
     "lat": "38.7084586",
     "lon": "-9.1461584",
     "link": "https://www.instagram.com/fares_lisboa/?hl=en",
-    "cover": "img/venues/Farès.jpg",
+    "cover": "img/venues/fares.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–1:00 AM",
@@ -7833,7 +7833,7 @@ const lisbonData = [
     "lat": "38.7092855",
     "lon": "-9.1321368",
     "link": "https://www.instagram.com/casa_tradicao_lisboa/?hl=en",
-    "cover": "img/venues/Casa Tradição.jpg",
+    "cover": "img/venues/casa-tradicao.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "1:00 PM–3:00 PM; 7:00 PM–10:30 PM",
@@ -8286,7 +8286,7 @@ const lisbonData = [
     "lat": "38.7116326",
     "lon": "-9.1606388",
     "link": "https://www.instagram.com/aera.lisboa/",
-    "cover": "img/venues/æra coffee.jpg",
+    "cover": "img/venues/aera-coffee.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "8:00 AM–3:00 PM",
@@ -8322,7 +8322,7 @@ const lisbonData = [
     "lat": "38.7232893",
     "lon": "-9.1375946",
     "link": "https://www.instagram.com/cafedopacolisboa/",
-    "cover": "img/venues/Café do Paço.jpg",
+    "cover": "img/venues/cafe-do-paco.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",
@@ -8394,7 +8394,7 @@ const lisbonData = [
     "lat": "38.7124551",
     "lon": "-9.1426513",
     "link": "https://www.instagram.com/oficiolisboa/",
-    "cover": "img/venues/Ofício (Wine & Dining Room).jpg",
+    "cover": "img/venues/oficio-wine-and-dining-room.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "Closed",
@@ -8586,7 +8586,7 @@ const lisbonData = [
     "lat": "38.7088637",
     "lon": "-9.1490119",
     "link": "https://www.instagram.com/comoba_lisboa/?hl=en",
-    "cover": "img/venues/COMOBÅ.jpg",
+    "cover": "img/venues/comoba.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "8:30 AM–5:00 PM",
@@ -9150,7 +9150,7 @@ const lisbonData = [
     "lat": "38.7354666",
     "lon": "-9.1329545",
     "link": "https://www.instagram.com/pequeno.cafebistro/",
-    "cover": "img/venues/Pequeno Café e Bistrô - Arroios.jpg",
+    "cover": "img/venues/pequeno-cafe-e-bistro-arroios.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–3:30 PM",
@@ -9756,7 +9756,7 @@ const lisbonData = [
     "lat": "38.7199694",
     "lon": "-9.160488",
     "link": "https://www.instagram.com/polemico.lx/?hl=en",
-    "cover": "img/venues/Polémico.jpg",
+    "cover": "img/venues/polemico.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -10284,7 +10284,7 @@ const lisbonData = [
     "lat": "38.7231757",
     "lon": "-9.1456112",
     "link": "https://www.instagram.com/theretreatspa/reels/?__d=1",
-    "cover": "img/venues/THE ReTREAT - WELLNESS & SPA.jpg",
+    "cover": "img/venues/the-retreat-wellness-spa.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 10:00 AM–8:00 PM",
@@ -10515,7 +10515,7 @@ const lisbonData = [
     "lat": "38.7133124",
     "lon": "-9.1531372",
     "link": "https://www.instagram.com/cafedesaobento/?hl=en",
-    "cover": "img/venues/Café de São Bento.jpg",
+    "cover": "img/venues/cafe-de-sao-bento.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–3:00 PM; 7:00 PM–1:00 AM",
@@ -10700,7 +10700,7 @@ const lisbonData = [
     "lat": "38.700449",
     "lon": "-9.1833449",
     "link": "https://www.instagram.com/macam.museum_hotel?hl=en",
-    "cover": "img/venues/MACAM - Museu de Arte Contemporânea Armando Martins.jpg",
+    "cover": "img/venues/macam-museu-de-arte-contemporanea-armando-martins.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 10:00 AM–7:00 PM",
@@ -10826,7 +10826,7 @@ const lisbonData = [
     "lat": "38.733166",
     "lon": "-9.1344633",
     "link": "https://www.instagram.com/fabricaboloschile/?hl=en",
-    "cover": "img/venues/Fábrica dos Bolos do Chile.jpg",
+    "cover": "img/venues/fabrica-dos-bolos-do-chile.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 8:30 PM–6:00 AM",
@@ -10862,7 +10862,7 @@ const lisbonData = [
     "lat": "38.7087296",
     "lon": "-9.1437048",
     "link": "https://www.instagram.com/semcodea.lisbon/",
-    "cover": "img/venues/Sem Côdea.jpg",
+    "cover": "img/venues/sem-codea.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–12:00 AM",
@@ -10895,6 +10895,960 @@ const lisbonData = [
     "timeCategory": "midday, evening, late",
     "energyRamp": 3,
     "tags": "naturalwine, smallplates, bar, sharing, organic, brunch, cocktails, ingredients, lisbon, seasonal",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "cosmo",
+    "name": "Cosmo",
+    "id": "dc73933b-d926-4491-8ab4-60d32813f99d",
+    "vibe": "fiery, lively, convivial, stylish, modern, buzzy",
+    "type": ["dinner"],
+    "lat": "38.7080936",
+    "lon": "-9.1450911",
+    "link": "https://www.instagram.com/cosmo_lisboa/",
+    "cover": "img/venues/Cosmo.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 PM–1:00 AM",
+      "Monday: 6:00 PM–1:00 AM",
+      "Tuesday: 6:00 PM–1:00 AM",
+      "Wednesday: 6:00 PM–1:00 AM",
+      "Thursday: 6:00 PM–1:00 AM",
+      "Friday: 6:00 PM–1:00 AM",
+      "Saturday: 6:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18, "close": 25 },
+      "mon": { "open": 18, "close": 25 },
+      "tue": { "open": 18, "close": 25 },
+      "wed": { "open": 18, "close": 25 },
+      "thu": { "open": 18, "close": 25 },
+      "fri": { "open": 18, "close": 25 },
+      "sat": { "open": 18, "close": 25 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "grill, basque, openfire, bites, cocktails, seafood, meats, bar, sharing, local",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "soeurs-cafe",
+    "name": "Soeurs Café",
+    "id": "8c48e011-c75a-4501-b9d6-e2bb02a95dec",
+    "vibe": "cozy, feminine, bright, casual, friendly, wholesome",
+    "type": ["coffee"],
+    "lat": "38.7259365",
+    "lon": "-9.1450678",
+    "link": "https://www.instagram.com/soeurscafe/",
+    "cover": "img/venues/soeurs-cafe.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–6:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 18 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "-",
+      "tue": "-",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 3,
+    "tags": "coffee, deli, pastries, sweets, brunch, specialty, sisters, plates, lunch, toast",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "pils-grill-eatery",
+    "name": "Pils Grill Eatery",
+    "id": "a420aa9d-9492-48a9-a2c1-81d805a85bd0",
+    "vibe": "smoky, hearty, relaxed, social, robust, unfussy",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7259358",
+    "lon": "-9.146226",
+    "link": "https://www.instagram.com/pils_lisboa/",
+    "cover": "img/venues/Pils Grill Eatery.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–11:00 PM",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–12:00 AM",
+      "Saturday: 12:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 23 },
+      "mon": null,
+      "tue": { "open": 12, "close": 23 },
+      "wed": { "open": 12, "close": 23 },
+      "thu": { "open": 12, "close": 23 },
+      "fri": { "open": 12, "close": 24 },
+      "sat": { "open": 12, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 3,
+    "tags": "grill, seafood, meats, beer, taps, local, charcoal, plates, eatery, lunch",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "cacue",
+    "name": "Cacué",
+    "id": "7c80940f-75d7-401f-b980-fcf21848ca70",
+    "vibe": "rustic, soulful, warm, contemporary, welcoming, honest",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7314809",
+    "lon": "-9.1489106",
+    "link": "https://www.instagram.com/cacue_restaurante/?hl=en",
+    "cover": "img/venues/Cacue.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 12:00 PM–3:00 PM",
+      "Tuesday: 12:00 PM–3:00 PM; 7:00 PM–10:00 PM",
+      "Wednesday: 12:00 PM–3:00 PM; 7:00 PM–10:00 PM",
+      "Thursday: 12:00 PM–3:00 PM; 7:00 PM–10:00 PM",
+      "Friday: 12:00 PM–3:00 PM; 7:00 PM–10:00 PM",
+      "Saturday: 12:00 PM–3:00 PM; 7:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 12, "close": 15 },
+      "tue": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 22 }
+      ],
+      "wed": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 22 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 22 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 22 }
+      ],
+      "sat": [
+        { "open": 12, "close": 15 },
+        { "open": 19, "close": 22 }
+      ]
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "A",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 3,
+    "tags": "tavern, portuguese, recipes, lunch, dinner, wine, comfort, dishes, chef, tradition",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "osteria-cucina-di-amici",
+    "name": "Osteria Cucina di Amici",
+    "id": "617a5f07-7c44-433c-b024-7309c00d9e1a",
+    "vibe": "intimate, charming, rustic, convivial, hearty, homelike",
+    "type": ["lunch", "dinner"],
+    "lat": "38.7087746",
+    "lon": "-9.1548862",
+    "link": "https://www.instagram.com/osterialisboa/",
+    "cover": "img/venues/Osteria Cucina di Amici.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:30 PM–11:30 PM",
+      "Monday: 7:00 PM–12:00 AM",
+      "Tuesday: 12:30 PM–3:00 PM; 7:00 PM–12:00 AM",
+      "Wednesday: 12:30 PM–3:00 PM; 7:00 PM–12:00 AM",
+      "Thursday: 12:30 PM–3:00 PM; 7:00 PM–12:00 AM",
+      "Friday: 12:30 PM–3:00 PM; 7:00 PM–12:30 AM",
+      "Saturday: 12:30 PM–4:00 PM; 7:00 PM–12:30 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12.5, "close": 23.5 },
+      "mon": { "open": 19, "close": 24 },
+      "tue": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 24 }
+      ],
+      "wed": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 24 }
+      ],
+      "thu": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 24 }
+      ],
+      "fri": [
+        { "open": 12.5, "close": 15 },
+        { "open": 19, "close": 24.5 }
+      ],
+      "sat": [
+        { "open": 12.5, "close": 16 },
+        { "open": 19, "close": 24.5 }
+      ]
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 3,
+    "tags": "italian, pasta, ravioli, focaccia, lasagna, lunch, dinner, wine, trattoria, homemade",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "ema-lisbon",
+    "name": "EMA LISBON - matcha • slow coffee • cool things to eat",
+    "id": "1c936ea8-d44d-4ef6-bfc5-aeba9102be69",
+    "vibe": "minimal, airy, calm, playful, intentional, fresh",
+    "type": ["coffee"],
+    "lat": "38.7109466",
+    "lon": "-9.1508095",
+    "link": "https://www.instagram.com/ema.lisbon/",
+    "cover": "img/venues/EMA LISBON.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–4:00 PM",
+      "Monday: 9:30 AM–3:30 PM",
+      "Tuesday: 9:30 AM–3:30 PM",
+      "Wednesday: 9:30 AM–3:30 PM",
+      "Thursday: 9:30 AM–3:30 PM",
+      "Friday: 9:30 AM–3:30 PM",
+      "Saturday: 10:00 AM–4:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 16 },
+      "mon": { "open": 9.5, "close": 15.5 },
+      "tue": { "open": 9.5, "close": 15.5 },
+      "wed": { "open": 9.5, "close": 15.5 },
+      "thu": { "open": 9.5, "close": 15.5 },
+      "fri": { "open": 9.5, "close": 15.5 },
+      "sat": { "open": 10, "close": 16 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 3,
+    "tags": "matcha, coffee, slow, toast, buns, sweets, pastries, drinks, brunch, specialty",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "a-capela",
+    "name": "A Capela",
+    "id": "1d928d7f-8daf-4dc2-9cd0-7160a77a7670",
+    "vibe": "vintage, eclectic, nocturnal, spirited, bohemian, dancey",
+    "type": ["club"],
+    "lat": "38.7119941",
+    "lon": "-9.1449705",
+    "link": "https://www.instagram.com/a_capela_bar/",
+    "cover": "img/venues/A Capela.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:30 PM–2:00 AM",
+      "Monday: 7:30 PM–2:00 AM",
+      "Tuesday: 7:30 PM–2:00 AM",
+      "Wednesday: 7:30 PM–2:00 AM",
+      "Thursday: 7:30 PM–2:00 AM",
+      "Friday: 7:30 PM–3:00 AM",
+      "Saturday: 7:30 PM–3:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 19.5, "close": 26 },
+      "mon": { "open": 19.5, "close": 26 },
+      "tue": { "open": 19.5, "close": 26 },
+      "wed": { "open": 19.5, "close": 26 },
+      "thu": { "open": 19.5, "close": 26 },
+      "fri": { "open": 19.5, "close": 27 },
+      "sat": { "open": 19.5, "close": 27 }
+    },
+    "dayParts": {
+      "sun": "L",
+      "mon": "L",
+      "tue": "L",
+      "wed": "L",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "late",
+    "energyRamp": 3,
+    "tags": "club, cocktails, djs, music, tapas, wine, concerts, performances, bar, sparkle",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "simos",
+    "name": "Simó’s",
+    "id": "5fa11fa4-3195-4e7d-82df-b22e02884c78",
+    "vibe": "scenic, mellow, cozy, easygoing, intimate, relaxed",
+    "type": ["café"],
+    "lat": "38.7262683",
+    "lon": "-9.1314187",
+    "link": "https://www.instagram.com/simos_lisboa/",
+    "cover": "img/venues/Simos.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:15 AM–10:15 PM",
+      "Monday: 9:15 AM–10:15 PM",
+      "Tuesday: 9:15 AM–10:15 PM",
+      "Wednesday: 9:15 AM–10:15 PM",
+      "Thursday: 9:15 AM–10:15 PM",
+      "Friday: 9:15 AM–10:15 PM",
+      "Saturday: 9:15 AM–10:15 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9.25, "close": 22.25 },
+      "mon": { "open": 9.25, "close": 22.25 },
+      "tue": { "open": 9.25, "close": 22.25 },
+      "wed": { "open": 9.25, "close": 22.25 },
+      "thu": { "open": 9.25, "close": 22.25 },
+      "fri": { "open": 9.25, "close": 22.25 },
+      "sat": { "open": 9.25, "close": 22.25 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 3,
+    "tags": "café, cocktails, wine, terrace, bites, cake, cappuccino, tosta, quiosque, views",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "carmo-vintage-shop-lisboa",
+    "name": "Carmo - Vintage Shop Lisboa",
+    "id": "10837337-9e05-4610-a957-76d108d9bcc2",
+    "vibe": "curated, retro, stylish, selective, nostalgic, chic",
+    "type": ["lifestyle"],
+    "lat": "38.7113531",
+    "lon": "-9.140643",
+    "link": "https://www.instagram.com/carmo.vintage/",
+    "cover": "img/venues/Carmo - Vintage Shop Lisboa.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–7:00 PM",
+      "Monday: 11:00 AM–7:00 PM",
+      "Tuesday: 11:00 AM–7:00 PM",
+      "Wednesday: 11:00 AM–7:00 PM",
+      "Thursday: 11:00 AM–7:00 PM",
+      "Friday: 11:30 AM–7:00 PM",
+      "Saturday: 11:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 19 },
+      "mon": { "open": 11, "close": 19 },
+      "tue": { "open": 11, "close": 19 },
+      "wed": { "open": 11, "close": 19 },
+      "thu": { "open": 11, "close": 19 },
+      "fri": { "open": 11.5, "close": 19 },
+      "sat": { "open": 11, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 3,
+    "tags": "vintage, preloved, designer, fashion, secondhand, clothing, accessories, archive, labels, resale",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "third-thrift-store",
+    "name": "Third Thrift Store",
+    "id": "c1908b57-5eb8-4f14-836e-7f628c734675",
+    "vibe": "youthful, casual, thrifty, eclectic, accessible, playful",
+    "type": ["lifestyle"],
+    "lat": "38.7117929",
+    "lon": "-9.1528312",
+    "link": "https://www.instagram.com/third_thrift_store/?hl=en",
+    "cover": "img/venues/Third Thrift Store.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–7:00 PM",
+      "Monday: 11:00 AM–7:00 PM",
+      "Tuesday: 11:00 AM–7:00 PM",
+      "Wednesday: 11:00 AM–7:00 PM",
+      "Thursday: 11:00 AM–7:00 PM",
+      "Friday: 11:00 AM–7:00 PM",
+      "Saturday: 11:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 19 },
+      "mon": { "open": 11, "close": 19 },
+      "tue": { "open": 11, "close": 19 },
+      "wed": { "open": 11, "close": 19 },
+      "thu": { "open": 11, "close": 19 },
+      "fri": { "open": 11, "close": 19 },
+      "sat": { "open": 11, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 3,
+    "tags": "thrift, vintage, clothing, secondhand, prices, fashion, pieces, resale, apparel, finds",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "a-outra-face-da-lua-baixa",
+    "name": "A Outra Face da Lua (Baixa)",
+    "id": "86a0376e-9f89-48ba-a581-de593a99cb90",
+    "vibe": "nostalgic, eclectic, quirky, retro, sustainable, colorful",
+    "type": ["lifestyle"],
+    "lat": "38.7120476",
+    "lon": "-9.1370758",
+    "link": "https://www.instagram.com/aoutrafacedalua/",
+    "cover": "img/venues/A Outra Face da Lua (Baixa).jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–7:00 PM",
+      "Monday: 10:00 AM–7:00 PM",
+      "Tuesday: 10:00 AM–7:00 PM",
+      "Wednesday: 10:00 AM–7:00 PM",
+      "Thursday: 10:00 AM–7:00 PM",
+      "Friday: 10:00 AM–7:00 PM",
+      "Saturday: 11:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 19 },
+      "mon": { "open": 10, "close": 19 },
+      "tue": { "open": 10, "close": 19 },
+      "wed": { "open": 10, "close": 19 },
+      "thu": { "open": 10, "close": 19 },
+      "fri": { "open": 10, "close": 19 },
+      "sat": { "open": 11, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 3,
+    "tags": "vintage, clothing, accessories, decor, wallpaper, toys, gadgets, teas, bistro, ethical",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "amor-fati-vintage-store-lisbon",
+    "name": "Amor Fati - Vintage Store Lisbon",
+    "id": "ddbcce56-31cd-4cd9-8972-e2f979888a52",
+    "vibe": "curated, nostalgic, stylish, selective, retro, eclectic",
+    "type": ["lifestyle"],
+    "lat": "38.7161888",
+    "lon": "-9.1374761",
+    "link": "https://www.instagram.com/amor.fati.lisbon/",
+    "cover": "img/venues/Amor Fati - Vintage Store Lisbon.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–7:00 PM",
+      "Monday: 11:00 AM–7:00 PM",
+      "Tuesday: 11:00 AM–7:00 PM",
+      "Wednesday: 11:00 AM–7:00 PM",
+      "Thursday: 11:00 AM–7:00 PM",
+      "Friday: 11:00 AM–7:00 PM",
+      "Saturday: 11:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 19 },
+      "mon": { "open": 11, "close": 19 },
+      "tue": { "open": 11, "close": 19 },
+      "wed": { "open": 11, "close": 19 },
+      "thu": { "open": 11, "close": 19 },
+      "fri": { "open": 11, "close": 19 },
+      "sat": { "open": 11, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 3,
+    "tags": "vintage, secondhand, clothing, accessories, denim, leather, resale, fashion, archive, preloved",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "moss-vintage",
+    "name": "Moss Vintage",
+    "id": "8802981e-a3b6-4219-9c61-c9642424d30e",
+    "vibe": "timeless, romantic, tactile, refined, classic, feminine",
+    "type": ["lifestyle"],
+    "lat": "38.7224861",
+    "lon": "-9.1319549",
+    "link": "https://www.instagram.com/mosssvintage/",
+    "cover": "img/venues/Moss Vintage.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–6:00 PM",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–7:00 PM",
+      "Wednesday: 12:00 PM–7:00 PM",
+      "Thursday: 12:00 PM–7:00 PM",
+      "Friday: 12:00 PM–7:00 PM",
+      "Saturday: 12:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 18 },
+      "mon": null,
+      "tue": { "open": 12, "close": 19 },
+      "wed": { "open": 12, "close": 19 },
+      "thu": { "open": 12, "close": 19 },
+      "fri": { "open": 12, "close": 19 },
+      "sat": { "open": 12, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 3,
+    "tags": "vintage, secondhand, clothing, dresses, leather, resale, fashion, capsule, curated, wearable",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "trading-post-sao-bento-vintage-store",
+    "name": "Trading Post São Bento Vintage Store",
+    "id": "136165b8-0aaa-4f23-8c0e-21e61f80beab",
+    "vibe": "rugged, classic, collectible, cool, selective, masculine",
+    "type": ["lifestyle"],
+    "lat": "38.7115467",
+    "lon": "-9.1528129",
+    "link": "https://www.instagram.com/tradingpost_saobento/",
+    "cover": "img/venues/trading-post-sao-bento-vintage-store.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 1:00 PM–6:00 PM",
+      "Monday: 11:00 AM–7:00 PM",
+      "Tuesday: 11:00 AM–7:00 PM",
+      "Wednesday: 11:00 AM–7:00 PM",
+      "Thursday: 11:00 AM–7:00 PM",
+      "Friday: 11:00 AM–7:00 PM",
+      "Saturday: 11:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 13, "close": 18 },
+      "mon": { "open": 11, "close": 19 },
+      "tue": { "open": 11, "close": 19 },
+      "wed": { "open": 11, "close": 19 },
+      "thu": { "open": 11, "close": 19 },
+      "fri": { "open": 11, "close": 19 },
+      "sat": { "open": 11, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 3,
+    "tags": "vintage, goods, jackets, denim, caps, accessories, resale, luxury, collectible, handpicked",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "santa-bica",
+    "name": "Santa Bica",
+    "id": "2d69e032-048b-48cb-8482-bcf17a0ef104",
+    "vibe": "welcoming, cozy, charming, scenic, relaxed, convivial",
+    "type": ["dinner"],
+    "lat": "38.709396",
+    "lon": "-9.1464424",
+    "link": "https://www.instagram.com/santabicalisboa/",
+    "cover": "img/venues/Santa Bica.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:30 PM–1:00 AM",
+      "Monday: Closed",
+      "Tuesday: 6:30 PM–1:00 AM",
+      "Wednesday: 6:30 PM–1:00 AM",
+      "Thursday: 6:30 PM–1:00 AM",
+      "Friday: 6:30 PM–1:00 AM",
+      "Saturday: 6:30 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18.5, "close": 25 },
+      "mon": null,
+      "tue": { "open": 18.5, "close": 25 },
+      "wed": { "open": 18.5, "close": 25 },
+      "thu": { "open": 18.5, "close": 25 },
+      "fri": { "open": 18.5, "close": 25 },
+      "sat": { "open": 18.5, "close": 25 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "portuguese, seafood, meats, wine, patio, cocktails, guesthouse, desserts, tapas, terrace",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "disco-wheel",
+    "name": "Disco Wheel",
+    "id": "7eab3a1e-7b2d-48b4-99d3-4f2e071d949c",
+    "vibe": "immersive, tactile, meditative, creative, sensory, playful",
+    "type": ["activity", "lifestyle"],
+    "lat": "38.7082076",
+    "lon": "-9.1454032",
+    "link": "https://www.instagram.com/disco.wheel/",
+    "cover": "img/venues/Disco Wheel.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–7:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 12:00 PM–7:00 PM",
+      "Thursday: 12:00 PM–7:00 PM",
+      "Friday: 12:00 PM–7:00 PM",
+      "Saturday: 12:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 19 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 12, "close": 19 },
+      "thu": { "open": 12, "close": 19 },
+      "fri": { "open": 12, "close": 19 },
+      "sat": { "open": 12, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "-",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "ceramics, pottery, workshops, studio, boutique, classes, handmade, scents, music, gifting",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "tasca-pete",
+    "name": "Tasca Pete",
+    "id": "2a570dc9-4910-410b-9ef0-17a9afb63b90",
+    "vibe": "intimate, honest, unfussy, convivial, thoughtful, modern",
+    "type": ["dinner"],
+    "lat": "38.7217805",
+    "lon": "-9.1305379",
+    "link": "https://www.instagram.com/tasca.pete/",
+    "cover": "img/venues/Tasca Pete.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 6:00 PM–12:00 AM",
+      "Thursday: 6:00 PM–12:00 AM",
+      "Friday: 6:00 PM–12:00 AM",
+      "Saturday: 6:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 18, "close": 24 },
+      "thu": { "open": 18, "close": 24 },
+      "fri": { "open": 18, "close": 24 },
+      "sat": { "open": 18, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 3,
+    "tags": "tasca, seasonal, sharing, focaccia, terrine, naturalwine, beer, dinner, plates, comfort",
+    "price": "$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "wide-shades",
+    "name": "Wide Shades",
+    "id": "923289db-8935-48e9-a40c-0381eebae538",
+    "vibe": "sleek, fashionforward, curated, sensory, modern, archival",
+    "type": ["lifestyle"],
+    "lat": "38.7088427",
+    "lon": "-9.1488231",
+    "link": "https://www.instagram.com/wide_shades/",
+    "cover": "img/venues/Wide Shades.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 11:00 AM–7:00 PM",
+      "Tuesday: 11:00 AM–8:00 PM",
+      "Wednesday: 11:00 AM–8:00 PM",
+      "Thursday: 11:00 AM–8:00 PM",
+      "Friday: 11:00 AM–8:00 PM",
+      "Saturday: 11:00 AM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 11, "close": 19 },
+      "tue": { "open": 11, "close": 20 },
+      "wed": { "open": 11, "close": 20 },
+      "thu": { "open": 11, "close": 20 },
+      "fri": { "open": 11, "close": 20 },
+      "sat": { "open": 11, "close": 20 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 3,
+    "tags": "eyewear, sunglasses, fashion, archive, frames, accessories, popup, styling, retail, design",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "embaixada",
+    "name": "EmbaiXada",
+    "id": "4a8b0ad2-3656-4bd9-b5a3-1b7260337454",
+    "vibe": "ornate, cultural, designled, eclectic, elegant, heritage",
+    "type": ["market", "lifestyle"],
+    "lat": "38.716873",
+    "lon": "-9.1484683",
+    "link": "https://www.instagram.com/embaixadalx/",
+    "cover": "img/venues/EmbaiXada.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–7:00 PM",
+      "Monday: 12:00 PM–8:00 PM",
+      "Tuesday: 12:00 PM–8:00 PM",
+      "Wednesday: 12:00 PM–8:00 PM",
+      "Thursday: 12:00 PM–8:00 PM",
+      "Friday: 12:00 PM–8:00 PM",
+      "Saturday: 12:00 PM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 19 },
+      "mon": { "open": 12, "close": 20 },
+      "tue": { "open": 12, "close": 20 },
+      "wed": { "open": 12, "close": 20 },
+      "thu": { "open": 12, "close": 20 },
+      "fri": { "open": 12, "close": 20 },
+      "sat": { "open": 12, "close": 20 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 3,
+    "tags": "market, design, fashion, gastronomy, crafts, brands, palace, artists, retail, culture",
+    "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "casa-sao-miguel-docaria-regional-portuguesa",
+    "name": "Casa São Miguel - Doçaria Regional Portuguesa - Casa de Pastéis de Nata",
+    "id": "aae505b6-2412-415f-96ab-3b5b529e7370",
+    "vibe": "traditional, sweet, nostalgic, comforting, artisanal, homely",
+    "type": ["café"],
+    "lat": "38.710713",
+    "lon": "-9.1293342",
+    "link": "https://www.instagram.com/casasaomiguel.alfama.lisboa/?hl=en",
+    "cover": "img/venues/casa-sao-miguel-docaria-regional-portuguesa.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:45 AM–7:00 PM",
+      "Monday: 8:45 AM–7:00 PM",
+      "Tuesday: 8:45 AM–7:00 PM",
+      "Wednesday: Closed",
+      "Thursday: 8:45 AM–7:00 PM",
+      "Friday: 8:45 AM–7:00 PM",
+      "Saturday: 8:45 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8.75, "close": 19 },
+      "mon": { "open": 8.75, "close": 19 },
+      "tue": { "open": 8.75, "close": 19 },
+      "wed": null,
+      "thu": { "open": 8.75, "close": 19 },
+      "fri": { "open": 8.75, "close": 19 },
+      "sat": { "open": 8.75, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "-",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday, afternoon",
+    "energyRamp": 3,
+    "tags": "pastries, nata, conventual, tarts, almond, carob, bean, bordallo, coffee, desserts",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "a-brasileira",
+    "name": "A Brasileira",
+    "id": "6f1c9b22-f018-46ad-9875-733570163f7f",
+    "vibe": "historic, iconic, literary, elegant, timeless, storied",
+    "type": ["café"],
+    "lat": "38.7107003",
+    "lon": "-9.1420317",
+    "link": "https://www.instagram.com/grupoovalordotempo/",
+    "cover": "img/venues/A Brasileira.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–12:00 AM",
+      "Monday: 8:00 AM–12:00 AM",
+      "Tuesday: 8:00 AM–12:00 AM",
+      "Wednesday: 8:00 AM–12:00 AM",
+      "Thursday: 8:00 AM–12:00 AM",
+      "Friday: 8:00 AM–12:00 AM",
+      "Saturday: 8:00 AM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 24 },
+      "mon": { "open": 8, "close": 24 },
+      "tue": { "open": 8, "close": 24 },
+      "wed": { "open": 8, "close": 24 },
+      "thu": { "open": 8, "close": 24 },
+      "fri": { "open": 8, "close": 24 },
+      "sat": { "open": 8, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday, afternoon",
+    "energyRamp": 3,
+    "tags": "coffee, espresso, pastries, terrace, artnouveau, pessoa, heritage, café, chiado, intellectuals",
     "price": "$$",
     "duration": 1.5
   }

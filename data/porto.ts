@@ -370,7 +370,7 @@ const portoData = [
     "lat": "41.1506653",
     "lon": "-8.6100694",
     "link": "https://www.instagram.com/gardenportocafe/?hl=en",
-    "cover": "img/venues/Garden Porto Café.jpg",
+    "cover": "img/venues/garden-porto-cafe.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–7:30 PM",
@@ -406,7 +406,7 @@ const portoData = [
     "lat": "41.145482",
     "lon": "-8.5974149",
     "link": "https://www.instagram.com/donamiracafe/",
-    "cover": "img/venues/Dona Mira - Café, Bar e Cultura.png",
+    "cover": "img/venues/dona-mira-cafe-bar-e-cultura.png",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -442,7 +442,7 @@ const portoData = [
     "lat": "41.145619",
     "lon": "-8.6012757",
     "link": "https://www.instagram.com/terraplanacafe/?hl=en",
-    "cover": "img/venues/Terraplana Café.jpg",
+    "cover": "img/venues/terraplana-cafe.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 6:00 PM–12:00 AM",
@@ -478,7 +478,7 @@ const portoData = [
     "lat": "41.1432393",
     "lon": "-8.6148346",
     "link": "https://www.instagram.com/florbarporto/?hl=en",
-    "cover": "img/venues/Flôr Bar Porto.jpg",
+    "cover": "img/venues/flor-bar-porto.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 10:00 AM–12:00 AM",
@@ -838,7 +838,7 @@ const portoData = [
     "lat": "41.1497049",
     "lon": "-8.6158284",
     "link": "https://www.instagram.com/coracao.alecrim/?hl=en",
-    "cover": "img/venues/Coração Alecrim.jpg",
+    "cover": "img/venues/coracao-alecrim.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -1018,7 +1018,7 @@ const portoData = [
     "lat": "41.149981",
     "lon": "-8.6187188",
     "link": "https://www.instagram.com/vintu.porto/?hl=en",
-    "cover": "img/venues/Vintu – Bistro & Wine Bar.jpg",
+    "cover": "img/venues/vintu-bistro-wine-bar.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -1270,7 +1270,7 @@ const portoData = [
     "lat": "41.1494942",
     "lon": "-8.6128915",
     "link": "https://www.instagram.com/tabua_rasa/?hl=en",
-    "cover": "img/venues/Tábua Rasa.jpg",
+    "cover": "img/venues/tabua-rasa.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 5:00 PM–12:00 AM",
@@ -1306,7 +1306,7 @@ const portoData = [
     "lat": "41.1378283",
     "lon": "-8.6095721",
     "link": "https://www.instagram.com/esplanadajardimdomorro/?hl=en",
-    "cover": "img/venues/Esplanada do Teleférico.jpg",
+    "cover": "img/venues/esplanada-do-teleferico.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -1630,7 +1630,7 @@ const portoData = [
     "lat": "41.1509992",
     "lon": "-8.6212118",
     "link": "https://www.instagram.com/rosi_cafe_porto/?hl=en",
-    "cover": "img/venues/Rosi. Café & more.jpg",
+    "cover": "img/venues/rosi-cafe-more.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–5:00 PM",
@@ -1738,7 +1738,7 @@ const portoData = [
     "lat": "41.147049",
     "lon": "-8.6004915",
     "link": "https://www.instagram.com/acertain_cafe/?hl=en",
-    "cover": "img/venues/A Certain café.jpg",
+    "cover": "img/venues/a-certain-cafe.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–5:00 PM",
@@ -1990,7 +1990,7 @@ const portoData = [
     "lat": "41.149815",
     "lon": "-8.6153289",
     "link": "https://www.instagram.com/museudavo/?hl=en",
-    "cover": "img/venues/Museu d'Avó.jpg",
+    "cover": "img/venues/museu-davo.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -2026,7 +2026,7 @@ const portoData = [
     "lat": "41.1469254",
     "lon": "-8.6058159",
     "link": "https://www.instagram.com/boiteporto/?hl=en",
-    "cover": "img/venues/Boîte.jpg",
+    "cover": "img/venues/boite-porto.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -2134,7 +2134,7 @@ const portoData = [
     "lat": "41.1472013",
     "lon": "-8.5892769",
     "link": "https://www.instagram.com/vonandvonnie/?hl=en",
-    "cover": "img/venues/von&vonnie microroasters.jpg",
+    "cover": "img/venues/von-vonnie-microroasters.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–5:00 PM",
@@ -2170,7 +2170,7 @@ const portoData = [
     "lat": "41.1501231",
     "lon": "-8.6177161",
     "link": "https://www.instagram.com/generosa.porto/?hl=en",
-    "cover": "img/venues/Generosa Pão e Pizza.jpg",
+    "cover": "img/venues/generosa-pao-e-pizza.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 5:30 PM–10:00 PM",
@@ -2278,7 +2278,7 @@ const portoData = [
     "lat": "41.1537165",
     "lon": "-8.6103467",
     "link": "https://www.instagram.com/perolanegraporto/?hl=en",
-    "cover": "img/venues/Pérola Negra.jpg",
+    "cover": "img/venues/perola-negra.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -2450,7 +2450,7 @@ const portoData = [
     "lat": "41.1421679",
     "lon": "-8.6180416",
     "link": "https://www.instagram.com/provavel.porto/",
-    "cover": "img/venues/Provável - Restaurante.jpg",
+    "cover": "img/venues/provavel-restaurante.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -2702,7 +2702,7 @@ const portoData = [
     "lat": "41.1478901",
     "lon": "-8.6204422",
     "link": "https://www.instagram.com/epocaporto/?hl=en",
-    "cover": "img/venues/Época.jpg",
+    "cover": "img/venues/epoca-porto.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -3062,7 +3062,7 @@ const portoData = [
     "lat": "41.1501028",
     "lon": "-8.6178598",
     "link": "https://www.instagram.com/genuino.porto/?hl=en",
-    "cover": "img/venues/Genuíno - Vinho Natural e Boa Comida.jpg",
+    "cover": "img/venues/genuino-vinho-natural-e-boa-comida.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -3134,7 +3134,7 @@ const portoData = [
     "lat": "41.1524758",
     "lon": "-8.620108",
     "link": "https://www.instagram.com/plumas_flores/?hl=en",
-    "cover": "img/venues/Plumas & Flores.jpg",
+    "cover": "img/venues/plumas-flores-porto.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:30 PM–6:30 PM",
@@ -3206,7 +3206,7 @@ const portoData = [
     "lat": "41.1493722",
     "lon": "-8.6224076",
     "link": "https://www.instagram.com/rota.do.cha/?hl=en",
-    "cover": "img/venues/Rota Do Chá.jpg",
+    "cover": "img/venues/rota-do-cha.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 10:00 AM–7:00 PM",
@@ -3437,7 +3437,7 @@ const portoData = [
     "lat": "41.1432501",
     "lon": "-8.6130673",
     "link": "https://www.instagram.com/panoplia.bar/",
-    "cover": "img/venues/Panóplia Bar - Cocktail & Market.jpg",
+    "cover": "img/venues/panoplia-bar.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 5:00 PM–12:00 AM",
@@ -3473,7 +3473,7 @@ const portoData = [
     "lat": "41.1403445",
     "lon": "-8.6141985",
     "link": "https://www.instagram.com/winequaybar/",
-    "cover": "img/venues/Wine Quay Bar (Porto).jpg",
+    "cover": "img/venues/wine-quay-bar-porto.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -3509,7 +3509,7 @@ const portoData = [
     "lat": "41.1354165",
     "lon": "-8.6114011",
     "link": "https://www.instagram.com/casatltpporto/?hl=en",
-    "cover": "img/venues/Casa Tão Longe, Tão Perto - Porto.jpg",
+    "cover": "img/venues/casa-tao-longe-tao-perto-porto.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -3581,7 +3581,7 @@ const portoData = [
     "lat": "41.1445695",
     "lon": "-8.5990737",
     "link": "https://www.instagram.com/rogeriodoredondo/",
-    "cover": "img/venues/Rogério do Redondo.jpg",
+    "cover": "img/venues/rogerio-do-redondo.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–2:30 PM",
@@ -3671,7 +3671,7 @@ const portoData = [
     "lat": "41.142259",
     "lon": "-8.6151515",
     "link": "https://www.instagram.com/apotecariospeakeasy/?hl=en",
-    "cover": "img/venues/Apotecário Speakeasy.jpg",
+    "cover": "img/venues/apotecario-speakeasy.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -3743,7 +3743,7 @@ const portoData = [
     "lat": "41.146703",
     "lon": "-8.605738",
     "link": "https://www.instagram.com/maushabitos/?hl=en",
-    "cover": "img/venues/Maus Hábitos.jpg",
+    "cover": "img/venues/maus-habitos.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -3779,7 +3779,7 @@ const portoData = [
     "lat": "41.159226",
     "lon": "-8.5996254",
     "link": "https://www.instagram.com/fragilbar/?hl=en",
-    "cover": "img/venues/Frágil Cocktail Bar.jpg",
+    "cover": "img/venues/fragil-cocktail-bar.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -4106,7 +4106,7 @@ const portoData = [
     "lat": "41.1482682",
     "lon": "-8.6255165",
     "link": "",
-    "cover": "img/venues/Jardins do Palácio de Cristal.jpg",
+    "cover": "img/venues/jardins-do-palacio-de-cristal.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 8:00 AM–7:00 PM",
@@ -4250,7 +4250,7 @@ const portoData = [
     "lat": "41.1426406",
     "lon": "-8.6133806",
     "link": "https://www.instagram.com/explore/locations/428072972/portugues-de-gema---restaurante-vinhos-lembrancas/",
-    "cover": "img/venues/Português de Gema.jpg",
+    "cover": "img/venues/portugues-de-gema.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -4419,6 +4419,358 @@ const portoData = [
     "energyRamp": 3,
     "tags": "portuguese, fine, dining, chef, ruitadepinha, tastingmenu, winepairing, reservations, downtown, gastronomy",
     "price": "$$$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "sismografo",
+    "name": "Sismógrafo",
+    "id": "8819271d-103f-4c42-a6b7-a1fb1ef49111",
+    "vibe": "experimental, cerebral, independent, rigorous, alternative, curatorial",
+    "type": ["gallery"],
+    "lat": "41.1463106",
+    "lon": "-8.5941476",
+    "link": "https://www.instagram.com/sismografo.porto/",
+    "cover": "img/venues/Sismografo.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 3:00 PM–7:00 PM",
+      "Thursday: 3:00 PM–7:00 PM",
+      "Friday: 3:00 PM–7:00 PM",
+      "Saturday: 3:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 15, "close": 19 },
+      "thu": { "open": 15, "close": 19 },
+      "fri": { "open": 15, "close": 19 },
+      "sat": { "open": 15, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "exhibitions, artists, editions, booklets, talks, screenings, installations, publishing, contemporary, nonprofit",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "ocio",
+    "name": "Ócio",
+    "id": "0725905c-ba50-454d-8f1b-79384d0436a8",
+    "vibe": "grassroots, communal, exploratory, transdisciplinary, underground, progressive",
+    "type": ["gallery"],
+    "lat": "41.1467011",
+    "lon": "-8.5912586",
+    "link": "https://www.instagram.com/oocioo/",
+    "cover": "img/venues/ocio.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 8:30 PM–1:00 AM",
+      "Tuesday: Closed",
+      "Wednesday: 8:30 PM–1:00 AM",
+      "Thursday: 8:30 PM–1:00 AM",
+      "Friday: 8:30 PM–3:00 AM",
+      "Saturday: 8:30 PM–3:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 20.5, "close": 25 },
+      "tue": null,
+      "wed": { "open": 20.5, "close": 25 },
+      "thu": { "open": 20.5, "close": 25 },
+      "fri": { "open": 20.5, "close": 27 },
+      "sat": { "open": 20.5, "close": 27 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "E",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 3,
+    "tags": "programming, collective, exhibitions, performance, workshops, music, artists, culture, contemporary, space",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "kuji-coffee",
+    "name": "Kuji Coffee",
+    "id": "0f3c7412-f851-4d9f-ba5a-fbe48148d29c",
+    "vibe": "minimal, calm, intentional, airy, precise, welcoming",
+    "type": ["coffee"],
+    "lat": "41.1526339",
+    "lon": "-8.6205282",
+    "link": "https://www.instagram.com/kuji_coffee/",
+    "cover": "img/venues/Kuji Coffee.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–6:00 PM",
+      "Monday: 9:00 AM–6:00 PM",
+      "Tuesday: 9:00 AM–6:00 PM",
+      "Wednesday: 9:00 AM–6:00 PM",
+      "Thursday: 9:00 AM–6:00 PM",
+      "Friday: 9:00 AM–6:00 PM",
+      "Saturday: 9:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 18 },
+      "mon": { "open": 9, "close": 18 },
+      "tue": { "open": 9, "close": 18 },
+      "wed": { "open": 9, "close": 18 },
+      "thu": { "open": 9, "close": 18 },
+      "fri": { "open": 9, "close": 18 },
+      "sat": { "open": 9, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 3,
+    "tags": "coffee, espresso, filter, pastries, roasting, breakfast, community, specialty, saltybread, handmade",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "brites-padaria-artesanal-e-pastelaria-artesanal",
+    "name": "Brites Padaria Artesanal & Pastelaria Artesanal",
+    "id": "b7ec1359-21e3-4f2d-8d71-f56d4f58514c",
+    "vibe": "artisanal, comforting, warm, meticulous, sweet, bustling",
+    "type": ["bakery"],
+    "lat": "41.1620014",
+    "lon": "-8.6060721",
+    "link": "https://www.instagram.com/brites.pt/?hl=en",
+    "cover": "img/venues/Brites Padaria Artesanal.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 8:30 AM–5:00 PM",
+      "Tuesday: 8:30 AM–5:00 PM",
+      "Wednesday: 8:30 AM–5:00 PM",
+      "Thursday: 8:30 AM–5:00 PM",
+      "Friday: 8:30 AM–5:00 PM",
+      "Saturday: 8:30 AM–2:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 8.5, "close": 17 },
+      "tue": { "open": 8.5, "close": 17 },
+      "wed": { "open": 8.5, "close": 17 },
+      "thu": { "open": 8.5, "close": 17 },
+      "fri": { "open": 8.5, "close": 17 },
+      "sat": { "open": 8.5, "close": 14 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 3,
+    "tags": "bakery, pastries, croissants, sourdough, cruffins, cinnamon, nata, coffee, laminated, bread",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "protest-kitchen",
+    "name": "Protest Kitchen",
+    "id": "c584d30e-211f-4c7e-b650-f58447396314",
+    "vibe": "relaxed, playful, casual, quirky, friendly, unfussy",
+    "type": ["café"],
+    "lat": "41.1529054",
+    "lon": "-8.6142987",
+    "link": "https://www.instagram.com/protest_kitchen/?hl=en",
+    "cover": "img/venues/Protest kitchen.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–5:00 PM",
+      "Monday: 9:00 AM–5:00 PM",
+      "Tuesday: 9:00 AM–5:00 PM",
+      "Wednesday: 9:00 AM–5:00 PM",
+      "Thursday: 9:00 AM–5:00 PM",
+      "Friday: 9:00 AM–5:00 PM",
+      "Saturday: 9:00 AM–5:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 17 },
+      "mon": { "open": 9, "close": 17 },
+      "tue": { "open": 9, "close": 17 },
+      "wed": { "open": 9, "close": 17 },
+      "thu": { "open": 9, "close": 17 },
+      "fri": { "open": 9, "close": 17 },
+      "sat": { "open": 9, "close": 17 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 3,
+    "tags": "coffee, brunch, pastries, lunch, eggs, cinnamonrolls, playlist, roastery, khachapuri, daytime",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "out-to-lunch-kitchen",
+    "name": "Out To Lunch Kitchen キッチン",
+    "id": "b6dbcf7d-230c-4ba8-9c2a-31195d20bc02",
+    "vibe": "intimate, focused, authentic, homey, thoughtful, serene",
+    "type": ["lunch"],
+    "lat": "41.1457117",
+    "lon": "-8.6236268",
+    "link": "https://www.instagram.com/outtolunch_kitchen/",
+    "cover": "img/venues/Out To Lunch Kitchen.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–4:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 12:00 PM–3:00 PM",
+      "Friday: 12:00 PM–3:00 PM",
+      "Saturday: 12:00 PM–4:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 16 },
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": { "open": 12, "close": 15 },
+      "fri": { "open": 12, "close": 15 },
+      "sat": { "open": 12, "close": 16 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "japanese, curry, soba, udon, katsu, miso, chefs, lunch, popups, homemade",
+    "price": "$$",
+    "duration": 1.5
+  },
+  {
+    "slug": "galeria-pedro-oliveira",
+    "name": "Galeria Pedro Oliveira",
+    "id": "f6872e0e-4247-4f7f-9afa-4f6c4873796e",
+    "vibe": "polished, established, refined, serious, contemporary, elegant",
+    "type": ["gallery"],
+    "lat": "41.144485",
+    "lon": "-8.6237073",
+    "link": "https://www.instagram.com/galeriapedrooliveira/",
+    "cover": "img/venues/Galeria Pedro Oliveira.jpeg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 3:00 PM–7:00 PM",
+      "Wednesday: 3:00 PM–7:00 PM",
+      "Thursday: 3:00 PM–7:00 PM",
+      "Friday: 3:00 PM–7:00 PM",
+      "Saturday: 3:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 15, "close": 19 },
+      "wed": { "open": 15, "close": 19 },
+      "thu": { "open": 15, "close": 19 },
+      "fri": { "open": 15, "close": 19 },
+      "sat": { "open": 15, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "painting, sculpture, design, artists, collectors, exhibitions, fairs, visual, curation, gallery",
+    "price": "$",
+    "duration": 1.5
+  },
+  {
+    "slug": "galeria-nuno-centeno",
+    "name": "Galeria Nuno Centeno",
+    "id": "5b041dc0-f84b-4ecd-aff1-67b49f264e96",
+    "vibe": "influential, international, minimalist, forward, respected, exacting",
+    "type": ["gallery"],
+    "lat": "41.1557564",
+    "lon": "-8.6018137",
+    "link": "https://www.instagram.com/galerianunocenteno/",
+    "cover": "img/venues/Galeria Nuno Centeno.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 2:00 PM–7:00 PM",
+      "Wednesday: 2:00 PM–7:00 PM",
+      "Thursday: 2:00 PM–7:00 PM",
+      "Friday: 2:00 PM–7:00 PM",
+      "Saturday: 2:00 PM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 14, "close": 19 },
+      "wed": { "open": 14, "close": 19 },
+      "thu": { "open": 14, "close": 19 },
+      "fri": { "open": 14, "close": 19 },
+      "sat": { "open": 14, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 3,
+    "tags": "exhibitions, artists, collectors, fairs, painting, sculpture, contemporary, representation, programs, dialogue",
+    "price": "$",
     "duration": 1.5
   }
 ]
