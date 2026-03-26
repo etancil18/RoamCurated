@@ -273,6 +273,26 @@ export default async function PropertyPage({ params }: PageProps) {
 
 </section>
 
+      {/* Welcome Description */}
+
+      {property.welcome_description && (
+        <section className="space-y-3">
+
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Welcome
+          </h2>
+
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">
+                {property.welcome_description}
+              </p>
+            </CardContent>
+          </Card>
+
+        </section>
+      )}
+
       {/* Map */}
 
       <section className="space-y-3">
@@ -299,28 +319,6 @@ export default async function PropertyPage({ params }: PageProps) {
         venues={nearbyVenues}
         city={property.city}
       />
-
-      {/* Host Favorites */}
-
-      <section className="space-y-3">
-
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Host Favorites
-        </h2>
-
-        {favoriteVenues.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Your host hasn't added favorites yet — explore nearby spots below.
-          </p>
-        )}
-
-        <div className="grid gap-3 md:grid-cols-2">
-          {favoriteVenues.map((v) => (
-            <VenueCard key={v.id} v={v} />
-          ))}
-        </div>
-
-      </section>
 
       {/* Events */}
 

@@ -37,7 +37,13 @@ export async function POST(req: Request) {
   try {
     const supabase = await createServerClient()
 
-    const { name, city, address, website } = await req.json()
+    const {
+      name,
+      city,
+      address,
+      website,
+      welcomeDescription,
+    } = await req.json()
 
     if (!name || !city || !address) {
       return NextResponse.json(
@@ -63,6 +69,11 @@ export async function POST(req: Request) {
         city: normalizedCity,
         address,
         website: website ?? null,
+        welcome_description:
+          typeof welcomeDescription === 'string' &&
+          welcomeDescription.trim().length > 0
+            ? welcomeDescription.trim()
+            : null,
         lat,
         lon,
       })

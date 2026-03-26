@@ -13,6 +13,7 @@ export default function HostsPage() {
   const [website,setWebsite] = useState('')
   const [link,setLink] = useState<string | null>(null)
   const [loading,setLoading] = useState(false)
+  const [welcomeDescription, setWelcomeDescription] = useState('')
 
   async function submit(){
 
@@ -21,7 +22,7 @@ export default function HostsPage() {
     const res = await fetch('/api/hosts/create',{
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body:JSON.stringify({ name,city,address,website }),
+      body:JSON.stringify({ name,city,address,website,welcomeDescription }),
     })
 
     const data = await res.json()
@@ -200,6 +201,20 @@ export default function HostsPage() {
           value={website}
           onChange={(e)=>setWebsite(e.target.value)}
         />
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            Welcome Description (optional)
+          </label>
+
+          <textarea
+            value={welcomeDescription}
+            onChange={(e)=>setWelcomeDescription(e.target.value)}
+            placeholder="Welcome to our place. We love slow mornings, neighborhood coffee, sunset walks, and long dinners nearby. Use this guide to explore the area like a local."
+            rows={5}
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          />
+        </div>
 
         <Button
           className="w-full"

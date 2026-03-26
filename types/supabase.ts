@@ -426,6 +426,7 @@ export type Database = {
           name: string
           slug: string
           website: string | null
+          welcome_description: string | null
         }
         Insert: {
           address?: string | null
@@ -441,6 +442,7 @@ export type Database = {
           name: string
           slug: string
           website?: string | null
+          welcome_description?: string | null
         }
         Update: {
           address?: string | null
@@ -456,6 +458,7 @@ export type Database = {
           name?: string
           slug?: string
           website?: string | null
+          welcome_description?: string | null
         }
         Relationships: []
       }

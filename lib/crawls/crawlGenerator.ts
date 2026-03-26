@@ -24,6 +24,7 @@ import {
 export type CrawlStageResult = {
   stageTypes: readonly string[]
   venue: Venue
+  matchedType: string | null
 }
 
 export type CrawlResult = {
@@ -100,7 +101,7 @@ const THEME_STAGE_FLOWS: Record<
     ['coffee','cafe','bakery'],
     ['park','garden','market'],
     ['spa','bookstore'],
-    ['lunch','cafe']
+    ['lunch','cafe','café']
   ],
 
   soloExplorer: [
@@ -123,12 +124,12 @@ const CRAWL_THEME_SIGNALS: Record<
 > = {
 
   dateNight: {
-    vibes: ['romantic','intimate','moody','sultry'],
+    vibes: ['romantic','intimate','moody','sultry','cozy'],
     tags: ['wine','dessert','cocktail']
   },
 
   nightOut: {
-    vibes: ['lively','energetic'],
+    vibes: ['lively','energetic','social'],
     tags: ['dj','dance','club','cocktail']
   },
 
@@ -138,8 +139,8 @@ const CRAWL_THEME_SIGNALS: Record<
   },
 
   soloExplorer: {
-    vibes: ['cozy','quiet','introspective'],
-    tags: ['bookstore','gallery','cafe']
+    vibes: ['cozy','quiet','introspective','exhibit'],
+    tags: ['bookstore','gallery','cafe','café']
   }
 
 }
@@ -195,6 +196,21 @@ function distanceMeters(
   const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
 
   return R*c
+}
+
+function getMatchedStageType(
+  venue: Venue,
+  stageTypes: readonly string[]
+) {
+  const venueTypes = getVenueTypes(venue)
+
+  for (const stageType of stageTypes) {
+    if (venueTypes.includes(stageType)) {
+      return stageType
+    }
+  }
+
+  return venueTypes[0] ?? null
 }
 
 /* ------------------------------------------------ */
@@ -412,7 +428,11 @@ export function generateCrawl(
 
     usedIds.add(venue.id)
 
-    stages.push({stageTypes,venue})
+    stages.push({
+      stageTypes,
+      venue,
+      matchedType: getMatchedStageType(venue, stageTypes)
+    })
     selectedVenues.push(venue)
 
     currentLat=venue.lat

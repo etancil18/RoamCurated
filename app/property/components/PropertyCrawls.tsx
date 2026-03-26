@@ -44,11 +44,16 @@ function getCrawlTitle(theme: string) {
 /* Stage Label Helper                               */
 /* ------------------------------------------------ */
 
-function formatStageLabel(stageTypes?: readonly string[]) {
+function formatStageLabel(
+  matchedType?: string | null,
+  stageTypes?: readonly string[]
+) {
 
-  if (!stageTypes || stageTypes.length === 0) return null
+  const label =
+    matchedType ??
+    (stageTypes && stageTypes.length > 0 ? stageTypes[0] : null)
 
-  const label = stageTypes[0]
+  if (!label) return null
 
   return label
     .replace('-', ' ')
@@ -149,6 +154,7 @@ export default function PropertyCrawls({
                 {(crawl.venues ?? []).map((v: Venue, i: number) => {
 
                   const stageLabel = formatStageLabel(
+                    crawl.stages?.[i]?.matchedType,
                     crawl.stages?.[i]?.stageTypes
                   )
 
