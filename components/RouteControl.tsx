@@ -7,7 +7,7 @@ if (typeof window === 'undefined') {
   )
 }
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { LatLngExpression, Map as LeafletMap } from 'leaflet'
 import { Polyline } from 'react-leaflet'
 
@@ -33,70 +33,70 @@ export default function RouteControl({
   color = 'cyan',
   travelMode,
 }: RouteControlProps) {
-  const controlRef = useRef<any>(null)
   const [polylineCoords, setPolylineCoords] = useState<LatLngExpression[]>([])
 
   useEffect(() => {
     if (!map || route.length < 2) return
 
-    let L: any
+    const MAPBOX_TOKEN: string = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? ''
+    if (!MAPBOX_TOKEN) {
+      console.error('❌ Missing Mapbox token')
+      setPolylineCoords([])
+      return
+    }
 
-    async function initRouting() {
-      // 🔒 Runtime-only imports (no SSR side effects)
-      const leaflet = await import('leaflet')
-      await import('leaflet-routing-machine')
-      await import('lrm-mapbox')
+    const controller = new AbortController()
+    let cancelled = false
 
-      L = leaflet.default ?? leaflet
+    async function loadRoute() {
+      try {
+        const validWaypoints = route
+          .map((v) => normalizeCoords(v.lat, v.lon))
+          .filter(
+            ([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon)
+          )
 
-      if (controlRef.current) {
-        try {
-          map.removeControl(controlRef.current)
-        } catch {}
-        controlRef.current = null
-      }
+        if (validWaypoints.length < 2) {
+          setPolylineCoords([])
+          return
+        }
 
-      const MAPBOX_TOKEN: string = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? ''
-      if (!MAPBOX_TOKEN) {
-        console.error('❌ Missing Mapbox token')
-        return
-      }
+        const coordinates = validWaypoints
+          .map(([lat, lon]) => `${lon},${lat}`)
+          .join(';')
 
-      const validWaypoints = route
-        .map((v) => normalizeCoords(v.lat, v.lon))
-        .filter(([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon))
+        const url =
+          `https://api.mapbox.com/directions/v5/mapbox/${travelMode}/${coordinates}` +
+          `?geometries=geojson&overview=full&steps=false&access_token=${MAPBOX_TOKEN}`
 
-      if (validWaypoints.length < 2) return
+        const res = await fetch(url, {
+          signal: controller.signal,
+        })
 
-      const latLngs = validWaypoints.map(([lat, lon]) =>
-        L.latLng(lat, lon)
-      )
+        if (!res.ok) {
+          throw new Error(`Mapbox directions failed: ${res.status}`)
+        }
 
-      const router = L.Routing.mapbox(MAPBOX_TOKEN, {
-        profile: `mapbox/${travelMode}`,
-        language: 'en',
-      })
+        const data = await res.json()
 
-      const control = L.Routing.control({
-        waypoints: latLngs,
-        router,
-        routeWhileDragging: false,
-        addWaypoints: false,
-        show: false,
-        plan: L.Routing.plan(latLngs, {
-          createMarker: () => null,
-        }),
-        lineOptions: {
-          styles: [{ color, weight: 4, opacity: 0.9 }],
-        },
-      })
+        const coords =
+          data?.routes?.[0]?.geometry?.coordinates?.map(
+            ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
+          ) ?? []
 
-      control.on('routesfound', (e: any) => {
-        const coords = e.routes[0].coordinates.map(
-          (c: any) => [c.lat, c.lng] as [number, number]
-        )
+        if (cancelled) return
+
+        if (coords.length === 0) {
+          setPolylineCoords([])
+          return
+        }
 
         setPolylineCoords(coords)
+
+        const leaflet = await import('leaflet')
+        const L = leaflet.default ?? leaflet
+
+        if (cancelled) return
 
         const bounds = L.latLngBounds(coords)
         map.fitBounds(bounds, { padding: [50, 50] })
@@ -108,25 +108,21 @@ export default function RouteControl({
             polyline_length: coords.length,
           },
         })
-      })
+      } catch (error: any) {
+        if (error?.name === 'AbortError') return
 
-      control.on('routingerror', () => {
-        setPolylineCoords([])
-      })
-
-      control.addTo(map)
-      controlRef.current = control
+        console.error('Routing error:', error)
+        if (!cancelled) {
+          setPolylineCoords([])
+        }
+      }
     }
 
-    initRouting()
+    loadRoute()
 
     return () => {
-      try {
-        if (controlRef.current) {
-          map.removeControl(controlRef.current)
-          controlRef.current = null
-        }
-      } catch {}
+      cancelled = true
+      controller.abort()
       setPolylineCoords([])
     }
   }, [map, route, travelMode, color])

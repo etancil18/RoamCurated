@@ -30,8 +30,6 @@ interface ControlPanelProps {
 }
 
 const themes = [
-  { id: 'active-all-day', label: 'Active All Day' },
-  { id: 'beltline-explorer', label: 'BeltLine Explorer' },
   { id: 'creative-outlet', label: 'Creative Outlet' },
   { id: 'date-night', label: 'Date Night' },
   { id: 'friends-night-out', label: 'Friends Night Out' },

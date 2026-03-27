@@ -16,6 +16,7 @@ type Property = {
   lat: number
   lon: number
   city: string
+  slug?: string
 }
 
 type Props = {
@@ -145,6 +146,8 @@ export default function PropertyCrawls({
                 <StartCrawlButton
                   venues={crawl.venues}
                   city={property.city}
+                  propertyId={property.id}
+                  propertySlug={property.slug}
                 />
 
               </div>

@@ -6,17 +6,25 @@ import CrawlMap from './CrawlMap'
 export const dynamic = 'force-dynamic'
 
 type Props = {
-  searchParams: {
-    city: string
-    venues: string
+  searchParams: Promise<{
+    city?: string
+    venues?: string
     property_id?: string
-  }
+    property_slug?: string
+  }>
 }
 
 export default async function PropertyCrawlPage({ searchParams }: Props) {
   const supabase = await createServerClient()
 
-  const venueIds = searchParams.venues.split(',')
+  const resolvedSearchParams = await searchParams
+
+  const city = resolvedSearchParams.city ?? ''
+  const venueIds = (resolvedSearchParams.venues ?? '')
+    .split(',')
+    .filter(Boolean)
+  const propertyId = resolvedSearchParams.property_id
+  const propertySlug = resolvedSearchParams.property_slug
 
   /* ------------------------------------------------ */
   /* Fetch venues                                     */
@@ -27,11 +35,20 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
     .select('*')
     .in('id', venueIds)
 
-  const venues =
-    data?.map((v: any) => ({
-      ...v,
-      link: `/venue-profile/${v.id}`,
-    })) ?? []
+  // ✅ FIX: Preserve original crawl order
+  const venueMap = new Map(
+    (data ?? []).map((v: any) => [
+      v.id,
+      {
+        ...v,
+        link: `/venue-profile/${v.id}`,
+      },
+    ])
+  )
+
+  const venues = venueIds
+    .map((id) => venueMap.get(id))
+    .filter(Boolean)
 
   /* ------------------------------------------------ */
   /* Fetch property (if provided)                     */
@@ -41,14 +58,15 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
     name: 'Property',
     lat: venues[0]?.lat ?? 0,
     lon: venues[0]?.lon ?? 0,
-    city: searchParams.city,
+    city,
+    slug: propertySlug,
   }
 
-  if (searchParams.property_id) {
+  if (propertyId) {
     const { data: propertyData } = await supabase
       .from('properties')
-      .select('name, lat, lon, city')
-      .eq('id', searchParams.property_id)
+      .select('name, lat, lon, city, slug')
+      .eq('id', propertyId)
       .limit(1)
 
     if (propertyData?.[0]) {
@@ -60,7 +78,7 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
   /* City-aware time                                  */
   /* ------------------------------------------------ */
 
-  const timezone = CITY_CONFIGS[searchParams.city]?.timezone ?? 'UTC'
+  const timezone = CITY_CONFIGS[city]?.timezone ?? 'UTC'
 
   const nowISO =
     DateTime.now()
@@ -83,9 +101,10 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
       <CrawlMap
         venues={venues}
         property={property}
-        city={searchParams.city}
+        city={city}
         nowISO={nowISO}
         markerRefs={markerRefs}
+        propertySlug={propertySlug ?? property.slug}
       />
 
     </main>

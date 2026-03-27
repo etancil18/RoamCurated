@@ -12,22 +12,40 @@ type Venue = {
 type Props = {
   venues: Venue[]
   city: string
+  propertyId?: string
+  propertySlug?: string
 }
 
-export default function StartCrawlButton({ venues, city }: Props) {
+export default function StartCrawlButton({
+  venues,
+  city,
+  propertyId,
+  propertySlug,
+}: Props) {
+
   const router = useRouter()
 
   const handleStartCrawl = () => {
+
     if (!venues || venues.length === 0) return
 
-    // encode venue ids for query string
     const venueIds = venues.map((v) => v.id).join(',')
 
-    router.push(
-      `/property/crawl?city=${encodeURIComponent(city)}&venues=${encodeURIComponent(
-        venueIds
-      )}`
-    )
+    const params = new URLSearchParams({
+      city,
+      venues: venueIds,
+    })
+
+    // ✅ Append optional context for better UX downstream
+    if (propertyId) {
+      params.append('property_id', propertyId)
+    }
+
+    if (propertySlug) {
+      params.append('property_slug', propertySlug)
+    }
+
+    router.push(`/property/crawl?${params.toString()}`)
   }
 
   return (

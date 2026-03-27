@@ -9,7 +9,7 @@ export const timeOfDayToHours: Record<string, [number, number]> = {
   afternoon: [14, 17],
   day: [11, 17],
   evening: [17, 21],
-  night: [21, 1],
+  late: [21, 1],
   "late-night": [1, 4],
 };
 
@@ -36,11 +36,11 @@ export const fallbackStageFlows: Record<string, StageFlow> = {
     "lunch"
   ],
   midday: [
-    ["gallery", "museum", "bookstore", "showroom", "lifestyle"],
-    ["lunch", "brunch"],
+    ["gallery", "museum", "bookstore", "showroom", "lifestyle", "market"],
+    ["lunch", "brunch", "cafe", "café"],
     ["gallery", "bookstore", "showroom", "lifestyle"],
     ["wine bar", "random gem"],
-    ["park", "market", "lifestyle"],
+    ["park", "lifestyle"],
     ["dinner", "wine bar", "cocktail"]
   ],
   afternoon: [
@@ -61,7 +61,7 @@ export const fallbackStageFlows: Record<string, StageFlow> = {
     ["wine bar", "cocktail", "speakeasy", "dessert"],
     ["cocktail", "bar", "lounge", "club"],
   ],
-  night: [
+  late: [
     "dinner",
     ["wine bar", "bar", "cocktail"],
     ["club", "rooftop", "speakeasy", "lounge", "bar"]
@@ -79,7 +79,7 @@ export const fallbackStageFlows: Record<string, StageFlow> = {
  */
 function generateStageFlow(
   theme: CrawlTheme,
-  fallbackTime: "morning" | "midday" | "afternoon" | "evening" | "night" | "late-night" = "evening"
+  fallbackTime: "morning" | "midday" | "afternoon" | "evening" | "late" | "late-night" = "evening"
 ): { flow: StageFlow; isFallback: boolean; reason: string } {
   if (Array.isArray(theme.stageFlow) && theme.stageFlow.length > 0) {
     return {

@@ -20,7 +20,7 @@ export type CrawlTheme = {
       | "happy hour"
       | "day"
       | "evening"
-      | "night"
+      | "late"
       | "late-night"
     )[];
     eventCategories?: string[]; // NEW — categories used to match live events
