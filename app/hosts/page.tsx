@@ -33,25 +33,31 @@ export default function HostsPage() {
 
       try{
 
-        const url = new URL(data.url)
-
-        const parts = url.pathname.split('/')
-
-        const city = parts[2]
-        const slug = parts[3]
-
-        // ✅ FIX: Use absolute URL for QR + sharing
         const baseUrl =
           process.env.NEXT_PUBLIC_SITE_URL ||
           'https://roam-curated.vercel.app'
 
-        const redirectLink = `${baseUrl}/open/property/${city}/${slug}`
+        const resolvedUrl = new URL(data.url, baseUrl)
+
+        const parts = resolvedUrl.pathname.split('/')
+
+        const city = parts[2]
+        const slug = parts[3]
+
+        const redirectLink =
+          city && slug
+            ? `${baseUrl}/open/property/${city}/${slug}`
+            : resolvedUrl.toString()
 
         setLink(redirectLink)
 
       } catch {
 
-        setLink(data.url)
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL ||
+          'https://roam-curated.vercel.app'
+
+        setLink(`${baseUrl}${data.url.startsWith('/') ? data.url : `/${data.url}`}`)
 
       }
 
