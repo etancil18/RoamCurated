@@ -40,7 +40,12 @@ export default function HostsPage() {
         const city = parts[2]
         const slug = parts[3]
 
-        const redirectLink = `/open/property/${city}/${slug}`
+        // ✅ FIX: Use absolute URL for QR + sharing
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL ||
+          'https://roam-curated.vercel.app'
+
+        const redirectLink = `${baseUrl}/open/property/${city}/${slug}`
 
         setLink(redirectLink)
 
@@ -210,9 +215,9 @@ export default function HostsPage() {
           <textarea
             value={welcomeDescription}
             onChange={(e)=>setWelcomeDescription(e.target.value)}
-            placeholder="Welcome to our place. We love slow mornings, neighborhood coffee, sunset walks, and long dinners nearby. Use this guide to explore the area like a local."
+            placeholder="Welcome to our place..."
             rows={5}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none"
           />
         </div>
 
@@ -242,25 +247,15 @@ export default function HostsPage() {
 
           </div>
 
-          {/* Link */}
-
           <div className="flex gap-2">
 
-            <Input
-              value={link}
-              readOnly
-            />
+            <Input value={link} readOnly />
 
-            <Button
-              variant="outline"
-              onClick={copyLink}
-            >
+            <Button variant="outline" onClick={copyLink}>
               Copy
             </Button>
 
           </div>
-
-          {/* Action buttons */}
 
           <div className="flex gap-2">
 
@@ -281,15 +276,9 @@ export default function HostsPage() {
 
           </div>
 
-          {/* QR Code */}
-
           <div className="flex flex-col items-center gap-3 pt-4 border-t">
 
-            <QRCodeSVG
-              value={link}
-              size={180}
-              level="H"
-            />
+            <QRCodeSVG value={link} size={180} level="H" />
 
             <p className="text-xs text-muted-foreground text-center">
               Guests can scan this QR code to open the guide instantly.
