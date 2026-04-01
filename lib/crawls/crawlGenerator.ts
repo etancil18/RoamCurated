@@ -86,7 +86,7 @@ const THEME_STAGE_FLOWS: Record<
     ['dinner','restaurant'],
     ['wine bar','cocktail'],
     ['cocktail','lounge','speakeasy'],
-    ['dessert','bakery']
+    ['dessert']
   ],
 
   nightOut: [

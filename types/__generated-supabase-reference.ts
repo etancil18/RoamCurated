@@ -225,6 +225,159 @@ export type Database = {
           },
         ]
       }
+      event_journey_stops: {
+        Row: {
+          created_at: string | null
+          event_journey_id: string
+          id: string
+          is_locked: boolean
+          role: string
+          stop_order: number
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_journey_id: string
+          id?: string
+          is_locked?: boolean
+          role: string
+          stop_order: number
+          venue_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_journey_id?: string
+          id?: string
+          is_locked?: boolean
+          role?: string
+          stop_order?: number
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_journey_stops_event_journey_id_fkey"
+            columns: ["event_journey_id"]
+            isOneToOne: false
+            referencedRelation: "event_journeys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_journey_stops_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "event_journey_stops_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_journeys: {
+        Row: {
+          city: string
+          created_at: string | null
+          destination_lat: number
+          destination_lon: number
+          destination_name: string
+          destination_venue_id: string | null
+          event_id: string | null
+          event_name: string
+          event_start_at: string
+          id: string
+          ideal_stop_duration_minutes: number
+          max_dynamic_stops: number
+          notes: string | null
+          property_id: string | null
+          range_expansion_pct: number
+          slug: string
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          vibes: string[] | null
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          destination_lat: number
+          destination_lon: number
+          destination_name: string
+          destination_venue_id?: string | null
+          event_id?: string | null
+          event_name: string
+          event_start_at: string
+          id?: string
+          ideal_stop_duration_minutes?: number
+          max_dynamic_stops?: number
+          notes?: string | null
+          property_id?: string | null
+          range_expansion_pct?: number
+          slug: string
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          vibes?: string[] | null
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          destination_lat?: number
+          destination_lon?: number
+          destination_name?: string
+          destination_venue_id?: string | null
+          event_id?: string | null
+          event_name?: string
+          event_start_at?: string
+          id?: string
+          ideal_stop_duration_minutes?: number
+          max_dynamic_stops?: number
+          notes?: string | null
+          property_id?: string | null
+          range_expansion_pct?: number
+          slug?: string
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          vibes?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_journeys_destination_venue_id_fkey"
+            columns: ["destination_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "event_journeys_destination_venue_id_fkey"
+            columns: ["destination_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_journeys_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_journeys_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string | null

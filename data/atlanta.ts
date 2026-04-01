@@ -6693,8 +6693,7 @@ const atlantaData = [
     "vibe": "patio, casual, ice skate, group-friendly, sports, social, lively, outdoors, festive, holiday, seasonal, laid-back",
     "type": [
       "bar", "sports bar",
-      "activity",
-      "brunch", "patio"
+     "patio"
     ],
     "lat": 33.7822253,
     "lon": -84.3692889,
@@ -16441,82 +16440,6 @@ const atlantaData = [
     "price": "$$",
     "duration": 2.5,
     "id": "888c6707-7951-4809-9a5a-4cd21a7846d7"
-  },
-  {
-    "slug": "one-flew-south-beltline",
-    "name": "One Flew South – BeltLine",
-    "vibe": "Fusion, Global, Elevated, Modern, Sleek, Sushi, Upscale, Date-Night, Refined, Beltline",
-    "type": [
-      "lunch",
-      "dinner",
-      "cocktail",
-      "brunch"
-    ],
-    "lat": 33.7615452,
-    "lon": -84.3429678,
-    "link": "https://www.instagram.com/oneflewsouthatl/?hl=en",
-    "cover": "img/venues/One Flew South .jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 11:00 AM–10:00 PM",
-      "Monday: Closed",
-      "Tuesday: Closed",
-      "Wednesday: 3:00 PM–10:00 PM",
-      "Thursday: 3:00 PM–10:00 PM",
-      "Friday: 3:00 PM–10:00 PM",
-      "Saturday: 11:00 AM–10:00 PM"
-    ],
-    "dateEvents": [
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      },
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      }
-    ],
-    "hoursNumeric": {
-      "sun": {
-        "open": 11,
-        "close": 22
-      },
-      "mon": null,
-      "tue": null,
-      "wed": {
-        "open": 15,
-        "close": 22
-      },
-      "thu": {
-        "open": 15,
-        "close": 22
-      },
-      "fri": {
-        "open": 15,
-        "close": 22
-      },
-      "sat": {
-        "open": 11,
-        "close": 22
-      }
-    },
-    "dayParts": {
-      "sun": "E",
-      "mon": "—",
-      "tue": "—",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "evening",
-    "energyRamp": 3,
-    "tags": "cocktails, chefs, menus, courses, pacing, wines, plates, evenings, service, reservations, flavors, dining, date-night",
-    "price": "$$$",
-    "duration": 2,
-    "id": "5ae55c98-783e-413d-a710-0e61e94ce6b2"
   },
   {
     "slug": "double-zero",
@@ -26560,68 +26483,6 @@ const atlantaData = [
     "price": "$$$",
     "duration": 2.5,
     "id": "3128be03-d97c-448e-a45f-587fe746e4ea"
-  },
-  {
-    "slug": "sanctuary-nightclub",
-    "name": "Sanctuary Nightclub",
-    "vibe": "Club, Dance, Elegant, DJs, Nightlife, Chic, Lounge, Packed, High-energy, International",
-    "type": "club",
-    "lat": 33.8426247,
-    "lon": -84.3818011,
-    "link": "https://www.instagram.com/sanctuarynightclubatlanta/",
-    "cover": "img/venues/Sanctuary Nightclub.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: Closed",
-      "Monday: Closed",
-      "Tuesday: Closed",
-      "Wednesday: Closed",
-      "Thursday: Closed",
-      "Friday: 9:00 PM–3:00 AM",
-      "Saturday: 10:00 PM–3:00 AM"
-    ],
-    "dateEvents": [
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      },
-      {
-        "date": "-",
-        "title": "-",
-        "time": "-"
-      }
-    ],
-    "hoursNumeric": {
-      "sun": null,
-      "mon": null,
-      "tue": null,
-      "wed": null,
-      "thu": null,
-      "fri": {
-        "open": 21,
-        "close": 27
-      },
-      "sat": {
-        "open": 22,
-        "close": 27
-      }
-    },
-    "dayParts": {
-      "sun": "-",
-      "mon": "-",
-      "tue": "-",
-      "wed": "-",
-      "thu": "-",
-      "fri": "L",
-      "sat": "L"
-    },
-    "timeCategory": "Late Night",
-    "energyRamp": 5,
-    "tags": "DJs, Elegant, Global, Stylish, Social",
-    "price": "$$$",
-    "duration": 2.5,
-    "id": "8ebcfa68-3012-42ba-b425-776c6967ef65"
   },
   {
     "slug": "tongue-groove",
@@ -37312,7 +37173,7 @@ const atlantaData = [
 "name": "The Salty Donut - Buckhead",
 "id": "e0223b8d-c9b3-437e-8fd9-b16f4b2a657c",
     "vibe": "playful, sweet, artisanal, fresh, bright, indulgent",
-"type": ["bakery", "dessert"],
+"type": ["bakery"],
 "lat": "33.8397384",
 "lon": "-84.380378",
 "link": "https://www.instagram.com/thesaltydonut/",

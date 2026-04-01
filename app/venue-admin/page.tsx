@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import RecurringEventAdmin from './recurringeventadmin'
 import EventsAdmin from './eventsadmin'
+import EventJourneysAdmin from './EventJourneysAdmin'
 import type { Database } from '@/types/supabase'
 
 export type VenueSummary = Pick<
@@ -33,7 +34,7 @@ export default function VenueAdminPage() {
     }
 
     checkUser()
-  }, [supabase])
+  }, [supabase, router])
 
   if (!userEmail) return null
 
@@ -43,9 +44,12 @@ export default function VenueAdminPage() {
         selectedVenue={selectedVenueId}
         onVenueChange={setSelectedVenueId}
       />
+
       {selectedVenueId && (
         <RecurringEventAdmin venueId={selectedVenueId} />
       )}
+
+      <EventJourneysAdmin />
     </div>
   )
 }
