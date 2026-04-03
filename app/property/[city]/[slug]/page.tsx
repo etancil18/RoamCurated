@@ -1,16 +1,20 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { createServerClient } from '@/lib/supabase/server'
+import { DateTime } from 'luxon'
+
 import PropertyMap from '@/components/maps/PropertyMap'
 import { Card, CardContent } from '@/components/ui/card'
-import { DateTime } from 'luxon'
-import { CITY_CONFIGS } from '@/config/cities'
 import PropertyCrawls from '@/app/property/components/PropertyCrawls'
 import EventJourneys from '@/app/property/components/EventJourneys'
-import { venueMatchesAnyType } from '@/lib/venues/typeMatching'
-import { loadCityVenues } from '@/lib/venues/loadCityVenues'
-import { generateEventJourney } from '@/lib/crawls/generateEventJourney'
 import SavePropertyButton from '../../components/SavePropertyButton'
+
+import { getPropertyGuideData } from '@/lib/property/getPropertyGuideData'
+import { buildEventJourneyVMs } from '@/lib/view-models/buildEventJourneyVM'
+import {
+  buildVenueCardVMs,
+  type VenueCardVM,
+} from '@/lib/view-models/buildVenueCardVM'
+import { logEventServer } from '@/lib/logEventServer'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,177 +25,17 @@ type PageProps = {
   }>
 }
 
-type EventJourneyRecord = {
-  id: string
-  city: string
-  title: string
-  slug: string
-  event_id: string | null
-  property_id: string | null
-  event_name: string
-  event_start_at: string
-  destination_name: string
-  destination_venue_id: string | null
-  destination_lat: number
-  destination_lon: number
-  vibes: string[] | null
-  tags: string[] | null
-  ideal_stop_duration_minutes: number | null
-  range_expansion_pct: number | null
-  max_dynamic_stops: number | null
-  status: string | null
-  notes: string | null
-  created_at?: string | null
-  updated_at?: string | null
-}
-
-type EventJourneyStopRow = {
-  id: string
-  event_journey_id: string
-  venue_id: string
-  stop_order: number
-  role: string
-  is_locked: boolean
-  created_at?: string | null
-}
-
-type EventJourneyPropertyLinkRow = {
-  id: string
-  event_journey_id: string
-  property_id: string
-  created_at?: string | null
-}
-
 export const metadata: Metadata = {
   title: 'Property Guide | Roam',
   description: 'Local neighborhood guide powered by Roam',
 }
 
-/* ------------------------------------------------ */
-/* Normalize city                                   */
-/* ------------------------------------------------ */
-
-function normalizeCityKey(input?: string | null) {
-  const raw = (input ?? '').trim().toLowerCase()
-
-  const aliases: Record<string, string> = {
-    atl: 'atl',
-    atlanta: 'atl',
-    'atlanta ga': 'atl',
-
-    nyc: 'nyc',
-    'new york': 'nyc',
-    'new york city': 'nyc',
-    manhattan: 'nyc',
-
-    porto: 'porto',
-    oporto: 'porto',
-
-    lisbon: 'lisbon',
-    lisboa: 'lisbon',
-  }
-
-  return aliases[raw] ?? raw
-}
-
-/* ------------------------------------------------ */
-/* Normalize venue                                  */
-/* ------------------------------------------------ */
-
-function normalizeVenue(v: any) {
-
-  let cover = v.cover
-
-  if (cover && !cover.startsWith('/')) {
-    cover = '/' + cover
-  }
-
-  return {
-    ...v,
-    cover,
-    lat: typeof v.lat === 'string' ? parseFloat(v.lat) : v.lat,
-    lon: typeof v.lon === 'string' ? parseFloat(v.lon) : v.lon,
-    link: `/venue-profile/${v.id}`,
-  }
-}
-
-/* ------------------------------------------------ */
-/* Venue Card                                       */
-/* ------------------------------------------------ */
-
-function VenueCard({ v }: { v: any }) {
-
-  const cover =
-    v.cover && v.cover.startsWith('/')
-      ? v.cover
-      : v.cover
-      ? '/' + v.cover
-      : '/placeholder-venue.jpg'
-
-  return (
-
-    <Link href={`/venue-profile/${v.id}`}>
-
-      <Card className="hover:shadow-md transition cursor-pointer">
-
-        <CardContent className="p-3 flex gap-3 items-center">
-
-          <img
-            src={cover}
-            className="w-16 h-16 rounded-lg object-cover"
-            alt={v.name}
-          />
-
-          <div className="flex flex-col">
-
-            <p className="font-medium text-sm">
-              {v.name}
-            </p>
-
-            {v.description && (
-              <p className="text-xs text-muted-foreground">
-                {v.description}
-              </p>
-            )}
-
-          </div>
-
-        </CardContent>
-
-      </Card>
-
-    </Link>
-
-  )
-}
-
 export default async function PropertyPage({ params }: PageProps) {
-
   const { city, slug } = await params
-  const supabase = await createServerClient()
-  const adminDb = supabase as any
 
-  const normalizedCity = normalizeCityKey(city)
-  const timezone =
-    CITY_CONFIGS[normalizedCity]?.timezone ??
-    CITY_CONFIGS[city]?.timezone ??
-    'UTC'
+  const guide = await getPropertyGuideData({ city, slug })
 
-  const nowForCity = DateTime.now().setZone(timezone)
-
-  /* ------------------------------------------------ */
-  /* Fetch property                                   */
-  /* ------------------------------------------------ */
-
-  const { data: propertyData } = await supabase
-    .from('properties')
-    .select('*')
-    .eq('slug', slug)
-
-  const property =
-    propertyData?.find((p: any) => normalizeCityKey(p.city) === normalizedCity) ?? null
-
-  if (!property) {
+  if (!guide.property) {
     return (
       <div className="max-w-2xl mx-auto text-center p-6">
         <h2 className="text-xl font-bold">Property not found</h2>
@@ -202,321 +46,272 @@ export default async function PropertyPage({ params }: PageProps) {
     )
   }
 
-  /* ------------------------------------------------ */
-  /* Host favorites                                   */
-  /* ------------------------------------------------ */
+  const origin = {
+    lat: guide.property.lat,
+    lon: guide.property.lon,
+  }
 
-  const { data: favorites } = await supabase
-    .from('property_favorites')
-    .select(`
-      id,
-      label,
-      description,
-      priority,
-      venues (
-        id,
-        name,
-        lat,
-        lon,
-        city,
-        slug,
-        cover,
-        type
-      )
-    `)
-    .eq('property_id', property.id)
-    .order('priority', { ascending: true })
-
-  const favoriteVenues =
-    favorites?.map((f: any) =>
-      normalizeVenue({
-        ...f.venues,
-        label: f.label,
-        description: f.description,
-      })
-    ) ?? []
-
-  /* ------------------------------------------------ */
-  /* Load city venues                                 */
-  /* ------------------------------------------------ */
-
-  const { data: allVenuesData } = await supabase
-    .from('venues')
-    .select('*')
-
-  const cityVenues =
-    (allVenuesData ?? []).filter(
-      (v: any) => normalizeCityKey(v.city) === normalizedCity
-    )
-
-  const allCityVenues = loadCityVenues(
-    normalizedCity,
-    cityVenues ?? []
-  )
-
-  const dbCityVenueById = new Map(
-    cityVenues.map((venue: any) => [venue.id, venue])
-  )
-
-  /* ------------------------------------------------ */
-  /* Filter nearby venues                             */
-  /* ------------------------------------------------ */
-
-  const nearbyVenues = allCityVenues.filter((v) => {
-
-    const latDiff = Math.abs(v.lat - property.lat)
-    const lonDiff = Math.abs(v.lon - property.lon)
-
-    return latDiff < 0.02 && lonDiff < 0.02
+  const hostPickCards = buildVenueCardVMs(guide.favoriteVenues, {
+    origin,
+    hostPickIds: guide.favoriteVenues.map((v) => v.id),
   })
 
-  /* ------------------------------------------------ */
-  /* Venue type filtering                             */
-  /* ------------------------------------------------ */
+  const coffeeCards = buildVenueCardVMs(guide.coffeeNearby, { origin })
+  const barCards = buildVenueCardVMs(guide.barsNearby, { origin })
+  const dinnerCards = buildVenueCardVMs(guide.dinnerNearby, { origin })
+  const wellnessCards = buildVenueCardVMs(guide.wellnessNearby, { origin })
 
-  const coffeeNearby = nearbyVenues.filter((v) =>
-    venueMatchesAnyType(v, ['coffee','cafe','café','bakery'])
-  )
+  const eventJourneyVMs = buildEventJourneyVMs(guide.eventJourneyCards, {
+    timezone: guide.timezone,
+    now: guide.nowForCity,
+  })
 
-  const barsNearby = nearbyVenues.filter((v) =>
-    venueMatchesAnyType(v, ['bar','wine bar','cocktail','pub','brewery'])
-  )
+  const mapVenuesForMap = guide.mapVenues.map((venue) => ({
+    ...venue,
+    slug: venue.slug ?? undefined,
+  }))
 
-  const dinnerNearby = nearbyVenues.filter((v) =>
-    venueMatchesAnyType(v, ['restaurant','dinner','kitchen'])
-  )
+  const hasFlexibleEventJourneys = guide.eventJourneyCards.some((journey) => {
+    const policy = String(journey.arrivalPolicy ?? '')
+      .trim()
+      .toLowerCase()
 
-  const wellnessNearby = nearbyVenues.filter((v) =>
-    venueMatchesAnyType(v, ['fitness','yoga','spa'])
-  )
+    return policy === 'midpoint_deadline' || policy === 'window'
+  })
 
-  /* ------------------------------------------------ */
-  /* Map venues                                       */
-  /* ------------------------------------------------ */
+  const eventJourneyIntroCopy = hasFlexibleEventJourneys
+    ? 'Smart routes for concerts, games, festivals, and flexible event windows near this property.'
+    : 'Smart routes for concerts, games, and major local events near this property.'
 
-  const mapVenues = [...favoriteVenues,...nearbyVenues].slice(0,40)
+  const totalVenueCards =
+    hostPickCards.length +
+    coffeeCards.length +
+    barCards.length +
+    dinnerCards.length +
+    wellnessCards.length
 
-  /* ------------------------------------------------ */
-  /* Nearby events                                    */
-  /* ------------------------------------------------ */
+  await Promise.all([
+    logEventServer({
+      impression_type: 'property_page_viewed',
+      metadata: {
+        property_id: guide.property.id,
+        property_slug: guide.property.slug,
+        property_name: guide.property.name,
+        city: guide.property.city,
+        has_event_journeys: eventJourneyVMs.length > 0,
+        num_event_journeys: eventJourneyVMs.length,
+        num_property_crawls: guide.propertyCrawlCards.length,
+        num_nearby_events: guide.nearbyEvents.length,
+        num_rendered_venue_cards: totalVenueCards,
+        num_map_venues: mapVenuesForMap.length,
+      },
+    }),
 
-  const { data: nearbyEventsData } = await supabase.rpc(
-    'get_nearby_events',
-    {
-      property_lat: property.lat,
-      property_lon: property.lon,
-      radius_meters: 3000,
-      limit_count: 25,
-    }
-  )
-
-  const nearbyEvents = nearbyEventsData ?? []
-
-  /* ------------------------------------------------ */
-  /* Event journeys (within next 7 days)              */
-  /* ------------------------------------------------ */
-
-  const sevenDaysFromNow = nowForCity.plus({ days: 7 }).toISO()
-
-  const { data: candidateEventJourneysData } = await adminDb
-    .from('event_journeys')
-    .select('*')
-    .eq('status', 'active')
-    .gte('event_start_at', nowForCity.toISO())
-    .lte('event_start_at', sevenDaysFromNow)
-    .order('event_start_at', { ascending: true })
-
-  const candidateEventJourneys =
-    ((candidateEventJourneysData as EventJourneyRecord[] | null) ?? [])
-      .filter((journey) => normalizeCityKey(journey.city) === normalizedCity)
-
-  let eventJourneys: EventJourneyRecord[] = []
-
-  if (candidateEventJourneys.length > 0) {
-    const candidateJourneyIds = candidateEventJourneys.map((journey) => journey.id)
-
-    const { data: eventJourneyPropertyLinksData } = await adminDb
-      .from('event_journey_properties')
-      .select('*')
-      .in('event_journey_id', candidateJourneyIds)
-
-    const eventJourneyPropertyLinks =
-      (eventJourneyPropertyLinksData as EventJourneyPropertyLinkRow[] | null) ?? []
-
-    const linksByJourneyId = new Map<string, EventJourneyPropertyLinkRow[]>()
-
-    eventJourneyPropertyLinks.forEach((link) => {
-      const existing = linksByJourneyId.get(link.event_journey_id) ?? []
-      existing.push(link)
-      linksByJourneyId.set(link.event_journey_id, existing)
-    })
-
-    eventJourneys = candidateEventJourneys.filter((journey) => {
-      const links = linksByJourneyId.get(journey.id) ?? []
-
-      if (links.length === 0) {
-        return true
-      }
-
-      return links.some((link) => link.property_id === property.id)
-    })
-  }
-
-  let eventJourneyStops: EventJourneyStopRow[] = []
-
-  if (eventJourneys.length > 0) {
-    const eventJourneyIds = eventJourneys.map((journey) => journey.id)
-
-    const { data: eventJourneyStopsData } = await adminDb
-      .from('event_journey_stops')
-      .select('*')
-      .in('event_journey_id', eventJourneyIds)
-      .order('stop_order', { ascending: true })
-
-    eventJourneyStops = (eventJourneyStopsData as EventJourneyStopRow[] | null) ?? []
-  }
-
-  const eventJourneyCards = eventJourneys
-    .map((journey) => {
-
-      const lockedStops = eventJourneyStops
-        .filter((stop) => stop.event_journey_id === journey.id)
-        .map((stop) => ({
-          venueId: stop.venue_id,
-          stopOrder: stop.stop_order,
-          role: stop.role,
-          isLocked: stop.is_locked,
-        }))
-
-      const result = generateEventJourney({
-        property: {
-          lat: property.lat,
-          lon: property.lon,
-          city: normalizeCityKey(property.city),
-          name: property.name,
-        },
-        destination: {
-          name: journey.destination_name,
-          lat: journey.destination_lat,
-          lon: journey.destination_lon,
-          venueId: journey.destination_venue_id,
-        },
-        eventStartAtISO: journey.event_start_at,
-        venues: allCityVenues,
-        now: nowForCity,
-        signals: {
-          vibes: journey.vibes,
-          tags: journey.tags,
-        },
-        lockedStops,
-        idealStopDurationMinutes: journey.ideal_stop_duration_minutes ?? 120,
-        rangeExpansionPct: journey.range_expansion_pct ?? 0.3,
-        maxDynamicStops: journey.max_dynamic_stops ?? 3,
-      })
-
-      if (!result) return null
-
-      const hydratedResult = {
-        ...result,
-        stops: result.stops.map((stop) => {
-          const dbVenue = dbCityVenueById.get(stop.venue.id) as any
-
-          return {
-            ...stop,
-            venue: {
-              ...stop.venue,
-              city: normalizeCityKey(dbVenue?.city ?? stop.venue.city),
-              description:
-                typeof dbVenue?.description === 'string'
-                  ? dbVenue.description
-                  : null,
+    ...(eventJourneyVMs.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'event_journeys_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_journeys: eventJourneyVMs.length,
+              journey_ids: eventJourneyVMs.map((journey) => journey.id),
             },
-          }
-        }),
-      }
+          }),
+        ]
+      : []),
 
-      const eventTime = DateTime.fromISO(journey.event_start_at).setZone(timezone)
-      const canStartToday = nowForCity.hasSame(eventTime, 'day')
-      const stopIds = hydratedResult.stops.map((stop) => stop.venue.id).join(',')
+    ...(guide.propertyCrawlCards.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'property_crawls_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_property_crawls: guide.propertyCrawlCards.length,
+              crawl_ids: guide.propertyCrawlCards.map((crawl) => crawl.id),
+            },
+          }),
+        ]
+      : []),
 
-      const href =
-        canStartToday
-          ? `/property/event-route?city=${encodeURIComponent(city)}&venues=${encodeURIComponent(
-              stopIds
-            )}&property_id=${encodeURIComponent(property.id)}&property_slug=${encodeURIComponent(
-              property.slug
-            )}&destination_name=${encodeURIComponent(journey.destination_name)}&destination_lat=${encodeURIComponent(
-              String(journey.destination_lat)
-            )}&destination_lon=${encodeURIComponent(
-              String(journey.destination_lon)
-            )}&event_name=${encodeURIComponent(
-              journey.event_name
-            )}&event_start_at=${encodeURIComponent(journey.event_start_at)}`
-          : undefined
+    ...(mapVenuesForMap.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'property_map_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_map_venues: mapVenuesForMap.length,
+            },
+          }),
+        ]
+      : []),
 
-      return {
-        id: journey.id,
-        title: journey.title,
-        eventName: journey.event_name,
-        eventStartAt: journey.event_start_at,
-        destinationName: journey.destination_name,
-        status: canStartToday ? 'route available today' : 'available day of event',
-        result: hydratedResult,
-        href,
-      }
-    })
-    .filter(Boolean)
+    ...(guide.nearbyEvents.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'property_nearby_events_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_nearby_events: guide.nearbyEvents.length,
+              nearby_event_ids: guide.nearbyEvents
+                .map((event: any) => event?.id)
+                .filter(Boolean),
+            },
+          }),
+        ]
+      : []),
+
+    ...(hostPickCards.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'property_host_picks_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_venues: hostPickCards.length,
+              venue_ids: hostPickCards.map((venue) => venue.id),
+            },
+          }),
+        ]
+      : []),
+
+    ...(coffeeCards.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'property_coffee_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_venues: coffeeCards.length,
+              venue_ids: coffeeCards.map((venue) => venue.id),
+            },
+          }),
+        ]
+      : []),
+
+    ...(barCards.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'property_bars_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_venues: barCards.length,
+              venue_ids: barCards.map((venue) => venue.id),
+            },
+          }),
+        ]
+      : []),
+
+    ...(dinnerCards.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'property_dinner_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_venues: dinnerCards.length,
+              venue_ids: dinnerCards.map((venue) => venue.id),
+            },
+          }),
+        ]
+      : []),
+
+    ...(wellnessCards.length > 0
+      ? [
+          logEventServer({
+            impression_type: 'property_wellness_section_impression',
+            metadata: {
+              property_id: guide.property.id,
+              property_slug: guide.property.slug,
+              property_name: guide.property.name,
+              city: guide.property.city,
+              num_venues: wellnessCards.length,
+              venue_ids: wellnessCards.map((venue) => venue.id),
+            },
+          }),
+        ]
+      : []),
+  ])
 
   return (
-
     <main className="max-w-5xl mx-auto p-6 space-y-10">
+      <section>
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-semibold">{guide.property.name}</h1>
 
-     {/* Hero */}
+                <p className="text-muted-foreground">
+                  {guide.property.city}
+                  {typeof guide.property.host_name === 'string' &&
+                    guide.property.host_name.trim().length > 0 &&
+                    ` • Hosted by ${guide.property.host_name}`}
+                </p>
 
-<section>
+                <p className="text-sm text-muted-foreground max-w-2xl">
+                  Best coffee, dinner, bars, and event routes within walking
+                  distance.
+                </p>
+              </div>
 
-  <Card>
+              <SavePropertyButton
+                propertyId={guide.property.id}
+                city={guide.property.city}
+                slug={guide.property.slug}
+              />
+            </div>
 
-    <CardContent className="p-6 space-y-3">
+            <div className="flex flex-wrap gap-2 pt-1">
+              {eventJourneyVMs.length > 0 ? (
+                <a
+                  href="#event-journeys"
+                  className="inline-flex items-center rounded-full bg-black text-white px-4 py-2 text-sm font-medium hover:opacity-90"
+                >
+                  View event routes
+                </a>
+              ) : (
+                <a
+                  href="#suggested-crawls"
+                  className="inline-flex items-center rounded-full bg-black text-white px-4 py-2 text-sm font-medium hover:opacity-90"
+                >
+                  Start nearby route
+                </a>
+              )}
 
-      <div className="flex items-start justify-between gap-4">
+              <a
+                href="#neighborhood-map"
+                className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium hover:bg-muted"
+              >
+                View map
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
-        <div className="space-y-2">
-
-          <h1 className="text-3xl font-semibold">
-            {property.name}
-          </h1>
-
-          <p className="text-muted-foreground">
-            {property.city}
-            {property.host_name && ` • Hosted by ${property.host_name}`}
-          </p>
-
-          <p className="text-sm text-muted-foreground">
-            Discover coffee, dining, nightlife, and hidden gems within walking distance.
-          </p>
-
-        </div>
-
-        <SavePropertyButton
-          propertyId={property.id}
-          city={property.city}
-          slug={property.slug}
-        />
-
-      </div>
-
-    </CardContent>
-
-  </Card>
-
-</section>
-
-      {/* Welcome Description */}
-
-      {property.welcome_description && (
+      {guide.property.welcome_description && (
         <section className="space-y-3">
-
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Welcome
           </h2>
@@ -524,68 +319,66 @@ export default async function PropertyPage({ params }: PageProps) {
           <Card>
             <CardContent className="p-6">
               <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">
-                {property.welcome_description}
+                {guide.property.welcome_description}
               </p>
             </CardContent>
           </Card>
-
         </section>
       )}
 
-      {/* Map */}
+      {eventJourneyVMs.length > 0 && (
+        <section id="event-journeys" className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Event Journeys
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {eventJourneyIntroCopy}
+            </p>
+          </div>
 
-      <section className="space-y-3">
+          <EventJourneys journeys={eventJourneyVMs} />
+        </section>
+      )}
 
+      <section id="neighborhood-map" className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Neighborhood Map
         </h2>
 
         <div className="rounded-xl overflow-hidden border h-[420px]">
-
-          <PropertyMap
-            property={property}
-            venues={mapVenues}
-          />
-
+          <PropertyMap property={guide.property} venues={mapVenuesForMap as any} />
         </div>
-
       </section>
 
-      {/* Event Journeys */}
+      <section id="suggested-crawls" className="space-y-3">
+        <div className="space-y-1">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Suggested Routes
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Ready-to-go nearby plans for coffee, dinner, drinks, and easy local
+            exploration.
+          </p>
+        </div>
 
-      {eventJourneyCards.length > 0 && (
-        <EventJourneys journeys={eventJourneyCards as any} />
-      )}
+        <PropertyCrawls
+          property={guide.property}
+          crawls={guide.propertyCrawlCards}
+        />
+      </section>
 
-      {/* Suggested Crawls */}
-
-      <PropertyCrawls
-        property={property}
-        venues={nearbyVenues}
-        city={property.city}
-      />
-
-      {/* Events */}
-
-      {nearbyEvents.length > 0 && (
-
+      {guide.nearbyEvents.length > 0 && (
         <section className="space-y-3">
-
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Events Nearby
           </h2>
 
           <div className="grid gap-3 md:grid-cols-2">
-
-            {nearbyEvents.map((ev: any) => (
-
+            {guide.nearbyEvents.map((ev: any) => (
               <Card key={ev.id}>
-
                 <CardContent className="p-4 space-y-1">
-
-                  <p className="font-medium">
-                    {ev.title}
-                  </p>
+                  <p className="font-medium">{ev.title}</p>
 
                   <p className="text-xs text-muted-foreground">
                     {ev.venue_name}
@@ -593,7 +386,7 @@ export default async function PropertyPage({ params }: PageProps) {
 
                   <p className="text-xs text-muted-foreground">
                     {DateTime.fromISO(ev.starts_at)
-                      .setZone(timezone)
+                      .setZone(guide.timezone)
                       .toFormat('M/d h:mm a')}
                   </p>
 
@@ -603,71 +396,119 @@ export default async function PropertyPage({ params }: PageProps) {
                   >
                     View Venue
                   </Link>
-
                 </CardContent>
-
               </Card>
-
             ))}
-
           </div>
-
         </section>
-
       )}
 
-      {/* Explore Nearby */}
+      {hostPickCards.length > 0 && (
+        <VenueSection
+          title="Host Picks"
+          subtitle="High-trust local recommendations curated for this property."
+          venues={hostPickCards.slice(0, 6)}
+        />
+      )}
 
       <section className="space-y-6">
-
-        {coffeeNearby.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold">☕ Coffee Nearby</h2>
-            <div className="grid gap-3 md:grid-cols-2">
-              {coffeeNearby.slice(0,5).map(v => (
-                <VenueCard key={v.id} v={v}/>
-              ))}
-            </div>
-          </div>
+        {coffeeCards.length > 0 && (
+          <VenueSection
+            title="☕ Coffee Nearby"
+            subtitle="Good coffee, quick breakfast, and easy daytime starts."
+            venues={coffeeCards.slice(0, 5)}
+          />
         )}
 
-        {barsNearby.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold">🍸 Bars Nearby</h2>
-            <div className="grid gap-3 md:grid-cols-2">
-              {barsNearby.slice(0,5).map(v => (
-                <VenueCard key={v.id} v={v}/>
-              ))}
-            </div>
-          </div>
+        {barCards.length > 0 && (
+          <VenueSection
+            title="🍸 Bars Nearby"
+            subtitle="Strong nearby options for drinks before or after dinner."
+            venues={barCards.slice(0, 5)}
+          />
         )}
 
-        {dinnerNearby.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold">🍽 Dinner Nearby</h2>
-            <div className="grid gap-3 md:grid-cols-2">
-              {dinnerNearby.slice(0,5).map(v => (
-                <VenueCard key={v.id} v={v}/>
-              ))}
-            </div>
-          </div>
+        {dinnerCards.length > 0 && (
+          <VenueSection
+            title="🍽 Dinner Nearby"
+            subtitle="Best nearby places for a full meal or an easy evening out."
+            venues={dinnerCards.slice(0, 5)}
+          />
         )}
 
-        {wellnessNearby.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold">🧘 Wellness Nearby</h2>
-            <div className="grid gap-3 md:grid-cols-2">
-              {wellnessNearby.slice(0,5).map(v => (
-                <VenueCard key={v.id} v={v}/>
-              ))}
-            </div>
-          </div>
+        {wellnessCards.length > 0 && (
+          <VenueSection
+            title="🧘 Wellness Nearby"
+            subtitle="Reset, move, or recharge close to the property."
+            venues={wellnessCards.slice(0, 5)}
+          />
         )}
-
       </section>
-
     </main>
-
   )
+}
 
+function VenueSection({
+  title,
+  subtitle,
+  venues,
+}: {
+  title: string
+  subtitle?: string
+  venues: VenueCardVM[]
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <h2 className="text-sm font-semibold">{title}</h2>
+        {subtitle ? (
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        ) : null}
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        {venues.map((venue) => (
+          <Link key={venue.id} href={venue.href}>
+            <Card className="h-full cursor-pointer transition hover:shadow-md">
+              <CardContent className="flex items-start gap-3 p-4">
+                <img
+                  src={venue.imageUrl || '/placeholder-venue.jpg'}
+                  className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                  alt={venue.name}
+                />
+
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">{venue.name}</p>
+
+                    {venue.description && (
+                      <p className="line-clamp-2 text-xs text-muted-foreground">
+                        {venue.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {venue.chips.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {venue.chips.map((chip) => (
+                        <Chip key={chip}>{chip}</Chip>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium text-muted-foreground">
+      {children}
+    </span>
+  )
 }

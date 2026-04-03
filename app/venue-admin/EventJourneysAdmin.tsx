@@ -10,6 +10,8 @@ type VenueOption = {
   id: string
   name: string
   city: string | null
+  lat: number | null
+  lon: number | null
 }
 
 type PropertyOption = {
@@ -25,6 +27,11 @@ type EventJourneyPropertyLink = {
   property_id: string
 }
 
+type DestinationKind = 'venue' | 'custom'
+type DestinationCoordinatesSource = 'venue' | 'manual'
+type ArrivalPolicy = 'by_start' | 'midpoint_deadline' | 'window' | 'custom'
+type ArrivalPreference = 'early' | 'on_time' | 'fashionably_late' | 'late_ok'
+
 type EventJourney = {
   id: string
   city: string
@@ -32,10 +39,16 @@ type EventJourney = {
   slug: string
   event_name: string
   event_start_at: string
+  event_end_at: string | null
+  event_type: string | null
   destination_name: string
   destination_venue_id: string | null
   destination_lat: number | null
   destination_lon: number | null
+  destination_kind: DestinationKind | null
+  destination_coordinates_source: DestinationCoordinatesSource | null
+  arrival_policy: ArrivalPolicy | null
+  arrival_preference: ArrivalPreference | null
   vibes: string[] | null
   tags: string[] | null
   ideal_stop_duration_minutes: number | null
@@ -63,10 +76,14 @@ const INITIAL_FORM = {
   slug: '',
   eventName: '',
   eventStartAt: '',
+  eventEndAt: '',
+  eventType: '',
   destinationName: '',
   destinationVenueId: '',
   destinationLat: '',
   destinationLon: '',
+  arrivalPolicy: 'by_start' as ArrivalPolicy,
+  arrivalPreference: 'on_time' as ArrivalPreference,
   vibes: '',
   tags: '',
   idealStopDurationMinutes: '120',
@@ -117,6 +134,24 @@ function parseCsv(value: string) {
     .filter(Boolean)
 }
 
+function formatForDateTimeLocal(value?: string | null) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toISOString().slice(0, 16)
+}
+
+function parseOptionalFloat(value: string) {
+  if (!value.trim()) return null
+  const parsed = parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function parseOptionalInt(value: string, fallback: number) {
+  const parsed = parseInt(value || String(fallback), 10)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
 export default function EventJourneysAdmin() {
   const supabase = useMemo(() => supabaseBrowser(), [])
   const adminDb = supabase as any
@@ -141,6 +176,13 @@ export default function EventJourneysAdmin() {
 
   const [journeyStops, setJourneyStops] = useState<EventJourneyStop[]>([])
 
+  const selectedDestinationVenue = useMemo(
+    () => venues.find((venue) => venue.id === form.destinationVenueId) ?? null,
+    [venues, form.destinationVenueId]
+  )
+
+  const destinationUsesVenue = Boolean(form.destinationVenueId)
+
   useEffect(() => {
     async function loadInitialData() {
       setLoading(true)
@@ -153,7 +195,7 @@ export default function EventJourneysAdmin() {
       ] = await Promise.all([
         supabase
           .from('venues')
-          .select('id, name, city')
+          .select('id, name, city, lat, lon')
           .order('city', { ascending: true })
           .order('name', { ascending: true }),
         supabase
@@ -167,17 +209,9 @@ export default function EventJourneysAdmin() {
           .order('event_start_at', { ascending: true }),
       ])
 
-      if (venueError) {
-        setError(venueError.message)
-      }
-
-      if (propertyError) {
-        setError(propertyError.message)
-      }
-
-      if (journeyError) {
-        setError(journeyError.message)
-      }
+      if (venueError) setError(venueError.message)
+      if (propertyError) setError(propertyError.message)
+      if (journeyError) setError(journeyError.message)
 
       const safeVenues = (venueData as unknown as VenueOption[]) ?? []
       const safeProperties = (propertyData as unknown as PropertyOption[]) ?? []
@@ -277,9 +311,9 @@ export default function EventJourneysAdmin() {
       title: journey.title ?? '',
       slug: journey.slug ?? '',
       eventName: journey.event_name ?? '',
-      eventStartAt: journey.event_start_at
-        ? new Date(journey.event_start_at).toISOString().slice(0, 16)
-        : '',
+      eventStartAt: formatForDateTimeLocal(journey.event_start_at),
+      eventEndAt: formatForDateTimeLocal(journey.event_end_at),
+      eventType: journey.event_type ?? '',
       destinationName: journey.destination_name ?? '',
       destinationVenueId: journey.destination_venue_id ?? '',
       destinationLat:
@@ -290,6 +324,8 @@ export default function EventJourneysAdmin() {
         journey.destination_lon !== null && journey.destination_lon !== undefined
           ? String(journey.destination_lon)
           : '',
+      arrivalPolicy: journey.arrival_policy ?? 'by_start',
+      arrivalPreference: journey.arrival_preference ?? 'on_time',
       vibes: (journey.vibes ?? []).join(', '),
       tags: (journey.tags ?? []).join(', '),
       idealStopDurationMinutes: String(
@@ -299,7 +335,7 @@ export default function EventJourneysAdmin() {
       maxDynamicStops: String(journey.max_dynamic_stops ?? 3),
       status: journey.status ?? 'draft',
       notes: journey.notes ?? '',
-      propertyIds: journey.property_id ? [journey.property_id] : [],
+      propertyIds: [],
       eventId: journey.event_id ?? '',
     })
   }
@@ -324,27 +360,55 @@ export default function EventJourneysAdmin() {
       ? new Date(form.eventStartAt).toISOString()
       : ''
 
+    const eventEndAtISO = form.eventEndAt
+      ? new Date(form.eventEndAt).toISOString()
+      : null
+
+    const manualDestinationLat = parseOptionalFloat(form.destinationLat)
+    const manualDestinationLon = parseOptionalFloat(form.destinationLon)
+
+    const destinationKind: DestinationKind = form.destinationVenueId ? 'venue' : 'custom'
+    const destinationCoordinatesSource: DestinationCoordinatesSource = form.destinationVenueId
+      ? 'venue'
+      : 'manual'
+    const arrivalPolicy: ArrivalPolicy = form.arrivalPolicy || 'by_start'
+    const arrivalPreference: ArrivalPreference =
+      form.arrivalPreference || 'on_time'
+
     const payload = {
       city: normalizeCityKey(form.city),
       title: form.title.trim(),
       slug: (form.slug.trim() || slugify(form.title)).toLowerCase(),
       event_name: form.eventName.trim(),
       event_start_at: eventStartAtISO,
+      event_end_at: eventEndAtISO,
+      event_type: form.eventType.trim() || null,
       destination_name: form.destinationName.trim(),
       destination_venue_id: form.destinationVenueId || null,
-      destination_lat: form.destinationLat ? parseFloat(form.destinationLat) : null,
-      destination_lon: form.destinationLon ? parseFloat(form.destinationLon) : null,
+      destination_kind: destinationKind,
+      destination_coordinates_source: destinationCoordinatesSource,
+      destination_lat: form.destinationVenueId ? null : manualDestinationLat,
+      destination_lon: form.destinationVenueId ? null : manualDestinationLon,
+      arrival_policy: arrivalPolicy,
+      arrival_preference: arrivalPreference,
       vibes: parseCsv(form.vibes),
       tags: parseCsv(form.tags),
-      ideal_stop_duration_minutes: parseInt(form.idealStopDurationMinutes || '120', 10),
+      ideal_stop_duration_minutes: parseOptionalInt(
+        form.idealStopDurationMinutes,
+        120
+      ),
       range_expansion_pct: parseFloat(form.rangeExpansionPct || '0.3'),
-      max_dynamic_stops: parseInt(form.maxDynamicStops || '3', 10),
+      max_dynamic_stops: parseOptionalInt(form.maxDynamicStops, 3),
       status: form.status || 'draft',
       notes: form.notes.trim() || null,
-      property_id: form.propertyIds[0] ?? null,
+      property_id: null,
       event_id: form.eventId.trim() || null,
       updated_at: new Date().toISOString(),
     }
+
+    const requiresEventEndAt =
+      payload.arrival_policy === 'midpoint_deadline' ||
+      payload.arrival_policy === 'window'
 
     if (
       !payload.city ||
@@ -352,12 +416,24 @@ export default function EventJourneysAdmin() {
       !payload.slug ||
       !payload.event_name ||
       !payload.event_start_at ||
-      !payload.destination_name ||
-      payload.destination_lat === null ||
-      payload.destination_lon === null
+      !payload.destination_name
     ) {
       setSaving(false)
       setError('Please complete all required event journey fields.')
+      return
+    }
+
+    if (!payload.destination_venue_id) {
+      if (payload.destination_lat === null || payload.destination_lon === null) {
+        setSaving(false)
+        setError('Manual destinations require both latitude and longitude.')
+        return
+      }
+    }
+
+    if (requiresEventEndAt && !payload.event_end_at) {
+      setSaving(false)
+      setError('Flexible-arrival event journeys require an event end time.')
       return
     }
 
@@ -380,8 +456,7 @@ export default function EventJourneysAdmin() {
       return
     }
 
-    const journeyId =
-      selectedJourneyId || (data as EventJourney | null)?.id
+    const journeyId = selectedJourneyId || (data as EventJourney | null)?.id
 
     if (!journeyId) {
       setSaving(false)
@@ -422,7 +497,7 @@ export default function EventJourneysAdmin() {
       const hydratedNewJourney: EventJourney = {
         ...newJourney,
         city: normalizeCityKey(newJourney.city),
-        property_id: form.propertyIds[0] ?? null,
+        property_id: null,
       }
 
       setJourneys((prev) => [hydratedNewJourney, ...prev])
@@ -440,10 +515,20 @@ export default function EventJourneysAdmin() {
         slug: payload.slug,
         event_name: payload.event_name,
         event_start_at: payload.event_start_at,
+        event_end_at: payload.event_end_at,
+        event_type: payload.event_type,
         destination_name: payload.destination_name,
         destination_venue_id: payload.destination_venue_id,
-        destination_lat: payload.destination_lat,
-        destination_lon: payload.destination_lon,
+        destination_lat: payload.destination_venue_id
+          ? selectedDestinationVenue?.lat ?? null
+          : payload.destination_lat,
+        destination_lon: payload.destination_venue_id
+          ? selectedDestinationVenue?.lon ?? null
+          : payload.destination_lon,
+        destination_kind: destinationKind,
+        destination_coordinates_source: destinationCoordinatesSource,
+        arrival_policy: arrivalPolicy,
+        arrival_preference: arrivalPreference,
         vibes: payload.vibes,
         tags: payload.tags,
         ideal_stop_duration_minutes: payload.ideal_stop_duration_minutes,
@@ -451,15 +536,13 @@ export default function EventJourneysAdmin() {
         max_dynamic_stops: payload.max_dynamic_stops,
         status: payload.status,
         notes: payload.notes,
-        property_id: payload.property_id,
+        property_id: null,
         event_id: payload.event_id,
       }
 
       setJourneys((prev) =>
         prev.map((journey) =>
-          journey.id === selectedJourneyId
-            ? updatedJourney
-            : journey
+          journey.id === selectedJourneyId ? updatedJourney : journey
         )
       )
     }
@@ -573,7 +656,6 @@ export default function EventJourneysAdmin() {
 
   const filteredVenueOptions = useMemo(() => {
     if (!form.city.trim()) return venues
-
     const normalizedFormCity = normalizeCityKey(form.city)
 
     return venues.filter(
@@ -583,7 +665,6 @@ export default function EventJourneysAdmin() {
 
   const filteredPropertyOptions = useMemo(() => {
     if (!form.city.trim()) return properties
-
     const normalizedFormCity = normalizeCityKey(form.city)
 
     return properties.filter(
@@ -608,13 +689,11 @@ export default function EventJourneysAdmin() {
       <Card>
         <CardContent className="p-6 space-y-6">
           <div className="space-y-1">
-            <h2 className="text-2xl font-semibold">
-              Event Journeys Admin
-            </h2>
+            <h2 className="text-2xl font-semibold">Event Journeys Admin</h2>
             <p className="text-sm text-muted-foreground">
               Configure destination-bound crawls for major local events, preset
-              the last stops, and add event vibes/tags to guide dynamic venue
-              pairing.
+              the last stops, auto-resolve destination coordinates from venue
+              records, and control strict or flexible arrival behavior.
             </p>
           </div>
 
@@ -633,15 +712,9 @@ export default function EventJourneysAdmin() {
           <div className="grid gap-6 md:grid-cols-[280px_minmax(0,1fr)]">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">
-                  Existing Journeys
-                </p>
+                <p className="text-sm font-medium">Existing Journeys</p>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetForm}
-                >
+                <Button variant="outline" size="sm" onClick={resetForm}>
                   New Journey
                 </Button>
               </div>
@@ -664,9 +737,7 @@ export default function EventJourneysAdmin() {
                         : 'border-border hover:bg-muted/60'
                     }`}
                   >
-                    <p className="text-sm font-medium">
-                      {journey.title}
-                    </p>
+                    <p className="text-sm font-medium">{journey.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {journey.city} • {journey.status ?? 'draft'}
                     </p>
@@ -731,6 +802,35 @@ export default function EventJourneysAdmin() {
                 </div>
 
                 <div className="space-y-2">
+                  <label className="text-sm font-medium">Event End</label>
+                  <Input
+                    type="datetime-local"
+                    value={form.eventEndAt}
+                    onChange={(e) => updateForm('eventEndAt', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Event Type</label>
+                  <select
+                    value={form.eventType}
+                    onChange={(e) => updateForm('eventType', e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">Select event type</option>
+                    <option value="sports">sports</option>
+                    <option value="concert">concert</option>
+                    <option value="festival">festival</option>
+                    <option value="market">market</option>
+                    <option value="theater">theater</option>
+                    <option value="conference">conference</option>
+                    <option value="exhibition">exhibition</option>
+                    <option value="community">community</option>
+                    <option value="other">other</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
                   <label className="text-sm font-medium">Status</label>
                   <select
                     value={form.status}
@@ -744,6 +844,41 @@ export default function EventJourneysAdmin() {
                   </select>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Arrival Policy</label>
+                  <select
+                    value={form.arrivalPolicy}
+                    onChange={(e) =>
+                      updateForm('arrivalPolicy', e.target.value as ArrivalPolicy)
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="by_start">by_start</option>
+                    <option value="midpoint_deadline">midpoint_deadline</option>
+                    <option value="window">window</option>
+                    <option value="custom">custom</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Arrival Preference</label>
+                  <select
+                    value={form.arrivalPreference}
+                    onChange={(e) =>
+                      updateForm(
+                        'arrivalPreference',
+                        e.target.value as ArrivalPreference
+                      )
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="early">early</option>
+                    <option value="on_time">on_time</option>
+                    <option value="fashionably_late">fashionably_late</option>
+                    <option value="late_ok">late_ok</option>
+                  </select>
+                </div>
+
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-sm font-medium">Destination Name *</label>
                   <Input
@@ -754,9 +889,7 @@ export default function EventJourneysAdmin() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">
-                    Destination Venue (optional)
-                  </label>
+                  <label className="text-sm font-medium">Destination Venue</label>
                   <select
                     value={form.destinationVenueId}
                     onChange={(e) => {
@@ -766,6 +899,18 @@ export default function EventJourneysAdmin() {
                       const venue = venues.find((v) => v.id === venueId)
                       if (venue) {
                         updateForm('destinationName', venue.name)
+                        updateForm(
+                          'destinationLat',
+                          venue.lat !== null && venue.lat !== undefined
+                            ? String(venue.lat)
+                            : ''
+                        )
+                        updateForm(
+                          'destinationLon',
+                          venue.lon !== null && venue.lon !== undefined
+                            ? String(venue.lon)
+                            : ''
+                        )
                       }
                     }}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -777,23 +922,47 @@ export default function EventJourneysAdmin() {
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-muted-foreground">
+                    Selecting a venue auto-resolves destination coordinates from
+                    the venues table.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Destination Lat *</label>
+                  <label className="text-sm font-medium">
+                    Destination Lat {destinationUsesVenue ? '' : '*'}
+                  </label>
                   <Input
-                    value={form.destinationLat}
+                    value={
+                      destinationUsesVenue &&
+                      selectedDestinationVenue &&
+                      selectedDestinationVenue.lat !== null &&
+                      selectedDestinationVenue.lat !== undefined
+                        ? String(selectedDestinationVenue.lat)
+                        : form.destinationLat
+                    }
                     onChange={(e) => updateForm('destinationLat', e.target.value)}
                     placeholder="41.1621"
+                    disabled={destinationUsesVenue}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Destination Lon *</label>
+                  <label className="text-sm font-medium">
+                    Destination Lon {destinationUsesVenue ? '' : '*'}
+                  </label>
                   <Input
-                    value={form.destinationLon}
+                    value={
+                      destinationUsesVenue &&
+                      selectedDestinationVenue &&
+                      selectedDestinationVenue.lon !== null &&
+                      selectedDestinationVenue.lon !== undefined
+                        ? String(selectedDestinationVenue.lon)
+                        : form.destinationLon
+                    }
                     onChange={(e) => updateForm('destinationLon', e.target.value)}
                     placeholder="-8.5839"
+                    disabled={destinationUsesVenue}
                   />
                 </div>
 
@@ -811,9 +980,7 @@ export default function EventJourneysAdmin() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Range Expansion %
-                  </label>
+                  <label className="text-sm font-medium">Range Expansion %</label>
                   <Input
                     value={form.rangeExpansionPct}
                     onChange={(e) => updateForm('rangeExpansionPct', e.target.value)}
@@ -859,9 +1026,7 @@ export default function EventJourneysAdmin() {
                             />
 
                             <div className="min-w-0">
-                              <p className="font-medium">
-                                {property.name}
-                              </p>
+                              <p className="font-medium">{property.name}</p>
 
                               <p className="text-xs text-muted-foreground">
                                 {property.city}
@@ -930,11 +1095,12 @@ export default function EventJourneysAdmin() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Button
-                  onClick={handleSaveJourney}
-                  disabled={saving}
-                >
-                  {saving ? 'Saving...' : selectedJourneyId ? 'Update Journey' : 'Create Journey'}
+                <Button onClick={handleSaveJourney} disabled={saving}>
+                  {saving
+                    ? 'Saving...'
+                    : selectedJourneyId
+                      ? 'Update Journey'
+                      : 'Create Journey'}
                 </Button>
 
                 {selectedJourneyId && (
@@ -955,9 +1121,7 @@ export default function EventJourneysAdmin() {
       <Card>
         <CardContent className="p-6 space-y-5">
           <div className="space-y-1">
-            <h3 className="text-xl font-semibold">
-              Preset Stops
-            </h3>
+            <h3 className="text-xl font-semibold">Preset Stops</h3>
             <p className="text-sm text-muted-foreground">
               Lock in the final or penultimate venues you want the event-bound
               itinerary to route through.

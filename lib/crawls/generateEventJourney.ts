@@ -55,6 +55,10 @@ export type EventJourneyInput = {
   }
   destination: EventJourneyDestination
   eventStartAtISO: string
+  eventEndAtISO?: string
+  eventType?: string | null
+  arrivalPolicy?: 'by_start' | 'midpoint_deadline' | 'window' | 'custom'
+  arrivalPreference?: 'early' | 'on_time' | 'fashionably_late' | 'late_ok'
   venues: Venue[]
   now: DateTime
   signals?: EventJourneySignals
@@ -65,20 +69,45 @@ export type EventJourneyInput = {
   maxDynamicStops?: number
 }
 
+export type EventJourneyConfidence = 'high' | 'medium' | 'low'
+
+export type EventJourneyRouteStyle =
+  | 'direct'
+  | 'quick_stop'
+  | 'balanced_pregame'
+  | 'full_pregame'
+
 export type EventJourneyStop = {
   stopOrder: number
   role: string
   venue: Venue
   matchedType: string | null
   locked: boolean
+  isCurated: boolean
   distanceFromPreviousMeters: number
   distanceToDestinationMeters: number
+  walkMinutesFromPrevious: number
+  arrivalAtISO: string | null
+  dwellMinutes: number
+  selectionReason: string | null
+  confidence: EventJourneyConfidence
+  tradeoff: string | null
 }
 
 export type EventJourneyResult = {
   strategy: '3-stop' | '2-stop' | '1-stop' | 'direct'
+  routeStyle: EventJourneyRouteStyle
   hoursUntilEvent: number
   stopBudget: number
+  plannedStops: number
+  fulfilledStops: number
+  arrivalBufferMinutes: number
+  recommendedStartAtISO: string | null
+  recommendedArrivalAtISO: string | null
+  degraded: boolean
+  degradationReasons: string[]
+  confidence: EventJourneyConfidence
+  selectionReasonSummary: string | null
   stops: EventJourneyStop[]
   destination: EventJourneyDestination
 }
@@ -94,20 +123,44 @@ type StopWindowPlan = {
   locked: boolean
 }
 
+type LockedStopResolved = {
+  stopOrder: number
+  role: string
+  venue: Venue
+  locked: boolean
+}
+
+type CandidateEvaluation = {
+  venue: Venue
+  total: number
+  matchedType: string | null
+  projectedArrivalTime: DateTime
+  projectedDepartureTime: DateTime
+  legDistance: number
+  distanceToDestinationMeters: number
+  arrivalWindowFit: number
+  usedFallbackTypes: boolean
+  reason: string
+  confidence: EventJourneyConfidence
+  tradeoff: string | null
+  experientialBucket: string | null
+  repeatedExperienceBucket: boolean
+}
+
 const DEFAULT_ALLOWED_TYPES_BY_STOP: readonly (readonly string[])[] = [
   ['coffee', 'cafe', 'bakery', 'breakfast'],
   ['lunch', 'restaurant', 'wine bar', 'bar', 'cocktail', 'lifestyle'],
   ['bar', 'cocktail', 'wine bar', 'restaurant', 'music'],
 ]
 
+const REPETITION_PENALTY = 5
+const REPETITION_SUBSTITUTION_THRESHOLD = 2.5
+
 function uniq(values: string[]) {
   return Array.from(new Set(values.filter(Boolean)))
 }
 
-function getMatchedType(
-  venue: Venue,
-  allowedTypes?: readonly string[]
-) {
+function getMatchedType(venue: Venue, allowedTypes?: readonly string[]) {
   const venueTypes = getVenueTypes(venue)
 
   if (allowedTypes?.length) {
@@ -119,18 +172,109 @@ function getMatchedType(
   return venueTypes[0] ?? null
 }
 
-function getHoursUntilEvent(
-  now: DateTime,
-  eventStartAtISO: string
+function inferExperienceBucket(
+  matchedType: string | null | undefined,
+  role?: string | null,
+  venue?: Venue
 ) {
-  const eventTime = DateTime.fromISO(eventStartAtISO)
-  return eventTime.diff(now, 'hours').hours
+  const normalizedRole = String(role ?? '').trim().toLowerCase()
+  const normalizedType = String(matchedType ?? '').trim().toLowerCase()
+  const venueTypes = venue
+    ? getVenueTypes(venue).map((type) => type.toLowerCase())
+    : []
+
+  if (normalizedRole.includes('preset')) return 'curated'
+  if (normalizedRole.includes('coffee')) return 'coffee'
+  if (normalizedRole.includes('meal') || normalizedRole.includes('dinner')) {
+    return 'meal'
+  }
+  if (normalizedRole.includes('drink')) return 'drinks'
+  if (normalizedRole.includes('browse')) return 'browse'
+  if (normalizedRole.includes('reset')) return 'reset'
+
+  const type = normalizedType || venueTypes[0] || ''
+
+  if (['coffee', 'cafe', 'café', 'bakery', 'breakfast', 'brunch'].includes(type)) {
+    return 'coffee'
+  }
+
+  if (['lunch', 'dinner', 'restaurant', 'kitchen', 'bbq'].includes(type)) {
+    return 'meal'
+  }
+
+  if (
+    ['bar', 'cocktail', 'wine bar', 'pub', 'brewery', 'music', 'lounge'].includes(type)
+  ) {
+    return 'drinks'
+  }
+
+  if (['gallery', 'museum', 'shop', 'retail', 'lifestyle', 'activity'].includes(type)) {
+    return 'browse'
+  }
+
+  if (['fitness', 'yoga', 'spa', 'wellness'].includes(type)) {
+    return 'reset'
+  }
+
+  return normalizedType || (venueTypes[0] ?? null)
 }
 
-function getStopBudget(
-  hoursUntilEvent: number,
-  maxDynamicStops = 3
-) {
+function resolveArrivalPlan({
+  now,
+  eventStartAtISO,
+  eventEndAtISO,
+  arrivalPolicy,
+  arrivalPreference,
+}: {
+  now: DateTime
+  eventStartAtISO: string
+  eventEndAtISO?: string
+  arrivalPolicy?: string | null
+  arrivalPreference?: string | null
+}) {
+  const start = DateTime.fromISO(eventStartAtISO)
+  const end = eventEndAtISO ? DateTime.fromISO(eventEndAtISO) : null
+
+  let targetArrival = start
+
+  if (arrivalPolicy === 'midpoint_deadline' && end?.isValid) {
+    const midpointOffsetMinutes = end.diff(start).shiftTo('minutes').minutes / 2
+    targetArrival = start.plus({ minutes: midpointOffsetMinutes })
+  } else if (arrivalPolicy === 'window' && end?.isValid) {
+    targetArrival = start.plus({ minutes: 60 })
+  } else {
+    targetArrival = start
+  }
+
+  if (arrivalPreference === 'early') {
+    targetArrival = targetArrival.minus({ minutes: 30 })
+  } else if (arrivalPreference === 'fashionably_late') {
+    targetArrival = targetArrival.plus({ minutes: 20 })
+  } else if (arrivalPreference === 'late_ok') {
+    targetArrival = targetArrival.plus({ minutes: 45 })
+  }
+
+  const hoursUntilEvent = targetArrival.diff(now, 'hours').hours
+
+  const arrivalBufferMinutes =
+    hoursUntilEvent >= 6 ? 45 : hoursUntilEvent >= 3 ? 40 : 30
+
+  const latestUsefulArrival = targetArrival.minus({
+    minutes: arrivalBufferMinutes,
+  })
+
+  const clampedLatestUsefulArrival =
+    latestUsefulArrival < now ? now : latestUsefulArrival
+
+  return {
+    targetArrival,
+    latestUsefulArrival: clampedLatestUsefulArrival,
+    arrivalBufferMinutes,
+    hoursUntilEvent,
+  }
+}
+
+function getStopBudget(hoursUntilEvent: number, maxDynamicStops = 3) {
   let base = 0
 
   if (hoursUntilEvent >= 6) base = 3
@@ -141,10 +285,17 @@ function getStopBudget(
   return Math.max(0, Math.min(base, maxDynamicStops))
 }
 
-function getStrategyLabel(stopBudget: number): EventJourneyResult['strategy'] {
-  if (stopBudget >= 3) return '3-stop'
-  if (stopBudget === 2) return '2-stop'
-  if (stopBudget === 1) return '1-stop'
+function getStrategyLabel(stopCount: number): EventJourneyResult['strategy'] {
+  if (stopCount >= 3) return '3-stop'
+  if (stopCount === 2) return '2-stop'
+  if (stopCount === 1) return '1-stop'
+  return 'direct'
+}
+
+function getRouteStyle(stopCount: number): EventJourneyRouteStyle {
+  if (stopCount >= 3) return 'full_pregame'
+  if (stopCount === 2) return 'balanced_pregame'
+  if (stopCount === 1) return 'quick_stop'
   return 'direct'
 }
 
@@ -163,15 +314,10 @@ function getMaxLegDistanceMeters(
   return Math.round(base * (1 + rangeExpansionPct * 3))
 }
 
-function getArrivalBufferMinutes(hoursUntilEvent: number) {
-  if (hoursUntilEvent >= 6) return 45
-  if (hoursUntilEvent >= 3) return 40
-  return 30
-}
-
 function estimateTravelMinutes(distanceMetersValue: number) {
   const walkingMinutes = distanceMetersValue / 80
-  return Math.max(8, Math.round(walkingMinutes))
+  const transitionOverheadMinutes = distanceMetersValue > 0 ? 3 : 0
+  return Math.max(4, Math.round(walkingMinutes + transitionOverheadMinutes))
 }
 
 function getProjectedArrivalTime(
@@ -210,12 +356,50 @@ function normalizeLockedStops(
       }
     })
     .filter(Boolean)
-    .sort((a, b) => a!.stopOrder - b!.stopOrder) as Array<{
-      stopOrder: number
-      role: string
-      venue: Venue
-      locked: boolean
-    }>
+    .sort((a, b) => a!.stopOrder - b!.stopOrder) as LockedStopResolved[]
+}
+
+function resolveLockedStopsForRoute({
+  lockedStops,
+  dynamicStopBudget,
+}: {
+  lockedStops: LockedStopResolved[]
+  dynamicStopBudget: number
+}) {
+  if (lockedStops.length === 0) {
+    return {
+      totalStops: dynamicStopBudget,
+      lockedByOrder: new Map<number, LockedStopResolved>(),
+    }
+  }
+
+  const highestLockedOrder = Math.max(...lockedStops.map((stop) => stop.stopOrder))
+  const shouldAnchorToRouteEnd = highestLockedOrder <= lockedStops.length
+
+  if (!shouldAnchorToRouteEnd) {
+    return {
+      totalStops: Math.max(dynamicStopBudget, highestLockedOrder),
+      lockedByOrder: new Map(
+        lockedStops.map((stop) => [stop.stopOrder, stop] as const)
+      ),
+    }
+  }
+
+  const lockedByOrder = new Map<number, LockedStopResolved>()
+  const totalStops = dynamicStopBudget + highestLockedOrder
+
+  lockedStops.forEach((stop) => {
+    const anchoredOrder = dynamicStopBudget + stop.stopOrder
+    lockedByOrder.set(anchoredOrder, {
+      ...stop,
+      stopOrder: anchoredOrder,
+    })
+  })
+
+  return {
+    totalStops,
+    lockedByOrder,
+  }
 }
 
 function uniqueById(venues: Venue[]) {
@@ -251,11 +435,30 @@ function estimateStopDwellMinutes(
 ) {
   const types = preferredTypes.map((t) => t.toLowerCase())
 
-  if (types.some((t) => ['coffee', 'cafe', 'bakery', 'tea', 'breakfast'].includes(t))) {
+  if (
+    types.some((t) =>
+      ['coffee', 'cafe', 'bakery', 'tea', 'breakfast'].includes(t)
+    )
+  ) {
     return 45
   }
 
-  if (types.some((t) => ['gallery', 'bookstore', 'lifestyle', 'activity', 'museum', 'showroom', 'library', 'class', 'park', 'garden'].includes(t))) {
+  if (
+    types.some((t) =>
+      [
+        'gallery',
+        'bookstore',
+        'lifestyle',
+        'activity',
+        'museum',
+        'showroom',
+        'library',
+        'class',
+        'park',
+        'garden',
+      ].includes(t)
+    )
+  ) {
     return 60
   }
 
@@ -267,7 +470,19 @@ function estimateStopDwellMinutes(
     return 90
   }
 
-  if (types.some((t) => ['bar', 'cocktail', 'cocktails', 'lounge', 'speakeasy', 'music', 'club'].includes(t))) {
+  if (
+    types.some((t) =>
+      [
+        'bar',
+        'cocktail',
+        'cocktails',
+        'lounge',
+        'speakeasy',
+        'music',
+        'club',
+      ].includes(t)
+    )
+  ) {
     return 75
   }
 
@@ -333,7 +548,9 @@ function getFallbackCandidatePool(
   usableCandidates: Venue[],
   preferredTypes?: readonly string[]
 ) {
-  if (!preferredTypes?.length) return usableCandidates
+  if (!preferredTypes?.length) {
+    return { candidates: usableCandidates, usedFallbackTypes: false }
+  }
 
   const widened = new Set<string>(preferredTypes)
 
@@ -345,9 +562,17 @@ function getFallbackCandidatePool(
     venueMatchesAnyType(venue, Array.from(widened))
   )
 
-  return widenedCandidates.length > 0
-    ? widenedCandidates
-    : usableCandidates
+  if (widenedCandidates.length > 0) {
+    return {
+      candidates: widenedCandidates,
+      usedFallbackTypes: true,
+    }
+  }
+
+  return {
+    candidates: usableCandidates,
+    usedFallbackTypes: true,
+  }
 }
 
 function buildBackwardStopPlans({
@@ -361,12 +586,7 @@ function buildBackwardStopPlans({
   totalStops: number
   latestUsefulArrival: DateTime
   eventTime: DateTime
-  lockedByOrder: Map<number, {
-    stopOrder: number
-    role: string
-    venue: Venue
-    locked: boolean
-  }>
+  lockedByOrder: Map<number, LockedStopResolved>
   allowedTypesByStop: readonly (readonly string[])[]
   idealStopDurationMinutes: number
 }) {
@@ -421,12 +641,11 @@ function buildBackwardStopPlans({
   return plans
 }
 
-function getArrivalWindowFitScore(
-  actualArrival: DateTime,
-  plan: StopWindowPlan
-) {
+function getArrivalWindowFitScore(actualArrival: DateTime, plan: StopWindowPlan) {
   if (actualArrival >= plan.targetStart && actualArrival <= plan.targetEnd) {
-    const diffMinutes = Math.abs(actualArrival.diff(plan.targetArrival, 'minutes').minutes)
+    const diffMinutes = Math.abs(
+      actualArrival.diff(plan.targetArrival, 'minutes').minutes
+    )
     return Math.max(0, 3 - diffMinutes / 20)
   }
 
@@ -439,6 +658,88 @@ function getArrivalWindowFitScore(
   return -Math.min(6, lateBy / 10)
 }
 
+function getConfidenceLabel(
+  totalScore: number,
+  tradeoff: string | null
+): EventJourneyConfidence {
+  if (tradeoff) return totalScore >= 10 ? 'medium' : 'low'
+  if (totalScore >= 12) return 'high'
+  if (totalScore >= 7) return 'medium'
+  return 'low'
+}
+
+function buildSelectionReason({
+  matchedType,
+  legDistance,
+  distanceToDestinationMeters,
+  arrivalWindowFit,
+  usedFallbackTypes,
+  addsVariety,
+}: {
+  matchedType: string | null
+  legDistance: number
+  distanceToDestinationMeters: number
+  arrivalWindowFit: number
+  usedFallbackTypes: boolean
+  addsVariety: boolean
+}) {
+  const reasons: string[] = []
+
+  if (matchedType) {
+    reasons.push(`${matchedType} fit`)
+  }
+
+  if (addsVariety) {
+    reasons.push('adds variety to the route')
+  }
+
+  if (legDistance <= 500) {
+    reasons.push('easy first move')
+  } else if (legDistance <= 900) {
+    reasons.push('reasonable detour')
+  }
+
+  if (distanceToDestinationMeters <= 1200) {
+    reasons.push('keeps momentum toward event')
+  }
+
+  if (arrivalWindowFit >= 1.5) {
+    reasons.push('timed well for this stage')
+  }
+
+  if (usedFallbackTypes) {
+    reasons.push('best nearby fallback')
+  }
+
+  if (reasons.length === 0) {
+    return 'Best available fit for this stage'
+  }
+
+  return reasons[0].charAt(0).toUpperCase() + reasons[0].slice(1)
+}
+
+function buildTradeoff({
+  projectedArrivalTime,
+  plan,
+  usedFallbackTypes,
+  legDistance,
+  maxLegDistanceMeters,
+  repeatedExperienceBucket,
+}: {
+  projectedArrivalTime: DateTime
+  plan: StopWindowPlan
+  usedFallbackTypes: boolean
+  legDistance: number
+  maxLegDistanceMeters: number
+  repeatedExperienceBucket: boolean
+}) {
+  if (usedFallbackTypes) return 'used fallback venue types'
+  if (projectedArrivalTime > plan.targetEnd) return 'tight timing fit'
+  if (legDistance > maxLegDistanceMeters) return 'longer walk than ideal'
+  if (repeatedExperienceBucket) return 'repeated venue category'
+  return null
+}
+
 function pickBestVenueForStage({
   candidates,
   current,
@@ -447,6 +748,9 @@ function pickBestVenueForStage({
   allowedTypes,
   maxLegDistanceMeters,
   plan,
+  rollingTime,
+  usedFallbackTypes,
+  previousStop,
 }: {
   candidates: Venue[]
   current: LatLon
@@ -455,14 +759,39 @@ function pickBestVenueForStage({
   allowedTypes?: readonly string[]
   maxLegDistanceMeters: number
   plan: StopWindowPlan
-}) {
+  rollingTime: DateTime
+  usedFallbackTypes: boolean
+  previousStop?: EventJourneyStop
+}): CandidateEvaluation | null {
+  const previousBucket = previousStop
+    ? inferExperienceBucket(previousStop.matchedType, previousStop.role, previousStop.venue)
+    : null
+
   const ranked = candidates
     .map((venue) => {
       const projectedArrivalTime = getProjectedArrivalTime(
-        plan.targetStart.minus({ minutes: 20 }),
+        rollingTime,
         current,
         venue
       )
+
+      const legDistance = distanceMeters(
+        current.lat,
+        current.lon,
+        venue.lat,
+        venue.lon
+      )
+
+      const distanceToDestinationMeters = distanceMeters(
+        venue.lat,
+        venue.lon,
+        destination.lat,
+        destination.lon
+      )
+
+      const projectedDepartureTime = projectedArrivalTime.plus({
+        minutes: plan.dwellMinutes,
+      })
 
       const baseScore = scoreEventJourneyVenue({
         venue,
@@ -485,20 +814,147 @@ function pickBestVenueForStage({
         plan
       )
 
+      const matchedType = getMatchedType(venue, allowedTypes)
+      const experientialBucket = inferExperienceBucket(
+        matchedType,
+        plan.role,
+        venue
+      )
+
+      const repeatedExperienceBucket =
+        Boolean(previousBucket) &&
+        Boolean(experientialBucket) &&
+        previousBucket === experientialBucket
+
+      const repetitionPenalty = repeatedExperienceBucket
+        ? REPETITION_PENALTY
+        : 0
+
+      const tradeoff = buildTradeoff({
+        projectedArrivalTime,
+        plan,
+        usedFallbackTypes,
+        legDistance,
+        maxLegDistanceMeters,
+        repeatedExperienceBucket,
+      })
+
+      const total = baseScore.total + arrivalWindowFit - repetitionPenalty
+      const confidence = getConfidenceLabel(total, tradeoff)
+      const reason = buildSelectionReason({
+        matchedType,
+        legDistance,
+        distanceToDestinationMeters,
+        arrivalWindowFit,
+        usedFallbackTypes,
+        addsVariety: Boolean(previousBucket) && !repeatedExperienceBucket,
+      })
+
       return {
         venue,
-        total: baseScore.total + arrivalWindowFit,
+        total,
+        matchedType,
+        projectedArrivalTime,
+        projectedDepartureTime,
+        legDistance,
+        distanceToDestinationMeters,
+        arrivalWindowFit,
+        usedFallbackTypes,
+        reason,
+        confidence,
+        tradeoff,
+        experientialBucket,
+        repeatedExperienceBucket,
       }
     })
     .sort((a, b) => b.total - a.total)
 
-  return ranked[0]?.venue ?? null
+  const topChoice = ranked[0] ?? null
+
+  if (!topChoice) return null
+
+  if (!topChoice.repeatedExperienceBucket) {
+    return topChoice
+  }
+
+  const alternative = ranked.find(
+    (candidate) =>
+      !candidate.repeatedExperienceBucket &&
+      candidate.total >= topChoice.total - REPETITION_SUBSTITUTION_THRESHOLD
+  )
+
+  return alternative ?? topChoice
+}
+
+function getRecommendedStartTime({
+  now,
+  property,
+  firstStop,
+  firstPlan,
+}: {
+  now: DateTime
+  property: EventJourneyInput['property']
+  firstStop: EventJourneyStop | undefined
+  firstPlan: StopWindowPlan | undefined
+}) {
+  if (!firstStop || !firstPlan) return now
+
+  const travelMinutes = firstStop.walkMinutesFromPrevious
+  const idealStart = firstPlan.targetStart.minus({ minutes: travelMinutes })
+
+  return idealStart > now ? idealStart : now
+}
+
+function getRouteConfidence(
+  stops: EventJourneyStop[],
+  degraded: boolean
+): EventJourneyConfidence {
+  if (stops.length === 0) return 'medium'
+
+  const lowCount = stops.filter((stop) => stop.confidence === 'low').length
+  const mediumCount = stops.filter((stop) => stop.confidence === 'medium').length
+
+  if (!degraded && lowCount === 0 && mediumCount <= 1) return 'high'
+  if (lowCount >= 2) return 'low'
+  if (degraded) return lowCount === 0 ? 'medium' : 'low'
+  return 'medium'
+}
+
+function buildSelectionReasonSummary({
+  routeStyle,
+  confidence,
+  degraded,
+}: {
+  routeStyle: EventJourneyRouteStyle
+  confidence: EventJourneyConfidence
+  degraded: boolean
+}) {
+  const styleCopy: Record<EventJourneyRouteStyle, string> = {
+    direct: 'A direct route when extra stops are not worth forcing.',
+    quick_stop: 'A quick pre-event stop that still keeps timing tight.',
+    balanced_pregame: 'A balanced pregame with enough time to enjoy the lead-up.',
+    full_pregame: 'A fuller pregame route that builds naturally toward the event.',
+  }
+
+  if (degraded) {
+    if (confidence === 'low') {
+      return 'A fallback route built from the best available nearby options.'
+    }
+
+    return 'A slightly compromised route that still fits the event clock.'
+  }
+
+  return styleCopy[routeStyle]
 }
 
 export function generateEventJourney({
   property,
   destination,
   eventStartAtISO,
+  eventEndAtISO,
+  eventType,
+  arrivalPolicy,
+  arrivalPreference,
   venues,
   now,
   signals,
@@ -508,27 +964,39 @@ export function generateEventJourney({
   rangeExpansionPct = 0.3,
   maxDynamicStops = 3,
 }: EventJourneyInput): EventJourneyResult | null {
-  const hoursUntilEvent = getHoursUntilEvent(now, eventStartAtISO)
+  void eventType
+
+  const {
+    targetArrival,
+    latestUsefulArrival,
+    arrivalBufferMinutes,
+    hoursUntilEvent,
+  } = resolveArrivalPlan({
+    now,
+    eventStartAtISO,
+    eventEndAtISO,
+    arrivalPolicy,
+    arrivalPreference,
+  })
 
   const computedBudget = getStopBudget(hoursUntilEvent, maxDynamicStops)
-  const strategy = getStrategyLabel(computedBudget)
-
   const normalizedLockedStops = normalizeLockedStops(lockedStops, venues)
 
-  const lockedByOrder = new Map(
-    normalizedLockedStops.map((stop) => [stop.stopOrder, stop])
-  )
+  const {
+    totalStops,
+    lockedByOrder,
+  } = resolveLockedStopsForRoute({
+    lockedStops: normalizedLockedStops,
+    dynamicStopBudget: computedBudget,
+  })
 
-  const highestLockedOrder = normalizedLockedStops.length
-    ? Math.max(...normalizedLockedStops.map((stop) => stop.stopOrder))
-    : 0
-
-  const totalStops = Math.max(computedBudget, highestLockedOrder)
   const usedIds = new Set<string>(
     normalizedLockedStops.map((stop) => stop.venue.id)
   )
 
   const resultStops: EventJourneyStop[] = []
+  const degradationReasons: string[] = []
+
   let currentPoint: LatLon = {
     lat: property.lat,
     lon: property.lon,
@@ -539,17 +1007,25 @@ export function generateEventJourney({
     rangeExpansionPct
   )
 
-  const eventTime = DateTime.fromISO(eventStartAtISO)
-  const arrivalBufferMinutes = getArrivalBufferMinutes(hoursUntilEvent)
-  const latestUsefulArrival = eventTime.minus({ minutes: arrivalBufferMinutes })
-
+  const eventTime = targetArrival
   let rollingTime = now
 
   if (totalStops === 0) {
     return {
-      strategy,
+      strategy: 'direct',
+      routeStyle: 'direct',
       hoursUntilEvent,
       stopBudget: 0,
+      plannedStops: 0,
+      fulfilledStops: 0,
+      arrivalBufferMinutes,
+      recommendedStartAtISO: now.toISO(),
+      recommendedArrivalAtISO: latestUsefulArrival.toISO(),
+      degraded: false,
+      degradationReasons: [],
+      confidence: 'medium',
+      selectionReasonSummary:
+        'A direct route when extra stops are not worth forcing.',
       stops: [],
       destination,
     }
@@ -593,13 +1069,17 @@ export function generateEventJourney({
         stopOrder: i,
         role: lockedStop.role,
         venue: lockedStop.venue,
-        matchedType: getMatchedType(
-          lockedStop.venue,
-          plan.preferredTypes
-        ),
+        matchedType: getMatchedType(lockedStop.venue, plan.preferredTypes),
         locked: lockedStop.locked,
+        isCurated: lockedStop.locked,
         distanceFromPreviousMeters,
         distanceToDestinationMeters,
+        walkMinutesFromPrevious: estimateTravelMinutes(distanceFromPreviousMeters),
+        arrivalAtISO: projectedArrivalTime.toISO(),
+        dwellMinutes: plan.dwellMinutes,
+        selectionReason: 'Curated stop locked into the route.',
+        confidence: 'high',
+        tradeoff: null,
       })
 
       currentPoint = {
@@ -685,80 +1165,107 @@ export function generateEventJourney({
           )
         : usableCandidates
 
-    const candidatePool =
+    const candidatePoolInfo =
       typedCandidates.length > 0
-        ? typedCandidates
+        ? {
+            candidates: typedCandidates,
+            usedFallbackTypes: false,
+          }
         : getFallbackCandidatePool(usableCandidates, allowedTypes)
 
     const chosen = pickBestVenueForStage({
-      candidates: candidatePool,
+      candidates: candidatePoolInfo.candidates,
       current: currentPoint,
       destination,
       signals,
       allowedTypes,
       maxLegDistanceMeters,
       plan,
+      rollingTime,
+      usedFallbackTypes: candidatePoolInfo.usedFallbackTypes,
+      previousStop: resultStops[resultStops.length - 1],
     })
 
-    if (!chosen) continue
+    if (!chosen) {
+      degradationReasons.push(`Could not place stop ${i} within route constraints.`)
+      continue
+    }
 
-    usedIds.add(chosen.id)
+    if (chosen.usedFallbackTypes) {
+      degradationReasons.push(`Stop ${i} used fallback venue types.`)
+    }
 
-    const distanceFromPreviousMeters = distanceMeters(
-      currentPoint.lat,
-      currentPoint.lon,
-      chosen.lat,
-      chosen.lon
-    )
+    if (chosen.tradeoff) {
+      degradationReasons.push(`Stop ${i} accepted tradeoff: ${chosen.tradeoff}.`)
+    }
 
-    const distanceToDestinationMeters = distanceMeters(
-      chosen.lat,
-      chosen.lon,
-      destination.lat,
-      destination.lon
-    )
+    if (chosen.repeatedExperienceBucket) {
+      degradationReasons.push(`Stop ${i} repeated the prior venue category.`)
+    }
 
-    const chosenArrivalTime = getProjectedArrivalTime(
-      rollingTime,
-      currentPoint,
-      chosen
-    )
+    usedIds.add(chosen.venue.id)
 
     resultStops.push({
       stopOrder: i,
       role: 'dynamic',
-      venue: chosen,
-      matchedType: getMatchedType(chosen, allowedTypes),
+      venue: chosen.venue,
+      matchedType: chosen.matchedType,
       locked: false,
-      distanceFromPreviousMeters,
-      distanceToDestinationMeters,
+      isCurated: false,
+      distanceFromPreviousMeters: chosen.legDistance,
+      distanceToDestinationMeters: chosen.distanceToDestinationMeters,
+      walkMinutesFromPrevious: estimateTravelMinutes(chosen.legDistance),
+      arrivalAtISO: chosen.projectedArrivalTime.toISO(),
+      dwellMinutes: plan.dwellMinutes,
+      selectionReason: chosen.reason,
+      confidence: chosen.confidence,
+      tradeoff: chosen.tradeoff,
     })
 
     currentPoint = {
-      lat: chosen.lat,
-      lon: chosen.lon,
+      lat: chosen.venue.lat,
+      lon: chosen.venue.lon,
     }
 
-    rollingTime = chosenArrivalTime.plus({
-      minutes: plan.dwellMinutes,
-    })
+    rollingTime = chosen.projectedDepartureTime
   }
 
-  const hardStopCap = Math.max(
-    totalStops,
-    Math.ceil(
-      (Math.max(hoursUntilEvent, 0) * 60) /
-        Math.max(idealStopDurationMinutes, 1)
-    )
-  )
+  const fulfilledStops = resultStops.length
+  const plannedStops = totalStops
+  const degraded =
+    fulfilledStops < plannedStops || degradationReasons.length > 0
 
-  const trimmedStops = resultStops.slice(0, Math.max(totalStops, hardStopCap))
+  const finalStrategy = getStrategyLabel(fulfilledStops)
+  const routeStyle = getRouteStyle(fulfilledStops)
+  const recommendedStartAt = getRecommendedStartTime({
+    now,
+    property,
+    firstStop: resultStops[0],
+    firstPlan: stopPlans[0],
+  })
+  const confidence = getRouteConfidence(resultStops, degraded)
+  const uniqueDegradationReasons = uniq(degradationReasons)
+  const selectionReasonSummary = buildSelectionReasonSummary({
+    routeStyle,
+    confidence,
+    degraded,
+  })
 
   return {
-    strategy,
+    strategy: finalStrategy,
+    routeStyle,
     hoursUntilEvent,
-    stopBudget: totalStops,
-    stops: trimmedStops,
+    stopBudget: plannedStops,
+    plannedStops,
+    fulfilledStops,
+    arrivalBufferMinutes,
+    recommendedStartAtISO: recommendedStartAt.toISO(),
+    recommendedArrivalAtISO: latestUsefulArrival.toISO(),
+    degraded,
+    degradationReasons: uniqueDegradationReasons,
+    confidence,
+    selectionReasonSummary,
+    stops: resultStops,
     destination,
   }
 }

@@ -1,311 +1,326 @@
 'use client'
 
-import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
-import { DateTime } from 'luxon'
+import { useEffect, useRef, useState } from 'react'
 
-type EventJourneyStop = {
-  stopOrder: number
-  role: string
-  matchedType: string | null
-  locked: boolean
-  distanceFromPreviousMeters: number
-  distanceToDestinationMeters: number
-  venue: {
-    id: string
-    name: string
-    city?: string | null
-    description?: string | null
-  }
-}
-
-type EventJourneyResult = {
-  strategy: '3-stop' | '2-stop' | '1-stop' | 'direct'
-  hoursUntilEvent: number
-  stopBudget: number
-  stops: EventJourneyStop[]
-  destination: {
-    name: string
-    lat: number
-    lon: number
-    venueId?: string | null
-  }
-}
-
-type EventJourneyCard = {
-  id: string
-  title: string
-  eventName: string
-  eventStartAt: string
-  destinationName: string
-  status?: string | null
-  result: EventJourneyResult
-  href?: string
-}
+import { Card, CardContent } from '@/components/ui/card'
+import type { EventJourneyVM } from '@/lib/view-models/buildEventJourneyVM'
+import { logEvent } from '@/lib/logEvent'
 
 type Props = {
-  journeys: EventJourneyCard[]
+  journeys: EventJourneyVM[]
 }
-
-/* ------------------------------------------------ */
-/* Helpers                                          */
-/* ------------------------------------------------ */
-
-function normalizeCityKey(input?: string | null) {
-  const raw = (input ?? '').trim().toLowerCase()
-
-  const aliases: Record<string, string> = {
-    atl: 'atl',
-    atlanta: 'atl',
-    'atlanta ga': 'atl',
-
-    nyc: 'nyc',
-    'new york': 'nyc',
-    'new york city': 'nyc',
-    manhattan: 'nyc',
-
-    porto: 'porto',
-    oporto: 'porto',
-
-    lisbon: 'lisbon',
-    lisboa: 'lisbon',
-  }
-
-  return aliases[raw] ?? raw
-}
-
-function formatStageLabel(label?: string | null) {
-  if (!label) return null
-
-  return label
-    .replace('-', ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase())
-}
-
-function formatEventTime(iso: string) {
-  const dt = DateTime.fromISO(iso)
-  if (!dt.isValid) return 'Date TBD'
-  return dt.toFormat('M/d • h:mm a')
-}
-
-function formatHoursUntilEvent(hours: number) {
-  if (!Number.isFinite(hours)) return 'Upcoming'
-
-  if (hours <= 0) return 'Starting now'
-
-  if (hours < 1) {
-    const minutes = Math.round(hours * 60)
-    return `${minutes}m to go`
-  }
-
-  const rounded = Math.round(hours * 10) / 10
-
-  if (Number.isInteger(rounded)) {
-    return `${rounded}h to go`
-  }
-
-  return `${rounded}h to go`
-}
-
-function getStrategyCopy(strategy: EventJourneyResult['strategy']) {
-  const labels: Record<EventJourneyResult['strategy'], string> = {
-    '3-stop': '3-stop route',
-    '2-stop': '2-stop route',
-    '1-stop': '1-stop route',
-    direct: 'Direct route',
-  }
-
-  return labels[strategy]
-}
-
-/* ------------------------------------------------ */
-/* Component                                        */
-/* ------------------------------------------------ */
 
 export default function EventJourneys({ journeys }: Props) {
-  const safeJourneys = (journeys ?? [])
-    .filter(
-      (journey): journey is EventJourneyCard =>
-        Boolean(
-          journey &&
+  const safeJourneys = (journeys ?? []).filter(
+    (journey): journey is EventJourneyVM =>
+      Boolean(
+        journey &&
           journey.id &&
           journey.title &&
           journey.eventName &&
-          journey.eventStartAt &&
-          journey.destinationName &&
-          journey.result
-        )
-    )
-    .map((journey) => ({
-      ...journey,
-      result: {
-        ...journey.result,
-        stops: (journey.result.stops ?? []).map((stop) => ({
-          ...stop,
-          venue: {
-            ...stop.venue,
-            city: stop.venue.city
-              ? normalizeCityKey(stop.venue.city)
-              : stop.venue.city,
-          },
-        })),
-      },
-    }))
-    .sort((a, b) => {
-      const aTime = DateTime.fromISO(a.eventStartAt).toMillis()
-      const bTime = DateTime.fromISO(b.eventStartAt).toMillis()
-      return aTime - bTime
-    })
+          journey.eventTimeLabel &&
+          journey.destinationName
+      )
+  )
 
   if (safeJourneys.length === 0) return null
 
   return (
-    <section className="space-y-4">
+    <div className="grid gap-4">
+      {safeJourneys.map((journey, index) => (
+        <EventJourneyCard
+          key={journey.id}
+          journey={journey}
+          position={index}
+          totalJourneys={safeJourneys.length}
+        />
+      ))}
+    </div>
+  )
+}
 
-      <div className="space-y-1">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Heading to a Big Event?
-        </h2>
+function EventJourneyCard({
+  journey,
+  position,
+  totalJourneys,
+}: {
+  journey: EventJourneyVM
+  position: number
+  totalJourneys: number
+}) {
+  const impressionLoggedRef = useRef(false)
 
-        <p className="text-sm text-muted-foreground">
-          Timed routes that move you from the property toward a major nearby destination.
-        </p>
-      </div>
+  useEffect(() => {
+    if (impressionLoggedRef.current) return
+    impressionLoggedRef.current = true
 
-      <div className="grid gap-4">
-        {safeJourneys.map((journey) => (
-          <Card key={journey.id}>
-            <CardContent className="p-5 space-y-4">
+    void logEvent('event_journey_impression', {
+      metadata: {
+        journey_id: journey.id,
+        journey_title: journey.title,
+        event_name: journey.eventName,
+        destination_name: journey.destinationName,
+        status: journey.statusLabel,
+        position,
+        total_journeys: totalJourneys,
+        has_href: Boolean(journey.href),
+        stop_count: journey.stops.length,
+        route_style_label: journey.routeStyleLabel,
+        total_stops_label: journey.totalStopsLabel,
+      },
+    })
+  }, [journey, position, totalJourneys])
 
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div className="space-y-1">
-                  <p className="font-medium">
-                    {journey.title}
-                  </p>
+  const handleJourneyClick = () => {
+    void logEvent('event_journey_clicked', {
+      metadata: {
+        journey_id: journey.id,
+        journey_title: journey.title,
+        event_name: journey.eventName,
+        destination_name: journey.destinationName,
+        status: journey.statusLabel,
+        position,
+        total_journeys: totalJourneys,
+        href: journey.href ?? null,
+        cta_label: journey.ctaLabel,
+        stop_count: journey.stops.length,
+        route_style_label: journey.routeStyleLabel,
+      },
+    })
+  }
 
-                  <p className="text-sm text-muted-foreground">
-                    {journey.eventName} • {formatEventTime(journey.eventStartAt)}
-                  </p>
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="p-5 space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Chip>{journey.routeStyleLabel}</Chip>
+              <Chip>{journey.totalStopsLabel}</Chip>
+              {journey.countdownLabel && <Chip>{journey.countdownLabel}</Chip>}
+              {journey.confidenceLabel && <Chip>{journey.confidenceLabel}</Chip>}
+              {journey.degradedLabel && <Chip>{journey.degradedLabel}</Chip>}
+            </div>
 
-                  <p className="text-sm text-muted-foreground">
-                    Destination • {journey.destinationName}
-                  </p>
+            <div className="space-y-1">
+              <h3 className="text-lg font-semibold">{journey.title}</h3>
+              <p className="text-sm text-muted-foreground">{journey.subtitle}</p>
+            </div>
+
+            <div className="space-y-1 text-sm">
+              <p className="font-medium">{journey.eventName}</p>
+              <p className="text-muted-foreground">
+                {journey.eventDateLabel} • {journey.eventTimeLabel}
+              </p>
+              <p className="text-muted-foreground">{journey.destinationLabel}</p>
+            </div>
+
+            {journey.selectionReasonSummary && (
+              <p className="text-sm text-muted-foreground">
+                {journey.selectionReasonSummary}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2 md:text-right">
+            <p className="text-sm font-medium">{journey.statusLabel}</p>
+
+            {journey.recommendedStartLabel && (
+              <p className="text-sm text-muted-foreground">
+                {journey.recommendedStartLabel}
+              </p>
+            )}
+
+            {journey.arrivalLabel && (
+              <p className="text-sm text-muted-foreground">
+                {journey.arrivalLabel}
+              </p>
+            )}
+
+            {journey.totalWalkLabel && (
+              <p className="text-sm text-muted-foreground">
+                {journey.totalWalkLabel}
+              </p>
+            )}
+
+            {journey.href ? (
+              <Link
+                href={journey.href}
+                onClick={handleJourneyClick}
+                className="inline-flex items-center rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90"
+              >
+                {journey.ctaLabel}
+              </Link>
+            ) : (
+              <div className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium text-muted-foreground">
+                {journey.ctaLabel}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {journey.stops.length > 0 ? (
+          <div className="space-y-3 border-t pt-4">
+            {journey.stops.map((stop) => (
+              <div
+                key={stop.id}
+                className="flex items-start gap-3 rounded-lg border p-3"
+              >
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                  {stop.order}
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
-                    {getStrategyCopy(journey.result.strategy)}
-                  </span>
-
-                  <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
-                    {formatHoursUntilEvent(journey.result.hoursUntilEvent)}
-                  </span>
-
-                  {journey.status && (
-                    <span className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
-                      {journey.status}
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {stop.roleLabel}
                     </span>
+
+                    {stop.isCurated && <Chip>Curated</Chip>}
+                    {stop.walkTimeFromPreviousLabel && (
+                      <Chip>{stop.walkTimeFromPreviousLabel}</Chip>
+                    )}
+                    {stop.confidenceLabel && <Chip>{stop.confidenceLabel}</Chip>}
+                    {stop.tradeoffLabel && <Chip>{stop.tradeoffLabel}</Chip>}
+                  </div>
+
+                  <Link
+                    href={stop.venueHref}
+                    onClick={() => {
+                      void logEvent('event_journey_stop_clicked', {
+                        venue_id: stop.id,
+                        metadata: {
+                          journey_id: journey.id,
+                          journey_title: journey.title,
+                          event_name: journey.eventName,
+                          destination_name: journey.destinationName,
+                          stop_id: stop.id,
+                          stop_order: stop.order,
+                          stop_name: stop.venueName,
+                          stop_role: stop.roleLabel,
+                          is_curated: stop.isCurated,
+                          venue_href: stop.venueHref,
+                        },
+                      })
+                    }}
+                    className="font-medium hover:underline"
+                  >
+                    {stop.venueName}
+                  </Link>
+
+                  {stop.description && (
+                    <StopDescription
+                      description={stop.description}
+                      journeyId={journey.id}
+                      journeyTitle={journey.title}
+                      eventName={journey.eventName}
+                      destinationName={journey.destinationName}
+                      stopId={stop.id}
+                      stopOrder={stop.order}
+                      stopName={stop.venueName}
+                    />
+                  )}
+
+                  {stop.selectionReason && (
+                    <p className="text-xs text-muted-foreground">
+                      {stop.selectionReason}
+                    </p>
                   )}
                 </div>
               </div>
+            ))}
 
-              {journey.result.stops.length > 0 ? (
-                <div className="space-y-2">
-                  {journey.result.stops.map((stop) => {
-                    const stageLabel = formatStageLabel(stop.matchedType)
-                    const briefDescription =
-                      typeof stop.venue.description === 'string' &&
-                      stop.venue.description.trim().length > 0
-                        ? stop.venue.description.trim()
-                        : null
+            <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+              Final destination:{' '}
+              <span className="font-medium text-foreground">
+                {journey.destinationName}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+            Head straight to {journey.destinationName} from the property.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
 
-                    return (
-                      <div
-                        key={`${journey.id}-${stop.stopOrder}-${stop.venue.id}`}
-                        className="flex items-start gap-2 text-sm"
-                      >
-                        <span className="mt-0.5 w-5 text-xs font-semibold text-muted-foreground">
-                          {stop.stopOrder}.
-                        </span>
+function StopDescription({
+  description,
+  journeyId,
+  journeyTitle,
+  eventName,
+  destinationName,
+  stopId,
+  stopOrder,
+  stopName,
+}: {
+  description: string
+  journeyId: string
+  journeyTitle: string
+  eventName: string
+  destinationName: string
+  stopId: string
+  stopOrder: number
+  stopName: string
+}) {
+  const [expanded, setExpanded] = useState(false)
 
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {stageLabel && (
-                              <span className="text-xs text-muted-foreground">
-                                {stageLabel} —
-                              </span>
-                            )}
+  const handleToggle = () => {
+    const nextExpanded = !expanded
 
-                            <Link
-                              href={`/venue-profile/${stop.venue.id}`}
-                              className="font-medium hover:underline"
-                            >
-                              {stop.venue.name}
-                            </Link>
+    void logEvent(
+      nextExpanded
+        ? 'event_journey_description_expanded'
+        : 'event_journey_description_collapsed',
+      {
+        venue_id: stopId,
+        metadata: {
+          journey_id: journeyId,
+          journey_title: journeyTitle,
+          event_name: eventName,
+          destination_name: destinationName,
+          stop_id: stopId,
+          stop_order: stopOrder,
+          stop_name: stopName,
+          description_length: description.length,
+        },
+      }
+    )
 
-                            {stop.locked && (
-                              <span className="rounded-full border px-2 py-0.5 text-[10px] text-muted-foreground">
-                                Preset
-                              </span>
-                            )}
-                          </div>
+    setExpanded(nextExpanded)
+  }
 
-                          {briefDescription && (
-                            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                              {briefDescription}
-                            </p>
-                          )}
+  return (
+    <div className="space-y-1">
+      <p
+        className={`text-sm text-muted-foreground ${
+          expanded ? '' : 'line-clamp-2'
+        }`}
+      >
+        {description}
+      </p>
 
-                          <p className="text-xs text-muted-foreground">
-                            {Math.round(stop.distanceFromPreviousMeters)}m from previous stop
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })}
+      {description.length > 120 && (
+        <button
+          type="button"
+          onClick={handleToggle}
+          className="text-xs font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        >
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+    </div>
+  )
+}
 
-                  <div className="flex items-start gap-2 text-sm pt-1">
-                    <span className="mt-0.5 w-5 text-xs font-semibold text-muted-foreground">
-                      →
-                    </span>
-
-                    <div className="min-w-0">
-                      <p className="font-medium">
-                        {journey.destinationName}
-                      </p>
-
-                      <p className="text-xs text-muted-foreground">
-                        Final destination
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-                  Go direct to the destination from the property.
-                </div>
-              )}
-
-              <div className="pt-1">
-                {journey.href ? (
-                  <Link
-                    href={journey.href}
-                    className="inline-flex items-center rounded-md bg-foreground px-3 py-2 text-sm font-medium text-background transition hover:opacity-90"
-                  >
-                    Start Event Route
-                  </Link>
-                ) : (
-                  <div className="inline-flex items-center rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                    Route available day of event
-                  </div>
-                )}
-              </div>
-
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-    </section>
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium text-muted-foreground">
+      {children}
+    </span>
   )
 }

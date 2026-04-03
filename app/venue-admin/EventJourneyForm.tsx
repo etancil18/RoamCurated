@@ -10,10 +10,14 @@ export type EventJourneyFormValues = {
   slug: string
   eventName: string
   eventStartAt: string
+  eventEndAt: string
+  eventType: string
   destinationName: string
   destinationVenueId: string
   destinationLat: string
   destinationLon: string
+  arrivalPolicy: 'by_start' | 'midpoint_deadline' | 'window' | 'custom'
+  arrivalPreference: 'early' | 'on_time' | 'fashionably_late' | 'late_ok'
   vibes: string
   tags: string
   idealStopDurationMinutes: string
@@ -65,6 +69,26 @@ function slugify(text: string) {
     .replace(/-+/g, '-')
 }
 
+function normalizeCityKey(input?: string | null) {
+  const raw = (input ?? '').trim().toLowerCase()
+
+  const aliases: Record<string, string> = {
+    atl: 'atl',
+    atlanta: 'atl',
+    'atlanta ga': 'atl',
+    nyc: 'nyc',
+    'new york': 'nyc',
+    'new york city': 'nyc',
+    manhattan: 'nyc',
+    porto: 'porto',
+    oporto: 'porto',
+    lisbon: 'lisbon',
+    lisboa: 'lisbon',
+  }
+
+  return aliases[raw] ?? raw
+}
+
 export default function EventJourneyForm({
   value,
   venues,
@@ -77,32 +101,31 @@ export default function EventJourneyForm({
   onSubmit,
   onDelete,
 }: Props) {
-  const normalizedCity = value.city.trim().toLowerCase()
+  const normalizedCity = normalizeCityKey(value.city)
 
   const filteredVenueOptions = normalizedCity
-    ? venues.filter(
-        (venue) =>
-          venue.city?.toLowerCase() === normalizedCity
-      )
+    ? venues.filter((venue) => normalizeCityKey(venue.city) === normalizedCity)
     : venues
 
   const filteredPropertyOptions = normalizedCity
     ? properties.filter(
-        (property) =>
-          property.city?.toLowerCase() === normalizedCity
+        (property) => normalizeCityKey(property.city) === normalizedCity
       )
     : properties
+
+  const selectedDestinationVenue =
+    venues.find((venue) => venue.id === value.destinationVenueId) ?? null
+
+  const destinationUsesVenue = Boolean(value.destinationVenueId)
 
   return (
     <Card>
       <CardContent className="p-6 space-y-6">
         <div className="space-y-1">
-          <h3 className="text-xl font-semibold">
-            Event Journey Details
-          </h3>
+          <h3 className="text-xl font-semibold">Event Journey Details</h3>
           <p className="text-sm text-muted-foreground">
-            Configure the destination-bound crawl, event timing, and metadata
-            used to bias venue pairing.
+            Configure the destination-bound crawl, event timing, destination
+            resolution, and arrival behavior used to shape the route.
           </p>
         </div>
 
@@ -170,6 +193,35 @@ export default function EventJourneyForm({
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm font-medium">Event End</label>
+            <Input
+              type="datetime-local"
+              value={value.eventEndAt}
+              onChange={(e) => onChange('eventEndAt', e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Event Type</label>
+            <select
+              value={value.eventType}
+              onChange={(e) => onChange('eventType', e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Select event type</option>
+              <option value="sports">sports</option>
+              <option value="concert">concert</option>
+              <option value="festival">festival</option>
+              <option value="market">market</option>
+              <option value="theater">theater</option>
+              <option value="conference">conference</option>
+              <option value="exhibition">exhibition</option>
+              <option value="community">community</option>
+              <option value="other">other</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm font-medium">Status</label>
             <select
               value={value.status}
@@ -183,6 +235,48 @@ export default function EventJourneyForm({
             </select>
           </div>
 
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Arrival Policy</label>
+            <select
+              value={value.arrivalPolicy}
+              onChange={(e) =>
+                onChange(
+                  'arrivalPolicy',
+                  e.target.value as EventJourneyFormValues['arrivalPolicy']
+                )
+              }
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="by_start">by_start</option>
+              <option value="midpoint_deadline">midpoint_deadline</option>
+              <option value="window">window</option>
+              <option value="custom">custom</option>
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Use strict arrival for sports or concerts, and flexible windowed
+              arrival for festivals or other long-running events.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Arrival Preference</label>
+            <select
+              value={value.arrivalPreference}
+              onChange={(e) =>
+                onChange(
+                  'arrivalPreference',
+                  e.target.value as EventJourneyFormValues['arrivalPreference']
+                )
+              }
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="early">early</option>
+              <option value="on_time">on_time</option>
+              <option value="fashionably_late">fashionably_late</option>
+              <option value="late_ok">late_ok</option>
+            </select>
+          </div>
+
           <div className="space-y-2 md:col-span-2">
             <label className="text-sm font-medium">Destination Name *</label>
             <Input
@@ -193,9 +287,7 @@ export default function EventJourneyForm({
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <label className="text-sm font-medium">
-              Destination Venue (optional)
-            </label>
+            <label className="text-sm font-medium">Destination Venue</label>
             <select
               value={value.destinationVenueId}
               onChange={(e) => {
@@ -207,11 +299,11 @@ export default function EventJourneyForm({
                 if (venue) {
                   onChange('destinationName', venue.name)
 
-                  if (
-                    typeof venue.lat === 'number' &&
-                    typeof venue.lon === 'number'
-                  ) {
+                  if (typeof venue.lat === 'number') {
                     onChange('destinationLat', String(venue.lat))
+                  }
+
+                  if (typeof venue.lon === 'number') {
                     onChange('destinationLon', String(venue.lon))
                   }
                 }
@@ -225,23 +317,43 @@ export default function EventJourneyForm({
                 </option>
               ))}
             </select>
+            <p className="text-xs text-muted-foreground">
+              Selecting a venue should auto-resolve destination coordinates from
+              your venues table.
+            </p>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Destination Lat *</label>
+            <label className="text-sm font-medium">
+              Destination Lat {destinationUsesVenue ? '' : '*'}
+            </label>
             <Input
-              value={value.destinationLat}
+              value={
+                destinationUsesVenue &&
+                typeof selectedDestinationVenue?.lat === 'number'
+                  ? String(selectedDestinationVenue.lat)
+                  : value.destinationLat
+              }
               onChange={(e) => onChange('destinationLat', e.target.value)}
               placeholder="41.1621"
+              disabled={destinationUsesVenue}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Destination Lon *</label>
+            <label className="text-sm font-medium">
+              Destination Lon {destinationUsesVenue ? '' : '*'}
+            </label>
             <Input
-              value={value.destinationLon}
+              value={
+                destinationUsesVenue &&
+                typeof selectedDestinationVenue?.lon === 'number'
+                  ? String(selectedDestinationVenue.lon)
+                  : value.destinationLon
+              }
               onChange={(e) => onChange('destinationLon', e.target.value)}
               placeholder="-8.5839"
+              disabled={destinationUsesVenue}
             />
           </div>
 
@@ -259,9 +371,7 @@ export default function EventJourneyForm({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Range Expansion %
-            </label>
+            <label className="text-sm font-medium">Range Expansion %</label>
             <Input
               value={value.rangeExpansionPct}
               onChange={(e) => onChange('rangeExpansionPct', e.target.value)}
@@ -307,9 +417,7 @@ export default function EventJourneyForm({
                       />
 
                       <div className="min-w-0">
-                        <p className="font-medium">
-                          {property.name}
-                        </p>
+                        <p className="font-medium">{property.name}</p>
 
                         <p className="text-xs text-muted-foreground">
                           {property.city}
@@ -327,8 +435,8 @@ export default function EventJourneyForm({
             </div>
 
             <p className="text-xs text-muted-foreground">
-              Select one or more properties to associate with this event journey.
-              Leave empty to keep it city-wide.
+              Select one or more properties to associate with this event
+              journey. Leave empty to keep it city-wide.
             </p>
           </div>
 
@@ -378,23 +486,16 @@ export default function EventJourneyForm({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={onSubmit}
-            disabled={saving}
-          >
+          <Button onClick={onSubmit} disabled={saving}>
             {saving
               ? 'Saving...'
               : selectedJourneyId
-              ? 'Update Journey'
-              : 'Create Journey'}
+                ? 'Update Journey'
+                : 'Create Journey'}
           </Button>
 
           {selectedJourneyId && onDelete && (
-            <Button
-              variant="outline"
-              onClick={onDelete}
-              disabled={saving}
-            >
+            <Button variant="outline" onClick={onDelete} disabled={saving}>
               Delete Journey
             </Button>
           )}

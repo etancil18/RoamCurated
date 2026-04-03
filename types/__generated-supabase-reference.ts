@@ -225,6 +225,42 @@ export type Database = {
           },
         ]
       }
+      event_journey_properties: {
+        Row: {
+          created_at: string | null
+          event_journey_id: string
+          id: string
+          property_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_journey_id: string
+          id?: string
+          property_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_journey_id?: string
+          id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_journey_properties_event_journey_id_fkey"
+            columns: ["event_journey_id"]
+            isOneToOne: false
+            referencedRelation: "event_journeys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_journey_properties_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_journey_stops: {
         Row: {
           created_at: string | null
@@ -279,15 +315,29 @@ export type Database = {
       }
       event_journeys: {
         Row: {
+          arrival_policy:
+            | Database["public"]["Enums"]["event_arrival_policy"]
+            | null
+          arrival_preference:
+            | Database["public"]["Enums"]["event_arrival_preference"]
+            | null
           city: string
           created_at: string | null
+          destination_coordinates_source:
+            | Database["public"]["Enums"]["event_destination_coordinates_source"]
+            | null
+          destination_kind:
+            | Database["public"]["Enums"]["event_destination_kind"]
+            | null
           destination_lat: number
           destination_lon: number
           destination_name: string
           destination_venue_id: string | null
+          event_end_at: string | null
           event_id: string | null
           event_name: string
           event_start_at: string
+          event_type: string | null
           id: string
           ideal_stop_duration_minutes: number
           max_dynamic_stops: number
@@ -302,15 +352,29 @@ export type Database = {
           vibes: string[] | null
         }
         Insert: {
+          arrival_policy?:
+            | Database["public"]["Enums"]["event_arrival_policy"]
+            | null
+          arrival_preference?:
+            | Database["public"]["Enums"]["event_arrival_preference"]
+            | null
           city: string
           created_at?: string | null
+          destination_coordinates_source?:
+            | Database["public"]["Enums"]["event_destination_coordinates_source"]
+            | null
+          destination_kind?:
+            | Database["public"]["Enums"]["event_destination_kind"]
+            | null
           destination_lat: number
           destination_lon: number
           destination_name: string
           destination_venue_id?: string | null
+          event_end_at?: string | null
           event_id?: string | null
           event_name: string
           event_start_at: string
+          event_type?: string | null
           id?: string
           ideal_stop_duration_minutes?: number
           max_dynamic_stops?: number
@@ -325,15 +389,29 @@ export type Database = {
           vibes?: string[] | null
         }
         Update: {
+          arrival_policy?:
+            | Database["public"]["Enums"]["event_arrival_policy"]
+            | null
+          arrival_preference?:
+            | Database["public"]["Enums"]["event_arrival_preference"]
+            | null
           city?: string
           created_at?: string | null
+          destination_coordinates_source?:
+            | Database["public"]["Enums"]["event_destination_coordinates_source"]
+            | null
+          destination_kind?:
+            | Database["public"]["Enums"]["event_destination_kind"]
+            | null
           destination_lat?: number
           destination_lon?: number
           destination_name?: string
           destination_venue_id?: string | null
+          event_end_at?: string | null
           event_id?: string | null
           event_name?: string
           event_start_at?: string
+          event_type?: string | null
           id?: string
           ideal_stop_duration_minutes?: number
           max_dynamic_stops?: number
@@ -2456,7 +2534,18 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      event_arrival_policy:
+        | "by_start"
+        | "midpoint_deadline"
+        | "window"
+        | "custom"
+      event_arrival_preference:
+        | "early"
+        | "on_time"
+        | "fashionably_late"
+        | "late_ok"
+      event_destination_coordinates_source: "venue" | "manual"
+      event_destination_kind: "venue" | "custom"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -2591,6 +2680,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      event_arrival_policy: [
+        "by_start",
+        "midpoint_deadline",
+        "window",
+        "custom",
+      ],
+      event_arrival_preference: [
+        "early",
+        "on_time",
+        "fashionably_late",
+        "late_ok",
+      ],
+      event_destination_coordinates_source: ["venue", "manual"],
+      event_destination_kind: ["venue", "custom"],
+    },
   },
 } as const
