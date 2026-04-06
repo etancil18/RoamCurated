@@ -25,6 +25,8 @@ interface ControlPanelProps {
   setCrawlDate: (date: string) => void
   crawlTime: string
   setCrawlTime: (time: string) => void
+  markerDisplayMode: 'color' | 'emoji'
+  setMarkerDisplayMode: (mode: 'color' | 'emoji') => void
   onGenerateRoute: (plannedStartAt?: string | Date) => void
   onClearRoute: () => void
 }
@@ -64,6 +66,8 @@ export function ControlPanel({
   setCrawlDate,
   crawlTime,
   setCrawlTime,
+  markerDisplayMode,
+  setMarkerDisplayMode,
   onGenerateRoute,
   onClearRoute,
 }: ControlPanelProps) {
@@ -73,6 +77,14 @@ export function ControlPanel({
     if (!val) return
     setTravelMode(val as 'walking' | 'cycling' | 'driving')
     logEvent('travel_mode_changed', { metadata: { travel_mode: val, city } })
+  }
+
+  const handleMarkerDisplayModeChange = (val: string) => {
+    if (!val) return
+    setMarkerDisplayMode(val as 'color' | 'emoji')
+    logEvent('marker_display_mode_changed', {
+      metadata: { marker_display_mode: val, city },
+    })
   }
 
   const handleGenerateClick = async () => {
@@ -126,6 +138,29 @@ export function ControlPanel({
               {['🚶', '🚲', '🚗'][i]}
             </ToggleGroupItem>
           ))}
+        </ToggleGroup>
+      </div>
+
+      <div className="space-y-0.5">
+        <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Marker</Label>
+        <ToggleGroup
+          type="single"
+          value={markerDisplayMode}
+          onValueChange={handleMarkerDisplayModeChange}
+          className="w-full gap-1"
+        >
+          <ToggleGroupItem
+            value="color"
+            className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+          >
+            Color
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="emoji"
+            className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+          >
+            Emoji
+          </ToggleGroupItem>
         </ToggleGroup>
       </div>
 
@@ -194,7 +229,6 @@ export function ControlPanel({
         </select>
       </div>
 
-      {/* Crawl Mode Toggle */}
       <div className="space-y-0.5">
         <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Crawl</Label>
         <ToggleGroup

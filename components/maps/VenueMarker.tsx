@@ -11,6 +11,7 @@ import type { Marker as LeafletMarker, Icon, DivIcon } from 'leaflet'
 import type { DateTime } from 'luxon'
 import { DateTime as LuxonDateTime } from 'luxon'
 import { CITY_CONFIGS } from '@/config/cities'
+import { getVenueMarkerEmoji } from '@/lib/maps/getVenueMarkerEmoji'
 
 type Props = {
   venue: Venue
@@ -18,6 +19,7 @@ type Props = {
   city: string
   nowForCity: DateTime
   isRouteMode: boolean
+  markerDisplayMode?: 'color' | 'emoji'
   markerRefs: React.MutableRefObject<Record<string, LeafletMarker>>
   eventsByVenueId: Record<string, any[]>
 }
@@ -37,19 +39,22 @@ export default function VenueMarker({
   city,
   nowForCity,
   isRouteMode,
+  markerDisplayMode = 'color',
   markerRefs,
   eventsByVenueId,
 }: Props) {
-  const isOpen = useMemo(
-    () => isVenueOpenNow(v, nowForCity),
-    [v, nowForCity]
+  const isOpen = useMemo(() => isVenueOpenNow(v, nowForCity), [v, nowForCity])
+
+  const markerEmoji = useMemo(
+    () => getVenueMarkerEmoji((v as any).type ?? (v as any).types ?? null),
+    [v]
   )
 
   // ✅ Today’s hours (city-aware)
   const todayHours = useMemo(() => {
     if (!Array.isArray(v.hours)) return null
 
-    const today = nowForCity.setLocale('en-US').toFormat('cccc') // Monday, Tuesday, etc.
+    const today = nowForCity.setLocale('en-US').toFormat('cccc')
     const match = v.hours.find((line: string) =>
       line.toLowerCase().startsWith(today.toLowerCase())
     )
@@ -63,8 +68,7 @@ export default function VenueMarker({
     const L = require('leaflet')
 
     const weekdayIndex = nowForCity.weekday % 7
-    const todayKey =
-      ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][weekdayIndex]
+    const todayKey = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][weekdayIndex]
 
     const dp = v.dayParts?.[todayKey] || ''
     const color = isOpen ? daypartColorMap[dp] || 'gray' : 'black'
@@ -92,6 +96,48 @@ export default function VenueMarker({
       })
     }
 
+    if (markerDisplayMode === 'emoji') {
+      const borderColorMap: Record<string, string> = {
+        blue: '#2563eb',
+        green: '#16a34a',
+        orange: '#ea580c',
+        gold: '#ca8a04',
+        violet: '#7c3aed',
+        red: '#dc2626',
+        gray: '#6b7280',
+        black: '#374151',
+      }
+
+      const accentColor = borderColorMap[color] ?? '#6b7280'
+      const backgroundColor = isOpen ? '#ffffff' : '#e5e7eb'
+      const textColor = isOpen ? '#111827' : '#6b7280'
+
+      return new L.DivIcon({
+        className: 'emoji-marker',
+        html: `
+          <div style="
+            width:30px;
+            height:30px;
+            border-radius:9999px;
+            background:${backgroundColor};
+            border:2px solid ${accentColor};
+            box-shadow:0 1px 4px rgba(0,0,0,0.18);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:16px;
+            line-height:1;
+            color:${textColor};
+          ">
+            ${markerEmoji}
+          </div>
+        `,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [1, -28],
+      })
+    }
+
     return new L.Icon({
       iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
       shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
@@ -100,7 +146,15 @@ export default function VenueMarker({
       popupAnchor: [1, -28],
       shadowSize: [30, 30],
     })
-  }, [index, isRouteMode, v.dayParts, isOpen, nowForCity])
+  }, [
+    index,
+    isRouteMode,
+    markerDisplayMode,
+    markerEmoji,
+    v.dayParts,
+    isOpen,
+    nowForCity,
+  ])
 
   const venueEvents = eventsByVenueId[v.id] ?? []
 
@@ -120,64 +174,69 @@ export default function VenueMarker({
   }, [venueEvents, nowForCity])
 
   const firstCandidate = coverCandidates(v)[0]
-const timezone = CITY_CONFIGS[city]?.timezone ?? 'UTC'
+  const timezone = CITY_CONFIGS[city]?.timezone ?? 'UTC'
 
-// Deterministic primary image from slug
-const primaryImage = v.slug
-  ? `/img/venues/${v.slug}.jpg`
-  : firstCandidate
+  // Deterministic primary image from slug
+  const primaryImage = v.slug ? `/img/venues/${v.slug}.jpg` : firstCandidate
 
-if (!icon) return null
+  if (!icon) return null
 
-return (
-  <Marker
-    position={[v.lat, v.lon]}
-    icon={icon}
-    ref={(ref) => {
-      if (v.slug && ref) markerRefs.current[v.slug] = ref
-    }}
-    eventHandlers={{
-      click: () => {
-        if (v?.id) {
-          logVenueImpression('map_marker_click', {
-            venue_id: v.id,
-            metadata: {
-              screen: 'map_marker',
-              city,
-              name: v.name,
-            },
-          })
-        }
-      },
-    }}
-  >
-    <Tooltip>{v.name}</Tooltip>
+  return (
+    <Marker
+      position={[v.lat, v.lon]}
+      icon={icon}
+      ref={(ref) => {
+        if (v.slug && ref) markerRefs.current[v.slug] = ref
+      }}
+      eventHandlers={{
+        click: () => {
+          if (v?.id) {
+            logVenueImpression('map_marker_click', {
+              venue_id: v.id,
+              metadata: {
+                screen: 'map_marker',
+                city,
+                name: v.name,
+                marker_display_mode: markerDisplayMode,
+              },
+            })
+          }
+        },
+      }}
+    >
+      <Tooltip>{v.name}</Tooltip>
 
-    <Popup>
-      <div style={{ fontSize: 14 }}>
-        <strong>{v.name}</strong>
+      <Popup>
+        <div style={{ fontSize: 14 }}>
+          <strong>{v.name}</strong>
 
-        {primaryImage && (
-          <img
-            src={primaryImage}
-            alt={v.name}
-            style={{
-              width: '100%',
-              maxHeight: 140,
-              objectFit: 'cover',
-              margin: '6px 0',
-            }}
-            onError={(e) => {
-              const img = e.currentTarget
-              if (firstCandidate && img.src !== firstCandidate) {
-                img.src = firstCandidate
-              }
-            }}
-          />
-        )}
+          {primaryImage && (
+            <img
+              src={primaryImage}
+              alt={v.name}
+              style={{
+                width: '100%',
+                maxHeight: 140,
+                objectFit: 'cover',
+                margin: '6px 0',
+              }}
+              onError={(e) => {
+                const img = e.currentTarget
+                if (firstCandidate && img.src !== firstCandidate) {
+                  img.src = firstCandidate
+                }
+              }}
+            />
+          )}
 
-          <div><em>Vibe:</em> {v.vibe}</div>
-          {v.price && <div><em>Price:</em> {v.price}</div>}
+          <div>
+            <em>Vibe:</em> {v.vibe}
+          </div>
+          {v.price && (
+            <div>
+              <em>Price:</em> {v.price}
+            </div>
+          )}
 
           <div>
             <em>Status:</em>{' '}

@@ -33,6 +33,7 @@ import 'leaflet/dist/leaflet.css'
 
 const USA_CENTER: [number, number] = [37.8, -96.9]
 const USA_ZOOM = 4
+const DEFAULT_FOCUS_ZOOM = 16
 
 function MapRefSetter({
   mapRef,
@@ -60,6 +61,7 @@ type Props = {
   themeId?: string
   searchTerm?: string
   showLiveEventsOnly?: boolean
+  markerDisplayMode?: 'color' | 'emoji'
   onCityChange?: (city: string | null) => void
   onMapClick?: (lat: number, lon: number) => void
   customStart?: { lat: number; lon: number } | null
@@ -71,6 +73,7 @@ export default function MapCanvas({
   themeId,
   searchTerm = '',
   showLiveEventsOnly = false,
+  markerDisplayMode = 'color',
   onCityChange,
   onMapClick,
   customStart,
@@ -78,6 +81,7 @@ export default function MapCanvas({
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [showCitySelector, setShowCitySelector] = useState(true)
   const [enableScrollZoom, setEnableScrollZoom] = useState(false)
+  const [returnFocusZoom, setReturnFocusZoom] = useState<number | null>(null)
 
   // 🔥 Live minute tick for real-time marker updates
   const [minuteTick, setMinuteTick] = useState(0)
@@ -136,7 +140,6 @@ export default function MapCanvas({
     [onCityChange]
   )
 
-
   const cityConfig = selectedCity ? CITY_CONFIGS[selectedCity] : null
   const mapCenter = cityConfig?.center ?? USA_CENTER
   const mapZoom = cityConfig?.zoom ?? USA_ZOOM
@@ -161,13 +164,46 @@ export default function MapCanvas({
     }
   }, [])
 
+  // ✅ Restore city / zoom context from richer back URL
   useEffect(() => {
-    if (!selectedCity || !mapRef.current) return
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    const cityParam = params.get('city')
+    const zoomParam = params.get('zoom')
+
+    if (cityParam) {
+      setSelectedCity(cityParam)
+      setShowCitySelector(false)
+      onCityChange?.(cityParam)
+    }
+
+    if (zoomParam) {
+      const parsedZoom = parseInt(zoomParam, 10)
+      if (Number.isFinite(parsedZoom)) {
+        setReturnFocusZoom(parsedZoom)
+      }
+    }
+  }, [onCityChange])
+
+  // ✅ Default city centering when no explicit venue-focus coords are present
+  useEffect(() => {
+    if (!selectedCity || !mapRef.current || customStart) return
     const config = CITY_CONFIGS[selectedCity]
     if (config) {
       mapRef.current.setView(config.center, config.zoom)
     }
-  }, [selectedCity])
+  }, [selectedCity, customStart])
+
+  // ✅ Venue-return focus: center on explicit lat/lon when provided
+  useEffect(() => {
+    if (!mapRef.current || !customStart) return
+
+    const focusZoom =
+      returnFocusZoom ?? (selectedCity ? Math.max(mapZoom, DEFAULT_FOCUS_ZOOM) : DEFAULT_FOCUS_ZOOM)
+
+    mapRef.current.setView([customStart.lat, customStart.lon], focusZoom)
+  }, [customStart, selectedCity, mapZoom, returnFocusZoom])
 
   const filteredVenues = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
@@ -204,13 +240,13 @@ export default function MapCanvas({
   return (
     <div className="h-screen w-screen relative">
       <div className="fixed bottom-3 right-3 z-[2000]">
-  <button
-    onClick={() => setShowCitySelector(prev => !prev)}
-    className="bg-black/80 text-white px-2 py-1 rounded text-xs shadow backdrop-blur-sm"
-  >
-    {showCitySelector ? 'Hide Cities' : '🌆 Choose City'}
-  </button>
-</div>
+        <button
+          onClick={() => setShowCitySelector((prev) => !prev)}
+          className="bg-black/80 text-white px-2 py-1 rounded text-xs shadow backdrop-blur-sm"
+        >
+          {showCitySelector ? 'Hide Cities' : '🌆 Choose City'}
+        </button>
+      </div>
 
       {showCitySelector && (
         <CitySelector
@@ -237,7 +273,7 @@ export default function MapCanvas({
         <MapEffectController
           city={selectedCity ?? ''}
           route={visibleRoute}
-          defaultCenter={mapCenter}
+          defaultCenter={customStart ? [customStart.lat, customStart.lon] : mapCenter}
           setUserPosition={() => {}}
           mapRef={mapRef}
           onMapClick={onMapClick}
@@ -261,6 +297,7 @@ export default function MapCanvas({
                 city={selectedCity}
                 nowForCity={nowForCity}
                 isRouteMode={visibleRoute.length > 0}
+                markerDisplayMode={markerDisplayMode}
                 markerRefs={markerRefs}
                 eventsByVenueId={eventsByVenueId}
               />
@@ -272,18 +309,19 @@ export default function MapCanvas({
         )}
 
         {customStart && customStartIcon && (
-  <Marker
-    position={[customStart.lat, customStart.lon]}
-    icon={customStartIcon}
-    draggable
-    eventHandlers={{
-      dragend: (e) => {
-        const { lat, lng } = e.target.getLatLng()
-        onMapClick?.(lat, lng)
-      },
-    }}
-  />
-)}
+          <Marker
+            position={[customStart.lat, customStart.lon]}
+            icon={customStartIcon}
+            draggable
+            eventHandlers={{
+              dragend: (e) => {
+                const { lat, lng } = e.target.getLatLng()
+                onMapClick?.(lat, lng)
+              },
+            }}
+          />
+        )}
+
         {visibleRoute.length > 1 && mapRef.current && (
           <RouteControl
             map={mapRef.current}

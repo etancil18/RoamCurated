@@ -17,6 +17,39 @@ import {
 
 type Params = { venueId: string }
 
+function normalizeCityKey(input?: string | null) {
+  const raw = (input ?? '').trim().toLowerCase()
+
+  const aliases: Record<string, string> = {
+    atl: 'atl',
+    atlanta: 'atl',
+    'atlanta ga': 'atl',
+    nyc: 'nyc',
+    'new york': 'nyc',
+    'new york city': 'nyc',
+    manhattan: 'nyc',
+    porto: 'porto',
+    oporto: 'porto',
+    lisbon: 'lisbon',
+    lisboa: 'lisbon',
+  }
+
+  return aliases[raw] ?? raw
+}
+
+function toNumberOrNull(value: unknown) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  return null
+}
+
 export default async function VenueProfilePage({ params }: { params: Params }) {
   const { venueId } = await params
   const supabase = await supabaseServerApi()
@@ -32,7 +65,9 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       hours,
       city,
       cover,
-      address
+      address,
+      lat,
+      lon
     `)
     .eq('id', venueId)
     .single()
@@ -64,6 +99,21 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
         : undefined,
   }
 
+  const normalizedCity = normalizeCityKey(venue.city)
+  const venueLat = toNumberOrNull(venue.lat)
+  const venueLon = toNumberOrNull(venue.lon)
+
+  const backToMapHref =
+    normalizedCity && venueLat !== null && venueLon !== null
+      ? `/?city=${encodeURIComponent(normalizedCity)}&lat=${encodeURIComponent(
+          String(venueLat)
+        )}&lon=${encodeURIComponent(
+          String(venueLon)
+        )}&venueId=${encodeURIComponent(venue.id)}&zoom=16`
+      : normalizedCity
+        ? `/?city=${encodeURIComponent(normalizedCity)}`
+        : '/'
+
   const { data: liveStatusRaw } = await supabase
     .from('venue_live_status')
     .select('is_open_for_dropins, status_tags')
@@ -92,8 +142,8 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
 
   const upcomingEvents: VenueEvent[] = [
     ...(events ?? [])
-      .filter(e => e.title)
-      .map(e => ({
+      .filter((e) => e.title)
+      .map((e) => ({
         id: e.id,
         title: e.title ?? 'Untitled Event',
         starts_at: e.starts_at ?? undefined,
@@ -101,8 +151,8 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
         tags: e.tags ?? [],
       })),
     ...(recurringEvents ?? [])
-      .filter(e => e.title)
-      .map(rec => {
+      .filter((e) => e.title)
+      .map((rec) => {
         let startsAt: string | undefined = undefined
         if (rec.starts_on && rec.start_time) {
           startsAt = `${rec.starts_on}T${rec.start_time}`
@@ -124,18 +174,14 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
   ]
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-10
+    <div
+      className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-10
                     bg-white text-gray-900
-                    dark:bg-neutral-950 dark:text-gray-100">
-
-      {/* 🔙 Back to Map */}
+                    dark:bg-neutral-950 dark:text-gray-100"
+    >
       <div>
         <Link
-          href={
-            normalizedVenue.city
-              ? `/?city=${normalizedVenue.city}`
-              : '/'
-          }
+          href={backToMapHref}
           className="inline-block text-sm font-medium
                      text-blue-600 hover:text-blue-800
                      dark:text-blue-400 dark:hover:text-blue-300"

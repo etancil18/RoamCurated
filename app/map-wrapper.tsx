@@ -24,6 +24,7 @@ export default function MapWrapper() {
   const [selectedThemeId, setSelectedThemeId] = useState('')
   const [selectedPrice, setSelectedPrice] = useState('')
   const [travelMode, setTravelMode] = useState<'walking' | 'cycling' | 'driving'>('walking')
+  const [markerDisplayMode, setMarkerDisplayMode] = useState<'color' | 'emoji'>('color')
   const [customStart, setCustomStart] = useState<{ lat: number; lon: number } | null>(null)
   const [tightness, setTightness] = useState<'tight' | 'medium' | 'loose'>('medium')
   const [showLiveEventsOnly, setShowLiveEventsOnly] = useState(false)
@@ -46,6 +47,28 @@ export default function MapWrapper() {
 
   useEffect(() => {
     setHasMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!inBrowser()) return
+
+    const params = new URLSearchParams(window.location.search)
+    const cityParam = params.get('city')
+    const latParam = params.get('lat')
+    const lonParam = params.get('lon')
+
+    if (cityParam) {
+      setSelectedCity(cityParam)
+    }
+
+    if (latParam && lonParam) {
+      const lat = parseFloat(latParam)
+      const lon = parseFloat(lonParam)
+
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        setCustomStart({ lat, lon })
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -88,8 +111,8 @@ export default function MapWrapper() {
   }, [filteredVenues, showLiveEventsOnly, eventsByVenueId])
 
   const handleMapClick = (lat: number, lon: number) => {
-  setCustomStart({ lat, lon })
-}
+    setCustomStart({ lat, lon })
+  }
 
   const computePlannedStartAt = () => {
     if (crawlDate && crawlTime) {
@@ -121,206 +144,204 @@ export default function MapWrapper() {
   }, [])
 
   const handleGenerateRoute = async () => {
-  if (!selectedCity) return
+    if (!selectedCity) return
 
-  setRouteErrorMessage(null)
-
-  const fallbackCoords: Record<string, { lat: number; lon: number }> = {
-    atl: { lat: 33.749, lon: -84.388 },
-    nyc: { lat: 40.73061, lon: -73.935242 },
-    lisbon: { lat: 38.7223, lon: -9.1393 },
-    porto: { lat: 41.1579, lon: -8.6291 },
-  }
-
-  const startLat = customStart?.lat ?? fallbackCoords[selectedCity]?.lat ?? 37.8
-  const startLon = customStart?.lon ?? fallbackCoords[selectedCity]?.lon ?? -96.9
-  const plannedStartAt = computePlannedStartAt()
-
-  try {
-    let finalRoute: Venue[] | null = null
-    let tierUsed: Tier | null = null
-
-    const options: any = {
-      maxStops: 6,
-      filterOpen: true,
-      customStart: customStart ?? undefined,
-      startTime: plannedStartAt,
-      tightness,
-      city: selectedCity,
-    }
-
-    let stages: any[] | undefined
-    let tier: Tier = 'commit'
-
-    // ───────────────── PROMPT FLOW ─────────────────
-    if (searchPrompt?.trim()) {
-      const parseRes = await fetch('/api/parseprompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: searchPrompt }),
-      })
-
-      const parsed = await parseRes.json()
-      tier = parsed?.data?.tier ?? 'constrain'
-      stages = parsed?.data?.stages
-      tierUsed = tier
-      setConfidenceTier(tier)
-
-      const crawlRes = await fetch('/api/generate-crawl', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          venues: visibleVenues,
-          userLat: startLat,
-          userLon: startLon,
-          city: selectedCity,
-          plannedStartAt,
-          options,
-          stages,
-          tier,
-        }),
-      })
-
-      const data = await crawlRes.json()
-      if (crawlRes.ok && Array.isArray(data.route) && data.route.length > 0) {
-        finalRoute = data.route
-        tierUsed = data.tier ?? tier
-      }
-    }
-
-    // ───────────────── THEME FLOW ─────────────────
-    if (!finalRoute && selectedThemeId) {
-      const themeRes = await fetch('/api/generate-theme', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          themeId: selectedThemeId,
-          userLat: startLat,
-          userLon: startLon,
-          venues: visibleVenues,
-          city: selectedCity,
-          plannedStartAt,
-          options,
-        }),
-      })
-
-      const data = await themeRes.json()
-      if (themeRes.ok && Array.isArray(data.route) && data.route.length > 0) {
-        finalRoute = data.route
-        tierUsed = null
-        setConfidenceTier(null)
-      }
-    }
-
-    // ───────────────── FREE EXPLORE ─────────────────
-    if (!finalRoute) {
-      const crawlRes = await fetch('/api/generate-crawl', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          venues: visibleVenues,
-          userLat: startLat,
-          userLon: startLon,
-          city: selectedCity,
-          plannedStartAt,
-          options,
-          tier: 'commit',
-        }),
-      })
-
-      const data = await crawlRes.json()
-      if (crawlRes.ok && Array.isArray(data.route) && data.route.length > 0) {
-        finalRoute = data.route
-        tierUsed = data.tier ?? 'commit'
-        setConfidenceTier(tierUsed)
-      }
-    }
-
-    // ───────────────── FAILURE ─────────────────
-    if (!finalRoute || finalRoute.length === 0) {
-      setRoute(undefined)
-      setRouteErrorMessage('We couldn’t build a crawl right now.')
-      return
-    }
-
-    // ───────────────── APPLY ROUTE ─────────────────
-    setRoute(finalRoute)
-    // Sync customStart to actual route origin
-if (finalRoute?.length) {
-  setCustomStart({
-    lat: finalRoute[0].lat,
-    lon: finalRoute[0].lon,
-  })
-}
     setRouteErrorMessage(null)
-    setConfidenceTier(tierUsed)
 
-    const ids = finalRoute.map((v) => v.id ?? v.name).join(',')
-    if (hasMounted) {
-      const url = new URL(window.location.href)
-      url.searchParams.set('route', ids)
-      window.history.replaceState(null, '', url.toString())
+    const fallbackCoords: Record<string, { lat: number; lon: number }> = {
+      atl: { lat: 33.749, lon: -84.388 },
+      nyc: { lat: 40.73061, lon: -73.935242 },
+      lisbon: { lat: 38.7223, lon: -9.1393 },
+      porto: { lat: 41.1579, lon: -8.6291 },
     }
 
-    // ───────────────── MAPBOX + LOGGING ─────────────────
-    const origin = { lat: finalRoute[0].lat, lng: finalRoute[0].lon }
-    const destination = {
-      lat: finalRoute.at(-1)!.lat,
-      lng: finalRoute.at(-1)!.lon,
-    }
-    const waypoints = finalRoute.slice(1, -1).map((v) => ({
-      lat: v.lat,
-      lng: v.lon,
-    }))
+    const startLat = customStart?.lat ?? fallbackCoords[selectedCity]?.lat ?? 37.8
+    const startLon = customStart?.lon ?? fallbackCoords[selectedCity]?.lon ?? -96.9
+    const plannedStartAt = computePlannedStartAt()
 
-    if (userId) {
-      const proxyRes = await fetch('/api/mapbox', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ origin, destination, waypoints, travelMode }),
-      })
+    try {
+      let finalRoute: Venue[] | null = null
+      let tierUsed: Tier | null = null
 
-      const routeData = await proxyRes.json()
+      const options: any = {
+        maxStops: 6,
+        filterOpen: true,
+        customStart: customStart ?? undefined,
+        startTime: plannedStartAt,
+        tightness,
+        city: selectedCity,
+      }
 
-      await fetch('/api/logRoute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          crawlTheme: selectedThemeId || 'manual',
-          origin,
-          destination,
-          waypoints,
-          routeDuration: routeData.duration,
-          routeDistance: routeData.distance,
-          routeGeometry: routeData.geometry,
-          routeMetadata: {
-            travelMode,
+      let stages: any[] | undefined
+      let tier: Tier = 'commit'
+
+      // ───────────────── PROMPT FLOW ─────────────────
+      if (searchPrompt?.trim()) {
+        const parseRes = await fetch('/api/parseprompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: searchPrompt }),
+        })
+
+        const parsed = await parseRes.json()
+        tier = parsed?.data?.tier ?? 'constrain'
+        stages = parsed?.data?.stages
+        tierUsed = tier
+        setConfidenceTier(tier)
+
+        const crawlRes = await fetch('/api/generate-crawl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            venues: visibleVenues,
+            userLat: startLat,
+            userLon: startLon,
             city: selectedCity,
-            stops: finalRoute.length,
-            confidenceTier: tierUsed ?? undefined,
-            usedPrompt: Boolean(searchPrompt?.trim()),
-          },
-        }),
-      })
-    }
-  } catch (err) {
-    console.error('Generate Crawl Error:', err)
-    setRouteErrorMessage('Something went wrong. Try again.')
-  }
-}
+            plannedStartAt,
+            options,
+            stages,
+            tier,
+          }),
+        })
 
+        const data = await crawlRes.json()
+        if (crawlRes.ok && Array.isArray(data.route) && data.route.length > 0) {
+          finalRoute = data.route
+          tierUsed = data.tier ?? tier
+        }
+      }
+
+      // ───────────────── THEME FLOW ─────────────────
+      if (!finalRoute && selectedThemeId) {
+        const themeRes = await fetch('/api/generate-theme', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            themeId: selectedThemeId,
+            userLat: startLat,
+            userLon: startLon,
+            venues: visibleVenues,
+            city: selectedCity,
+            plannedStartAt,
+            options,
+          }),
+        })
+
+        const data = await themeRes.json()
+        if (themeRes.ok && Array.isArray(data.route) && data.route.length > 0) {
+          finalRoute = data.route
+          tierUsed = null
+          setConfidenceTier(null)
+        }
+      }
+
+      // ───────────────── FREE EXPLORE ─────────────────
+      if (!finalRoute) {
+        const crawlRes = await fetch('/api/generate-crawl', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            venues: visibleVenues,
+            userLat: startLat,
+            userLon: startLon,
+            city: selectedCity,
+            plannedStartAt,
+            options,
+            tier: 'commit',
+          }),
+        })
+
+        const data = await crawlRes.json()
+        if (crawlRes.ok && Array.isArray(data.route) && data.route.length > 0) {
+          finalRoute = data.route
+          tierUsed = data.tier ?? 'commit'
+          setConfidenceTier(tierUsed)
+        }
+      }
+
+      // ───────────────── FAILURE ─────────────────
+      if (!finalRoute || finalRoute.length === 0) {
+        setRoute(undefined)
+        setRouteErrorMessage('We couldn’t build a crawl right now.')
+        return
+      }
+
+      // ───────────────── APPLY ROUTE ─────────────────
+      setRoute(finalRoute)
+      // Sync customStart to actual route origin
+      if (finalRoute?.length) {
+        setCustomStart({
+          lat: finalRoute[0].lat,
+          lon: finalRoute[0].lon,
+        })
+      }
+      setRouteErrorMessage(null)
+      setConfidenceTier(tierUsed)
+
+      const ids = finalRoute.map((v) => v.id ?? v.name).join(',')
+      if (hasMounted) {
+        const url = new URL(window.location.href)
+        url.searchParams.set('route', ids)
+        window.history.replaceState(null, '', url.toString())
+      }
+
+      // ───────────────── MAPBOX + LOGGING ─────────────────
+      const origin = { lat: finalRoute[0].lat, lng: finalRoute[0].lon }
+      const destination = {
+        lat: finalRoute.at(-1)!.lat,
+        lng: finalRoute.at(-1)!.lon,
+      }
+      const waypoints = finalRoute.slice(1, -1).map((v) => ({
+        lat: v.lat,
+        lng: v.lon,
+      }))
+
+      if (userId) {
+        const proxyRes = await fetch('/api/mapbox', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origin, destination, waypoints, travelMode }),
+        })
+
+        const routeData = await proxyRes.json()
+
+        await fetch('/api/logRoute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            crawlTheme: selectedThemeId || 'manual',
+            origin,
+            destination,
+            waypoints,
+            routeDuration: routeData.duration,
+            routeDistance: routeData.distance,
+            routeGeometry: routeData.geometry,
+            routeMetadata: {
+              travelMode,
+              city: selectedCity,
+              stops: finalRoute.length,
+              confidenceTier: tierUsed ?? undefined,
+              usedPrompt: Boolean(searchPrompt?.trim()),
+            },
+          }),
+        })
+      }
+    } catch (err) {
+      console.error('Generate Crawl Error:', err)
+      setRouteErrorMessage('Something went wrong. Try again.')
+    }
+  }
 
   return (
     <main className="h-screen w-screen relative overflow-hidden">
       <LeafletSetup />
       <button
-  onClick={() => setIsPanelOpen(!isPanelOpen)}
-  className="fixed bottom-12 right-3 z-[2000] bg-black/80 text-white px-2 py-1 rounded text-xs shadow backdrop-blur-sm"
->
-  {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
-</button>
-
+        onClick={() => setIsPanelOpen(!isPanelOpen)}
+        className="fixed bottom-12 right-3 z-[2000] bg-black/80 text-white px-2 py-1 rounded text-xs shadow backdrop-blur-sm"
+      >
+        {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
+      </button>
 
       {isPanelOpen && (
         <ControlPanel
@@ -336,6 +357,8 @@ if (finalRoute?.length) {
           setSelectedPrice={setSelectedPrice}
           travelMode={travelMode}
           setTravelMode={setTravelMode}
+          markerDisplayMode={markerDisplayMode}
+          setMarkerDisplayMode={setMarkerDisplayMode}
           onGenerateRoute={handleGenerateRoute}
           onClearRoute={handleClearRoute}
           tightness={tightness}
@@ -371,6 +394,7 @@ if (finalRoute?.length) {
             customStart={customStart}
             themeId={selectedThemeId}
             travelMode={travelMode}
+            markerDisplayMode={markerDisplayMode}
             showLiveEventsOnly={showLiveEventsOnly}
             onCityChange={handleCityChange}
             searchTerm={searchTerm}
