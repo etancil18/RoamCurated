@@ -13,7 +13,7 @@ export default function SetPasswordPage() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const router = useRouter()
-  const { user } = useUser()
+  const { user, loading: userLoading } = useUser()
 
   const supabase = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,10 +21,16 @@ export default function SetPasswordPage() {
   )
 
   useEffect(() => {
+    void supabase.auth.getSession()
+  }, [supabase])
+
+  useEffect(() => {
+    if (userLoading) return
+
     if (!user) {
       router.replace('/login') // redirect unauthenticated users
     }
-  }, [user, router])
+  }, [user, userLoading, router])
 
   async function handleSetPassword(e: React.FormEvent) {
     e.preventDefault()
