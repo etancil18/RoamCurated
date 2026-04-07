@@ -23,6 +23,14 @@ export async function middleware(req: NextRequest) {
   console.log(`🔍 [Middleware] Path: ${pathname}`)
   console.log("   User session:", user?.email ?? "None", error ? error.message : "")
 
+  const allowedAdminEmails = [
+    "evantancil@gmail.com",
+    "etancil92@gmail.com",
+    "evantancil@roamcurated.com",
+    "fyejono@gmail.com",
+    "jonathangordon@roamcurated.com",
+  ]
+
   /* ------------------------------------------------------------------ */
   /* PROTECTED ROUTES                                                    */
   /* ------------------------------------------------------------------ */
@@ -32,12 +40,22 @@ export async function middleware(req: NextRequest) {
   )
 
   const isLogin = pathname === "/login"
+  const isVenueAdminRoute =
+    pathname === "/venue-admin" || pathname.startsWith("/venue-admin/")
 
   if (isProtected && !user) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
   if (isLogin && user) {
+    return NextResponse.redirect(new URL("/", req.url))
+  }
+
+  if (
+    user &&
+    isVenueAdminRoute &&
+    !allowedAdminEmails.includes((user.email ?? "").toLowerCase())
+  ) {
     return NextResponse.redirect(new URL("/", req.url))
   }
 

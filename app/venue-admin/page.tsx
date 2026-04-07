@@ -19,12 +19,19 @@ export default function VenueAdminPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [selectedVenueId, setSelectedVenueId] = useState<string>('')
 
-  const allowedEmails = ['evantancil@gmail.com', 'etancil92@gmail.com', 'evantancil@roamcurated.com', 'fyejono@gmail.com', 'jonathangordon@roamcurated.com']
+  const allowedEmails = [
+    'evantancil@gmail.com',
+    'etancil92@gmail.com',
+    'evantancil@roamcurated.com',
+    'fyejono@gmail.com',
+    'jonathangordon@roamcurated.com',
+  ]
 
   useEffect(() => {
     async function checkUser() {
       const { data } = await supabase.auth.getUser()
-      const email = data.user?.email ?? null
+      const emailRaw = data.user?.email ?? null
+      const email = emailRaw?.toLowerCase() ?? null
 
       if (!email || !allowedEmails.includes(email)) {
         router.push('/')
