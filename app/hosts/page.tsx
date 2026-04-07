@@ -202,7 +202,7 @@ export default function HostsPage() {
         />
 
         <Input
-          placeholder="Property Address"
+          placeholder="Property Address (example: 111 Main Street, ATLANTA, GA 30305)"
           value={address}
           onChange={(e)=>setAddress(e.target.value)}
         />
