@@ -99,7 +99,8 @@ export default function RouteControl({
         if (cancelled) return
 
         const bounds = L.latLngBounds(coords)
-        map.fitBounds(bounds, { padding: [50, 50] })
+        const center = bounds.getCenter()
+        map.panTo(center, { animate: true })
 
         logEvent('route_rendered', {
           metadata: {

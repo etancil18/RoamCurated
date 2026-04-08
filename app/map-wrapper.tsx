@@ -268,13 +268,6 @@ export default function MapWrapper() {
 
       // ───────────────── APPLY ROUTE ─────────────────
       setRoute(finalRoute)
-      // Sync customStart to actual route origin
-      if (finalRoute?.length) {
-        setCustomStart({
-          lat: finalRoute[0].lat,
-          lon: finalRoute[0].lon,
-        })
-      }
       setRouteErrorMessage(null)
       setConfidenceTier(tierUsed)
 

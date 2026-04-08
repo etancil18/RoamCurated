@@ -2,6 +2,7 @@ import type { CrawlTheme } from "@/lib/theme-engine/types";
 import type { Venue } from "@/types/venue";
 import { DateTime } from "luxon";
 import { matchesThemeFilters } from "../../utils/typeUtils";
+import { getDistanceMeters } from "../../utils/geoUtils";
 import {
   isVenueOpenAtTime,
   isVenueOpenWithinWindow,
@@ -100,6 +101,10 @@ function matchesVenueType(venueType: unknown, desiredCategory: string): boolean 
   });
 }
 
+function estimateTravelMinutes(distanceMeters: number): number {
+  return Math.max(5, Math.round(distanceMeters / 80));
+}
+
 export function selectCandidates({
   venues,
   stageType,
@@ -108,6 +113,8 @@ export function selectCandidates({
   stageArrivalTime,
   relaxedMode = false,
   windowMinutes = 90,
+  currentLat,
+  currentLon,
 }: {
   venues: Venue[];
   stageType: string;
@@ -116,10 +123,15 @@ export function selectCandidates({
   stageArrivalTime: DateTime;
   relaxedMode?: boolean;
   windowMinutes?: number;
+  currentLat?: number;
+  currentLon?: number;
 }): Venue[] {
   const now = DateTime.now().setZone(stageArrivalTime.zone);
   const isFutureCrawl = stageArrivalTime.toMillis() > now.toMillis();
-
+  const effectiveWindowMinutes =
+    relaxedMode && isFutureCrawl
+      ? Math.max(windowMinutes, 45)
+      : windowMinutes;
 
   return venues.filter((v) => {
     const venueId = v.id || v.name;
@@ -140,17 +152,26 @@ export function selectCandidates({
     // Type check (skip event category match — that's handled above)
     if (!isEventVenue && !matchesVenueType(v.type, stageType)) return false;
 
-    // Time gating (open now, opens soon, relaxed future crawl)
-    const openNow = isVenueOpenAtTime(v, stageArrivalTime);
+    const candidateArrivalTime =
+      typeof currentLat === "number" && typeof currentLon === "number"
+        ? stageArrivalTime.plus({
+            minutes: estimateTravelMinutes(
+              getDistanceMeters(currentLat, currentLon, v.lat, v.lon)
+            ),
+          })
+        : stageArrivalTime;
+
+    // Time gating (open on arrival or opening soon enough)
+    const openNow = isVenueOpenAtTime(v, candidateArrivalTime);
     const opensSoon = isVenueOpenWithinWindow(
       v,
-      stageArrivalTime,
-      windowMinutes
+      candidateArrivalTime,
+      effectiveWindowMinutes
     );
 
-    if (!(openNow || opensSoon || (relaxedMode && isFutureCrawl))) return false;
+    if (!(openNow || opensSoon)) return false;
 
-    if (!daypartAllowedAtTime(v, stageArrivalTime)) return false;
+    if (!daypartAllowedAtTime(v, candidateArrivalTime)) return false;
 
     // Core filters — vibes, tags, price, timeOfDay
     if (!matchesThemeFilters(v, theme.filters ?? {})) return false;

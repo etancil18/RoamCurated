@@ -8,7 +8,7 @@ import { DateTime } from "luxon";
 
 const DEFAULTS = {
   maxStops: 6,
-  fallbackWindowMinutes: 90,
+  fallbackWindowMinutes: 60,
 };
 
 const CITY_DISTANCE_THRESHOLDS: Record<
@@ -20,6 +20,10 @@ const CITY_DISTANCE_THRESHOLDS: Record<
   lisbon: { tight: 250, medium: 700, loose: 1000 },
   porto: { tight: 175, medium: 550, loose: 1000 },
 };
+
+function estimateTravelMinutes(distanceMeters: number): number {
+  return Math.max(5, Math.round(distanceMeters / 80));
+}
 
 export interface ThemeRouteOptions {
   userLat: number;
@@ -48,7 +52,7 @@ export async function generateThemeRoute({
   maxDistanceMeters,
   eventOnly = false,
   startTime,
-  relaxedTimeFiltering = true,
+  relaxedTimeFiltering = false,
 }: ThemeRouteOptions): Promise<Venue[]> {
   const theme = themeById[themeId];
   if (!theme) {
@@ -109,7 +113,7 @@ export async function generateThemeRoute({
       stageType: desiredType,
       selected: new Set(route.map((v) => v.id ?? v.name)),
       theme,
-      stageArrivalTime: currentTime, // 🔥 Luxon-native
+      stageArrivalTime: currentTime,
       relaxedMode: relaxedTimeFiltering,
       windowMinutes: DEFAULTS.fallbackWindowMinutes,
     });
@@ -157,12 +161,16 @@ export async function generateThemeRoute({
     }
 
     const next = sorted[0];
+    const travelMinutes = estimateTravelMinutes(
+      getDistanceMeters(lastLat, lastLon, next.lat, next.lon)
+    );
+
     route.push(next);
 
     lastLat = next.lat;
     lastLon = next.lon;
     currentTime = currentTime.plus({
-      hours: next.duration || 1,
+      minutes: travelMinutes + ((next.duration || 1) * 60),
     });
   }
 
@@ -186,7 +194,7 @@ export async function generateMultipleThemeRoutes({
   maxDistanceMeters,
   eventOnly = false,
   startTime,
-  relaxedTimeFiltering = true,
+  relaxedTimeFiltering = false,
   variants = 5,
 }: ThemeRouteOptions & { variants?: number }): Promise<Venue[][]> {
   const results: Venue[][] = [];

@@ -195,15 +195,38 @@ export default function MapCanvas({
     }
   }, [selectedCity, customStart])
 
-  // ✅ Venue-return focus: center on explicit lat/lon when provided
+  // ✅ Explicit venue-return focus keeps zoom, user pin clicks only re-center without changing zoom
   useEffect(() => {
     if (!mapRef.current || !customStart) return
 
-    const focusZoom =
-      returnFocusZoom ?? (selectedCity ? Math.max(mapZoom, DEFAULT_FOCUS_ZOOM) : DEFAULT_FOCUS_ZOOM)
+    if (returnFocusZoom !== null) {
+      const focusZoom =
+        selectedCity ? Math.max(mapZoom, returnFocusZoom) : returnFocusZoom
 
-    mapRef.current.setView([customStart.lat, customStart.lon], focusZoom)
+      mapRef.current.setView([customStart.lat, customStart.lon], focusZoom, {
+        animate: true,
+      })
+      return
+    }
+
+    mapRef.current.panTo([customStart.lat, customStart.lon], {
+      animate: true,
+    })
   }, [customStart, selectedCity, mapZoom, returnFocusZoom])
+
+  // ✅ When a route is generated, center it without forcing a zoom change
+  useEffect(() => {
+    if (!mapRef.current || visibleRoute.length < 2) return
+
+    const avgLat =
+      visibleRoute.reduce((sum, venue) => sum + venue.lat, 0) / visibleRoute.length
+    const avgLon =
+      visibleRoute.reduce((sum, venue) => sum + venue.lon, 0) / visibleRoute.length
+
+    mapRef.current.panTo([avgLat, avgLon], {
+      animate: true,
+    })
+  }, [visibleRoute])
 
   const filteredVenues = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()

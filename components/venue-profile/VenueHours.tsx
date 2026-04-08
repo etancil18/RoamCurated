@@ -8,44 +8,75 @@ type Props = {
   isOpen?: boolean
 }
 
+const DAY_ALIASES: Record<string, string> = {
+  sunday: 'sunday',
+  sun: 'sunday',
+  monday: 'monday',
+  mon: 'monday',
+  tuesday: 'tuesday',
+  tue: 'tuesday',
+  tues: 'tuesday',
+  wednesday: 'wednesday',
+  wed: 'wednesday',
+  thursday: 'thursday',
+  thu: 'thursday',
+  thur: 'thursday',
+  thurs: 'thursday',
+  friday: 'friday',
+  fri: 'friday',
+  saturday: 'saturday',
+  sat: 'saturday',
+}
+
+function normalizeDayKey(value: string) {
+  const cleaned = value.trim().toLowerCase().replace(/\./g, '')
+  return DAY_ALIASES[cleaned] ?? cleaned
+}
+
 export default function VenueHours({ hours, isOpen }: Props) {
   const [expanded, setExpanded] = useState(false)
   if (!hours) return null
 
-  // get lowercased weekday like "monday"
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-  }).toLowerCase()
+  const rawToday = new Date()
+    .toLocaleDateString('en-US', { weekday: 'long' })
+    .toLowerCase()
 
-  // format time string like "14:00" or "2:00" into proper 12-hour with AM/PM
+  const normalizedToday = normalizeDayKey(rawToday)
+
+  const actualTodayKey =
+    Object.keys(hours).find((day) => normalizeDayKey(day) === normalizedToday) ??
+    rawToday
+
   const formatTime = (time: string) => {
-  if (!time) return 'Closed'
+    if (!time) return 'Closed'
 
-  // If already contains AM/PM, just normalize spacing
-  if (/AM|PM/i.test(time)) {
-    return time.replace(/\s+/, ' ').toUpperCase()
+    if (/AM|PM/i.test(time)) {
+      return time.replace(/\s+/, ' ').toUpperCase()
+    }
+
+    const [hourStr, minStr] = time.split(':')
+    let hour = parseInt(hourStr, 10)
+    const min = parseInt(minStr || '0', 10)
+
+    if (isNaN(hour) || isNaN(min)) return 'Invalid'
+
+    const ampm = hour >= 12 ? 'PM' : 'AM'
+    hour = hour % 12
+    if (hour === 0) hour = 12
+
+    return `${hour}:${min.toString().padStart(2, '0')} ${ampm}`
   }
-
-  // fallback: parse "HH:MM" 24-hour numeric strings
-  const [hourStr, minStr] = time.split(':')
-  let hour = parseInt(hourStr, 10)
-  const min = parseInt(minStr || '0', 10)
-  if (isNaN(hour) || isNaN(min)) return 'Invalid'
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  hour = hour % 12
-  if (hour === 0) hour = 12
-  return `${hour}:${min.toString().padStart(2, '0')} ${ampm}`
-}
 
   const renderLine = (day: string) => {
     const slot: Record<string, string> | undefined = hours[day] as any
+    const isToday = normalizeDayKey(day) === normalizedToday
 
     if (!slot || Object.keys(slot).length === 0) {
       return (
         <li
           key={day}
           className={`flex justify-between text-sm ${
-            day === today
+            isToday
               ? 'font-semibold text-blue-600 dark:text-blue-400'
               : 'text-gray-700 dark:text-gray-300'
           }`}
@@ -56,55 +87,29 @@ export default function VenueHours({ hours, isOpen }: Props) {
       )
     }
 
-    const now = new Date()
     const pairs: string[] = []
 
-// handle single-slot (open/close)
-if (slot.open && slot.close) {
-  pairs.push(`${formatTime(slot.open)} – ${formatTime(slot.close)}`)
-
-  if (day === today) {
-    const [openH, openM] = slot.open.split(':').map(Number)
-    const [closeH, closeM] = slot.close.split(':').map(Number)
-    const now = new Date()
-    const openDate = new Date()
-    openDate.setHours(openH, openM, 0, 0)
-    const closeDate = new Date()
-    closeDate.setHours(closeH, closeM, 0, 0)
-    if (closeDate <= openDate) closeDate.setDate(closeDate.getDate() + 1)
-    if (now >= openDate && now <= closeDate) isOpen = true
-  }
-}
-
-// handle multi-slot (open1/close1, open2/close2...)
-Object.keys(slot).forEach((key) => {
-  if (key.startsWith('open') && key !== 'open') {
-    const index = key.replace('open', '')
-    const closeKey = `close${index}`
-    const openTime = slot[key]
-    const closeTime = slot[closeKey]
-    if (!openTime || !closeTime) return
-    pairs.push(`${formatTime(openTime)} – ${formatTime(closeTime)}`)
-
-    if (day === today) {
-      const [openH, openM] = openTime.split(':').map(Number)
-      const [closeH, closeM] = closeTime.split(':').map(Number)
-      const now = new Date()
-      const openDate = new Date()
-      openDate.setHours(openH, openM, 0, 0)
-      const closeDate = new Date()
-      closeDate.setHours(closeH, closeM, 0, 0)
-      if (closeDate <= openDate) closeDate.setDate(closeDate.getDate() + 1)
-      if (now >= openDate && now <= closeDate) isOpen = true
+    if (slot.open && slot.close) {
+      pairs.push(`${formatTime(slot.open)} – ${formatTime(slot.close)}`)
     }
-  }
-})
+
+    Object.keys(slot).forEach((key) => {
+      if (key.startsWith('open') && key !== 'open') {
+        const index = key.replace('open', '')
+        const closeKey = `close${index}`
+        const openTime = slot[key]
+        const closeTime = slot[closeKey]
+        if (!openTime || !closeTime) return
+
+        pairs.push(`${formatTime(openTime)} – ${formatTime(closeTime)}`)
+      }
+    })
 
     return (
       <li
         key={day}
         className={`flex justify-between text-sm ${
-          day === today
+          isToday
             ? 'font-semibold text-blue-600 dark:text-blue-400'
             : 'text-gray-700 dark:text-gray-300'
         }`}
@@ -115,8 +120,7 @@ Object.keys(slot).forEach((key) => {
     )
   }
 
-  // Get the correct line for today before expanding
-  const todayLine = renderLine(today)
+  const todayLine = renderLine(actualTodayKey)
 
   return (
     <div className="space-y-2">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
@@ -17,6 +17,7 @@ type Props = {
 const USA_CENTER: [number, number] = [37.8, -96.9]
 const USA_ZOOM = 4
 const CITY_ZOOM = 12
+const PIN_FOCUS_ZOOM = 16
 
 export default function MapEffectController({
   city,
@@ -28,6 +29,10 @@ export default function MapEffectController({
 }: Props) {
   const map = useMap()
   const leafletRef = useRef<any>(null)
+  const hasAppliedPinFocusRef = useRef(false)
+
+  const isPinnedCenter =
+    defaultCenter[0] !== USA_CENTER[0] || defaultCenter[1] !== USA_CENTER[1]
 
   // Dynamically load Leaflet
   useEffect(() => {
@@ -49,12 +54,20 @@ export default function MapEffectController({
     if (!map || !leafletRef.current) return
 
     if (!city || city === '') {
+      hasAppliedPinFocusRef.current = false
       map.flyTo(USA_CENTER, USA_ZOOM, {
         animate: true,
         duration: 1.5,
       })
       return
     }
+
+    if (isPinnedCenter) {
+      hasAppliedPinFocusRef.current = true
+      return
+    }
+
+    hasAppliedPinFocusRef.current = false
 
     const timeout = setTimeout(() => {
       map.flyTo(defaultCenter, CITY_ZOOM, {
@@ -64,15 +77,17 @@ export default function MapEffectController({
     }, 300)
 
     return () => clearTimeout(timeout)
-  }, [city, map, defaultCenter])
+  }, [city, map, defaultCenter, isPinnedCenter])
 
   useEffect(() => {
     if (!map || !route || route.length < 2 || !leafletRef.current) return
 
+    if (hasAppliedPinFocusRef.current || isPinnedCenter) return
+
     const L = leafletRef.current
     const bounds = L.latLngBounds(route.map((v: Venue) => [v.lat, v.lon]))
     map.fitBounds(bounds, { padding: [50, 50] })
-  }, [map, route])
+  }, [map, route, isPinnedCenter])
 
   useEffect(() => {
     if (!map || !onMapClick || !leafletRef.current) return
