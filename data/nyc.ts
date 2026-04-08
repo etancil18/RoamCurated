@@ -21962,7 +21962,7 @@ const nycData = [
      {
        "slug": "animal",    "name": "ANIMAL",
     "vibe": "LGBTQ+, Dance, Fun, Neighborhood Bar, Vintage, Playful, Local, Energetic",
-    "type": "club",
+    "type": "clube",
         "lat": "40.71870937",
     "lon": "-73.94714459",
     "link": "https://www.instagram.com/animal.nyc/?hl=en",
