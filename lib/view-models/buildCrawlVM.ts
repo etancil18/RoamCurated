@@ -71,10 +71,10 @@ const DEFAULT_PER_STOP_MINUTES = 45
 const DEFAULT_TRANSITION_MINUTES = 8
 
 const DEFAULT_TITLE_BY_THEME: Record<string, string> = {
-  dateNight: 'Date Night Nearby',
-  nightOut: 'Night Out Nearby',
-  morningFlow: 'Easy Morning Nearby',
-  soloExplorer: 'Solo Explore Nearby',
+  dateNight: 'Date Night',
+  nightOut: 'Night Out',
+  morningFlow: 'Easy Morning',
+  soloExplorer: 'Solo Explore',
 }
 
 const DEFAULT_SUBTITLE_BY_THEME: Record<string, string> = {

@@ -71,6 +71,17 @@ export default async function PropertyPage({ params }: PageProps) {
     slug: venue.slug ?? undefined,
   }))
 
+  const nearbySwapVenues = guide.nearbyVenues.map((venue) => ({
+    id: venue.id,
+    name: venue.name,
+    link: venue.link,
+    description:
+      typeof venue.description === 'string' ? venue.description : null,
+    type: venue.type ?? null,
+    lat: venue.lat,
+    lon: venue.lon,
+  }))
+
   const hasFlexibleEventJourneys = guide.eventJourneyCards.some((journey) => {
     const policy = String(journey.arrivalPolicy ?? '')
       .trim()
@@ -365,6 +376,7 @@ export default async function PropertyPage({ params }: PageProps) {
         <PropertyCrawls
           property={guide.property}
           crawls={guide.propertyCrawlCards}
+          nearbyVenues={nearbySwapVenues}
         />
       </section>
 
