@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { QRCodeSVG } from 'qrcode.react'
 
+const HOST_CITY_OPTIONS = [
+  { value: 'atl', label: 'Atlanta' },
+  { value: 'nyc', label: 'New York City' },
+  { value: 'porto', label: 'Porto' },
+  { value: 'lisbon', label: 'Lisbon' },
+] as const
+
 export default function HostsPage() {
 
   const [name,setName] = useState('')
@@ -195,11 +202,29 @@ export default function HostsPage() {
           onChange={(e)=>setName(e.target.value)}
         />
 
-        <Input
-          placeholder="City (example: atlanta)"
-          value={city}
-          onChange={(e)=>setCity(e.target.value)}
-        />
+        <div className="space-y-2">
+          <label className="text-sm font-medium">
+            City
+          </label>
+
+          <select
+            value={city}
+            onChange={(e)=>setCity(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Select a city</option>
+            {HOST_CITY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <p className="text-xs text-muted-foreground">
+            Choose the main city your property belongs to. For places in
+            Brooklyn, Queens, or Manhattan, select New York City.
+          </p>
+        </div>
 
         <Input
           placeholder="Property Address (example: 111 Main Street, ATLANTA, GA 30305)"
@@ -230,7 +255,7 @@ export default function HostsPage() {
         <Button
           className="w-full"
           onClick={submit}
-          disabled={loading}
+          disabled={loading || !city}
         >
           {loading ? 'Creating Guide...' : 'Create Guide'}
         </Button>

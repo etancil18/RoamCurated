@@ -1,11 +1,40 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+const SUPPORTED_HOST_CITIES = new Set(['atl', 'nyc', 'porto', 'lisbon'])
+
 function slugify(text: string) {
   return text
     .toLowerCase()
     .replace(/[^\w\s-]/g, '')
     .replace(/\s+/g, '-')
+}
+
+function normalizeCityKey(input: string) {
+  const raw = input.toLowerCase().trim()
+
+  const aliases: Record<string, string> = {
+    atl: 'atl',
+    atlanta: 'atl',
+    'atlanta ga': 'atl',
+
+    nyc: 'nyc',
+    'new york': 'nyc',
+    'new york city': 'nyc',
+    manhattan: 'nyc',
+    brooklyn: 'nyc',
+    queens: 'nyc',
+    bronx: 'nyc',
+    'staten island': 'nyc',
+
+    porto: 'porto',
+    oporto: 'porto',
+
+    lisbon: 'lisbon',
+    lisboa: 'lisbon',
+  }
+
+  return aliases[raw] ?? raw
 }
 
 async function geocodeAddress(address: string) {
@@ -52,7 +81,15 @@ export async function POST(req: Request) {
       )
     }
 
-    const normalizedCity = city.toLowerCase().trim()
+    const normalizedCity = normalizeCityKey(city)
+
+    if (!SUPPORTED_HOST_CITIES.has(normalizedCity)) {
+      return NextResponse.json(
+        { error: 'Unsupported city selection' },
+        { status: 400 }
+      )
+    }
+
     const slug = slugify(name)
 
     // Geocode address

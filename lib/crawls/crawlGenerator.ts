@@ -43,6 +43,15 @@ type CrawlTheme =
   | 'morningFlow'
   | 'soloExplorer'
 
+type CrawlGenerationOpts = {
+  durationHours?: number
+  latestEndHour?: number
+  theme?: CrawlTheme
+  stageIndex?: number
+  discouragedVenueIds?: Set<string>
+  stronglyDiscouragedVenueIds?: Set<string>
+}
+
 /* ------------------------------------------------ */
 /* Config                                           */
 /* ------------------------------------------------ */
@@ -129,8 +138,8 @@ const CRAWL_THEME_SIGNALS: Record<
   },
 
   nightOut: {
-    vibes: ['lively','energetic','social'],
-    tags: ['dj','dance','club','cocktail']
+    vibes: ['lively','energetic','social','dj','beer','weekend'],
+    tags: ['dj','crowded','late','late-night','bar','dance','club','cocktail']
   },
 
   morningFlow: {
@@ -213,6 +222,30 @@ function getMatchedStageType(
   return venueTypes[0] ?? null
 }
 
+function shouldSkipForThemeDistinctness(
+  venueId: string,
+  opts?: CrawlGenerationOpts
+) {
+  const stageIndex = opts?.stageIndex ?? 0
+
+  if (stageIndex > 1) {
+    return false
+  }
+
+  const stronglyDiscouraged = opts?.stronglyDiscouragedVenueIds?.has(venueId) ?? false
+  const discouraged = opts?.discouragedVenueIds?.has(venueId) ?? false
+
+  if (stageIndex === 0) {
+    return stronglyDiscouraged || discouraged
+  }
+
+  if (stageIndex === 1) {
+    return stronglyDiscouraged || discouraged
+  }
+
+  return false
+}
+
 /* ------------------------------------------------ */
 /* Venue Stage Matching                             */
 /* ------------------------------------------------ */
@@ -283,7 +316,7 @@ function selectVenueForStage(
   now: DateTime,
   originLat:number,
   originLon:number,
-  opts?:{ theme?:CrawlTheme }
+  opts: CrawlGenerationOpts = {}
 ){
 
   let candidates = filterStageCandidates(
@@ -322,35 +355,49 @@ function selectVenueForStage(
     originLon
   )
 
-  for(const v of distanceSorted){
+  const selectionPasses = [
+    { enforceDistinctOpeners: true },
+    { enforceDistinctOpeners: false }
+  ]
 
-    const venueTypes = getVenueTypes(v)
-    const stage = stageTypes[0]
+  for (const pass of selectionPasses) {
+    for(const v of distanceSorted){
 
-    if(
-      STAGE_TYPE_EXCLUSIONS[stage]?.some(t =>
-        venueTypes.includes(t)
+      const venueTypes = getVenueTypes(v)
+      const stage = stageTypes[0]
+
+      if(
+        STAGE_TYPE_EXCLUSIONS[stage]?.some(t =>
+          venueTypes.includes(t)
+        )
+      ){
+        continue
+      }
+
+      if (
+        pass.enforceDistinctOpeners &&
+        shouldSkipForThemeDistinctness(v.id, opts)
+      ) {
+        continue
+      }
+
+      const dist = distanceMeters(
+        originLat,
+        originLon,
+        v.lat,
+        v.lon
       )
-    ){
-      continue
+
+      if(dist < MIN_VENUE_DISTANCE_METERS) continue
+
+      const typeKey = venueTypes[0] ?? 'unknown'
+
+      if((usedTypes[typeKey] ?? 0) >= 2) continue
+
+      usedTypes[typeKey] = (usedTypes[typeKey] ?? 0)+1
+
+      return v
     }
-
-    const dist = distanceMeters(
-      originLat,
-      originLon,
-      v.lat,
-      v.lon
-    )
-
-    if(dist < MIN_VENUE_DISTANCE_METERS) continue
-
-    const typeKey = venueTypes[0] ?? 'unknown'
-
-    if((usedTypes[typeKey] ?? 0) >= 2) continue
-
-    usedTypes[typeKey] = (usedTypes[typeKey] ?? 0)+1
-
-    return v
   }
 
   return null
@@ -392,11 +439,7 @@ export function generateCrawl(
   originLat:number,
   originLon:number,
   now: DateTime,
-  opts:{
-    durationHours?:number
-    latestEndHour?:number
-    theme?:CrawlTheme
-  }={}
+  opts:CrawlGenerationOpts={}
 ):CrawlResult|null{
 
   const stagePlan = resolveStagePlan(now,opts)
@@ -411,7 +454,9 @@ export function generateCrawl(
   let currentLat=originLat
   let currentLon=originLon
 
-  for(const stageTypes of stagePlan){
+  for(let stageIndex = 0; stageIndex < stagePlan.length; stageIndex++){
+
+    const stageTypes = stagePlan[stageIndex]
 
     const venue = selectVenueForStage(
       venues,
@@ -421,7 +466,10 @@ export function generateCrawl(
       now,
       currentLat,
       currentLon,
-      opts
+      {
+        ...opts,
+        stageIndex
+      }
     )
 
     if(!venue) continue
@@ -467,18 +515,39 @@ export function generatePropertyCrawls(
     'soloExplorer'
   ]
 
+  let referenceDateNight: CrawlResult | null = null
+
   for(const theme of themes){
+
+    const crawlOpts: CrawlGenerationOpts = { theme }
+
+    if (theme === 'nightOut' && referenceDateNight) {
+      const dateNightFirstStop = referenceDateNight.venues[0]?.id
+      const dateNightOpeningStops = referenceDateNight.venues
+        .slice(0, 2)
+        .map((venue) => venue.id)
+
+      crawlOpts.stronglyDiscouragedVenueIds = new Set(
+        dateNightFirstStop ? [dateNightFirstStop] : []
+      )
+
+      crawlOpts.discouragedVenueIds = new Set(dateNightOpeningStops)
+    }
 
     const crawl = generateCrawl(
       venues,
       originLat,
       originLon,
       now,
-      {theme}
+      crawlOpts
     )
 
     if(crawl){
       crawls.push({theme,crawl})
+
+      if (theme === 'dateNight') {
+        referenceDateNight = crawl
+      }
     }
   }
 
