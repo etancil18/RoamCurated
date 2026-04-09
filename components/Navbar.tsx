@@ -124,6 +124,13 @@ export default function Navbar() {
               <div className="py-2">
                 {user ? (
                   <>
+                   <Link
+                      href="/hosts"
+                      onClick={() => handleNavClick('hosts')}
+                      className="block px-4 py-2 text-sm text-amber-600 transition hover:bg-gray-50 hover:text-black dark:hover:bg-zinc-800 dark:hover:text-white"
+                    >
+                      Build a Guide
+                    </Link>
                     <Link
                       href="/events"
                       onClick={() => handleNavClick('events')}
@@ -132,18 +139,18 @@ export default function Navbar() {
                       Events
                     </Link>
                     <Link
+                      href="/sponsor-crawl"
+                      onClick={() => handleNavClick('sponsor-crawl')}
+                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                    >
+                      Get Social
+                    </Link>
+                    <Link
                       href="/favorites"
                       onClick={() => handleNavClick('favorites')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Favorites
-                    </Link>
-                    <Link
-                      href="/sponsor-crawl"
-                      onClick={() => handleNavClick('sponsor-crawl')}
-                      className="block px-4 py-2 text-sm text-amber-600 transition hover:bg-gray-50 hover:text-black dark:hover:bg-zinc-800 dark:hover:text-white"
-                    >
-                      Get Social
                     </Link>
                     <Link
                       href="/profile"
