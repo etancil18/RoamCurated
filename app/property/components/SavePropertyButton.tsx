@@ -7,6 +7,7 @@ import {
   supabaseBrowser,
   getCurrentUserId
 } from '@/lib/supabase/client'
+import { getAppDownloadLink } from '@/lib/constants/appLinks'
 
 type Props = {
   propertyId: string
@@ -28,6 +29,7 @@ export default function SavePropertyButton({
   const [saved,setSaved] = useState(false)
   const [loading,setLoading] = useState(false)
   const [checking,setChecking] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   /* -------------------------------- */
   /* Detect if property already saved */
@@ -40,9 +42,12 @@ export default function SavePropertyButton({
       const userId = await getCurrentUserId()
 
       if(!userId){
+        setIsAuthenticated(false)
         setChecking(false)
         return
       }
+
+      setIsAuthenticated(true)
 
       const { data } = await supabase
         .from('saved_properties')
@@ -63,22 +68,30 @@ export default function SavePropertyButton({
   },[propertyId, supabase])
 
   /* -------------------------------- */
-  /* Save property                    */
+  /* Save property / redirect to app  */
   /* -------------------------------- */
 
   async function handleSave(){
 
     if(loading || saved) return
 
+    if(isAuthenticated === false){
+      window.location.href = getAppDownloadLink()
+      return
+    }
+
     setLoading(true)
 
     const userId = await getCurrentUserId()
 
     if(!userId){
-      router.push('/login')
+      setIsAuthenticated(false)
       setLoading(false)
+      window.location.href = getAppDownloadLink()
       return
     }
+
+    setIsAuthenticated(true)
 
     const { error } = await supabase
       .from('saved_properties')
@@ -107,6 +120,7 @@ export default function SavePropertyButton({
   let label = '♡ Save'
 
   if(checking) label = '...'
+  else if(isAuthenticated === false) label = '↓ Download App'
   else if(saved) label = '♥ Saved'
   else if(loading) label = 'Saving...'
 
@@ -114,7 +128,7 @@ export default function SavePropertyButton({
 
     <button
       onClick={handleSave}
-      disabled={saved || loading}
+      disabled={checking || saved || loading}
       className="
         px-4 py-2
         rounded-lg
