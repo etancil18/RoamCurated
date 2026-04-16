@@ -13,6 +13,14 @@ function toNumber(value: unknown): number {
   return 0
 }
 
+function toStringOrArray(
+  value: unknown
+): string | string[] | undefined {
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string') return value
+  return undefined
+}
+
 /* ------------------------------------------------ */
 /* Merge Static + DB                                */
 /* ------------------------------------------------ */
@@ -71,17 +79,22 @@ export function mergeStaticWithDb(
       instagram_handle:
         match?.instagram_handle ?? sv.instagram_handle ?? undefined,
 
-      vibe: sv.vibe ?? undefined,
+      vibe:
+        toStringOrArray(sv.vibe) ??
+        toStringOrArray(match?.vibe) ??
+        undefined,
 
       cover: sv.cover ?? match?.cover ?? undefined,
 
       type:
-        Array.isArray(sv.type)
-          ? sv.type.join(',')
-          : sv.type ?? match?.type ?? undefined,
+        toStringOrArray(sv.type) ??
+        toStringOrArray(match?.type) ??
+        undefined,
 
       timeCategory:
-        sv.timeCategory ?? match?.time_category ?? undefined,
+        toStringOrArray(sv.timeCategory) ??
+        toStringOrArray(match?.time_category) ??
+        undefined,
 
       energyRamp:
         sv.energyRamp ?? match?.energy_ramp ?? undefined,
@@ -93,9 +106,9 @@ export function mergeStaticWithDb(
         sv.duration ?? match?.duration ?? undefined,
 
       tags:
-        typeof sv.tags === 'string'
-          ? sv.tags
-          : match?.tags?.join(', ') ?? undefined,
+        toStringOrArray(sv.tags) ??
+        toStringOrArray(match?.tags) ??
+        undefined,
 
       tier:
         sv.tier ?? match?.tier ?? undefined,
@@ -136,7 +149,13 @@ export function mergeStaticWithDb(
 
       city: v.city ?? undefined,
 
-      type: v.type ?? undefined,
+      type: toStringOrArray(v.type) ?? undefined,
+
+      timeCategory: toStringOrArray(v.time_category) ?? undefined,
+
+      vibe: toStringOrArray(v.vibe) ?? undefined,
+
+      tags: toStringOrArray(v.tags) ?? undefined,
 
       cover: v.cover ?? undefined,
     }))

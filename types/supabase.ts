@@ -573,6 +573,334 @@ export type Database = {
           },
         ]
       }
+      planned_outing_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          event_value: string | null
+          id: string
+          metadata: Json
+          planned_outing_id: string
+          planned_outing_stop_id: string | null
+          stop_order: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          event_value?: string | null
+          id?: string
+          metadata?: Json
+          planned_outing_id: string
+          planned_outing_stop_id?: string | null
+          stop_order?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          event_value?: string | null
+          id?: string
+          metadata?: Json
+          planned_outing_id?: string
+          planned_outing_stop_id?: string | null
+          stop_order?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_outing_events_planned_outing_id_fkey"
+            columns: ["planned_outing_id"]
+            isOneToOne: false
+            referencedRelation: "planned_outings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planned_outing_events_planned_outing_stop_id_fkey"
+            columns: ["planned_outing_stop_id"]
+            isOneToOne: false
+            referencedRelation: "planned_outing_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planned_outing_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          low_regret: boolean | null
+          notes: string | null
+          planned_outing_id: string
+          rating: number | null
+          user_id: string | null
+          would_use_again: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          low_regret?: boolean | null
+          notes?: string | null
+          planned_outing_id: string
+          rating?: number | null
+          user_id?: string | null
+          would_use_again?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          low_regret?: boolean | null
+          notes?: string | null
+          planned_outing_id?: string
+          rating?: number | null
+          user_id?: string | null
+          would_use_again?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_outing_feedback_planned_outing_id_fkey"
+            columns: ["planned_outing_id"]
+            isOneToOne: false
+            referencedRelation: "planned_outings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planned_outing_stop_events: {
+        Row: {
+          created_at: string | null
+          dwell_time_seconds: number | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          planned_outing_id: string
+          planned_outing_stop_id: string
+          position: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dwell_time_seconds?: number | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          planned_outing_id: string
+          planned_outing_stop_id: string
+          position?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dwell_time_seconds?: number | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          planned_outing_id?: string
+          planned_outing_stop_id?: string
+          position?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_outing_stop_events_planned_outing_id_fkey"
+            columns: ["planned_outing_id"]
+            isOneToOne: false
+            referencedRelation: "planned_outings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planned_outing_stop_events_planned_outing_stop_id_fkey"
+            columns: ["planned_outing_stop_id"]
+            isOneToOne: false
+            referencedRelation: "planned_outing_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planned_outing_stops: {
+        Row: {
+          created_at: string
+          distance_meters_from_prev: number | null
+          dwell_minutes: number | null
+          id: string
+          is_locked: boolean
+          metadata: Json
+          planned_arrival_at: string | null
+          planned_departure_at: string | null
+          planned_outing_id: string
+          rationale: string | null
+          role: string
+          stop_order: number
+          title: string | null
+          travel_minutes_from_prev: number | null
+          travel_mode: string | null
+          venue_id: string
+          was_swapped: boolean
+        }
+        Insert: {
+          created_at?: string
+          distance_meters_from_prev?: number | null
+          dwell_minutes?: number | null
+          id?: string
+          is_locked?: boolean
+          metadata?: Json
+          planned_arrival_at?: string | null
+          planned_departure_at?: string | null
+          planned_outing_id: string
+          rationale?: string | null
+          role: string
+          stop_order: number
+          title?: string | null
+          travel_minutes_from_prev?: number | null
+          travel_mode?: string | null
+          venue_id: string
+          was_swapped?: boolean
+        }
+        Update: {
+          created_at?: string
+          distance_meters_from_prev?: number | null
+          dwell_minutes?: number | null
+          id?: string
+          is_locked?: boolean
+          metadata?: Json
+          planned_arrival_at?: string | null
+          planned_departure_at?: string | null
+          planned_outing_id?: string
+          rationale?: string | null
+          role?: string
+          stop_order?: number
+          title?: string | null
+          travel_minutes_from_prev?: number | null
+          travel_mode?: string | null
+          venue_id?: string
+          was_swapped?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_outing_stops_planned_outing_id_fkey"
+            columns: ["planned_outing_id"]
+            isOneToOne: false
+            referencedRelation: "planned_outings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planned_outing_stops_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "planned_outing_stops_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planned_outings: {
+        Row: {
+          anchor_ends_at: string | null
+          anchor_starts_at: string | null
+          anchor_title: string | null
+          budget: string | null
+          city: string
+          confidence_score: number | null
+          created_at: string
+          event_id: string | null
+          generation_version: string | null
+          group_size: number | null
+          id: string
+          metadata: Json
+          mobility: string | null
+          mode: string
+          plan_summary: string | null
+          planned_end_at: string | null
+          planned_start_at: string | null
+          score_breakdown: Json
+          source: string
+          status: string
+          updated_at: string
+          user_id: string | null
+          venue_id: string | null
+          vibe_tags: string[]
+        }
+        Insert: {
+          anchor_ends_at?: string | null
+          anchor_starts_at?: string | null
+          anchor_title?: string | null
+          budget?: string | null
+          city: string
+          confidence_score?: number | null
+          created_at?: string
+          event_id?: string | null
+          generation_version?: string | null
+          group_size?: number | null
+          id?: string
+          metadata?: Json
+          mobility?: string | null
+          mode: string
+          plan_summary?: string | null
+          planned_end_at?: string | null
+          planned_start_at?: string | null
+          score_breakdown?: Json
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          venue_id?: string | null
+          vibe_tags?: string[]
+        }
+        Update: {
+          anchor_ends_at?: string | null
+          anchor_starts_at?: string | null
+          anchor_title?: string | null
+          budget?: string | null
+          city?: string
+          confidence_score?: number | null
+          created_at?: string
+          event_id?: string | null
+          generation_version?: string | null
+          group_size?: number | null
+          id?: string
+          metadata?: Json
+          mobility?: string | null
+          mode?: string
+          plan_summary?: string | null
+          planned_end_at?: string | null
+          planned_start_at?: string | null
+          score_breakdown?: Json
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          venue_id?: string | null
+          vibe_tags?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_outings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planned_outings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "planned_outings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_admins: {
         Row: {
           email: string
@@ -1413,8 +1741,9 @@ export type Database = {
           slug: string | null
           tags: string[] | null
           tier: string | null
-          time_category: string | null
-          type: string | null
+          time_category: string[] | null
+          type: string[] | null
+          vibe: string[] | null
         }
         Insert: {
           access_token?: string | null
@@ -1435,8 +1764,9 @@ export type Database = {
           slug?: string | null
           tags?: string[] | null
           tier?: string | null
-          time_category?: string | null
-          type?: string | null
+          time_category?: string[] | null
+          type?: string[] | null
+          vibe?: string[] | null
         }
         Update: {
           access_token?: string | null
@@ -1457,8 +1787,81 @@ export type Database = {
           slug?: string | null
           tags?: string[] | null
           tier?: string | null
+          time_category?: string[] | null
+          type?: string[] | null
+          vibe?: string[] | null
+        }
+        Relationships: []
+      }
+      venues_staging_raw: {
+        Row: {
+          access_token: string | null
+          address: string | null
+          city: string | null
+          contact: string | null
+          cover: string | null
+          description: string | null
+          duration: string | null
+          energy_ramp: string | null
+          hours: string | null
+          id: string | null
+          instagram_handle: string | null
+          lat: string | null
+          lon: string | null
+          name: string | null
+          price: string | null
+          slug: string | null
+          tags: string | null
+          tier: string | null
+          time_category: string | null
+          type: string | null
+          vibe: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          address?: string | null
+          city?: string | null
+          contact?: string | null
+          cover?: string | null
+          description?: string | null
+          duration?: string | null
+          energy_ramp?: string | null
+          hours?: string | null
+          id?: string | null
+          instagram_handle?: string | null
+          lat?: string | null
+          lon?: string | null
+          name?: string | null
+          price?: string | null
+          slug?: string | null
+          tags?: string | null
+          tier?: string | null
           time_category?: string | null
           type?: string | null
+          vibe?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          address?: string | null
+          city?: string | null
+          contact?: string | null
+          cover?: string | null
+          description?: string | null
+          duration?: string | null
+          energy_ramp?: string | null
+          hours?: string | null
+          id?: string | null
+          instagram_handle?: string | null
+          lat?: string | null
+          lon?: string | null
+          name?: string | null
+          price?: string | null
+          slug?: string | null
+          tags?: string | null
+          tier?: string | null
+          time_category?: string | null
+          type?: string | null
+          vibe?: string | null
         }
         Relationships: []
       }
@@ -1873,8 +2276,9 @@ export type Database = {
           slug: string | null
           tags: string[] | null
           tier: string | null
-          time_category: string | null
-          type: string | null
+          time_category: string[] | null
+          type: string[] | null
+          vibe: string[] | null
         }[]
         SetofOptions: {
           from: "*"
@@ -2719,6 +3123,51 @@ export type SavedRouteUpdate = Database['public']['Tables']['saved_routes']['Upd
 
 export type UserRouteRecord = Database['public']['Tables']['user_routes']['Row']
 export type UserRecord = Database['public']['Tables']['users']['Row']
+
+export type PlannedOutingRecord =
+  Database['public']['Tables']['planned_outings']['Row']
+
+export type PlannedOutingInsert =
+  Database['public']['Tables']['planned_outings']['Insert']
+
+export type PlannedOutingUpdate =
+  Database['public']['Tables']['planned_outings']['Update']
+
+export type PlannedOutingStopRecord =
+  Database['public']['Tables']['planned_outing_stops']['Row']
+
+export type PlannedOutingStopInsert =
+  Database['public']['Tables']['planned_outing_stops']['Insert']
+
+export type PlannedOutingStopUpdate =
+  Database['public']['Tables']['planned_outing_stops']['Update']
+
+export type PlannedOutingEventRecord =
+  Database['public']['Tables']['planned_outing_events']['Row']
+
+export type PlannedOutingEventInsert =
+  Database['public']['Tables']['planned_outing_events']['Insert']
+
+export type PlannedOutingEventUpdate =
+  Database['public']['Tables']['planned_outing_events']['Update']
+
+export type PlannedOutingFeedbackRecord =
+  Database['public']['Tables']['planned_outing_feedback']['Row']
+
+export type PlannedOutingFeedbackInsert =
+  Database['public']['Tables']['planned_outing_feedback']['Insert']
+
+export type PlannedOutingFeedbackUpdate =
+  Database['public']['Tables']['planned_outing_feedback']['Update']
+
+export type PlannedOutingStopEventRecord =
+  Database['public']['Tables']['planned_outing_stop_events']['Row']
+
+export type PlannedOutingStopEventInsert =
+  Database['public']['Tables']['planned_outing_stop_events']['Insert']
+
+export type PlannedOutingStopEventUpdate =
+  Database['public']['Tables']['planned_outing_stop_events']['Update']
 
 /* ----------------------- */
 /* Event Journey Types     */

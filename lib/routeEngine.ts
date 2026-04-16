@@ -41,7 +41,7 @@ const DEFAULTS = {
 };
 
 const CITY_DISTANCE_THRESHOLDS = {
-  atl: { tight: 800, medium: 1600, loose: 2500 },
+  atl: { tight: 1500, medium: 3000, loose: 4500 },
   nyc: { tight: 400, medium: 1200, loose: 2000 },
   lisbon: { tight: 300, medium: 900, loose: 1500 },
   porto: { tight: 300, medium: 700, loose: 1300 },

@@ -15,10 +15,10 @@ const CITY_DISTANCE_THRESHOLDS: Record<
   "atl" | "nyc" | "lisbon" | "porto",
   Record<"tight" | "medium" | "loose", number>
 > = {
-  atl: { tight: 1000, medium: 2000, loose: 3500 },
+  atl: { tight: 1200, medium: 3000, loose: 4500 },
   nyc: { tight: 350, medium: 800, loose: 1200 },
-  lisbon: { tight: 250, medium: 700, loose: 1000 },
-  porto: { tight: 175, medium: 550, loose: 1000 },
+  lisbon: { tight: 300, medium: 700, loose: 1000 },
+  porto: { tight: 255, medium: 550, loose: 1000 },
 };
 
 function estimateTravelMinutes(distanceMeters: number): number {

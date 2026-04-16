@@ -17,6 +17,23 @@ import {
 
 type Tier = 'commit' | 'constrain' | 'clarify'
 
+function normalizeSearchableList(value: string | string[] | undefined): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+
+  return []
+}
+
 export default function MapWrapper() {
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [route, setRoute] = useState<Venue[] | undefined>(undefined)
@@ -89,12 +106,18 @@ export default function MapWrapper() {
 
   const filteredVenues = useMemo(() => {
     return venues.filter((v) => {
+      const search = searchTerm.toLowerCase()
+
+      const vibeArray = normalizeSearchableList(v.vibe)
+      const tagsArray = normalizeSearchableList(v.tags)
+      const typeArray = normalizeSearchableList(v.type)
+
       const matchesSearch =
         !searchTerm ||
-        v.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.vibe?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.tags?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(v.type ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+        v.name?.toLowerCase().includes(search) ||
+        vibeArray.some((item) => item.toLowerCase().includes(search)) ||
+        tagsArray.some((item) => item.toLowerCase().includes(search)) ||
+        typeArray.some((item) => item.toLowerCase().includes(search))
 
       const priceRank: Record<string, number> = { '$': 1, '$$': 2, '$$$': 3, '$$$$': 4 }
       const venuePriceRank = v.price && priceRank[v.price] ? priceRank[v.price] : Infinity

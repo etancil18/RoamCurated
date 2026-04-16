@@ -15,11 +15,11 @@ export type Venue = {
 
   // Metadata
   slug?: string;
-  vibe?: string;
+  vibe?: string | string[];
   type?: string | string[];
   cover?: string;
   instagram_handle?: string;
-  tags?: string;
+  tags?: string | string[];
   tier?: string;
   city?: string;
   neighborhood?: string;
@@ -29,7 +29,7 @@ export type Venue = {
   hours?: string[];
   hoursNumeric?: HoursNumeric;
   dayParts?: Record<string, string>;
-  timeCategory?: string;
+  timeCategory?: string | string[];
   energyRamp?: number;
 
   // UX filters

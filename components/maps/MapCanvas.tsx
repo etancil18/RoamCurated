@@ -35,6 +35,23 @@ const USA_CENTER: [number, number] = [37.8, -96.9]
 const USA_ZOOM = 4
 const DEFAULT_FOCUS_ZOOM = 16
 
+function normalizeSearchableList(value: string | string[] | undefined): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((item: string) => item.trim())
+      .filter(Boolean)
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item: string) => item.trim())
+      .filter(Boolean)
+  }
+
+  return []
+}
+
 function MapRefSetter({
   mapRef,
 }: {
@@ -234,25 +251,19 @@ export default function MapCanvas({
 
     return allVenues.filter((venue) => {
       const nameMatch = venue.name?.toLowerCase().includes(term)
-      const vibeMatch = venue.vibe?.toLowerCase().includes(term)
 
-      const typeArray = Array.isArray(venue.type)
-        ? venue.type
-        : typeof venue.type === 'string'
-          ? venue.type.split(',').map((t) => t.trim())
-          : []
+      const vibeArray = normalizeSearchableList(venue.vibe)
+      const vibeMatch = vibeArray.some((vibe: string) =>
+        vibe.toLowerCase().includes(term)
+      )
 
-      const typeMatch = typeArray.some((t) =>
+      const typeArray = normalizeSearchableList(venue.type)
+      const typeMatch = typeArray.some((t: string) =>
         t.toLowerCase().includes(term)
       )
 
-      const tagsArray = Array.isArray(venue.tags)
-        ? venue.tags
-        : typeof venue.tags === 'string'
-          ? venue.tags.split(',').map((t) => t.trim())
-          : []
-
-      const tagsMatch = tagsArray.some((tag) =>
+      const tagsArray = normalizeSearchableList(venue.tags)
+      const tagsMatch = tagsArray.some((tag: string) =>
         tag.toLowerCase().includes(term)
       )
 
