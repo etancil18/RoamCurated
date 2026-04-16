@@ -1,9 +1,10 @@
 // app/api/events/[eventId]/plan-outing/route.ts
 
 import { NextResponse } from "next/server"
-import { supabaseServerApi } from "@/lib/supabase/server-api"
 import { generateEventOutingPlan } from "@/lib/outings/generateEventOutingPlan"
+import { buildPlanningContext } from "@/lib/outings/planningContext"
 import { persistGeneratedOutingPlan } from "@/lib/outings/persistGeneratedOutingPlan"
+import { supabaseServerApi } from "@/lib/supabase/server-api"
 import type {
   Budget,
   EventRecord,
@@ -84,6 +85,23 @@ export async function POST(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
+    console.log(
+      "OUTING_EVENT_TIME_DEBUG",
+      JSON.stringify(
+        {
+          eventId: event.id,
+          rawStartsAt: event.starts_at,
+          parsedStartsAt: event.starts_at
+            ? new Date(event.starts_at).toISOString()
+            : null,
+          title: event.title,
+          tags: event.tags,
+        },
+        null,
+        2
+      )
+    )
+
     const anchorVenue = normalizeVenueRelation(event.venue)
     const city = anchorVenue?.city?.trim()
 
@@ -105,9 +123,7 @@ export async function POST(
 
     const { data: venueCandidatesRaw, error: venuesError } = await supabase
       .from("venues")
-      .select(
-        "id, name, city, lat, lon, address, tags, vibe, type, price, hours"
-      )
+      .select("id, name, city, lat, lon, address, tags, vibe, type, price, hours")
       .eq("city", city)
       .neq("id", anchorVenue?.id ?? "")
       .limit(150)
@@ -120,6 +136,40 @@ export async function POST(
     }
 
     const venueCandidates = (venueCandidatesRaw ?? []) as VenueRecordWithHours[]
+
+    const debugPlanningContext = buildPlanningContext({
+      mode,
+      event,
+      anchorVenue,
+      groupSize,
+      budget,
+      mobility,
+      vibeTags,
+    })
+
+    console.log(
+      "OUTING_CONTEXT_DEBUG",
+      JSON.stringify(
+        {
+          eventId: event.id,
+          mode: debugPlanningContext.mode,
+          startsAt: debugPlanningContext.startsAt?.toISOString?.(),
+          estimatedEndAt: debugPlanningContext.estimatedEndAt?.toISOString?.(),
+          eventArchetype: debugPlanningContext.eventArchetype,
+          desiredRoles: debugPlanningContext.desiredRoles,
+          slots: debugPlanningContext.slots?.map((slot) => ({
+            index: slot.index,
+            role: slot.role,
+            phase: slot.phase,
+            arrival: slot.targetArrivalAt?.toISOString?.(),
+            departure: slot.targetDepartureAt?.toISOString?.(),
+            flexibleRole: slot.flexibleRole,
+          })),
+        },
+        null,
+        2
+      )
+    )
 
     // ---------- Generate Plan ----------
 
@@ -225,7 +275,9 @@ export async function POST(
     )
 
     const responseStops = generatedPlan.stops.map((stop) => ({
-      id: insertedStopIdsByOrder.get(stop.stopOrder) ?? `${plannedOuting.id}:${stop.stopOrder}`,
+      id:
+        insertedStopIdsByOrder.get(stop.stopOrder) ??
+        `${plannedOuting.id}:${stop.stopOrder}`,
       venueId: stop.venueId,
       stopOrder: stop.stopOrder,
       role: stop.role,
