@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import {
@@ -139,6 +139,8 @@ export default function OutingPlannerModal({
   const router = useRouter()
 
   const [mode, setMode] = useState<PlanMode>("full")
+  const modeRef = useRef<PlanMode>("full")
+
   const [groupSize, setGroupSize] = useState<number>(2)
   const [groupSizePresetId, setGroupSizePresetId] = useState<GroupSizePresetId | null>("duo")
   const [budget, setBudget] = useState<Budget | "">("")
@@ -166,15 +168,13 @@ export default function OutingPlannerModal({
   }, [event?.starts_at])
 
   useEffect(() => {
+    modeRef.current = mode
+  }, [mode])
+
+  useEffect(() => {
     if (!open) return
     setMode(derivedDefaultMode)
   }, [open, derivedDefaultMode])
-
-  useEffect(() => {
-    if (!open || !event?.id) return
-    void generatePlan({ nextMode: derivedDefaultMode, isRegenerate: false })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, event?.id, derivedDefaultMode])
 
   useEffect(() => {
     if (!open) {
@@ -207,80 +207,96 @@ export default function OutingPlannerModal({
     })
   }
 
-  const generatePlan = async ({
-    nextMode,
-    isRegenerate,
-  }: {
-    nextMode?: PlanMode
-    isRegenerate?: boolean
-  } = {}) => {
-    if (!event?.id) return
+  const generatePlan = useCallback(
+    async ({
+      nextMode,
+      isRegenerate,
+    }: {
+      nextMode?: PlanMode
+      isRegenerate?: boolean
+    } = {}) => {
+      if (!event?.id) return
 
-    const activeMode = nextMode ?? mode
-    setError(null)
+      const activeMode = nextMode ?? modeRef.current
+      setError(null)
 
-    if (isRegenerate) {
-      setRegenerating(true)
-    } else {
-      setLoading(true)
-    }
-
-    try {
-      const res = await fetch(`/api/events/${event.id}/plan-outing`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mode: activeMode,
-          groupSize,
-          groupSizePresetId: groupSizePresetId ?? undefined,
-          budget: budget || undefined,
-          mobility,
-          vibePresetId: vibePresetId ?? undefined,
-          vibeTags,
-        }),
-      })
-
-      const data = (await res.json().catch(() => null)) as
-        | PlanOutingResponse
-        | PlanOutingErrorResponse
-        | null
-
-      if (!res.ok) {
-        console.error("plan-outing error response:", data)
-
-        const debugData = data && "debug" in data ? data.debug ?? null : null
-        const scoreData =
-          data && "scoreBreakdown" in data ? data.scoreBreakdown ?? null : null
-
-        setPlannerDebug(debugData)
-        setScoreBreakdown(scoreData)
-
-        const message =
-          (data && "error" in data && data.error) ||
-          "Failed to generate outing plan"
-
-        throw new Error(message)
+      if (isRegenerate) {
+        setRegenerating(true)
+      } else {
+        setLoading(true)
       }
 
-      const successData = data as PlanOutingResponse
+      try {
+        const res = await fetch(`/api/events/${event.id}/plan-outing`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mode: activeMode,
+            groupSize,
+            groupSizePresetId: groupSizePresetId ?? undefined,
+            budget: budget || undefined,
+            mobility,
+            vibePresetId: vibePresetId ?? undefined,
+            vibeTags,
+          }),
+        })
 
-      console.log("plan-outing success/debug payload:", successData)
+        const data = (await res.json().catch(() => null)) as
+          | PlanOutingResponse
+          | PlanOutingErrorResponse
+          | null
 
-      setPlan(successData)
-      setPlannerDebug(successData.debug ?? null)
-      setScoreBreakdown(successData.scoreBreakdown ?? null)
-      setMode(activeMode)
-    } catch (err) {
-      console.error("Error generating outing plan:", err)
-      setPlan(null)
-      setError(err instanceof Error ? err.message : "Failed to generate outing plan")
-    } finally {
-      setLoading(false)
-      setRegenerating(false)
-    }
-  }
+        if (!res.ok) {
+          console.error("plan-outing error response:", data)
+
+          const debugData = data && "debug" in data ? data.debug ?? null : null
+          const scoreData =
+            data && "scoreBreakdown" in data ? data.scoreBreakdown ?? null : null
+
+          setPlannerDebug(debugData)
+          setScoreBreakdown(scoreData)
+
+          const message =
+            (data && "error" in data && data.error) ||
+            "Failed to generate outing plan"
+
+          throw new Error(message)
+        }
+
+        const successData = data as PlanOutingResponse
+
+        console.log("plan-outing success/debug payload:", successData)
+
+        setPlan(successData)
+        setPlannerDebug(successData.debug ?? null)
+        setScoreBreakdown(successData.scoreBreakdown ?? null)
+        setMode(activeMode)
+      } catch (err) {
+        console.error("Error generating outing plan:", err)
+        setPlan(null)
+        setError(err instanceof Error ? err.message : "Failed to generate outing plan")
+      } finally {
+        setLoading(false)
+        setRegenerating(false)
+      }
+    },
+    [
+      budget,
+      event?.id,
+      groupSize,
+      groupSizePresetId,
+      mobility,
+      vibePresetId,
+      vibeTags,
+    ]
+  )
+
+  useEffect(() => {
+    if (!open || !event?.id) return
+    void generatePlan({ nextMode: derivedDefaultMode, isRegenerate: false })
+  }, [open, event?.id, derivedDefaultMode, generatePlan])
 
   const handleModeChange = async (nextMode: PlanMode) => {
     setMode(nextMode)
