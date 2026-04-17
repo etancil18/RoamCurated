@@ -1,5 +1,6 @@
 // lib/outings/sequenceScoring.ts
 
+import { CITY_CONFIGS } from "@/config/cities"
 import type {
   Budget,
   GeneratedOutingStop,
@@ -37,6 +38,8 @@ export type CandidateVenue = VenueRecord & {
   distanceMeters: number | null
   score: number
 }
+
+const DEFAULT_TIME_ZONE = "America/New_York"
 
 export function rankVenueCandidates(
   venues: VenueRecord[],
@@ -82,6 +85,7 @@ export function generatePlanStops(
 ): GeneratedOutingStop[] {
   const slots = getPlanningSlots(context)
   const selected = selectCandidates(rankedCandidates, context, slots)
+  const timeZone = resolvePlannerTimeZone(context)
 
   return selected.map((venue, index) => {
     const slot = slots[index] ?? fallbackSlotForIndex(index, context)
@@ -95,7 +99,7 @@ export function generatePlanStops(
     const venueTypes = normalizeVenueTypes((venue as VenueWithHours).type)
     const venueType = normalizeDisplayVenueType((venue as VenueWithHours).type)
     const displayType =
-      pickBestDisplayTypeForRole(slot, role, venueTypes) ?? venueType ?? role
+      pickBestDisplayTypeForRole(slot, role, venueTypes, timeZone) ?? venueType ?? role
 
     return {
       venueId: venue.id,
@@ -464,6 +468,7 @@ function selectCandidates(
 ): CandidateVenue[] {
   const selected: CandidateVenue[] = []
   const usedIds = new Set<string>()
+  const timeZone = resolvePlannerTimeZone(context)
 
   for (let index = 0; index < slots.length; index += 1) {
     const slot = slots[index]
@@ -471,8 +476,8 @@ function selectCandidates(
     const matches = rankedCandidates
       .filter((candidate) => {
         if (usedIds.has(candidate.id)) return false
-        if (!candidateSupportsSlot(candidate, slot, false)) return false
-        if (!isCandidateEligibleForSlot(candidate, selected, slot, context)) {
+        if (!candidateSupportsSlot(candidate, slot, context, false)) return false
+        if (!isCandidateEligibleForSlot(candidate, selected, slot, context, false, timeZone)) {
           return false
         }
         if (
@@ -482,6 +487,7 @@ function selectCandidates(
             slot.targetArrivalAt,
             slot.targetDepartureAt,
             slot.phase,
+            timeZone,
             false
           )
         ) {
@@ -509,8 +515,8 @@ function selectCandidates(
     const fallbackMatches = rankedCandidates
       .filter((candidate) => {
         if (usedIds.has(candidate.id)) return false
-        if (!candidateSupportsSlot(candidate, slot, true)) return false
-        if (!isCandidateEligibleForSlot(candidate, selected, slot, context, true)) {
+        if (!candidateSupportsSlot(candidate, slot, context, true)) return false
+        if (!isCandidateEligibleForSlot(candidate, selected, slot, context, true, timeZone)) {
           return false
         }
         if (
@@ -520,6 +526,7 @@ function selectCandidates(
             slot.targetArrivalAt,
             slot.targetDepartureAt,
             slot.phase,
+            timeZone,
             true
           )
         ) {
@@ -554,20 +561,22 @@ function selectCandidates(
 function candidateSupportsSlot(
   candidate: CandidateVenue,
   slot: PlanningSlot,
+  context: PlanningContext,
   relaxed = false
 ): boolean {
-  const acceptableRoles = getAcceptableRolesForSlot(slot, candidate, relaxed)
+  const acceptableRoles = getAcceptableRolesForSlot(slot, candidate, context, relaxed)
   return acceptableRoles.some((role) => candidate.inferredRoles.includes(role))
 }
 
 function getAcceptableRolesForSlot(
   slot: PlanningSlot,
   candidate: CandidateVenue,
+  context: PlanningContext,
   relaxed = false
 ): StopRole[] {
   const roles: StopRole[] = [slot.role]
   const types = normalizeVenueTypes((candidate as VenueWithHours).type)
-  const hour = slot.targetArrivalAt.getHours() + slot.targetArrivalAt.getMinutes() / 60
+  const hour = getHourFractionInTimeZone(slot.targetArrivalAt, resolvePlannerTimeZone(context))
 
   if (slot.flexibleRole) {
     roles.push(slot.flexibleRole)
@@ -606,7 +615,8 @@ function isCandidateEligibleForSlot(
   selectedSoFar: CandidateVenue[],
   slot: PlanningSlot,
   context: PlanningContext,
-  relaxed = false
+  relaxed = false,
+  timeZone = resolvePlannerTimeZone(context)
 ): boolean {
   const anchorDistance = candidate.distanceMeters
   const previous = selectedSoFar[selectedSoFar.length - 1] ?? null
@@ -688,7 +698,7 @@ function isCandidateEligibleForSlot(
   }
 
   const types = normalizeVenueTypes((candidate as VenueWithHours).type)
-  const referenceHour = slot.targetArrivalAt.getHours() + slot.targetArrivalAt.getMinutes() / 60
+  const referenceHour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
   const effectiveRole = pickRoleForSlot(slot, candidate.inferredRoles)
 
   if (effectiveRole === "food" && hasAnyType(types, ["dinner"]) && referenceHour < 12) return false
@@ -920,8 +930,10 @@ function computeModeSpecificVenueBias(
   context: PlanningContext
 ): number {
   const types = normalizeVenueTypes((candidate as VenueWithHours).type)
-  const referenceHour =
-    slot.targetArrivalAt.getHours() + slot.targetArrivalAt.getMinutes() / 60
+  const referenceHour = getHourFractionInTimeZone(
+    slot.targetArrivalAt,
+    resolvePlannerTimeZone(context)
+  )
 
   if (slot.phase === "before") {
     if (referenceHour < 11) {
@@ -1083,14 +1095,15 @@ function isVenueTemporallyEligible(
   arrival: Date,
   departure: Date,
   phase: "before" | "after",
+  timeZone: string,
   relaxed = false
 ): boolean {
-  if (!isRoleTemporallyCompatible(venue, role, arrival, phase, relaxed)) return false
+  if (!isRoleTemporallyCompatible(venue, role, arrival, phase, timeZone, relaxed)) return false
 
   const minimumOpenUntil =
     phase === "after" ? addMinutes(arrival, relaxed ? 60 : 90) : departure
 
-  return isVenueOpenForWindow(venue as VenueWithHours, arrival, minimumOpenUntil, relaxed)
+  return isVenueOpenForWindow(venue as VenueWithHours, arrival, minimumOpenUntil, timeZone, relaxed)
 }
 
 function isRoleTemporallyCompatible(
@@ -1098,15 +1111,16 @@ function isRoleTemporallyCompatible(
   role: StopRole,
   arrival: Date,
   phase: "before" | "after",
+  timeZone: string,
   relaxed = false
 ): boolean {
-  const hour = arrival.getHours() + arrival.getMinutes() / 60
+  const hour = getHourFractionInTimeZone(arrival, timeZone)
   const types = normalizeVenueTypes((venue as VenueWithHours).type)
 
   if (hasAnyType(types, ["breakfast"])) return hour >= 6 && hour <= (relaxed ? 12.5 : 11.5)
   if (hasAnyType(types, ["lunch"])) return hour >= 11 && hour <= (relaxed ? 16.5 : 15.5)
   if (hasAnyType(types, ["dinner"])) return hour >= (relaxed ? 15.5 : 16.5)
-  if (hasAnyType(types, ["brunch"])) return hour >= 9 && hour <= (relaxed ? 16 : 15)
+  if (hasAnyType(types, ["brunch"])) return hour >= 9 && hour <= (relaxed ? 14 : 13.5)
 
   if (hasAnyType(types, ["coffee", "cafe", "café", "tea"])) {
     if (!relaxed && phase !== "before" && hour >= 18) return false
@@ -1145,20 +1159,21 @@ function isVenueOpenForWindow(
   venue: VenueWithHours,
   start: Date,
   end: Date,
+  timeZone: string,
   relaxed = false
 ): boolean {
   const hours = normalizeVenueHours(venue.hours)
   if (!hours) return true
 
-  const entry = hours[getDayKey(start)]
+  const entry = hours[getDayKey(start, timeZone)]
   if (!entry?.open || !entry?.close) return false
 
   const openMinutes = parseTimeToMinutes(entry.open)
   let closeMinutes = parseTimeToMinutes(entry.close)
   if (openMinutes == null || closeMinutes == null) return false
 
-  const startMinutes = start.getHours() * 60 + start.getMinutes()
-  let endMinutes = end.getHours() * 60 + end.getMinutes()
+  const startMinutes = getLocalMinutesInDay(start, timeZone)
+  let endMinutes = getLocalMinutesInDay(end, timeZone)
 
   const crossesMidnight =
     closeMinutes <= openMinutes || entry.close.toLowerCase().includes("12:00 am")
@@ -1200,8 +1215,11 @@ function parseTimeToMinutes(value: string): number | null {
   return hours * 60 + minutes
 }
 
-function getDayKey(date: Date): string {
-  return date.toLocaleDateString("en-US", { weekday: "short" })
+function getDayKey(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+  }).format(date)
 }
 
 function getDesiredRolesForRanking(context: PlanningContext): StopRole[] {
@@ -1376,10 +1394,10 @@ function normalizeDisplayVenueType(value: string | string[] | null | undefined):
 function pickBestDisplayTypeForRole(
   slot: PlanningSlot,
   role: StopRole,
-  venueTypes: string[]
+  venueTypes: string[],
+  timeZone: string
 ): string | null {
-  const arrivalHour =
-    slot.targetArrivalAt.getHours() + slot.targetArrivalAt.getMinutes() / 60
+  const arrivalHour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
 
   const orderedCandidates =
     role === "coffee"
@@ -1439,6 +1457,40 @@ function isCoffeeLikeVenue(venueTypes: string[]): boolean {
 
 function isMealLikeVenue(venueTypes: string[]): boolean {
   return hasAnyType(venueTypes, ["breakfast", "brunch", "lunch", "dinner"])
+}
+
+function resolvePlannerTimeZone(context: PlanningContext): string {
+  const cityKey = context.anchorVenue?.city?.trim().toLowerCase()
+  if (!cityKey) return DEFAULT_TIME_ZONE
+  return CITY_CONFIGS[cityKey]?.timezone ?? DEFAULT_TIME_ZONE
+}
+
+function getHourFractionInTimeZone(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date)
+
+  const hourPart = parts.find((part) => part.type === "hour")?.value ?? "0"
+  const minutePart = parts.find((part) => part.type === "minute")?.value ?? "0"
+
+  return Number(hourPart) + Number(minutePart) / 60
+}
+
+function getLocalMinutesInDay(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date)
+
+  const hourPart = Number(parts.find((part) => part.type === "hour")?.value ?? "0")
+  const minutePart = Number(parts.find((part) => part.type === "minute")?.value ?? "0")
+
+  return hourPart * 60 + minutePart
 }
 
 function uniqueStrings(values: string[]): string[] {

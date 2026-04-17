@@ -1,6 +1,7 @@
 // app/api/events/[eventId]/plan-outing/route.ts
 
 import { NextResponse } from "next/server"
+import { CITY_CONFIGS } from "@/config/cities"
 import { generateEventOutingPlan } from "@/lib/outings/generateEventOutingPlan"
 import { buildPlanningContext } from "@/lib/outings/planningContext"
 import { persistGeneratedOutingPlan } from "@/lib/outings/persistGeneratedOutingPlan"
@@ -85,23 +86,6 @@ export async function POST(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    console.log(
-      "OUTING_EVENT_TIME_DEBUG",
-      JSON.stringify(
-        {
-          eventId: event.id,
-          rawStartsAt: event.starts_at,
-          parsedStartsAt: event.starts_at
-            ? new Date(event.starts_at).toISOString()
-            : null,
-          title: event.title,
-          tags: event.tags,
-        },
-        null,
-        2
-      )
-    )
-
     const anchorVenue = normalizeVenueRelation(event.venue)
     const city = anchorVenue?.city?.trim()
 
@@ -111,6 +95,10 @@ export async function POST(
         { status: 422 }
       )
     }
+
+    const cityKey = city.toLowerCase()
+    const timeZone = CITY_CONFIGS[cityKey]?.timezone ?? "America/New_York"
+
 
     if (anchorVenue && (anchorVenue.lat == null || anchorVenue.lon == null)) {
       return NextResponse.json(
@@ -147,30 +135,6 @@ export async function POST(
       vibeTags,
     })
 
-    console.log(
-      "OUTING_CONTEXT_DEBUG",
-      JSON.stringify(
-        {
-          eventId: event.id,
-          mode: debugPlanningContext.mode,
-          startsAt: debugPlanningContext.startsAt?.toISOString?.(),
-          estimatedEndAt: debugPlanningContext.estimatedEndAt?.toISOString?.(),
-          eventArchetype: debugPlanningContext.eventArchetype,
-          desiredRoles: debugPlanningContext.desiredRoles,
-          slots: debugPlanningContext.slots?.map((slot) => ({
-            index: slot.index,
-            role: slot.role,
-            phase: slot.phase,
-            arrival: slot.targetArrivalAt?.toISOString?.(),
-            departure: slot.targetDepartureAt?.toISOString?.(),
-            flexibleRole: slot.flexibleRole,
-          })),
-        },
-        null,
-        2
-      )
-    )
-
     // ---------- Generate Plan ----------
 
     const generatedPlan = generateEventOutingPlan({
@@ -191,6 +155,7 @@ export async function POST(
           eventId,
           mode,
           city,
+          timeZone,
           requestedGroupSize: groupSize,
           requestedBudget: budget,
           requestedMobility: mobility,
@@ -215,6 +180,8 @@ export async function POST(
             minimumRequiredStops: minimumStopsForMode(mode),
             generatedStopCount: generatedPlan.stops.length,
             candidateVenueCount: venueCandidates.length,
+            city,
+            timeZone,
             scoreBreakdown: generatedPlan.scoreBreakdown,
             debug: generatedPlan.debug ?? null,
           },
@@ -259,6 +226,7 @@ export async function POST(
       metadata: {
         mode,
         city,
+        timeZone,
         stopCount: insertedStops.length,
         confidenceScore: generatedPlan.confidenceScore,
         completionRate: generatedPlan.scoreBreakdown.completionRate ?? null,
@@ -305,6 +273,7 @@ export async function POST(
         title: event.title,
         startsAt: event.starts_at,
         endsAt: generatedPlan.estimatedEndAt,
+        timeZone,
         venue: anchorVenue
           ? {
               id: anchorVenue.id,

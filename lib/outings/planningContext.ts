@@ -20,12 +20,14 @@ export type BuildPlanningContextInput = {
   budget?: Budget | null
   mobility?: Mobility
   vibeTags?: string[]
+  timeZone?: string | null
 }
 
 const ALLOWED_BUDGETS: Budget[] = ["$", "$$", "$$$", "$$$$"]
 
 const BEFORE_EVENT_BUFFER_MINUTES = 20
 const INTERSTOP_TRAVEL_BUFFER_MINUTES = 12
+const DEFAULT_TIME_ZONE = "America/New_York"
 
 type Daypart =
   | "breakfast"
@@ -41,6 +43,7 @@ export function buildPlanningContext(
   const budget = normalizeBudget(input.budget)
   const mobility = normalizeMobility(input.mobility)
   const vibeTags = normalizeVibeTags(input.vibeTags)
+  const timeZone = normalizeTimeZone(input.timeZone)
 
   const startsAt = input.event.starts_at ? new Date(input.event.starts_at) : new Date()
   const estimatedEndAt = input.event.ends_at
@@ -55,14 +58,15 @@ export function buildPlanningContext(
 
   const eventArchetype = inferEventArchetype(eventTags)
 
-  const plannedStartAt = inferPlannedStartAt(input.mode, startsAt, estimatedEndAt)
-  const plannedEndAt = inferPlannedEndAt(input.mode, startsAt, estimatedEndAt)
+  const plannedStartAt = inferPlannedStartAt(input.mode, startsAt, estimatedEndAt, timeZone)
+  const plannedEndAt = inferPlannedEndAt(input.mode, startsAt, estimatedEndAt, timeZone)
 
   const desiredRoles = desiredRolesFor(
     input.mode,
     eventArchetype,
     startsAt,
-    estimatedEndAt
+    estimatedEndAt,
+    timeZone
   )
 
   const slots = buildPlanningSlots({
@@ -133,10 +137,12 @@ export function desiredRolesFor(
   mode: PlanMode,
   archetype: string,
   startsAt: Date,
-  estimatedEndAt: Date
+  estimatedEndAt: Date,
+  timeZone?: string | null
 ): StopRole[] {
-  const beforeDaypart = getDaypart(startsAt)
-  const afterDaypart = getDaypart(addMinutes(estimatedEndAt, 30))
+  const resolvedTimeZone = normalizeTimeZone(timeZone)
+  const beforeDaypart = getDaypart(startsAt, resolvedTimeZone)
+  const afterDaypart = getDaypart(addMinutes(estimatedEndAt, 30), resolvedTimeZone)
 
   if (mode === "before") {
     return desiredBeforeRoles(archetype, beforeDaypart)
@@ -196,9 +202,10 @@ export function addMinutes(date: Date, minutes: number): Date {
 function inferPlannedStartAt(
   mode: PlanMode,
   startsAt: Date,
-  estimatedEndAt: Date
+  estimatedEndAt: Date,
+  timeZone?: string | null
 ): Date {
-  const startHour = startsAt.getHours() + startsAt.getMinutes() / 60
+  const startHour = getHourFractionInTimeZone(startsAt, normalizeTimeZone(timeZone))
 
   if (mode === "after") {
     return addMinutes(estimatedEndAt, 20)
@@ -219,9 +226,10 @@ function inferPlannedStartAt(
 function inferPlannedEndAt(
   mode: PlanMode,
   startsAt: Date,
-  estimatedEndAt: Date
+  estimatedEndAt: Date,
+  timeZone?: string | null
 ): Date {
-  const endHour = estimatedEndAt.getHours() + estimatedEndAt.getMinutes() / 60
+  const endHour = getHourFractionInTimeZone(estimatedEndAt, normalizeTimeZone(timeZone))
 
   if (mode === "before") {
     return addMinutes(startsAt, -BEFORE_EVENT_BUFFER_MINUTES)
@@ -495,14 +503,32 @@ function flexibleRoleFor(
   return null
 }
 
-function getDaypart(date: Date): Daypart {
-  const hour = date.getHours() + date.getMinutes() / 60
+function getDaypart(date: Date, timeZone?: string | null): Daypart {
+  const hour = getHourFractionInTimeZone(date, normalizeTimeZone(timeZone))
 
   if (hour < 10.5) return "breakfast"
   if (hour < 12.5) return "brunch"
   if (hour < 16) return "lunch"
   if (hour < 22) return "dinner"
   return "late_night"
+}
+
+function getHourFractionInTimeZone(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date)
+
+  const hourPart = parts.find((part) => part.type === "hour")?.value ?? "0"
+  const minutePart = parts.find((part) => part.type === "minute")?.value ?? "0"
+
+  return Number(hourPart) + Number(minutePart) / 60
+}
+
+function normalizeTimeZone(timeZone?: string | null): string {
+  return timeZone?.trim() || DEFAULT_TIME_ZONE
 }
 
 function normalizeStringArray(
