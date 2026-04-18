@@ -11,7 +11,7 @@ export async function POST(
   context: { params: Promise<{ venueId: string }> }
 ) {
   const { venueId } = await context.params
-  const supabase = await supabaseServerApi ()
+  const supabase = await supabaseServerApi()
   const body = await req.json()
 
   // ✅ Check for authenticated user (RLS-safe)
@@ -27,6 +27,12 @@ export async function POST(
 
   console.log("✅ Authenticated user:", user.id)
 
+  const timezone = body.timezone ?? "America/New_York"
+  const normalizedTimes = normalizeEventTimes(
+    body.starts_at ?? body.startsAt ?? null,
+    body.ends_at ?? body.endsAt ?? null
+  )
+
   const validated: EventInsert = {
     venue_id: venueId,
     title: body.title?.trim() ?? null,
@@ -38,9 +44,9 @@ export async function POST(
     source: body.source ?? "portal",
     source_type: body.source_type ?? body.sourceType ?? "portal",
     raw_payload: (body.raw_payload ?? body.rawPayload ?? null) as Json | null,
-    starts_at: body.starts_at ?? body.startsAt ?? null,
-    ends_at: body.ends_at ?? body.endsAt ?? null,
-    timezone: body.timezone ?? "America/New_York",
+    starts_at: normalizedTimes.starts_at,
+    ends_at: normalizedTimes.ends_at,
+    timezone,
     is_active: body.is_active ?? true,
     created_at: null,
     updated_at: null,
@@ -103,4 +109,49 @@ export async function POST(
       { status: 500 }
     )
   }
+}
+
+function normalizeEventTimes(
+  startsAtInput: unknown,
+  endsAtInput: unknown
+): { starts_at: string | null; ends_at: string | null } {
+  const startsAt = normalizeDateInput(startsAtInput)
+  let endsAt = normalizeDateInput(endsAtInput)
+
+  if (startsAt && endsAt && endsAt.getTime() <= startsAt.getTime()) {
+    endsAt = new Date(endsAt.getTime() + 24 * 60 * 60 * 1000)
+  }
+
+  return {
+    starts_at: startsAt ? startsAt.toISOString() : null,
+    ends_at: endsAt ? endsAt.toISOString() : null,
+  }
+}
+
+function normalizeDateInput(value: unknown): Date | null {
+  if (value == null) return null
+
+  const raw = String(value).trim()
+  if (!raw) return null
+
+  const localDateTimeMatch = raw.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/
+  )
+
+  if (localDateTimeMatch) {
+    const [, year, month, day, hour, minute, second] = localDateTimeMatch
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second ?? "0")
+    )
+
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+
+  const parsed = new Date(raw)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
 }

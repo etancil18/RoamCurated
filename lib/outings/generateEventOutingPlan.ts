@@ -3,6 +3,7 @@
 import { buildPlanningContext } from "./planningContext"
 import {
   buildPlanSummary,
+  buildSelectionDebug,
   computeConfidenceScore,
   generatePlanStops,
   rankVenueCandidates,
@@ -23,9 +24,11 @@ export function generateEventOutingPlan(
     budget: input.budget,
     mobility: input.mobility,
     vibeTags: input.vibeTags,
+    timeZone: input.timeZone,
   })
 
   const rankedCandidates = rankVenueCandidates(input.candidateVenues, context)
+  const debug = buildSelectionDebug(rankedCandidates, context)
   const stops = generatePlanStops(rankedCandidates, context)
   const confidenceScore = computeConfidenceScore(stops, context)
 
@@ -54,6 +57,7 @@ export function generateEventOutingPlan(
       planningContext: context,
     }),
     stops,
+    debug,
     scoreBreakdown: {
       mode: input.mode,
       city: input.anchorVenue?.city ?? null,

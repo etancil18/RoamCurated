@@ -60,6 +60,10 @@ export type PlanningSlot = {
 
 export type PlanningContext = {
   mode: PlanMode
+
+  // 🔥 NEW: canonical timezone for all temporal logic
+  timeZone: string
+
   startsAt: Date
   estimatedEndAt: Date
   plannedStartAt: Date
@@ -165,11 +169,9 @@ export type GeneratedOutingStop = {
     score: number
     inferredRoles: StopRole[]
 
-    // Actual venue/display labeling
     venueType?: string | null
     displayType?: string | null
 
-    // Forward-compatible debugging / inspection fields
     normalizedType?: string
     anchorDistanceMeters?: number | null
     selectedPass?: SelectionPass | null
@@ -200,6 +202,9 @@ export type GenerateEventOutingPlanInput = {
   budget?: Budget | null
   mobility?: Mobility
   vibeTags?: string[]
+
+  // 🔥 ADD THIS (surgical)
+  timeZone?: string
 }
 
 // ---------- Generator Output ----------

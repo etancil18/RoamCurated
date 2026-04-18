@@ -39413,42 +39413,6 @@ const atlantaData = [
     "duration": 1
   },
   {
-    "slug": "omni-coffee-eggs",
-    "name": "Omni Coffee & Eggs",
-    "id": "d2016a75-029d-406e-b2b4-0fc2243974ca",
-    "vibe": "minimal, bright, modern, clean, focused, calm",
-    "type": ["café"],
-    "lat": "33.747624",
-    "lon": "-84.402037",
-    "link": "https://www.instagram.com/omnicoffeeandeggs/?hl=en",
-    "cover": "img/venues/Omni Coffee & Eggs.png",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: 10:00 AM–3:00 PM",
-      "Monday: Closed",
-      "Tuesday: Closed",
-      "Wednesday: Closed",
-      "Thursday: 7:30 AM–4:00 PM",
-      "Friday: 7:30 AM–4:00 PM",
-      "Saturday: 7:30 AM–4:00 PM"
-    ],
-    "hoursNumeric": {
-      "sun": { "open": 10, "close": 15 },
-      "mon": null,
-      "tue": null,
-      "wed": null,
-      "thu": { "open": 7.5, "close": 16 },
-      "fri": { "open": 7.5, "close": 16 },
-      "sat": { "open": 7.5, "close": 16 }
-    },
-    "dayParts": { "sun": "MD", "mon": "-", "tue": "-", "wed": "-", "thu": "MD", "fri": "MD", "sat": "MD" },
-    "timeCategory": "midday",
-    "energyRamp": 3,
-    "tags": "coffee, espresso, breakfast, eggs, pastries, daytime, casual, quickservice, counter, neighborhood",
-    "price": "$",
-    "duration": 1
-  },
-  {
     "slug": "no-mas-cantina",
     "name": "No Mas! Cantina",
     "id": "c46769d1-78eb-4808-897d-b6d380ebbdd1",

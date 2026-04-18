@@ -108,11 +108,7 @@ export default function EventForm({
         <input
           type="datetime-local"
           name="starts_at"
-          defaultValue={
-            event?.starts_at
-              ? new Date(event.starts_at).toISOString().slice(0, 16)
-              : ''
-          }
+          defaultValue={event?.starts_at ? formatDateTimeLocal(event.starts_at) : ''}
           required
           className="w-full border p-2 rounded"
         />
@@ -124,11 +120,7 @@ export default function EventForm({
         <input
           type="datetime-local"
           name="ends_at"
-          defaultValue={
-            event?.ends_at
-              ? new Date(event.ends_at).toISOString().slice(0, 16)
-              : ''
-          }
+          defaultValue={event?.ends_at ? formatDateTimeLocal(event.ends_at) : ''}
           className="w-full border p-2 rounded"
         />
       </div>
@@ -168,7 +160,7 @@ export default function EventForm({
           placeholder="https://example.com/tickets"
         />
       </div>
-      
+
       {/* Submit */}
       <button
         type="submit"
@@ -185,4 +177,20 @@ export default function EventForm({
       </button>
     </form>
   )
+}
+
+function formatDateTimeLocal(value: string | Date): string {
+  const date = value instanceof Date ? value : new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`
 }

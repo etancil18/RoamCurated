@@ -5,6 +5,10 @@ import { CITY_CONFIGS } from "@/config/cities"
 import { generateEventOutingPlan } from "@/lib/outings/generateEventOutingPlan"
 import { buildPlanningContext } from "@/lib/outings/planningContext"
 import { persistGeneratedOutingPlan } from "@/lib/outings/persistGeneratedOutingPlan"
+import {
+  qualifiesForLateNightReducedFullFallback,
+  qualifiesForLateNightSingleStopFallback,
+} from "@/lib/outings/sequenceScoring"
 import { supabaseServerApi } from "@/lib/supabase/server-api"
 import type {
   Budget,
@@ -20,7 +24,7 @@ const ALLOWED_BUDGETS: Budget[] = ["$", "$$", "$$$", "$$$$"]
 const ALLOWED_MOBILITY: Mobility[] = ["walk", "short_ride", "any"]
 
 type VenueRecordWithHours = VenueRecord & {
-  hours?: Record<string, { open?: string | null; close?: string | null }> | null
+  hours?: Record<string, { open?: string | null; close?: string | null }> | string | null
 }
 
 type EventWithVenueRecord = EventRecord & {
@@ -50,8 +54,6 @@ export async function POST(
     const budget = normalizeBudget(body.budget)
     const mobility = normalizeMobility(body.mobility)
     const vibeTags = normalizeVibeTags(body.vibeTags)
-
-    // ---------- Fetch Event ----------
 
     const { data: event, error: eventError } = await supabase
       .from("events")
@@ -99,6 +101,28 @@ export async function POST(
     const cityKey = city.toLowerCase()
     const timeZone = CITY_CONFIGS[cityKey]?.timezone ?? "America/New_York"
 
+    console.log(
+      "OUTING_EVENT_TIME_DEBUG",
+      JSON.stringify(
+        {
+          eventId: event.id,
+          rawStartsAt: event.starts_at,
+          parsedStartsAt: event.starts_at
+            ? new Date(event.starts_at).toISOString()
+            : null,
+          rawEndsAt: event.ends_at,
+          parsedEndsAt: event.ends_at
+            ? new Date(event.ends_at).toISOString()
+            : null,
+          title: event.title,
+          tags: event.tags,
+          city,
+          timeZone,
+        },
+        null,
+        2
+      )
+    )
 
     if (anchorVenue && (anchorVenue.lat == null || anchorVenue.lon == null)) {
       return NextResponse.json(
@@ -106,8 +130,6 @@ export async function POST(
         { status: 422 }
       )
     }
-
-    // ---------- Fetch Candidate Venues ----------
 
     const { data: venueCandidatesRaw, error: venuesError } = await supabase
       .from("venues")
@@ -133,9 +155,36 @@ export async function POST(
       budget,
       mobility,
       vibeTags,
+      timeZone,
     })
 
-    // ---------- Generate Plan ----------
+    console.log(
+      "OUTING_CONTEXT_DEBUG",
+      JSON.stringify(
+        {
+          eventId: event.id,
+          mode: debugPlanningContext.mode,
+          startsAt: debugPlanningContext.startsAt?.toISOString?.(),
+          estimatedEndAt: debugPlanningContext.estimatedEndAt?.toISOString?.(),
+          plannedStartAt: debugPlanningContext.plannedStartAt?.toISOString?.(),
+          plannedEndAt: debugPlanningContext.plannedEndAt?.toISOString?.(),
+          eventArchetype: debugPlanningContext.eventArchetype,
+          desiredRoles: debugPlanningContext.desiredRoles,
+          city,
+          timeZone,
+          slots: debugPlanningContext.slots?.map((slot) => ({
+            index: slot.index,
+            role: slot.role,
+            phase: slot.phase,
+            arrival: slot.targetArrivalAt?.toISOString?.(),
+            departure: slot.targetDepartureAt?.toISOString?.(),
+            flexibleRole: slot.flexibleRole,
+          })),
+        },
+        null,
+        2
+      )
+    )
 
     const generatedPlan = generateEventOutingPlan({
       mode,
@@ -146,7 +195,25 @@ export async function POST(
       budget,
       mobility,
       vibeTags,
+      timeZone,
     })
+
+    const lateNightSingleStopFallbackApplied =
+      qualifiesForLateNightSingleStopFallback(
+        generatedPlan.stops,
+        debugPlanningContext
+      )
+
+    const lateNightReducedFullFallbackApplied =
+      qualifiesForLateNightReducedFullFallback(
+        generatedPlan.stops,
+        debugPlanningContext
+      )
+
+    const minimumRequiredStops =
+      lateNightSingleStopFallbackApplied || lateNightReducedFullFallbackApplied
+        ? generatedPlan.stops.length
+        : minimumStopsForMode(mode)
 
     console.log(
       "generated outing plan",
@@ -162,6 +229,9 @@ export async function POST(
           requestedVibeTags: vibeTags,
           candidateVenueCount: venueCandidates.length,
           generatedStopCount: generatedPlan.stops.length,
+          minimumRequiredStops,
+          lateNightSingleStopFallbackApplied,
+          lateNightReducedFullFallbackApplied,
           scoreBreakdown: generatedPlan.scoreBreakdown,
           debug: generatedPlan.debug ?? null,
         },
@@ -170,14 +240,16 @@ export async function POST(
       )
     )
 
-    if (generatedPlan.stops.length < minimumStopsForMode(mode)) {
+    if (generatedPlan.stops.length < minimumRequiredStops) {
       console.warn(
         "insufficient outing coverage",
         JSON.stringify(
           {
             eventId,
             mode,
-            minimumRequiredStops: minimumStopsForMode(mode),
+            minimumRequiredStops,
+            lateNightSingleStopFallbackApplied,
+            lateNightReducedFullFallbackApplied,
             generatedStopCount: generatedPlan.stops.length,
             candidateVenueCount: venueCandidates.length,
             city,
@@ -201,8 +273,6 @@ export async function POST(
       )
     }
 
-    // ---------- Persist Plan ----------
-
     const { plannedOuting, insertedStops } = await persistGeneratedOutingPlan({
       supabase,
       userId: user.id,
@@ -216,8 +286,6 @@ export async function POST(
       vibeTags,
       generatedPlan,
     })
-
-    // ---------- Log Event ----------
 
     await supabase.from("planned_outing_events").insert({
       planned_outing_id: plannedOuting.id,
@@ -233,10 +301,11 @@ export async function POST(
         candidatePoolSize: generatedPlan.scoreBreakdown.candidatePoolSize,
         preparedCandidateCount:
           generatedPlan.scoreBreakdown.preparedCandidateCount ?? null,
+        minimumRequiredStops,
+        lateNightSingleStopFallbackApplied,
+        lateNightReducedFullFallbackApplied,
       },
     })
-
-    // ---------- Response ----------
 
     const insertedStopIdsByOrder = new Map<number, string>(
       insertedStops.map((stop) => [stop.stop_order, stop.id])
@@ -295,8 +364,6 @@ export async function POST(
     )
   }
 }
-
-// ---------- Helpers ----------
 
 async function safeJson(req: Request): Promise<unknown> {
   try {

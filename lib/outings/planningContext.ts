@@ -74,10 +74,12 @@ export function buildPlanningContext(
     desiredRoles,
     startsAt,
     estimatedEndAt,
+    timeZone,
   })
 
   return {
     mode: input.mode,
+    timeZone,
     startsAt,
     estimatedEndAt,
     plannedStartAt,
@@ -143,16 +145,22 @@ export function desiredRolesFor(
   const resolvedTimeZone = normalizeTimeZone(timeZone)
   const beforeDaypart = getDaypart(startsAt, resolvedTimeZone)
   const afterDaypart = getDaypart(addMinutes(estimatedEndAt, 30), resolvedTimeZone)
+  const lateNightAfterEvent = endsAfterMidnight(startsAt, estimatedEndAt, resolvedTimeZone)
 
   if (mode === "before") {
     return desiredBeforeRoles(archetype, beforeDaypart)
   }
 
   if (mode === "after") {
-    return desiredAfterRoles(archetype, afterDaypart)
+    return desiredAfterRoles(archetype, afterDaypart, lateNightAfterEvent)
   }
 
-  return desiredFullRoles(archetype, beforeDaypart, afterDaypart)
+  return desiredFullRoles(
+    archetype,
+    beforeDaypart,
+    afterDaypart,
+    lateNightAfterEvent
+  )
 }
 
 export function normalizeBudget(budget?: Budget | null): Budget | null {
@@ -287,8 +295,13 @@ function desiredBeforeRoles(
 
 function desiredAfterRoles(
   archetype: string,
-  daypart: Daypart
+  daypart: Daypart,
+  lateNightAfterEvent = false
 ): StopRole[] {
+  if (lateNightAfterEvent) {
+    return ["drink"]
+  }
+
   if (daypart === "breakfast") {
     return ["coffee", "food"]
   }
@@ -318,13 +331,32 @@ function desiredAfterRoles(
 function desiredFullRoles(
   archetype: string,
   beforeDaypart: Daypart,
-  afterDaypart: Daypart
+  afterDaypart: Daypart,
+  lateNightAfterEvent = false
 ): StopRole[] {
-  const first = desiredBeforeRoles(archetype, beforeDaypart)[0] ?? "food"
+  const beforeRoles = desiredBeforeRoles(archetype, beforeDaypart)
+  const firstBefore = beforeRoles[0] ?? "food"
+  const secondBefore =
+    beforeRoles[1] ?? (firstBefore === "food" ? "activity" : "food")
+
+  // Late full-night fallback:
+  // 2 before + 1 after
+  if (lateNightAfterEvent || afterDaypart === "late_night") {
+    if (archetype === "art") {
+      return [beforeDaypart === "breakfast" ? "coffee" : "activity", "food", "drink"]
+    }
+
+    if (archetype === "festival") {
+      return [beforeDaypart === "breakfast" ? "coffee" : "food", "activity", "drink"]
+    }
+
+    return [firstBefore, secondBefore, "drink"]
+  }
+
   const second = desiredAfterRoles(archetype, afterDaypart)[0] ?? "drink"
   const third = desiredAfterRoles(archetype, afterDaypart)[1] ?? "dessert"
 
-  const roles: StopRole[] = [first, second, third]
+  const roles: StopRole[] = [firstBefore, second, third]
 
   if (roles[0] === roles[1]) {
     roles[1] = roles[1] === "food" ? "drink" : "food"
@@ -337,13 +369,13 @@ function desiredFullRoles(
   if (archetype === "art" && beforeDaypart !== "late_night") {
     roles[0] = beforeDaypart === "breakfast" ? "coffee" : "activity"
     roles[1] = "food"
-    roles[2] = afterDaypart === "late_night" ? "drink" : "dessert"
+    roles[2] = "dessert"
   }
 
   if (archetype === "festival") {
     roles[0] = beforeDaypart === "breakfast" ? "coffee" : "food"
     roles[1] = "activity"
-    roles[2] = afterDaypart === "late_night" ? "drink" : "dessert"
+    roles[2] = "dessert"
   }
 
   return roles
@@ -354,11 +386,13 @@ function buildPlanningSlots({
   desiredRoles,
   startsAt,
   estimatedEndAt,
+  timeZone,
 }: {
   mode: PlanMode
   desiredRoles: StopRole[]
   startsAt: Date
   estimatedEndAt: Date
+  timeZone?: string | null
 }): PlanningSlot[] {
   if (desiredRoles.length === 0) return []
 
@@ -370,7 +404,18 @@ function buildPlanningSlots({
     return buildAfterSlots(desiredRoles, estimatedEndAt)
   }
 
-  return buildFullSlots(desiredRoles, startsAt, estimatedEndAt)
+  const lateNightFullFallback = endsAfterMidnight(
+    startsAt,
+    estimatedEndAt,
+    normalizeTimeZone(timeZone)
+  )
+
+  return buildFullSlots(
+    desiredRoles,
+    startsAt,
+    estimatedEndAt,
+    lateNightFullFallback
+  )
 }
 
 function buildBeforeSlots(
@@ -430,8 +475,28 @@ function buildAfterSlots(
 function buildFullSlots(
   desiredRoles: StopRole[],
   startsAt: Date,
-  estimatedEndAt: Date
+  estimatedEndAt: Date,
+  lateNightFullFallback = false
 ): PlanningSlot[] {
+  if (lateNightFullFallback) {
+    const beforeRoles = desiredRoles.slice(0, 2)
+    const afterRoles = desiredRoles.slice(2)
+
+    const beforeSlots = buildBeforeSlots(beforeRoles, startsAt).map((slot, index) => ({
+      ...slot,
+      index,
+      strictProgression: index > 0,
+    }))
+
+    const afterSlots = buildAfterSlots(afterRoles, estimatedEndAt).map((slot, index) => ({
+      ...slot,
+      index: index + beforeRoles.length,
+      strictProgression: index === 0,
+    }))
+
+    return [...beforeSlots, ...afterSlots]
+  }
+
   return desiredRoles.map((role, index) => {
     const phase: SlotPhase = index === 0 ? "before" : "after"
     const dwellMinutes = dwellMinutesForRole(role, phase)
@@ -513,6 +578,20 @@ function getDaypart(date: Date, timeZone?: string | null): Daypart {
   return "late_night"
 }
 
+function endsAfterMidnight(
+  startsAt: Date,
+  estimatedEndAt: Date,
+  timeZone: string
+): boolean {
+  const startDayKey = getCalendarDayKey(startsAt, timeZone)
+  const endDayKey = getCalendarDayKey(estimatedEndAt, timeZone)
+
+  if (startDayKey !== endDayKey) return true
+
+  const endMinutes = getLocalMinutesInDay(estimatedEndAt, timeZone)
+  return endMinutes < 4 * 60
+}
+
 function getHourFractionInTimeZone(date: Date, timeZone: string): number {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,
@@ -525,6 +604,35 @@ function getHourFractionInTimeZone(date: Date, timeZone: string): number {
   const minutePart = parts.find((part) => part.type === "minute")?.value ?? "0"
 
   return Number(hourPart) + Number(minutePart) / 60
+}
+
+function getLocalMinutesInDay(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date)
+
+  const hourPart = Number(parts.find((part) => part.type === "hour")?.value ?? "0")
+  const minutePart = Number(parts.find((part) => part.type === "minute")?.value ?? "0")
+
+  return hourPart * 60 + minutePart
+}
+
+function getCalendarDayKey(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date)
+
+  const year = parts.find((part) => part.type === "year")?.value ?? "0000"
+  const month = parts.find((part) => part.type === "month")?.value ?? "00"
+  const day = parts.find((part) => part.type === "day")?.value ?? "00"
+
+  return `${year}-${month}-${day}`
 }
 
 function normalizeTimeZone(timeZone?: string | null): string {
