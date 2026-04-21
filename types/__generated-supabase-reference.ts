@@ -1477,6 +1477,45 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_bookings: {
+        Row: {
+          created_at: string | null
+          id: string
+          provider: string | null
+          url: string
+          venue_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          provider?: string | null
+          url: string
+          venue_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          provider?: string | null
+          url?: string
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_bookings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_bookings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_claim_requests: {
         Row: {
           created_at: string | null

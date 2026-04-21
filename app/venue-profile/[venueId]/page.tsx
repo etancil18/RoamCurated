@@ -8,6 +8,7 @@ import VenueHours from '@/components/venue-profile/VenueHours'
 import LiveStatusPill from '@/components/venue-profile/LiveStatusPill'
 import EventCarousel from '@/components/venue-profile/EventCarousel'
 import FollowButton from '@/components/venue-profile/FollowButton'
+import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
 
 import {
   VenueProfileData,
@@ -53,6 +54,10 @@ function toNumberOrNull(value: unknown) {
 export default async function VenueProfilePage({ params }: { params: Params }) {
   const { venueId } = await params
   const supabase = await supabaseServerApi()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const { data: venue, error: venueError } = await supabase
     .from('venues')
@@ -127,9 +132,20 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       }
     : undefined
 
+  const { data: venueBookings } = await supabase
+    .from('venue_bookings')
+    .select('provider, url')
+    .eq('venue_id', venueId)
+
+  const bookingOptions =
+    (venueBookings ?? []).filter(
+      (row): row is { provider: string; url: string } =>
+        typeof row?.provider === 'string' && typeof row?.url === 'string'
+    )
+
   const { data: events } = await supabase
     .from('events')
-    .select('id, title, starts_at, ends_at, tags')
+    .select('id, title, description, starts_at, ends_at, tags, ticket_link')
     .eq('venue_id', venueId)
     .order('starts_at', { ascending: true })
 
@@ -140,15 +156,33 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
     )
     .eq('venue_id', venueId)
 
+  const standardEventIds = (events ?? []).map((e) => e.id)
+
+  let interestedEventIds: string[] = []
+
+  if (user && standardEventIds.length > 0) {
+    const { data: interestRows } = await supabase
+      .from('event_interests')
+      .select('event_id')
+      .eq('user_id', user.id)
+      .in('event_id', standardEventIds)
+
+    interestedEventIds = (interestRows ?? [])
+      .map((row) => row.event_id)
+      .filter((value): value is string => typeof value === 'string')
+  }
+
   const upcomingEvents: VenueEvent[] = [
     ...(events ?? [])
       .filter((e) => e.title)
       .map((e) => ({
         id: e.id,
         title: e.title ?? 'Untitled Event',
+        description: e.description ?? undefined,
         starts_at: e.starts_at ?? undefined,
         ends_at: e.ends_at ?? undefined,
         tags: e.tags ?? [],
+        ticket_link: e.ticket_link ?? undefined,
       })),
     ...(recurringEvents ?? [])
       .filter((e) => e.title)
@@ -206,6 +240,10 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
 
       {liveStatus && <LiveStatusPill status={liveStatus} />}
 
+      {bookingOptions.length > 0 && (
+        <VenueBookingButtons bookingOptions={bookingOptions} />
+      )}
+      
       <SocialLinks contact={normalizedVenue.contact} />
 
       <VenueHours
@@ -214,7 +252,10 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       />
 
       {upcomingEvents.length > 0 && (
-        <EventCarousel events={upcomingEvents} />
+        <EventCarousel
+          events={upcomingEvents}
+          interestedEventIds={interestedEventIds}
+        />
       )}
 
       <FollowButton venueId={venueId} />
