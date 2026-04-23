@@ -14,6 +14,7 @@ import { supabaseServerApi } from "@/lib/supabase/server-api"
 import type {
   Budget,
   EventRecord,
+  LeaveEarlyByHours,
   Mobility,
   PlanMode,
   PlanOutingRequestBody,
@@ -24,6 +25,7 @@ import type {
 const ALLOWED_MODES: PlanMode[] = ["before", "after", "full"]
 const ALLOWED_BUDGETS: Budget[] = ["$", "$$", "$$$", "$$$$"]
 const ALLOWED_MOBILITY: Mobility[] = ["walk", "short_ride", "any"]
+const ALLOWED_LEAVE_EARLY_BY_HOURS: LeaveEarlyByHours[] = [1, 2, 3, 4]
 
 type VenueBookingRow = {
   provider: string | null
@@ -62,6 +64,7 @@ export async function POST(
     const budget = normalizeBudget(body.budget)
     const mobility = normalizeMobility(body.mobility)
     const vibeTags = normalizeVibeTags(body.vibeTags)
+    const leaveEarlyByHours = normalizeLeaveEarlyByHours(body.leaveEarlyByHours)
 
     const { data: event, error: eventError } = await supabase
       .from("events")
@@ -100,6 +103,11 @@ export async function POST(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
+    const plannedExitAt = derivePlannedExitAtFromLeaveEarlyByHours(
+      event.ends_at,
+      leaveEarlyByHours
+    )
+
     const anchorVenueRaw = normalizeVenueRelation(event.venue)
     const anchorVenue = enrichVenueWithBookingOptions(anchorVenueRaw)
     const city = anchorVenue?.city?.trim()
@@ -127,6 +135,8 @@ export async function POST(
           parsedEndsAt: event.ends_at
             ? new Date(event.ends_at).toISOString()
             : null,
+          leaveEarlyByHours,
+          plannedExitAt,
           title: event.title,
           tags: event.tags,
           city,
@@ -189,6 +199,7 @@ export async function POST(
       mobility,
       vibeTags,
       timeZone,
+      leaveEarlyByHours,
     })
 
     console.log(
@@ -199,6 +210,9 @@ export async function POST(
           mode: debugPlanningContext.mode,
           startsAt: debugPlanningContext.startsAt?.toISOString?.(),
           estimatedEndAt: debugPlanningContext.estimatedEndAt?.toISOString?.(),
+          leaveEarlyByHours: debugPlanningContext.leaveEarlyByHours ?? null,
+          plannedExitAt: debugPlanningContext.plannedExitAt?.toISOString?.() ?? null,
+          effectiveExitAt: debugPlanningContext.effectiveExitAt?.toISOString?.() ?? null,
           plannedStartAt: debugPlanningContext.plannedStartAt?.toISOString?.(),
           plannedEndAt: debugPlanningContext.plannedEndAt?.toISOString?.(),
           eventArchetype: debugPlanningContext.eventArchetype,
@@ -229,6 +243,8 @@ export async function POST(
       mobility,
       vibeTags,
       timeZone,
+      leaveEarlyByHours,
+      plannedExitAt,
     })
 
     const lateNightSingleStopFallbackApplied =
@@ -249,10 +265,18 @@ export async function POST(
         debugPlanningContext
       )
 
+    const leaveEarlyCoverageSufficient =
+      qualifiesForLeaveEarlyCoverage(
+        generatedPlan.stops,
+        mode,
+        leaveEarlyByHours
+      )
+
     const minimumRequiredStops =
       lateNightSingleStopFallbackApplied ||
       lateNightReducedFullFallbackApplied ||
-      reducedBeforeSingleStopFallbackApplied
+      reducedBeforeSingleStopFallbackApplied ||
+      leaveEarlyCoverageSufficient
         ? generatedPlan.stops.length
         : minimumStopsForMode(mode)
 
@@ -268,12 +292,19 @@ export async function POST(
           requestedBudget: budget,
           requestedMobility: mobility,
           requestedVibeTags: vibeTags,
+          requestedLeaveEarlyByHours: leaveEarlyByHours,
+          derivedPlannedExitAt: plannedExitAt,
+          effectiveExitAt:
+            generatedPlan.effectiveExitAt ??
+            debugPlanningContext.effectiveExitAt?.toISOString?.() ??
+            null,
           candidateVenueCount: venueCandidates.length,
           generatedStopCount: generatedPlan.stops.length,
           minimumRequiredStops,
           lateNightSingleStopFallbackApplied,
           lateNightReducedFullFallbackApplied,
           reducedBeforeSingleStopFallbackApplied,
+          leaveEarlyCoverageSufficient,
           scoreBreakdown: generatedPlan.scoreBreakdown,
           debug: generatedPlan.debug ?? null,
         },
@@ -293,6 +324,13 @@ export async function POST(
             lateNightSingleStopFallbackApplied,
             lateNightReducedFullFallbackApplied,
             reducedBeforeSingleStopFallbackApplied,
+            leaveEarlyCoverageSufficient,
+            leaveEarlyByHours,
+            plannedExitAt,
+            effectiveExitAt:
+              generatedPlan.effectiveExitAt ??
+              debugPlanningContext.effectiveExitAt?.toISOString?.() ??
+              null,
             generatedStopCount: generatedPlan.stops.length,
             candidateVenueCount: venueCandidates.length,
             city,
@@ -328,6 +366,8 @@ export async function POST(
       mobility,
       vibeTags,
       generatedPlan,
+      leaveEarlyByHours,
+      plannedExitAt,
     })
 
     await supabase.from("planned_outing_events").insert({
@@ -338,6 +378,12 @@ export async function POST(
         mode,
         city,
         timeZone,
+        leaveEarlyByHours,
+        plannedExitAt,
+        effectiveExitAt:
+          generatedPlan.effectiveExitAt ??
+          debugPlanningContext.effectiveExitAt?.toISOString?.() ??
+          null,
         stopCount: insertedStops.length,
         confidenceScore: generatedPlan.confidenceScore,
         completionRate: generatedPlan.scoreBreakdown.completionRate ?? null,
@@ -348,6 +394,7 @@ export async function POST(
         lateNightSingleStopFallbackApplied,
         lateNightReducedFullFallbackApplied,
         reducedBeforeSingleStopFallbackApplied,
+        leaveEarlyCoverageSufficient,
       },
     })
 
@@ -393,6 +440,12 @@ export async function POST(
         title: event.title,
         startsAt: event.starts_at,
         endsAt: generatedPlan.estimatedEndAt,
+        leaveEarlyByHours,
+        plannedExitAt,
+        effectiveExitAt:
+          generatedPlan.effectiveExitAt ??
+          debugPlanningContext.effectiveExitAt?.toISOString?.() ??
+          null,
         timeZone,
         venue: anchorVenue
           ? {
@@ -463,6 +516,50 @@ function normalizeVibeTags(vibeTags?: string[] | string | null): string[] {
   }
 
   return []
+}
+
+function normalizeLeaveEarlyByHours(
+  value?: number | null
+): LeaveEarlyByHours | null {
+  if (!Number.isFinite(value)) return null
+
+  const hours = Math.floor(Number(value)) as LeaveEarlyByHours
+  return ALLOWED_LEAVE_EARLY_BY_HOURS.includes(hours) ? hours : null
+}
+
+function derivePlannedExitAtFromLeaveEarlyByHours(
+  eventEndsAt?: string | null,
+  leaveEarlyByHours?: LeaveEarlyByHours | null
+): string | null {
+  if (!eventEndsAt || !leaveEarlyByHours) return null
+
+  const parsedEndsAt = new Date(eventEndsAt)
+  if (Number.isNaN(parsedEndsAt.getTime())) return null
+
+  return new Date(
+    parsedEndsAt.getTime() - leaveEarlyByHours * 60 * 60 * 1000
+  ).toISOString()
+}
+
+function qualifiesForLeaveEarlyCoverage(
+  stops: Array<{ phase?: "before" | "after" | null }>,
+  mode: PlanMode,
+  leaveEarlyByHours?: LeaveEarlyByHours | null
+): boolean {
+  if (!leaveEarlyByHours) return false
+
+  const afterStops = stops.filter((stop) => stop.phase === "after").length
+  const beforeStops = stops.filter((stop) => stop.phase === "before").length
+
+  if (mode === "after") {
+    return afterStops >= 1
+  }
+
+  if (mode === "full") {
+    return beforeStops >= 1 && afterStops >= 1
+  }
+
+  return false
 }
 
 function normalizeVenueRelation(

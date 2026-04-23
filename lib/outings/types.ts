@@ -17,6 +17,10 @@ export type TravelMode = "walk" | "drive" | "transit" | "rideshare"
 export type SlotPhase = "before" | "after"
 export type SelectionPass = "strict" | "balanced" | "relaxed"
 
+// ---------- Exit-Aware Planning ----------
+
+export type LeaveEarlyByHours = 1 | 2 | 3 | 4
+
 // ---------- Booking Layer ----------
 
 export type BookingProvider = "opentable" | "resy" | "tock" | "manual"
@@ -80,6 +84,11 @@ export type PlanningContext = {
   estimatedEndAt: Date
   plannedStartAt: Date
   plannedEndAt: Date
+
+  // exit-aware planning
+  leaveEarlyByHours?: LeaveEarlyByHours | null
+  plannedExitAt?: Date | null
+  effectiveExitAt?: Date
 
   eventTags: string[]
   eventArchetype: string
@@ -210,6 +219,10 @@ export type GenerateEventOutingPlanInput = {
   mobility?: Mobility
   vibeTags?: string[]
   timeZone?: string | null
+
+  // exit-aware planning
+  leaveEarlyByHours?: LeaveEarlyByHours | null
+  plannedExitAt?: string | null
 }
 
 export type GenerateEventOutingPlanResult = {
@@ -221,6 +234,12 @@ export type GenerateEventOutingPlanResult = {
   plannedStartAt: string
   plannedEndAt: string
   estimatedEndAt: string
+
+  // exit-aware planning
+  leaveEarlyByHours?: LeaveEarlyByHours | null
+  plannedExitAt?: string | null
+  effectiveExitAt?: string | null
+
   summary: string
   stops: GeneratedOutingStop[]
   debug?: SelectionDebug | null
@@ -244,6 +263,10 @@ export type PlanOutingRequestBody = {
   budget?: Budget
   mobility?: Mobility
   vibeTags?: string[] | string
+
+  // exit-aware planning
+  leaveEarlyByHours?: LeaveEarlyByHours | null
+  plannedExitAt?: string
 }
 
 export type PlannedOutingStopRecord = {
@@ -286,4 +309,8 @@ export type PersistGeneratedOutingPlanInput = {
   userId: string
   eventId: string
   plan: GenerateEventOutingPlanResult
+
+  // exit-aware planning
+  leaveEarlyByHours?: LeaveEarlyByHours | null
+  plannedExitAt?: string | null
 }

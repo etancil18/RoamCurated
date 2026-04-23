@@ -116,6 +116,7 @@ export function computeStopTiming(
 } {
   const slots = getPlanningSlots(context)
   const slot = slots[index]
+  const effectiveExitAt = getEffectiveExitAt(context)
 
   if (slot) {
     return {
@@ -144,7 +145,7 @@ export function computeStopTiming(
   }
 
   if (context.mode === "after") {
-    const arrival = addMinutes(context.estimatedEndAt, 20 + index * 80)
+    const arrival = addMinutes(effectiveExitAt, 20 + index * 80)
     const departure = addMinutes(arrival, dwellMinutes)
 
     return {
@@ -167,7 +168,7 @@ export function computeStopTiming(
     }
   }
 
-  const arrival = addMinutes(context.estimatedEndAt, 20 + (index - 1) * 80)
+  const arrival = addMinutes(effectiveExitAt, 20 + (index - 1) * 80)
   const departure = addMinutes(arrival, dwellMinutes)
 
   return {
@@ -195,9 +196,25 @@ export function buildPlanSummary({
   const modeLabel =
     mode === "before" ? "before-event" : mode === "after" ? "post-event" : "full-night"
 
+  const exitAwareText =
+    mode !== "before" && planningContext.plannedExitAt
+      ? planningContext.leaveEarlyByHours
+        ? `based on leaving ${planningContext.leaveEarlyByHours} hour${
+            planningContext.leaveEarlyByHours === 1 ? "" : "s"
+          } early around ${planningContext.plannedExitAt.toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          })}`
+        : `based on leaving around ${planningContext.plannedExitAt.toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          })}`
+      : null
+
   return [
     `A ${modeLabel} plan for ${eventTitle ?? "this event"}`,
     venueName ? `anchored around ${venueName}` : null,
+    exitAwareText,
     `with ${stops.length} contextual stop${stops.length === 1 ? "" : "s"}`,
     `optimized for ${planningContext.eventArchetype} energy`,
     stopNames ? `and low-regret sequencing: ${stopNames}.` : null,
@@ -215,11 +232,14 @@ export function computeConfidenceScore(
     qualifiesForLateNightSingleStopFallback(stops, context)
   const qualifiesReducedBeforeSingleStop =
     qualifiesForReducedBeforeSingleStopFallback(stops, context)
+  const qualifiesLeaveEarlyReducedAfterCoverage =
+    qualifiesForLeaveEarlyReducedCoverage(stops, context)
 
   if (
     stops.length >= minimumStopsForMode(context.mode) ||
     qualifiesLateNightSingleStop ||
-    qualifiesReducedBeforeSingleStop
+    qualifiesReducedBeforeSingleStop ||
+    qualifiesLeaveEarlyReducedAfterCoverage
   ) {
     score += 0.2
   } else if (context.mode === "full" && stops.length >= 2) {
@@ -332,6 +352,7 @@ function computeLegacyStopTiming(
 } {
   const dwellMinutes =
     role === "food" ? 75 : role === "drink" ? 60 : role === "activity" ? 60 : 45
+  const effectiveExitAt = getEffectiveExitAt(context)
 
   if (context.mode === "before") {
     const finalDeparture = addMinutes(context.startsAt, -35)
@@ -347,7 +368,7 @@ function computeLegacyStopTiming(
   }
 
   if (context.mode === "after") {
-    const arrival = addMinutes(context.estimatedEndAt, 20 + index * 80)
+    const arrival = addMinutes(effectiveExitAt, 20 + index * 80)
     const departure = addMinutes(arrival, dwellMinutes)
 
     return {
@@ -368,7 +389,7 @@ function computeLegacyStopTiming(
     }
   }
 
-  const arrival = addMinutes(context.estimatedEndAt, 20 + (index - 1) * 80)
+  const arrival = addMinutes(effectiveExitAt, 20 + (index - 1) * 80)
   const departure = addMinutes(arrival, dwellMinutes)
 
   return {
@@ -400,4 +421,28 @@ function defaultTravelMinutesForFirstSlot(
   if (slot.phase === "after") return 20
   if (context.mode === "after") return 20
   return null
+}
+
+function getEffectiveExitAt(context: PlanningContext): Date {
+  return context.effectiveExitAt ?? context.estimatedEndAt
+}
+
+function qualifiesForLeaveEarlyReducedCoverage(
+  stops: GeneratedOutingStop[],
+  context: PlanningContext
+): boolean {
+  if (!context.leaveEarlyByHours) return false
+
+  const beforeStops = stops.filter((stop) => stop.phase === "before").length
+  const afterStops = stops.filter((stop) => stop.phase === "after").length
+
+  if (context.mode === "after") {
+    return afterStops >= 1
+  }
+
+  if (context.mode === "full") {
+    return beforeStops >= 1 && afterStops >= 1
+  }
+
+  return false
 }

@@ -81,15 +81,16 @@ export function isLateNightNightlifeType(
 }
 
 export function endsAfterMidnight(
-  context: Pick<PlanningContext, "startsAt" | "estimatedEndAt">,
+  context: Pick<PlanningContext, "startsAt" | "estimatedEndAt" | "effectiveExitAt">,
   timeZone: string
 ): boolean {
+  const effectiveEndAt = context.effectiveExitAt ?? context.estimatedEndAt
   const startDayKey = getCalendarDayKey(context.startsAt, timeZone)
-  const endDayKey = getCalendarDayKey(context.estimatedEndAt, timeZone)
+  const endDayKey = getCalendarDayKey(effectiveEndAt, timeZone)
 
   if (startDayKey !== endDayKey) return true
 
-  const endMinutes = getLocalMinutesInDay(context.estimatedEndAt, timeZone)
+  const endMinutes = getLocalMinutesInDay(effectiveEndAt, timeZone)
   return endMinutes < 4 * 60
 }
 
@@ -136,5 +137,6 @@ function isAfterEventStop(
 
   if (!plannedArrival) return false
 
-  return plannedArrival.getTime() >= context.estimatedEndAt.getTime()
+  const effectiveExitAt = context.effectiveExitAt ?? context.estimatedEndAt
+  return plannedArrival.getTime() >= effectiveExitAt.getTime()
 }

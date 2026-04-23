@@ -5,6 +5,7 @@ import type {
   Budget,
   EventRecord,
   GenerateEventOutingPlanResult,
+  LeaveEarlyByHours,
   Mobility,
   PlanMode,
   VenueRecord,
@@ -21,6 +22,8 @@ type PersistGeneratedOutingPlanInput = {
   budget?: Budget | null
   mobility?: Mobility
   vibeTags?: string[]
+  plannedExitAt?: string | null
+  leaveEarlyByHours?: LeaveEarlyByHours | null
   generatedPlan: GenerateEventOutingPlanResult
 }
 
@@ -62,6 +65,8 @@ export async function persistGeneratedOutingPlan({
   budget,
   mobility,
   vibeTags = [],
+  plannedExitAt,
+  leaveEarlyByHours,
   generatedPlan,
 }: PersistGeneratedOutingPlanInput): Promise<PersistGeneratedOutingPlanResult> {
   if (!generatedPlan.stops.length) {
@@ -134,6 +139,8 @@ export async function persistGeneratedOutingPlan({
           budget: budget ?? null,
           mobility: mobility ?? null,
           vibeTags,
+          leaveEarlyByHours: leaveEarlyByHours ?? null,
+          plannedExitAt: plannedExitAt ?? null,
         },
         planner: {
           mode: generatedPlan.mode,
@@ -144,6 +151,10 @@ export async function persistGeneratedOutingPlan({
           preparedCandidateCount:
             generatedPlan.scoreBreakdown.preparedCandidateCount ?? null,
           completionRate: generatedPlan.scoreBreakdown.completionRate ?? null,
+          leaveEarlyByHours:
+            generatedPlan.leaveEarlyByHours ?? leaveEarlyByHours ?? null,
+          plannedExitAt: generatedPlan.plannedExitAt ?? plannedExitAt ?? null,
+          effectiveExitAt: generatedPlan.effectiveExitAt ?? null,
           debug: generatedPlan.debug ?? null,
         },
       },

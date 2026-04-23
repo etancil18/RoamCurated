@@ -64,6 +64,7 @@ export function generateEventOutingPlan(
     mobility: input.mobility,
     vibeTags: input.vibeTags,
     timeZone: input.timeZone,
+    leaveEarlyByHours: input.leaveEarlyByHours,
   })
 
   const rankedCandidates = rankVenueCandidates(input.candidateVenues, context)
@@ -99,6 +100,9 @@ export function generateEventOutingPlan(
     plannedStartAt: context.plannedStartAt.toISOString(),
     plannedEndAt: context.plannedEndAt.toISOString(),
     estimatedEndAt: context.estimatedEndAt.toISOString(),
+    leaveEarlyByHours: context.leaveEarlyByHours ?? null,
+    plannedExitAt: context.plannedExitAt?.toISOString() ?? null,
+    effectiveExitAt: context.effectiveExitAt?.toISOString() ?? null,
     summary: buildPlanSummary({
       mode: input.mode,
       eventTitle: input.event.title,

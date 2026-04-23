@@ -17,6 +17,7 @@ import {
 type PlanMode = "before" | "after" | "full"
 type Budget = "$" | "$$" | "$$$" | "$$$$"
 type Mobility = "walk" | "short_ride" | "any"
+type LeaveEarlyByHours = 1 | 2 | 3 | 4
 
 type PlannerEvent = {
   id: string
@@ -110,6 +111,8 @@ type PlanOutingResponse = {
     title?: string | null
     startsAt?: string | null
     endsAt?: string | null
+    plannedExitAt?: string | null
+    effectiveExitAt?: string | null
     venue?: {
       id?: string | null
       name?: string | null
@@ -141,6 +144,16 @@ const MODE_LABELS: Record<PlanMode, string> = {
   full: "Full Night",
 }
 
+const LEAVE_EARLY_OPTIONS: Array<{
+  value: LeaveEarlyByHours
+  label: string
+}> = [
+  { value: 1, label: "1 hour early" },
+  { value: 2, label: "2 hours early" },
+  { value: 3, label: "3 hours early" },
+  { value: 4, label: "4 hours early" },
+]
+
 const GROUP_SIZE_OPTIONS = getGroupSizePresetOptions()
 const VIBE_OPTIONS = getVibePresetOptions()
 
@@ -160,6 +173,9 @@ export default function OutingPlannerModal({
   const [mobility, setMobility] = useState<Mobility>("short_ride")
   const [vibePresetId, setVibePresetId] = useState<VibePresetId | null>(null)
   const [vibeTags, setVibeTags] = useState<string[]>([])
+
+  const [plannedExitEnabled, setPlannedExitEnabled] = useState(false)
+  const [leaveEarlyByHours, setLeaveEarlyByHours] = useState<LeaveEarlyByHours>(2)
 
   const [loading, setLoading] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
@@ -201,6 +217,8 @@ export default function OutingPlannerModal({
       setGroupSizePresetId("duo")
       setVibePresetId(null)
       setVibeTags([])
+      setPlannedExitEnabled(false)
+      setLeaveEarlyByHours(2)
     }
   }, [open])
 
@@ -240,6 +258,9 @@ export default function OutingPlannerModal({
       }
 
       try {
+        const shouldSendLeaveEarlyByHours =
+          activeMode !== "before" && plannedExitEnabled
+
         const res = await fetch(`/api/events/${event.id}/plan-outing`, {
           method: "POST",
           headers: {
@@ -253,6 +274,9 @@ export default function OutingPlannerModal({
             mobility,
             vibePresetId: vibePresetId ?? undefined,
             vibeTags,
+            leaveEarlyByHours: shouldSendLeaveEarlyByHours
+              ? leaveEarlyByHours
+              : undefined,
           }),
         })
 
@@ -301,6 +325,8 @@ export default function OutingPlannerModal({
       groupSize,
       groupSizePresetId,
       mobility,
+      leaveEarlyByHours,
+      plannedExitEnabled,
       vibePresetId,
       vibeTags,
     ]
@@ -462,6 +488,59 @@ export default function OutingPlannerModal({
                     <option value="any">Any</option>
                   </select>
                 </div>
+
+                {mode !== "before" ? (
+                  <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/60 p-3">
+                    <div className="flex items-start gap-3">
+                      <input
+                        id="planned-exit-toggle"
+                        type="checkbox"
+                        checked={plannedExitEnabled}
+                        onChange={(e) => setPlannedExitEnabled(e.target.checked)}
+                        className="mt-1 h-4 w-4 rounded border-neutral-600 bg-neutral-900 text-cyan-500 focus:ring-cyan-500"
+                      />
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="planned-exit-toggle"
+                          className="block text-sm font-medium text-neutral-300"
+                        >
+                          Leaving before the event ends?
+                        </label>
+                        <p className="mt-1 text-xs text-neutral-400">
+                          Roam will subtract 1 to 4 hours from the event end time and
+                          look for viable post-event options from there.
+                        </p>
+                      </div>
+                    </div>
+
+                    {plannedExitEnabled ? (
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-neutral-300">
+                          Leave Early By
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {LEAVE_EARLY_OPTIONS.map((option) => {
+                            const selected = leaveEarlyByHours === option.value
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => setLeaveEarlyByHours(option.value)}
+                                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                                  selected
+                                    ? "border-cyan-500 bg-cyan-500 text-white"
+                                    : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800"
+                                }`}
+                              >
+                                {option.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-neutral-300">
@@ -679,6 +758,36 @@ export default function OutingPlannerModal({
                       <p className="mt-3 text-sm leading-6 text-neutral-300">
                         {plan.summary}
                       </p>
+                    )}
+
+                    {(plan.anchor?.plannedExitAt || plan.anchor?.effectiveExitAt) && (
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-400">
+                        {plan.anchor?.plannedExitAt ? (
+                          <span className="rounded-full bg-neutral-950 px-2.5 py-1">
+                            Planned exit{" "}
+                            {new Date(plan.anchor.plannedExitAt).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "numeric",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </span>
+                        ) : null}
+
+                        {plan.anchor?.effectiveExitAt ? (
+                          <span className="rounded-full bg-neutral-950 px-2.5 py-1">
+                            Exit-aware anchor{" "}
+                            {new Date(plan.anchor.effectiveExitAt).toLocaleTimeString(
+                              "en-US",
+                              {
+                                hour: "numeric",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </span>
+                        ) : null}
+                      </div>
                     )}
                   </div>
 

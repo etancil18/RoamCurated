@@ -3,6 +3,7 @@
 import type {
   Budget,
   EventRecord,
+  LeaveEarlyByHours,
   Mobility,
   PlanMode,
   PlanningContext,
@@ -21,9 +22,11 @@ export type BuildPlanningContextInput = {
   mobility?: Mobility
   vibeTags?: string[]
   timeZone?: string | null
+  leaveEarlyByHours?: LeaveEarlyByHours | null
 }
 
 const ALLOWED_BUDGETS: Budget[] = ["$", "$$", "$$$", "$$$$"]
+const ALLOWED_LEAVE_EARLY_BY_HOURS: LeaveEarlyByHours[] = [1, 2, 3, 4]
 
 const BEFORE_EVENT_BUFFER_MINUTES = 20
 const INTERSTOP_TRAVEL_BUFFER_MINUTES = 12
@@ -44,11 +47,17 @@ export function buildPlanningContext(
   const mobility = normalizeMobility(input.mobility)
   const vibeTags = normalizeVibeTags(input.vibeTags)
   const timeZone = normalizeTimeZone(input.timeZone)
+  const leaveEarlyByHours = normalizeLeaveEarlyByHours(input.leaveEarlyByHours)
 
   const startsAt = input.event.starts_at ? new Date(input.event.starts_at) : new Date()
   const estimatedEndAt = input.event.ends_at
     ? new Date(input.event.ends_at)
     : addMinutes(startsAt, inferEventDurationMinutes(input.event))
+  const plannedExitAt =
+    leaveEarlyByHours != null
+      ? addMinutes(estimatedEndAt, -leaveEarlyByHours * 60)
+      : null
+  const effectiveExitAt = plannedExitAt ?? estimatedEndAt
 
   const eventTags = normalizeTags([
     ...normalizeStringArray((input.event as EventRecord & { tags?: string[] | string | null }).tags),
@@ -58,22 +67,23 @@ export function buildPlanningContext(
 
   const eventArchetype = inferEventArchetype(eventTags)
 
-  const plannedStartAt = inferPlannedStartAt(input.mode, startsAt, estimatedEndAt, timeZone)
-  const plannedEndAt = inferPlannedEndAt(input.mode, startsAt, estimatedEndAt, timeZone)
+  const plannedStartAt = inferPlannedStartAt(input.mode, startsAt, effectiveExitAt, timeZone)
+  const plannedEndAt = inferPlannedEndAt(input.mode, startsAt, effectiveExitAt, timeZone)
 
   const desiredRoles = desiredRolesFor(
     input.mode,
     eventArchetype,
     startsAt,
-    estimatedEndAt,
-    timeZone
+    effectiveExitAt,
+    timeZone,
+    leaveEarlyByHours
   )
 
   const slots = buildPlanningSlots({
     mode: input.mode,
     desiredRoles,
     startsAt,
-    estimatedEndAt,
+    estimatedEndAt: effectiveExitAt,
     timeZone,
   })
 
@@ -84,6 +94,9 @@ export function buildPlanningContext(
     estimatedEndAt,
     plannedStartAt,
     plannedEndAt,
+    leaveEarlyByHours,
+    plannedExitAt,
+    effectiveExitAt,
     eventTags,
     eventArchetype,
     desiredRoles,
@@ -140,7 +153,8 @@ export function desiredRolesFor(
   archetype: string,
   startsAt: Date,
   estimatedEndAt: Date,
-  timeZone?: string | null
+  timeZone?: string | null,
+  leaveEarlyByHours?: LeaveEarlyByHours | null
 ): StopRole[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
   const beforeDaypart = getDaypart(startsAt, resolvedTimeZone)
@@ -152,14 +166,20 @@ export function desiredRolesFor(
   }
 
   if (mode === "after") {
-    return desiredAfterRoles(archetype, afterDaypart, lateNightAfterEvent)
+    return desiredAfterRoles(
+      archetype,
+      afterDaypart,
+      lateNightAfterEvent,
+      leaveEarlyByHours
+    )
   }
 
   return desiredFullRoles(
     archetype,
     beforeDaypart,
     afterDaypart,
-    lateNightAfterEvent
+    lateNightAfterEvent,
+    leaveEarlyByHours
   )
 }
 
@@ -299,10 +319,24 @@ function desiredBeforeRoles(
 function desiredAfterRoles(
   archetype: string,
   daypart: Daypart,
-  lateNightAfterEvent = false
+  lateNightAfterEvent = false,
+  leaveEarlyByHours?: LeaveEarlyByHours | null
 ): StopRole[] {
-  if (lateNightAfterEvent) {
+  if (lateNightAfterEvent && !leaveEarlyByHours) {
     return ["drink"]
+  }
+
+  if (leaveEarlyByHours) {
+    if (daypart === "breakfast") return ["coffee"]
+    if (daypart === "brunch" || daypart === "lunch") {
+      if (archetype === "art") return ["activity"]
+      return ["food"]
+    }
+    if (daypart === "dinner") {
+      if (archetype === "art") return ["food"]
+      return ["drink"]
+    }
+    if (daypart === "late_night") return ["drink"]
   }
 
   if (daypart === "breakfast") {
@@ -335,12 +369,21 @@ function desiredFullRoles(
   archetype: string,
   beforeDaypart: Daypart,
   afterDaypart: Daypart,
-  lateNightAfterEvent = false
+  lateNightAfterEvent = false,
+  leaveEarlyByHours?: LeaveEarlyByHours | null
 ): StopRole[] {
   const beforeRoles = desiredBeforeRoles(archetype, beforeDaypart)
   const firstBefore = beforeRoles[0] ?? "food"
   const secondBefore =
     beforeRoles[1] ?? (firstBefore === "food" ? "activity" : "food")
+
+  if (leaveEarlyByHours) {
+    const singleAfterRole =
+      desiredAfterRoles(archetype, afterDaypart, lateNightAfterEvent, leaveEarlyByHours)[0] ??
+      "drink"
+
+    return [firstBefore, secondBefore, singleAfterRole]
+  }
 
   // Late full-night fallback:
   // 2 before + 1 after
@@ -640,6 +683,15 @@ function getCalendarDayKey(date: Date, timeZone: string): string {
 
 function normalizeTimeZone(timeZone?: string | null): string {
   return timeZone?.trim() || DEFAULT_TIME_ZONE
+}
+
+function normalizeLeaveEarlyByHours(
+  value?: LeaveEarlyByHours | number | null
+): LeaveEarlyByHours | null {
+  if (!Number.isFinite(value)) return null
+
+  const n = Math.floor(Number(value)) as LeaveEarlyByHours
+  return ALLOWED_LEAVE_EARLY_BY_HOURS.includes(n) ? n : null
 }
 
 function normalizeStringArray(
