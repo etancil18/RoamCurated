@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
+import VenueBookingButtons from "@/components/venue-profile/VenueBookingButtons"
 import {
   getGroupSizePresetOptions,
   type GroupSizePresetId,
@@ -30,11 +31,17 @@ type PlannerEvent = {
   } | null
 }
 
+type VenueBookingOption = {
+  provider: string
+  url: string
+}
+
 type PlannedStop = {
   id: string
   venueId: string
   stopOrder: number
   role: "coffee" | "food" | "drink" | "activity" | "dessert"
+  phase?: "before" | "after" | null
   venueType?: string | null
   displayType?: string | null
   title: string
@@ -45,6 +52,12 @@ type PlannedStop = {
   travelMode?: string | null
   travelMinutesFromPrev?: number | null
   distanceMetersFromPrev?: number | null
+  lat?: number | null
+  lon?: number | null
+  address?: string | null
+  bookingOptions?: VenueBookingOption[] | null
+  reservationRecommended?: boolean
+  recommendedReservationAt?: string | null
 }
 
 type SlotSelectionDebug = {
@@ -740,6 +753,23 @@ export default function OutingPlannerModal({
                                 </span>
                               ) : null}
                             </div>
+
+                            {stop.address ? (
+                              <p className="mt-3 text-xs text-neutral-500">
+                                {stop.address}
+                              </p>
+                            ) : null}
+
+                            {(stop.bookingOptions?.length ?? 0) > 0 || stop.reservationRecommended ? (
+                              <div className="mt-4">
+                                <VenueBookingButtons
+                                  bookingOptions={stop.bookingOptions}
+                                  reservationRecommended={stop.reservationRecommended}
+                                  recommendedReservationAt={stop.recommendedReservationAt}
+                                  compact
+                                />
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       </div>

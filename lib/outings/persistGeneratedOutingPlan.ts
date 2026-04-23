@@ -87,6 +87,10 @@ export async function persistGeneratedOutingPlan({
       ...(stop.metadata ?? {}),
       venueType: stop.venueType ?? stop.metadata?.venueType ?? null,
       displayType: stop.displayType ?? stop.metadata?.displayType ?? null,
+      phase: stop.phase ?? null,
+      bookingOptions: stop.bookingOptions ?? null,
+      reservationRecommended: stop.reservationRecommended ?? false,
+      recommendedReservationAt: stop.recommendedReservationAt ?? null,
     },
   }))
 
@@ -111,7 +115,7 @@ export async function persistGeneratedOutingPlan({
       anchor_ends_at: generatedPlan.estimatedEndAt,
       planned_start_at: generatedPlan.plannedStartAt,
       planned_end_at: generatedPlan.plannedEndAt,
-      generation_version: "v1.2.0-slot-aware-display-type-outings",
+      generation_version: "v1.3.0-booking-annotated-outings",
       confidence_score: generatedPlan.confidenceScore,
       score_breakdown: generatedPlan.scoreBreakdown,
       plan_summary: generatedPlan.summary,
@@ -195,14 +199,14 @@ type StopRowForValidation = {
   venue_id: string
   stop_order: number
   role: string
-  title: string
-  rationale: string
-  planned_arrival_at: string | null
-  planned_departure_at: string | null
-  dwell_minutes: number
-  travel_mode: string
-  travel_minutes_from_prev: number | null
-  distance_meters_from_prev: number | null
+  title: string | null | undefined
+  rationale: string | null | undefined
+  planned_arrival_at: string | null | undefined
+  planned_departure_at: string | null | undefined
+  dwell_minutes: number | null | undefined
+  travel_mode: string | null | undefined
+  travel_minutes_from_prev: number | null | undefined
+  distance_meters_from_prev: number | null | undefined
   is_locked: boolean
   was_swapped: boolean
   metadata: unknown

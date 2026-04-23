@@ -6841,51 +6841,6 @@ const nycData = [
     "id": "43cafaea-cee1-45f0-862c-ebbdd5de1dc3"
     },
      {
-       "slug": "sun-at-six-gallery",    "name": "Sun at Six Gallery",
-    "vibe": "Artistic, Furniture, Contemporary, Showroom, By Appointment, Clean, Modernist, Bright, Curated",
-    "type": "showroom",
-        "lat": "40.674276",
-    "lon": "-73.9626129",
-    "link": "https://www.instagram.com/sunatsix/?hl=en",
-    "cover": "",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: ",
-    "Monday: ",
-    "Tuesday: ",
-    "Wednesday: ",
-    "Thursday: ",
-    "Friday: ",
-    "Saturday: "
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": null,
-  "mon": null,
-  "tue": null,
-  "wed": null,
-  "thu": null,
-  "fri": null,
-  "sat": null },
-    "dayParts": {
-    "mon": "A",
-    "tue": "A",
-    "wed": "A",
-    "thu": "A",
-    "fri": "A",
-    "sat": "A",
-    "sun": "A"
-  },
-  "timeCategory": "afternoon",
-    "energyRamp": 1,
-    "tags": "danish, design, craftsmanship, woodworking, minimalist, modernism, teak, interiors, collectible",
-    "price": "",
-    "duration": 0.5,
-    "id": "ac53fc26-1d5e-4542-b2ad-8d5f51d59b3a"
-    },
-     {
        "slug": "quarters",    "name": "Quarters",
     "vibe": "Cozy, Warm, Wine, Aesthetic, Hidden, Showroom, Chic, Subtle, Designer, Ambient",
     "type": ["wine bar", "gallery", "showroom"],
@@ -18843,51 +18798,6 @@ const nycData = [
     "id": "6017c78e-ff29-42fd-bbc5-343d37cfa3f2"
     },
      {
-       "slug": "cafe-kitsune-west-village",    "name": "Cafe Kitsune West Village",
-    "vibe": "French Café, Cozy, Coffee, Pastries, Quiet, Brunch, Artistic, Warm, Minimal",
-    "type": "coffee",
-        "lat": "40.735053",
-    "lon": "-74.0059043",
-    "link": "https://www.instagram.com/cafekitsune/",
-    "cover": "",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 8:00 AM–6:00 PM",
-    "Monday: 8:00 AM–6:00 PM",
-    "Tuesday: 8:00 AM–6:00 PM",
-    "Wednesday: 8:00 AM–6:00 PM",
-    "Thursday: 8:00 AM–6:00 PM",
-    "Friday: 8:00 AM–8:00 PM",
-    "Saturday: 8:00 AM–8:00 PM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 8, "close": 18 },
-    "mon": { "open": 8, "close": 18 },
-    "tue": { "open": 8, "close": 18 },
-    "wed": { "open": 8, "close": 18 },
-    "thu": { "open": 8, "close": 18 },
-    "fri": { "open": 8, "close": 20 },
-    "sat": { "open": 8, "close": 20 } },
-    "dayParts": {
-    "mon": "M",
-    "tue": "M",
-    "wed": "M",
-    "thu": "M",
-    "fri": "M",
-    "sat": "M",
-    "sun": "M"
-  },
-  "timeCategory": "morning, midday",
-    "energyRamp": 1,
-    "tags": "chic, airy, Euro-style",
-    "price": "$",
-    "duration": 0.75,
-    "id": "ec8c16e5-b19f-4c9b-8f96-1a92f43af422"
-    },
-     {
        "slug": "tompkins-square-bagels",    "name": "Tompkins Square Bagels",
     "vibe": "Iconic, Breakfast, Quick Bite, Neighborhood Gem, Busy, Local, Classic, Comfort, Cheap",
     "type": ["bakery", "breakfast"],
@@ -28448,52 +28358,6 @@ const nycData = [
     "duration": 2,
     "id": "f8301296-883e-4fdf-9a38-e9c97d99b1f2"
   },
-   {
-    "slug": "archivio-records",    "name": "Archivio Records",
-    "vibe": "Vintage vinyl, Curated collection, Music lovers, Indie cred",
-    "type": ["random gem", "lifestyle"],
-    "lat": 40.7031,
-    "lon": -73.984034,
-    "link": "https://www.instagram.com/archiviorecords/",
-    "cover": "img/venues/Archivio Records.png",
-    "openNow": false,
-    "hours": {
-      "Sunday": "Closed",
-      "Monday": "Closed",
-      "Tuesday": "Closed",
-      "Wednesday": "Closed",
-      "Thursday": "Closed",
-      "Friday": "Closed",
-      "Saturday": "Closed"
-    },
-    "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": { "sun": null,
-    "mon": null,
-    "tue": null,
-    "wed": null,
-    "thu": null,
-    "fri": null,
-    "sat": null
-},
-    "dayParts": {
-      "sun": "-",
-      "mon": "-",
-      "tue": "-",
-      "wed": "-",
-      "thu": "-",
-      "fri": "-",
-      "sat": "-"
-    },
-    "timeCategory": "-",
-    "energyRamp": 1,
-    "tags": "rare vinyl, record hunting, indie music vibes",
-    "price": "$",
-    "duration": 1,
-    "id": "b7338278-bd8f-42bb-bbc4-7255605a602a"
-    },
      {
        "slug": "cafe-mado",    "name": "Cafe Mado",
     "vibe": "Korean café, Brunch spot, Sweet & savory pastries, Cozy",
@@ -31821,50 +31685,6 @@ const nycData = [
     "id": "38cc8d80-4ade-4a83-86cb-3b84d0d6ca9f"
     },
      {
-       "slug": "coby-club",
-    "name": "Coby Club",
-    "vibe": "Lounge, Plush, Social, Night‑Life, Happy‑Hour, VIP, Trendy, Stylish, Chic",
-    "type": ["lounge"],
-    "lat": "40.7419989",
-    "lon": "-73.9975642",
-    "link": "https://www.instagram.com/cobyclubnyc/?hl=en",
-    "cover": "img/venues/Coby Club.jpg",
-    "openNow": "TRUE",
-    "hours": {
-      "Sunday": "Closed",
-      "Monday": "Closed",
-      "Tuesday": "6:00 PM–12:00 AM",
-      "Wednesday": "6:00 PM–12:00 AM",
-      "Thursday": "6:00 PM–12:00 AM",
-      "Friday": "6:00 PM–1:00 AM",
-      "Saturday": "6:00 PM–1:00 AM"
-    },
-    "hoursNumeric": {
-      "sun": null,
-      "mon": null,
-      "tue": { "open": 18, "close": 24 },
-      "wed": { "open": 18, "close": 24 },
-      "thu": { "open": 18, "close": 24 },
-      "fri": { "open": 18, "close": 25 },
-      "sat": { "open": 18, "close": 25 }
-    },
-    "dayParts": {
-      "mon": "-",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E",
-      "sun": "-"
-    },
-    "timeCategory": "evening",
-    "energyRamp": 4,
-    "tags": "Lounge, Plush, VIP, Trendy, Stylish, Nightlife",
-    "price": "$$$",
-    "duration": 1.75,
-    "id": "d7b8a27b-0c3f-4a70-ad24-df7df735908d"
-    },
-     {
        "slug": "shy-shy",
     "name": "Shy Shy",
     "vibe": "Cocktail, Pink, Trendy, Intimate, Stylish, Date‑Night, Chic, Soft‑Light, Playful, Upbeat",
@@ -32058,50 +31878,6 @@ const nycData = [
     "price": "$$",
     "duration": 1.5,
     "id": "cecd6b0d-6bd4-41a2-84ea-79fb0e38af54"
-    },
-     {
-       "slug": "chinato",
-    "name": "Chinato",
-    "vibe": "Cocktail, Italian, Refined, Stylish, Intimate, Date‑Night, Creative, Chic, Elegant, Upscale",
-    "type": ["cocktail"],
-    "lat": "40.721247",
-    "lon": "-73.9874848",
-    "link": "https://www.instagram.com/chinatonyc/?hl=en",
-    "cover": "img/venues/Chinato.jpg",
-    "openNow": "TRUE",
-    "hours": {
-      "Sunday": "6:00 PM–12:00 AM",
-      "Monday": "Closed",
-      "Tuesday": "6:00 PM–12:00 AM",
-      "Wednesday": "6:00 PM–12:00 AM",
-      "Thursday": "6:00 PM–12:00 AM",
-      "Friday": "5:00 PM–1:00 AM",
-      "Saturday": "5:00 PM–1:00 AM"
-    },
-    "hoursNumeric": {
-      "sun": { "open": 18, "close": 24 },
-      "mon": null,
-      "tue": { "open": 18, "close": 24 },
-      "wed": { "open": 18, "close": 24 },
-      "thu": { "open": 18, "close": 24 },
-      "fri": { "open": 17, "close": 25 },
-      "sat": { "open": 17, "close": 25 }
-    },
-    "dayParts": {
-      "mon": "-",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "L",
-      "sat": "L",
-      "sun": "E"
-    },
-    "timeCategory": "evening, late",
-    "energyRamp": 3,
-    "tags": "Venetian, Aperitivo, Italian, Urbane, Chic",
-    "price": "$$",
-    "duration": 1.5,
-    "id": "d83674d4-b718-4c57-bbc8-0a5e7064b338"
     },
      {
        "slug": "the-rhymers-club",

@@ -33,6 +33,7 @@ import {
 
 import { selectCandidates } from "./selection"
 import { qualifiesForLateNightSingleStopFallback } from "./lateNight"
+import { qualifiesForReducedBeforeSingleStopFallback } from "./daytime"
 
 export function generatePlanStops(
   rankedCandidates: CandidateVenue[],
@@ -42,19 +43,7 @@ export function generatePlanStops(
   const selection = selectCandidates(rankedCandidates, context, slots)
   const timeZone = resolvePlannerTimeZone(context)
 
-  const selectedStopsWithSlots = selection.slotDiagnostics
-    .filter((diagnostic) => diagnostic.selectedVenueId != null)
-    .map((diagnostic) => {
-      const venue = selection.selected.find(
-        (candidate) => candidate.id === diagnostic.selectedVenueId
-      )
-      const slot = slots[diagnostic.slotIndex]
-
-      if (!venue || !slot) return null
-
-      return { venue, slot }
-    })
-    .filter(Boolean) as Array<{ venue: CandidateVenue; slot: PlanningSlot }>
+  const selectedStopsWithSlots = selection.selected
 
   return selectedStopsWithSlots.map(({ venue, slot }, index) => {
     const role = pickRoleForSlot(slot, venue.inferredRoles)
@@ -76,6 +65,7 @@ export function generatePlanStops(
       venueId: venue.id,
       stopOrder: index + 1,
       role,
+      phase: slot.phase,
       venueType,
       displayType,
       title: venue.name ?? humanizeRole(role),
@@ -95,6 +85,10 @@ export function generatePlanStops(
           ? defaultTravelMinutesForFirstSlot(context, slot)
           : estimateTravelMinutes(context.mobility, distanceFromPrev),
       distanceMetersFromPrev: distanceFromPrev,
+      lat: venue.lat ?? null,
+      lon: venue.lon ?? null,
+      address: venue.address ?? null,
+      bookingOptions: venue.bookingOptions ?? null,
       metadata: {
         venueName: venue.name,
         venueAddress: venue.address,
@@ -219,10 +213,13 @@ export function computeConfidenceScore(
   let score = 0.4
   const qualifiesLateNightSingleStop =
     qualifiesForLateNightSingleStopFallback(stops, context)
+  const qualifiesReducedBeforeSingleStop =
+    qualifiesForReducedBeforeSingleStopFallback(stops, context)
 
   if (
     stops.length >= minimumStopsForMode(context.mode) ||
-    qualifiesLateNightSingleStop
+    qualifiesLateNightSingleStop ||
+    qualifiesReducedBeforeSingleStop
   ) {
     score += 0.2
   } else if (context.mode === "full" && stops.length >= 2) {

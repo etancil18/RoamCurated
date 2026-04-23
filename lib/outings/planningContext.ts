@@ -261,18 +261,21 @@ function desiredBeforeRoles(
   if (daypart === "breakfast") {
     if (archetype === "art") return ["coffee", "activity"]
     if (archetype === "festival") return ["coffee", "food"]
+    if (archetype === "music") return ["coffee", "food"]
     return ["coffee", "food"]
   }
 
   if (daypart === "brunch") {
     if (archetype === "art") return ["coffee", "food"]
     if (archetype === "festival") return ["food", "activity"]
+    if (archetype === "music") return ["coffee", "food"]
     return ["coffee", "food"]
   }
 
   if (daypart === "lunch") {
     if (archetype === "art") return ["activity", "food"]
     if (archetype === "sports") return ["food", "drink"]
+    if (archetype === "music") return ["coffee", "food"]
     return ["food", "activity"]
   }
 

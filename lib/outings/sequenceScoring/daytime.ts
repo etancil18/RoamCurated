@@ -1,0 +1,105 @@
+// lib/outings/sequenceScoring/daytime.ts
+
+import type {
+  GeneratedOutingStop,
+  PlanningContext,
+  StopRole,
+} from "../types"
+import { normalizeVenueType, normalizeVenueTypes, hasAnyType } from "./helpers"
+import { getHourFractionInTimeZone, resolvePlannerTimeZone } from "./time"
+
+type MorningTypedStop = Pick<
+  GeneratedOutingStop,
+  "role" | "venueType" | "displayType" | "metadata"
+>
+
+const MORNING_COMPATIBLE_STOP_ROLES: StopRole[] = ["coffee", "food", "activity"]
+
+const MORNING_COMPATIBLE_VENUE_TYPES = [
+  "coffee",
+  "cafe",
+  "café",
+  "bakery",
+  "breakfast",
+  "brunch",
+  "tea",
+  "juice",
+  "matcha",
+  "wellness",
+  "yoga",
+  "pilates",
+]
+
+export function qualifiesForReducedBeforeSingleStopFallback(
+  stops: GeneratedOutingStop[],
+  context: PlanningContext
+): boolean {
+  if (context.mode !== "before") return false
+  if (stops.length !== 1) return false
+  if (!isEarlyDayBeforeEventContext(context)) return false
+
+  const stop = stops[0]
+  return isMorningCompatibleStop(stop)
+}
+
+export function isEarlyDayBeforeEventContext(context: PlanningContext): boolean {
+  const timeZone = resolvePlannerTimeZone(context)
+  const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
+
+  // Accept morning and late-morning starts.
+  // Noon and slightly after can still reasonably support a single pre-event stop.
+  return eventStartHour <= 12.5
+}
+
+export function isMorningCompatibleStop(stop: MorningTypedStop): boolean {
+  if (MORNING_COMPATIBLE_STOP_ROLES.includes(stop.role)) {
+    if (stop.role === "coffee") return true
+    if (stop.role === "activity") {
+      return stopHasAnyVenueType(stop, ["wellness", "yoga", "pilates"])
+    }
+
+    if (stop.role === "food") {
+      return stopHasAnyVenueType(stop, [
+        "breakfast",
+        "brunch",
+        "bakery",
+        "cafe",
+        "café",
+        "coffee",
+        "tea",
+        "juice",
+        "matcha",
+      ])
+    }
+  }
+
+  return stopHasAnyVenueType(stop, MORNING_COMPATIBLE_VENUE_TYPES)
+}
+
+function stopHasAnyVenueType(
+  stop: MorningTypedStop,
+  expectedTypes: string[]
+): boolean {
+  const explicitType = normalizeVenueType(stop.displayType ?? stop.venueType ?? null)
+
+  if (explicitType && expectedTypes.includes(explicitType)) {
+    return true
+  }
+
+  const metadataTypes = Array.isArray(stop.metadata?.venueTypes)
+    ? normalizeVenueTypes(stop.metadata.venueTypes)
+    : []
+
+  if (metadataTypes.length > 0 && hasAnyType(metadataTypes, expectedTypes)) {
+    return true
+  }
+
+  const inferredTypes = normalizeVenueTypes([
+    stop.displayType ?? "",
+    stop.venueType ?? "",
+    stop.metadata?.venueType ?? "",
+    stop.metadata?.appliedDisplayType ?? "",
+  ])
+
+  return hasAnyType(inferredTypes, expectedTypes)
+}

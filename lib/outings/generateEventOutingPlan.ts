@@ -8,10 +8,49 @@ import {
   generatePlanStops,
   rankVenueCandidates,
 } from "./sequenceScoring"
+import { qualifiesForReducedBeforeSingleStopFallback } from "./sequenceScoring/daytime"
 import type {
   GenerateEventOutingPlanInput,
   GenerateEventOutingPlanResult,
+  GeneratedOutingStop,
+  PlanMode,
 } from "./types"
+
+function annotateBookingRecommendations({
+  mode,
+  stops,
+}: {
+  mode: PlanMode
+  stops: GeneratedOutingStop[]
+}): GeneratedOutingStop[] {
+  const normalizedStops = stops.map((stop) => ({
+    ...stop,
+    reservationRecommended: false,
+    recommendedReservationAt: null,
+  }))
+
+  if (mode === "after") return normalizedStops
+
+  const firstReservableFoodIndex = normalizedStops.findIndex(
+    (stop) =>
+      stop.phase === "before" &&
+      stop.role === "food" &&
+      Array.isArray(stop.bookingOptions) &&
+      stop.bookingOptions.length > 0
+  )
+
+  if (firstReservableFoodIndex === -1) return normalizedStops
+
+  return normalizedStops.map((stop, index) =>
+    index === firstReservableFoodIndex
+      ? {
+          ...stop,
+          reservationRecommended: true,
+          recommendedReservationAt: stop.plannedArrivalAt ?? null,
+        }
+      : stop
+  )
+}
 
 export function generateEventOutingPlan(
   input: GenerateEventOutingPlanInput
@@ -29,15 +68,26 @@ export function generateEventOutingPlan(
 
   const rankedCandidates = rankVenueCandidates(input.candidateVenues, context)
   const debug = buildSelectionDebug(rankedCandidates, context)
-  const stops = generatePlanStops(rankedCandidates, context)
+  const rawStops = generatePlanStops(rankedCandidates, context)
+  const stops = annotateBookingRecommendations({
+    mode: input.mode,
+    stops: rawStops,
+  })
   const confidenceScore = computeConfidenceScore(stops, context)
 
   const intendedStopCount =
     context.slots?.length ?? context.desiredRoles.length
 
+  const reducedBeforeSingleStopFallbackApplied =
+    qualifiesForReducedBeforeSingleStopFallback(stops, context)
+
+  const effectiveIntendedStopCount = reducedBeforeSingleStopFallbackApplied
+    ? Math.min(intendedStopCount, 1)
+    : intendedStopCount
+
   const completionRate =
-    intendedStopCount > 0
-      ? Number((stops.length / intendedStopCount).toFixed(2))
+    effectiveIntendedStopCount > 0
+      ? Number((stops.length / effectiveIntendedStopCount).toFixed(2))
       : 0
 
   return {

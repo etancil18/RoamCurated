@@ -68,9 +68,23 @@ export type SlotSelectionDebug = {
   }
 }
 
+export type SelectedSlotVenue = {
+  venue: CandidateVenue
+  slot: PlanningSlot
+  selectedPass: "strict" | "relaxed"
+}
+
 export type SelectionDebugResult = {
-  selected: CandidateVenue[]
+  selected: SelectedSlotVenue[]
   slotDiagnostics: SlotSelectionDebug[]
+}
+
+function unwrapSelectedVenues(
+  selected: SelectedSlotVenue[] | CandidateVenue[]
+): CandidateVenue[] {
+  return selected.map((entry) =>
+    "venue" in entry ? entry.venue : entry
+  )
 }
 
 export function selectCandidates(
@@ -78,7 +92,7 @@ export function selectCandidates(
   context: PlanningContext,
   slots: PlanningSlot[]
 ): SelectionDebugResult {
-  const selected: CandidateVenue[] = []
+  const selected: SelectedSlotVenue[] = []
   const usedIds = new Set<string>()
   const slotDiagnostics: SlotSelectionDebug[] = []
   const timeZone = resolvePlannerTimeZone(context)
@@ -113,7 +127,7 @@ export function selectCandidates(
 
         const eligibility = evaluateCandidateEligibilityForSlot(
           candidate,
-          selected,
+          unwrapSelectedVenues(selected),
           slot,
           context,
           false,
@@ -148,18 +162,24 @@ export function selectCandidates(
         return true
       })
       .sort((a, b) => {
+        const selectedVenues = unwrapSelectedVenues(selected)
+
         const scoreA =
-          computeSequentialCandidateScore(a, selected, slot, context) +
+          computeSequentialCandidateScore(a, selectedVenues, slot, context) +
           computeSlotRoleFitBonus(a, slot)
         const scoreB =
-          computeSequentialCandidateScore(b, selected, slot, context) +
+          computeSequentialCandidateScore(b, selectedVenues, slot, context) +
           computeSlotRoleFitBonus(b, slot)
         return scoreB - scoreA
       })
 
     const best = matches[0]
     if (best) {
-      selected.push(best)
+      selected.push({
+        venue: best,
+        slot,
+        selectedPass: "strict",
+      })
       usedIds.add(best.id)
 
       slotDiagnostics.push({
@@ -204,7 +224,7 @@ export function selectCandidates(
 
         const eligibility = evaluateCandidateEligibilityForSlot(
           candidate,
-          selected,
+          unwrapSelectedVenues(selected),
           slot,
           context,
           true,
@@ -239,18 +259,24 @@ export function selectCandidates(
         return true
       })
       .sort((a, b) => {
+        const selectedVenues = unwrapSelectedVenues(selected)
+
         const scoreA =
-          computeSequentialCandidateScore(a, selected, slot, context) +
+          computeSequentialCandidateScore(a, selectedVenues, slot, context) +
           computeSlotRoleFitBonus(a, slot)
         const scoreB =
-          computeSequentialCandidateScore(b, selected, slot, context) +
+          computeSequentialCandidateScore(b, selectedVenues, slot, context) +
           computeSlotRoleFitBonus(b, slot)
         return scoreB - scoreA
       })
 
     const fallbackBest = fallbackMatches[0]
     if (fallbackBest) {
-      selected.push(fallbackBest)
+      selected.push({
+        venue: fallbackBest,
+        slot,
+        selectedPass: "relaxed",
+      })
       usedIds.add(fallbackBest.id)
 
       slotDiagnostics.push({
@@ -348,7 +374,7 @@ export function buildSelectionDebug(
 
 export function evaluateCandidateEligibilityForSlot(
   candidate: CandidateVenue,
-  selectedSoFar: CandidateVenue[],
+  selectedSoFar: SelectedSlotVenue[] | CandidateVenue[],
   slot: PlanningSlot,
   context: PlanningContext,
   relaxed = false,
@@ -395,7 +421,10 @@ export function evaluateTemporalEligibility(
       })
     }
 
-    return { eligible: lateNightEligibleOverall, reason: lateNightEligibleOverall ? undefined : "hours" }
+    return {
+      eligible: lateNightEligibleOverall,
+      reason: lateNightEligibleOverall ? undefined : "hours",
+    }
   }
 
   const roleCompatible = isRoleTemporallyCompatible(
@@ -427,14 +456,15 @@ export function evaluateTemporalEligibility(
 
 export function isCandidateEligibleForSlot(
   candidate: CandidateVenue,
-  selectedSoFar: CandidateVenue[],
+  selectedSoFar: SelectedSlotVenue[] | CandidateVenue[],
   slot: PlanningSlot,
   context: PlanningContext,
   relaxed = false,
   timeZone = resolvePlannerTimeZone(context)
 ): boolean {
+  const selectedVenues = unwrapSelectedVenues(selectedSoFar)
   const anchorDistance = candidate.distanceMeters
-  const previous = selectedSoFar[selectedSoFar.length - 1] ?? null
+  const previous = selectedVenues[selectedVenues.length - 1] ?? null
   const prevToCandidate = previous ? getDistanceBetweenVenues(previous, candidate) : null
 
   if (slot.phase === "before") {
@@ -502,7 +532,7 @@ export function isCandidateEligibleForSlot(
 
     if (!isImmediatePostEvent) {
       const sameDirection = isAfterSequenceDirectionallyConsistent(
-        selectedSoFar,
+        selectedVenues,
         candidate,
         context,
         slot

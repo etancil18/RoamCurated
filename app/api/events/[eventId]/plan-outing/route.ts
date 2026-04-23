@@ -9,6 +9,7 @@ import {
   qualifiesForLateNightReducedFullFallback,
   qualifiesForLateNightSingleStopFallback,
 } from "@/lib/outings/sequenceScoring"
+import { qualifiesForReducedBeforeSingleStopFallback } from "@/lib/outings/sequenceScoring/daytime"
 import { supabaseServerApi } from "@/lib/supabase/server-api"
 import type {
   Budget,
@@ -16,6 +17,7 @@ import type {
   Mobility,
   PlanMode,
   PlanOutingRequestBody,
+  VenueBookingOption,
   VenueRecord,
 } from "@/lib/outings/types"
 
@@ -23,8 +25,14 @@ const ALLOWED_MODES: PlanMode[] = ["before", "after", "full"]
 const ALLOWED_BUDGETS: Budget[] = ["$", "$$", "$$$", "$$$$"]
 const ALLOWED_MOBILITY: Mobility[] = ["walk", "short_ride", "any"]
 
+type VenueBookingRow = {
+  provider: string | null
+  url: string | null
+}
+
 type VenueRecordWithHours = VenueRecord & {
   hours?: Record<string, { open?: string | null; close?: string | null }> | string | null
+  venue_bookings?: VenueBookingRow[] | null
 }
 
 type EventWithVenueRecord = EventRecord & {
@@ -77,7 +85,11 @@ export async function POST(
             vibe,
             type,
             price,
-            hours
+            hours,
+            venue_bookings (
+              provider,
+              url
+            )
           )
         `
       )
@@ -88,7 +100,8 @@ export async function POST(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    const anchorVenue = normalizeVenueRelation(event.venue)
+    const anchorVenueRaw = normalizeVenueRelation(event.venue)
+    const anchorVenue = enrichVenueWithBookingOptions(anchorVenueRaw)
     const city = anchorVenue?.city?.trim()
 
     if (!city) {
@@ -133,7 +146,25 @@ export async function POST(
 
     const { data: venueCandidatesRaw, error: venuesError } = await supabase
       .from("venues")
-      .select("id, name, city, lat, lon, address, tags, vibe, type, price, hours")
+      .select(
+        `
+          id,
+          name,
+          city,
+          lat,
+          lon,
+          address,
+          tags,
+          vibe,
+          type,
+          price,
+          hours,
+          venue_bookings (
+            provider,
+            url
+          )
+        `
+      )
       .eq("city", city)
       .neq("id", anchorVenue?.id ?? "")
       .limit(150)
@@ -145,7 +176,9 @@ export async function POST(
       )
     }
 
-    const venueCandidates = (venueCandidatesRaw ?? []) as VenueRecordWithHours[]
+    const venueCandidates = ((venueCandidatesRaw ?? []) as VenueRecordWithHours[])
+      .map(enrichVenueWithBookingOptions)
+      .filter((venue): venue is VenueRecord => venue != null)
 
     const debugPlanningContext = buildPlanningContext({
       mode,
@@ -210,8 +243,16 @@ export async function POST(
         debugPlanningContext
       )
 
+    const reducedBeforeSingleStopFallbackApplied =
+      qualifiesForReducedBeforeSingleStopFallback(
+        generatedPlan.stops,
+        debugPlanningContext
+      )
+
     const minimumRequiredStops =
-      lateNightSingleStopFallbackApplied || lateNightReducedFullFallbackApplied
+      lateNightSingleStopFallbackApplied ||
+      lateNightReducedFullFallbackApplied ||
+      reducedBeforeSingleStopFallbackApplied
         ? generatedPlan.stops.length
         : minimumStopsForMode(mode)
 
@@ -232,6 +273,7 @@ export async function POST(
           minimumRequiredStops,
           lateNightSingleStopFallbackApplied,
           lateNightReducedFullFallbackApplied,
+          reducedBeforeSingleStopFallbackApplied,
           scoreBreakdown: generatedPlan.scoreBreakdown,
           debug: generatedPlan.debug ?? null,
         },
@@ -250,6 +292,7 @@ export async function POST(
             minimumRequiredStops,
             lateNightSingleStopFallbackApplied,
             lateNightReducedFullFallbackApplied,
+            reducedBeforeSingleStopFallbackApplied,
             generatedStopCount: generatedPlan.stops.length,
             candidateVenueCount: venueCandidates.length,
             city,
@@ -304,6 +347,7 @@ export async function POST(
         minimumRequiredStops,
         lateNightSingleStopFallbackApplied,
         lateNightReducedFullFallbackApplied,
+        reducedBeforeSingleStopFallbackApplied,
       },
     })
 
@@ -318,6 +362,7 @@ export async function POST(
       venueId: stop.venueId,
       stopOrder: stop.stopOrder,
       role: stop.role,
+      phase: stop.phase ?? null,
       venueType: stop.venueType ?? stop.metadata?.venueType ?? null,
       displayType: stop.displayType ?? stop.metadata?.displayType ?? null,
       title: stop.title,
@@ -328,6 +373,12 @@ export async function POST(
       travelMode: stop.travelMode,
       travelMinutesFromPrev: stop.travelMinutesFromPrev,
       distanceMetersFromPrev: stop.distanceMetersFromPrev,
+      lat: stop.lat ?? null,
+      lon: stop.lon ?? null,
+      address: stop.address ?? null,
+      bookingOptions: stop.bookingOptions ?? null,
+      reservationRecommended: stop.reservationRecommended ?? false,
+      recommendedReservationAt: stop.recommendedReservationAt ?? null,
     }))
 
     return NextResponse.json({
@@ -373,21 +424,21 @@ async function safeJson(req: Request): Promise<unknown> {
   }
 }
 
-function normalizeMode(mode?: string): PlanMode {
+function normalizeMode(mode?: string | null): PlanMode {
   return ALLOWED_MODES.includes(mode as PlanMode) ? (mode as PlanMode) : "full"
 }
 
-function normalizeBudget(budget?: string): Budget | null {
+function normalizeBudget(budget?: string | null): Budget | null {
   return ALLOWED_BUDGETS.includes(budget as Budget) ? (budget as Budget) : null
 }
 
-function normalizeMobility(mobility?: string): Mobility {
+function normalizeMobility(mobility?: string | null): Mobility {
   return ALLOWED_MOBILITY.includes(mobility as Mobility)
     ? (mobility as Mobility)
     : "short_ride"
 }
 
-function normalizeGroupSize(groupSize?: number): number | null {
+function normalizeGroupSize(groupSize?: number | null): number | null {
   if (!Number.isFinite(groupSize)) return null
   const n = Math.floor(Number(groupSize))
   if (n < 1) return 1
@@ -395,12 +446,23 @@ function normalizeGroupSize(groupSize?: number): number | null {
   return n
 }
 
-function normalizeVibeTags(vibeTags?: string[]): string[] {
-  if (!Array.isArray(vibeTags)) return []
-  return vibeTags
-    .map((tag) => String(tag).trim().toLowerCase())
-    .filter(Boolean)
-    .slice(0, 8)
+function normalizeVibeTags(vibeTags?: string[] | string | null): string[] {
+  if (Array.isArray(vibeTags)) {
+    return vibeTags
+      .map((tag) => String(tag).trim().toLowerCase())
+      .filter(Boolean)
+      .slice(0, 8)
+  }
+
+  if (typeof vibeTags === "string") {
+    return vibeTags
+      .split(",")
+      .map((tag) => tag.trim().toLowerCase())
+      .filter(Boolean)
+      .slice(0, 8)
+  }
+
+  return []
 }
 
 function normalizeVenueRelation(
@@ -408,6 +470,38 @@ function normalizeVenueRelation(
 ): VenueRecordWithHours | null {
   if (!venue) return null
   return Array.isArray(venue) ? venue[0] ?? null : venue
+}
+
+function enrichVenueWithBookingOptions(
+  venue: VenueRecordWithHours | null
+): VenueRecord | null {
+  if (!venue) return null
+
+  const bookingRows = venue.venue_bookings ?? []
+
+  const bookingOptions: VenueBookingOption[] = bookingRows
+    .filter(
+      (
+        row
+      ): row is {
+        provider: string
+        url: string
+      } =>
+        !!row &&
+        typeof row.provider === "string" &&
+        row.provider.trim().length > 0 &&
+        typeof row.url === "string" &&
+        row.url.trim().length > 0
+    )
+    .map((row) => ({
+      provider: row.provider.trim().toLowerCase(),
+      url: row.url.trim(),
+    }))
+
+  return {
+    ...venue,
+    bookingOptions: bookingOptions.length > 0 ? bookingOptions : null,
+  }
 }
 
 function minimumStopsForMode(mode: PlanMode): number {

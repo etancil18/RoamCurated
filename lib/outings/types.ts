@@ -17,6 +17,15 @@ export type TravelMode = "walk" | "drive" | "transit" | "rideshare"
 export type SlotPhase = "before" | "after"
 export type SelectionPass = "strict" | "balanced" | "relaxed"
 
+// ---------- Booking Layer ----------
+
+export type BookingProvider = "opentable" | "resy" | "tock" | "manual"
+
+export type VenueBookingOption = {
+  provider: BookingProvider | string
+  url: string
+}
+
 // ---------- Core Domain Records ----------
 
 export type VenueRecord = {
@@ -33,6 +42,9 @@ export type VenueRecord = {
   time_category?: string[] | null
   price?: string | number | null
   hours?: Record<string, { open?: string | null; close?: string | null }> | null
+
+  // booking enrichment
+  bookingOptions?: VenueBookingOption[] | null
 }
 
 export type EventRecord = {
@@ -61,7 +73,7 @@ export type PlanningSlot = {
 export type PlanningContext = {
   mode: PlanMode
 
-  // 🔥 NEW: canonical timezone for all temporal logic
+  // canonical timezone for all temporal logic
   timeZone: string
 
   startsAt: Date
@@ -72,10 +84,7 @@ export type PlanningContext = {
   eventTags: string[]
   eventArchetype: string
 
-  // Backward-compatible with current planner
   desiredRoles: StopRole[]
-
-  // Forward-compatible slot intent for improved sequencing
   slots?: PlanningSlot[]
 
   groupSize: number | null
@@ -131,7 +140,7 @@ export type SlotSelectionDebug = {
   }
 }
 
-export type PlanDebug = {
+export type SelectionDebug = {
   candidatePoolSize: number
   preparedCandidateCount: number
   selectedStopCount: number
@@ -139,93 +148,82 @@ export type PlanDebug = {
   slotDiagnostics: SlotSelectionDebug[]
 }
 
-// ---------- Generated Stops ----------
+// ---------- Generated Stops / Planner Output ----------
 
 export type GeneratedOutingStop = {
+  id?: string
   venueId: string
   stopOrder: number
 
-  // Internal planner role used for selection / analytics
   role: StopRole
-
-  // User-facing specificity derived from the actual venue record
+  phase?: SlotPhase | null
   venueType?: string | null
   displayType?: string | null
 
   title: string
-  rationale: string
+  rationale?: string | null
 
-  plannedArrivalAt: string | null
-  plannedDepartureAt: string | null
-  dwellMinutes: number
+  plannedArrivalAt?: string | null
+  plannedDepartureAt?: string | null
 
-  travelMode: TravelMode
-  travelMinutesFromPrev: number | null
-  distanceMetersFromPrev: number | null
+  dwellMinutes?: number | null
+  travelMode?: TravelMode | null
+  distanceMetersFromPrev?: number | null
+  travelMinutesFromPrev?: number | null
 
-  metadata: {
-    venueName: string | null
-    venueAddress: string | null
-    score: number
-    inferredRoles: StopRole[]
+  lat?: number | null
+  lon?: number | null
+  address?: string | null
 
+  metadata?: {
+    venueName?: string | null
+    venueAddress?: string | null
+    score?: number | null
+    inferredRoles?: StopRole[]
+    venueTypes?: string[]
     venueType?: string | null
     displayType?: string | null
+    appliedDisplayType?: string | null
+  } | null
 
-    normalizedType?: string
-    anchorDistanceMeters?: number | null
-    selectedPass?: SelectionPass | null
-    usedFallback?: boolean
-    hoursVerified?: boolean
-    scoreComponents?: {
-      roleFit?: number
-      distance?: number
-      budget?: number
-      vibe?: number
-      archetype?: number
-      group?: number
-      progression?: number
-      modeBias?: number
-    }
-  }
+  // booking additions
+  bookingOptions?: VenueBookingOption[] | null
+  reservationRecommended?: boolean
+  recommendedReservationAt?: string | null
 }
 
-// ---------- Generator Input ----------
+export type BuildPlanSummaryInput = {
+  mode: PlanMode
+  eventTitle: string | null
+  venueName: string | null
+  stops: GeneratedOutingStop[]
+  planningContext: PlanningContext
+}
 
 export type GenerateEventOutingPlanInput = {
   mode: PlanMode
   event: EventRecord
   anchorVenue: VenueRecord | null
   candidateVenues: VenueRecord[]
-
   groupSize?: number | null
   budget?: Budget | null
   mobility?: Mobility
   vibeTags?: string[]
-
-  // 🔥 ADD THIS (surgical)
-  timeZone?: string
+  timeZone?: string | null
 }
-
-// ---------- Generator Output ----------
 
 export type GenerateEventOutingPlanResult = {
   source: "event" | "venue_fallback"
-
   mode: PlanMode
   eventArchetype: string
   eventTags: string[]
-
   confidenceScore: number
-
   plannedStartAt: string
   plannedEndAt: string
   estimatedEndAt: string
-
   summary: string
-
   stops: GeneratedOutingStop[]
-
+  debug?: SelectionDebug | null
   scoreBreakdown: {
     mode: PlanMode
     city: string | null
@@ -233,47 +231,59 @@ export type GenerateEventOutingPlanResult = {
     eventArchetype: string
     candidatePoolSize: number
     selectedStops: number
-    preparedCandidateCount?: number
-    completionRate?: number
+    preparedCandidateCount: number
+    completionRate: number
   }
-
-  debug?: PlanDebug
 }
 
-// ---------- API Layer Types ----------
+// ---------- API Contracts ----------
 
 export type PlanOutingRequestBody = {
   mode?: PlanMode
   groupSize?: number
   budget?: Budget
   mobility?: Mobility
-  vibeTags?: string[]
+  vibeTags?: string[] | string
 }
 
-export type PlanOutingResponse = {
-  success: boolean
-  plannedOutingId: string
-  status: string
+export type PlannedOutingStopRecord = {
+  id: string
+  planned_outing_id: string
+  venue_id: string | null
+  stop_order: number | null
+  role: StopRole | null
+  title: string | null
+  rationale: string | null
+  planned_arrival_at: string | null
+  planned_departure_at: string | null
+  distance_meters_from_prev: number | null
+  travel_minutes_from_prev: number | null
+  metadata?: {
+    venueType?: string | null
+    displayType?: string | null
 
-  mode: PlanMode
-  summary: string
-  confidenceScore: number
+    // booking additions
+    bookingOptions?: VenueBookingOption[] | null
+    reservationRecommended?: boolean
+    recommendedReservationAt?: string | null
+  } | null
+}
 
-  anchor?: {
-    eventId?: string
-    title?: string | null
-    startsAt?: string | null
-    endsAt?: string | null
-    venue?: {
-      id?: string | null
-      name?: string | null
-      city?: string | null
-      address?: string | null
-    } | null
-  }
+export type PlannedOutingRecord = {
+  id: string
+  user_id?: string | null
+  event_id?: string | null
+  mode: PlanMode | null
+  summary: string | null
+  confidence_score: number | null
+  planned_start_at: string | null
+  planned_end_at: string | null
+  estimated_end_at: string | null
+  metadata?: Record<string, unknown> | null
+}
 
-  stops: GeneratedOutingStop[]
-
-  error?: string
-  debug?: PlanDebug
+export type PersistGeneratedOutingPlanInput = {
+  userId: string
+  eventId: string
+  plan: GenerateEventOutingPlanResult
 }

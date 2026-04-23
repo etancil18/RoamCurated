@@ -104,6 +104,10 @@ export function isRoleTemporallyCompatible(
     return hour >= 10 && hour <= (relaxed ? 21 : 20)
   }
 
+  if (hasAnyType(types, ["wellness", "yoga", "pilates"])) {
+    return hour >= 6 && hour <= (relaxed ? 13.5 : 12.5)
+  }
+
   if (
     hasAnyType(types, [
       "bar",
@@ -121,7 +125,35 @@ export function isRoleTemporallyCompatible(
   }
 
   if (!relaxed && role === "coffee" && hour >= 18) return false
-  if (role === "food" && hour < (relaxed ? 9 : 10)) return false
+
+  if (role === "food") {
+    if (hour < (relaxed ? 8 : 9)) return false
+
+    const isMorningFoodLike = hasAnyType(types, [
+      "breakfast",
+      "brunch",
+      "bakery",
+      "cafe",
+      "café",
+      "coffee",
+      "tea",
+      "juice",
+      "matcha",
+    ])
+
+    if (!relaxed && hour < 11 && !isMorningFoodLike) {
+      return false
+    }
+  }
+
+  if (role === "activity") {
+    const isMorningWellnessLike = hasAnyType(types, ["wellness", "yoga", "pilates"])
+
+    if (isMorningWellnessLike) {
+      return hour >= 6 && hour <= (relaxed ? 13.5 : 12.5)
+    }
+  }
+
   if (role === "drink" && hour < (relaxed ? 13 : 14)) return false
 
   return true
