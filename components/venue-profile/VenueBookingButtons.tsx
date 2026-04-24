@@ -1,5 +1,9 @@
 // components/venue-profile/VenueBookingButtons.tsx
 
+"use client"
+
+import { logEvent } from "@/lib/logEvent"
+
 type VenueBookingOption = {
   provider: string
   url: string
@@ -10,6 +14,14 @@ type Props = {
   reservationRecommended?: boolean
   recommendedReservationAt?: string | null
   compact?: boolean
+}
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(logEvent(eventName, metadata))
+  } catch (error) {
+    console.warn("logEvent failed:", eventName, error)
+  }
 }
 
 function getProviderLabel(provider: string): string {
@@ -86,6 +98,17 @@ export default function VenueBookingButtons({
       })
     : null
 
+  const handleBookingClick = (option: VenueBookingOption) => {
+    safeLogEvent("venue_booking_click", {
+      provider: option.provider,
+      url: option.url,
+      compact,
+      reservation_recommended: reservationRecommended,
+      recommended_reservation_at: recommendedReservationAt,
+      suggested_time_label: suggestedTimeLabel,
+    })
+  }
+
   if (compact) {
     return (
       <div className="rounded-xl border border-neutral-800 bg-neutral-950 px-3 py-3">
@@ -111,6 +134,7 @@ export default function VenueBookingButtons({
                 href={option.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => handleBookingClick(option)}
                 className="inline-flex items-center justify-center rounded-lg border border-cyan-700 bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-neutral-950"
               >
                 {getButtonText(option.provider, true)}
@@ -157,6 +181,7 @@ export default function VenueBookingButtons({
               href={option.url}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => handleBookingClick(option)}
               className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-950"
             >
               {getButtonText(option.provider)}

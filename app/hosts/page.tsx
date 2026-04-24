@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { QRCodeSVG } from 'qrcode.react'
+import { logEvent } from '@/lib/logEvent'
 
 const HOST_CITY_OPTIONS = [
   { value: 'atl', label: 'Atlanta' },
@@ -12,8 +13,15 @@ const HOST_CITY_OPTIONS = [
   { value: 'lisbon', label: 'Lisbon' },
 ] as const
 
-export default function HostsPage() {
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(logEvent(eventName, metadata))
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
+}
 
+export default function HostsPage() {
   const [name,setName] = useState('')
   const [city,setCity] = useState('')
   const [address,setAddress] = useState('')
@@ -22,71 +30,108 @@ export default function HostsPage() {
   const [loading,setLoading] = useState(false)
   const [welcomeDescription, setWelcomeDescription] = useState('')
 
+  useEffect(() => {
+    safeLogEvent('host_guide_page_viewed')
+  }, [])
+
   async function submit(){
+    safeLogEvent('host_guide_create_clicked', {
+      city,
+      has_name: Boolean(name.trim()),
+      has_address: Boolean(address.trim()),
+      has_website: Boolean(website.trim()),
+      has_welcome_description: Boolean(welcomeDescription.trim()),
+    })
 
     setLoading(true)
 
-    const res = await fetch('/api/hosts/create',{
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body:JSON.stringify({ name,city,address,website,welcomeDescription }),
-    })
+    try {
+      const res = await fetch('/api/hosts/create',{
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ name,city,address,website,welcomeDescription }),
+      })
 
-    const data = await res.json()
+      const data = await res.json()
 
-    setLoading(false)
+      setLoading(false)
 
-    if(data.url){
+      if(data.url){
+        try{
+          const baseUrl =
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            'https://roam-curated.vercel.app'
 
-      try{
+          const resolvedUrl = new URL(data.url, baseUrl)
 
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ||
-          'https://roam-curated.vercel.app'
+          const parts = resolvedUrl.pathname.split('/')
 
-        const resolvedUrl = new URL(data.url, baseUrl)
+          const city = parts[2]
+          const slug = parts[3]
 
-        const parts = resolvedUrl.pathname.split('/')
+          const redirectLink =
+            city && slug
+              ? `${baseUrl}/open/property/${city}/${slug}`
+              : resolvedUrl.toString()
 
-        const city = parts[2]
-        const slug = parts[3]
+          setLink(redirectLink)
 
-        const redirectLink =
-          city && slug
-            ? `${baseUrl}/open/property/${city}/${slug}`
-            : resolvedUrl.toString()
+          safeLogEvent('host_guide_created', {
+            city,
+            slug,
+            guide_url: redirectLink,
+          })
 
-        setLink(redirectLink)
+        } catch {
+          const baseUrl =
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            'https://roam-curated.vercel.app'
 
-      } catch {
+          const fallbackLink = `${baseUrl}${data.url.startsWith('/') ? data.url : `/${data.url}`}`
 
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ||
-          'https://roam-curated.vercel.app'
+          setLink(fallbackLink)
 
-        setLink(`${baseUrl}${data.url.startsWith('/') ? data.url : `/${data.url}`}`)
-
+          safeLogEvent('host_guide_created', {
+            city,
+            guide_url: fallbackLink,
+            used_fallback_url_resolution: true,
+          })
+        }
+      } else {
+        safeLogEvent('host_guide_create_failed', {
+          city,
+          status: res.status,
+          response: data,
+        })
       }
+    } catch (error) {
+      setLoading(false)
 
+      safeLogEvent('host_guide_create_error', {
+        city,
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
     }
-
   }
 
   function copyLink(){
-
     if(!link) return
 
     navigator.clipboard.writeText(link)
 
+    safeLogEvent('host_guide_link_copied', {
+      city,
+      guide_url: link,
+    })
   }
 
-  /* ------------------------------------------------ */
-  /* Printable guide card                             */
-  /* ------------------------------------------------ */
-
   function printGuideCard(){
-
     if(!link) return
+
+    safeLogEvent('host_guide_qr_card_print_clicked', {
+      city,
+      guide_url: link,
+    })
 
     const qrUrl =
       `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(link)}`
@@ -175,15 +220,11 @@ export default function HostsPage() {
     `)
 
     printWindow.document.close()
-
   }
 
   return (
-
     <main className="max-w-xl mx-auto p-6 space-y-8">
-
       <div className="space-y-2">
-
         <h1 className="text-3xl font-bold">
           Create a Roam Neighborhood Guide
         </h1>
@@ -191,11 +232,9 @@ export default function HostsPage() {
         <p className="text-muted-foreground">
           Generate a local guide your guests can open instantly.
         </p>
-
       </div>
 
       <div className="space-y-4">
-
         <Input
           placeholder="Property Name"
           value={name}
@@ -209,7 +248,11 @@ export default function HostsPage() {
 
           <select
             value={city}
-            onChange={(e)=>setCity(e.target.value)}
+            onChange={(e)=>{
+              const nextCity = e.target.value
+              setCity(nextCity)
+              safeLogEvent('host_guide_city_selected', { city: nextCity })
+            }}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
             <option value="">Select a city</option>
@@ -259,15 +302,11 @@ export default function HostsPage() {
         >
           {loading ? 'Creating Guide...' : 'Create Guide'}
         </Button>
-
       </div>
 
       {link && (
-
         <div className="border rounded-lg p-6 space-y-5">
-
           <div className="space-y-1">
-
             <p className="font-semibold">
               Your guide is ready
             </p>
@@ -275,24 +314,26 @@ export default function HostsPage() {
             <p className="text-sm text-muted-foreground">
               Share this with guests so they can explore the neighborhood.
             </p>
-
           </div>
 
           <div className="flex gap-2">
-
             <Input value={link} readOnly />
 
             <Button variant="outline" onClick={copyLink}>
               Copy
             </Button>
-
           </div>
 
           <div className="flex gap-2">
-
             <Button
               className="flex-1"
-              onClick={()=>window.open(link,'_blank')}
+              onClick={()=>{
+                safeLogEvent('host_guide_open_clicked', {
+                  city,
+                  guide_url: link,
+                })
+                window.open(link,'_blank')
+              }}
             >
               Open Guide
             </Button>
@@ -304,25 +345,17 @@ export default function HostsPage() {
             >
               Download QR Card
             </Button>
-
           </div>
 
           <div className="flex flex-col items-center gap-3 pt-4 border-t">
-
             <QRCodeSVG value={link} size={180} level="H" />
 
             <p className="text-xs text-muted-foreground text-center">
               Guests can scan this QR code to open the guide instantly.
             </p>
-
           </div>
-
         </div>
-
       )}
-
     </main>
-
   )
-
 }

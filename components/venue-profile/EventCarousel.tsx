@@ -2,11 +2,20 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { VenueEvent } from '@/types/venue-profile'
+import { logEvent } from '@/lib/logEvent'
 
 type Props = {
   events: VenueEvent[]
   interestedEventIds?: string[]
   onToggleInterested?: (event: VenueEvent) => Promise<void> | void
+}
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(logEvent(eventName, metadata))
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
 }
 
 export default function EventCarousel({
@@ -48,6 +57,13 @@ export default function EventCarousel({
     const isInterested = localInterestedIds.includes(event.id)
     const method = isInterested ? 'DELETE' : 'POST'
 
+    safeLogEvent('venue_event_interest_clicked', {
+      event_id: event.id,
+      event_title: event.title ?? null,
+      action: isInterested ? 'remove_interest' : 'add_interest',
+      is_recurring: false,
+    })
+
     const res = await fetch(`/api/events/${event.id}/interest`, {
       method,
       headers: {
@@ -57,12 +73,27 @@ export default function EventCarousel({
 
     if (!res.ok) {
       const json = await res.json().catch(() => null)
+
+      safeLogEvent('venue_event_interest_failed', {
+        event_id: event.id,
+        event_title: event.title ?? null,
+        action: isInterested ? 'remove_interest' : 'add_interest',
+        status: res.status,
+        error: json,
+      })
+
       throw new Error(json?.error || 'Failed to update interest')
     }
 
     setLocalInterestedIds((prev) =>
       isInterested ? prev.filter((id) => id !== event.id) : [...prev, event.id]
     )
+
+    safeLogEvent('venue_event_interest_updated', {
+      event_id: event.id,
+      event_title: event.title ?? null,
+      action: isInterested ? 'remove_interest' : 'add_interest',
+    })
 
     if (onToggleInterested) {
       await onToggleInterested(event)
@@ -192,9 +223,38 @@ function EventCard({
       await onToggleInterested(event)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save interest')
+
+      safeLogEvent('venue_event_interest_error', {
+        event_id: event.id,
+        event_title: title ?? null,
+        message: err instanceof Error ? err.message : 'Failed to save interest',
+      })
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleMoreInfoClick = () => {
+    const nextShowMoreInfo = !showMoreInfo
+    setShowMoreInfo(nextShowMoreInfo)
+
+    safeLogEvent(
+      nextShowMoreInfo ? 'venue_event_details_expanded' : 'venue_event_details_collapsed',
+      {
+        event_id: event.id,
+        event_title: title ?? null,
+        is_recurring: Boolean(isRecurring),
+      }
+    )
+  }
+
+  const handleTicketClick = () => {
+    safeLogEvent('venue_event_ticket_click', {
+      event_id: event.id,
+      event_title: title ?? null,
+      ticket_link: ticket_link ?? null,
+      is_recurring: Boolean(isRecurring),
+    })
   }
 
   return (
@@ -220,7 +280,7 @@ function EventCard({
         <div className="mt-3">
           <button
             type="button"
-            onClick={() => setShowMoreInfo((prev) => !prev)}
+            onClick={handleMoreInfoClick}
             className="text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
           >
             {showMoreInfo ? 'Less info' : 'More info'}
@@ -259,6 +319,7 @@ function EventCard({
             href={ticket_link}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleTicketClick}
             className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-center text-sm font-medium text-white hover:bg-indigo-700 transition"
           >
             RSVP / Tickets

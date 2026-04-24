@@ -244,7 +244,6 @@ export async function POST(
       vibeTags,
       timeZone,
       leaveEarlyByHours,
-      plannedExitAt,
     })
 
     const lateNightSingleStopFallbackApplied =
@@ -280,6 +279,10 @@ export async function POST(
         ? generatedPlan.stops.length
         : minimumStopsForMode(mode)
 
+    const failedToGenerateStops =
+      generatedPlan.scoreBreakdown.failedToGenerateStops ||
+      generatedPlan.stops.length === 0
+
     console.log(
       "generated outing plan",
       JSON.stringify(
@@ -294,6 +297,7 @@ export async function POST(
           requestedVibeTags: vibeTags,
           requestedLeaveEarlyByHours: leaveEarlyByHours,
           derivedPlannedExitAt: plannedExitAt,
+          generatedPlannedExitAt: generatedPlan.plannedExitAt ?? null,
           effectiveExitAt:
             generatedPlan.effectiveExitAt ??
             debugPlanningContext.effectiveExitAt?.toISOString?.() ??
@@ -301,6 +305,7 @@ export async function POST(
           candidateVenueCount: venueCandidates.length,
           generatedStopCount: generatedPlan.stops.length,
           minimumRequiredStops,
+          failedToGenerateStops,
           lateNightSingleStopFallbackApplied,
           lateNightReducedFullFallbackApplied,
           reducedBeforeSingleStopFallbackApplied,
@@ -313,7 +318,7 @@ export async function POST(
       )
     )
 
-    if (generatedPlan.stops.length < minimumRequiredStops) {
+    if (failedToGenerateStops || generatedPlan.stops.length < minimumRequiredStops) {
       console.warn(
         "insufficient outing coverage",
         JSON.stringify(
@@ -321,12 +326,14 @@ export async function POST(
             eventId,
             mode,
             minimumRequiredStops,
+            failedToGenerateStops,
             lateNightSingleStopFallbackApplied,
             lateNightReducedFullFallbackApplied,
             reducedBeforeSingleStopFallbackApplied,
             leaveEarlyCoverageSufficient,
             leaveEarlyByHours,
             plannedExitAt,
+            generatedPlannedExitAt: generatedPlan.plannedExitAt ?? null,
             effectiveExitAt:
               generatedPlan.effectiveExitAt ??
               debugPlanningContext.effectiveExitAt?.toISOString?.() ??
@@ -367,7 +374,7 @@ export async function POST(
       vibeTags,
       generatedPlan,
       leaveEarlyByHours,
-      plannedExitAt,
+      plannedExitAt: generatedPlan.plannedExitAt ?? plannedExitAt,
     })
 
     await supabase.from("planned_outing_events").insert({
@@ -379,7 +386,7 @@ export async function POST(
         city,
         timeZone,
         leaveEarlyByHours,
-        plannedExitAt,
+        plannedExitAt: generatedPlan.plannedExitAt ?? plannedExitAt,
         effectiveExitAt:
           generatedPlan.effectiveExitAt ??
           debugPlanningContext.effectiveExitAt?.toISOString?.() ??
@@ -390,6 +397,10 @@ export async function POST(
         candidatePoolSize: generatedPlan.scoreBreakdown.candidatePoolSize,
         preparedCandidateCount:
           generatedPlan.scoreBreakdown.preparedCandidateCount ?? null,
+        intendedStopCount: generatedPlan.scoreBreakdown.intendedStopCount,
+        effectiveIntendedStopCount:
+          generatedPlan.scoreBreakdown.effectiveIntendedStopCount,
+        failedToGenerateStops,
         minimumRequiredStops,
         lateNightSingleStopFallbackApplied,
         lateNightReducedFullFallbackApplied,
@@ -441,7 +452,7 @@ export async function POST(
         startsAt: event.starts_at,
         endsAt: generatedPlan.estimatedEndAt,
         leaveEarlyByHours,
-        plannedExitAt,
+        plannedExitAt: generatedPlan.plannedExitAt ?? plannedExitAt,
         effectiveExitAt:
           generatedPlan.effectiveExitAt ??
           debugPlanningContext.effectiveExitAt?.toISOString?.() ??
@@ -552,8 +563,8 @@ function qualifiesForLeaveEarlyCoverage(
   const beforeStops = stops.filter((stop) => stop.phase === "before").length
 
   if (mode === "after") {
-  return leaveEarlyByHours ? true : afterStops >= 1
-}
+    return afterStops >= 1
+  }
 
   if (mode === "full") {
     return beforeStops >= 1 && afterStops >= 1

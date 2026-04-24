@@ -15,7 +15,7 @@ export type StopRole =
 
 export type TravelMode = "walk" | "drive" | "transit" | "rideshare"
 export type SlotPhase = "before" | "after"
-export type SelectionPass = "strict" | "balanced" | "relaxed"
+export type SelectionPass = "strict" | "balanced" | "relaxed" | "emergency"
 
 // ---------- Exit-Aware Planning ----------
 
@@ -46,8 +46,6 @@ export type VenueRecord = {
   time_category?: string[] | null
   price?: string | number | null
   hours?: Record<string, { open?: string | null; close?: string | null }> | null
-
-  // booking enrichment
   bookingOptions?: VenueBookingOption[] | null
 }
 
@@ -76,8 +74,6 @@ export type PlanningSlot = {
 
 export type PlanningContext = {
   mode: PlanMode
-
-  // canonical timezone for all temporal logic
   timeZone: string
 
   startsAt: Date
@@ -85,10 +81,9 @@ export type PlanningContext = {
   plannedStartAt: Date
   plannedEndAt: Date
 
-  // exit-aware planning
   leaveEarlyByHours?: LeaveEarlyByHours | null
   plannedExitAt?: Date | null
-  effectiveExitAt?: Date
+  effectiveExitAt?: Date | null
 
   eventTags: string[]
   eventArchetype: string
@@ -135,7 +130,7 @@ export type SlotSelectionDebug = {
   role: StopRole
   phase?: SlotPhase
   selectedVenueId: string | null
-  selectedPass: SelectionPass | null
+  selectedPass?: SelectionPass | null
   candidatesTotal: number
   matchedRole: number
   passedHardConstraints: number
@@ -185,17 +180,17 @@ export type GeneratedOutingStop = {
   address?: string | null
 
   metadata?: {
-    venueName?: string | null
-    venueAddress?: string | null
-    score?: number | null
-    inferredRoles?: StopRole[]
-    venueTypes?: string[]
-    venueType?: string | null
-    displayType?: string | null
-    appliedDisplayType?: string | null
-  } | null
+  venueName?: string | null
+  venueAddress?: string | null
+  score?: number | null
+  inferredRoles?: StopRole[]
+  venueTypes?: string[]
+  venueType?: string | null
+  displayType?: string | null
+  appliedDisplayType?: string | null
+  selectedPass?: SelectionPass | null
+} | null
 
-  // booking additions
   bookingOptions?: VenueBookingOption[] | null
   reservationRecommended?: boolean
   recommendedReservationAt?: string | null
@@ -219,10 +214,7 @@ export type GenerateEventOutingPlanInput = {
   mobility?: Mobility
   vibeTags?: string[]
   timeZone?: string | null
-
-  // exit-aware planning
   leaveEarlyByHours?: LeaveEarlyByHours | null
-  plannedExitAt?: string | null
 }
 
 export type GenerateEventOutingPlanResult = {
@@ -235,7 +227,6 @@ export type GenerateEventOutingPlanResult = {
   plannedEndAt: string
   estimatedEndAt: string
 
-  // exit-aware planning
   leaveEarlyByHours?: LeaveEarlyByHours | null
   plannedExitAt?: string | null
   effectiveExitAt?: string | null
@@ -251,7 +242,14 @@ export type GenerateEventOutingPlanResult = {
     candidatePoolSize: number
     selectedStops: number
     preparedCandidateCount: number
+    intendedStopCount: number
+    effectiveIntendedStopCount: number
     completionRate: number
+    failedToGenerateStops: boolean
+    reducedBeforeSingleStopFallbackApplied: boolean
+    leaveEarlyByHours: LeaveEarlyByHours | null
+    plannedExitAt: string | null
+    effectiveExitAt: string | null
   }
 }
 
@@ -263,10 +261,7 @@ export type PlanOutingRequestBody = {
   budget?: Budget
   mobility?: Mobility
   vibeTags?: string[] | string
-
-  // exit-aware planning
   leaveEarlyByHours?: LeaveEarlyByHours | null
-  plannedExitAt?: string
 }
 
 export type PlannedOutingStopRecord = {
@@ -284,8 +279,6 @@ export type PlannedOutingStopRecord = {
   metadata?: {
     venueType?: string | null
     displayType?: string | null
-
-    // booking additions
     bookingOptions?: VenueBookingOption[] | null
     reservationRecommended?: boolean
     recommendedReservationAt?: string | null
@@ -309,8 +302,6 @@ export type PersistGeneratedOutingPlanInput = {
   userId: string
   eventId: string
   plan: GenerateEventOutingPlanResult
-
-  // exit-aware planning
   leaveEarlyByHours?: LeaveEarlyByHours | null
   plannedExitAt?: string | null
 }

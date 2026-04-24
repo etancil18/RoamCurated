@@ -68,16 +68,21 @@ export function generateEventOutingPlan(
   })
 
   const rankedCandidates = rankVenueCandidates(input.candidateVenues, context)
-  const debug = buildSelectionDebug(rankedCandidates, context)
+
   const rawStops = generatePlanStops(rankedCandidates, context)
   const stops = annotateBookingRecommendations({
     mode: input.mode,
     stops: rawStops,
   })
+
+  const debug = buildSelectionDebug(rankedCandidates, context)
   const confidenceScore = computeConfidenceScore(stops, context)
 
   const intendedStopCount =
     context.slots?.length ?? context.desiredRoles.length
+
+  const failedToGenerateStops =
+    intendedStopCount > 0 && stops.length === 0
 
   const reducedBeforeSingleStopFallbackApplied =
     qualifiesForReducedBeforeSingleStopFallback(stops, context)
@@ -120,7 +125,14 @@ export function generateEventOutingPlan(
       candidatePoolSize: rankedCandidates.length,
       selectedStops: stops.length,
       preparedCandidateCount: rankedCandidates.length,
+      intendedStopCount,
+      effectiveIntendedStopCount,
       completionRate,
+      failedToGenerateStops,
+      reducedBeforeSingleStopFallbackApplied,
+      leaveEarlyByHours: context.leaveEarlyByHours ?? null,
+      plannedExitAt: context.plannedExitAt?.toISOString() ?? null,
+      effectiveExitAt: context.effectiveExitAt?.toISOString() ?? null,
     },
   }
 }

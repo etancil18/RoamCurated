@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import VenueBookingButtons from "@/components/venue-profile/VenueBookingButtons"
+import { logEvent } from "@/lib/logEvent"
 import {
   getGroupSizePresetOptions,
   type GroupSizePresetId,
@@ -66,7 +67,7 @@ type SlotSelectionDebug = {
   role: "coffee" | "food" | "drink" | "activity" | "dessert"
   phase?: "before" | "after"
   selectedVenueId: string | null
-  selectedPass: "strict" | "balanced" | "relaxed" | null
+  selectedPass: "strict" | "balanced" | "relaxed" | "emergency" | null
   candidatesTotal: number
   matchedRole: number
   passedHardConstraints: number
@@ -157,6 +158,14 @@ const LEAVE_EARLY_OPTIONS: Array<{
 const GROUP_SIZE_OPTIONS = getGroupSizePresetOptions()
 const VIBE_OPTIONS = getVibePresetOptions()
 
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(logEvent(eventName, metadata))
+  } catch (error) {
+    console.warn("logEvent failed:", eventName, error)
+  }
+}
+
 export default function OutingPlannerModal({
   open,
   onClose,
@@ -168,24 +177,29 @@ export default function OutingPlannerModal({
   const modeRef = useRef<PlanMode>("full")
 
   const [groupSize, setGroupSize] = useState<number>(2)
-  const [groupSizePresetId, setGroupSizePresetId] = useState<GroupSizePresetId | null>("duo")
+  const [groupSizePresetId, setGroupSizePresetId] =
+    useState<GroupSizePresetId | null>("duo")
   const [budget, setBudget] = useState<Budget | "">("")
   const [mobility, setMobility] = useState<Mobility>("short_ride")
   const [vibePresetId, setVibePresetId] = useState<VibePresetId | null>(null)
   const [vibeTags, setVibeTags] = useState<string[]>([])
 
   const [plannedExitEnabled, setPlannedExitEnabled] = useState(false)
-  const [leaveEarlyByHours, setLeaveEarlyByHours] = useState<LeaveEarlyByHours>(2)
+  const [leaveEarlyByHours, setLeaveEarlyByHours] =
+    useState<LeaveEarlyByHours>(2)
 
   const [loading, setLoading] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [plan, setPlan] = useState<PlanOutingResponse | null>(null)
   const [plannerDebug, setPlannerDebug] = useState<PlanDebug | null>(null)
-  const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null)
+  const [scoreBreakdown, setScoreBreakdown] =
+    useState<ScoreBreakdown | null>(null)
 
   const [hasUserSelectedMode, setHasUserSelectedMode] = useState(false)
   const initialPlanKeyRef = useRef<string | null>(null)
+  const openedLoggedRef = useRef(false)
+  const stopImpressionIdsRef = useRef<Set<string>>(new Set())
 
   const derivedDefaultMode = useMemo<PlanMode>(() => {
     if (!event?.starts_at) return "full"
@@ -204,31 +218,54 @@ export default function OutingPlannerModal({
   }, [mode])
 
   useEffect(() => {
-  if (!open) return
-  if (hasUserSelectedMode) return
+    if (!open || !event?.id || openedLoggedRef.current) return
 
-  setMode(derivedDefaultMode)
-  modeRef.current = derivedDefaultMode
-}, [open, derivedDefaultMode, hasUserSelectedMode])
+    openedLoggedRef.current = true
+
+    safeLogEvent("outing_planner_opened", {
+      event_id: event.id,
+      event_title: event.title ?? null,
+      venue_id: event.venue?.id ?? null,
+      city: event.venue?.city ?? null,
+      derived_default_mode: derivedDefaultMode,
+    })
+  }, [
+    open,
+    event?.id,
+    event?.title,
+    event?.venue?.id,
+    event?.venue?.city,
+    derivedDefaultMode,
+  ])
 
   useEffect(() => {
-  if (!open) {
-    setError(null)
-    setPlan(null)
-    setPlannerDebug(null)
-    setScoreBreakdown(null)
-    setLoading(false)
-    setRegenerating(false)
-    setGroupSize(2)
-    setGroupSizePresetId("duo")
-    setVibePresetId(null)
-    setVibeTags([])
-    setPlannedExitEnabled(false)
-    setLeaveEarlyByHours(2)
-    setHasUserSelectedMode(false)
-    initialPlanKeyRef.current = null
-  }
-}, [open])
+    if (!open) return
+    if (hasUserSelectedMode) return
+
+    setMode(derivedDefaultMode)
+    modeRef.current = derivedDefaultMode
+  }, [open, derivedDefaultMode, hasUserSelectedMode])
+
+  useEffect(() => {
+    if (!open) {
+      setError(null)
+      setPlan(null)
+      setPlannerDebug(null)
+      setScoreBreakdown(null)
+      setLoading(false)
+      setRegenerating(false)
+      setGroupSize(2)
+      setGroupSizePresetId("duo")
+      setVibePresetId(null)
+      setVibeTags([])
+      setPlannedExitEnabled(false)
+      setLeaveEarlyByHours(2)
+      setHasUserSelectedMode(false)
+      initialPlanKeyRef.current = null
+      openedLoggedRef.current = false
+      stopImpressionIdsRef.current = new Set()
+    }
+  }, [open])
 
   const selectGroupSizePreset = (presetId: GroupSizePresetId) => {
     const preset = GROUP_SIZE_OPTIONS.find((option) => option.id === presetId)
@@ -236,13 +273,65 @@ export default function OutingPlannerModal({
 
     setGroupSizePresetId(presetId)
     setGroupSize(preset.representativeSize)
+
+    safeLogEvent("outing_group_size_selected", {
+      event_id: event?.id ?? null,
+      group_size_preset_id: presetId,
+      group_size: preset.representativeSize,
+    })
   }
 
   const toggleVibePreset = (presetId: VibePresetId) => {
     setVibePresetId((prev) => {
       const nextPresetId = prev === presetId ? null : presetId
-      setVibeTags(nextPresetId ? expandVibeTags(nextPresetId) : [])
+      const nextTags = nextPresetId ? expandVibeTags(nextPresetId) : []
+
+      setVibeTags(nextTags)
+
+      safeLogEvent("outing_vibe_selected", {
+        event_id: event?.id ?? null,
+        vibe_preset_id: nextPresetId,
+        vibe_tags: nextTags,
+      })
+
       return nextPresetId
+    })
+  }
+
+  const handleBudgetChange = (nextBudget: Budget | "") => {
+    setBudget(nextBudget)
+
+    safeLogEvent("outing_budget_selected", {
+      event_id: event?.id ?? null,
+      budget: nextBudget || null,
+    })
+  }
+
+  const handleMobilityChange = (nextMobility: Mobility) => {
+    setMobility(nextMobility)
+
+    safeLogEvent("outing_mobility_selected", {
+      event_id: event?.id ?? null,
+      mobility: nextMobility,
+    })
+  }
+
+  const handleLeaveEarlyToggle = (enabled: boolean) => {
+    setPlannedExitEnabled(enabled)
+
+    safeLogEvent("outing_leave_early_toggled", {
+      event_id: event?.id ?? null,
+      enabled,
+      leave_early_by_hours: enabled ? leaveEarlyByHours : null,
+    })
+  }
+
+  const handleLeaveEarlyHoursChange = (hours: LeaveEarlyByHours) => {
+    setLeaveEarlyByHours(hours)
+
+    safeLogEvent("outing_leave_early_hours_selected", {
+      event_id: event?.id ?? null,
+      leave_early_by_hours: hours,
     })
   }
 
@@ -268,6 +357,26 @@ export default function OutingPlannerModal({
       try {
         const shouldSendLeaveEarlyByHours =
           activeMode !== "before" && plannedExitEnabled
+
+        safeLogEvent(
+          isRegenerate
+            ? "outing_plan_regenerate_started"
+            : "outing_plan_generate_started",
+          {
+            event_id: event.id,
+            mode: activeMode,
+            group_size: groupSize,
+            group_size_preset_id: groupSizePresetId ?? null,
+            budget: budget || null,
+            mobility,
+            vibe_preset_id: vibePresetId ?? null,
+            vibe_tags: vibeTags,
+            leave_early_enabled: plannedExitEnabled,
+            leave_early_by_hours: shouldSendLeaveEarlyByHours
+              ? leaveEarlyByHours
+              : null,
+          }
+        )
 
         const res = await fetch(`/api/events/${event.id}/plan-outing`, {
           method: "POST",
@@ -307,6 +416,15 @@ export default function OutingPlannerModal({
             (data && "error" in data && data.error) ||
             "Failed to generate outing plan"
 
+          safeLogEvent("outing_plan_failed", {
+            event_id: event.id,
+            mode: activeMode,
+            reason: message,
+            status: res.status,
+            score_breakdown: scoreData,
+            debug: debugData,
+          })
+
           throw new Error(message)
         }
 
@@ -314,12 +432,32 @@ export default function OutingPlannerModal({
 
         console.log("plan-outing success/debug payload:", successData)
 
+        safeLogEvent("outing_plan_generated", {
+          event_id: event.id,
+          planned_outing_id: successData.plannedOutingId,
+          mode: successData.mode,
+          stop_count: successData.stops?.length ?? 0,
+          confidence_score: successData.confidenceScore,
+          completion_rate: successData.scoreBreakdown?.completionRate ?? null,
+          selected_stops: successData.scoreBreakdown?.selectedStops ?? null,
+          candidate_pool_size:
+            successData.scoreBreakdown?.candidatePoolSize ?? null,
+        })
+
         setPlan(successData)
         setPlannerDebug(successData.debug ?? null)
         setScoreBreakdown(successData.scoreBreakdown ?? null)
         setMode(activeMode)
       } catch (err) {
         console.error("Error generating outing plan:", err)
+
+        safeLogEvent("outing_plan_error", {
+          event_id: event.id,
+          mode: activeMode,
+          message:
+            err instanceof Error ? err.message : "Failed to generate outing plan",
+        })
+
         setPlan(null)
         setError(err instanceof Error ? err.message : "Failed to generate outing plan")
       } finally {
@@ -341,24 +479,61 @@ export default function OutingPlannerModal({
   )
 
   useEffect(() => {
-  if (!open || !event?.id) return
+    if (!open || !event?.id) return
 
-  const initialPlanKey = `${event.id}:${derivedDefaultMode}`
-  if (initialPlanKeyRef.current === initialPlanKey) return
+    const initialPlanKey = `${event.id}:${derivedDefaultMode}`
+    if (initialPlanKeyRef.current === initialPlanKey) return
 
-  initialPlanKeyRef.current = initialPlanKey
-  void generatePlan({ nextMode: derivedDefaultMode, isRegenerate: false })
-}, [open, event?.id, derivedDefaultMode, generatePlan])
+    initialPlanKeyRef.current = initialPlanKey
+    void generatePlan({ nextMode: derivedDefaultMode, isRegenerate: false })
+  }, [open, event?.id, derivedDefaultMode, generatePlan])
+
+  useEffect(() => {
+    if (!open || !plan?.plannedOutingId || !plan.stops?.length) return
+
+    for (const stop of plan.stops) {
+      const key = `${plan.plannedOutingId}:${stop.venueId}:${stop.stopOrder}`
+      if (stopImpressionIdsRef.current.has(key)) continue
+
+      stopImpressionIdsRef.current.add(key)
+
+      safeLogEvent("outing_stop_impression", {
+        event_id: event?.id ?? null,
+        planned_outing_id: plan.plannedOutingId,
+        venue_id: stop.venueId,
+        stop_order: stop.stopOrder,
+        role: stop.role,
+        phase: stop.phase ?? null,
+        venue_type: stop.venueType ?? null,
+        display_type: stop.displayType ?? null,
+        has_booking_options: Boolean(stop.bookingOptions?.length),
+        reservation_recommended: stop.reservationRecommended ?? false,
+      })
+    }
+  }, [open, plan?.plannedOutingId, plan?.stops, event?.id])
 
   const handleModeChange = async (nextMode: PlanMode) => {
-  setHasUserSelectedMode(true)
-  setMode(nextMode)
-  modeRef.current = nextMode
-  await generatePlan({ nextMode, isRegenerate: true })
-}
+    safeLogEvent("outing_mode_selected", {
+      event_id: event?.id ?? null,
+      previous_mode: modeRef.current,
+      mode: nextMode,
+    })
+
+    setHasUserSelectedMode(true)
+    setMode(nextMode)
+    modeRef.current = nextMode
+    await generatePlan({ nextMode, isRegenerate: true })
+  }
 
   const handleViewPlan = () => {
     if (!event?.id || !plan?.plannedOutingId) return
+
+    safeLogEvent("outing_view_plan_clicked", {
+      event_id: event.id,
+      planned_outing_id: plan.plannedOutingId,
+      mode: plan.mode,
+    })
+
     router.push(`/events/${event.id}/outing/${plan.plannedOutingId}`)
   }
 
@@ -412,7 +587,9 @@ export default function OutingPlannerModal({
           <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
             <div className="space-y-5">
               <section>
-                <p className="mb-2 text-sm font-medium text-neutral-300">Timing</p>
+                <p className="mb-2 text-sm font-medium text-neutral-300">
+                  Timing
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {(["before", "after", "full"] as PlanMode[]).map((option) => {
                     const selected = mode === option
@@ -478,7 +655,9 @@ export default function OutingPlannerModal({
                   </label>
                   <select
                     value={budget}
-                    onChange={(e) => setBudget(e.target.value as Budget | "")}
+                    onChange={(e) =>
+                      handleBudgetChange(e.target.value as Budget | "")
+                    }
                     className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white"
                   >
                     <option value="">Any</option>
@@ -495,7 +674,9 @@ export default function OutingPlannerModal({
                   </label>
                   <select
                     value={mobility}
-                    onChange={(e) => setMobility(e.target.value as Mobility)}
+                    onChange={(e) =>
+                      handleMobilityChange(e.target.value as Mobility)
+                    }
                     className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-white"
                   >
                     <option value="walk">Walk only</option>
@@ -511,7 +692,7 @@ export default function OutingPlannerModal({
                         id="planned-exit-toggle"
                         type="checkbox"
                         checked={plannedExitEnabled}
-                        onChange={(e) => setPlannedExitEnabled(e.target.checked)}
+                        onChange={(e) => handleLeaveEarlyToggle(e.target.checked)}
                         className="mt-1 h-4 w-4 rounded border-neutral-600 bg-neutral-900 text-cyan-500 focus:ring-cyan-500"
                       />
                       <div className="min-w-0">
@@ -529,30 +710,30 @@ export default function OutingPlannerModal({
                     </div>
 
                     {plannedExitEnabled ? (
-                      <div>
+                    <div>
                         <label className="mb-2 block text-sm font-medium text-neutral-300">
-                          Leave Early By
+                        Leave Early By
                         </label>
                         <div className="flex flex-wrap gap-2">
-                          {LEAVE_EARLY_OPTIONS.map((option) => {
+                        {LEAVE_EARLY_OPTIONS.map((option) => {
                             const selected = leaveEarlyByHours === option.value
                             return (
-                              <button
+                            <button
                                 key={option.value}
                                 type="button"
-                                onClick={() => setLeaveEarlyByHours(option.value)}
+                                onClick={() => handleLeaveEarlyHoursChange(option.value)}
                                 className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                                  selected
+                                selected
                                     ? "border-cyan-500 bg-cyan-500 text-white"
                                     : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800"
                                 }`}
-                              >
+                            >
                                 {option.label}
-                              </button>
+                            </button>
                             )
-                          })}
+                        })}
                         </div>
-                      </div>
+                    </div>
                     ) : null}
                   </div>
                 ) : null}
@@ -885,15 +1066,27 @@ export default function OutingPlannerModal({
                             ) : null}
 
                             {(stop.bookingOptions?.length ?? 0) > 0 || stop.reservationRecommended ? (
-                              <div className="mt-4">
-                                <VenueBookingButtons
-                                  bookingOptions={stop.bookingOptions}
-                                  reservationRecommended={stop.reservationRecommended}
-                                  recommendedReservationAt={stop.recommendedReservationAt}
-                                  compact
-                                />
-                              </div>
-                            ) : null}
+                                <div
+                                    className="mt-4"
+                                    onClickCapture={() => {
+                                    safeLogEvent("outing_booking_click", {
+                                        event_id: event?.id ?? null,
+                                        planned_outing_id: plan?.plannedOutingId ?? null,
+                                        venue_id: stop.venueId,
+                                        stop_order: stop.stopOrder,
+                                        role: stop.role,
+                                        provider: stop.bookingOptions?.[0]?.provider ?? null,
+                                    })
+                                    }}
+                                >
+                                    <VenueBookingButtons
+                                    bookingOptions={stop.bookingOptions}
+                                    reservationRecommended={stop.reservationRecommended}
+                                    recommendedReservationAt={stop.recommendedReservationAt}
+                                    compact
+                                    />
+                                </div>
+                                ) : null}
                           </div>
                         </div>
                       </div>

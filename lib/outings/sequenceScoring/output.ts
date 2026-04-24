@@ -98,6 +98,7 @@ export function generatePlanStops(
         venueType,
         displayType,
         appliedDisplayType: displayType,
+        selectedPass: selectedStopsWithSlots[index]?.selectedPass ?? null,
       },
     }
   })

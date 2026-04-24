@@ -8,6 +8,7 @@ import type {
   LeaveEarlyByHours,
   Mobility,
   PlanMode,
+  SelectionPass,
   VenueRecord,
 } from "./types"
 
@@ -73,6 +74,8 @@ export async function persistGeneratedOutingPlan({
     throw new Error("Cannot persist a planned outing with zero stops")
   }
 
+  const selectionPassCounts = countSelectionPasses(generatedPlan)
+
   const stopRows = generatedPlan.stops.map((stop) => ({
     planned_outing_id: "__PENDING_OUTING_ID__",
     venue_id: stop.venueId,
@@ -92,6 +95,7 @@ export async function persistGeneratedOutingPlan({
       ...(stop.metadata ?? {}),
       venueType: stop.venueType ?? stop.metadata?.venueType ?? null,
       displayType: stop.displayType ?? stop.metadata?.displayType ?? null,
+      selectedPass: stop.metadata?.selectedPass ?? null,
       phase: stop.phase ?? null,
       bookingOptions: stop.bookingOptions ?? null,
       reservationRecommended: stop.reservationRecommended ?? false,
@@ -122,7 +126,10 @@ export async function persistGeneratedOutingPlan({
       planned_end_at: generatedPlan.plannedEndAt,
       generation_version: "v1.3.0-booking-annotated-outings",
       confidence_score: generatedPlan.confidenceScore,
-      score_breakdown: generatedPlan.scoreBreakdown,
+      score_breakdown: {
+        ...generatedPlan.scoreBreakdown,
+        selectionPassCounts,
+      },
       plan_summary: generatedPlan.summary,
       metadata: {
         anchorVenue: anchorVenue
@@ -151,6 +158,8 @@ export async function persistGeneratedOutingPlan({
           preparedCandidateCount:
             generatedPlan.scoreBreakdown.preparedCandidateCount ?? null,
           completionRate: generatedPlan.scoreBreakdown.completionRate ?? null,
+          selectionPassCounts,
+          emergencyStopCount: selectionPassCounts.emergency,
           leaveEarlyByHours:
             generatedPlan.leaveEarlyByHours ?? leaveEarlyByHours ?? null,
           plannedExitAt: generatedPlan.plannedExitAt ?? plannedExitAt ?? null,
@@ -203,6 +212,37 @@ export async function persistGeneratedOutingPlan({
     plannedOuting,
     insertedStops: insertedStops ?? [],
   }
+}
+
+function countSelectionPasses(
+  generatedPlan: GenerateEventOutingPlanResult
+): Record<SelectionPass, number> {
+  return generatedPlan.stops.reduce<Record<SelectionPass, number>>(
+    (counts, stop) => {
+      const selectedPass = stop.metadata?.selectedPass
+
+      if (isSelectionPass(selectedPass)) {
+        counts[selectedPass] += 1
+      }
+
+      return counts
+    },
+    {
+      strict: 0,
+      balanced: 0,
+      relaxed: 0,
+      emergency: 0,
+    }
+  )
+}
+
+function isSelectionPass(value: unknown): value is SelectionPass {
+  return (
+    value === "strict" ||
+    value === "balanced" ||
+    value === "relaxed" ||
+    value === "emergency"
+  )
 }
 
 type StopRowForValidation = {

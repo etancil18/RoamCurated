@@ -49,29 +49,41 @@ import {
 
 import { computeSequentialCandidateScore } from "./bias"
 
+type SelectionPass = "strict" | "balanced" | "relaxed" | "emergency"
+
+type RejectionCounts = {
+  used: number
+  role: number
+  geometry: number
+  temporal: number
+  hours: number
+  missing_data: number
+}
+
+type SelectionPassConfig = {
+  name: SelectionPass
+  relaxedRole: boolean
+  relaxedGeometry: boolean
+  relaxedTemporal: boolean
+  allowWeakRoleMatch?: boolean
+}
+
 export type SlotSelectionDebug = {
   slotIndex: number
   role: StopRole
   phase?: "before" | "after"
   selectedVenueId: string | null
-  selectedPass: "strict" | "balanced" | "relaxed" | null
+  selectedPass: SelectionPass | null
   candidatesTotal: number
   matchedRole: number
   passedHardConstraints: number
-  rejectionCounts: {
-    used: number
-    role: number
-    geometry: number
-    temporal: number
-    hours: number
-    missing_data: number
-  }
+  rejectionCounts: RejectionCounts
 }
 
 export type SelectedSlotVenue = {
   venue: CandidateVenue
   slot: PlanningSlot
-  selectedPass: "strict" | "relaxed"
+  selectedPass: SelectionPass
 }
 
 export type SelectionDebugResult = {
@@ -79,12 +91,65 @@ export type SelectionDebugResult = {
   slotDiagnostics: SlotSelectionDebug[]
 }
 
+const SELECTION_PASSES: SelectionPassConfig[] = [
+  {
+    name: "strict",
+    relaxedRole: false,
+    relaxedGeometry: false,
+    relaxedTemporal: false,
+  },
+  {
+    name: "balanced",
+    relaxedRole: true,
+    relaxedGeometry: false,
+    relaxedTemporal: false,
+  },
+  {
+    name: "relaxed",
+    relaxedRole: true,
+    relaxedGeometry: true,
+    relaxedTemporal: true,
+  },
+  {
+    name: "emergency",
+    relaxedRole: true,
+    relaxedGeometry: true,
+    relaxedTemporal: true,
+    allowWeakRoleMatch: true,
+  },
+]
+
 function unwrapSelectedVenues(
   selected: SelectedSlotVenue[] | CandidateVenue[]
 ): CandidateVenue[] {
   return selected.map((entry) =>
     "venue" in entry ? entry.venue : entry
   )
+}
+
+function emptyRejectionCounts(): RejectionCounts {
+  return {
+    used: 0,
+    role: 0,
+    geometry: 0,
+    temporal: 0,
+    hours: 0,
+    missing_data: 0,
+  }
+}
+
+function mergeRejectionCounts(
+  a: RejectionCounts,
+  b: RejectionCounts
+): RejectionCounts {
+  return {
+    used: a.used + b.used,
+    role: a.role + b.role,
+    geometry: a.geometry + b.geometry,
+    temporal: a.temporal + b.temporal,
+    hours: a.hours + b.hours,
+    missing_data: a.missing_data + b.missing_data,
+  }
 }
 
 export function selectCandidates(
@@ -100,195 +165,67 @@ export function selectCandidates(
   for (let index = 0; index < slots.length; index += 1) {
     const slot = slots[index]
 
-    const strictRejections = {
-      used: 0,
-      role: 0,
-      geometry: 0,
-      temporal: 0,
-      hours: 0,
-      missing_data: 0,
+    let aggregateRejections = emptyRejectionCounts()
+    let aggregateMatchedRole = 0
+    let aggregatePassedHardConstraints = 0
+
+    let selectedForSlot: {
+      venue: CandidateVenue
+      pass: SelectionPass
+      matchedRole: number
+      passedHardConstraints: number
+      rejectionCounts: RejectionCounts
+    } | null = null
+
+    for (const pass of SELECTION_PASSES) {
+      const attempt = selectBestCandidateForPass({
+        rankedCandidates,
+        selected,
+        usedIds,
+        slot,
+        context,
+        timeZone,
+        pass,
+      })
+
+      aggregateRejections = mergeRejectionCounts(
+        aggregateRejections,
+        attempt.rejectionCounts
+      )
+      aggregateMatchedRole += attempt.matchedRole
+      aggregatePassedHardConstraints += attempt.passedHardConstraints
+
+      if (attempt.best) {
+        selectedForSlot = {
+          venue: attempt.best,
+          pass: pass.name,
+          matchedRole: attempt.matchedRole,
+          passedHardConstraints: attempt.passedHardConstraints,
+          rejectionCounts: attempt.rejectionCounts,
+        }
+        break
+      }
     }
 
-    let strictMatchedRole = 0
-    let strictPassedHardConstraints = 0
-
-    const matches = rankedCandidates
-      .filter((candidate) => {
-        if (usedIds.has(candidate.id)) {
-          strictRejections.used += 1
-          return false
-        }
-
-        if (!candidateSupportsSlot(candidate, slot, context, false)) {
-          strictRejections.role += 1
-          return false
-        }
-        strictMatchedRole += 1
-
-        const eligibility = evaluateCandidateEligibilityForSlot(
-          candidate,
-          unwrapSelectedVenues(selected),
-          slot,
-          context,
-          false,
-          timeZone
-        )
-
-        if (!eligibility.eligible) {
-          if (eligibility.reason === "missing_data") {
-            strictRejections.missing_data += 1
-          } else {
-            strictRejections.geometry += 1
-          }
-          return false
-        }
-
-        strictPassedHardConstraints += 1
-
-        const temporal = evaluateTemporalEligibility(
-          candidate,
-          slot,
-          context,
-          timeZone,
-          false
-        )
-
-        if (!temporal.eligible) {
-          if (temporal.reason === "hours") strictRejections.hours += 1
-          else strictRejections.temporal += 1
-          return false
-        }
-
-        return true
-      })
-      .sort((a, b) => {
-        const selectedVenues = unwrapSelectedVenues(selected)
-
-        const scoreA =
-          computeSequentialCandidateScore(a, selectedVenues, slot, context) +
-          computeSlotRoleFitBonus(a, slot)
-        const scoreB =
-          computeSequentialCandidateScore(b, selectedVenues, slot, context) +
-          computeSlotRoleFitBonus(b, slot)
-        return scoreB - scoreA
-      })
-
-    const best = matches[0]
-    if (best) {
+    if (selectedForSlot) {
       selected.push({
-        venue: best,
+        venue: selectedForSlot.venue,
         slot,
-        selectedPass: "strict",
+        selectedPass: selectedForSlot.pass,
       })
-      usedIds.add(best.id)
+
+      usedIds.add(selectedForSlot.venue.id)
 
       slotDiagnostics.push({
         slotIndex: slot.index,
         role: slot.role,
         phase: slot.phase,
-        selectedVenueId: best.id,
-        selectedPass: "strict",
+        selectedVenueId: selectedForSlot.venue.id,
+        selectedPass: selectedForSlot.pass,
         candidatesTotal: rankedCandidates.length,
-        matchedRole: strictMatchedRole,
-        passedHardConstraints: strictPassedHardConstraints,
-        rejectionCounts: strictRejections,
-      })
-
-      continue
-    }
-
-    const relaxedRejections = {
-      used: 0,
-      role: 0,
-      geometry: 0,
-      temporal: 0,
-      hours: 0,
-      missing_data: 0,
-    }
-
-    let relaxedMatchedRole = 0
-    let relaxedPassedHardConstraints = 0
-
-    const fallbackMatches = rankedCandidates
-      .filter((candidate) => {
-        if (usedIds.has(candidate.id)) {
-          relaxedRejections.used += 1
-          return false
-        }
-
-        if (!candidateSupportsSlot(candidate, slot, context, true)) {
-          relaxedRejections.role += 1
-          return false
-        }
-        relaxedMatchedRole += 1
-
-        const eligibility = evaluateCandidateEligibilityForSlot(
-          candidate,
-          unwrapSelectedVenues(selected),
-          slot,
-          context,
-          true,
-          timeZone
-        )
-
-        if (!eligibility.eligible) {
-          if (eligibility.reason === "missing_data") {
-            relaxedRejections.missing_data += 1
-          } else {
-            relaxedRejections.geometry += 1
-          }
-          return false
-        }
-
-        relaxedPassedHardConstraints += 1
-
-        const temporal = evaluateTemporalEligibility(
-          candidate,
-          slot,
-          context,
-          timeZone,
-          true
-        )
-
-        if (!temporal.eligible) {
-          if (temporal.reason === "hours") relaxedRejections.hours += 1
-          else relaxedRejections.temporal += 1
-          return false
-        }
-
-        return true
-      })
-      .sort((a, b) => {
-        const selectedVenues = unwrapSelectedVenues(selected)
-
-        const scoreA =
-          computeSequentialCandidateScore(a, selectedVenues, slot, context) +
-          computeSlotRoleFitBonus(a, slot)
-        const scoreB =
-          computeSequentialCandidateScore(b, selectedVenues, slot, context) +
-          computeSlotRoleFitBonus(b, slot)
-        return scoreB - scoreA
-      })
-
-    const fallbackBest = fallbackMatches[0]
-    if (fallbackBest) {
-      selected.push({
-        venue: fallbackBest,
-        slot,
-        selectedPass: "relaxed",
-      })
-      usedIds.add(fallbackBest.id)
-
-      slotDiagnostics.push({
-        slotIndex: slot.index,
-        role: slot.role,
-        phase: slot.phase,
-        selectedVenueId: fallbackBest.id,
-        selectedPass: "relaxed",
-        candidatesTotal: rankedCandidates.length,
-        matchedRole: relaxedMatchedRole,
-        passedHardConstraints: relaxedPassedHardConstraints,
-        rejectionCounts: relaxedRejections,
+        matchedRole: selectedForSlot.matchedRole,
+        passedHardConstraints: selectedForSlot.passedHardConstraints,
+        rejectionCounts: selectedForSlot.rejectionCounts,
       })
 
       continue
@@ -301,26 +238,220 @@ export function selectCandidates(
       selectedVenueId: null,
       selectedPass: null,
       candidatesTotal: rankedCandidates.length,
-      matchedRole: relaxedMatchedRole || strictMatchedRole,
-      passedHardConstraints:
-        relaxedPassedHardConstraints || strictPassedHardConstraints,
-      rejectionCounts: {
-        used: strictRejections.used + relaxedRejections.used,
-        role: strictRejections.role + relaxedRejections.role,
-        geometry: strictRejections.geometry + relaxedRejections.geometry,
-        temporal: strictRejections.temporal + relaxedRejections.temporal,
-        hours: strictRejections.hours + relaxedRejections.hours,
-        missing_data:
-          strictRejections.missing_data + relaxedRejections.missing_data,
-      },
+      matchedRole: aggregateMatchedRole,
+      passedHardConstraints: aggregatePassedHardConstraints,
+      rejectionCounts: aggregateRejections,
     })
   }
 
-  if (context.mode === "full" && selected.length < 2) {
-    return { selected, slotDiagnostics }
+  return { selected, slotDiagnostics }
+}
+
+function selectBestCandidateForPass({
+  rankedCandidates,
+  selected,
+  usedIds,
+  slot,
+  context,
+  timeZone,
+  pass,
+}: {
+  rankedCandidates: CandidateVenue[]
+  selected: SelectedSlotVenue[]
+  usedIds: Set<string>
+  slot: PlanningSlot
+  context: PlanningContext
+  timeZone: string
+  pass: SelectionPassConfig
+}): {
+  best: CandidateVenue | null
+  matchedRole: number
+  passedHardConstraints: number
+  rejectionCounts: RejectionCounts
+} {
+  const rejectionCounts = emptyRejectionCounts()
+  let matchedRole = 0
+  let passedHardConstraints = 0
+
+  const matches = rankedCandidates
+    .filter((candidate) => {
+      if (usedIds.has(candidate.id)) {
+        rejectionCounts.used += 1
+        return false
+      }
+
+      const supportsRole =
+        candidateSupportsSlot(candidate, slot, context, pass.relaxedRole) ||
+        Boolean(pass.allowWeakRoleMatch && isEmergencyCompatibleForSlot(candidate, slot))
+
+      if (!supportsRole) {
+        rejectionCounts.role += 1
+        return false
+      }
+
+      matchedRole += 1
+
+      const eligibility = evaluateCandidateEligibilityForSlot(
+        candidate,
+        unwrapSelectedVenues(selected),
+        slot,
+        context,
+        pass.relaxedGeometry,
+        timeZone
+      )
+
+      if (!eligibility.eligible) {
+        if (eligibility.reason === "missing_data") {
+          rejectionCounts.missing_data += 1
+        } else {
+          rejectionCounts.geometry += 1
+        }
+        return false
+      }
+
+      passedHardConstraints += 1
+
+      const temporal = evaluateTemporalEligibility(
+        candidate,
+        slot,
+        context,
+        timeZone,
+        pass.relaxedTemporal
+      )
+
+      if (!temporal.eligible) {
+        if (temporal.reason === "hours") rejectionCounts.hours += 1
+        else rejectionCounts.temporal += 1
+        return false
+      }
+
+      return true
+    })
+    .sort((a, b) => {
+      const selectedVenues = unwrapSelectedVenues(selected)
+
+      const scoreA =
+        computeSequentialCandidateScore(a, selectedVenues, slot, context) +
+        computeSlotRoleFitBonus(a, slot) +
+        emergencyRoleFitBonus(a, slot, pass)
+      const scoreB =
+        computeSequentialCandidateScore(b, selectedVenues, slot, context) +
+        computeSlotRoleFitBonus(b, slot) +
+        emergencyRoleFitBonus(b, slot, pass)
+
+      return scoreB - scoreA
+    })
+
+  return {
+    best: matches[0] ?? null,
+    matchedRole,
+    passedHardConstraints,
+    rejectionCounts,
+  }
+}
+
+function isEmergencyCompatibleForSlot(
+  candidate: CandidateVenue,
+  slot: PlanningSlot
+): boolean {
+  const roles = candidate.inferredRoles ?? []
+  const types = normalizeVenueTypes(candidate.type)
+
+  if (roles.includes(slot.role)) return true
+  if (slot.flexibleRole && roles.includes(slot.flexibleRole)) return true
+
+  if (slot.role === "drink") {
+    return (
+      roles.includes("drink") ||
+      roles.includes("food") ||
+      hasAnyType(types, [
+        "bar",
+        "wine bar",
+        "cocktail",
+        "lounge",
+        "speakeasy",
+        "brewery",
+        "rooftop",
+        "sports bar",
+        "club",
+        "restaurant",
+        "dinner",
+        "gastropub",
+        "late night",
+      ])
+    )
   }
 
-  return { selected, slotDiagnostics }
+  if (slot.role === "food") {
+    return (
+      roles.includes("food") ||
+      roles.includes("drink") ||
+      roles.includes("coffee") ||
+      hasAnyType(types, [
+        "restaurant",
+        "dinner",
+        "lunch",
+        "brunch",
+        "breakfast",
+        "cafe",
+        "café",
+        "bakery",
+        "gastropub",
+      ])
+    )
+  }
+
+  if (slot.role === "coffee") {
+    return (
+      roles.includes("coffee") ||
+      roles.includes("food") ||
+      hasAnyType(types, [
+        "coffee",
+        "tea",
+        "cafe",
+        "café",
+        "bakery",
+        "breakfast",
+        "brunch",
+      ])
+    )
+  }
+
+  if (slot.role === "dessert") {
+    return (
+      roles.includes("dessert") ||
+      roles.includes("coffee") ||
+      roles.includes("drink") ||
+      hasAnyType(types, [
+        "dessert",
+        "bakery",
+        "cafe",
+        "café",
+        "coffee",
+        "cocktail",
+        "wine bar",
+        "bar",
+      ])
+    )
+  }
+
+  if (slot.role === "activity") {
+    return roles.includes("activity") || roles.includes("food") || roles.includes("coffee")
+  }
+
+  return roles.length > 0
+}
+
+function emergencyRoleFitBonus(
+  candidate: CandidateVenue,
+  slot: PlanningSlot,
+  pass: SelectionPassConfig
+): number {
+  if (pass.name !== "emergency") return 0
+  if (candidate.inferredRoles.includes(slot.role)) return 8
+  if (slot.flexibleRole && candidate.inferredRoles.includes(slot.flexibleRole)) return 4
+  if (isEmergencyCompatibleForSlot(candidate, slot)) return 2
+  return 0
 }
 
 export function buildSelectionDebug(

@@ -241,6 +241,19 @@ export default async function EventOutingPage({ params }: Props) {
 
   const city = outing.city ?? anchor.venue?.city ?? stops[0]?.venue?.city ?? ""
 
+  await logPlannedOutingViewed({
+    supabase,
+    userId: user.id,
+    plannedOutingId: outing.id,
+    eventId,
+    city,
+    mode: outing.mode,
+    status: outing.status,
+    confidenceScore: outing.confidence_score,
+    stopCount: stops.length,
+    anchorVenueId: anchor.venue?.id ?? null,
+  })
+
   return (
     <main className="mx-auto max-w-5xl p-4 space-y-4">
       <div className="space-y-1">
@@ -273,6 +286,49 @@ export default async function EventOutingPage({ params }: Props) {
       />
     </main>
   )
+}
+
+async function logPlannedOutingViewed({
+  supabase,
+  userId,
+  plannedOutingId,
+  eventId,
+  city,
+  mode,
+  status,
+  confidenceScore,
+  stopCount,
+  anchorVenueId,
+}: {
+  supabase: Awaited<ReturnType<typeof createServerClient>>
+  userId: string
+  plannedOutingId: string
+  eventId: string
+  city: string
+  mode: "before" | "after" | "full"
+  status: string | null
+  confidenceScore: number | null
+  stopCount: number
+  anchorVenueId: string | null
+}): Promise<void> {
+  try {
+    await supabase.from("planned_outing_events").insert({
+      planned_outing_id: plannedOutingId,
+      user_id: userId,
+      event_type: "outing_plan_viewed",
+      metadata: {
+        eventId,
+        city,
+        mode,
+        status,
+        confidenceScore,
+        stopCount,
+        anchorVenueId,
+      },
+    })
+  } catch (error) {
+    console.warn("Failed to log outing_plan_viewed:", error)
+  }
 }
 
 function normalizeVenueRelation(

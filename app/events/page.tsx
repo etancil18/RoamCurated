@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useEvents } from '@/hooks/useEvents'
 import OutingPlannerModal from '@/components/events/OutingPlannerModal'
+import { logEvent } from '@/lib/logEvent'
 
 type EventWithTicket = ReturnType<typeof useEvents>['events'][number] & {
   ticket_link?: string | null
@@ -11,6 +12,14 @@ type EventWithTicket = ReturnType<typeof useEvents>['events'][number] & {
 
 const AVAILABLE_CITIES = ['atl', 'nyc', 'lisbon', 'porto']
 const AVAILABLE_TAGS = ['music', 'rooftop', 'gallery', 'food', 'comedy']
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(logEvent(eventName, metadata))
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
+}
 
 export default function EventsPage() {
   const [city, setCity] = useState('atl')
@@ -21,6 +30,10 @@ export default function EventsPage() {
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null)
   const [plannerOpen, setPlannerOpen] = useState(false)
   const [plannerEvent, setPlannerEvent] = useState<EventWithTicket | null>(null)
+
+  useEffect(() => {
+    safeLogEvent('events_page_viewed', { city })
+  }, [])
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(searchQuery), 300)
@@ -47,36 +60,139 @@ export default function EventsPage() {
   )
 
   const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    )
+    const nextTags = selectedTags.includes(tag)
+      ? selectedTags.filter((t) => t !== tag)
+      : [...selectedTags, tag]
+
+    setSelectedTags(nextTags)
+
+    safeLogEvent('events_filter_tag_toggled', {
+      city,
+      tag,
+      selected: nextTags.includes(tag),
+      selected_tags: nextTags,
+    })
+  }
+
+  const handleCityChange = (nextCity: string) => {
+    setCity(nextCity)
+
+    safeLogEvent('events_city_selected', {
+      previous_city: city,
+      city: nextCity,
+    })
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value)
+
+    if (value.trim().length >= 2) {
+      safeLogEvent('events_search_updated', {
+        city,
+        query_length: value.trim().length,
+      })
+    }
+  }
+
+  const handleRefresh = () => {
+    safeLogEvent('events_refreshed', {
+      city,
+      selected_tags: selectedTags,
+      search_active: debouncedSearch.trim().length > 0,
+    })
+
+    refetch()
+  }
+
+  const toggleExpandedEvent = (ev: EventWithTicket, isExpanded: boolean) => {
+    const nextExpandedId = isExpanded ? null : ev.id
+    setExpandedEventId(nextExpandedId)
+
+    safeLogEvent(isExpanded ? 'event_details_collapsed' : 'event_details_expanded', {
+      event_id: ev.id,
+      event_title: ev.title ?? null,
+      city,
+      venue_id: ev.venue?.id ?? null,
+      venue_name: ev.venue?.name ?? null,
+    })
   }
 
   const markInterested = async (eventId: string) => {
     if (interestedIds.includes(eventId)) return
+
+    safeLogEvent('event_interest_clicked', {
+      event_id: eventId,
+      city,
+    })
+
     try {
       const res = await fetch(`/api/events/${eventId}/interest`, {
         method: 'POST',
       })
+
       if (res.ok) {
         setInterestedIds((prev) => [...prev, eventId])
+
+        safeLogEvent('event_interest_saved', {
+          event_id: eventId,
+          city,
+        })
       } else {
         const err = await res.json()
         console.error('Error marking interest:', err)
+
+        safeLogEvent('event_interest_failed', {
+          event_id: eventId,
+          city,
+          status: res.status,
+          error: err,
+        })
       }
     } catch (err) {
       console.error('Error marking interest:', err)
+
+      safeLogEvent('event_interest_error', {
+        event_id: eventId,
+        city,
+        message: err instanceof Error ? err.message : 'Unknown error',
+      })
     }
   }
 
   const openPlanner = (event: EventWithTicket) => {
+    safeLogEvent('outing_planner_open_clicked', {
+      event_id: event.id,
+      event_title: event.title ?? null,
+      city,
+      venue_id: event.venue?.id ?? null,
+      venue_name: event.venue?.name ?? null,
+      starts_at: event.starts_at ?? null,
+      tags: event.tags ?? [],
+    })
+
     setPlannerEvent(event)
     setPlannerOpen(true)
   }
 
   const closePlanner = () => {
+    safeLogEvent('outing_planner_closed', {
+      event_id: plannerEvent?.id ?? null,
+      city,
+    })
+
     setPlannerOpen(false)
     setPlannerEvent(null)
+  }
+
+  const handleTicketClick = (ev: EventWithTicket) => {
+    safeLogEvent('event_ticket_click', {
+      event_id: ev.id,
+      event_title: ev.title ?? null,
+      city,
+      venue_id: ev.venue?.id ?? null,
+      venue_name: ev.venue?.name ?? null,
+      ticket_link: ev.ticket_link ?? null,
+    })
   }
 
   const filteredEvents = events.filter((ev) => {
@@ -89,6 +205,17 @@ export default function EventsPage() {
     )
   })
 
+  useEffect(() => {
+    if (loading || error) return
+
+    safeLogEvent('events_results_loaded', {
+      city,
+      selected_tags: selectedTags,
+      search_active: debouncedSearch.trim().length > 0,
+      result_count: filteredEvents.length,
+    })
+  }, [loading, error, city, selectedTags, debouncedSearch, filteredEvents.length])
+
   return (
     <>
       <div className="p-6 max-w-4xl mx-auto">
@@ -99,7 +226,7 @@ export default function EventsPage() {
             <label className="text-sm font-medium mr-2">City:</label>
             <select
               value={city}
-              onChange={(e) => setCity(e.target.value)}
+              onChange={(e) => handleCityChange(e.target.value)}
               className="border rounded p-2 bg-neutral-900 text-white"
             >
               {AVAILABLE_CITIES.map((c) => (
@@ -128,7 +255,7 @@ export default function EventsPage() {
           </div>
 
           <button
-            onClick={refetch}
+            onClick={handleRefresh}
             className="ml-auto text-sm px-3 py-1 bg-blue-600 text-white rounded"
           >
             🔄 Refresh
@@ -141,7 +268,7 @@ export default function EventsPage() {
             placeholder="Search by title, venue, description, or tag..."
             className="w-full border bg-neutral-900 text-white p-2 rounded"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
         </div>
 
@@ -194,9 +321,7 @@ export default function EventsPage() {
                       {ev.description.length > 140 && (
                         <button
                           className="text-cyan-400 text-sm hover:underline"
-                          onClick={() =>
-                            setExpandedEventId(isExpanded ? null : ev.id)
-                          }
+                          onClick={() => toggleExpandedEvent(ev, isExpanded)}
                         >
                           {isExpanded ? 'Show Less' : 'More Info'}
                         </button>
@@ -218,6 +343,15 @@ export default function EventsPage() {
                       <Link
                         href={`/venue-profile/${ev.venue.id}`}
                         className="text-cyan-400 hover:underline font-medium"
+                        onClick={() =>
+                          safeLogEvent('event_venue_click', {
+                            event_id: ev.id,
+                            event_title: ev.title ?? null,
+                            city,
+                            venue_id: ev.venue?.id ?? null,
+                            venue_name: ev.venue?.name ?? null,
+                          })
+                        }
                       >
                         📍 {ev.venue.name}
                       </Link>
@@ -253,6 +387,7 @@ export default function EventsPage() {
                       href={ev.ticket_link}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => handleTicketClick(ev)}
                       className="text-sm px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
                     >
                       🎟️ Tickets/RSVP
