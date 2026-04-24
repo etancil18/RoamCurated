@@ -552,8 +552,8 @@ function qualifiesForLeaveEarlyCoverage(
   const beforeStops = stops.filter((stop) => stop.phase === "before").length
 
   if (mode === "after") {
-    return afterStops >= 1
-  }
+  return leaveEarlyByHours ? true : afterStops >= 1
+}
 
   if (mode === "full") {
     return beforeStops >= 1 && afterStops >= 1

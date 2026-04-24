@@ -184,6 +184,9 @@ export default function OutingPlannerModal({
   const [plannerDebug, setPlannerDebug] = useState<PlanDebug | null>(null)
   const [scoreBreakdown, setScoreBreakdown] = useState<ScoreBreakdown | null>(null)
 
+  const [hasUserSelectedMode, setHasUserSelectedMode] = useState(false)
+  const initialPlanKeyRef = useRef<string | null>(null)
+
   const derivedDefaultMode = useMemo<PlanMode>(() => {
     if (!event?.starts_at) return "full"
 
@@ -201,26 +204,31 @@ export default function OutingPlannerModal({
   }, [mode])
 
   useEffect(() => {
-    if (!open) return
-    setMode(derivedDefaultMode)
-  }, [open, derivedDefaultMode])
+  if (!open) return
+  if (hasUserSelectedMode) return
+
+  setMode(derivedDefaultMode)
+  modeRef.current = derivedDefaultMode
+}, [open, derivedDefaultMode, hasUserSelectedMode])
 
   useEffect(() => {
-    if (!open) {
-      setError(null)
-      setPlan(null)
-      setPlannerDebug(null)
-      setScoreBreakdown(null)
-      setLoading(false)
-      setRegenerating(false)
-      setGroupSize(2)
-      setGroupSizePresetId("duo")
-      setVibePresetId(null)
-      setVibeTags([])
-      setPlannedExitEnabled(false)
-      setLeaveEarlyByHours(2)
-    }
-  }, [open])
+  if (!open) {
+    setError(null)
+    setPlan(null)
+    setPlannerDebug(null)
+    setScoreBreakdown(null)
+    setLoading(false)
+    setRegenerating(false)
+    setGroupSize(2)
+    setGroupSizePresetId("duo")
+    setVibePresetId(null)
+    setVibeTags([])
+    setPlannedExitEnabled(false)
+    setLeaveEarlyByHours(2)
+    setHasUserSelectedMode(false)
+    initialPlanKeyRef.current = null
+  }
+}, [open])
 
   const selectGroupSizePreset = (presetId: GroupSizePresetId) => {
     const preset = GROUP_SIZE_OPTIONS.find((option) => option.id === presetId)
@@ -333,14 +341,21 @@ export default function OutingPlannerModal({
   )
 
   useEffect(() => {
-    if (!open || !event?.id) return
-    void generatePlan({ nextMode: derivedDefaultMode, isRegenerate: false })
-  }, [open, event?.id, derivedDefaultMode, generatePlan])
+  if (!open || !event?.id) return
+
+  const initialPlanKey = `${event.id}:${derivedDefaultMode}`
+  if (initialPlanKeyRef.current === initialPlanKey) return
+
+  initialPlanKeyRef.current = initialPlanKey
+  void generatePlan({ nextMode: derivedDefaultMode, isRegenerate: false })
+}, [open, event?.id, derivedDefaultMode, generatePlan])
 
   const handleModeChange = async (nextMode: PlanMode) => {
-    setMode(nextMode)
-    await generatePlan({ nextMode, isRegenerate: true })
-  }
+  setHasUserSelectedMode(true)
+  setMode(nextMode)
+  modeRef.current = nextMode
+  await generatePlan({ nextMode, isRegenerate: true })
+}
 
   const handleViewPlan = () => {
     if (!event?.id || !plan?.plannedOutingId) return

@@ -327,17 +327,24 @@ function desiredAfterRoles(
   }
 
   if (leaveEarlyByHours) {
-    if (daypart === "breakfast") return ["coffee"]
-    if (daypart === "brunch" || daypart === "lunch") {
-      if (archetype === "art") return ["activity"]
-      return ["food"]
-    }
-    if (daypart === "dinner") {
-      if (archetype === "art") return ["food"]
-      return ["drink"]
-    }
-    if (daypart === "late_night") return ["drink"]
+  if (lateNightAfterEvent || daypart === "late_night" || archetype === "music") {
+    return ["drink"]
   }
+
+  if (daypart === "breakfast") return ["coffee"]
+
+  if (daypart === "brunch" || daypart === "lunch") {
+    if (archetype === "art") return ["activity"]
+    return ["food"]
+  }
+
+  if (daypart === "dinner") {
+    if (archetype === "art") return ["food"]
+    return ["drink"]
+  }
+
+  return ["drink"]
+}
 
   if (daypart === "breakfast") {
     return ["coffee", "food"]
