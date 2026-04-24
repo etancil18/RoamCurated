@@ -254,7 +254,7 @@ export default function LoginPage() {
                       : 'bg-zinc-900 hover:-translate-y-0.5 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200'
                   }`}
                 >
-                  {loading ? 'Processing...' : 'Continue'}
+                  {loading ? 'Processing...' : 'Sign In / Sign Up'}
                 </button>
               </form>
 
