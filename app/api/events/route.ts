@@ -69,8 +69,19 @@ export async function GET(req: Request) {
     query = query.eq('is_active', true)
   }
 
-  if (from) query = query.gte('starts_at', from)
-  if (to) query = query.lte('starts_at', to)
+  // Keep current/future events visible, including overnight events that started before `from`.
+  const nowIso = new Date().toISOString()
+
+  if (to) {
+    query = query.lte('starts_at', to)
+  }
+
+  if (from) {
+    query = query.or(`starts_at.gte.${from},ends_at.gte.${nowIso}`)
+  } else {
+    query = query.or(`ends_at.gte.${nowIso},ends_at.is.null`)
+  }
+
   if (city) query = query.filter('venues.city', 'eq', city)
 
   if (tags) {
@@ -102,6 +113,7 @@ export async function GET(req: Request) {
         id: ev.id,
         title: ev.title,
         starts_at: ev.starts_at,
+        ends_at: ev.ends_at,
         venue_city: ev.venue?.city,
         is_active: ev.is_active,
         interest_count: ev.interest_count,
