@@ -271,17 +271,31 @@ export async function POST(
         leaveEarlyByHours
       )
 
-    const minimumRequiredStops =
-      lateNightSingleStopFallbackApplied ||
-      lateNightReducedFullFallbackApplied ||
-      reducedBeforeSingleStopFallbackApplied ||
-      leaveEarlyCoverageSufficient
-        ? generatedPlan.stops.length
-        : minimumStopsForMode(mode)
+      const reducedFullCoverageSufficient =
+  qualifiesForReducedFullCoverage(generatedPlan.stops, mode)
 
-    const failedToGenerateStops =
-      generatedPlan.scoreBreakdown.failedToGenerateStops ||
-      generatedPlan.stops.length === 0
+      const hasEmergencyStop = generatedPlan.stops.some(
+    (stop) => stop.metadata?.selectedPass === "emergency"
+  )
+
+    const plannerCoverageComplete =
+      generatedPlan.scoreBreakdown.completionRate >= 1 &&
+      generatedPlan.stops.length >= 1
+
+const minimumRequiredStops =
+  plannerCoverageComplete ||
+  hasEmergencyStop ||
+  reducedFullCoverageSufficient ||
+  lateNightSingleStopFallbackApplied ||
+  lateNightReducedFullFallbackApplied ||
+  reducedBeforeSingleStopFallbackApplied ||
+  leaveEarlyCoverageSufficient
+    ? Math.max(generatedPlan.stops.length, 1)
+    : minimumStopsForMode(mode)
+
+const failedToGenerateStops =
+  generatedPlan.scoreBreakdown.failedToGenerateStops ||
+  generatedPlan.stops.length === 0
 
     console.log(
       "generated outing plan",
@@ -305,6 +319,9 @@ export async function POST(
           candidateVenueCount: venueCandidates.length,
           generatedStopCount: generatedPlan.stops.length,
           minimumRequiredStops,
+          reducedFullCoverageSufficient,
+          plannerCoverageComplete,
+          hasEmergencyStop,
           failedToGenerateStops,
           lateNightSingleStopFallbackApplied,
           lateNightReducedFullFallbackApplied,
@@ -331,7 +348,10 @@ export async function POST(
             lateNightReducedFullFallbackApplied,
             reducedBeforeSingleStopFallbackApplied,
             leaveEarlyCoverageSufficient,
+            reducedFullCoverageSufficient,
             leaveEarlyByHours,
+            plannerCoverageComplete,
+            hasEmergencyStop,
             plannedExitAt,
             generatedPlannedExitAt: generatedPlan.plannedExitAt ?? null,
             effectiveExitAt:
@@ -401,6 +421,8 @@ export async function POST(
         effectiveIntendedStopCount:
           generatedPlan.scoreBreakdown.effectiveIntendedStopCount,
         failedToGenerateStops,
+        reducedFullCoverageSufficient,
+        hasEmergencyStop,
         minimumRequiredStops,
         lateNightSingleStopFallbackApplied,
         lateNightReducedFullFallbackApplied,
@@ -571,6 +593,18 @@ function qualifiesForLeaveEarlyCoverage(
   }
 
   return false
+}
+
+function qualifiesForReducedFullCoverage(
+  stops: Array<{ phase?: "before" | "after" | null }>,
+  mode: PlanMode
+): boolean {
+  if (mode !== "full") return false
+
+  const beforeStops = stops.filter((stop) => stop.phase === "before").length
+  const afterStops = stops.filter((stop) => stop.phase === "after").length
+
+  return beforeStops >= 1 && afterStops >= 1
 }
 
 function normalizeVenueRelation(

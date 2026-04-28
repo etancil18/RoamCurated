@@ -18,7 +18,6 @@ import {
   getDistanceBetweenVenues,
   getMaxAfterInterstopMeters,
   getMaxAfterLocalFallbackMeters,
-  isAfterSequenceDirectionallyConsistent,
   isTooFarForAfterFirstStop,
   isTooFarForBeforeFirstStop,
 } from "./geometry"
@@ -66,6 +65,8 @@ type SelectionPassConfig = {
   relaxedGeometry: boolean
   relaxedTemporal: boolean
   allowWeakRoleMatch?: boolean
+  bypassLateNightNightlifeType?: boolean
+  allowMissingOrUncertainHours?: boolean
 }
 
 export type SlotSelectionDebug = {
@@ -116,6 +117,8 @@ const SELECTION_PASSES: SelectionPassConfig[] = [
     relaxedGeometry: true,
     relaxedTemporal: true,
     allowWeakRoleMatch: true,
+    bypassLateNightNightlifeType: true,
+    allowMissingOrUncertainHours: true,
   },
 ]
 
@@ -124,6 +127,18 @@ function unwrapSelectedVenues(
 ): CandidateVenue[] {
   return selected.map((entry) =>
     "venue" in entry ? entry.venue : entry
+  )
+}
+
+function unwrapSelectedSlotVenues(
+  selected: SelectedSlotVenue[] | CandidateVenue[]
+): SelectedSlotVenue[] {
+  return selected.filter(
+    (entry): entry is SelectedSlotVenue =>
+      typeof entry === "object" &&
+      entry != null &&
+      "venue" in entry &&
+      "slot" in entry
   )
 }
 
@@ -293,11 +308,12 @@ function selectBestCandidateForPass({
 
       const eligibility = evaluateCandidateEligibilityForSlot(
         candidate,
-        unwrapSelectedVenues(selected),
+        selected,
         slot,
         context,
         pass.relaxedGeometry,
-        timeZone
+        timeZone,
+        pass.bypassLateNightNightlifeType
       )
 
       if (!eligibility.eligible) {
@@ -316,7 +332,8 @@ function selectBestCandidateForPass({
         slot,
         context,
         timeZone,
-        pass.relaxedTemporal
+        pass.relaxedTemporal,
+        pass.allowMissingOrUncertainHours
       )
 
       if (!temporal.eligible) {
@@ -509,7 +526,8 @@ export function evaluateCandidateEligibilityForSlot(
   slot: PlanningSlot,
   context: PlanningContext,
   relaxed = false,
-  timeZone = resolvePlannerTimeZone(context)
+  timeZone = resolvePlannerTimeZone(context),
+  bypassLateNightNightlifeType = false
 ): { eligible: boolean; reason?: "geometry" | "missing_data" } {
   const eligible = isCandidateEligibleForSlot(
     candidate,
@@ -517,7 +535,8 @@ export function evaluateCandidateEligibilityForSlot(
     slot,
     context,
     relaxed,
-    timeZone
+    timeZone,
+    bypassLateNightNightlifeType
   )
 
   return { eligible, reason: eligible ? undefined : "geometry" }
@@ -528,7 +547,8 @@ export function evaluateTemporalEligibility(
   slot: PlanningSlot,
   context: PlanningContext,
   timeZone: string,
-  relaxed = false
+  relaxed = false,
+  allowMissingOrUncertainHours = false
 ): { eligible: boolean; reason?: "temporal" | "hours" } {
   const role = pickRoleForSlot(slot, candidate.inferredRoles)
 
@@ -550,6 +570,10 @@ export function evaluateTemporalEligibility(
         role,
         lateNightEligibleOverall,
       })
+
+      if (allowMissingOrUncertainHours) {
+        return { eligible: true }
+      }
     }
 
     return {
@@ -568,6 +592,10 @@ export function evaluateTemporalEligibility(
   )
 
   if (!roleCompatible) {
+    if (allowMissingOrUncertainHours) {
+      return { eligible: true }
+    }
+
     return { eligible: false, reason: "temporal" }
   }
 
@@ -578,6 +606,10 @@ export function evaluateTemporalEligibility(
     timeZone,
     relaxed
   )
+
+  if (!openForWindow && allowMissingOrUncertainHours) {
+    return { eligible: true }
+  }
 
   return {
     eligible: openForWindow,
@@ -591,9 +623,16 @@ export function isCandidateEligibleForSlot(
   slot: PlanningSlot,
   context: PlanningContext,
   relaxed = false,
-  timeZone = resolvePlannerTimeZone(context)
+  timeZone = resolvePlannerTimeZone(context),
+  bypassLateNightNightlifeType = false
 ): boolean {
   const selectedVenues = unwrapSelectedVenues(selectedSoFar)
+  const selectedSlotVenues = unwrapSelectedSlotVenues(selectedSoFar)
+
+  if (selectedVenues.some((venue) => venue.id === candidate.id)) {
+    return false
+  }
+
   const anchorDistance = candidate.distanceMeters
   const previous = selectedVenues[selectedVenues.length - 1] ?? null
   const prevToCandidate = previous ? getDistanceBetweenVenues(previous, candidate) : null
@@ -641,8 +680,13 @@ export function isCandidateEligibleForSlot(
   }
 
   if (slot.phase === "after") {
-    const isImmediatePostEvent =
-      slot.index === 0 || (context.mode === "full" && slot.index === 1)
+    const afterSelections = selectedSlotVenues.filter(
+      (selection) => selection.slot.phase === "after"
+    )
+    const previousAfterVenue =
+      afterSelections[afterSelections.length - 1]?.venue ?? null
+
+    const isImmediatePostEvent = afterSelections.length === 0
     const maxInterstop = getMaxAfterInterstopMeters(context.mobility, relaxed)
     const lateNightFallback = isLateNightAfterFallbackContext(context, slot)
 
@@ -657,28 +701,35 @@ export function isCandidateEligibleForSlot(
       return false
     }
 
-    if (!isImmediatePostEvent && prevToCandidate != null && prevToCandidate > maxInterstop) {
-      return false
-    }
-
     if (!isImmediatePostEvent) {
-      const sameDirection = isAfterSequenceDirectionallyConsistent(
-        selectedVenues,
+      const afterPrevToCandidate = previousAfterVenue
+        ? getDistanceBetweenVenues(previousAfterVenue, candidate)
+        : prevToCandidate
+
+      if (afterPrevToCandidate != null && afterPrevToCandidate > maxInterstop) {
+        return false
+      }
+
+      const sameDirection = isDirectionallyConsistentFromAfterStops(
+        afterSelections,
         candidate,
-        context,
-        slot
+        context
       )
       const maxLocalFallbackMeters = getMaxAfterLocalFallbackMeters(context.mobility)
 
-      if (!sameDirection && prevToCandidate != null && prevToCandidate > maxLocalFallbackMeters) {
+      if (
+        !sameDirection &&
+        afterPrevToCandidate != null &&
+        afterPrevToCandidate > maxLocalFallbackMeters
+      ) {
         return false
       }
 
       if (
-        previous?.distanceMeters != null &&
+        previousAfterVenue?.distanceMeters != null &&
         anchorDistance != null &&
-        anchorDistance + 250 < previous.distanceMeters &&
-        (prevToCandidate == null || prevToCandidate > maxLocalFallbackMeters)
+        anchorDistance + 250 < previousAfterVenue.distanceMeters &&
+        (afterPrevToCandidate == null || afterPrevToCandidate > maxLocalFallbackMeters)
       ) {
         return false
       }
@@ -688,6 +739,21 @@ export function isCandidateEligibleForSlot(
   const types = normalizeVenueTypes(candidate.type)
   const referenceHour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
   const effectiveRole = pickRoleForSlot(slot, candidate.inferredRoles)
+  const isClubType = hasAnyType(types, ["club"])
+
+  if (slot.phase === "before" && isClubType) {
+    return false
+  }
+
+  if (slot.phase === "after" && isClubType) {
+    const afterSelections = selectedSlotVenues.filter(
+      (selection) => selection.slot.phase === "after"
+    )
+
+    if (afterSelections.length < 1) {
+      return false
+    }
+  }
 
   if (effectiveRole === "food" && hasAnyType(types, ["dinner"]) && referenceHour < 12) {
     return false
@@ -697,11 +763,56 @@ export function isCandidateEligibleForSlot(
     return false
   }
 
-  if (isLateNightAfterFallbackContext(context, slot)) {
+  if (
+    isLateNightAfterFallbackContext(context, slot) &&
+    !bypassLateNightNightlifeType
+  ) {
     if (!isLateNightNightlifeType(candidate)) return false
   }
 
   return true
+}
+
+function isDirectionallyConsistentFromAfterStops(
+  afterSelections: SelectedSlotVenue[],
+  candidate: CandidateVenue,
+  context: PlanningContext
+): boolean {
+  const anchor = context.anchorVenue
+  const firstPostEventStop = afterSelections[0]?.venue ?? null
+  const previous = afterSelections[afterSelections.length - 1]?.venue ?? null
+
+  if (!anchor || !firstPostEventStop || !previous) return true
+  if (afterSelections.length < 1) return true
+
+  if (
+    anchor.lat == null ||
+    anchor.lon == null ||
+    firstPostEventStop.lat == null ||
+    firstPostEventStop.lon == null ||
+    previous.lat == null ||
+    previous.lon == null ||
+    candidate.lat == null ||
+    candidate.lon == null
+  ) {
+    return false
+  }
+
+  const outboundX = firstPostEventStop.lon - anchor.lon
+  const outboundY = firstPostEventStop.lat - anchor.lat
+  const stepX = candidate.lon - previous.lon
+  const stepY = candidate.lat - previous.lat
+
+  const outboundMagnitude = Math.hypot(outboundX, outboundY)
+  const stepMagnitude = Math.hypot(stepX, stepY)
+
+  if (outboundMagnitude === 0 || stepMagnitude === 0) return true
+
+  const dot =
+    (outboundX * stepX + outboundY * stepY) /
+    (outboundMagnitude * stepMagnitude)
+
+  return dot >= 0.42
 }
 
 function logLateNightTemporalRejection({

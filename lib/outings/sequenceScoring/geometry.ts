@@ -110,6 +110,21 @@ export function getMaxAfterLocalFallbackMeters(mobility: Mobility): number {
   return 2200
 }
 
+export function shouldResetRouteAtEvent(
+  context: PlanningContext,
+  slot: PlanningSlot
+): boolean {
+  return context.mode === "full" && slot.phase === "after"
+}
+
+export function isFirstAfterSlotInFullMode(
+  context: PlanningContext,
+  slot: PlanningSlot,
+  selectedAfterStopCount = 0
+): boolean {
+  return shouldResetRouteAtEvent(context, slot) && selectedAfterStopCount === 0
+}
+
 export function getFirstPostEventSelectedStop(
   selectedSoFar: VenueRecord[],
   context: PlanningContext
@@ -166,4 +181,49 @@ export function isAfterSequenceDirectionallyConsistent(
     (outboundMagnitude * stepMagnitude)
 
   return dot >= 0.42
+}
+
+export function isDirectionallyConsistentFromAnchorRoute({
+  anchor,
+  firstStop,
+  previousStop,
+  candidate,
+  minimumDot = 0.42,
+}: {
+  anchor: Pick<VenueRecord, "lat" | "lon"> | null
+  firstStop: Pick<VenueRecord, "lat" | "lon"> | null
+  previousStop: Pick<VenueRecord, "lat" | "lon"> | null
+  candidate: Pick<VenueRecord, "lat" | "lon">
+  minimumDot?: number
+}): boolean {
+  if (!anchor || !firstStop || !previousStop) return true
+
+  if (
+    anchor.lat == null ||
+    anchor.lon == null ||
+    firstStop.lat == null ||
+    firstStop.lon == null ||
+    previousStop.lat == null ||
+    previousStop.lon == null ||
+    candidate.lat == null ||
+    candidate.lon == null
+  ) {
+    return false
+  }
+
+  const outboundX = firstStop.lon - anchor.lon
+  const outboundY = firstStop.lat - anchor.lat
+  const stepX = candidate.lon - previousStop.lon
+  const stepY = candidate.lat - previousStop.lat
+
+  const outboundMagnitude = Math.hypot(outboundX, outboundY)
+  const stepMagnitude = Math.hypot(stepX, stepY)
+
+  if (outboundMagnitude === 0 || stepMagnitude === 0) return true
+
+  const dot =
+    (outboundX * stepX + outboundY * stepY) /
+    (outboundMagnitude * stepMagnitude)
+
+  return dot >= minimumDot
 }

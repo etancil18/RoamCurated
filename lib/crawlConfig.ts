@@ -233,7 +233,7 @@ export const crawlThemes: CrawlTheme[] = [
   ],
   filters: {
     price: [1, 2, 3, 4],
-    timeOfDay: ["afternoon", "happy hour", "evening", "night", "late-night"],
+    timeOfDay: ["afternoon", "happy hour", "evening", "late", "late-night"],
     vibes: [
       "romantic", "cocktail", "winebar", "jazz", "twilight", "wine", "dim", "moody", "wine",
       "candlelit", "intimate", "charming", "flirty", "cozy", "soft",
@@ -341,7 +341,7 @@ export const crawlThemes: CrawlTheme[] = [
 ],
   filters: {
     price: [1, 2, 3],
-    timeOfDay: ["midday", "day", "afternoon", "evening", "night", "late-night"],
+    timeOfDay: ["midday", "day", "afternoon", "evening", "late", "late-night"],
     vibes: [
       "sports", "rowdy", "screen", "beer", "gameday", "fans", "casual", "lively", "loud", "fun",
       "tailgate", "chill", "celebratory", "teams", "energy", "crowd", "cheer", "wings", "burgers", "pitchers", "game", "football", "basketball", "baseball", "soccer", "social", "competitive", "athletic",    // sports
@@ -499,7 +499,7 @@ export const crawlThemes: CrawlTheme[] = [
   "rounds",
   "tab",
   "hangover"],
-    timeOfDay: ["evening", "night", "late-night"]
+    timeOfDay: ["evening", "late", "late-night"]
   },
   keywords: [
     "loud", "shareable", "pitchers", "group", "crowded", "bar", "dinner", "club", "dj",
@@ -597,7 +597,7 @@ export const crawlThemes: CrawlTheme[] = [
     "late-night"
   ],
   "filters": {
-    "timeOfDay": ["evening", "night", "late-night"],
+    "timeOfDay": ["evening", "late", "late-night"],
     "price": [2, 3, 4],
     "tags": [
       "activity", "bar", "dinner", "club", "late-night",
@@ -900,7 +900,7 @@ export const crawlThemes: CrawlTheme[] = [
   "dinner"
 ],
   filters: {
-    timeOfDay: ["afternoon", "evening", "night"],
+    timeOfDay: ["afternoon", "evening", "late"],
     price: [1, 2, 3],
     tags: ["bar", "cocktail", "dinner", "lounge", "patio", "happy hour", "wine bar", "winebar", "wine", "gastropub",
   "taproom",

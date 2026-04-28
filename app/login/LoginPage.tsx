@@ -39,7 +39,7 @@ export default function LoginPage() {
     if (!signInError) {
       await supabase.auth.getSession()
       setLoading(false)
-      window.location.href = '/'
+      window.location.href = '/events'
       return
     }
 

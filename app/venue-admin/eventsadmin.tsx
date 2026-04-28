@@ -35,6 +35,7 @@ export default function EventsAdmin({
     title: '',
     date: '',
     start_time: '',
+    end_date: '',
     end_time: '',
     tags: '',
     price_info: '',
@@ -77,13 +78,14 @@ export default function EventsAdmin({
     loadVenuesByCity()
   }, [supabase])
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedVenue) return setError('Please select a venue')
     setLoading(true)
     setError(null)
     setSuccess(false)
+
+    const endDateForPayload = form.end_date || form.date
 
     const payload = {
       title: form.title.trim(),
@@ -93,8 +95,8 @@ export default function EventsAdmin({
           ? new Date(`${form.date}T${form.start_time}:00`).toISOString()
           : null,
       ends_at:
-        form.date && form.end_time
-          ? new Date(`${form.date}T${form.end_time}:00`).toISOString()
+        endDateForPayload && form.end_time
+          ? new Date(`${endDateForPayload}T${form.end_time}:00`).toISOString()
           : null,
       tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : null,
       price_info: form.price_info.trim() || null,
@@ -119,6 +121,7 @@ export default function EventsAdmin({
         title: '',
         date: '',
         start_time: '',
+        end_date: '',
         end_time: '',
         tags: '',
         price_info: '',
@@ -143,7 +146,7 @@ export default function EventsAdmin({
             value={selectedCity}
             onChange={(e) => {
               setSelectedCity(e.target.value)
-              onVenueChange('') // reset venue when city changes
+              onVenueChange('')
             }}
             className="w-full border p-2 rounded"
           >
@@ -156,51 +159,48 @@ export default function EventsAdmin({
           </select>
         </div>
 
-       {selectedCity && (
-  <div>
-    <label className="block mb-1 font-medium">Search Venue</label>
+        {selectedCity && (
+          <div>
+            <label className="block mb-1 font-medium">Search Venue</label>
 
-    <div className="border rounded">
-      <Command>
-        <CommandInput
-          placeholder="Type to search venues..."
-          value={searchQuery}
-          onValueChange={setSearchQuery}
-        />
-        <CommandList>
-          <CommandGroup heading="Venues">
-            {venuesByCity[selectedCity]
-              ?.filter((venue) =>
-                venue.name?.toLowerCase().includes(searchQuery.toLowerCase())
-              )
-              .map((venue) => (
-                <CommandItem
-                  key={venue.id}
-                  value={venue.name ?? ''}
-                  onSelect={() => {
-                    onVenueChange(venue.id)
-                    setSearchQuery(venue.name ?? '')
-                  }}
-                >
-                  {venue.name}
-                </CommandItem>
-              ))}
-          </CommandGroup>
-        </CommandList>
-      </Command>
-    </div>
+            <div className="border rounded">
+              <Command>
+                <CommandInput
+                  placeholder="Type to search venues..."
+                  value={searchQuery}
+                  onValueChange={setSearchQuery}
+                />
+                <CommandList>
+                  <CommandGroup heading="Venues">
+                    {venuesByCity[selectedCity]
+                      ?.filter((venue) =>
+                        venue.name?.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((venue) => (
+                        <CommandItem
+                          key={venue.id}
+                          value={venue.name ?? ''}
+                          onSelect={() => {
+                            onVenueChange(venue.id)
+                            setSearchQuery(venue.name ?? '')
+                          }}
+                        >
+                          {venue.name}
+                        </CommandItem>
+                      ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </div>
 
-    {selectedVenue && (
-      <p className="text-sm text-green-600 mt-2">
-        Selected venue: {
-          venuesByCity[selectedCity]?.find((v) => v.id === selectedVenue)?.name
-        }
-      </p>
-    )}
-  </div>
-)}
-
-
+            {selectedVenue && (
+              <p className="text-sm text-green-600 mt-2">
+                Selected venue:{' '}
+                {venuesByCity[selectedCity]?.find((v) => v.id === selectedVenue)?.name}
+              </p>
+            )}
+          </div>
+        )}
 
         <div>
           <label className="block mb-1 font-medium">Event Title</label>
@@ -216,15 +216,22 @@ export default function EventsAdmin({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block mb-1 font-medium">Date</label>
+            <label className="block mb-1 font-medium">Start Date</label>
             <input
               type="date"
               required
               value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  date: e.target.value,
+                  end_date: form.end_date || e.target.value,
+                })
+              }
               className="w-full border p-2 rounded"
             />
           </div>
+
           <div>
             <label className="block mb-1 font-medium">Start Time</label>
             <input
@@ -237,14 +244,26 @@ export default function EventsAdmin({
           </div>
         </div>
 
-        <div>
-          <label className="block mb-1 font-medium">End Time</label>
-          <input
-            type="time"
-            value={form.end_time}
-            onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-            className="w-full border p-2 rounded"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1 font-medium">End Date</label>
+            <input
+              type="date"
+              value={form.end_date}
+              onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+              className="w-full border p-2 rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">End Time</label>
+            <input
+              type="time"
+              value={form.end_time}
+              onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+              className="w-full border p-2 rounded"
+            />
+          </div>
         </div>
 
         <div>

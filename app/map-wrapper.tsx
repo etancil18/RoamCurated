@@ -41,7 +41,7 @@ export default function MapWrapper() {
   const [selectedThemeId, setSelectedThemeId] = useState('')
   const [selectedPrice, setSelectedPrice] = useState('')
   const [travelMode, setTravelMode] = useState<'walking' | 'cycling' | 'driving'>('walking')
-  const [markerDisplayMode, setMarkerDisplayMode] = useState<'color' | 'emoji'>('color')
+  const [markerDisplayMode, setMarkerDisplayMode] = useState<'color' | 'emoji'>('emoji')
   const [customStart, setCustomStart] = useState<{ lat: number; lon: number } | null>(null)
   const [tightness, setTightness] = useState<'tight' | 'medium' | 'loose'>('medium')
   const [showLiveEventsOnly, setShowLiveEventsOnly] = useState(false)
