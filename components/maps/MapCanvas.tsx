@@ -82,6 +82,7 @@ type Props = {
   onCityChange?: (city: string | null) => void
   onMapClick?: (lat: number, lon: number) => void
   customStart?: { lat: number; lon: number } | null
+  isPanelOpen?: boolean
 }
 
 export default function MapCanvas({
@@ -94,6 +95,7 @@ export default function MapCanvas({
   onCityChange,
   onMapClick,
   customStart,
+  isPanelOpen = false,
 }: Props) {
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [showCitySelector, setShowCitySelector] = useState(true)
@@ -286,6 +288,7 @@ export default function MapCanvas({
         <CitySelector
           selectedCity={selectedCity}
           onSelectCity={handleSelectCity}
+          panelOpen={isPanelOpen}
         />
       )}
 

@@ -77,8 +77,8 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-[5000] w-full border-b border-gray-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 sm:px-6">
-      <div className="flex items-center justify-between">
+   <nav className="fixed top-0 left-0 right-0 z-[5000] h-16 border-b border-gray-200 bg-white/95 px-4 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 sm:px-6">
+      <div className="flex h-full items-center justify-between">
         <Link
           href="/"
           onClick={() => handleNavClick('home')}

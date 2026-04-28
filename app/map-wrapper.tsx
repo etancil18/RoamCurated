@@ -414,6 +414,7 @@ export default function MapWrapper() {
             showLiveEventsOnly={showLiveEventsOnly}
             onCityChange={handleCityChange}
             searchTerm={searchTerm}
+            isPanelOpen={isPanelOpen}
           />
         </Suspense>
       )}

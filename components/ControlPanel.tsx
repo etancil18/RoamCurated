@@ -108,19 +108,21 @@ export function ControlPanel({
 
   return (
     <div
-      className="
-        w-full fixed top-0 left-0 z-[1000]
-        bg-white dark:bg-zinc-950
-        border-b border-zinc-300 dark:border-zinc-700
-        px-3 py-2
-        text-xs
-        grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6
-        gap-2
-        items-center
-        rounded-b-xl
-        shadow-sm
-      "
-    >
+  className="
+    fixed top-16 left-0 right-0 z-[4000]
+    max-h-[calc(100vh-4rem)]
+    overflow-y-auto
+    bg-white dark:bg-zinc-950
+    border-b border-zinc-300 dark:border-zinc-700
+    px-3 py-2
+    text-xs
+    grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6
+    gap-2
+    items-center
+    rounded-b-xl
+    shadow-sm
+  "
+>
       <div className="space-y-0.5">
         <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Mode</Label>
         <ToggleGroup

@@ -5,32 +5,34 @@ import { CITY_CONFIGS } from '@/config/cities'
 type Props = {
   selectedCity: string | null
   onSelectCity: (city: string | null) => void
+  panelOpen?: boolean
 }
 
 export default function CitySelector({
   selectedCity,
   onSelectCity,
+  panelOpen = false,
 }: Props) {
   const cities = Object.entries(CITY_CONFIGS)
 
   return (
     <div
-      className="
-        absolute top-4 left-1/2 -translate-x-1/2 z-[1000]
+      className={`
+        fixed left-1/2 -translate-x-1/2 z-[3900]
+        ${panelOpen ? 'top-44' : 'top-20'}
         bg-neutral-900/90 backdrop-blur-md
         border border-neutral-700
         rounded-xl shadow-xl
         px-4 py-3
         max-w-screen w-[95%] sm:w-auto
         overflow-x-auto
-      "
+      `}
     >
       <div className="flex gap-2 items-center flex-nowrap min-w-max">
         <span className="text-sm text-neutral-400 whitespace-nowrap mr-2">
           Select a city:
         </span>
 
-        {/* 🔁 All Cities Button */}
         <button
           onClick={() => onSelectCity(null)}
           className={`
@@ -43,7 +45,6 @@ export default function CitySelector({
           🗺️ All Cities
         </button>
 
-        {/* 🔁 Per-City Buttons */}
         {cities.map(([slug, city]) => {
           const isActive = slug === selectedCity
 
