@@ -1,6 +1,52 @@
 // lib/outings/sequenceScoring/geometry.ts
 
-import type { Mobility, PlanningContext, PlanningSlot, VenueRecord } from "../types"
+import type {
+  CityPlanningConfig,
+  Mobility,
+  PlanningContext,
+  PlanningSlot,
+  VenueRecord,
+} from "../types"
+
+type PlanningDistanceSource =
+  | PlanningContext
+  | CityPlanningConfig
+  | null
+  | undefined
+
+function isCityPlanningConfig(value: unknown): value is CityPlanningConfig {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "distances" in value
+  )
+}
+
+function resolveCityPlanning(
+  source?: PlanningDistanceSource
+): CityPlanningConfig | null {
+  if (!source) return null
+
+  if (isCityPlanningConfig(source)) {
+    return source
+  }
+
+  return source.cityPlanning ?? null
+}
+
+function applyRelaxedDistance(base: number, relaxed = false): number {
+  return relaxed ? Math.round(base * 1.35) : base
+}
+
+function getAnchorDistanceLimit(
+  mobility: Mobility,
+  source?: PlanningDistanceSource
+): number | null {
+  const cityPlanning = resolveCityPlanning(source)
+  const value = cityPlanning?.distances.maxAnchorDistanceMeters[mobility]
+
+  return typeof value === "number" && Number.isFinite(value) ? value : null
+}
 
 export function haversineMeters(
   lat1: number,
@@ -45,28 +91,37 @@ export function getDistanceBetweenVenues(
 
 export function inferTravelMode(
   mobility: Mobility,
-  distanceMeters: number | null
+  distanceMeters: number | null,
+  source?: PlanningDistanceSource
 ): "walk" | "drive" | "transit" | "rideshare" {
+  const walkableMeters =
+    getAnchorDistanceLimit("walk", source) ?? 1200
+
   if (mobility === "walk") return "walk"
-  if (distanceMeters != null && distanceMeters < 1200) return "walk"
+  if (distanceMeters != null && distanceMeters < walkableMeters) return "walk"
   if (mobility === "short_ride") return "rideshare"
   return "drive"
 }
 
 export function estimateTravelMinutes(
   mobility: Mobility,
-  distanceMeters: number | null
+  distanceMeters: number | null,
+  source?: PlanningDistanceSource
 ): number | null {
   if (distanceMeters == null) return null
+
+  const walkableMeters =
+    getAnchorDistanceLimit("walk", source) ?? 1200
 
   if (mobility === "walk") {
     return Math.max(5, Math.round(distanceMeters / 75))
   }
 
   if (mobility === "short_ride") {
-    if (distanceMeters < 1200) {
+    if (distanceMeters < walkableMeters) {
       return Math.max(5, Math.round(distanceMeters / 75))
     }
+
     return Math.max(6, Math.round(distanceMeters / 300))
   }
 
@@ -76,9 +131,17 @@ export function estimateTravelMinutes(
 export function isTooFarForBeforeFirstStop(
   anchorDistance: number | null,
   mobility: Mobility,
-  relaxed = false
+  relaxed = false,
+  source?: PlanningDistanceSource
 ): boolean {
   if (anchorDistance == null) return false
+
+  const override = getAnchorDistanceLimit(mobility, source)
+
+  if (override != null) {
+    return anchorDistance > applyRelaxedDistance(override, relaxed)
+  }
+
   if (mobility === "walk") return anchorDistance > (relaxed ? 2000 : 1400)
   if (mobility === "short_ride") return anchorDistance > (relaxed ? 3800 : 2800)
   return anchorDistance > (relaxed ? 5500 : 4500)
@@ -87,24 +150,69 @@ export function isTooFarForBeforeFirstStop(
 export function isTooFarForAfterFirstStop(
   anchorDistance: number | null,
   mobility: Mobility,
-  relaxed = false
+  relaxed = false,
+  source?: PlanningDistanceSource
 ): boolean {
   if (anchorDistance == null) return false
+
+  const override = getAnchorDistanceLimit(mobility, source)
+
+  if (override != null) {
+    return anchorDistance > applyRelaxedDistance(override, relaxed)
+  }
+
   if (mobility === "walk") return anchorDistance > (relaxed ? 2200 : 1600)
   if (mobility === "short_ride") return anchorDistance > (relaxed ? 4200 : 3200)
   return anchorDistance > (relaxed ? 6000 : 5000)
 }
 
+export function getMaxBeforeInterstopMeters(
+  mobility: Mobility,
+  relaxed = false,
+  source?: PlanningDistanceSource
+): number {
+  const cityPlanning = resolveCityPlanning(source)
+  const value = relaxed
+    ? cityPlanning?.distances.beforeInterstopMeters.relaxed
+    : cityPlanning?.distances.beforeInterstopMeters.strict
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value
+  }
+
+  return relaxed ? 4500 : 3500
+}
+
 export function getMaxAfterInterstopMeters(
   mobility: Mobility,
-  relaxed = false
+  relaxed = false,
+  source?: PlanningDistanceSource
 ): number {
+  const cityPlanning = resolveCityPlanning(source)
+  const value = relaxed
+    ? cityPlanning?.distances.afterInterstopMeters.relaxed
+    : cityPlanning?.distances.afterInterstopMeters.strict
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value
+  }
+
   if (mobility === "walk") return relaxed ? 1200 : 900
   if (mobility === "short_ride") return relaxed ? 2200 : 1600
   return relaxed ? 3200 : 2400
 }
 
-export function getMaxAfterLocalFallbackMeters(mobility: Mobility): number {
+export function getMaxAfterLocalFallbackMeters(
+  mobility: Mobility,
+  source?: PlanningDistanceSource
+): number {
+  const cityPlanning = resolveCityPlanning(source)
+  const afterStrict = cityPlanning?.distances.afterInterstopMeters.strict
+
+  if (typeof afterStrict === "number" && Number.isFinite(afterStrict)) {
+    return Math.round(afterStrict * 0.65)
+  }
+
   if (mobility === "walk") return 700
   if (mobility === "short_ride") return 1400
   return 2200

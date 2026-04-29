@@ -18,6 +18,7 @@ import {
   getDistanceBetweenVenues,
   getMaxAfterInterstopMeters,
   getMaxAfterLocalFallbackMeters,
+  getMaxBeforeInterstopMeters,
   isTooFarForAfterFirstStop,
   isTooFarForBeforeFirstStop,
 } from "./geometry"
@@ -638,7 +639,11 @@ export function isCandidateEligibleForSlot(
   const prevToCandidate = previous ? getDistanceBetweenVenues(previous, candidate) : null
 
   if (slot.phase === "before") {
-    const maxInterstop = relaxed ? 4500 : 3500
+    const maxInterstop = getMaxBeforeInterstopMeters(
+  context.mobility,
+  relaxed,
+  context
+)
 
     if (
       slot.index === 0 &&
@@ -687,7 +692,11 @@ export function isCandidateEligibleForSlot(
       afterSelections[afterSelections.length - 1]?.venue ?? null
 
     const isImmediatePostEvent = afterSelections.length === 0
-    const maxInterstop = getMaxAfterInterstopMeters(context.mobility, relaxed)
+    const maxInterstop = getMaxAfterInterstopMeters(
+  context.mobility,
+  relaxed,
+  context
+)
     const lateNightFallback = isLateNightAfterFallbackContext(context, slot)
 
     if (
@@ -715,7 +724,10 @@ export function isCandidateEligibleForSlot(
         candidate,
         context
       )
-      const maxLocalFallbackMeters = getMaxAfterLocalFallbackMeters(context.mobility)
+      const maxLocalFallbackMeters = getMaxAfterLocalFallbackMeters(
+  context.mobility,
+  context
+)
 
       if (
         !sameDirection &&
@@ -814,6 +826,7 @@ function isDirectionallyConsistentFromAfterStops(
 
   return dot >= 0.42
 }
+
 
 function logLateNightTemporalRejection({
   candidate,

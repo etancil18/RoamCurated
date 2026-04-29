@@ -209,20 +209,20 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
 
   return (
     <div
-      className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-10
-                    bg-white text-gray-900
-                    dark:bg-neutral-950 dark:text-gray-100"
+      className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-24 pb-6 space-y-10
+           bg-white text-gray-900
+           dark:bg-neutral-950 dark:text-gray-100"
     >
-      <div>
-        <Link
-          href={backToMapHref}
-          className="inline-block text-sm font-medium
-                     text-blue-600 hover:text-blue-800
-                     dark:text-blue-400 dark:hover:text-blue-300"
-        >
-          ← Back to {normalizedVenue.city ?? 'Map'}
-        </Link>
-      </div>
+      <div className="sticky top-16 z-30 -mx-4 bg-white/95 px-4 py-3 backdrop-blur dark:bg-neutral-950/95 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
+  <Link
+    href={backToMapHref}
+    className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium
+               text-blue-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800
+               dark:border-zinc-700 dark:bg-zinc-900 dark:text-blue-400 dark:hover:bg-zinc-800 dark:hover:text-blue-300"
+  >
+    ← Back to {normalizedVenue.city ?? 'Map'}
+  </Link>
+</div>
 
       <HeroBanner venue={normalizedVenue} />
 

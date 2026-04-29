@@ -17,6 +17,26 @@ export type TravelMode = "walk" | "drive" | "transit" | "rideshare"
 export type SlotPhase = "before" | "after"
 export type SelectionPass = "strict" | "balanced" | "relaxed" | "emergency"
 
+// ---------- City-Aware Planning ----------
+
+export type CityPlanningConfig = {
+  distances: {
+    beforeInterstopMeters: {
+      strict: number
+      relaxed: number
+    }
+    afterInterstopMeters: {
+      strict: number
+      relaxed: number
+    }
+    maxAnchorDistanceMeters: {
+      walk: number
+      short_ride: number
+      any: number
+    }
+  }
+}
+
 // ---------- Exit-Aware Planning ----------
 
 export type LeaveEarlyByHours = 1 | 2 | 3 | 4
@@ -75,6 +95,7 @@ export type PlanningSlot = {
 export type PlanningContext = {
   mode: PlanMode
   timeZone: string
+  cityPlanning?: CityPlanningConfig | null
 
   startsAt: Date
   estimatedEndAt: Date
@@ -180,16 +201,16 @@ export type GeneratedOutingStop = {
   address?: string | null
 
   metadata?: {
-  venueName?: string | null
-  venueAddress?: string | null
-  score?: number | null
-  inferredRoles?: StopRole[]
-  venueTypes?: string[]
-  venueType?: string | null
-  displayType?: string | null
-  appliedDisplayType?: string | null
-  selectedPass?: SelectionPass | null
-} | null
+    venueName?: string | null
+    venueAddress?: string | null
+    score?: number | null
+    inferredRoles?: StopRole[]
+    venueTypes?: string[]
+    venueType?: string | null
+    displayType?: string | null
+    appliedDisplayType?: string | null
+    selectedPass?: SelectionPass | null
+  } | null
 
   bookingOptions?: VenueBookingOption[] | null
   reservationRecommended?: boolean
@@ -214,6 +235,7 @@ export type GenerateEventOutingPlanInput = {
   mobility?: Mobility
   vibeTags?: string[]
   timeZone?: string | null
+  cityPlanning?: CityPlanningConfig | null
   leaveEarlyByHours?: LeaveEarlyByHours | null
 }
 

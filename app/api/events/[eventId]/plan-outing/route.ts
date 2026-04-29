@@ -120,7 +120,9 @@ export async function POST(
     }
 
     const cityKey = city.toLowerCase()
-    const timeZone = CITY_CONFIGS[cityKey]?.timezone ?? "America/New_York"
+    const cityConfig = CITY_CONFIGS[cityKey]
+    const timeZone = cityConfig?.timezone ?? "America/New_York"
+    const cityPlanning = cityConfig?.planning ?? null
 
     console.log(
       "OUTING_EVENT_TIME_DEBUG",
@@ -141,6 +143,7 @@ export async function POST(
           tags: event.tags,
           city,
           timeZone,
+          cityPlanning,
         },
         null,
         2
@@ -200,6 +203,7 @@ export async function POST(
       vibeTags,
       timeZone,
       leaveEarlyByHours,
+      cityPlanning,
     })
 
     console.log(
@@ -219,6 +223,7 @@ export async function POST(
           desiredRoles: debugPlanningContext.desiredRoles,
           city,
           timeZone,
+          cityPlanning: debugPlanningContext.cityPlanning ?? cityPlanning,
           slots: debugPlanningContext.slots?.map((slot) => ({
             index: slot.index,
             role: slot.role,
@@ -244,6 +249,7 @@ export async function POST(
       vibeTags,
       timeZone,
       leaveEarlyByHours,
+      cityPlanning,
     })
 
     const lateNightSingleStopFallbackApplied =
@@ -264,38 +270,39 @@ export async function POST(
         debugPlanningContext
       )
 
-    const leaveEarlyCoverageSufficient =
-      qualifiesForLeaveEarlyCoverage(
-        generatedPlan.stops,
-        mode,
-        leaveEarlyByHours
-      )
+    const leaveEarlyCoverageSufficient = qualifiesForLeaveEarlyCoverage(
+      generatedPlan.stops,
+      mode,
+      leaveEarlyByHours
+    )
 
-      const reducedFullCoverageSufficient =
-  qualifiesForReducedFullCoverage(generatedPlan.stops, mode)
+    const reducedFullCoverageSufficient = qualifiesForReducedFullCoverage(
+      generatedPlan.stops,
+      mode
+    )
 
-      const hasEmergencyStop = generatedPlan.stops.some(
-    (stop) => stop.metadata?.selectedPass === "emergency"
-  )
+    const hasEmergencyStop = generatedPlan.stops.some(
+      (stop) => stop.metadata?.selectedPass === "emergency"
+    )
 
     const plannerCoverageComplete =
       generatedPlan.scoreBreakdown.completionRate >= 1 &&
       generatedPlan.stops.length >= 1
 
-const minimumRequiredStops =
-  plannerCoverageComplete ||
-  hasEmergencyStop ||
-  reducedFullCoverageSufficient ||
-  lateNightSingleStopFallbackApplied ||
-  lateNightReducedFullFallbackApplied ||
-  reducedBeforeSingleStopFallbackApplied ||
-  leaveEarlyCoverageSufficient
-    ? Math.max(generatedPlan.stops.length, 1)
-    : minimumStopsForMode(mode)
+    const minimumRequiredStops =
+      plannerCoverageComplete ||
+      hasEmergencyStop ||
+      reducedFullCoverageSufficient ||
+      lateNightSingleStopFallbackApplied ||
+      lateNightReducedFullFallbackApplied ||
+      reducedBeforeSingleStopFallbackApplied ||
+      leaveEarlyCoverageSufficient
+        ? Math.max(generatedPlan.stops.length, 1)
+        : minimumStopsForMode(mode)
 
-const failedToGenerateStops =
-  generatedPlan.scoreBreakdown.failedToGenerateStops ||
-  generatedPlan.stops.length === 0
+    const failedToGenerateStops =
+      generatedPlan.scoreBreakdown.failedToGenerateStops ||
+      generatedPlan.stops.length === 0
 
     console.log(
       "generated outing plan",
@@ -305,6 +312,7 @@ const failedToGenerateStops =
           mode,
           city,
           timeZone,
+          cityPlanning,
           requestedGroupSize: groupSize,
           requestedBudget: budget,
           requestedMobility: mobility,
@@ -362,6 +370,7 @@ const failedToGenerateStops =
             candidateVenueCount: venueCandidates.length,
             city,
             timeZone,
+            cityPlanning,
             scoreBreakdown: generatedPlan.scoreBreakdown,
             debug: generatedPlan.debug ?? null,
           },
@@ -405,6 +414,7 @@ const failedToGenerateStops =
         mode,
         city,
         timeZone,
+        cityPlanning,
         leaveEarlyByHours,
         plannedExitAt: generatedPlan.plannedExitAt ?? plannedExitAt,
         effectiveExitAt:
@@ -480,6 +490,7 @@ const failedToGenerateStops =
           debugPlanningContext.effectiveExitAt?.toISOString?.() ??
           null,
         timeZone,
+        cityPlanning,
         venue: anchorVenue
           ? {
               id: anchorVenue.id,

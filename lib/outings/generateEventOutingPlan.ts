@@ -65,6 +65,7 @@ export function generateEventOutingPlan(
     vibeTags: input.vibeTags,
     timeZone: input.timeZone,
     leaveEarlyByHours: input.leaveEarlyByHours,
+    cityPlanning: input.cityPlanning,
   })
 
   const rankedCandidates = rankVenueCandidates(input.candidateVenues, context)

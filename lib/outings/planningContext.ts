@@ -2,6 +2,7 @@
 
 import type {
   Budget,
+  CityPlanningConfig,
   EventRecord,
   LeaveEarlyByHours,
   Mobility,
@@ -23,6 +24,7 @@ export type BuildPlanningContextInput = {
   vibeTags?: string[]
   timeZone?: string | null
   leaveEarlyByHours?: LeaveEarlyByHours | null
+  cityPlanning?: CityPlanningConfig | null
 }
 
 const ALLOWED_BUDGETS: Budget[] = ["$", "$$", "$$$", "$$$$"]
@@ -106,6 +108,7 @@ export function buildPlanningContext(
     mobility,
     vibeTags,
     anchorVenue: input.anchorVenue,
+    cityPlanning: input.cityPlanning ?? null,
   }
 }
 
