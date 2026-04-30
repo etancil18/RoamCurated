@@ -818,6 +818,7 @@ export type Database = {
           planned_end_at: string | null
           planned_start_at: string | null
           score_breakdown: Json
+          share_enabled: boolean | null
           source: string
           status: string
           updated_at: string
@@ -844,6 +845,7 @@ export type Database = {
           planned_end_at?: string | null
           planned_start_at?: string | null
           score_breakdown?: Json
+          share_enabled?: boolean | null
           source?: string
           status?: string
           updated_at?: string
@@ -870,6 +872,7 @@ export type Database = {
           planned_end_at?: string | null
           planned_start_at?: string | null
           score_breakdown?: Json
+          share_enabled?: boolean | null
           source?: string
           status?: string
           updated_at?: string

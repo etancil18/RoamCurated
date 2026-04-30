@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
 import OutingMap from "@/components/events/OutingMap"
+import OutingShareActions from "@/components/outings/OutingShareActions"
 
 export const dynamic = "force-dynamic"
 
@@ -273,6 +274,29 @@ export default async function EventOutingPage({ params }: Props) {
           ) : null}
         </div>
       </div>
+
+      <OutingShareActions
+        plannedOutingId={outing.id}
+        eventId={eventId}
+        city={city}
+        mode={outing.mode}
+        summary={outing.plan_summary}
+        anchorTitle={anchor.title}
+        anchorVenue={{
+          id: anchor.venue?.id ?? "anchor-event",
+          name: anchor.venue?.name ?? anchor.title ?? "Event",
+          title: anchor.title,
+          lat: anchor.venue?.lat ?? null,
+          lon: anchor.venue?.lon ?? null,
+          city,
+        }}
+        eventStartsAt={anchor.startsAt}
+        stops={stops.map((stop) => ({
+          ...stop,
+          lat: stop.venue?.lat ?? null,
+          lon: stop.venue?.lon ?? null,
+        }))}
+      />
 
       <OutingMap
         plannedOutingId={outing.id}

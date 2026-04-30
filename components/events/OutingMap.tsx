@@ -521,7 +521,7 @@ export default function OutingMap({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:grid-cols-4">
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 justify-items-center">
         <Button
           variant="outline"
           onClick={openGoogleMaps}
@@ -541,14 +541,6 @@ export default function OutingMap({
         </Button>
 
         <Button
-          variant="outline"
-          onClick={shareRoute}
-          className="w-full"
-        >
-          {shareFeedback}
-        </Button>
-
-        <Button
           variant="secondary"
           onClick={goBackToEvent}
           className="w-full"
@@ -563,12 +555,6 @@ export default function OutingMap({
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card p-4">
-        <p className="text-sm text-muted-foreground">
-          Reordering stops here updates the route preview only. It does not overwrite
-          the saved outing plan for <span className="font-medium text-foreground">{plannedOutingId}</span>.
-        </p>
-      </div>
     </div>
   )
 }
