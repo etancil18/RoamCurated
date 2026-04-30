@@ -109,10 +109,10 @@ export default function OutingShareActions({
         headers: {
           "Content-Type": "application/json",
         },
-            body: JSON.stringify({
-        mode,
-        travelMode: "walking",
-        anchorVenue: anchorVenue
+        body: JSON.stringify({
+          mode,
+          travelMode: "walking",
+          anchorVenue: anchorVenue
             ? {
                 id: anchorVenue.id ?? "anchor-event",
                 name: anchorVenue.name ?? anchorVenue.title ?? anchorTitle ?? "Event",
@@ -120,9 +120,9 @@ export default function OutingShareActions({
                 lon: anchorVenue.lon ?? null,
                 city,
                 link: "#",
-            }
+              }
             : null,
-        stops: stops.map((stop) => ({
+          stops: stops.map((stop) => ({
             id: stop.id,
             name: stop.title ?? `Stop ${stop.stopOrder}`,
             lat: stop.lat ?? null,
@@ -407,25 +407,34 @@ export default function OutingShareActions({
               </button>
             </div>
 
-            <div className="max-h-[calc(92vh-58px)] overflow-auto bg-neutral-950 p-4">
+            <div className="flex items-center justify-center bg-neutral-950 p-4">
               <div className="mx-auto w-full max-w-[320px] overflow-hidden rounded-xl border border-neutral-800 bg-black">
                 <div
-                  className="origin-top-left scale-[0.2963]"
+                  className="relative mx-auto"
                   style={{
-                    width: 1080,
-                    height: 1920,
+                    width: 320,
+                    height: 568,
                   }}
                 >
-                  <OutingShareCard
-                    city={city}
-                    mode={mode}
-                    summary={summary}
-                    anchorTitle={anchorTitle}
-                    eventStartsAt={eventStartsAt}
-                    stops={stops}
-                    anchorVenue={anchorVenue}
-                    routeLine={routeLine}
-                  />
+                  <div
+                    className="absolute left-1/2 top-0"
+                    style={{
+                      width: 1080,
+                      transform: "translateX(-50%) scale(0.2963)",
+                      transformOrigin: "top center",
+                    }}
+                  >
+                    <OutingShareCard
+                      city={city}
+                      mode={mode}
+                      summary={summary}
+                      anchorTitle={anchorTitle}
+                      eventStartsAt={eventStartsAt}
+                      stops={stops}
+                      anchorVenue={anchorVenue}
+                      routeLine={routeLine}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
