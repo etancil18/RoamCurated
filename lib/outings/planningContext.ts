@@ -33,6 +33,7 @@ const ALLOWED_LEAVE_EARLY_BY_HOURS: LeaveEarlyByHours[] = [1, 2, 3, 4]
 const BEFORE_EVENT_BUFFER_MINUTES = 20
 const INTERSTOP_TRAVEL_BUFFER_MINUTES = 12
 const DEFAULT_TIME_ZONE = "America/New_York"
+const DINNER_MINIMUM_LOCAL_HOUR = 17.5
 
 type Daypart =
   | "breakfast"
@@ -330,24 +331,24 @@ function desiredAfterRoles(
   }
 
   if (leaveEarlyByHours) {
-  if (lateNightAfterEvent || daypart === "late_night" || archetype === "music") {
+    if (lateNightAfterEvent || daypart === "late_night" || archetype === "music") {
+      return ["drink"]
+    }
+
+    if (daypart === "breakfast") return ["coffee"]
+
+    if (daypart === "brunch" || daypart === "lunch") {
+      if (archetype === "art") return ["activity"]
+      return ["food"]
+    }
+
+    if (daypart === "dinner") {
+      if (archetype === "art") return ["food"]
+      return ["drink"]
+    }
+
     return ["drink"]
   }
-
-  if (daypart === "breakfast") return ["coffee"]
-
-  if (daypart === "brunch" || daypart === "lunch") {
-    if (archetype === "art") return ["activity"]
-    return ["food"]
-  }
-
-  if (daypart === "dinner") {
-    if (archetype === "art") return ["food"]
-    return ["drink"]
-  }
-
-  return ["drink"]
-}
 
   if (daypart === "breakfast") {
     return ["coffee", "food"]
@@ -395,8 +396,6 @@ function desiredFullRoles(
     return [firstBefore, secondBefore, singleAfterRole]
   }
 
-  // Late full-night fallback:
-  // 2 before + 1 after
   if (lateNightAfterEvent || afterDaypart === "late_night") {
     if (archetype === "art") {
       return [beforeDaypart === "breakfast" ? "coffee" : "activity", "food", "drink"]
@@ -453,7 +452,7 @@ function buildPlanningSlots({
   if (desiredRoles.length === 0) return []
 
   if (mode === "before") {
-    return buildBeforeSlots(desiredRoles, startsAt)
+    return buildBeforeSlots(desiredRoles, startsAt, timeZone)
   }
 
   if (mode === "after") {
@@ -470,16 +469,19 @@ function buildPlanningSlots({
     desiredRoles,
     startsAt,
     estimatedEndAt,
-    lateNightFullFallback
+    lateNightFullFallback,
+    timeZone
   )
 }
 
 function buildBeforeSlots(
   desiredRoles: StopRole[],
-  startsAt: Date
+  startsAt: Date,
+  timeZone?: string | null
 ): PlanningSlot[] {
   const finalDeparture = addMinutes(startsAt, -BEFORE_EVENT_BUFFER_MINUTES)
   const slots: PlanningSlot[] = new Array(desiredRoles.length)
+  const resolvedTimeZone = normalizeTimeZone(timeZone)
 
   let nextBoundary = finalDeparture
 
@@ -497,7 +499,12 @@ function buildBeforeSlots(
       targetDepartureAt: departure,
       dwellMinutes,
       strictProgression: index > 0,
-      flexibleRole: flexibleRoleFor(role, "before"),
+      flexibleRole: flexibleRoleForPlanningSlot(
+        role,
+        "before",
+        arrival,
+        resolvedTimeZone
+      ),
     }
 
     nextBoundary = addMinutes(arrival, -INTERSTOP_TRAVEL_BUFFER_MINUTES)
@@ -532,13 +539,16 @@ function buildFullSlots(
   desiredRoles: StopRole[],
   startsAt: Date,
   estimatedEndAt: Date,
-  lateNightFullFallback = false
+  lateNightFullFallback = false,
+  timeZone?: string | null
 ): PlanningSlot[] {
+  const resolvedTimeZone = normalizeTimeZone(timeZone)
+
   if (lateNightFullFallback) {
     const beforeRoles = desiredRoles.slice(0, 2)
     const afterRoles = desiredRoles.slice(2)
 
-    const beforeSlots = buildBeforeSlots(beforeRoles, startsAt).map((slot, index) => ({
+    const beforeSlots = buildBeforeSlots(beforeRoles, startsAt, resolvedTimeZone).map((slot, index) => ({
       ...slot,
       index,
       strictProgression: index > 0,
@@ -569,7 +579,12 @@ function buildFullSlots(
         targetDepartureAt: departure,
         dwellMinutes,
         strictProgression: false,
-        flexibleRole: flexibleRoleFor(role, phase),
+        flexibleRole: flexibleRoleForPlanningSlot(
+          role,
+          phase,
+          arrival,
+          resolvedTimeZone
+        ),
       }
     }
 
@@ -606,6 +621,23 @@ function dwellMinutesForRole(
   if (role === "activity") return 60
   if (role === "dessert") return 40
   return 45
+}
+
+function flexibleRoleForPlanningSlot(
+  role: StopRole,
+  phase: SlotPhase,
+  arrival: Date,
+  timeZone: string
+): StopRole | null {
+  if (
+    phase === "before" &&
+    role === "food" &&
+    getHourFractionInTimeZone(arrival, timeZone) < DINNER_MINIMUM_LOCAL_HOUR
+  ) {
+    return "drink"
+  }
+
+  return flexibleRoleFor(role, phase)
 }
 
 function flexibleRoleFor(

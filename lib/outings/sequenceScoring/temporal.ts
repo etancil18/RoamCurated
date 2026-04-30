@@ -25,6 +25,7 @@ import {
 import { pickRoleForSlot } from "./roles"
 
 const LATE_NIGHT_MIN_VIABLE_WINDOW_MINUTES = 12
+const DINNER_MINIMUM_LOCAL_HOUR = 17.5
 
 type RawVenueHoursEntry = VenueHoursEntry & {
   open1?: string | null
@@ -71,6 +72,46 @@ export function isRoleTemporallyCompatible(
   const hour = getHourFractionInTimeZone(arrival, timeZone)
   const types = normalizeVenueTypes(venue.type)
 
+  const isBeforeDinnerMinimum =
+    phase === "before" && hour < DINNER_MINIMUM_LOCAL_HOUR
+  const hasDinnerType = hasAnyType(types, ["dinner"])
+  const hasDinnerHybridType = hasAnyType(types, [
+    "cocktail",
+    "bar",
+    "wine bar",
+    "lounge",
+  ])
+  const hasEarlyDinnerFallbackDrinkType = hasAnyType(types, [
+    "cocktail",
+    "wine bar",
+  ])
+
+  if (
+    isBeforeDinnerMinimum &&
+    role === "food" &&
+    hasDinnerType &&
+    !hasDinnerHybridType
+  ) {
+    return false
+  }
+
+  if (
+    isBeforeDinnerMinimum &&
+    role === "drink" &&
+    hasAnyType(types, [
+      "bar",
+      "sports bar",
+      "lounge",
+      "speakeasy",
+      "club",
+      "brewery",
+      "rooftop",
+    ]) &&
+    !hasEarlyDinnerFallbackDrinkType
+  ) {
+    return false
+  }
+
   if (hasAnyType(types, ["breakfast"])) {
     return hour >= 6 && hour <= (relaxed ? 12.5 : 11.5)
   }
@@ -79,7 +120,7 @@ export function isRoleTemporallyCompatible(
     return hour >= 11 && hour <= (relaxed ? 16.5 : 15.5)
   }
 
-  if (hasAnyType(types, ["dinner"])) {
+  if (hasDinnerType) {
     return hour >= (relaxed ? 15.5 : 16.5)
   }
 

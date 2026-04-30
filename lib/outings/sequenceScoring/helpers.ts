@@ -121,6 +121,28 @@ export function isMealLikeVenue(venueTypes: string[]): boolean {
   return hasAnyType(venueTypes, ["breakfast", "brunch", "lunch", "dinner"])
 }
 
+export function isDinnerVenue(venueTypes: string[]): boolean {
+  return hasAnyType(venueTypes, ["dinner"])
+}
+
+export function isDinnerDrinkHybridVenue(venueTypes: string[]): boolean {
+  return (
+    isDinnerVenue(venueTypes) &&
+    hasAnyType(venueTypes, ["cocktail", "bar", "wine bar", "lounge"])
+  )
+}
+
+export function isEarlyDinnerFallbackDrinkVenue(venueTypes: string[]): boolean {
+  return hasAnyType(venueTypes, ["cocktail", "wine bar"])
+}
+
+export function isEarlyDinnerCompatibleVenue(venueTypes: string[]): boolean {
+  return (
+    isDinnerDrinkHybridVenue(venueTypes) ||
+    isEarlyDinnerFallbackDrinkVenue(venueTypes)
+  )
+}
+
 export function uniqueStrings(values: string[]): string[] {
   return Array.from(new Set(values))
 }

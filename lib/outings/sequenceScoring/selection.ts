@@ -123,6 +123,8 @@ const SELECTION_PASSES: SelectionPassConfig[] = [
   },
 ]
 
+const DINNER_MINIMUM_LOCAL_HOUR = 17.5
+
 function unwrapSelectedVenues(
   selected: SelectedSlotVenue[] | CandidateVenue[]
 ): CandidateVenue[] {
@@ -298,6 +300,12 @@ function selectBestCandidateForPass({
 
       const supportsRole =
         candidateSupportsSlot(candidate, slot, context, pass.relaxedRole) ||
+        isBeforeDinnerFallbackDrinkCandidate({
+          candidate,
+          rankedCandidates,
+          slot,
+          timeZone,
+        }) ||
         Boolean(pass.allowWeakRoleMatch && isEmergencyCompatibleForSlot(candidate, slot))
 
       if (!supportsRole) {
@@ -306,6 +314,18 @@ function selectBestCandidateForPass({
       }
 
       matchedRole += 1
+
+      if (
+        !satisfiesBeforeDinnerTimingRule({
+          candidate,
+          rankedCandidates,
+          slot,
+          timeZone,
+        })
+      ) {
+        rejectionCounts.temporal += 1
+        return false
+      }
 
       const eligibility = evaluateCandidateEligibilityForSlot(
         candidate,
@@ -351,11 +371,14 @@ function selectBestCandidateForPass({
       const scoreA =
         computeSequentialCandidateScore(a, selectedVenues, slot, context) +
         computeSlotRoleFitBonus(a, slot) +
-        emergencyRoleFitBonus(a, slot, pass)
+        emergencyRoleFitBonus(a, slot, pass) +
+        beforeDinnerTimingScoreBonus(a, slot, timeZone)
+
       const scoreB =
         computeSequentialCandidateScore(b, selectedVenues, slot, context) +
         computeSlotRoleFitBonus(b, slot) +
-        emergencyRoleFitBonus(b, slot, pass)
+        emergencyRoleFitBonus(b, slot, pass) +
+        beforeDinnerTimingScoreBonus(b, slot, timeZone)
 
       return scoreB - scoreA
     })
@@ -640,14 +663,14 @@ export function isCandidateEligibleForSlot(
 
   if (slot.phase === "before") {
     const maxInterstop = getMaxBeforeInterstopMeters(
-  context.mobility,
-  relaxed,
-  context
-)
+      context.mobility,
+      relaxed,
+      context
+    )
 
     if (
       slot.index === 0 &&
-      isTooFarForBeforeFirstStop(anchorDistance, context.mobility, relaxed)
+      isTooFarForBeforeFirstStop(anchorDistance, context.mobility, relaxed, context)
     ) {
       return false
     }
@@ -693,10 +716,10 @@ export function isCandidateEligibleForSlot(
 
     const isImmediatePostEvent = afterSelections.length === 0
     const maxInterstop = getMaxAfterInterstopMeters(
-  context.mobility,
-  relaxed,
-  context
-)
+      context.mobility,
+      relaxed,
+      context
+    )
     const lateNightFallback = isLateNightAfterFallbackContext(context, slot)
 
     if (
@@ -704,7 +727,8 @@ export function isCandidateEligibleForSlot(
       isTooFarForAfterFirstStop(
         anchorDistance,
         context.mobility,
-        lateNightFallback ? true : relaxed
+        lateNightFallback ? true : relaxed,
+        context
       )
     ) {
       return false
@@ -725,9 +749,9 @@ export function isCandidateEligibleForSlot(
         context
       )
       const maxLocalFallbackMeters = getMaxAfterLocalFallbackMeters(
-  context.mobility,
-  context
-)
+        context.mobility,
+        context
+      )
 
       if (
         !sameDirection &&
@@ -827,6 +851,110 @@ function isDirectionallyConsistentFromAfterStops(
   return dot >= 0.42
 }
 
+function isBeforeDinnerFoodSlot({
+  slot,
+  timeZone,
+}: {
+  slot: PlanningSlot
+  timeZone: string
+}): boolean {
+  if (slot.phase !== "before") return false
+  if (slot.role !== "food") return false
+
+  const hour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
+  return hour < DINNER_MINIMUM_LOCAL_HOUR
+}
+
+function isHybridDinnerDrinkVenue(candidate: CandidateVenue): boolean {
+  const types = normalizeVenueTypes(candidate.type)
+
+  return (
+    hasAnyType(types, ["dinner"]) &&
+    hasAnyType(types, ["cocktail", "bar", "wine bar", "lounge"])
+  )
+}
+
+function isEarlyDinnerFallbackDrinkVenue(candidate: CandidateVenue): boolean {
+  const types = normalizeVenueTypes(candidate.type)
+  return hasAnyType(types, ["cocktail", "wine bar"])
+}
+
+function hasHybridDinnerDrinkCandidate({
+  rankedCandidates,
+  slot,
+  timeZone,
+}: {
+  rankedCandidates: CandidateVenue[]
+  slot: PlanningSlot
+  timeZone: string
+}): boolean {
+  if (!isBeforeDinnerFoodSlot({ slot, timeZone })) return false
+  return rankedCandidates.some(isHybridDinnerDrinkVenue)
+}
+
+function isBeforeDinnerFallbackDrinkCandidate({
+  candidate,
+  rankedCandidates,
+  slot,
+  timeZone,
+}: {
+  candidate: CandidateVenue
+  rankedCandidates: CandidateVenue[]
+  slot: PlanningSlot
+  timeZone: string
+}): boolean {
+  if (!isBeforeDinnerFoodSlot({ slot, timeZone })) return false
+  if (hasHybridDinnerDrinkCandidate({ rankedCandidates, slot, timeZone })) return false
+
+  return isEarlyDinnerFallbackDrinkVenue(candidate)
+}
+
+function satisfiesBeforeDinnerTimingRule({
+  candidate,
+  rankedCandidates,
+  slot,
+  timeZone,
+}: {
+  candidate: CandidateVenue
+  rankedCandidates: CandidateVenue[]
+  slot: PlanningSlot
+  timeZone: string
+}): boolean {
+  if (!isBeforeDinnerFoodSlot({ slot, timeZone })) return true
+
+  const hasHybrid = hasHybridDinnerDrinkCandidate({
+    rankedCandidates,
+    slot,
+    timeZone,
+  })
+
+  if (hasHybrid) {
+    return isHybridDinnerDrinkVenue(candidate)
+  }
+
+  if (isEarlyDinnerFallbackDrinkVenue(candidate)) {
+    return true
+  }
+
+  const types = normalizeVenueTypes(candidate.type)
+
+  if (hasAnyType(types, ["dinner"])) {
+    return false
+  }
+
+  return false
+}
+
+function beforeDinnerTimingScoreBonus(
+  candidate: CandidateVenue,
+  slot: PlanningSlot,
+  timeZone: string
+): number {
+  if (!isBeforeDinnerFoodSlot({ slot, timeZone })) return 0
+  if (isHybridDinnerDrinkVenue(candidate)) return 12
+  if (isEarlyDinnerFallbackDrinkVenue(candidate)) return 6
+  return 0
+}
 
 function logLateNightTemporalRejection({
   candidate,

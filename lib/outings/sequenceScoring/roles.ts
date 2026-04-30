@@ -20,6 +20,8 @@ import {
   resolvePlannerTimeZone,
 } from "./time"
 
+const DINNER_MINIMUM_LOCAL_HOUR = 17.5
+
 export function inferVenueRoles(venue: VenueRecord): StopRole[] {
   const types = normalizeVenueTypes(venue.type)
   const roles: StopRole[] = []
@@ -151,6 +153,18 @@ export function getAcceptableRolesForSlot(
     roles.push(slot.flexibleRole)
   }
 
+  // Dinner-before-5:30p rule:
+  // A before-event food slot that lands before 5:30p may flex to drink
+  // only for dinner+cocktail/bar/wine-bar/lounge hybrids or cocktail/wine-bar fallback venues.
+  if (
+    slot.phase === "before" &&
+    slot.role === "food" &&
+    hour < DINNER_MINIMUM_LOCAL_HOUR &&
+    isEarlyDinnerCompatibleVenueType(types)
+  ) {
+    roles.push("drink")
+  }
+
   // Morning food can flex into coffee
   if (slot.phase === "before" && slot.role === "food") {
     if (
@@ -213,6 +227,8 @@ export function pickBestDisplayTypeForRole(
         ? ["breakfast", "brunch", "lunch", "dinner", "cafe", "café"]
         : arrivalHour < 15
         ? ["lunch", "brunch", "breakfast", "dinner", "cafe", "café"]
+        : arrivalHour < DINNER_MINIMUM_LOCAL_HOUR && slot.phase === "before"
+        ? ["cocktail", "wine bar", "lounge", "bar", "dinner", "lunch", "brunch"]
         : ["dinner", "lunch", "brunch", "breakfast"]
       : role === "drink"
       ? [
@@ -252,4 +268,14 @@ export function getPrimaryDisplayVenueType(
   venue: Pick<VenueRecord, "type">
 ): string | null {
   return normalizeDisplayVenueType(venue.type)
+}
+
+function isEarlyDinnerCompatibleVenueType(types: string[]): boolean {
+  const isHybridDinnerDrink =
+    hasAnyType(types, ["dinner"]) &&
+    hasAnyType(types, ["cocktail", "bar", "wine bar", "lounge"])
+
+  const isFallbackDrink = hasAnyType(types, ["cocktail", "wine bar"])
+
+  return isHybridDinnerDrink || isFallbackDrink
 }
