@@ -39,6 +39,7 @@ type Props = {
   eventStartsAt?: string | null
   stops: OutingShareStop[]
   routeLine?: RouteLinePoint[]
+  variant?: "preview" | "export"
 }
 
 type RoutePoint = {
@@ -59,6 +60,7 @@ export default function OutingShareCard({
   eventStartsAt = null,
   stops,
   routeLine = [],
+  variant = "export",
 }: Props) {
   const routeLabel = buildRouteLabel(stops)
   const dateLabel = eventStartsAt ? formatDate(eventStartsAt) : null
@@ -71,15 +73,22 @@ export default function OutingShareCard({
 
   return (
     <div
+      data-roam-share-card
+      data-roam-share-variant={variant}
       className="relative flex w-[1080px] overflow-hidden bg-neutral-950 text-white"
       style={{
+        minHeight: variant === "export" ? 1920 : undefined,
         fontFamily:
           "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.28),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(99,102,241,0.25),_transparent_35%)]" />
 
-      <div className="relative z-10 flex w-full flex-col gap-16 p-20">
+      <div
+        className={`relative z-10 flex w-full flex-col p-20 ${
+          variant === "export" ? "min-h-[1920px] justify-between gap-16" : "gap-16"
+        }`}
+      >
         <div>
           <div className="flex items-center justify-between">
             <p className="text-4xl font-black tracking-tight">Roam</p>

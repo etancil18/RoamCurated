@@ -256,7 +256,7 @@ export default async function EventOutingPage({ params }: Props) {
   })
 
   return (
-    <main className="mx-auto max-w-5xl p-4 space-y-4">
+    <main className="mx-auto max-w-5xl space-y-4 px-4 pb-4 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">
           {humanizeMode(outing.mode)} Plan

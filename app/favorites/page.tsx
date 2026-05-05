@@ -20,7 +20,7 @@ export default async function FavoritesPage() {
 
   if (!user || authError) {
     return (
-      <main className="min-h-screen p-8 bg-white text-black">
+      <main className="min-h-screen bg-white text-black px-8 pb-8 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
         <h1 className="text-2xl font-bold mb-4">My Favorites</h1>
         <p className="text-gray-500">
           Please log in to view your saved routes and favorite venues.
@@ -63,7 +63,7 @@ export default async function FavoritesPage() {
   } catch (error: any) {
     console.error('[FavoritesPage] Load error:', error)
     return (
-      <main className="min-h-screen p-8 bg-white text-black">
+      <main className="min-h-screen bg-white text-black px-8 pb-8 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
         <h1 className="text-2xl font-bold mb-4">My Favorites</h1>
         <p className="text-red-600">Unable to load data. Please try again later.</p>
       </main>
@@ -83,7 +83,7 @@ export default async function FavoritesPage() {
   }
 
   return (
-    <main className="min-h-screen p-8 bg-white text-black">
+    <main className="min-h-screen bg-white text-black px-8 pb-8 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
       <h1 className="text-2xl font-bold mb-4">My Favorites</h1>
 
       <FavoritesList

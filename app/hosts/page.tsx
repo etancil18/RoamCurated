@@ -223,7 +223,7 @@ export default function HostsPage() {
   }
 
   return (
-    <main className="max-w-xl mx-auto p-6 space-y-8">
+    <main className="mx-auto max-w-xl space-y-8 px-6 pb-6 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">
           Create a Roam Neighborhood Guide

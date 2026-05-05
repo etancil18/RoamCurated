@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { logEvent } from "@/lib/logEvent"
 import OutingShareCard from "@/components/outings/OutingShareCard"
 
@@ -80,6 +80,8 @@ export default function OutingShareActions({
   eventStartsAt = null,
   stops,
 }: Props) {
+  const exportRef = useRef<HTMLDivElement>(null)
+
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -87,6 +89,7 @@ export default function OutingShareActions({
   const [snapshotOpen, setSnapshotOpen] = useState(false)
   const [routeLine, setRouteLine] = useState<RouteLinePoint[]>([])
   const [routeLineLoading, setRouteLineLoading] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const stopCount = stops.length
 
@@ -165,6 +168,142 @@ export default function OutingShareActions({
       })
     } finally {
       setRouteLineLoading(false)
+    }
+  }
+
+  const getSnapshotBlob = async (): Promise<Blob | null> => {
+    if (!exportRef.current) return null
+
+    const { toBlob } = await import("html-to-image")
+
+    return await toBlob(exportRef.current, {
+      width: 1080,
+      height: 1920,
+      pixelRatio: 2,
+      backgroundColor: "#020617",
+      cacheBust: true,
+    })
+  }
+
+  const downloadSnapshot = async () => {
+    setExporting(true)
+    setError(null)
+
+    try {
+      if (routeLine.length === 0) {
+        await fetchSnapshotRouteLine()
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 150))
+
+      const blob = await getSnapshotBlob()
+
+      if (!blob) {
+        throw new Error("Failed to create snapshot image")
+      }
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `roam-itinerary-${plannedOutingId}.png`
+      link.click()
+      URL.revokeObjectURL(url)
+
+      safeLogEvent("outing_snapshot_downloaded", {
+        plannedOutingId,
+        eventId,
+        city,
+        mode,
+        stopCount,
+      })
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to export snapshot"
+
+      setError(message)
+
+      safeLogEvent("outing_snapshot_download_failed", {
+        plannedOutingId,
+        eventId,
+        city,
+        mode,
+        stopCount,
+        message,
+      })
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const shareSnapshotImage = async () => {
+    setExporting(true)
+    setError(null)
+
+    try {
+      if (routeLine.length === 0) {
+        await fetchSnapshotRouteLine()
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 150))
+
+      const blob = await getSnapshotBlob()
+
+      if (!blob) {
+        throw new Error("Failed to create snapshot image")
+      }
+
+      const file = new File([blob], `roam-itinerary-${plannedOutingId}.png`, {
+        type: "image/png",
+      })
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          files: [file],
+        })
+
+        safeLogEvent("outing_snapshot_shared", {
+          plannedOutingId,
+          eventId,
+          city,
+          mode,
+          stopCount,
+        })
+
+        return
+      }
+
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `roam-itinerary-${plannedOutingId}.png`
+      link.click()
+      URL.revokeObjectURL(url)
+
+      safeLogEvent("outing_snapshot_share_download_fallback", {
+        plannedOutingId,
+        eventId,
+        city,
+        mode,
+        stopCount,
+      })
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to share snapshot"
+
+      setError(message)
+
+      safeLogEvent("outing_snapshot_share_failed", {
+        plannedOutingId,
+        eventId,
+        city,
+        mode,
+        stopCount,
+        message,
+      })
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -343,6 +482,24 @@ export default function OutingShareActions({
 
             <button
               type="button"
+              onClick={() => void shareSnapshotImage()}
+              disabled={exporting}
+              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {exporting ? "Preparing..." : "Share Snapshot"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void downloadSnapshot()}
+              disabled={exporting}
+              className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Save Snapshot
+            </button>
+
+            <button
+              type="button"
               onClick={() => void copyShareLink()}
               disabled={loading}
               className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
@@ -374,6 +531,22 @@ export default function OutingShareActions({
           <p className="mt-3 text-sm text-red-400">{error}</p>
         ) : null}
       </section>
+
+      <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none">
+        <div ref={exportRef}>
+          <OutingShareCard
+            city={city}
+            mode={mode}
+            summary={summary}
+            anchorTitle={anchorTitle}
+            eventStartsAt={eventStartsAt}
+            stops={stops}
+            anchorVenue={anchorVenue}
+            routeLine={routeLine}
+            variant="export"
+          />
+        </div>
+      </div>
 
       {snapshotOpen ? (
         <div
@@ -433,6 +606,7 @@ export default function OutingShareActions({
                       stops={stops}
                       anchorVenue={anchorVenue}
                       routeLine={routeLine}
+                      variant="preview"
                     />
                   </div>
                 </div>

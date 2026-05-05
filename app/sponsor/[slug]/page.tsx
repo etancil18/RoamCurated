@@ -105,16 +105,18 @@ export default async function SponsorPage({ params }: PageProps) {
 
   return (
     <main
-      className="
-        max-w-3xl
-        mx-auto
-        p-4
-        space-y-8
-        min-h-screen
-        overscroll-y-auto
-        scroll-smooth
-      "
-    >
+  className="
+    mx-auto
+    max-w-3xl
+    space-y-8
+    min-h-screen
+    overscroll-y-auto
+    scroll-smooth
+    px-4
+    pb-4
+    pt-[calc(4rem+env(safe-area-inset-top)+1rem)]
+  "
+>
       <SponsorDetail crawl={enriched} />
 
       <SharePreview

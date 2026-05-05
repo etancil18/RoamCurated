@@ -9,7 +9,7 @@ export default function UserProfilePage() {
 
     <div className="min-h-screen bg-black text-white">
 
-      <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
+      <div className="mx-auto max-w-4xl space-y-10 px-6 pb-10 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
 
         {/* Header */}
 

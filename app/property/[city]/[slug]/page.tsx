@@ -265,7 +265,7 @@ export default async function PropertyPage({ params }: PageProps) {
   ])
 
   return (
-    <main className="max-w-5xl mx-auto p-6 space-y-10">
+    <main className="mx-auto max-w-5xl space-y-10 px-6 pb-6 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
       <section>
         <Card>
           <CardContent className="p-6 space-y-4">

@@ -92,7 +92,7 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
   const markerRefs = { current: {} as Record<string, any> }
 
   return (
-    <main className="max-w-3xl mx-auto p-4 space-y-4">
+    <main className="mx-auto max-w-3xl space-y-4 px-4 pb-4 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
 
       <h1 className="text-xl font-bold">
         Crawl Route
