@@ -98,15 +98,8 @@ export function isRoleTemporallyCompatible(
   if (
     isBeforeDinnerMinimum &&
     role === "drink" &&
-    hasAnyType(types, [
-      "bar",
-      "sports bar",
-      "lounge",
-      "speakeasy",
-      "club",
-      "brewery",
-      "rooftop",
-    ]) &&
+    !relaxed &&
+    hasAnyType(types, ["club", "sports bar", "speakeasy"]) &&
     !hasEarlyDinnerFallbackDrinkType
   ) {
     return false
@@ -117,7 +110,8 @@ export function isRoleTemporallyCompatible(
   }
 
   if (hasAnyType(types, ["lunch"])) {
-    return hour >= 11 && hour <= (relaxed ? 16.5 : 15.5)
+    if (relaxed) return hour >= 10.5 && hour <= 17.5
+    return hour >= 11 && hour <= 15.5
   }
 
   if (hasDinnerType) {
@@ -134,7 +128,8 @@ export function isRoleTemporallyCompatible(
   }
 
   if (hasAnyType(types, ["bakery"])) {
-    return hour >= 7 && hour <= (relaxed ? 18 : 17)
+    if (relaxed) return hour >= 7 && hour <= 14
+    return hour >= 7 && hour <= 12.5
   }
 
   if (hasAnyType(types, ["dessert"])) {
@@ -198,6 +193,44 @@ export function isRoleTemporallyCompatible(
   if (role === "drink" && hour < (relaxed ? 13 : 14)) return false
 
   return true
+}
+
+export function computeTemporalFitPenalty(
+  venue: Pick<VenueRecord, "type">,
+  role: StopRole,
+  arrival: Date,
+  phase: "before" | "after",
+  timeZone: string
+): number {
+  const hour = getHourFractionInTimeZone(arrival, timeZone)
+  const types = normalizeVenueTypes(venue.type)
+
+  let penalty = 0
+
+  if (hasAnyType(types, ["breakfast"]) && hour > 12) penalty += 12
+  if (hasAnyType(types, ["brunch"]) && hour > 14) penalty += 10
+  if (hasAnyType(types, ["lunch"]) && hour > 16.5) penalty += 8
+
+  if (hasAnyType(types, ["dinner"]) && hour < DINNER_MINIMUM_LOCAL_HOUR) {
+    const hybrid = hasAnyType(types, ["cocktail", "bar", "wine bar", "lounge"])
+    penalty += hybrid ? 3 : 14
+  }
+
+  if (hasAnyType(types, ["bakery"]) && hour > 12.5) {
+    penalty += hour > 17 ? 18 : 8
+  }
+
+  if (role === "coffee" && hour >= 18) penalty += 10
+  if (role === "drink" && hour < 14) penalty += 8
+
+  if (
+    hasAnyType(types, ["gallery", "museum", "bookstore", "library"]) &&
+    (hour < 10 || hour > 21)
+  ) {
+    penalty += 10
+  }
+
+  return penalty
 }
 
 export function isVenueOpenForWindow(

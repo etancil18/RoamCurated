@@ -55,16 +55,19 @@ export function normalizeVenueType(
 export function normalizeVenueTypes(
   value: string | string[] | null | undefined
 ): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .flatMap((entry) => normalizeTags([String(entry)]))
+  const rawValues = Array.isArray(value) ? value : [value]
+
+  return uniqueStrings(
+    rawValues
+      .map((entry) =>
+        String(entry ?? "")
+          .trim()
+          .toLowerCase()
+          .replace(/[_-]+/g, " ")
+          .replace(/\s+/g, " ")
+      )
       .filter(Boolean)
-  }
-
-  const normalized = String(value ?? "").trim()
-  if (!normalized) return []
-
-  return normalizeTags([normalized])
+  )
 }
 
 export function normalizeDisplayVenueType(

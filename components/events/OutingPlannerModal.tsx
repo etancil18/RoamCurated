@@ -195,6 +195,7 @@ export default function OutingPlannerModal({
   const [plannerDebug, setPlannerDebug] = useState<PlanDebug | null>(null)
   const [scoreBreakdown, setScoreBreakdown] =
     useState<ScoreBreakdown | null>(null)
+  const [planDirty, setPlanDirty] = useState(false)
 
   const [hasUserSelectedMode, setHasUserSelectedMode] = useState(false)
   const initialPlanKeyRef = useRef<string | null>(null)
@@ -212,6 +213,33 @@ export default function OutingPlannerModal({
     if (diffMinutes > 45) return "full"
     return "after"
   }, [event?.starts_at])
+
+  const plannerInput = useMemo(
+    () => ({
+      eventId: event?.id ?? null,
+      mode,
+      groupSize,
+      groupSizePresetId,
+      budget: budget || null,
+      mobility,
+      vibePresetId,
+      vibeTags,
+      plannedExitEnabled,
+      leaveEarlyByHours,
+    }),
+    [
+      event?.id,
+      mode,
+      groupSize,
+      groupSizePresetId,
+      budget,
+      mobility,
+      vibePresetId,
+      vibeTags,
+      plannedExitEnabled,
+      leaveEarlyByHours,
+    ]
+  )
 
   useEffect(() => {
     modeRef.current = mode
@@ -254,8 +282,11 @@ export default function OutingPlannerModal({
       setScoreBreakdown(null)
       setLoading(false)
       setRegenerating(false)
+      setPlanDirty(false)
       setGroupSize(2)
       setGroupSizePresetId("duo")
+      setBudget("")
+      setMobility("short_ride")
       setVibePresetId(null)
       setVibeTags([])
       setPlannedExitEnabled(false)
@@ -273,6 +304,7 @@ export default function OutingPlannerModal({
 
     setGroupSizePresetId(presetId)
     setGroupSize(preset.representativeSize)
+    setPlanDirty(true)
 
     safeLogEvent("outing_group_size_selected", {
       event_id: event?.id ?? null,
@@ -287,6 +319,7 @@ export default function OutingPlannerModal({
       const nextTags = nextPresetId ? expandVibeTags(nextPresetId) : []
 
       setVibeTags(nextTags)
+      setPlanDirty(true)
 
       safeLogEvent("outing_vibe_selected", {
         event_id: event?.id ?? null,
@@ -300,6 +333,7 @@ export default function OutingPlannerModal({
 
   const handleBudgetChange = (nextBudget: Budget | "") => {
     setBudget(nextBudget)
+    setPlanDirty(true)
 
     safeLogEvent("outing_budget_selected", {
       event_id: event?.id ?? null,
@@ -309,6 +343,7 @@ export default function OutingPlannerModal({
 
   const handleMobilityChange = (nextMobility: Mobility) => {
     setMobility(nextMobility)
+    setPlanDirty(true)
 
     safeLogEvent("outing_mobility_selected", {
       event_id: event?.id ?? null,
@@ -318,6 +353,7 @@ export default function OutingPlannerModal({
 
   const handleLeaveEarlyToggle = (enabled: boolean) => {
     setPlannedExitEnabled(enabled)
+    setPlanDirty(true)
 
     safeLogEvent("outing_leave_early_toggled", {
       event_id: event?.id ?? null,
@@ -328,6 +364,7 @@ export default function OutingPlannerModal({
 
   const handleLeaveEarlyHoursChange = (hours: LeaveEarlyByHours) => {
     setLeaveEarlyByHours(hours)
+    setPlanDirty(true)
 
     safeLogEvent("outing_leave_early_hours_selected", {
       event_id: event?.id ?? null,
@@ -448,6 +485,7 @@ export default function OutingPlannerModal({
         setPlannerDebug(successData.debug ?? null)
         setScoreBreakdown(successData.scoreBreakdown ?? null)
         setMode(activeMode)
+        setPlanDirty(false)
       } catch (err) {
         console.error("Error generating outing plan:", err)
 
@@ -489,6 +527,25 @@ export default function OutingPlannerModal({
   }, [open, event?.id, derivedDefaultMode, generatePlan])
 
   useEffect(() => {
+    if (!open || !event?.id || !planDirty) return
+    if (loading || regenerating) return
+
+    const timeout = window.setTimeout(() => {
+      void generatePlan({ isRegenerate: true })
+    }, 650)
+
+    return () => window.clearTimeout(timeout)
+  }, [
+    open,
+    event?.id,
+    planDirty,
+    loading,
+    regenerating,
+    plannerInput,
+    generatePlan,
+  ])
+
+  useEffect(() => {
     if (!open || !plan?.plannedOutingId || !plan.stops?.length) return
 
     for (const stop of plan.stops) {
@@ -522,6 +579,7 @@ export default function OutingPlannerModal({
     setHasUserSelectedMode(true)
     setMode(nextMode)
     modeRef.current = nextMode
+    setPlanDirty(false)
     await generatePlan({ nextMode, isRegenerate: true })
   }
 
@@ -710,30 +768,30 @@ export default function OutingPlannerModal({
                     </div>
 
                     {plannedExitEnabled ? (
-                    <div>
+                      <div>
                         <label className="mb-2 block text-sm font-medium text-neutral-300">
-                        Leave Early By
+                          Leave Early By
                         </label>
                         <div className="flex flex-wrap gap-2">
-                        {LEAVE_EARLY_OPTIONS.map((option) => {
+                          {LEAVE_EARLY_OPTIONS.map((option) => {
                             const selected = leaveEarlyByHours === option.value
                             return (
-                            <button
+                              <button
                                 key={option.value}
                                 type="button"
                                 onClick={() => handleLeaveEarlyHoursChange(option.value)}
                                 className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                                selected
+                                  selected
                                     ? "border-cyan-500 bg-cyan-500 text-white"
                                     : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800"
                                 }`}
-                            >
+                              >
                                 {option.label}
-                            </button>
+                              </button>
                             )
-                        })}
+                          })}
                         </div>
-                    </div>
+                      </div>
                     ) : null}
                   </div>
                 ) : null}
@@ -773,13 +831,17 @@ export default function OutingPlannerModal({
                   ) : null}
                 </div>
 
-                <button
+                                <button
                   type="button"
                   onClick={() => void generatePlan({ isRegenerate: true })}
                   disabled={loading || regenerating}
                   className="w-full rounded-lg bg-cyan-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {regenerating ? "Regenerating..." : "Regenerate Plan"}
+                  {regenerating
+                    ? "Recalibrating..."
+                    : planDirty
+                    ? "Apply Preferences"
+                    : "Regenerate Plan"}
                 </button>
 
                 <button
@@ -818,14 +880,8 @@ export default function OutingPlannerModal({
 
                       {scoreBreakdown && (
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <DiagnosticCard
-                            label="Mode"
-                            value={scoreBreakdown.mode}
-                          />
-                          <DiagnosticCard
-                            label="City"
-                            value={scoreBreakdown.city ?? "—"}
-                          />
+                          <DiagnosticCard label="Mode" value={scoreBreakdown.mode} />
+                          <DiagnosticCard label="City" value={scoreBreakdown.city ?? "—"} />
                           <DiagnosticCard
                             label="Candidate pool"
                             value={String(scoreBreakdown.candidatePoolSize)}
@@ -879,51 +935,15 @@ export default function OutingPlannerModal({
                               </div>
 
                               <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                                <DiagnosticCard
-                                  label="Candidates"
-                                  value={String(slot.candidatesTotal)}
-                                  compact
-                                />
-                                <DiagnosticCard
-                                  label="Role matches"
-                                  value={String(slot.matchedRole)}
-                                  compact
-                                />
-                                <DiagnosticCard
-                                  label="Passed hard constraints"
-                                  value={String(slot.passedHardConstraints)}
-                                  compact
-                                />
-                                <DiagnosticCard
-                                  label="Rejected: used"
-                                  value={String(slot.rejectionCounts.used)}
-                                  compact
-                                />
-                                <DiagnosticCard
-                                  label="Rejected: role"
-                                  value={String(slot.rejectionCounts.role)}
-                                  compact
-                                />
-                                <DiagnosticCard
-                                  label="Rejected: geometry"
-                                  value={String(slot.rejectionCounts.geometry)}
-                                  compact
-                                />
-                                <DiagnosticCard
-                                  label="Rejected: temporal"
-                                  value={String(slot.rejectionCounts.temporal)}
-                                  compact
-                                />
-                                <DiagnosticCard
-                                  label="Rejected: hours"
-                                  value={String(slot.rejectionCounts.hours)}
-                                  compact
-                                />
-                                <DiagnosticCard
-                                  label="Rejected: missing data"
-                                  value={String(slot.rejectionCounts.missing_data)}
-                                  compact
-                                />
+                                <DiagnosticCard label="Candidates" value={String(slot.candidatesTotal)} compact />
+                                <DiagnosticCard label="Role matches" value={String(slot.matchedRole)} compact />
+                                <DiagnosticCard label="Passed hard constraints" value={String(slot.passedHardConstraints)} compact />
+                                <DiagnosticCard label="Rejected: used" value={String(slot.rejectionCounts.used)} compact />
+                                <DiagnosticCard label="Rejected: role" value={String(slot.rejectionCounts.role)} compact />
+                                <DiagnosticCard label="Rejected: geometry" value={String(slot.rejectionCounts.geometry)} compact />
+                                <DiagnosticCard label="Rejected: temporal" value={String(slot.rejectionCounts.temporal)} compact />
+                                <DiagnosticCard label="Rejected: hours" value={String(slot.rejectionCounts.hours)} compact />
+                                <DiagnosticCard label="Rejected: missing data" value={String(slot.rejectionCounts.missing_data)} compact />
                               </div>
                             </div>
                           ))}
@@ -934,6 +954,12 @@ export default function OutingPlannerModal({
                 </div>
               ) : plan ? (
                 <div className="space-y-4">
+                  {planDirty ? (
+                    <p className="rounded-lg border border-cyan-900 bg-cyan-950/40 px-3 py-2 text-xs text-cyan-200">
+                      Preferences changed. Recalibrating venue sequence…
+                    </p>
+                  ) : null}
+
                   <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
@@ -961,26 +987,20 @@ export default function OutingPlannerModal({
                         {plan.anchor?.plannedExitAt ? (
                           <span className="rounded-full bg-neutral-950 px-2.5 py-1">
                             Planned exit{" "}
-                            {new Date(plan.anchor.plannedExitAt).toLocaleTimeString(
-                              "en-US",
-                              {
-                                hour: "numeric",
-                                minute: "2-digit",
-                              }
-                            )}
+                            {new Date(plan.anchor.plannedExitAt).toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
                           </span>
                         ) : null}
 
                         {plan.anchor?.effectiveExitAt ? (
                           <span className="rounded-full bg-neutral-950 px-2.5 py-1">
                             Exit-aware anchor{" "}
-                            {new Date(plan.anchor.effectiveExitAt).toLocaleTimeString(
-                              "en-US",
-                              {
-                                hour: "numeric",
-                                minute: "2-digit",
-                              }
-                            )}
+                            {new Date(plan.anchor.effectiveExitAt).toLocaleTimeString("en-US", {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
                           </span>
                         ) : null}
                       </div>
@@ -1004,9 +1024,7 @@ export default function OutingPlannerModal({
                                 {stop.title}
                               </h4>
                               <span className="rounded-full border border-neutral-700 px-2 py-0.5 text-[11px] uppercase tracking-wide text-neutral-300">
-                                {humanizeStopType(
-                                  stop.displayType ?? stop.venueType ?? stop.role
-                                )}
+                                {humanizeStopType(stop.displayType ?? stop.venueType ?? stop.role)}
                               </span>
                             </div>
 
@@ -1020,26 +1038,20 @@ export default function OutingPlannerModal({
                               {stop.plannedArrivalAt ? (
                                 <span className="rounded-full bg-neutral-950 px-2.5 py-1">
                                   Arrive{" "}
-                                  {new Date(stop.plannedArrivalAt).toLocaleTimeString(
-                                    "en-US",
-                                    {
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                    }
-                                  )}
+                                  {new Date(stop.plannedArrivalAt).toLocaleTimeString("en-US", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  })}
                                 </span>
                               ) : null}
 
                               {stop.plannedDepartureAt ? (
                                 <span className="rounded-full bg-neutral-950 px-2.5 py-1">
                                   Leave{" "}
-                                  {new Date(stop.plannedDepartureAt).toLocaleTimeString(
-                                    "en-US",
-                                    {
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                    }
-                                  )}
+                                  {new Date(stop.plannedDepartureAt).toLocaleTimeString("en-US", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  })}
                                 </span>
                               ) : null}
 
@@ -1065,28 +1077,29 @@ export default function OutingPlannerModal({
                               </p>
                             ) : null}
 
-                            {(stop.bookingOptions?.length ?? 0) > 0 || stop.reservationRecommended ? (
-                                <div
-                                    className="mt-4"
-                                    onClickCapture={() => {
-                                    safeLogEvent("outing_booking_click", {
-                                        event_id: event?.id ?? null,
-                                        planned_outing_id: plan?.plannedOutingId ?? null,
-                                        venue_id: stop.venueId,
-                                        stop_order: stop.stopOrder,
-                                        role: stop.role,
-                                        provider: stop.bookingOptions?.[0]?.provider ?? null,
-                                    })
-                                    }}
-                                >
-                                    <VenueBookingButtons
-                                    bookingOptions={stop.bookingOptions}
-                                    reservationRecommended={stop.reservationRecommended}
-                                    recommendedReservationAt={stop.recommendedReservationAt}
-                                    compact
-                                    />
-                                </div>
-                                ) : null}
+                            {(stop.bookingOptions?.length ?? 0) > 0 ||
+                            stop.reservationRecommended ? (
+                              <div
+                                className="mt-4"
+                                onClickCapture={() => {
+                                  safeLogEvent("outing_booking_click", {
+                                    event_id: event?.id ?? null,
+                                    planned_outing_id: plan?.plannedOutingId ?? null,
+                                    venue_id: stop.venueId,
+                                    stop_order: stop.stopOrder,
+                                    role: stop.role,
+                                    provider: stop.bookingOptions?.[0]?.provider ?? null,
+                                  })
+                                }}
+                              >
+                                <VenueBookingButtons
+                                  bookingOptions={stop.bookingOptions}
+                                  reservationRecommended={stop.reservationRecommended}
+                                  recommendedReservationAt={stop.recommendedReservationAt}
+                                  compact
+                                />
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       </div>

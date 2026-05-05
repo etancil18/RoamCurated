@@ -370,20 +370,22 @@ function normalizeTokenArray(
   input?: string | string[] | null
 ): string[] {
   if (Array.isArray(input)) {
-    return input.flatMap((value) => normalizeTokens(String(value)))
+    return input
+      .map((value) => normalizeTypeToken(String(value)))
+      .filter(Boolean)
   }
 
   if (input == null) return []
 
-  return normalizeTokens(String(input))
+  return [normalizeTypeToken(String(input))].filter(Boolean)
 }
 
-function normalizeTokens(value: string): string[] {
+function normalizeTypeToken(value: string): string {
   return String(value)
+    .trim()
     .toLowerCase()
-    .split(/[\s,./|_\-–—]+/)
-    .map((token) => token.trim())
-    .filter(Boolean)
+    .replace(/[_\-–—]+/g, " ")
+    .replace(/\s+/g, " ")
 }
 
 function uniqueStrings(values: string[]): string[] {

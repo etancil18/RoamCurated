@@ -41104,6 +41104,71 @@ const atlantaData = [
     "tags": "croissants, macarons, tarts, pastries, coffee, tea, quiche, sandwiches, butter, chocolate",
     "price": "$$",
     "duration": 1
+  },
+  {
+    "slug": "bar-pilar",
+    "name": "Bar Pilar",
+    "vibe": "Cocktail, Hidden, Seasonal, Intimate, Dramatic, Cozy, Sophisticated, Underground, Curated, New-American",
+    "type": [
+      "dinner",
+      "cocktail", "speakeasy"
+    ],
+    "lat": 33.7797376,
+    "lon": -84.3675947,
+    "link": "https://www.instagram.com/barpilar_atl/",
+    "cover": "img/venues/Bar Pilar.jpg",
+    "openNow": true,
+    "hours": [
+      "Sunday: 11:30 AM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: 4:00 PM–9:00 PM",
+      "Wednesday: 4:00 PM–9:00 PM",
+      "Thursday: 4:00 PM–9:00 PM",
+      "Friday: 11:30 AM–10:00 PM",
+      "Saturday: 11:30 AM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": {
+        "open": 11.5,
+        "close": 21
+      },
+      "mon": null,
+      "tue": {
+        "open": 16,
+        "close": 21
+      },
+      "wed": {
+        "open": 16,
+        "close": 21
+      },
+      "thu": {
+        "open": 16,
+        "close": 21
+      },
+      "fri": {
+        "open": 11.5,
+        "close": 22
+      },
+      "sat": {
+        "open": 11.5,
+        "close": 22
+      }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "-",
+      "tue": "HH",
+      "wed": "HH",
+      "thu": "HH",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "Midday, Happy Hour, Evening",
+    "energyRamp": 3,
+    "tags": "Cocktails, Hidden, Intimate, Date-night, Seasonal, Cozy, Stylish",
+    "price": "$$",
+    "duration": 1.5,
+    "id": "68172b53-9256-4733-bfeb-93d85ff3997d"
   }
 ]
 

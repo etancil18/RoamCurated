@@ -544,82 +544,39 @@ function buildFullSlots(
 ): PlanningSlot[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
 
-  if (lateNightFullFallback) {
-    const beforeRoles = desiredRoles.slice(0, 2)
-    const afterRoles = desiredRoles.slice(2)
+  const beforeCount = desiredRoles.length >= 3 ? 2 : 1
+  const beforeRoles = desiredRoles.slice(0, beforeCount)
+  const afterRoles = desiredRoles.slice(beforeCount)
 
-    const beforeSlots = buildBeforeSlots(beforeRoles, startsAt, resolvedTimeZone).map((slot, index) => ({
+  const beforeSlots = buildBeforeSlots(beforeRoles, startsAt, resolvedTimeZone).map(
+    (slot, index) => ({
       ...slot,
       index,
       strictProgression: index > 0,
-    }))
+    })
+  )
 
-    const afterSlots = buildAfterSlots(afterRoles, estimatedEndAt).map((slot, index) => ({
+  const afterSlots = buildAfterSlots(afterRoles, estimatedEndAt).map(
+    (slot, index) => ({
       ...slot,
       index: index + beforeRoles.length,
       strictProgression: index === 0,
-    }))
+    })
+  )
 
-    return [...beforeSlots, ...afterSlots]
-  }
-
-  return desiredRoles.map((role, index) => {
-    const phase: SlotPhase = index === 0 ? "before" : "after"
-    const dwellMinutes = dwellMinutesForRole(role, phase)
-
-    if (index === 0) {
-      const departure = addMinutes(startsAt, -BEFORE_EVENT_BUFFER_MINUTES)
-      const arrival = addMinutes(departure, -dwellMinutes)
-
-      return {
-        index,
-        role,
-        phase,
-        targetArrivalAt: arrival,
-        targetDepartureAt: departure,
-        dwellMinutes,
-        strictProgression: false,
-        flexibleRole: flexibleRoleForPlanningSlot(
-          role,
-          phase,
-          arrival,
-          resolvedTimeZone
-        ),
-      }
-    }
-
-    const arrival = addMinutes(estimatedEndAt, 20 + (index - 1) * 80)
-    const departure = addMinutes(arrival, dwellMinutes)
-
-    return {
-      index,
-      role,
-      phase,
-      targetArrivalAt: arrival,
-      targetDepartureAt: departure,
-      dwellMinutes,
-      strictProgression: index === 1,
-      flexibleRole: flexibleRoleFor(role, phase),
-    }
-  })
+  return [...beforeSlots, ...afterSlots]
 }
 
 function dwellMinutesForRole(
   role: StopRole,
   phase: SlotPhase
 ): number {
-  if (phase === "before") {
-    if (role === "food") return 50
-    if (role === "drink") return 40
-    if (role === "activity") return 45
-    if (role === "dessert") return 30
-    return 35
-  }
-
-  if (role === "food") return 75
-  if (role === "drink") return 60
-  if (role === "activity") return 60
+  if (role === "food") return phase === "before" ? 75 : 90
+  if (role === "drink") return phase === "before" ? 60 : 90
+  if (role === "coffee") return 40
+  if (role === "activity") return 55
   if (role === "dessert") return 40
+
   return 45
 }
 
@@ -661,7 +618,7 @@ function getDaypart(date: Date, timeZone?: string | null): Daypart {
 
   if (hour < 10.5) return "breakfast"
   if (hour < 12.5) return "brunch"
-  if (hour < 16) return "lunch"
+  if (hour < DINNER_MINIMUM_LOCAL_HOUR) return "lunch"
   if (hour < 22) return "dinner"
   return "late_night"
 }

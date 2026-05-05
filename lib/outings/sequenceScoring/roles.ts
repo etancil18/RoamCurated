@@ -165,6 +165,29 @@ export function getAcceptableRolesForSlot(
     roles.push("drink")
   }
 
+  // Lunch/afternoon substitution:
+  // Between 1p and 5:30p, a food slot may become a light activity
+  // when lunch/dinner fit is weak.
+  if (
+    relaxed &&
+    slot.role === "food" &&
+    hour >= 13 &&
+    hour < DINNER_MINIMUM_LOCAL_HOUR &&
+    hasAnyType(types, [
+      "gallery",
+      "museum",
+      "bookstore",
+      "library",
+      "park",
+      "garden",
+      "lifestyle",
+      "showroom",
+      "market",
+    ])
+  ) {
+    roles.push("activity")
+  }
+
   // Morning food can flex into coffee
   if (slot.phase === "before" && slot.role === "food") {
     if (

@@ -87,6 +87,7 @@ export function computeSequentialCandidateScore<TCandidate extends CandidateVenu
   }
 
   score += computeModeSpecificVenueBias(candidate, slot, context)
+  score += computePhaseAwarePreferenceBias(candidate, slot, context)
 
   return score
 }
@@ -353,6 +354,33 @@ export function computeModeSpecificVenueBias(
   return 0
 }
 
+function computePhaseAwarePreferenceBias(
+  candidate: Pick<VenueRecord, "type" | "tags" | "vibe">,
+  slot: PlanningSlot,
+  context: PlanningContext
+): number {
+  if (context.vibeTags.length === 0) return 0
+
+  const types = normalizeVenueTypes(candidate.type)
+  let score = 0
+
+  if (
+    slot.phase === "before" &&
+    hasAnyType(types, ["coffee", "cafe", "café", "bookstore", "gallery", "lunch"])
+  ) {
+    score += 4
+  }
+
+  if (
+    slot.phase === "after" &&
+    hasAnyType(types, ["cocktail", "wine bar", "bar", "lounge", "rooftop"])
+  ) {
+    score += 6
+  }
+
+  return score
+}
+
 export function scoreDistanceFromAnchor(
   distanceMeters: number | null,
   mobility: Mobility
@@ -381,10 +409,16 @@ export function scoreBudgetFit(
   budget: Budget | null
 ): number {
   if (!budget) return 0
+
   const priceString = normalizePrice(value)
-  if (priceString === budget) return 10
-  if (Math.abs(priceToInt(priceString) - priceToInt(budget)) === 1) return 5
-  return 0
+  if (!priceString) return 0
+
+  const diff = Math.abs(priceToInt(priceString) - priceToInt(budget))
+
+  if (diff === 0) return 16
+  if (diff === 1) return 8
+  if (diff === 2) return -8
+  return -14
 }
 
 export function scoreVibeFit(
@@ -406,14 +440,14 @@ export function scoreVibeFit(
 
   let score = 0
 
-  score += expandedVibeTags.filter((tag) => normalizedVenueTags.includes(tag)).length * 8
+  score += expandedVibeTags.filter((tag) => normalizedVenueTags.includes(tag)).length * 12
 
   if (preferredTypes.length > 0) {
-    score += preferredTypes.filter((type) => venueTypes.includes(type)).length * 6
+    score += preferredTypes.filter((type) => venueTypes.includes(type)).length * 10
   }
 
   if (discouragedTypes.length > 0) {
-    score -= discouragedTypes.filter((type) => venueTypes.includes(type)).length * 6
+    score -= discouragedTypes.filter((type) => venueTypes.includes(type)).length * 12
   }
 
   return score
@@ -432,11 +466,31 @@ export function scoreGroupFit(
   let score = 0
 
   if (preferredTypes.length > 0) {
-    score += preferredTypes.filter((type) => venueTypes.includes(type)).length * 6
+    score += preferredTypes.filter((type) => venueTypes.includes(type)).length * 10
   }
 
   if (discouragedTypes.length > 0) {
-    score -= discouragedTypes.filter((type) => venueTypes.includes(type)).length * 6
+    score -= discouragedTypes.filter((type) => venueTypes.includes(type)).length * 12
+  }
+
+  if (groupSize >= 6) {
+    if (hasAnyType(venueTypes, ["speakeasy", "cocktail", "coffee", "bakery"])) {
+      score -= 8
+    }
+
+    if (hasAnyType(venueTypes, ["brewery", "restaurant", "sports bar", "rooftop"])) {
+      score += 8
+    }
+  }
+
+  if (groupSize <= 2) {
+    if (hasAnyType(venueTypes, ["speakeasy", "cocktail", "wine bar", "gallery"])) {
+      score += 6
+    }
+
+    if (hasAnyType(venueTypes, ["sports bar", "brewery"])) {
+      score -= 4
+    }
   }
 
   return score

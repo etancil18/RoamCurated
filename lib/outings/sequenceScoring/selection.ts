@@ -29,6 +29,7 @@ import {
 } from "./lateNight"
 
 import {
+  computeTemporalFitPenalty,
   isLateNightFallbackVenueTemporallyEligible,
   isRoleTemporallyCompatible,
   isVenueOpenForWindow,
@@ -124,6 +125,78 @@ const SELECTION_PASSES: SelectionPassConfig[] = [
 ]
 
 const DINNER_MINIMUM_LOCAL_HOUR = 17.5
+
+const ALLOWED_AFTER_BACK_TO_BACK_TYPES = ["bar", "cocktail"]
+
+function hasDisallowedBackToBackType(
+  previous: CandidateVenue | null,
+  candidate: CandidateVenue,
+  slot: PlanningSlot
+): boolean {
+  if (!previous) return false
+
+  const previousTypes = normalizeVenueTypes(previous.type)
+  const candidateTypes = normalizeVenueTypes(candidate.type)
+
+  const sharedTypes = previousTypes.filter((type) =>
+    candidateTypes.includes(type)
+  )
+
+  if (sharedTypes.length === 0) return false
+
+  return sharedTypes.some((type) => {
+    if (
+      slot.phase === "after" &&
+      ALLOWED_AFTER_BACK_TO_BACK_TYPES.includes(type)
+    ) {
+      return false
+    }
+
+    return true
+  })
+}
+
+function hasAbsurdTimeOfDayMismatch(
+  candidate: CandidateVenue,
+  slot: PlanningSlot,
+  timeZone: string
+): boolean {
+  const types = normalizeVenueTypes(candidate.type)
+  const hour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
+
+  const isCoffeeLike = hasAnyType(types, [
+    "coffee",
+    "tea",
+    "cafe",
+    "café",
+    "bakery",
+    "breakfast",
+  ])
+
+  const isMorningOnlyFood = hasAnyType(types, [
+    "breakfast",
+    "brunch",
+    "bakery",
+  ])
+
+  const isCocktailLike = hasAnyType(types, [
+    "cocktail",
+    "wine bar",
+    "bar",
+    "lounge",
+    "speakeasy",
+    "club",
+    "brewery",
+    "rooftop",
+    "sports bar",
+  ])
+
+  if (isCoffeeLike && hour >= 18) return true
+  if (isMorningOnlyFood && hour >= 15) return true
+  if (isCocktailLike && hour < 12) return true
+
+  return false
+}
 
 function unwrapSelectedVenues(
   selected: SelectedSlotVenue[] | CandidateVenue[]
@@ -315,14 +388,14 @@ function selectBestCandidateForPass({
 
       matchedRole += 1
 
-      if (
-        !satisfiesBeforeDinnerTimingRule({
-          candidate,
-          rankedCandidates,
-          slot,
-          timeZone,
-        })
-      ) {
+      const dinnerTimingOk = satisfiesBeforeDinnerTimingRule({
+        candidate,
+        rankedCandidates,
+        slot,
+        timeZone,
+      })
+
+      if (!dinnerTimingOk && !pass.relaxedTemporal) {
         rejectionCounts.temporal += 1
         return false
       }
@@ -369,16 +442,20 @@ function selectBestCandidateForPass({
       const selectedVenues = unwrapSelectedVenues(selected)
 
       const scoreA =
-        computeSequentialCandidateScore(a, selectedVenues, slot, context) +
-        computeSlotRoleFitBonus(a, slot) +
-        emergencyRoleFitBonus(a, slot, pass) +
-        beforeDinnerTimingScoreBonus(a, slot, timeZone)
+  computeSequentialCandidateScore(a, selectedVenues, slot, context) +
+  computeSlotRoleFitBonus(a, slot) +
+  emergencyRoleFitBonus(a, slot, pass) +
+  beforeDinnerTimingScoreBonus(a, slot, timeZone) -
+  relaxedTemporalPenalty(a, slot, timeZone, pass) -
+  beforeDinnerTimingScorePenalty(a, slot, timeZone, pass)
 
-      const scoreB =
-        computeSequentialCandidateScore(b, selectedVenues, slot, context) +
-        computeSlotRoleFitBonus(b, slot) +
-        emergencyRoleFitBonus(b, slot, pass) +
-        beforeDinnerTimingScoreBonus(b, slot, timeZone)
+const scoreB =
+  computeSequentialCandidateScore(b, selectedVenues, slot, context) +
+  computeSlotRoleFitBonus(b, slot) +
+  emergencyRoleFitBonus(b, slot, pass) +
+  beforeDinnerTimingScoreBonus(b, slot, timeZone) -
+  relaxedTemporalPenalty(b, slot, timeZone, pass) -
+  beforeDinnerTimingScorePenalty(b, slot, timeZone, pass)
 
       return scoreB - scoreA
     })
@@ -660,6 +737,14 @@ export function isCandidateEligibleForSlot(
   const anchorDistance = candidate.distanceMeters
   const previous = selectedVenues[selectedVenues.length - 1] ?? null
   const prevToCandidate = previous ? getDistanceBetweenVenues(previous, candidate) : null
+
+  if (hasDisallowedBackToBackType(previous, candidate, slot)) {
+  return false
+}
+
+if (hasAbsurdTimeOfDayMismatch(candidate, slot, timeZone)) {
+  return false
+}
 
   if (slot.phase === "before") {
     const maxInterstop = getMaxBeforeInterstopMeters(
@@ -954,6 +1039,45 @@ function beforeDinnerTimingScoreBonus(
   if (isHybridDinnerDrinkVenue(candidate)) return 12
   if (isEarlyDinnerFallbackDrinkVenue(candidate)) return 6
   return 0
+}
+
+function relaxedTemporalPenalty(
+  candidate: CandidateVenue,
+  slot: PlanningSlot,
+  timeZone: string,
+  pass: SelectionPassConfig
+): number {
+  if (!pass.relaxedTemporal) return 0
+
+  const role = pickRoleForSlot(slot, candidate.inferredRoles)
+
+  return computeTemporalFitPenalty(
+    candidate,
+    role,
+    slot.targetArrivalAt,
+    slot.phase,
+    timeZone
+  )
+}
+
+function beforeDinnerTimingScorePenalty(
+  candidate: CandidateVenue,
+  slot: PlanningSlot,
+  timeZone: string,
+  pass: SelectionPassConfig
+): number {
+  if (!isBeforeDinnerFoodSlot({ slot, timeZone })) return 0
+
+  const types = normalizeVenueTypes(candidate.type)
+
+  if (isHybridDinnerDrinkVenue(candidate)) return 0
+  if (isEarlyDinnerFallbackDrinkVenue(candidate)) return 2
+
+  if (hasAnyType(types, ["dinner"])) {
+    return pass.name === "relaxed" ? 10 : 16
+  }
+
+  return pass.name === "emergency" ? 6 : 12
 }
 
 function logLateNightTemporalRejection({
