@@ -125,18 +125,25 @@ export default function Navbar() {
                 {user ? (
                   <>
                    <Link
-                      href="/hosts"
-                      onClick={() => handleNavClick('hosts')}
-                      className="block px-4 py-2 text-sm text-amber-600 transition hover:bg-gray-50 hover:text-black dark:hover:bg-zinc-800 dark:hover:text-white"
-                    >
-                      Build a Guide
-                    </Link>
-                    <Link
                       href="/events"
                       onClick={() => handleNavClick('events')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Events
+                   </Link>
+                   <Link
+                      href="/"
+                      onClick={() => handleNavClick('maps')}
+                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                    >
+                      Maps
+                    </Link>
+                   <Link
+                      href="/hosts"
+                      onClick={() => handleNavClick('hosts')}
+                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                    >
+                      Build a Guide
                     </Link>
                     <Link
                       href="/sponsor-crawl"

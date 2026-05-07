@@ -48,7 +48,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (isLogin && user) {
-    return NextResponse.redirect(new URL("/", req.url))
+    return NextResponse.redirect(new URL("/events", req.url))
   }
 
   if (
@@ -56,7 +56,7 @@ export async function middleware(req: NextRequest) {
     isVenueAdminRoute &&
     !allowedAdminEmails.includes((user.email ?? "").toLowerCase())
   ) {
-    return NextResponse.redirect(new URL("/", req.url))
+    return NextResponse.redirect(new URL("/events", req.url))
   }
 
   /* ------------------------------------------------------------------ */
@@ -81,7 +81,7 @@ export async function middleware(req: NextRequest) {
       .maybeSingle()
 
     if (dashErr || !venueUser) {
-      return NextResponse.redirect(new URL("/", req.url))
+      return NextResponse.redirect(new URL("/events", req.url))
     }
   }
 
