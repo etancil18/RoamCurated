@@ -505,7 +505,15 @@ function selectBestCandidateForPass({
         relaxedTemporalPenalty(b, slot, timeZone, pass) -
         beforeDinnerTimingScorePenalty(b, slot, timeZone, pass)
 
-      return scoreB - scoreA
+      const scoreDelta = scoreB - scoreA
+      if (Math.abs(scoreDelta) > 0.001) return scoreDelta
+
+      const distanceA = a.distanceMeters ?? Number.POSITIVE_INFINITY
+      const distanceB = b.distanceMeters ?? Number.POSITIVE_INFINITY
+      const distanceDelta = distanceA - distanceB
+      if (Math.abs(distanceDelta) > 1) return distanceDelta
+
+      return a.id.localeCompare(b.id)
     })
 
   return {

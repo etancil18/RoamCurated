@@ -181,9 +181,13 @@ export async function POST(
           )
         `
       )
-      .eq("city", city)
-      .neq("id", anchorVenue?.id ?? "")
-      .limit(150)
+        .eq("city", city)
+        .neq("id", anchorVenue?.id ?? "")
+        .not("type", "is", null)
+        .not("vibe", "is", null)
+        .not("lat", "is", null)
+        .not("lon", "is", null)
+        .limit(400)
 
     if (venuesError) {
       return NextResponse.json(

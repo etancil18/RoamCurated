@@ -8,7 +8,7 @@ export type UberRidePoint = {
 }
 
 type BuildUberRideUrlInput = {
-  pickup: UberRidePoint
+  pickup: UberRidePoint | null
   dropoff: UberRidePoint
 }
 
@@ -19,8 +19,6 @@ export function buildUberRideUrl({
   dropoff,
 }: BuildUberRideUrlInput): string | null {
   if (
-    typeof pickup.lat !== "number" ||
-    typeof pickup.lon !== "number" ||
     typeof dropoff.lat !== "number" ||
     typeof dropoff.lon !== "number"
   ) {
@@ -43,18 +41,27 @@ export function buildUberRideUrl({
   url.searchParams.set("client_id", clientId)
 
   // Pickup
-  url.searchParams.set("pickup[latitude]", String(pickup.lat))
-  url.searchParams.set("pickup[longitude]", String(pickup.lon))
+  // If pickup is omitted, Uber uses the rider's live/current location.
+  if (
+    pickup &&
+    typeof pickup.lat === "number" &&
+    typeof pickup.lon === "number"
+  ) {
+    url.searchParams.set("pickup[latitude]", String(pickup.lat))
+    url.searchParams.set("pickup[longitude]", String(pickup.lon))
 
-  if (pickup.name) {
-    url.searchParams.set("pickup[nickname]", pickup.name)
-  }
+    if (pickup.name) {
+      url.searchParams.set("pickup[nickname]", pickup.name)
+    }
 
-  if (pickup.address) {
-    url.searchParams.set(
-      "pickup[formatted_address]",
-      pickup.address
-    )
+    if (pickup.address) {
+      url.searchParams.set(
+        "pickup[formatted_address]",
+        pickup.address
+      )
+    }
+  } else {
+    url.searchParams.set("pickup", "my_location")
   }
 
   // Dropoff

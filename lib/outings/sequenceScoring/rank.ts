@@ -48,6 +48,7 @@ export function rankVenueCandidates(
       score += scoreVibeFit(venue, context.vibeTags)
       score += scoreArchetypeFit(venue, context)
       score += scoreGroupFit(venue, context.groupSize)
+      score += scoreMetadataRichness(venue)
 
       return {
         ...venue,
@@ -56,7 +57,40 @@ export function rankVenueCandidates(
         score,
       }
     })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      const scoreDelta = b.score - a.score
+      if (Math.abs(scoreDelta) > 0.001) return scoreDelta
+
+      const distanceA = a.distanceMeters ?? Number.POSITIVE_INFINITY
+      const distanceB = b.distanceMeters ?? Number.POSITIVE_INFINITY
+      const distanceDelta = distanceA - distanceB
+      if (Math.abs(distanceDelta) > 1) return distanceDelta
+
+      return a.id.localeCompare(b.id)
+    })
+}
+
+function scoreMetadataRichness(venue: VenueRecord): number {
+  let score = 0
+
+  const typeCount = venue.type?.length ?? 0
+  const vibeCount = venue.vibe?.length ?? 0
+  const tagCount = venue.tags?.length ?? 0
+
+  if (typeCount > 0) score += 8
+  if (typeCount >= 2) score += 3
+
+  if (vibeCount > 0) score += 10
+  if (vibeCount >= 3) score += 4
+
+  if (tagCount > 0) score += 6
+  if (tagCount >= 5) score += 3
+
+  if (venue.hours) score += 5
+  if (venue.address?.trim()) score += 2
+  if (venue.lat != null && venue.lon != null) score += 4
+
+  return score
 }
 
 function getDesiredRolesForRanking(context: PlanningContext): StopRole[] {
