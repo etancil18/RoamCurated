@@ -160,6 +160,7 @@ export type SlotSelectionDebug = {
     role: number
     geometry: number
     temporal: number
+    type_time: number
     hours: number
     missing_data: number
   }

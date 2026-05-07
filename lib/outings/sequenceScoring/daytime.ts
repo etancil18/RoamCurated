@@ -36,10 +36,47 @@ export function qualifiesForReducedBeforeSingleStopFallback(
 ): boolean {
   if (context.mode !== "before") return false
   if (stops.length !== 1) return false
-  if (!isEarlyDayBeforeEventContext(context)) return false
 
   const stop = stops[0]
-  return isMorningCompatibleStop(stop)
+  if (stop.phase !== "before") return false
+  if (stop.metadata?.selectedPass === "emergency") return false
+
+  if (isEarlyDayBeforeEventContext(context)) {
+    return isMorningCompatibleStop(stop)
+  }
+
+  if (isLateNightMusicBeforeEventContext(context)) {
+    return stop.role === "food" || stop.role === "drink"
+  }
+
+  return false
+}
+
+export function qualifiesForDaytimeCultureReducedFullFallback(
+  stops: GeneratedOutingStop[],
+  context: PlanningContext
+): boolean {
+  if (context.mode !== "full") return false
+  if (context.eventArchetype !== "art") return false
+  if (stops.length < 1) return false
+
+  const beforeStops = stops.filter((stop) => stop.phase === "before")
+  if (beforeStops.length < 1) return false
+
+  const hasEmergencyStop = stops.some(
+    (stop) => stop.metadata?.selectedPass === "emergency"
+  )
+
+  if (hasEmergencyStop) return false
+
+  const timeZone = resolvePlannerTimeZone(context)
+  const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
+  const eventEndHour = getHourFractionInTimeZone(
+    context.effectiveExitAt ?? context.estimatedEndAt,
+    timeZone
+  )
+
+  return eventStartHour <= 12.5 && eventEndHour <= 18.5
 }
 
 export function isEarlyDayBeforeEventContext(context: PlanningContext): boolean {
@@ -49,6 +86,13 @@ export function isEarlyDayBeforeEventContext(context: PlanningContext): boolean 
   // Accept morning and late-morning starts.
   // Noon and slightly after can still reasonably support a single pre-event stop.
   return eventStartHour <= 12.5
+}
+
+function isLateNightMusicBeforeEventContext(context: PlanningContext): boolean {
+  const timeZone = resolvePlannerTimeZone(context)
+  const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
+
+  return context.eventArchetype === "music" && eventStartHour >= 20
 }
 
 export function isMorningCompatibleStop(stop: MorningTypedStop): boolean {

@@ -57,6 +57,7 @@ type RejectionCounts = {
   role: number
   geometry: number
   temporal: number
+  type_time: number
   hours: number
   missing_data: number
 }
@@ -161,26 +162,41 @@ function hasAbsurdTimeOfDayMismatch(
   slot: PlanningSlot,
   timeZone: string
 ): boolean {
-  const types = normalizeVenueTypes(candidate.type)
+  const types = normalizeVenueTypes([
+    ...(candidate.type ?? []),
+    ...(candidate.tags ?? []),
+    ...(candidate.vibe ?? []),
+    ...(candidate.time_category ?? []),
+    candidate.name ?? "",
+  ])
+
   const hour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
 
-  const isCoffeeLike = hasAnyType(types, [
-    "coffee",
-    "tea",
-    "cafe",
-    "café",
-    "bakery",
-    "breakfast",
+  const hasLateNightIdentity = hasAnyType(types, [
+    "bar",
+    "cocktail",
+    "cocktails",
+    "wine bar",
+    "lounge",
+    "speakeasy",
+    "club",
+    "brewery",
+    "rooftop",
+    "sports bar",
+    "late night",
+    "dessert bar",
+    "restaurant",
+    "dinner",
+    "gastropub",
   ])
 
-  const isMorningOnlyFood = hasAnyType(types, [
-    "breakfast",
-    "brunch",
-    "bakery",
-  ])
+  const isMorningOnly = hasAnyType(types, ["bakery", "breakfast"])
+  const isBrunchOnly = hasAnyType(types, ["brunch"])
+  const isDaytimeCafe = hasAnyType(types, ["coffee", "tea", "cafe", "café"])
 
   const isCocktailLike = hasAnyType(types, [
     "cocktail",
+    "cocktails",
     "wine bar",
     "bar",
     "lounge",
@@ -191,9 +207,33 @@ function hasAbsurdTimeOfDayMismatch(
     "sports bar",
   ])
 
-  if (isCoffeeLike && hour >= 18) return true
-  if (isMorningOnlyFood && hour >= 15) return true
-  if (isCocktailLike && hour < 12) return true
+  if (
+    slot.role === "drink" &&
+    slot.phase === "after" &&
+    hasLateNightIdentity
+  ) {
+    return false
+  }
+
+  if (isCocktailLike && hour >= 6 && hour < 12) {
+    return true
+  }
+
+  if (hasLateNightIdentity) {
+    return false
+  }
+
+  if (isMorningOnly) {
+    return hour < 6 || hour >= 12
+  }
+
+  if (isBrunchOnly) {
+    return hour < 9 || hour >= 14
+  }
+
+  if (isDaytimeCafe) {
+    return hour < 6 || hour >= 17
+  }
 
   return false
 }
@@ -224,6 +264,7 @@ function emptyRejectionCounts(): RejectionCounts {
     role: 0,
     geometry: 0,
     temporal: 0,
+    type_time: 0,
     hours: 0,
     missing_data: 0,
   }
@@ -238,6 +279,7 @@ function mergeRejectionCounts(
     role: a.role + b.role,
     geometry: a.geometry + b.geometry,
     temporal: a.temporal + b.temporal,
+    type_time: a.type_time + b.type_time,
     hours: a.hours + b.hours,
     missing_data: a.missing_data + b.missing_data,
   }
@@ -373,6 +415,7 @@ function selectBestCandidateForPass({
 
       const supportsRole =
         candidateSupportsSlot(candidate, slot, context, pass.relaxedRole) ||
+        isDaytimeArtFlexibleSlotMatch(candidate, slot, context, timeZone) ||
         isBeforeDinnerFallbackDrinkCandidate({
           candidate,
           rankedCandidates,
@@ -387,6 +430,11 @@ function selectBestCandidateForPass({
       }
 
       matchedRole += 1
+
+      if (hasAbsurdTimeOfDayMismatch(candidate, slot, timeZone)) {
+        rejectionCounts.type_time += 1
+        return false
+      }
 
       const dinnerTimingOk = satisfiesBeforeDinnerTimingRule({
         candidate,
@@ -442,20 +490,20 @@ function selectBestCandidateForPass({
       const selectedVenues = unwrapSelectedVenues(selected)
 
       const scoreA =
-  computeSequentialCandidateScore(a, selectedVenues, slot, context) +
-  computeSlotRoleFitBonus(a, slot) +
-  emergencyRoleFitBonus(a, slot, pass) +
-  beforeDinnerTimingScoreBonus(a, slot, timeZone) -
-  relaxedTemporalPenalty(a, slot, timeZone, pass) -
-  beforeDinnerTimingScorePenalty(a, slot, timeZone, pass)
+        computeSequentialCandidateScore(a, selectedVenues, slot, context) +
+        computeSlotRoleFitBonus(a, slot) +
+        emergencyRoleFitBonus(a, slot, pass) +
+        beforeDinnerTimingScoreBonus(a, slot, timeZone) -
+        relaxedTemporalPenalty(a, slot, timeZone, pass) -
+        beforeDinnerTimingScorePenalty(a, slot, timeZone, pass)
 
-const scoreB =
-  computeSequentialCandidateScore(b, selectedVenues, slot, context) +
-  computeSlotRoleFitBonus(b, slot) +
-  emergencyRoleFitBonus(b, slot, pass) +
-  beforeDinnerTimingScoreBonus(b, slot, timeZone) -
-  relaxedTemporalPenalty(b, slot, timeZone, pass) -
-  beforeDinnerTimingScorePenalty(b, slot, timeZone, pass)
+      const scoreB =
+        computeSequentialCandidateScore(b, selectedVenues, slot, context) +
+        computeSlotRoleFitBonus(b, slot) +
+        emergencyRoleFitBonus(b, slot, pass) +
+        beforeDinnerTimingScoreBonus(b, slot, timeZone) -
+        relaxedTemporalPenalty(b, slot, timeZone, pass) -
+        beforeDinnerTimingScorePenalty(b, slot, timeZone, pass)
 
       return scoreB - scoreA
     })
@@ -509,11 +557,8 @@ function isEmergencyCompatibleForSlot(
         "restaurant",
         "dinner",
         "lunch",
-        "brunch",
-        "breakfast",
         "cafe",
         "café",
-        "bakery",
         "gastropub",
       ])
     )
@@ -528,9 +573,6 @@ function isEmergencyCompatibleForSlot(
         "tea",
         "cafe",
         "café",
-        "bakery",
-        "breakfast",
-        "brunch",
       ])
     )
   }
@@ -538,26 +580,105 @@ function isEmergencyCompatibleForSlot(
   if (slot.role === "dessert") {
     return (
       roles.includes("dessert") ||
-      roles.includes("coffee") ||
       roles.includes("drink") ||
       hasAnyType(types, [
         "dessert",
-        "bakery",
-        "cafe",
-        "café",
-        "coffee",
+        "dessert bar",
         "cocktail",
         "wine bar",
         "bar",
+        "lounge",
       ])
     )
   }
 
   if (slot.role === "activity") {
-    return roles.includes("activity") || roles.includes("food") || roles.includes("coffee")
+    return (
+      roles.includes("activity") ||
+      roles.includes("food") ||
+      roles.includes("coffee")
+    )
   }
 
   return roles.length > 0
+}
+
+function isDaytimeArtFlexibleSlotMatch(
+  candidate: CandidateVenue,
+  slot: PlanningSlot,
+  context: PlanningContext,
+  timeZone: string
+): boolean {
+  if (context.mode !== "full") return false
+  if (context.eventArchetype !== "art") return false
+
+  const types = normalizeVenueTypes([
+    ...(candidate.type ?? []),
+    ...(candidate.tags ?? []),
+    ...(candidate.vibe ?? []),
+    ...(candidate.time_category ?? []),
+    candidate.name ?? "",
+  ])
+
+  const hour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
+
+  if (slot.index === 0 && slot.role === "coffee") {
+    return hasAnyType(types, [
+      "coffee",
+      "cafe",
+      "café",
+      "bakery",
+      "breakfast",
+      "brunch",
+      "tea",
+      "matcha",
+    ])
+  }
+
+  if (slot.index === 1 && slot.role === "food") {
+    return hasAnyType(types, [
+      "restaurant",
+      "lunch",
+      "brunch",
+      "cafe",
+      "café",
+      "park",
+      "garden",
+      "bookstore",
+      "library",
+      "lifestyle",
+      "shop",
+      "gallery",
+      "museum",
+      "activity",
+    ])
+  }
+
+  if (slot.index === 2 && slot.role === "dessert") {
+    if (hour < 16) {
+      return hasAnyType(types, [
+        "dessert",
+        "cafe",
+        "café",
+        "bakery",
+        "ice cream",
+        "gelato",
+      ])
+    }
+
+    return hasAnyType(types, [
+      "dessert",
+      "dessert bar",
+      "wine bar",
+      "cocktail",
+      "bar",
+      "lounge",
+      "ice cream",
+      "gelato",
+    ])
+  }
+
+  return false
 }
 
 function emergencyRoleFitBonus(
@@ -742,9 +863,6 @@ export function isCandidateEligibleForSlot(
   return false
 }
 
-if (hasAbsurdTimeOfDayMismatch(candidate, slot, timeZone)) {
-  return false
-}
 
   if (slot.phase === "before") {
     const maxInterstop = getMaxBeforeInterstopMeters(

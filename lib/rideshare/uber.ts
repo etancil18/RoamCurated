@@ -80,5 +80,5 @@ export function shouldShowUberRideButton(
 ): boolean {
   if (!Number.isFinite(travelMinutes)) return false
 
-  return Number(travelMinutes) > 12
+  return Number(travelMinutes) > 7
 }

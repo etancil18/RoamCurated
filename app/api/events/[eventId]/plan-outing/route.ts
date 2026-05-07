@@ -9,7 +9,10 @@ import {
   qualifiesForLateNightReducedFullFallback,
   qualifiesForLateNightSingleStopFallback,
 } from "@/lib/outings/sequenceScoring"
-import { qualifiesForReducedBeforeSingleStopFallback } from "@/lib/outings/sequenceScoring/daytime"
+import {
+  qualifiesForDaytimeCultureReducedFullFallback,
+  qualifiesForReducedBeforeSingleStopFallback,
+} from "@/lib/outings/sequenceScoring/daytime"
 import { supabaseServerApi } from "@/lib/supabase/server-api"
 import type {
   Budget,
@@ -270,6 +273,12 @@ export async function POST(
         debugPlanningContext
       )
 
+    const daytimeCultureReducedFullFallbackApplied =
+      qualifiesForDaytimeCultureReducedFullFallback(
+        generatedPlan.stops,
+        debugPlanningContext
+      )
+
     const leaveEarlyCoverageSufficient = qualifiesForLeaveEarlyCoverage(
       generatedPlan.stops,
       mode,
@@ -293,6 +302,7 @@ export async function POST(
       plannerCoverageComplete ||
       hasEmergencyStop ||
       reducedFullCoverageSufficient ||
+      daytimeCultureReducedFullFallbackApplied ||
       lateNightSingleStopFallbackApplied ||
       lateNightReducedFullFallbackApplied ||
       reducedBeforeSingleStopFallbackApplied ||
@@ -335,6 +345,7 @@ export async function POST(
           lateNightReducedFullFallbackApplied,
           reducedBeforeSingleStopFallbackApplied,
           leaveEarlyCoverageSufficient,
+          daytimeCultureReducedFullFallbackApplied,
           scoreBreakdown: generatedPlan.scoreBreakdown,
           debug: generatedPlan.debug ?? null,
         },
@@ -371,6 +382,7 @@ export async function POST(
             city,
             timeZone,
             cityPlanning,
+            daytimeCultureReducedFullFallbackApplied,
             scoreBreakdown: generatedPlan.scoreBreakdown,
             debug: generatedPlan.debug ?? null,
           },
@@ -438,6 +450,7 @@ export async function POST(
         lateNightReducedFullFallbackApplied,
         reducedBeforeSingleStopFallbackApplied,
         leaveEarlyCoverageSufficient,
+        daytimeCultureReducedFullFallbackApplied,
       },
     })
 

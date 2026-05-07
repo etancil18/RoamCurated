@@ -73,7 +73,7 @@ export default function OutingRideActions({
       <div className="space-y-1">
         <p className="font-medium text-foreground">Ride options</p>
         <p className="text-sm text-muted-foreground">
-          Uber appears for route legs over 12 minutes with valid coordinates.
+          Uber appears for route legs over 7 minutes with valid coordinates.
         </p>
       </div>
 
