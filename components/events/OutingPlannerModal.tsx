@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import VenueBookingButtons from "@/components/venue-profile/VenueBookingButtons"
+import UberRideButton from "@/components/rideshare/UberRideButton"
 import { logEvent } from "@/lib/logEvent"
 import {
   getGroupSizePresetOptions,
@@ -1008,103 +1009,116 @@ export default function OutingPlannerModal({
                   </div>
 
                   <div className="space-y-3">
-                    {plan.stops?.map((stop, index) => (
-                      <div
-                        key={stop.id}
-                        className="rounded-xl border border-neutral-800 bg-neutral-900 p-4"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-sm font-semibold text-white">
-                            {index + 1}
-                          </div>
+  {plan.stops?.map((stop, index) => {
+    const previousStop = index > 0 ? plan.stops[index - 1] : null
 
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h4 className="text-base font-semibold text-white">
-                                {stop.title}
-                              </h4>
-                              <span className="rounded-full border border-neutral-700 px-2 py-0.5 text-[11px] uppercase tracking-wide text-neutral-300">
-                                {humanizeStopType(stop.displayType ?? stop.venueType ?? stop.role)}
-                              </span>
-                            </div>
+    return (
+      <div
+        key={stop.id}
+        className="rounded-xl border border-neutral-800 bg-neutral-900 p-4"
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cyan-600 text-sm font-semibold text-white">
+            {index + 1}
+          </div>
 
-                            {stop.rationale && (
-                              <p className="mt-2 text-sm leading-6 text-neutral-300">
-                                {stop.rationale}
-                              </p>
-                            )}
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="text-base font-semibold text-white">
+                {stop.title}
+              </h4>
+              <span className="rounded-full border border-neutral-700 px-2 py-0.5 text-[11px] uppercase tracking-wide text-neutral-300">
+                {humanizeStopType(stop.displayType ?? stop.venueType ?? stop.role)}
+              </span>
+            </div>
 
-                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-400">
-                              {stop.plannedArrivalAt ? (
-                                <span className="rounded-full bg-neutral-950 px-2.5 py-1">
-                                  Arrive{" "}
-                                  {new Date(stop.plannedArrivalAt).toLocaleTimeString("en-US", {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                  })}
-                                </span>
-                              ) : null}
+            {stop.rationale ? (
+              <p className="mt-2 text-sm leading-6 text-neutral-300">
+                {stop.rationale}
+              </p>
+            ) : null}
 
-                              {stop.plannedDepartureAt ? (
-                                <span className="rounded-full bg-neutral-950 px-2.5 py-1">
-                                  Leave{" "}
-                                  {new Date(stop.plannedDepartureAt).toLocaleTimeString("en-US", {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                  })}
-                                </span>
-                              ) : null}
+            <div className="mt-3 flex flex-wrap gap-2 text-xs text-neutral-400">
+              {stop.plannedArrivalAt ? (
+                <span className="rounded-full bg-neutral-950 px-2.5 py-1">
+                  Arrive{" "}
+                  {new Date(stop.plannedArrivalAt).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </span>
+              ) : null}
 
-                              {stop.dwellMinutes != null ? (
-                                <span className="rounded-full bg-neutral-950 px-2.5 py-1">
-                                  {stop.dwellMinutes} min
-                                </span>
-                              ) : null}
+              {stop.travelMode ? (
+                <span className="rounded-full bg-neutral-950 px-2.5 py-1">
+                  {humanizeStopType(stop.travelMode)}
+                  {stop.travelMinutesFromPrev != null
+                    ? ` · ${stop.travelMinutesFromPrev} min`
+                    : ""}
+                </span>
+              ) : null}
+            </div>
 
-                              {stop.travelMode ? (
-                                <span className="rounded-full bg-neutral-950 px-2.5 py-1">
-                                  {humanizeStopType(stop.travelMode)}
-                                  {stop.travelMinutesFromPrev != null
-                                    ? ` · ${stop.travelMinutesFromPrev} min`
-                                    : ""}
-                                </span>
-                              ) : null}
-                            </div>
+            {stop.address ? (
+              <p className="mt-3 text-xs text-neutral-500">
+                {stop.address}
+              </p>
+            ) : null}
 
-                            {stop.address ? (
-                              <p className="mt-3 text-xs text-neutral-500">
-                                {stop.address}
-                              </p>
-                            ) : null}
+            {(stop.bookingOptions?.length ?? 0) > 0 ||
+            stop.reservationRecommended ? (
+              <div
+                className="mt-4"
+                onClickCapture={() => {
+                  safeLogEvent("outing_booking_click", {
+                    event_id: event?.id ?? null,
+                    planned_outing_id: plan?.plannedOutingId ?? null,
+                    venue_id: stop.venueId,
+                    stop_order: stop.stopOrder,
+                    role: stop.role,
+                    provider: stop.bookingOptions?.[0]?.provider ?? null,
+                  })
+                }}
+              >
+                <VenueBookingButtons
+                  bookingOptions={stop.bookingOptions}
+                  reservationRecommended={stop.reservationRecommended}
+                  recommendedReservationAt={stop.recommendedReservationAt}
+                  compact
+                />
+              </div>
+            ) : null}
 
-                            {(stop.bookingOptions?.length ?? 0) > 0 ||
-                            stop.reservationRecommended ? (
-                              <div
-                                className="mt-4"
-                                onClickCapture={() => {
-                                  safeLogEvent("outing_booking_click", {
-                                    event_id: event?.id ?? null,
-                                    planned_outing_id: plan?.plannedOutingId ?? null,
-                                    venue_id: stop.venueId,
-                                    stop_order: stop.stopOrder,
-                                    role: stop.role,
-                                    provider: stop.bookingOptions?.[0]?.provider ?? null,
-                                  })
-                                }}
-                              >
-                                <VenueBookingButtons
-                                  bookingOptions={stop.bookingOptions}
-                                  reservationRecommended={stop.reservationRecommended}
-                                  recommendedReservationAt={stop.recommendedReservationAt}
-                                  compact
-                                />
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            {previousStop ? (
+              <div className="mt-3">
+                <UberRideButton
+                  pickup={{
+                    name: previousStop.title,
+                    address: previousStop.address,
+                    lat: previousStop.lat,
+                    lon: previousStop.lon,
+                  }}
+                  dropoff={{
+                    name: stop.title,
+                    address: stop.address,
+                    lat: stop.lat,
+                    lon: stop.lon,
+                  }}
+                  travelMinutes={stop.travelMinutesFromPrev}
+                  plannedOutingId={plan.plannedOutingId}
+                  eventId={event?.id ?? null}
+                  fromVenueId={previousStop.venueId}
+                  toVenueId={stop.venueId}
+                  compact
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    )
+  })}
+</div>
                 </div>
               ) : (
                 <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5">

@@ -1,5 +1,13 @@
 // lib/outings/planningContext.ts
 
+import {
+  addMinutes,
+  desiredRolesFor,
+  endsAfterMidnight,
+  getDaypart,
+  getHourFractionInTimeZone,
+} from "./planningRoles"
+
 import type {
   Budget,
   CityPlanningConfig,
@@ -35,13 +43,6 @@ const INTERSTOP_TRAVEL_BUFFER_MINUTES = 12
 const DEFAULT_TIME_ZONE = "America/New_York"
 const DINNER_MINIMUM_LOCAL_HOUR = 17.5
 
-type Daypart =
-  | "breakfast"
-  | "brunch"
-  | "lunch"
-  | "dinner"
-  | "late_night"
-
 export function buildPlanningContext(
   input: BuildPlanningContextInput
 ): PlanningContext {
@@ -56,22 +57,37 @@ export function buildPlanningContext(
   const estimatedEndAt = input.event.ends_at
     ? new Date(input.event.ends_at)
     : addMinutes(startsAt, inferEventDurationMinutes(input.event))
+
   const plannedExitAt =
     leaveEarlyByHours != null
       ? addMinutes(estimatedEndAt, -leaveEarlyByHours * 60)
       : null
+
   const effectiveExitAt = plannedExitAt ?? estimatedEndAt
 
   const eventTags = normalizeTags([
-    ...normalizeStringArray((input.event as EventRecord & { tags?: string[] | string | null }).tags),
+    ...normalizeStringArray(
+      (input.event as EventRecord & { tags?: string[] | string | null }).tags
+    ),
     input.event.title ?? "",
     input.event.description ?? "",
   ])
 
   const eventArchetype = inferEventArchetype(eventTags)
 
-  const plannedStartAt = inferPlannedStartAt(input.mode, startsAt, effectiveExitAt, timeZone)
-  const plannedEndAt = inferPlannedEndAt(input.mode, startsAt, effectiveExitAt, timeZone)
+  const plannedStartAt = inferPlannedStartAt(
+    input.mode,
+    startsAt,
+    effectiveExitAt,
+    timeZone
+  )
+
+  const plannedEndAt = inferPlannedEndAt(
+    input.mode,
+    startsAt,
+    effectiveExitAt,
+    timeZone
+  )
 
   const desiredRoles = desiredRolesFor(
     input.mode,
@@ -88,6 +104,7 @@ export function buildPlanningContext(
     startsAt,
     estimatedEndAt: effectiveExitAt,
     timeZone,
+    archetype: eventArchetype,
   })
 
   return {
@@ -115,13 +132,17 @@ export function buildPlanningContext(
 
 export function inferEventDurationMinutes(event: EventRecord): number {
   const tags = normalizeTags([
-    ...normalizeStringArray((event as EventRecord & { tags?: string[] | string | null }).tags),
+    ...normalizeStringArray(
+      (event as EventRecord & { tags?: string[] | string | null }).tags
+    ),
     event.title ?? "",
     event.description ?? "",
   ])
 
   if (tags.some((t) => ["festival", "market", "fair"].includes(t))) return 240
-  if (tags.some((t) => ["concert", "music", "show", "comedy", "live"].includes(t))) return 120
+  if (tags.some((t) => ["concert", "music", "show", "comedy", "live"].includes(t))) {
+    return 120
+  }
   if (tags.some((t) => ["game", "sports", "match"].includes(t))) return 150
   if (tags.some((t) => ["gallery", "art", "exhibit", "museum"].includes(t))) return 90
 
@@ -129,6 +150,51 @@ export function inferEventDurationMinutes(event: EventRecord): number {
 }
 
 export function inferEventArchetype(tags: string[]): string {
+  if (
+    tags.some((t) =>
+      [
+        "market",
+        "markets",
+        "vendor",
+        "vendors",
+        "vintage",
+        "apparel",
+        "books",
+        "tarot",
+        "craft",
+        "makers",
+        "maker",
+        "flea",
+        "bazaar",
+      ].includes(t)
+    )
+  ) {
+    return "market"
+  }
+
+  if (
+    tags.some((t) =>
+      [
+        "dinner",
+        "lunch",
+        "brunch",
+        "breakfast",
+        "supper",
+        "tasting",
+        "pairing",
+        "chef",
+        "restaurant",
+        "meal",
+        "feast",
+        "prix",
+        "menu",
+        "omakase",
+      ].includes(t)
+    )
+  ) {
+    return "food_drink"
+  }
+
   if (tags.some((t) => ["concert", "music", "live", "dj", "show"].includes(t))) {
     return "music"
   }
@@ -145,46 +211,11 @@ export function inferEventArchetype(tags: string[]): string {
     return "art"
   }
 
-  if (tags.some((t) => ["festival", "market", "fair"].includes(t))) {
+  if (tags.some((t) => ["festival", "fair"].includes(t))) {
     return "festival"
   }
 
   return "general"
-}
-
-export function desiredRolesFor(
-  mode: PlanMode,
-  archetype: string,
-  startsAt: Date,
-  estimatedEndAt: Date,
-  timeZone?: string | null,
-  leaveEarlyByHours?: LeaveEarlyByHours | null
-): StopRole[] {
-  const resolvedTimeZone = normalizeTimeZone(timeZone)
-  const beforeDaypart = getDaypart(startsAt, resolvedTimeZone)
-  const afterDaypart = getDaypart(addMinutes(estimatedEndAt, 30), resolvedTimeZone)
-  const lateNightAfterEvent = endsAfterMidnight(startsAt, estimatedEndAt, resolvedTimeZone)
-
-  if (mode === "before") {
-    return desiredBeforeRoles(archetype, beforeDaypart)
-  }
-
-  if (mode === "after") {
-    return desiredAfterRoles(
-      archetype,
-      afterDaypart,
-      lateNightAfterEvent,
-      leaveEarlyByHours
-    )
-  }
-
-  return desiredFullRoles(
-    archetype,
-    beforeDaypart,
-    afterDaypart,
-    lateNightAfterEvent,
-    leaveEarlyByHours
-  )
 }
 
 export function normalizeBudget(budget?: Budget | null): Budget | null {
@@ -225,10 +256,6 @@ export function normalizeTags(values: string[]): string[] {
     )
     .map((tag) => tag.trim())
     .filter(Boolean)
-}
-
-export function addMinutes(date: Date, minutes: number): Date {
-  return new Date(date.getTime() + minutes * 60_000)
 }
 
 function inferPlannedStartAt(
@@ -278,191 +305,37 @@ function inferPlannedEndAt(
   return addMinutes(estimatedEndAt, 180)
 }
 
-function desiredBeforeRoles(
-  archetype: string,
-  daypart: Daypart
-): StopRole[] {
-  if (daypart === "breakfast") {
-    if (archetype === "art") return ["coffee", "activity"]
-    if (archetype === "festival") return ["coffee", "food"]
-    if (archetype === "music") return ["coffee", "food"]
-    return ["coffee", "food"]
-  }
-
-  if (daypart === "brunch") {
-    if (archetype === "art") return ["coffee", "food"]
-    if (archetype === "festival") return ["food", "activity"]
-    if (archetype === "music") return ["coffee", "food"]
-    return ["coffee", "food"]
-  }
-
-  if (daypart === "lunch") {
-    if (archetype === "art") return ["activity", "food"]
-    if (archetype === "sports") return ["food", "drink"]
-    if (archetype === "music") return ["coffee", "food"]
-    return ["food", "activity"]
-  }
-
-  if (daypart === "dinner") {
-    if (archetype === "sports") return ["food", "drink"]
-    if (archetype === "music") return ["food", "drink"]
-    if (archetype === "comedy") return ["food", "drink"]
-    if (archetype === "art") return ["food", "activity"]
-    return ["food", "drink"]
-  }
-
-  if (daypart === "late_night") {
-    if (archetype === "music") return ["food", "drink"]
-    if (archetype === "comedy") return ["food", "drink"]
-    return ["drink", "food"]
-  }
-
-  return ["food", "drink"]
-}
-
-function desiredAfterRoles(
-  archetype: string,
-  daypart: Daypart,
-  lateNightAfterEvent = false,
-  leaveEarlyByHours?: LeaveEarlyByHours | null
-): StopRole[] {
-  if (lateNightAfterEvent && !leaveEarlyByHours) {
-    return ["drink"]
-  }
-
-  if (leaveEarlyByHours) {
-    if (lateNightAfterEvent || daypart === "late_night" || archetype === "music") {
-      return ["drink"]
-    }
-
-    if (daypart === "breakfast") return ["coffee"]
-
-    if (daypart === "brunch" || daypart === "lunch") {
-      if (archetype === "art") return ["activity"]
-      return ["food"]
-    }
-
-    if (daypart === "dinner") {
-      if (archetype === "art") return ["food"]
-      return ["drink"]
-    }
-
-    return ["drink"]
-  }
-
-  if (daypart === "breakfast") {
-    return ["coffee", "food"]
-  }
-
-  if (daypart === "brunch" || daypart === "lunch") {
-    if (archetype === "art") return ["activity", "food"]
-    return ["food", "drink"]
-  }
-
-  if (daypart === "dinner") {
-    if (archetype === "art") return ["food", "drink"]
-    if (archetype === "music") return ["drink", "food"]
-    if (archetype === "comedy") return ["drink", "food"]
-    return ["drink", "food"]
-  }
-
-  if (daypart === "late_night") {
-    if (archetype === "music") return ["drink", "dessert"]
-    if (archetype === "comedy") return ["drink", "food"]
-    if (archetype === "sports") return ["drink", "food"]
-    return ["drink", "dessert"]
-  }
-
-  return ["drink", "food"]
-}
-
-function desiredFullRoles(
-  archetype: string,
-  beforeDaypart: Daypart,
-  afterDaypart: Daypart,
-  lateNightAfterEvent = false,
-  leaveEarlyByHours?: LeaveEarlyByHours | null
-): StopRole[] {
-  const beforeRoles = desiredBeforeRoles(archetype, beforeDaypart)
-  const firstBefore = beforeRoles[0] ?? "food"
-  const secondBefore =
-    beforeRoles[1] ?? (firstBefore === "food" ? "activity" : "food")
-
-  if (leaveEarlyByHours) {
-    const singleAfterRole =
-      desiredAfterRoles(archetype, afterDaypart, lateNightAfterEvent, leaveEarlyByHours)[0] ??
-      "drink"
-
-    return [firstBefore, secondBefore, singleAfterRole]
-  }
-
-  if (lateNightAfterEvent || afterDaypart === "late_night") {
-    if (archetype === "art") {
-      return [beforeDaypart === "breakfast" ? "coffee" : "activity", "food", "drink"]
-    }
-
-    if (archetype === "festival") {
-      return [beforeDaypart === "breakfast" ? "coffee" : "food", "activity", "drink"]
-    }
-
-    return [firstBefore, secondBefore, "drink"]
-  }
-
-  const second = desiredAfterRoles(archetype, afterDaypart)[0] ?? "drink"
-  const third = desiredAfterRoles(archetype, afterDaypart)[1] ?? "dessert"
-
-  const roles: StopRole[] = [firstBefore, second, third]
-
-  if (roles[0] === roles[1]) {
-    roles[1] = roles[1] === "food" ? "drink" : "food"
-  }
-
-  if (roles[2] === roles[1]) {
-    roles[2] = roles[2] === "drink" ? "dessert" : "drink"
-  }
-
-  if (archetype === "art" && beforeDaypart !== "late_night") {
-    roles[0] = beforeDaypart === "breakfast" ? "coffee" : "activity"
-    roles[1] = "food"
-    roles[2] = "dessert"
-  }
-
-  if (archetype === "festival") {
-    roles[0] = beforeDaypart === "breakfast" ? "coffee" : "food"
-    roles[1] = "activity"
-    roles[2] = "dessert"
-  }
-
-  return roles
-}
-
 function buildPlanningSlots({
   mode,
   desiredRoles,
   startsAt,
   estimatedEndAt,
   timeZone,
+  archetype,
 }: {
   mode: PlanMode
   desiredRoles: StopRole[]
   startsAt: Date
   estimatedEndAt: Date
   timeZone?: string | null
+  archetype: string
 }): PlanningSlot[] {
   if (desiredRoles.length === 0) return []
 
+  const resolvedTimeZone = normalizeTimeZone(timeZone)
+
   if (mode === "before") {
-    return buildBeforeSlots(desiredRoles, startsAt, timeZone)
+    return buildBeforeSlots(desiredRoles, startsAt, resolvedTimeZone)
   }
 
   if (mode === "after") {
-    return buildAfterSlots(desiredRoles, estimatedEndAt)
+    return buildAfterSlots(desiredRoles, estimatedEndAt, resolvedTimeZone, archetype)
   }
 
   const lateNightFullFallback = endsAfterMidnight(
     startsAt,
     estimatedEndAt,
-    normalizeTimeZone(timeZone)
+    resolvedTimeZone
   )
 
   return buildFullSlots(
@@ -470,7 +343,8 @@ function buildPlanningSlots({
     startsAt,
     estimatedEndAt,
     lateNightFullFallback,
-    timeZone
+    resolvedTimeZone,
+    archetype
   )
 }
 
@@ -503,7 +377,8 @@ function buildBeforeSlots(
         role,
         "before",
         arrival,
-        resolvedTimeZone
+        resolvedTimeZone,
+        "general"
       ),
     }
 
@@ -515,8 +390,12 @@ function buildBeforeSlots(
 
 function buildAfterSlots(
   desiredRoles: StopRole[],
-  estimatedEndAt: Date
+  estimatedEndAt: Date,
+  timeZone?: string | null,
+  archetype = "general"
 ): PlanningSlot[] {
+  const resolvedTimeZone = normalizeTimeZone(timeZone)
+
   return desiredRoles.map((role, index) => {
     const dwellMinutes = dwellMinutesForRole(role, "after")
     const arrival = addMinutes(estimatedEndAt, 20 + index * 80)
@@ -530,7 +409,13 @@ function buildAfterSlots(
       targetDepartureAt: departure,
       dwellMinutes,
       strictProgression: index === 0,
-      flexibleRole: flexibleRoleFor(role, "after"),
+      flexibleRole: flexibleRoleForPlanningSlot(
+        role,
+        "after",
+        arrival,
+        resolvedTimeZone,
+        archetype
+      ),
     }
   })
 }
@@ -540,7 +425,8 @@ function buildFullSlots(
   startsAt: Date,
   estimatedEndAt: Date,
   lateNightFullFallback = false,
-  timeZone?: string | null
+  timeZone?: string | null,
+  archetype = "general"
 ): PlanningSlot[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
 
@@ -556,21 +442,21 @@ function buildFullSlots(
     })
   )
 
-  const afterSlots = buildAfterSlots(afterRoles, estimatedEndAt).map(
-    (slot, index) => ({
-      ...slot,
-      index: index + beforeRoles.length,
-      strictProgression: index === 0,
-    })
-  )
+  const afterSlots = buildAfterSlots(
+    afterRoles,
+    estimatedEndAt,
+    resolvedTimeZone,
+    archetype
+  ).map((slot, index) => ({
+    ...slot,
+    index: index + beforeRoles.length,
+    strictProgression: index === 0,
+  }))
 
   return [...beforeSlots, ...afterSlots]
 }
 
-function dwellMinutesForRole(
-  role: StopRole,
-  phase: SlotPhase
-): number {
+function dwellMinutesForRole(role: StopRole, phase: SlotPhase): number {
   if (role === "food") return phase === "before" ? 75 : 90
   if (role === "drink") return phase === "before" ? 60 : 90
   if (role === "coffee") return 40
@@ -584,8 +470,11 @@ function flexibleRoleForPlanningSlot(
   role: StopRole,
   phase: SlotPhase,
   arrival: Date,
-  timeZone: string
+  timeZone: string,
+  archetype = "general"
 ): StopRole | null {
+  const daypart = getDaypart(arrival, timeZone)
+
   if (
     phase === "before" &&
     role === "food" &&
@@ -594,13 +483,35 @@ function flexibleRoleForPlanningSlot(
     return "drink"
   }
 
+  if (
+    phase === "after" &&
+    role === "drink" &&
+    (archetype === "music" || archetype === "food_drink" || archetype === "market") &&
+    daypart === "late_night"
+  ) {
+    return null
+  }
+
+  if (
+    phase === "after" &&
+    role === "drink" &&
+    daypart === "late_night"
+  ) {
+    return null
+  }
+
+  if (
+    phase === "after" &&
+    archetype === "food_drink" &&
+    role === "food"
+  ) {
+    return "drink"
+  }
+
   return flexibleRoleFor(role, phase)
 }
 
-function flexibleRoleFor(
-  role: StopRole,
-  phase: SlotPhase
-): StopRole | null {
+function flexibleRoleFor(role: StopRole, phase: SlotPhase): StopRole | null {
   if (phase === "before") {
     if (role === "coffee") return "food"
     return null
@@ -611,73 +522,6 @@ function flexibleRoleFor(
   if (role === "food") return "drink"
 
   return null
-}
-
-function getDaypart(date: Date, timeZone?: string | null): Daypart {
-  const hour = getHourFractionInTimeZone(date, normalizeTimeZone(timeZone))
-
-  if (hour < 10.5) return "breakfast"
-  if (hour < 12.5) return "brunch"
-  if (hour < DINNER_MINIMUM_LOCAL_HOUR) return "lunch"
-  if (hour < 22) return "dinner"
-  return "late_night"
-}
-
-function endsAfterMidnight(
-  startsAt: Date,
-  estimatedEndAt: Date,
-  timeZone: string
-): boolean {
-  const startDayKey = getCalendarDayKey(startsAt, timeZone)
-  const endDayKey = getCalendarDayKey(estimatedEndAt, timeZone)
-
-  if (startDayKey !== endDayKey) return true
-
-  const endMinutes = getLocalMinutesInDay(estimatedEndAt, timeZone)
-  return endMinutes < 4 * 60
-}
-
-function getHourFractionInTimeZone(date: Date, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(date)
-
-  const hourPart = parts.find((part) => part.type === "hour")?.value ?? "0"
-  const minutePart = parts.find((part) => part.type === "minute")?.value ?? "0"
-
-  return Number(hourPart) + Number(minutePart) / 60
-}
-
-function getLocalMinutesInDay(date: Date, timeZone: string): number {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(date)
-
-  const hourPart = Number(parts.find((part) => part.type === "hour")?.value ?? "0")
-  const minutePart = Number(parts.find((part) => part.type === "minute")?.value ?? "0")
-
-  return hourPart * 60 + minutePart
-}
-
-function getCalendarDayKey(date: Date, timeZone: string): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date)
-
-  const year = parts.find((part) => part.type === "year")?.value ?? "0000"
-  const month = parts.find((part) => part.type === "month")?.value ?? "00"
-  const day = parts.find((part) => part.type === "day")?.value ?? "00"
-
-  return `${year}-${month}-${day}`
 }
 
 function normalizeTimeZone(timeZone?: string | null): string {
@@ -704,3 +548,5 @@ function normalizeStringArray(
 
   return [String(value)]
 }
+
+export { addMinutes }

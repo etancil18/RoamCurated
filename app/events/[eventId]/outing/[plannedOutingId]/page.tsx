@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
 import OutingMap from "@/components/events/OutingMap"
 import OutingShareActions from "@/components/outings/OutingShareActions"
+import OutingRideActions from "@/components/outings/OutingRideActions"
 
 export const dynamic = "force-dynamic"
 
@@ -295,6 +296,20 @@ export default async function EventOutingPage({ params }: Props) {
           ...stop,
           lat: stop.venue?.lat ?? null,
           lon: stop.venue?.lon ?? null,
+        }))}
+      />
+
+      <OutingRideActions
+        plannedOutingId={outing.id}
+        eventId={eventId}
+        stops={stops.map((stop) => ({
+          id: stop.id,
+          venueId: stop.venueId,
+          title: stop.title ?? stop.venue?.name ?? "Stop",
+          address: stop.venue?.address ?? null,
+          lat: stop.venue?.lat ?? null,
+          lon: stop.venue?.lon ?? null,
+          travelMinutesFromPrev: stop.travelMinutesFromPrev,
         }))}
       />
 
