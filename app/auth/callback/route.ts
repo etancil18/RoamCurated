@@ -6,7 +6,7 @@ import type { Database } from "@/types/supabase"
 export async function GET(req: Request) {
   const { searchParams, origin } = new URL(req.url)
   const code = searchParams.get("code")
-  const nextPath = searchParams.get("next") ?? "/"
+  const nextPath = searchParams.get("next") ?? "/events"
 
   if (!code) {
     console.warn("[Auth callback] No code in URL — redirecting to login")
