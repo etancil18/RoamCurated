@@ -157,6 +157,15 @@ function hasDisallowedBackToBackType(
   })
 }
 
+function isWeekendInTimeZone(date: Date, timeZone: string): boolean {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+  }).format(date)
+
+  return weekday === "Sat" || weekday === "Sun"
+}
+
 function hasAbsurdTimeOfDayMismatch(
   candidate: CandidateVenue,
   slot: PlanningSlot,
@@ -171,6 +180,7 @@ function hasAbsurdTimeOfDayMismatch(
   ])
 
   const hour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
+  const isWeekend = isWeekendInTimeZone(slot.targetArrivalAt, timeZone)
 
   const hasLateNightIdentity = hasAnyType(types, [
     "bar",
@@ -190,8 +200,11 @@ function hasAbsurdTimeOfDayMismatch(
     "gastropub",
   ])
 
+  const hasBrunch = hasAnyType(types, ["brunch"])
+  const hasLunch = hasAnyType(types, ["lunch"])
+  const isBrunchOnly = hasBrunch && !hasLunch
+
   const isMorningOnly = hasAnyType(types, ["bakery", "breakfast"])
-  const isBrunchOnly = hasAnyType(types, ["brunch"])
   const isDaytimeCafe = hasAnyType(types, ["coffee", "tea", "cafe", "café"])
 
   const isCocktailLike = hasAnyType(types, [
@@ -207,6 +220,11 @@ function hasAbsurdTimeOfDayMismatch(
     "sports bar",
   ])
 
+  if (isBrunchOnly) {
+    if (!isWeekend) return true
+    return hour < 9 || hour >= 14
+  }
+
   if (
     slot.role === "drink" &&
     slot.phase === "after" &&
@@ -219,16 +237,12 @@ function hasAbsurdTimeOfDayMismatch(
     return true
   }
 
-  if (hasLateNightIdentity) {
-    return false
-  }
-
   if (isMorningOnly) {
     return hour < 6 || hour >= 12
   }
 
-  if (isBrunchOnly) {
-    return hour < 9 || hour >= 14
+  if (hasLateNightIdentity) {
+    return false
   }
 
   if (isDaytimeCafe) {
@@ -236,6 +250,12 @@ function hasAbsurdTimeOfDayMismatch(
   }
 
   return false
+}
+
+function hasUsableVenueHours(candidate: CandidateVenue): boolean {
+  if (!candidate.hours) return false
+
+  return Object.keys(candidate.hours).length > 0
 }
 
 function unwrapSelectedVenues(
@@ -436,6 +456,11 @@ function selectBestCandidateForPass({
         return false
       }
 
+      if (!hasUsableVenueHours(candidate)) {
+        rejectionCounts.hours += 1
+        return false
+      }
+
       const dinnerTimingOk = satisfiesBeforeDinnerTimingRule({
         candidate,
         rankedCandidates,
@@ -523,7 +548,6 @@ function selectBestCandidateForPass({
     rejectionCounts,
   }
 }
-
 function isEmergencyCompatibleForSlot(
   candidate: CandidateVenue,
   slot: PlanningSlot
@@ -629,6 +653,7 @@ function isDaytimeArtFlexibleSlotMatch(
   ])
 
   const hour = getHourFractionInTimeZone(slot.targetArrivalAt, timeZone)
+  const isWeekend = isWeekendInTimeZone(slot.targetArrivalAt, timeZone)
 
   if (slot.index === 0 && slot.role === "coffee") {
     return hasAnyType(types, [
@@ -637,7 +662,7 @@ function isDaytimeArtFlexibleSlotMatch(
       "café",
       "bakery",
       "breakfast",
-      "brunch",
+      ...(isWeekend ? ["brunch"] : []),
       "tea",
       "matcha",
     ])
@@ -647,7 +672,7 @@ function isDaytimeArtFlexibleSlotMatch(
     return hasAnyType(types, [
       "restaurant",
       "lunch",
-      "brunch",
+      ...(isWeekend ? ["brunch"] : []),
       "cafe",
       "café",
       "park",
@@ -801,14 +826,12 @@ export function evaluateTemporalEligibility(
         lateNightEligibleOverall,
       })
 
-      if (allowMissingOrUncertainHours) {
-        return { eligible: true }
-      }
+      return { eligible: false, reason: "hours" }
     }
 
     return {
-      eligible: lateNightEligibleOverall,
-      reason: lateNightEligibleOverall ? undefined : "hours",
+      eligible: true,
+      reason: undefined,
     }
   }
 
@@ -822,10 +845,6 @@ export function evaluateTemporalEligibility(
   )
 
   if (!roleCompatible) {
-    if (allowMissingOrUncertainHours) {
-      return { eligible: true }
-    }
-
     return { eligible: false, reason: "temporal" }
   }
 
@@ -837,13 +856,13 @@ export function evaluateTemporalEligibility(
     relaxed
   )
 
-  if (!openForWindow && allowMissingOrUncertainHours) {
-    return { eligible: true }
+  if (!openForWindow) {
+    return { eligible: false, reason: "hours" }
   }
 
   return {
-    eligible: openForWindow,
-    reason: openForWindow ? undefined : "hours",
+    eligible: true,
+    reason: undefined,
   }
 }
 

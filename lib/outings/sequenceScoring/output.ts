@@ -55,11 +55,14 @@ export function generatePlanStops(
         : venue.distanceMeters
 
     const venueTypes = normalizeVenueTypes(venue.type)
-    const venueType = normalizeDisplayVenueType(venue.type)
-    const displayType =
-      pickBestDisplayTypeForRole(slot, role, venueTypes, timeZone) ??
-      venueType ??
-      role
+const venueType = normalizeDisplayVenueType(venue.type)
+const displayType = resolveDisplayTypeForSlot({
+  slot,
+  role,
+  venueTypes,
+  venueType,
+  timeZone,
+})
 
     return {
       venueId: venue.id,
@@ -398,6 +401,47 @@ function computeLegacyStopTiming(
     departure,
     dwellMinutes,
   }
+}
+
+function resolveDisplayTypeForSlot({
+  slot,
+  role,
+  venueTypes,
+  venueType,
+  timeZone,
+}: {
+  slot: PlanningSlot
+  role: StopRole
+  venueTypes: string[]
+  venueType: string | null
+  timeZone: string
+}): string {
+  const isWeekend = isWeekendInTimeZone(slot.targetArrivalAt, timeZone)
+  const hasBrunch = venueTypes.includes("brunch")
+  const hasLunch = venueTypes.includes("lunch")
+
+  if (!isWeekend && hasBrunch && hasLunch) {
+    return "lunch"
+  }
+
+  if (isWeekend && hasBrunch) {
+    return "brunch"
+  }
+
+  return (
+    pickBestDisplayTypeForRole(slot, role, venueTypes, timeZone) ??
+    venueType ??
+    role
+  )
+}
+
+function isWeekendInTimeZone(date: Date, timeZone: string): boolean {
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "short",
+  }).format(date)
+
+  return weekday === "Sat" || weekday === "Sun"
 }
 
 function defaultTravelMinutesForSlotIndex(

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet"
 import RouteControl from "@/components/RouteControl"
 import { Button } from "@/components/ui/button"
+import { logEvent } from "@/lib/logEvent"
 
 import "leaflet/dist/leaflet.css"
 
@@ -70,6 +71,18 @@ type RouteVenue = {
   link: string
 }
 
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn("logEvent failed:", eventName, error)
+  }
+}
+
 function RoutingLayer({
   routeStops,
   anchorVenue,
@@ -93,13 +106,7 @@ function RoutingLayer({
 
   if (route.length < 2) return null
 
-  return (
-    <RouteControl
-      map={map}
-      route={route}
-      travelMode={travelMode}
-    />
-  )
+  return <RouteControl map={map} route={route} travelMode={travelMode} />
 }
 
 export default function OutingMap({
@@ -115,6 +122,7 @@ export default function OutingMap({
   const [travelMode, setTravelMode] = useState<"walking" | "driving">("walking")
   const [orderedStops, setOrderedStops] = useState<Stop[]>(stops)
   const [shareFeedback, setShareFeedback] = useState("Share Route")
+  const [routeChooserOpen, setRouteChooserOpen] = useState(false)
 
   useEffect(() => {
     setOrderedStops(stops)
@@ -130,10 +138,8 @@ export default function OutingMap({
     L.Icon.Default.mergeOptions({
       iconRetinaUrl:
         "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png",
-      iconUrl:
-        "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
-      shadowUrl:
-        "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+      iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
     })
   }, [])
 
@@ -196,10 +202,7 @@ export default function OutingMap({
   }
 
   const anchorVenue = useMemo<RouteVenue | null>(() => {
-    if (
-      anchor.venue?.lat == null ||
-      anchor.venue?.lon == null
-    ) {
+    if (anchor.venue?.lat == null || anchor.venue?.lon == null) {
       return null
     }
 
@@ -236,8 +239,27 @@ export default function OutingMap({
     ? [routeStops[0].lat, routeStops[0].lon]
     : [0, 0]
 
+  function baseLogMetadata(): Record<string, unknown> {
+    return {
+      planned_outing_id: plannedOutingId,
+      event_id: eventId,
+      city,
+      mode,
+      travel_mode: travelMode,
+      stop_count: routeStops.length,
+    }
+  }
+
   function moveStopUp(index: number) {
     if (index === 0) return
+
+    safeLogEvent("outing_stop_reordered", {
+      ...baseLogMetadata(),
+      direction: "up",
+      from_index: index,
+      to_index: index - 1,
+      stop_id: orderedStops[index]?.id,
+    })
 
     setOrderedStops((prev) => {
       const next = [...prev]
@@ -255,6 +277,14 @@ export default function OutingMap({
   function moveStopDown(index: number) {
     if (index === orderedStops.length - 1) return
 
+    safeLogEvent("outing_stop_reordered", {
+      ...baseLogMetadata(),
+      direction: "down",
+      from_index: index,
+      to_index: index + 1,
+      stop_id: orderedStops[index]?.id,
+    })
+
     setOrderedStops((prev) => {
       const next = [...prev]
       const temp = next[index + 1]
@@ -268,6 +298,14 @@ export default function OutingMap({
     })
   }
 
+  function openExternalUrl(url: string) {
+    const opened = window.open(url, "_blank", "noopener,noreferrer")
+
+    if (!opened) {
+      window.location.href = url
+    }
+  }
+
   function openGoogleMaps() {
     if (!anchorVenue || routeStops.length === 0) return
 
@@ -278,6 +316,8 @@ export default function OutingMap({
     })
 
     if (route.length < 2) return
+
+    safeLogEvent("outing_route_google_maps_clicked", baseLogMetadata())
 
     const origin = route[0]
     const destination = route[route.length - 1]
@@ -296,7 +336,7 @@ export default function OutingMap({
       url.searchParams.set("waypoints", waypoints)
     }
 
-    window.open(url.toString(), "_blank")
+    openExternalUrl(url.toString())
   }
 
   function openAppleMaps() {
@@ -310,6 +350,8 @@ export default function OutingMap({
 
     if (route.length < 2) return
 
+    safeLogEvent("outing_route_apple_maps_clicked", baseLogMetadata())
+
     const origin = route[0]
     const destination = route[route.length - 1]
     const dirFlag = travelMode === "driving" ? "d" : "w"
@@ -319,7 +361,7 @@ export default function OutingMap({
       `&daddr=${destination.lat},${destination.lon}` +
       `&dirflg=${dirFlag}`
 
-    window.open(url, "_blank")
+    openExternalUrl(url)
   }
 
   async function shareRoute() {
@@ -359,6 +401,7 @@ export default function OutingMap({
   }
 
   function goBackToEvent() {
+    safeLogEvent("outing_back_to_events_clicked", baseLogMetadata())
     router.push(`/events`)
   }
 
@@ -387,7 +430,7 @@ export default function OutingMap({
 
   return (
     <div className="space-y-4">
-      <div className="h-[420px] sm:h-[500px] rounded-xl overflow-hidden border border-border bg-card">
+      <div className="h-[420px] overflow-hidden rounded-xl border border-border bg-card sm:h-[500px]">
         <MapContainer
           center={center}
           zoom={15}
@@ -400,10 +443,7 @@ export default function OutingMap({
           />
 
           {anchorVenue && (
-            <Marker
-              position={[anchorVenue.lat, anchorVenue.lon]}
-              icon={anchorIcon()}
-            >
+            <Marker position={[anchorVenue.lat, anchorVenue.lon]} icon={anchorIcon()}>
               <Tooltip>
                 {anchor.title ?? "Event"}
                 {anchorVenue.name ? ` • ${anchorVenue.name}` : ""}
@@ -439,10 +479,16 @@ export default function OutingMap({
         </MapContainer>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Button
           variant={travelMode === "walking" ? "default" : "outline"}
-          onClick={() => setTravelMode("walking")}
+          onClick={() => {
+            safeLogEvent("outing_travel_mode_changed", {
+              ...baseLogMetadata(),
+              selected_travel_mode: "walking",
+            })
+            setTravelMode("walking")
+          }}
           className="w-full"
         >
           Walking Route
@@ -450,7 +496,13 @@ export default function OutingMap({
 
         <Button
           variant={travelMode === "driving" ? "default" : "outline"}
-          onClick={() => setTravelMode("driving")}
+          onClick={() => {
+            safeLogEvent("outing_travel_mode_changed", {
+              ...baseLogMetadata(),
+              selected_travel_mode: "driving",
+            })
+            setTravelMode("driving")
+          }}
           className="w-full"
         >
           Driving Route
@@ -459,9 +511,7 @@ export default function OutingMap({
 
       <div className="space-y-3 rounded-xl border border-border bg-card p-4">
         <div className="space-y-1">
-          <p className="font-medium text-foreground">
-            Route Stops
-          </p>
+          <p className="font-medium text-foreground">Route Stops</p>
           <p className="text-sm text-muted-foreground">
             Adjust the order of your preset stops before you head out.
           </p>
@@ -469,13 +519,11 @@ export default function OutingMap({
 
         {anchorVenue && (
           <div className="rounded-lg border border-cyan-500/30 bg-background px-3 py-3">
-            <p className="text-sm font-medium text-foreground">
-              Event Anchor
-            </p>
-            <p className="text-sm text-foreground mt-1">
+            <p className="text-sm font-medium text-foreground">Event Anchor</p>
+            <p className="mt-1 text-sm text-foreground">
               {anchor.title ?? anchorVenue.name}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               {anchorVenue.name}
               {anchor.venue?.address ? ` • ${anchor.venue.address}` : ""}
             </p>
@@ -489,7 +537,7 @@ export default function OutingMap({
               className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-foreground truncate">
+                <p className="truncate text-sm font-medium text-foreground">
                   {i + 1}. {stop.title ?? stop.venue?.name ?? "Stop"}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -497,7 +545,7 @@ export default function OutingMap({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex shrink-0 items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -521,32 +569,89 @@ export default function OutingMap({
         </div>
       </div>
 
-     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 justify-items-center">
-        <Button
-          variant="outline"
-          onClick={openGoogleMaps}
-          disabled={!anchorVenue || routeStops.length === 0}
-          className="w-full"
-        >
-          Open in Google Maps
-        </Button>
+      <div className="space-y-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              safeLogEvent("outing_start_route_clicked", baseLogMetadata())
+              setRouteChooserOpen(true)
+            }}
+            disabled={!anchorVenue || routeStops.length === 0}
+            className="w-full"
+          >
+            Start Route
+          </Button>
 
-        <Button
-          variant="outline"
-          onClick={openAppleMaps}
-          disabled={!anchorVenue || routeStops.length === 0}
-          className="w-full"
-        >
-          Open in Apple Maps
-        </Button>
+          <Button variant="secondary" onClick={goBackToEvent} className="w-full">
+            Back to Events
+          </Button>
+        </div>
 
-        <Button
-          variant="secondary"
-          onClick={goBackToEvent}
-          className="w-full"
-        >
-          Back to Events
-        </Button>
+        {routeChooserOpen ? (
+          <div
+            className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/80 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:items-center sm:pb-4"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => {
+              safeLogEvent("outing_route_chooser_cancelled", {
+                ...baseLogMetadata(),
+                cancel_source: "backdrop",
+              })
+              setRouteChooserOpen(false)
+            }}
+          >
+            <div
+              className="w-full max-w-sm rounded-2xl border border-neutral-700 bg-neutral-950 p-5 text-white shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="mb-5">
+                <p className="text-lg font-semibold text-white">Start route</p>
+                <p className="mt-1 text-sm leading-5 text-neutral-300">
+                  Choose your preferred maps app.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setRouteChooserOpen(false)
+                    openGoogleMaps()
+                  }}
+                  className="h-12 w-full justify-start border-neutral-700 bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white"
+                >
+                  Open in Google Maps
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setRouteChooserOpen(false)
+                    openAppleMaps()
+                  }}
+                  className="h-12 w-full justify-start border-neutral-700 bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white"
+                >
+                  Open in Apple Maps
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    safeLogEvent("outing_route_chooser_cancelled", {
+                      ...baseLogMetadata(),
+                      cancel_source: "button",
+                    })
+                    setRouteChooserOpen(false)
+                  }}
+                  className="h-11 w-full text-neutral-300 hover:bg-neutral-900 hover:text-white"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {orderedStops.length === 0 && (
@@ -554,7 +659,6 @@ export default function OutingMap({
           No mapped outing stops available yet.
         </div>
       )}
-
     </div>
   )
 }
