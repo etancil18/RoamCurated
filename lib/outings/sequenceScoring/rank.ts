@@ -49,6 +49,7 @@ export function rankVenueCandidates(
       score += scoreArchetypeFit(venue, context)
       score += scoreGroupFit(venue, context.groupSize)
       score += scoreMetadataRichness(venue)
+      score += scoreNetworkingVenueFit(venue, context)
 
       return {
         ...venue,
@@ -91,6 +92,86 @@ function scoreMetadataRichness(venue: VenueRecord): number {
   if (venue.lat != null && venue.lon != null) score += 4
 
   return score
+}
+
+function scoreNetworkingVenueFit(
+  venue: VenueRecord,
+  context: PlanningContext
+): number {
+  if (context.eventArchetype !== "networking") return 0
+
+  const tokens = normalizeVenueTokens(venue)
+  let score = 0
+
+  if (
+    tokens.some((token) =>
+      [
+        "lounge",
+        "wine bar",
+        "cocktail",
+        "bar",
+        "rooftop",
+        "hotel bar",
+        "hotel lobby",
+        "social club",
+        "coworking",
+        "cafe",
+        "café",
+        "coffee",
+        "lunch",
+      ].includes(token)
+    )
+  ) {
+    score += 14
+  }
+
+  if (
+    tokens.some((token) =>
+      [
+        "social",
+        "conversation",
+        "professional",
+        "networking",
+        "business",
+        "founder",
+        "founders",
+        "startup",
+        "community",
+        "upscale",
+        "polished",
+        "quiet",
+        "lively",
+      ].includes(token)
+    )
+  ) {
+    score += 8
+  }
+
+  if (
+    tokens.some((token) =>
+      ["club", "sports bar", "fitness", "spa", "bakery", "breakfast"].includes(token)
+    )
+  ) {
+    score -= 8
+  }
+
+  return score
+}
+
+function normalizeVenueTokens(venue: VenueRecord): string[] {
+  return [
+    ...(venue.type ?? []),
+    ...(venue.vibe ?? []),
+    ...(venue.tags ?? []),
+    venue.name ?? "",
+  ]
+    .flatMap((value) =>
+      String(value)
+        .toLowerCase()
+        .split(/[\s,./|_-]+/)
+    )
+    .map((token) => token.trim())
+    .filter(Boolean)
 }
 
 function getDesiredRolesForRanking(context: PlanningContext): StopRole[] {

@@ -140,11 +140,47 @@ export function inferEventDurationMinutes(event: EventRecord): number {
   ])
 
   if (tags.some((t) => ["festival", "market", "fair"].includes(t))) return 240
+
+  if (
+    tags.some((t) =>
+      [
+        "networking",
+        "mixer",
+        "meetup",
+        "founders",
+        "founder",
+        "startup",
+        "startups",
+        "entrepreneur",
+        "entrepreneurs",
+        "professional",
+        "professionals",
+        "industry",
+        "business",
+        "conference",
+        "summit",
+        "panel",
+        "investor",
+        "investors",
+        "vc",
+        "venture",
+        "community",
+        "social",
+      ].includes(t)
+    )
+  ) {
+    return 120
+  }
+
   if (tags.some((t) => ["concert", "music", "show", "comedy", "live"].includes(t))) {
     return 120
   }
+
   if (tags.some((t) => ["game", "sports", "match"].includes(t))) return 150
-  if (tags.some((t) => ["gallery", "art", "exhibit", "museum"].includes(t))) return 90
+
+  if (tags.some((t) => ["gallery", "art", "exhibit", "museum"].includes(t))) {
+    return 90
+  }
 
   return 120
 }
@@ -170,6 +206,37 @@ export function inferEventArchetype(tags: string[]): string {
     )
   ) {
     return "market"
+  }
+
+  if (
+    tags.some((t) =>
+      [
+        "networking",
+        "mixer",
+        "meetup",
+        "founders",
+        "founder",
+        "startup",
+        "startups",
+        "entrepreneur",
+        "entrepreneurs",
+        "professional",
+        "professionals",
+        "industry",
+        "business",
+        "conference",
+        "summit",
+        "panel",
+        "investor",
+        "investors",
+        "vc",
+        "venture",
+        "community",
+        "social",
+      ].includes(t)
+    )
+  ) {
+    return "networking"
   }
 
   if (

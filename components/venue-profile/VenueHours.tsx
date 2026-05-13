@@ -28,9 +28,23 @@ const DAY_ALIASES: Record<string, string> = {
   sat: 'saturday',
 }
 
+const DAYS_IN_ORDER = [
+  'sunday',
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+]
+
 function normalizeDayKey(value: string) {
   const cleaned = value.trim().toLowerCase().replace(/\./g, '')
   return DAY_ALIASES[cleaned] ?? cleaned
+}
+
+function getDisplayLabel(day: string) {
+  return day.charAt(0).toUpperCase() + day.slice(1, 3)
 }
 
 export default function VenueHours({ hours, isOpen }: Props) {
@@ -42,10 +56,28 @@ export default function VenueHours({ hours, isOpen }: Props) {
     .toLowerCase()
 
   const normalizedToday = normalizeDayKey(rawToday)
+  const todayIndex = DAYS_IN_ORDER.indexOf(normalizedToday)
 
-  const actualTodayKey =
-    Object.keys(hours).find((day) => normalizeDayKey(day) === normalizedToday) ??
-    rawToday
+  const hoursByNormalizedDay = Object.keys(hours).reduce<
+    Record<string, string>
+  >((acc, day) => {
+    acc[normalizeDayKey(day)] = day
+    return acc
+  }, {})
+
+  const orderedDaysFromToday =
+    todayIndex >= 0
+      ? [
+          ...DAYS_IN_ORDER.slice(todayIndex),
+          ...DAYS_IN_ORDER.slice(0, todayIndex),
+        ]
+      : DAYS_IN_ORDER
+
+  const orderedAvailableDays = orderedDaysFromToday
+    .map((day) => hoursByNormalizedDay[day])
+    .filter((day): day is string => Boolean(day))
+
+  const actualTodayKey = hoursByNormalizedDay[normalizedToday] ?? rawToday
 
   const formatTime = (time: string) => {
     if (!time) return 'Closed'
@@ -69,19 +101,20 @@ export default function VenueHours({ hours, isOpen }: Props) {
 
   const renderLine = (day: string) => {
     const slot: Record<string, string> | undefined = hours[day] as any
-    const isToday = normalizeDayKey(day) === normalizedToday
+    const normalizedDay = normalizeDayKey(day)
+    const isToday = normalizedDay === normalizedToday
 
     if (!slot || Object.keys(slot).length === 0) {
       return (
         <li
           key={day}
-          className={`flex justify-between text-sm ${
+          className={`flex justify-between gap-4 text-sm ${
             isToday
               ? 'font-semibold text-blue-600 dark:text-blue-400'
               : 'text-gray-700 dark:text-gray-300'
           }`}
         >
-          <span className="capitalize">{day}</span>
+          <span>{getDisplayLabel(normalizedDay)}</span>
           <span>Closed</span>
         </li>
       )
@@ -108,14 +141,16 @@ export default function VenueHours({ hours, isOpen }: Props) {
     return (
       <li
         key={day}
-        className={`flex justify-between text-sm ${
+        className={`flex justify-between gap-4 text-sm ${
           isToday
             ? 'font-semibold text-blue-600 dark:text-blue-400'
             : 'text-gray-700 dark:text-gray-300'
         }`}
       >
-        <span className="capitalize">{day}</span>
-        <span>{pairs.length > 0 ? pairs.join(', ') : 'Closed'}</span>
+        <span>{getDisplayLabel(normalizedDay)}</span>
+        <span className="text-right">
+          {pairs.length > 0 ? pairs.join(', ') : 'Closed'}
+        </span>
       </li>
     )
   }
@@ -124,10 +159,16 @@ export default function VenueHours({ hours, isOpen }: Props) {
 
   return (
     <div className="space-y-2">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Hours</h2>
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        Hours
+      </h2>
 
       {typeof isOpen === 'boolean' && (
-        <p className={`text-sm font-medium ${isOpen ? 'text-green-600' : 'text-red-500'}`}>
+        <p
+          className={`text-sm font-medium ${
+            isOpen ? 'text-green-600' : 'text-red-500'
+          }`}
+        >
           {isOpen ? 'Open now' : 'Closed now'}
         </p>
       )}
@@ -136,12 +177,13 @@ export default function VenueHours({ hours, isOpen }: Props) {
         <ul>{todayLine}</ul>
       ) : (
         <ul className="space-y-1">
-          {Object.keys(hours).map((day) => renderLine(day))}
+          {orderedAvailableDays.map((day) => renderLine(day))}
         </ul>
       )}
 
       <button
-        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+        type="button"
+        className="text-sm text-blue-600 hover:underline dark:text-blue-400"
         onClick={() => setExpanded(!expanded)}
       >
         {expanded ? 'Hide full hours' : 'View full week'}

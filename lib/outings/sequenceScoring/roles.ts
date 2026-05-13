@@ -62,6 +62,10 @@ export function inferVenueRoles(venue: VenueRecord): StopRole[] {
         "speakeasy",
         "club",
         "brewery",
+        "hotel bar",
+        "hotel lobby",
+        "social club",
+        "coworking",
       ].includes(type)
     ) {
       roles.push("drink")
@@ -86,6 +90,9 @@ export function inferVenueRoles(venue: VenueRecord): StopRole[] {
         "nature",
         "showroom",
         "spa",
+        "coworking",
+        "hotel lobby",
+        "social club",
       ].includes(type)
     ) {
       roles.push("activity")
@@ -153,9 +160,34 @@ export function getAcceptableRolesForSlot(
     roles.push(slot.flexibleRole)
   }
 
-  // Dinner-before-5:30p rule:
-  // A before-event food slot that lands before 5:30p may flex to drink
-  // only for dinner+cocktail/bar/wine-bar/lounge hybrids or cocktail/wine-bar fallback venues.
+  if (
+    context.eventArchetype === "networking" &&
+    hasAnyType(types, [
+      "coffee",
+      "tea",
+      "cafe",
+      "café",
+      "lunch",
+      "dinner",
+      "cocktail",
+      "wine bar",
+      "bar",
+      "lounge",
+      "hotel bar",
+      "hotel lobby",
+      "rooftop",
+      "coworking",
+      "social club",
+      "bookstore",
+      "lifestyle",
+    ])
+  ) {
+    if (slot.role === "coffee") roles.push("food", "drink", "activity")
+    if (slot.role === "food") roles.push("coffee", "drink", "activity")
+    if (slot.role === "drink") roles.push("food", "coffee", "activity")
+    if (slot.role === "activity") roles.push("coffee", "drink", "food")
+  }
+
   if (
     slot.phase === "before" &&
     slot.role === "food" &&
@@ -165,9 +197,6 @@ export function getAcceptableRolesForSlot(
     roles.push("drink")
   }
 
-  // Lunch/afternoon substitution:
-  // Between 1p and 5:30p, a food slot may become a light activity
-  // when lunch/dinner fit is weak.
   if (
     relaxed &&
     slot.role === "food" &&
@@ -188,7 +217,6 @@ export function getAcceptableRolesForSlot(
     roles.push("activity")
   }
 
-  // Morning food can flex into coffee
   if (slot.phase === "before" && slot.role === "food") {
     if (
       hour < 12.5 &&
@@ -202,7 +230,6 @@ export function getAcceptableRolesForSlot(
     }
   }
 
-  // Coffee can flex into light food
   if (slot.phase === "before" && slot.role === "coffee") {
     if (
       hour < 13 &&
@@ -264,6 +291,9 @@ export function pickBestDisplayTypeForRole(
           "rooftop",
           "club",
           "sports bar",
+          "hotel bar",
+          "hotel lobby",
+          "social club",
         ]
       : role === "dessert"
       ? ["dessert", "bakery"]
@@ -279,6 +309,9 @@ export function pickBestDisplayTypeForRole(
           "showroom",
           "lifestyle",
           "spa",
+          "coworking",
+          "hotel lobby",
+          "social club",
         ]
 
   return (

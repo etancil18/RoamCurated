@@ -33,6 +33,15 @@ export const metadata: Metadata = {
 export default async function PropertyPage({ params }: PageProps) {
   const { city, slug } = await params
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    'https://roam-curated.vercel.app'
+
+  const guideUrl = `${baseUrl}/open/property/${city}/${slug}`
+
+  const guideQrImageUrl =
+    `https://api.qrserver.com/v1/create-qr-code/?size=440x440&data=${encodeURIComponent(guideUrl)}`
+
   const guide = await getPropertyGuideData({ city, slug })
 
   if (!guide.property) {
@@ -311,15 +320,71 @@ export default async function PropertyPage({ params }: PageProps) {
               )}
 
               <a
-                href="#neighborhood-map"
+                href="#guide-qr-modal"
                 className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium hover:bg-muted"
               >
-                View map
+                View QR
               </a>
             </div>
           </CardContent>
         </Card>
       </section>
+
+      <div
+        id="guide-qr-modal"
+        className="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/80 px-4 py-8 target:flex"
+      >
+        <a
+          href="#"
+          aria-label="Close QR modal"
+          className="absolute inset-0"
+        />
+
+        <Card className="relative z-[10000] w-full max-w-sm">
+          <CardContent className="space-y-5 p-6 text-center">
+            <div className="flex items-start justify-between gap-4 text-left">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold">
+                  Guest QR Code
+                </h2>
+
+                <p className="text-sm text-muted-foreground">
+                  Guests can scan this code to open this neighborhood guide
+                  instantly on their phone.
+                </p>
+              </div>
+
+              <a
+                href="#"
+                aria-label="Close QR modal"
+                className="rounded-full border px-3 py-1 text-sm font-medium hover:bg-muted"
+              >
+                ×
+              </a>
+            </div>
+
+            <div className="flex justify-center">
+              <div className="rounded-2xl bg-white p-4">
+                <img
+                  src={guideQrImageUrl}
+                  alt={`QR code for ${guide.property.name}`}
+                  className="h-[220px] w-[220px]"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                {guide.property.name}
+              </p>
+
+              <p className="break-all text-xs text-muted-foreground">
+                {guideUrl}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {guide.property.welcome_description && (
         <section className="space-y-3">

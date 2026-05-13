@@ -26,7 +26,7 @@ export function qualifiesForLateNightSingleStopFallback(
   if (!endsAfterMidnight(context, timeZone)) return false
 
   const stop = stops[0]
-  return isQualifyingLateNightStop(stop, timeZone)
+  return isQualifyingLateNightStop(stop, timeZone, context)
 }
 
 export function qualifiesForLateNightReducedFullFallback(
@@ -44,7 +44,7 @@ export function qualifiesForLateNightReducedFullFallback(
 
   if (stops.length === 3) {
     const lastStop = stops[2]
-    return isQualifyingLateNightStop(lastStop, timeZone)
+    return isQualifyingLateNightStop(lastStop, timeZone, context)
   }
 
   return false
@@ -77,6 +77,10 @@ export function isLateNightNightlifeType(
     "cocktail",
     "speakeasy",
     "rooftop",
+    "wine bar",
+    "hotel bar",
+    "hotel lobby",
+    "social club",
   ])
 }
 
@@ -96,11 +100,26 @@ export function endsAfterMidnight(
 
 function isQualifyingLateNightStop(
   stop: GeneratedOutingStop,
-  timeZone: string
+  timeZone: string,
+  context?: PlanningContext
 ): boolean {
   const appliedType = normalizeVenueType(stop.displayType ?? stop.venueType ?? null)
+  const allowedTypes =
+    context?.eventArchetype === "networking"
+      ? [
+          "bar",
+          "lounge",
+          "cocktail",
+          "speakeasy",
+          "rooftop",
+          "wine bar",
+          "hotel bar",
+          "hotel lobby",
+          "social club",
+        ]
+      : ["bar", "lounge", "club", "cocktail", "speakeasy", "rooftop"]
 
-  if (!["bar", "lounge", "club", "cocktail", "speakeasy", "rooftop"].includes(appliedType)) {
+  if (!allowedTypes.includes(appliedType)) {
     return false
   }
 

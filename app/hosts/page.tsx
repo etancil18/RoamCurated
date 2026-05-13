@@ -223,15 +223,52 @@ export default function HostsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-xl space-y-8 px-6 pb-6 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">
-          Create a Roam Neighborhood Guide
-        </h1>
+    <main className="mx-auto max-w-xl space-y-8 px-5 pb-8 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] sm:px-6">
+      <div className="space-y-4 rounded-2xl border border-border bg-card/70 p-5 shadow-sm sm:p-6">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-primary">
+            For hosts, rentals, and boutique stays
+          </p>
 
-        <p className="text-muted-foreground">
-          Generate a local guide your guests can open instantly.
-        </p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Create a Roam Neighborhood Guide
+          </h1>
+
+          <p className="text-base leading-7 text-muted-foreground">
+            Create a shareable neighborhood guide for your guests with curated
+            places to eat, drink, explore, and experience nearby. Roam turns
+            your property into a more helpful, local-feeling stay.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-border bg-background/70 p-3">
+            <p className="text-sm font-medium text-foreground">
+              Curated local picks
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Restaurants, coffee, drinks, and nearby gems.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background/70 p-3">
+            <p className="text-sm font-medium text-foreground">
+              Guest-ready QR
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Print it or place it in your welcome book.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border bg-background/70 p-3">
+            <p className="text-sm font-medium text-foreground">
+              No app required
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Guests open the guide instantly on their phone.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -253,7 +290,7 @@ export default function HostsPage() {
               setCity(nextCity)
               safeLogEvent('host_guide_city_selected', { city: nextCity })
             }}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
           >
             <option value="">Select a city</option>
             {HOST_CITY_OPTIONS.map((option) => (
@@ -291,7 +328,7 @@ export default function HostsPage() {
             onChange={(e)=>setWelcomeDescription(e.target.value)}
             placeholder="Welcome to our place..."
             rows={5}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground"
           />
         </div>
 
@@ -305,9 +342,9 @@ export default function HostsPage() {
       </div>
 
       {link && (
-        <div className="border rounded-lg p-6 space-y-5">
+        <div className="space-y-5 rounded-lg border border-border bg-card/70 p-5 sm:p-6">
           <div className="space-y-1">
-            <p className="font-semibold">
+            <p className="font-semibold text-foreground">
               Your guide is ready
             </p>
 
@@ -316,7 +353,7 @@ export default function HostsPage() {
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Input value={link} readOnly />
 
             <Button variant="outline" onClick={copyLink}>
@@ -324,7 +361,7 @@ export default function HostsPage() {
             </Button>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               className="flex-1"
               onClick={()=>{
@@ -347,10 +384,12 @@ export default function HostsPage() {
             </Button>
           </div>
 
-          <div className="flex flex-col items-center gap-3 pt-4 border-t">
-            <QRCodeSVG value={link} size={180} level="H" />
+          <div className="flex flex-col items-center gap-3 border-t border-border pt-4">
+            <div className="rounded-xl bg-white p-3">
+              <QRCodeSVG value={link} size={180} level="H" />
+            </div>
 
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-center text-xs text-muted-foreground">
               Guests can scan this QR code to open the guide instantly.
             </p>
           </div>

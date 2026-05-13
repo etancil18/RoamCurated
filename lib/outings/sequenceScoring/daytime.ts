@@ -49,6 +49,10 @@ export function qualifiesForReducedBeforeSingleStopFallback(
     return stop.role === "food" || stop.role === "drink"
   }
 
+  if (isNetworkingBeforeEventContext(context)) {
+    return stop.role === "coffee" || stop.role === "food" || stop.role === "drink"
+  }
+
   return false
 }
 
@@ -57,7 +61,9 @@ export function qualifiesForDaytimeCultureReducedFullFallback(
   context: PlanningContext
 ): boolean {
   if (context.mode !== "full") return false
-  if (context.eventArchetype !== "art") return false
+  if (context.eventArchetype !== "art" && context.eventArchetype !== "networking") {
+    return false
+  }
   if (stops.length < 1) return false
 
   const beforeStops = stops.filter((stop) => stop.phase === "before")
@@ -76,6 +82,10 @@ export function qualifiesForDaytimeCultureReducedFullFallback(
     timeZone
   )
 
+  if (context.eventArchetype === "networking") {
+    return eventStartHour <= 17.5 && eventEndHour <= 22
+  }
+
   return eventStartHour <= 12.5 && eventEndHour <= 18.5
 }
 
@@ -93,6 +103,13 @@ function isLateNightMusicBeforeEventContext(context: PlanningContext): boolean {
   const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
 
   return context.eventArchetype === "music" && eventStartHour >= 20
+}
+
+function isNetworkingBeforeEventContext(context: PlanningContext): boolean {
+  const timeZone = resolvePlannerTimeZone(context)
+  const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
+
+  return context.eventArchetype === "networking" && eventStartHour >= 15
 }
 
 export function isMorningCompatibleStop(stop: MorningTypedStop): boolean {

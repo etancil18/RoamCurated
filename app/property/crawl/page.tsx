@@ -2,6 +2,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import { DateTime } from 'luxon'
 import { CITY_CONFIGS } from '@/config/cities'
 import CrawlMap from './CrawlMap'
+import PropertyCrawlShareActions from '@/components/property/PropertyCrawlShareActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,16 +27,11 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
   const propertyId = resolvedSearchParams.property_id
   const propertySlug = resolvedSearchParams.property_slug
 
-  /* ------------------------------------------------ */
-  /* Fetch venues                                     */
-  /* ------------------------------------------------ */
-
   const { data } = await supabase
     .from('venues')
     .select('*')
     .in('id', venueIds)
 
-  // ✅ FIX: Preserve original crawl order
   const venueMap = new Map(
     (data ?? []).map((v: any) => [
       v.id,
@@ -49,10 +45,6 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
   const venues = venueIds
     .map((id) => venueMap.get(id))
     .filter(Boolean)
-
-  /* ------------------------------------------------ */
-  /* Fetch property (if provided)                     */
-  /* ------------------------------------------------ */
 
   let property = {
     name: 'Property',
@@ -74,10 +66,6 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
     }
   }
 
-  /* ------------------------------------------------ */
-  /* City-aware time                                  */
-  /* ------------------------------------------------ */
-
   const timezone = CITY_CONFIGS[city]?.timezone ?? 'UTC'
 
   const nowISO =
@@ -85,18 +73,29 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
       .setZone(timezone)
       .toISO() ?? new Date().toISOString()
 
-  /* ------------------------------------------------ */
-  /* Marker refs                                      */
-  /* ------------------------------------------------ */
-
   const markerRefs = { current: {} as Record<string, any> }
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 px-4 pb-4 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
-
       <h1 className="text-xl font-bold">
         Crawl Route
       </h1>
+
+      <PropertyCrawlShareActions
+        city={city}
+        propertyName={property.name}
+        propertySlug={propertySlug ?? property.slug ?? null}
+        venues={venues.map((venue: any, index: number) => ({
+          id: String(venue.id),
+          title: String(venue.name ?? `Stop ${index + 1}`),
+          stopOrder: index + 1,
+          venueType: venue.type ? String(venue.type) : null,
+          displayType: venue.type ? String(venue.type) : 'venue',
+          lat: venue.lat ?? null,
+          lon: venue.lon ?? null,
+          address: venue.address ?? null,
+        }))}
+      />
 
       <CrawlMap
         venues={venues}
@@ -106,7 +105,6 @@ export default async function PropertyCrawlPage({ searchParams }: Props) {
         markerRefs={markerRefs}
         propertySlug={propertySlug ?? property.slug}
       />
-
     </main>
   )
 }

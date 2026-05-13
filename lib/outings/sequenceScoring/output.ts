@@ -55,14 +55,14 @@ export function generatePlanStops(
         : venue.distanceMeters
 
     const venueTypes = normalizeVenueTypes(venue.type)
-const venueType = normalizeDisplayVenueType(venue.type)
-const displayType = resolveDisplayTypeForSlot({
-  slot,
-  role,
-  venueTypes,
-  venueType,
-  timeZone,
-})
+    const venueType = normalizeDisplayVenueType(venue.type)
+    const displayType = resolveDisplayTypeForSlot({
+      slot,
+      role,
+      venueTypes,
+      venueType,
+      timeZone,
+    })
 
     return {
       venueId: venue.id,
@@ -200,6 +200,11 @@ export function buildPlanSummary({
   const modeLabel =
     mode === "before" ? "before-event" : mode === "after" ? "post-event" : "full-night"
 
+  const archetypeEnergy =
+    planningContext.eventArchetype === "networking"
+      ? "conversation-friendly networking"
+      : planningContext.eventArchetype
+
   const exitAwareText =
     mode !== "before" && planningContext.plannedExitAt
       ? planningContext.leaveEarlyByHours
@@ -220,7 +225,7 @@ export function buildPlanSummary({
     venueName ? `anchored around ${venueName}` : null,
     exitAwareText,
     `with ${stops.length} contextual stop${stops.length === 1 ? "" : "s"}`,
-    `optimized for ${planningContext.eventArchetype} energy`,
+    `optimized for ${archetypeEnergy} energy`,
     stopNames ? `and low-regret sequencing: ${stopNames}.` : null,
   ]
     .filter(Boolean)
@@ -288,7 +293,17 @@ export function buildRationale({
       : "closer to the edge of the outing window"
 
   const roleText =
-    role === "food"
+    eventArchetype === "networking"
+      ? role === "food"
+        ? "creates a natural sit-down moment for conversation"
+        : role === "drink"
+        ? "keeps the setting social and easy to continue conversations"
+        : role === "coffee"
+        ? "creates a low-pressure starting point for meeting or reconnecting"
+        : role === "dessert"
+        ? "gives the outing a softer closing beat for follow-up conversation"
+        : "adds a conversation-friendly change of scene"
+      : role === "food"
       ? "grounds the outing with a real meal"
       : role === "drink"
       ? "keeps the energy social without overcomplicating the route"

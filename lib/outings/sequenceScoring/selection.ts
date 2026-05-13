@@ -198,6 +198,9 @@ function hasAbsurdTimeOfDayMismatch(
     "restaurant",
     "dinner",
     "gastropub",
+    "hotel bar",
+    "hotel lobby",
+    "social club",
   ])
 
   const hasBrunch = hasAnyType(types, ["brunch"])
@@ -218,6 +221,16 @@ function hasAbsurdTimeOfDayMismatch(
     "brewery",
     "rooftop",
     "sports bar",
+    "hotel bar",
+    "social club",
+  ])
+
+  const isNetworkingDaytimeCompatible = hasAnyType(types, [
+    "coworking",
+    "hotel lobby",
+    "social club",
+    "bookstore",
+    "lifestyle",
   ])
 
   if (isBrunchOnly) {
@@ -233,7 +246,12 @@ function hasAbsurdTimeOfDayMismatch(
     return false
   }
 
-  if (isCocktailLike && hour >= 6 && hour < 12) {
+  if (
+    isCocktailLike &&
+    hour >= 6 &&
+    hour < 12 &&
+    !isNetworkingDaytimeCompatible
+  ) {
     return true
   }
 
@@ -548,12 +566,19 @@ function selectBestCandidateForPass({
     rejectionCounts,
   }
 }
+
 function isEmergencyCompatibleForSlot(
   candidate: CandidateVenue,
   slot: PlanningSlot
 ): boolean {
   const roles = candidate.inferredRoles ?? []
-  const types = normalizeVenueTypes(candidate.type)
+  const types = normalizeVenueTypes([
+    ...(candidate.type ?? []),
+    ...(candidate.tags ?? []),
+    ...(candidate.vibe ?? []),
+    ...(candidate.time_category ?? []),
+    candidate.name ?? "",
+  ])
 
   if (roles.includes(slot.role)) return true
   if (slot.flexibleRole && roles.includes(slot.flexibleRole)) return true
@@ -576,6 +601,10 @@ function isEmergencyCompatibleForSlot(
         "dinner",
         "gastropub",
         "late night",
+        "hotel bar",
+        "hotel lobby",
+        "social club",
+        "coworking",
       ])
     )
   }
@@ -592,6 +621,9 @@ function isEmergencyCompatibleForSlot(
         "cafe",
         "café",
         "gastropub",
+        "hotel lobby",
+        "social club",
+        "coworking",
       ])
     )
   }
@@ -605,6 +637,9 @@ function isEmergencyCompatibleForSlot(
         "tea",
         "cafe",
         "café",
+        "hotel lobby",
+        "coworking",
+        "bookstore",
       ])
     )
   }
@@ -628,7 +663,16 @@ function isEmergencyCompatibleForSlot(
     return (
       roles.includes("activity") ||
       roles.includes("food") ||
-      roles.includes("coffee")
+      roles.includes("coffee") ||
+      roles.includes("drink") ||
+      hasAnyType(types, [
+        "coworking",
+        "hotel lobby",
+        "social club",
+        "bookstore",
+        "lifestyle",
+        "lounge",
+      ])
     )
   }
 

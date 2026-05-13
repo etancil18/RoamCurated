@@ -478,7 +478,7 @@ export function scoreGroupFit(
       score -= 8
     }
 
-    if (hasAnyType(venueTypes, ["brewery", "restaurant", "sports bar", "rooftop"])) {
+    if (hasAnyType(venueTypes, ["brewery", "restaurant", "bar", "sports bar", "rooftop"])) {
       score += 8
     }
   }
@@ -530,6 +530,52 @@ export function scoreArchetypeFit(
 
   if (context.eventArchetype === "festival") {
     if (hasAnyType(types, ["market", "club", "music", "dessert"])) score += 6
+  }
+
+  if (context.eventArchetype === "networking") {
+    if (
+      hasAnyType(types, [
+        "cocktail",
+        "wine bar",
+        "bar",
+        "lounge",
+        "rooftop",
+        "hotel bar",
+        "hotel lobby",
+        "social club",
+        "coworking",
+        "cafe",
+        "café",
+        "coffee",
+        "lunch",
+      ])
+    ) {
+      score += 10
+    }
+
+    if (
+      tags.some((tag) =>
+        [
+          "networking",
+          "mixer",
+          "founders",
+          "startup",
+          "professional",
+          "community",
+          "meetup",
+          "industry",
+          "social",
+          "conversation",
+          "lounge",
+        ].includes(tag)
+      )
+    ) {
+      score += 6
+    }
+
+    if (hasAnyType(types, ["club", "sports bar", "fitness", "spa"])) {
+      score -= 8
+    }
   }
 
   return score
