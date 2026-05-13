@@ -1,7 +1,7 @@
 import Stripe from "stripe"
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
-import { createClient } from "@supabase/supabase-js"
+import { supabaseAdmin } from "@/lib/supabase/admin"
 import { createServerClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -12,17 +12,6 @@ function getStripe() {
     throw new Error("STRIPE_SECRET_KEY is not set")
   }
   return new Stripe(process.env.STRIPE_SECRET_KEY)
-}
-
-function getSupabaseAdmin() {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Supabase environment variables are not set")
-  }
-
-  return createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
 }
 
 function mustGetEnv(name: string) {
@@ -45,7 +34,6 @@ async function getBaseUrlFromHeaders() {
 export async function POST() {
   try {
     const stripe = getStripe()
-    const supabaseAdmin = getSupabaseAdmin()
 
     const supabase = await createServerClient()
     const {

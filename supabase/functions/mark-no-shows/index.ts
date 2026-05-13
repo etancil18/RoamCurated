@@ -2,10 +2,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SERVICE_ROLE_KEY = Deno.env.get('SERVICE_ROLE_KEY')
+const SERVICE_ROLE_KEY = Deno.env.get('ROAM_SUPABASE_SERVICE_ROLE_KEY')
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-  console.error('Missing SUPABASE_URL or SERVICE_ROLE_KEY')
+  console.error('Missing SUPABASE_URL or ROAM_SUPABASE_SERVICE_ROLE_KEY')
   throw new Error('Missing required environment variables')
 }
 

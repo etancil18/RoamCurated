@@ -16,7 +16,7 @@
 import * as dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase/admin'
 
 /* ------------------------------------------------------------------ */
 /* LOAD ENVIRONMENT CONFIG                                            */
@@ -24,17 +24,6 @@ import { createClient } from '@supabase/supabase-js'
 
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
 dotenv.config()
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  throw new Error(
-    'Missing Supabase env vars. Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env.local'
-  )
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 /* ------------------------------------------------------------------ */
 /* TYPES                                                              */
@@ -149,8 +138,9 @@ export default venues
 }
 
 /* ------------------------------------------------------------------ */
-/* RUN                                                              */
+/* RUN                                                                */
 /* ------------------------------------------------------------------ */
+
 runInjection().catch((err) => {
   console.error('\n❌ Injection failed:', err)
   process.exit(1)

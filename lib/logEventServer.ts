@@ -1,8 +1,9 @@
-import { createServerClient } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js' // ✅ ADDED
+import 'server-only'
+
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 type LogEventServerArgs = {
-  impression_type: string // ✅ REQUIRED
+  impression_type: string
   user_id?: string | null
   venue_id?: string
   crawl_id?: string
@@ -25,18 +26,6 @@ export async function logEventServer({
   }
 
   try {
-    // ✅ REPLACED: use service role client instead of request-scoped client
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!, // 🔴 MUST be set in env
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        },
-      }
-    )
-
     const payload = {
       impression_type,
       user_id,
@@ -46,9 +35,9 @@ export async function logEventServer({
       created_at: new Date().toISOString(),
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('user_impressions')
-      .insert([payload], { returning: 'minimal' } as any) // ✅ Cast to `any`
+      .insert([payload], { returning: 'minimal' } as any)
 
     if (error) {
       console.error('[logEventServer] insert failed:', error)
