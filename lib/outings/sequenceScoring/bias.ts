@@ -413,12 +413,32 @@ export function scoreBudgetFit(
   const priceString = normalizePrice(value)
   if (!priceString) return 0
 
-  const diff = Math.abs(priceToInt(priceString) - priceToInt(budget))
+  const venuePrice = priceToInt(priceString)
+  const selectedBudget = priceToInt(budget)
 
-  if (diff === 0) return 16
-  if (diff === 1) return 8
-  if (diff === 2) return -8
-  return -14
+  if (!venuePrice || !selectedBudget) return 0
+
+  if (budget === "$$$$") {
+    if (venuePrice >= 2 && venuePrice <= 4) {
+      if (venuePrice === 4) return 16
+      if (venuePrice === 3) return 12
+      return 8
+    }
+
+    return -40
+  }
+
+  if (venuePrice <= selectedBudget) {
+    const diff = selectedBudget - venuePrice
+
+    if (diff === 0) return 16
+    if (diff === 1) return 10
+    if (diff === 2) return 4
+
+    return 0
+  }
+
+  return -40
 }
 
 export function scoreVibeFit(
@@ -533,50 +553,63 @@ export function scoreArchetypeFit(
   }
 
   if (context.eventArchetype === "networking") {
-    if (
-      hasAnyType(types, [
-        "cocktail",
-        "wine bar",
-        "bar",
-        "lounge",
-        "rooftop",
-        "hotel bar",
-        "hotel lobby",
-        "social club",
-        "coworking",
-        "cafe",
-        "café",
-        "coffee",
-        "lunch",
-      ])
-    ) {
-      score += 10
-    }
-
-    if (
-      tags.some((tag) =>
-        [
-          "networking",
-          "mixer",
-          "founders",
-          "startup",
-          "professional",
-          "community",
-          "meetup",
-          "industry",
-          "social",
-          "conversation",
-          "lounge",
-        ].includes(tag)
-      )
-    ) {
-      score += 6
-    }
-
-    if (hasAnyType(types, ["club", "sports bar", "fitness", "spa"])) {
-      score -= 8
-    }
+  if (
+    hasAnyType(types, [
+      "cocktail",
+      "wine bar",
+      "bar",
+      "lounge",
+      "rooftop",
+      "hotel bar",
+      "hotel lobby",
+      "social club",
+      "coworking",
+      "speakeasy",
+      "dinner",
+      "lunch",
+    ])
+  ) {
+    score += 10
   }
+
+  if (
+    hasAnyType(types, [
+      "activity",
+      "lifestyle",
+      "gallery",
+      "museum",
+      "bookstore",
+      "library",
+      "showroom",
+    ])
+  ) {
+    score -= 100
+  }
+
+  if (
+    tags.some((tag) =>
+      [
+        "networking",
+        "mixer",
+        "founders",
+        "startup",
+        "professional",
+        "community",
+        "meetup",
+        "industry",
+        "social",
+        "conversation",
+        "lounge",
+      ].includes(tag)
+    )
+  ) {
+    score += 6
+  }
+
+  if (hasAnyType(types, ["club", "sports bar", "fitness", "spa"])) {
+    score -= 8
+  }
+}
 
   return score
 }

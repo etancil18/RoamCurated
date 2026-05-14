@@ -60,11 +60,16 @@ export function desiredBeforeRoles(
   daypart: Daypart
 ): StopRole[] {
   if (archetype === "networking") {
-    if (daypart === "breakfast" || daypart === "brunch") return ["coffee", "food"]
-    if (daypart === "lunch") return ["coffee", "food"]
-    if (daypart === "dinner") return ["food", "drink"]
+  if (daypart === "breakfast" || daypart === "brunch" || daypart === "lunch") {
+    return ["food"]
+  }
+
+  if (daypart === "dinner") {
     return ["drink"]
   }
+
+  return ["drink"]
+}
 
   if (archetype === "market") {
     if (daypart === "breakfast" || daypart === "brunch") {
@@ -129,12 +134,16 @@ export function desiredAfterRoles(
   leaveEarlyByHours?: LeaveEarlyByHours | null
 ): StopRole[] {
   if (archetype === "networking") {
-    if (lateNightAfterEvent || daypart === "late_night") return ["drink"]
-    if (daypart === "breakfast") return ["coffee"]
-    if (daypart === "brunch" || daypart === "lunch") return ["coffee", "food"]
-    if (daypart === "dinner") return ["drink", "food"]
+  if (lateNightAfterEvent || daypart === "late_night") {
     return ["drink"]
   }
+
+  if (daypart === "dinner") {
+    return ["food", "drink"]
+  }
+
+  return ["drink", "food"]
+}
 
   if (archetype === "market") {
     if (lateNightAfterEvent || daypart === "late_night") return ["drink"]
@@ -210,24 +219,19 @@ export function desiredFullRoles(
     beforeRoles[1] ?? (firstBefore === "food" ? "activity" : "food")
 
   if (archetype === "networking") {
-    if (leaveEarlyByHours || lateNightAfterEvent || afterDaypart === "late_night") {
-      return [
-        beforeDaypart === "breakfast" || beforeDaypart === "brunch"
-          ? "coffee"
-          : "food",
-        "drink",
-        "drink",
-      ]
-    }
+  const beforeRole: StopRole =
+    beforeDaypart === "breakfast" ||
+    beforeDaypart === "brunch" ||
+    beforeDaypart === "lunch"
+      ? "food"
+      : "drink"
 
-    return [
-      beforeDaypart === "breakfast" || beforeDaypart === "brunch"
-        ? "coffee"
-        : "food",
-      beforeDaypart === "dinner" ? "drink" : "food",
-      afterDaypart === "dinner" ? "drink" : "coffee",
-    ]
+  if (leaveEarlyByHours || lateNightAfterEvent || afterDaypart === "late_night") {
+    return [beforeRole, "drink"]
   }
+
+  return [beforeRole, afterDaypart === "dinner" ? "food" : "drink", "drink"]
+}
 
   if (archetype === "market") {
     return [

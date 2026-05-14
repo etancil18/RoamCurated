@@ -13,7 +13,12 @@ import {
   qualifiesForDaytimeCultureReducedFullFallback,
   qualifiesForReducedBeforeSingleStopFallback,
 } from "@/lib/outings/sequenceScoring/daytime"
+import {
+  normalizePrice,
+  priceToInt,
+} from "@/lib/outings/sequenceScoring/helpers"
 import { supabaseServerApi } from "@/lib/supabase/server-api"
+import { normalizeVenueTypes } from "@/lib/outings/sequenceScoring/helpers"
 import type {
   Budget,
   EventRecord,
@@ -199,6 +204,7 @@ export async function POST(
     const venueCandidates = ((venueCandidatesRaw ?? []) as VenueRecordWithHours[])
       .map(enrichVenueWithBookingOptions)
       .filter((venue): venue is VenueRecord => venue != null)
+      .filter((venue) => venueMatchesBudget(venue.price, budget))
 
     const debugPlanningContext = buildPlanningContext({
       mode,
@@ -245,11 +251,15 @@ export async function POST(
       )
     )
 
+    const archetypeFilteredVenueCandidates = venueCandidates.filter((venue) =>
+      venueAllowedForArchetype(venue, debugPlanningContext.eventArchetype)
+    )
+
     const generatedPlan = generateEventOutingPlan({
       mode,
       event,
       anchorVenue,
-      candidateVenues: venueCandidates,
+      candidateVenues: archetypeFilteredVenueCandidates,
       groupSize,
       budget,
       mobility,
@@ -544,6 +554,48 @@ function normalizeMode(mode?: string | null): PlanMode {
 
 function normalizeBudget(budget?: string | null): Budget | null {
   return ALLOWED_BUDGETS.includes(budget as Budget) ? (budget as Budget) : null
+}
+
+function venueMatchesBudget(
+  value: string | number | null | undefined,
+  budget: Budget | null
+): boolean {
+  if (!budget) return true
+
+  const priceString = normalizePrice(value)
+  if (!priceString) return true
+
+  const venuePrice = priceToInt(priceString)
+  const selectedBudget = priceToInt(budget)
+
+  if (!venuePrice || !selectedBudget) return true
+
+  if (budget === "$$$$") {
+    return venuePrice >= 2 && venuePrice <= 4
+  }
+
+  return venuePrice <= selectedBudget
+}
+
+function venueAllowedForArchetype(
+  venue: VenueRecord,
+  eventArchetype: string
+): boolean {
+  if (eventArchetype !== "networking") return true
+
+  const blockedNetworkingTypes = [
+    "activity",
+    "lifestyle",
+    "gallery",
+    "museum",
+    "bookstore",
+    "library",
+    "showroom",
+  ]
+
+  const venueTypes = normalizeVenueTypes(venue.type)
+
+  return !blockedNetworkingTypes.some((type) => venueTypes.includes(type))
 }
 
 function normalizeMobility(mobility?: string | null): Mobility {
