@@ -146,28 +146,28 @@ export default function LoginPage() {
               <div className="grid max-w-xl grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
                 <div className="rounded-2xl border border-zinc-200/80 bg-white/70 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/60">
                   <p className="text-sm font-medium text-zinc-900 dark:text-white">
-                    Save favorite spots
+                    Explore curated maps
                   </p>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    Keep the places worth returning to.
+                    Discover neighborhoods through locally curated spots, hidden gems, and cultural hubs.
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-zinc-200/80 bg-white/70 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/60">
                   <p className="text-sm font-medium text-zinc-900 dark:text-white">
-                    Build better routes
+                    Plan around live events
                   </p>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    Explore neighborhoods with more intention.
+                    Generate day and nightlife routes synced to concerts, pop-ups, screenings, and local happenings.
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-zinc-200/80 bg-white/70 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/60">
                   <p className="text-sm font-medium text-zinc-900 dark:text-white">
-                    Unlock curated guides
+                    Build your own guides
                   </p>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    Get smarter local recommendations.
+                    Create and share neighborhood guides with your favorite places, routes, and local recommendations.
                   </p>
                 </div>
               </div>
