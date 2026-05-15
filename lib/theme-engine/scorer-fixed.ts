@@ -136,12 +136,18 @@ export function sortVenuesByScore(
   theme: CrawlTheme,
   origin: { lat: number; lon: number },
   lastVenue: Venue | null,
-  city: "nyc" | "atl" | "lisbon" | "porto" = "atl"
+  city: "nyc" | "atl" | "lisbon" | "porto" = "atl",
+  weight?: {
+    vibe?: number;
+    tag?: number;
+    keyword?: number;
+    dist?: number;
+  }
 ): Venue[] {
   return venues
     .map((v) => ({
       ...v,
-      _score: computeScore(v, theme, origin, lastVenue, city),
+      _score: computeScore(v, theme, origin, lastVenue, city, weight),
     }))
     .sort((a, b) => (b._score || 0) - (a._score || 0));
 }

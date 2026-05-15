@@ -139,6 +139,7 @@ export async function POST(req: NextRequest) {
       maxDistanceMeters,
       eventOnly,
       city,
+      tightness,
       startTime,
       relaxedTimeFiltering,
     };

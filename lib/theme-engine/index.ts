@@ -87,10 +87,19 @@ export async function generateThemeRoute({
     CITY_DISTANCE_THRESHOLDS[city]?.[tightness] ??
     1600;
 
+  const routeRadiusMultiplier = {
+    tight: 1.25,
+    medium: 1.75,
+    loose: 2.5,
+  }[tightness];
+
+  const effectiveRouteRadius = effectiveMaxDistance * routeRadiusMultiplier;
+
   console.log("📏 Theme distance threshold:", {
     city,
     tightness,
     effectiveMaxDistance,
+    effectiveRouteRadius,
     eventOnly,
     relaxedTimeFiltering,
   });
@@ -116,11 +125,18 @@ export async function generateThemeRoute({
       stageArrivalTime: currentTime,
       relaxedMode: relaxedTimeFiltering,
       windowMinutes: DEFAULTS.fallbackWindowMinutes,
+      currentLat: lastLat,
+      currentLon: lastLon,
     });
 
     candidates = candidates.filter((v) => {
-      const dist = getDistanceMeters(lastLat, lastLon, v.lat, v.lon);
-      return dist <= effectiveMaxDistance;
+      const legDistance = getDistanceMeters(lastLat, lastLon, v.lat, v.lon);
+      const originDistance = getDistanceMeters(userLat, userLon, v.lat, v.lon);
+
+      return (
+        legDistance <= effectiveMaxDistance &&
+        originDistance <= effectiveRouteRadius
+      );
     });
 
     candidates = candidates.map((v) => {

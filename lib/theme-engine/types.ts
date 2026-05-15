@@ -41,6 +41,7 @@ export type ThemeRouteOptions = {
   eventOnly?: boolean;
   relaxedTimeFiltering?: boolean;
   city?: "atl" | "nyc" | "lisbon" | "porto";
+  tightness?: "tight" | "medium" | "loose";
 };
 
 export type Stage = {
