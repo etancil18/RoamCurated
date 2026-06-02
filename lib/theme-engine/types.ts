@@ -40,7 +40,7 @@ export type ThemeRouteOptions = {
   maxDistanceMeters?: number;
   eventOnly?: boolean;
   relaxedTimeFiltering?: boolean;
-  city?: "atl" | "nyc" | "lisbon" | "porto";
+  city?: "atl" | "nyc" | "lisbon" | "porto" | "london" | "la";
   tightness?: "tight" | "medium" | "loose";
 };
 

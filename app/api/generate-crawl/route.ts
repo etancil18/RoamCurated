@@ -11,6 +11,8 @@ const CITY_DISTANCE_THRESHOLDS = {
   nyc: { tight: 750, medium: 1400, loose: 2100 },
   lisbon: { tight: 800, medium: 1600, loose: 2600 },
   porto: { tight: 700, medium: 1300, loose: 2000 },
+  london: { tight: 900, medium: 1800, loose: 3000 },
+  la: { tight: 1800, medium: 4000, loose: 7000 },
 };
 
 type Tier = "commit" | "constrain" | "clarify";
@@ -38,7 +40,7 @@ export async function POST(req: NextRequest) {
     options?: Record<string, any>;
     userLat: number;
     userLon: number;
-    city?: "atl" | "nyc" | "lisbon" | "porto";
+    city?: "atl" | "nyc" | "lisbon" | "porto" | "london" | "la";
     plannedStartAt?: string;
     stages?: any[];
     tier: Tier;
@@ -72,7 +74,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!city || (city !== "atl" && city !== "nyc")) {
+  if (
+    !city ||
+    (
+      city !== "atl" &&
+      city !== "nyc" &&
+      city !== "lisbon" &&
+      city !== "porto" &&
+      city !== "london" &&
+      city !== "la"
+    )
+  ) {
     return NextResponse.json(
       { error: "Missing or invalid city." },
       { status: 400 }

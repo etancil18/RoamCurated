@@ -1,7 +1,18 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-const SUPPORTED_HOST_CITIES = new Set(['atl', 'nyc', 'porto', 'lisbon'])
+const SUPPORTED_HOST_CITIES = new Set([
+  'atl',
+  'nyc',
+  'porto',
+  'lisbon',
+
+  // 🇬🇧 London
+  'london',
+
+  // 🇺🇸 Los Angeles
+  'la',
+])
 
 function slugify(text: string) {
   return text
@@ -26,6 +37,24 @@ function normalizeCityKey(input: string) {
     queens: 'nyc',
     bronx: 'nyc',
     'staten island': 'nyc',
+
+    la: 'la',
+    'los angeles': 'la',
+    hollywood: 'la',
+    'west hollywood': 'la',
+    weho: 'la',
+    venice: 'la',
+    'santa monica': 'la',
+    dtla: 'la',
+
+    london: 'london',
+    ldn: 'london',
+    'greater london': 'london',
+    shoreditch: 'london',
+    soho: 'london',
+    camden: 'london',
+    chelsea: 'london',
+    hackney: 'london',
 
     porto: 'porto',
     oporto: 'porto',

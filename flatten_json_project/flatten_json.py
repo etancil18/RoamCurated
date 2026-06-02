@@ -39,15 +39,8 @@ def to_list(value):
     ]
 
 
-def postgres_text_array(items):
-    clean = []
-    for item in items:
-        item = str(item).strip()
-        if not item:
-            continue
-        item = item.replace('"', '\\"')
-        clean.append(f'"{item}"')
-    return "{" + ",".join(clean) + "}"
+def json_array(value):
+    return json.dumps(to_list(value), ensure_ascii=False)
 
 
 def extract_instagram_handle(link):
@@ -59,28 +52,14 @@ def extract_instagram_handle(link):
 
 
 def normalize_time_string(value):
-    value = value.strip().lower()
+    value = str(value).strip()
     value = value.replace("\u202f", " ")
     value = value.replace("\xa0", " ")
     value = re.sub(r"\s+", " ", value)
-    return value
+    return value.upper().replace("AM", "am").replace("PM", "pm")
 
 
 def parse_hours(hours_list):
-    """
-    Converts:
-    ["Monday: 8:00 AM–4:00 PM; 6:00 PM–12:00 AM"]
-
-    Into:
-    {
-      "Mon": {
-        "open1": "8:00 am",
-        "close1": "4:00 pm",
-        "open2": "6:00 pm",
-        "close2": "12:00 am"
-      }
-    }
-    """
     if not isinstance(hours_list, list):
         return {}
 
@@ -116,30 +95,33 @@ def parse_hours(hours_list):
         day_hours = {}
 
         for idx, time_range in enumerate(ranges, start=1):
-            parts = re.split(r"\s*[–-]\s*", time_range)
+            parts = re.split(r"\s*[–—-]\s*", time_range)
 
             if len(parts) != 2:
                 continue
 
-            open_time = normalize_time_string(parts[0])
-            close_time = normalize_time_string(parts[1])
-
-            day_hours[f"open{idx}"] = open_time
-            day_hours[f"close{idx}"] = close_time
+            day_hours[f"open{idx}"] = normalize_time_string(parts[0])
+            day_hours[f"close{idx}"] = normalize_time_string(parts[1])
 
         parsed[day_key] = day_hours if day_hours else None
 
     return parsed
 
 
-with open(input_file, "r") as infile:
+def get_first(*values):
+    for value in values:
+        if value not in [None, ""]:
+            return value
+    return ""
+
+
+with open(input_file, "r", encoding="utf-8") as infile:
     data = json.load(infile)
 
 city = infer_city(input_file)
 
 headers = [
     "name",
-    "slug",
     "lat",
     "lon",
     "instagram_handle",
@@ -151,6 +133,7 @@ headers = [
     "duration",
     "cover",
     "city",
+    "slug",
     "description",
     "contact",
     "hours",
@@ -158,52 +141,57 @@ headers = [
     "vibe",
 ]
 
-with open(output_file, "w", newline="") as f:
+with open(output_file, "w", newline="", encoding="utf-8") as f:
     writer = csv.writer(f)
     writer.writerow(headers)
 
     for venue in data:
-        name = venue.get("name", "")
-        slug = venue.get("slug") or slugify(name)
+        name = get_first(venue.get("name"), venue.get("title"))
+        slug = get_first(venue.get("slug"), slugify(name))
 
-        lat = venue.get("lat", "")
-        lon = venue.get("lon", "")
+        lat = get_first(venue.get("lat"), venue.get("latitude"))
+        lon = get_first(venue.get("lon"), venue.get("lng"), venue.get("longitude"))
 
-        link = venue.get("link", "")
-        instagram_handle = extract_instagram_handle(link)
+        link = get_first(
+            venue.get("link"),
+            venue.get("instagram"),
+            venue.get("instagram_url"),
+            venue.get("url"),
+            venue.get("website"),
+        )
 
-        tags = postgres_text_array(to_list(venue.get("tags", "")))
-        venue_type = postgres_text_array(to_list(venue.get("type", "")))
-        time_category = postgres_text_array(to_list(venue.get("timeCategory", "")))
-        vibe = postgres_text_array(to_list(venue.get("vibe", "")))
-        contact = postgres_text_array([link] if link else [])
+        instagram_handle = get_first(
+            venue.get("instagram_handle"),
+            venue.get("instagramHandle"),
+            extract_instagram_handle(link),
+        )
 
-        energy_ramp = venue.get("energyRamp", "")
-        price = venue.get("price", "")
-        duration = venue.get("duration", "")
-        cover = venue.get("cover", "")
-        description = venue.get("description", "")
-        address = venue.get("address", "")
-        hours = json.dumps(parse_hours(venue.get("hours", [])))
+        tags = json_array(venue.get("tags"))
+        venue_type = json_array(get_first(venue.get("type"), venue.get("types")))
+        time_category = json_array(get_first(venue.get("time_category"), venue.get("timeCategory")))
+        vibe = json_array(venue.get("vibe"))
+
+        contact = json.dumps([link] if link else [], ensure_ascii=False)
+        hours = json.dumps(parse_hours(venue.get("hours", [])), ensure_ascii=False)
 
         row = [
             name,
-            slug,
             lat,
             lon,
             instagram_handle,
             tags,
             venue_type,
             time_category,
-            energy_ramp,
-            price,
-            duration,
-            cover,
-            city,
-            description,
+            get_first(venue.get("energy_ramp"), venue.get("energyRamp")),
+            venue.get("price", ""),
+            venue.get("duration", ""),
+            venue.get("cover", ""),
+            get_first(venue.get("city"), city),
+            slug,
+            venue.get("description", ""),
             contact,
             hours,
-            address,
+            venue.get("address", ""),
             vibe,
         ]
 

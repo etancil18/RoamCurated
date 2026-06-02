@@ -15,11 +15,16 @@ import 'leaflet/dist/leaflet.css'
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
 
-const defaultCenter: Record<'atl' | 'nyc' | 'lisbon' | 'porto', [number, number]> = {
+const defaultCenter: Record<
+  'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la',
+  [number, number]
+> = {
   atl: [33.749, -84.388],
   nyc: [40.73061, -73.935242],
   lisbon: [38.7223, -9.1393],
   porto: [41.1579, -8.6291],
+  london: [51.5072, -0.1276],
+  la: [34.0522, -118.2437],
 }
 
 function MapRefSetter({ mapRef }: { mapRef: React.MutableRefObject<any> }) {
@@ -40,7 +45,7 @@ export default function MapCanvasSaved({
   city,
 }: {
   venues: Venue[]
-  city: 'atl' | 'nyc' | 'lisbon' | 'porto'
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la'
 }) {
   const mapRef = useRef<any>(null)
   const [polyline, setPolyline] = useState<[number, number][]>([])

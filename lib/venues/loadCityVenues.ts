@@ -41,6 +41,8 @@ import ATLANTA_VENUES from '@/data/atlanta'
 import NYC_VENUES from '@/data/nyc'
 import LISBON_VENUES from '@/data/lisbon'
 import PORTO_VENUES from '@/data/porto'
+import LONDON_VENUES from '@/data/london'
+import LOS_ANGELES_VENUES from '@/data/losangeles'
 
 /* ------------------------------------------------ */
 /* Dataset registry                                 */
@@ -54,6 +56,13 @@ const STATIC_CITY_DATASETS: Record<string, any[]> = {
   nyc: NYC_VENUES,
   'new-york': NYC_VENUES,
   'new-york-city': NYC_VENUES,
+
+  la: LOS_ANGELES_VENUES,
+  'los-angeles': LOS_ANGELES_VENUES,
+  'los angeles': LOS_ANGELES_VENUES,
+
+  london: LONDON_VENUES,
+  ldn: LONDON_VENUES,
 
   lisbon: LISBON_VENUES,
   lisboa: LISBON_VENUES,

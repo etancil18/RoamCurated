@@ -23,7 +23,7 @@ type Event = {
 }
 
 export function useEvents(
-  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | null,
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la' | null,
   daysAhead = 7,
   tags?: string[],
   activeOnly = true,

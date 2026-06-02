@@ -11,7 +11,9 @@ interface FavoriteRow {
   city: string | null
 }
 
-export function useFavorites(city: 'atl' | 'nyc' | 'lisbon' | 'porto') {
+export function useFavorites(
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la'
+) {
   const [favorites, setFavorites] = useState<(Venue & { city: string })[]>([])
   const [loading, setLoading] = useState(true)
 

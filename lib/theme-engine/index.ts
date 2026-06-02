@@ -12,13 +12,15 @@ const DEFAULTS = {
 };
 
 const CITY_DISTANCE_THRESHOLDS: Record<
-  "atl" | "nyc" | "lisbon" | "porto",
+  "atl" | "nyc" | "lisbon" | "porto" | "london" | "la",
   Record<"tight" | "medium" | "loose", number>
 > = {
   atl: { tight: 1200, medium: 3000, loose: 4500 },
   nyc: { tight: 350, medium: 800, loose: 1200 },
   lisbon: { tight: 300, medium: 700, loose: 1000 },
   porto: { tight: 255, medium: 550, loose: 1000 },
+  london: { tight: 500, medium: 1100, loose: 1800 },
+  la: { tight: 1800, medium: 4000, loose: 7000 },
 };
 
 function estimateTravelMinutes(distanceMeters: number): number {
@@ -32,7 +34,7 @@ export interface ThemeRouteOptions {
   venues: Venue[];
   maxStops?: number;
   filterOpen?: boolean;
-  city?: "atl" | "nyc" | "lisbon" | "porto";
+  city?: "atl" | "nyc" | "lisbon" | "porto" | "london" | "la";
   tightness?: "tight" | "medium" | "loose";
   maxDistanceMeters?: number;
   eventOnly?: boolean;

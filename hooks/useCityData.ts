@@ -8,6 +8,8 @@ import atlantaData from '@/data/atlanta'
 import nycData from '@/data/nyc'
 import portoData from '@/data/porto'
 import lisbonData from '@/data/lisbon'
+import londonData from '@/data/london'
+import losAngelesData from '@/data/losangeles'
 
 // Raw data type — unknown or loosely typed
 const RAW_CITY_DATA: Record<string, any[]> = {
@@ -15,6 +17,8 @@ const RAW_CITY_DATA: Record<string, any[]> = {
   nyc: nycData,
   porto: portoData,
   lisbon: lisbonData,
+  london: londonData,
+  la: losAngelesData,
 }
 
 type Event = {

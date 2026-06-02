@@ -171,12 +171,34 @@ function normalizeCityKey(input?: string | null) {
     atl: 'atl',
     atlanta: 'atl',
     'atlanta ga': 'atl',
+
     nyc: 'nyc',
     'new york': 'nyc',
     'new york city': 'nyc',
     manhattan: 'nyc',
+
+    la: 'la',
+    'los angeles': 'la',
+    'los-angeles': 'la',
+    hollywood: 'la',
+    'west hollywood': 'la',
+    weho: 'la',
+    venice: 'la',
+    'santa monica': 'la',
+    dtla: 'la',
+
+    london: 'london',
+    ldn: 'london',
+    'greater london': 'london',
+    shoreditch: 'london',
+    camden: 'london',
+    hackney: 'london',
+    soho: 'london',
+    chelsea: 'london',
+
     porto: 'porto',
     oporto: 'porto',
+
     lisbon: 'lisbon',
     lisboa: 'lisbon',
   }

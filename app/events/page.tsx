@@ -10,7 +10,18 @@ type EventWithTicket = ReturnType<typeof useEvents>['events'][number] & {
   ticket_link?: string | null
 }
 
-const AVAILABLE_CITIES = ['atl', 'nyc', 'lisbon', 'porto']
+const AVAILABLE_CITIES = [
+  'atl',
+  'nyc',
+  'lisbon',
+  'porto',
+
+  // 🇬🇧 London
+  'london',
+
+  // 🇺🇸 Los Angeles
+  'la',
+]
 const AVAILABLE_TAGS = ['music', 'rooftop', 'gallery', 'food', 'comedy']
 
 function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
@@ -52,12 +63,12 @@ export default function EventsPage() {
   }, [city])
 
   const { events, loading, error, refetch } = useEvents(
-    city as 'atl' | 'nyc' | 'lisbon' | 'porto',
-    7,
-    selectedTags,
-    true,
-    30
-  )
+  city as 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la',
+  7,
+  selectedTags,
+  true,
+  30
+)
 
   const toggleTag = (tag: string) => {
     const nextTags = selectedTags.includes(tag)

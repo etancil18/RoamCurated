@@ -22,7 +22,7 @@ type SavedRouteResponse = {
 
 function normalizeCity(
   value: string | null
-): "atl" | "nyc" | "lisbon" | "porto" {
+): "atl" | "nyc" | "lisbon" | "porto" | "la" | "london" {
   if (!value) return "nyc"
 
   const v = value.toLowerCase()
@@ -32,6 +32,39 @@ function normalizeCity(
 
   // 🇺🇸 New York
   if (["nyc", "new-york", "newyork", "ny"].includes(v)) return "nyc"
+
+  // 🇺🇸 Los Angeles
+  if (
+    [
+      "la",
+      "los-angeles",
+      "losangeles",
+      "hollywood",
+      "west-hollywood",
+      "weho",
+      "venice",
+      "santa-monica",
+      "dtla",
+    ].includes(v)
+  ) {
+    return "la"
+  }
+
+  // 🇬🇧 London
+  if (
+    [
+      "london",
+      "ldn",
+      "greater-london",
+      "shoreditch",
+      "camden",
+      "hackney",
+      "soho",
+      "chelsea",
+    ].includes(v)
+  ) {
+    return "london"
+  }
 
   // 🇵🇹 Lisbon
   if (["lis", "lisbon", "lx", "lisboa"].includes(v)) return "lisbon"

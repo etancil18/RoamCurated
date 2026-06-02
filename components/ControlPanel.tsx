@@ -7,8 +7,10 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { logEvent } from '@/lib/logEvent'
 
 interface ControlPanelProps {
-  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | null
-  onCityChange: (city: 'atl' | 'nyc' | 'lisbon' | 'porto') => void
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la' | null
+  onCityChange: (
+    city: 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la'
+  ) => void
   searchTerm: string
   setSearchTerm: (term: string) => void
   searchPrompt: string

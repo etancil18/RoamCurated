@@ -167,7 +167,7 @@ export default function LoginPage() {
                     Build your own guides
                   </p>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    Create and share neighborhood guides with your favorite places, routes, and local recommendations.
+                    Build and share neighborhood guides that feel editorial, personal, and deeply rooted in the city.
                   </p>
                 </div>
               </div>

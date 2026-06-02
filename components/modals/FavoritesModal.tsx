@@ -8,7 +8,7 @@ interface FavoritesModalProps {
   favorites: Venue[]
   loading: boolean
   route?: Venue[]
-  city: 'atl' | 'nyc' | 'lisbon' | 'porto'
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la'
   onInsert: (venue: Venue, index: number) => void
   onClose: () => void
 }

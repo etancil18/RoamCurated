@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       userLat: number;
       userLon: number;
       options?: Record<string, any>;
-      city?: "atl" | "nyc" | "lisbon" | "porto";
+      city?: "atl" | "nyc" | "lisbon" | "porto" | "london" | "la";
       plannedStartAt?: string;
     };
 
@@ -56,15 +56,19 @@ export async function POST(req: NextRequest) {
 
     if (
       !city ||
-      (city !== "atl" &&
+      (
+        city !== "atl" &&
         city !== "nyc" &&
         city !== "lisbon" &&
-        city !== "porto")
+        city !== "porto" &&
+        city !== "london" &&
+        city !== "la"
+      )
     ) {
       return NextResponse.json(
         {
           error:
-            "Missing or invalid city (must be atl, nyc, lisbon, or porto).",
+            "Missing or invalid city (must be atl, nyc, lisbon, porto, london, or la).",
         },
         { status: 400 }
       );

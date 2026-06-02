@@ -172,11 +172,17 @@ export default function MapWrapper() {
     setRouteErrorMessage(null)
 
     const fallbackCoords: Record<string, { lat: number; lon: number }> = {
-      atl: { lat: 33.749, lon: -84.388 },
-      nyc: { lat: 40.73061, lon: -73.935242 },
-      lisbon: { lat: 38.7223, lon: -9.1393 },
-      porto: { lat: 41.1579, lon: -8.6291 },
-    }
+  atl: { lat: 33.749, lon: -84.388 },
+  nyc: { lat: 40.73061, lon: -73.935242 },
+  lisbon: { lat: 38.7223, lon: -9.1393 },
+  porto: { lat: 41.1579, lon: -8.6291 },
+
+  // 🇬🇧 London
+  london: { lat: 51.5072, lon: -0.1276 },
+
+  // 🇺🇸 Los Angeles
+  la: { lat: 34.0522, lon: -118.2437 },
+}
 
     const startLat = customStart?.lat ?? fallbackCoords[selectedCity]?.lat ?? 37.8
     const startLon = customStart?.lon ?? fallbackCoords[selectedCity]?.lon ?? -96.9
@@ -360,47 +366,65 @@ export default function MapWrapper() {
       </button>
 
       {isPanelOpen && (
-        <ControlPanel
-          city={selectedCity as 'atl' | 'nyc' | 'lisbon' | 'porto' | null}
-          onCityChange={setSelectedCity}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          searchPrompt={searchPrompt}
-          setSearchPrompt={setSearchPrompt}
-          selectedThemeId={selectedThemeId}
-          setSelectedThemeId={setSelectedThemeId}
-          selectedPrice={selectedPrice}
-          setSelectedPrice={setSelectedPrice}
-          travelMode={travelMode}
-          setTravelMode={setTravelMode}
-          markerDisplayMode={markerDisplayMode}
-          setMarkerDisplayMode={setMarkerDisplayMode}
-          onGenerateRoute={handleGenerateRoute}
-          onClearRoute={handleClearRoute}
-          tightness={tightness}
-          setTightness={setTightness}
-          crawlDate={crawlDate}
-          setCrawlDate={setCrawlDate}
-          crawlTime={crawlTime}
-          setCrawlTime={setCrawlTime}
-        />
-      )}
+  <ControlPanel
+    city={
+      selectedCity as
+        | 'atl'
+        | 'nyc'
+        | 'lisbon'
+        | 'porto'
+        | 'london'
+        | 'la'
+        | null
+    }
+    onCityChange={setSelectedCity}
+    searchTerm={searchTerm}
+    setSearchTerm={setSearchTerm}
+    searchPrompt={searchPrompt}
+    setSearchPrompt={setSearchPrompt}
+    selectedThemeId={selectedThemeId}
+    setSelectedThemeId={setSelectedThemeId}
+    selectedPrice={selectedPrice}
+    setSelectedPrice={setSelectedPrice}
+    travelMode={travelMode}
+    setTravelMode={setTravelMode}
+    markerDisplayMode={markerDisplayMode}
+    setMarkerDisplayMode={setMarkerDisplayMode}
+    onGenerateRoute={handleGenerateRoute}
+    onClearRoute={handleClearRoute}
+    tightness={tightness}
+    setTightness={setTightness}
+    crawlDate={crawlDate}
+    setCrawlDate={setCrawlDate}
+    crawlTime={crawlTime}
+    setCrawlTime={setCrawlTime}
+  />
+)}
 
-      {routeErrorMessage && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded shadow z-[1050] text-sm max-w-md text-center">
-          {routeErrorMessage}
-        </div>
-      )}
+{routeErrorMessage && (
+  <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded shadow z-[1050] text-sm max-w-md text-center">
+    {routeErrorMessage}
+  </div>
+)}
 
-      <CrawlControl
-        venues={visibleVenues}
-        route={route}
-        onRoute={setRoute}
-        selectedThemeId={selectedThemeId}
-        customStart={customStart}
-        city={selectedCity as 'atl' | 'nyc' | 'lisbon' | 'porto' | null}
-        onGenerateRoute={handleGenerateRoute}
-      />
+<CrawlControl
+  venues={visibleVenues}
+  route={route}
+  onRoute={setRoute}
+  selectedThemeId={selectedThemeId}
+  customStart={customStart}
+  city={
+    selectedCity as
+      | 'atl'
+      | 'nyc'
+      | 'lisbon'
+      | 'porto'
+      | 'london'
+      | 'la'
+      | null
+  }
+  onGenerateRoute={handleGenerateRoute}
+/>
 
       {hasMounted && (
         <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>

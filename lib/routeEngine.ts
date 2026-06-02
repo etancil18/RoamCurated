@@ -19,7 +19,7 @@ export interface RouteOptions {
   tightness?: "tight" | "medium" | "loose";
   maxDistMeal?: number;
   maxDistOther?: number;
-  city?: "atl" | "nyc" | "lisbon" | "porto";
+  city?: "atl" | "nyc" | "lisbon" | "porto" | "london" | "la";
   relaxedTimeFiltering?: boolean;
   forceStageOrder?: boolean;
   disableStageInference?: boolean;
@@ -45,6 +45,8 @@ const CITY_DISTANCE_THRESHOLDS = {
   nyc: { tight: 400, medium: 1200, loose: 2000 },
   lisbon: { tight: 300, medium: 900, loose: 1500 },
   porto: { tight: 300, medium: 700, loose: 1300 },
+  london: { tight: 500, medium: 1400, loose: 2400 },
+  la: { tight: 1800, medium: 4000, loose: 7000 },
 };
 
 const STRICT_TYPES = new Set([

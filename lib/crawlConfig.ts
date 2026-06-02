@@ -335,7 +335,7 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Gameday Vibes",
   description: "Settle into the city’s best sports bars, taprooms, and wing spots to catch the game in high-def with high vibes.",
   stageFlow: [
-  ["lunch", "brewery"],
+  ["lunch", "brewery", "pub"],
   "sports bar",
   ["sports bar", "bar"]
 ],
@@ -629,7 +629,7 @@ export const crawlThemes: CrawlTheme[] = [
   description: "Cozy solo spots and hidden gems for wandering.",
   stageFlow: [
   ["coffee", "cafe", "café", "bakery", "tea"],
-  ["random gem", "lifestyle", "gallery", "bookstore", "showroom"],
+  ["random gem", "lifestyle", "market", "gallery", "bookstore", "showroom"],
   ["gallery", "museum", "park", "garden"],
   ["lunch", "wine bar", "dessert", "class", "random gem"],
   ["random gem", "lifestyle", "park"]
