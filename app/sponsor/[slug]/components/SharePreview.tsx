@@ -19,9 +19,10 @@ export default function SharePreview({ title, city, slug }: Props) {
   useEffect(() => {
     if (!inBrowser()) return
     const origin = getOrigin()
+    const publicRouteId = slug
 
-    // ✅ Use invite route (future deep link ready)
-    setShareUrl(`${origin}/sponsor/${slug}`)
+    // ✅ Uses public_id when passed from parent, falls back to legacy slug
+    setShareUrl(`${origin}/sponsor/${publicRouteId}`)
   }, [slug])
 
   const handleShare = async () => {

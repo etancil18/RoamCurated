@@ -8,8 +8,8 @@ import { SponsorCrawlWithAttendees } from '@/types/sponsor';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Crawl | Roam',
-  description: 'Discover and join curated city crawls',
+  title: 'Flow | Roam',
+  description: 'Join, share, and complete playable city flows.',
 };
 
 type PageProps = {
@@ -20,7 +20,6 @@ export default async function SponsorPage({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createServerClient();
 
-  // 1️⃣ Get crawl metadata (FIXED + SAFE)
   const { data, error } = await supabase
     .from('crawl_events')
     .select(`
@@ -45,11 +44,12 @@ export default async function SponsorPage({ params }: PageProps) {
   const crawl = data?.[0] ?? null;
 
   if (error || !crawl) {
-    console.error('Crawl fetch error:', error);
+    console.error('Flow fetch error:', error);
 
     return (
       <div className="max-w-2xl mx-auto text-center p-6">
-        <h2 className="text-xl font-bold">Crawl not found</h2>
+        <h2 className="text-xl font-bold">Flow not found</h2>
+
         <p className="text-muted-foreground">
           It may have been removed, is private, or doesn’t exist.
         </p>
@@ -57,7 +57,6 @@ export default async function SponsorPage({ params }: PageProps) {
     );
   }
 
-  // 2️⃣ Fetch attendees
   const { data: attendees, error: rsvpError } = await supabase.rpc(
     'get_crawl_with_attendees',
     { input_crawl_id: crawl.id }
@@ -67,7 +66,6 @@ export default async function SponsorPage({ params }: PageProps) {
     console.warn('RSVP fetch error:', rsvpError);
   }
 
-  // 3️⃣ Determine if current user is RSVP'd
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -86,7 +84,6 @@ export default async function SponsorPage({ params }: PageProps) {
     isGoing = !!rsvp;
   }
 
-  // 4️⃣ Enrich data
   const enriched: SponsorCrawlWithAttendees[] = (attendees || []).map((a) => ({
     ...a,
     title: crawl.title ?? '',
@@ -105,18 +102,18 @@ export default async function SponsorPage({ params }: PageProps) {
 
   return (
     <main
-  className="
-    mx-auto
-    max-w-3xl
-    space-y-8
-    min-h-screen
-    overscroll-y-auto
-    scroll-smooth
-    px-4
-    pb-4
-    pt-[calc(4rem+env(safe-area-inset-top)+1rem)]
-  "
->
+      className="
+        mx-auto
+        max-w-3xl
+        space-y-8
+        min-h-screen
+        overscroll-y-auto
+        scroll-smooth
+        px-4
+        pb-4
+        pt-[calc(4rem+env(safe-area-inset-top)+1rem)]
+      "
+    >
       <SponsorDetail crawl={enriched} />
 
       <SharePreview
@@ -125,7 +122,6 @@ export default async function SponsorPage({ params }: PageProps) {
         slug={crawl.slug ?? ''}
       />
 
-      {/* 💬 Chat only visible to RSVP'd users */}
       {isGoing && (
         <div className="scroll-mt-24">
           <SponsorChat crawlId={crawl.id} />

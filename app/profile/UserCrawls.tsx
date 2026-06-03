@@ -10,6 +10,7 @@ type Crawl = {
   id: string
   title: string
   slug: string
+  public_id: string | null
   datetime: string | null
   city: string | null
 }
@@ -59,7 +60,7 @@ export default function UserCrawls() {
 
       const { data: hostedData } = await supabase
         .from('crawl_events')
-        .select('id, title, slug, datetime, city')
+        .select('id, title, slug, public_id, datetime, city')
         .eq('creator_id', user.id)
         .order('datetime',{ ascending:true })
 
@@ -71,6 +72,7 @@ export default function UserCrawls() {
             id,
             title,
             slug,
+            public_id,
             datetime,
             city
           )
@@ -176,7 +178,7 @@ export default function UserCrawls() {
         <div className="grid gap-3">
 
           {hostedVisible.map((crawl)=>(
-            <Link key={crawl.id} href={`/sponsor/${crawl.slug}`}>
+            <Link key={crawl.id} href={`/sponsor/${crawl.public_id ?? crawl.slug}`}>
 
               <Card className="hover:shadow-md transition cursor-pointer">
 
@@ -237,7 +239,7 @@ export default function UserCrawls() {
 
             return (
 
-              <Link key={crawl.id} href={`/sponsor/${crawl.slug}`}>
+              <Link key={crawl.id} href={`/sponsor/${crawl.public_id ?? crawl.slug}`}>
 
                 <Card
                   className={`transition cursor-pointer hover:shadow-md ${
@@ -324,7 +326,7 @@ export default function UserCrawls() {
         <div className="grid gap-3">
 
           {pastVisible.map((crawl)=>(
-            <Link key={crawl.id} href={`/sponsor/${crawl.slug}`}>
+            <Link key={crawl.id} href={`/sponsor/${crawl.public_id ?? crawl.slug}`}>
 
               <Card className="hover:shadow-md transition cursor-pointer opacity-80">
 

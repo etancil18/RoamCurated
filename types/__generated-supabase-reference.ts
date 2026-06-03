@@ -17,15 +17,23 @@ export type Database = {
       crawl_events: {
         Row: {
           city: string | null
+          completion_count: number | null
           created_at: string | null
           creator_id: string
           datetime: string | null
           description: string | null
+          flow_score: number | null
+          flow_type: string | null
           id: string
           is_public: boolean
           is_sponsored: boolean | null
           max_capacity: number | null
+          public_id: string
+          published_at: string | null
+          repeat_count: number | null
           rsvp_enabled: boolean | null
+          save_count: number | null
+          share_count: number | null
           slug: string | null
           sponsor_name: string | null
           title: string
@@ -35,15 +43,23 @@ export type Database = {
         }
         Insert: {
           city?: string | null
+          completion_count?: number | null
           created_at?: string | null
           creator_id: string
           datetime?: string | null
           description?: string | null
+          flow_score?: number | null
+          flow_type?: string | null
           id?: string
           is_public?: boolean
           is_sponsored?: boolean | null
           max_capacity?: number | null
+          public_id: string
+          published_at?: string | null
+          repeat_count?: number | null
           rsvp_enabled?: boolean | null
+          save_count?: number | null
+          share_count?: number | null
           slug?: string | null
           sponsor_name?: string | null
           title: string
@@ -53,15 +69,23 @@ export type Database = {
         }
         Update: {
           city?: string | null
+          completion_count?: number | null
           created_at?: string | null
           creator_id?: string
           datetime?: string | null
           description?: string | null
+          flow_score?: number | null
+          flow_type?: string | null
           id?: string
           is_public?: boolean
           is_sponsored?: boolean | null
           max_capacity?: number | null
+          public_id?: string
+          published_at?: string | null
+          repeat_count?: number | null
           rsvp_enabled?: boolean | null
+          save_count?: number | null
+          share_count?: number | null
           slug?: string | null
           sponsor_name?: string | null
           title?: string
@@ -1853,11 +1877,15 @@ export type Database = {
           name: string | null
           price: string | null
           slug: string | null
-          tags: string | null
+          tags: string[] | null
+          tags_normalized: string[] | null
           tier: string | null
-          time_category: string | null
-          type: string | null
-          vibe: string | null
+          time_category: string[] | null
+          time_category_normalized: string[] | null
+          type: string[] | null
+          type_normalized: string[] | null
+          vibe: string[] | null
+          vibe_normalized: string[] | null
         }
         Insert: {
           access_token?: string | null
@@ -1876,11 +1904,15 @@ export type Database = {
           name?: string | null
           price?: string | null
           slug?: string | null
-          tags?: string | null
+          tags?: string[] | null
+          tags_normalized?: string[] | null
           tier?: string | null
-          time_category?: string | null
-          type?: string | null
-          vibe?: string | null
+          time_category?: string[] | null
+          time_category_normalized?: string[] | null
+          type?: string[] | null
+          type_normalized?: string[] | null
+          vibe?: string[] | null
+          vibe_normalized?: string[] | null
         }
         Update: {
           access_token?: string | null
@@ -1899,11 +1931,15 @@ export type Database = {
           name?: string | null
           price?: string | null
           slug?: string | null
-          tags?: string | null
+          tags?: string[] | null
+          tags_normalized?: string[] | null
           tier?: string | null
-          time_category?: string | null
-          type?: string | null
-          vibe?: string | null
+          time_category?: string[] | null
+          time_category_normalized?: string[] | null
+          type?: string[] | null
+          type_normalized?: string[] | null
+          vibe?: string[] | null
+          vibe_normalized?: string[] | null
         }
         Relationships: []
       }

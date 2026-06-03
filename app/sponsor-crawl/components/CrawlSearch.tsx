@@ -10,6 +10,7 @@ type Crawl = {
   id: string;
   title: string;
   slug: string;
+  public_id: string | null;
   datetime: string | null;
   city: string | null;
 };
@@ -30,7 +31,7 @@ export default function CrawlSearch() {
 
       const { data, error } = await supabase
         .from('crawl_events')
-        .select('id, title, slug, datetime, city')
+        .select('id, title, slug, public_id, datetime, city')
         .eq('is_public', true)
         .ilike('title', `%${query}%`)
         .order('datetime', { ascending: true })
@@ -64,7 +65,7 @@ export default function CrawlSearch() {
       {results.length > 0 && (
         <div className="grid gap-2">
           {results.map((crawl) => (
-            <Link key={crawl.id} href={`/sponsor/${crawl.slug}`}>
+            <Link key={crawl.id} href={`/sponsor/${crawl.public_id ?? crawl.slug}`}>
               <Card className="hover:shadow-md transition cursor-pointer bg-white dark:bg-neutral-800 border dark:border-neutral-700">
                 <CardContent className="p-3">
                   <p className="font-medium text-gray-900 dark:text-white">

@@ -12,14 +12,17 @@ import { supabaseBrowser } from '@/lib/supabase/client';
 
 async function fetchAttendeeDetails(userIds: string[]) {
   const supabase = supabaseBrowser();
+
   const { data, error } = await supabase
     .from('profiles')
     .select('id, full_name, instagram_handle, personality_style')
     .in('id', userIds);
+
   if (error) {
     console.error('[SponsorDetail] Failed to fetch profile details:', error);
     return [];
   }
+
   return data || [];
 }
 
@@ -38,11 +41,13 @@ const venueMoodEmojiMap: Record<string, string> = {
 
 function getEmojiForVenue(name: string): string {
   const lower = name.toLowerCase();
+
   if (lower.includes('bar')) return venueMoodEmojiMap.bar;
   if (lower.includes('cafe') || lower.includes('coffee')) return venueMoodEmojiMap.cafe;
   if (lower.includes('club') || lower.includes('music')) return venueMoodEmojiMap.club;
   if (lower.includes('gallery') || lower.includes('art')) return venueMoodEmojiMap.gallery;
   if (lower.includes('restaurant') || lower.includes('grill')) return venueMoodEmojiMap.restaurant;
+
   return venueMoodEmojiMap.default;
 }
 
@@ -53,19 +58,17 @@ export default function SponsorDetail({ crawl }: Props) {
   const [userId, setUserId] = useState<string | null>(null);
   const [attendeesWithDetails, setAttendeesWithDetails] = useState<any[]>([]);
 
-  /* 🆕 Edit state */
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
   const [editedDescription, setEditedDescription] = useState('');
 
   if (!crawl || crawl.length === 0) {
     console.warn('[SponsorDetail] No crawl data passed');
-    return <p>No crawl found.</p>;
+    return <p>No flow found.</p>;
   }
 
   const meta = crawl[0];
 
-  /* initialize edit fields */
   useEffect(() => {
     setEditedTitle(meta.title ?? '');
     setEditedDescription(meta.description ?? '');
@@ -73,7 +76,7 @@ export default function SponsorDetail({ crawl }: Props) {
 
   if (!meta.venue_ids || !Array.isArray(meta.venue_ids)) {
     console.error('[SponsorDetail] Invalid or missing venue_ids:', meta.venue_ids);
-    return <p>Error loading crawl itinerary.</p>;
+    return <p>Error loading flow itinerary.</p>;
   }
 
   const attendees = crawl.filter(
@@ -82,6 +85,20 @@ export default function SponsorDetail({ crawl }: Props) {
 
   const currentCount = attendees.length;
   const maxCapacity = (meta as any).max_capacity ?? 0;
+
+  const totalStops = venues.length;
+  const completedStops = checkedStops.length;
+
+  const progressPercent =
+    totalStops > 0 ? Math.round((completedStops / totalStops) * 100) : 0;
+
+  const flowStarted = completedStops > 0;
+  const flowCompleted = totalStops > 0 && completedStops === totalStops;
+
+  const estimatedXP =
+    25 +
+    completedStops * 25 +
+    (flowCompleted ? 100 : 0);
 
   useEffect(() => {
     const preloadProfiles = async () => {
@@ -98,6 +115,7 @@ export default function SponsorDetail({ crawl }: Props) {
 
       const enriched = attendees.map((a) => {
         const profile = profiles.find((p) => p.id === a.rsvp_user_id);
+
         return {
           ...a,
           full_name: profile?.full_name ?? 'anonymous',
@@ -139,19 +157,26 @@ export default function SponsorDetail({ crawl }: Props) {
     };
 
     update();
+
     const timer = setInterval(update, 60000);
+
     return () => clearInterval(timer);
   }, [meta.datetime]);
 
   useEffect(() => {
     const fetchVenues = async () => {
       const supabase = supabaseBrowser();
+
       const { data, error } = await supabase
         .from('venues')
         .select('id, name, city, lat, lon, instagram_handle')
         .in('id', meta.venue_ids);
 
-      if (error) return console.error('[SponsorDetail] Venue fetch failed:', error);
+      if (error) {
+        console.error('[SponsorDetail] Venue fetch failed:', error);
+        return;
+      }
+
       if (!data) return;
 
       const ordered: SponsorVenue[] = meta.venue_ids
@@ -168,15 +193,18 @@ export default function SponsorDetail({ crawl }: Props) {
 
       setVenues(ordered);
     };
+
     if (meta.venue_ids?.length) fetchVenues();
   }, [meta]);
 
   useEffect(() => {
     const loadProgress = async () => {
       const supabase = supabaseBrowser();
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (!user) return;
 
       setUserId(user.id);
@@ -187,40 +215,61 @@ export default function SponsorDetail({ crawl }: Props) {
         .eq('user_id', user.id)
         .eq('crawl_id', meta.crawl_id);
 
-      if (error) console.error('[SponsorDetail] Progress fetch failed:', error);
-      else setCheckedStops(progressData?.map((p) => p.stop_index) || []);
+      if (error) {
+        console.error('[SponsorDetail] Progress fetch failed:', error);
+        return;
+      }
+
+      setCheckedStops(progressData?.map((p) => p.stop_index) || []);
     };
+
     loadProgress();
   }, [meta.crawl_id]);
 
   const toggleStop = async (index: number) => {
-    if (!userId) return;
-    const supabase = supabaseBrowser();
+    if (!userId) {
+      alert('Sign in to check in and track your flow progress.');
+      return;
+    }
 
+    const supabase = supabaseBrowser();
     const alreadyChecked = checkedStops.includes(index);
+
     let updated: number[];
 
     if (alreadyChecked) {
-      await supabase
+      const { error } = await supabase
         .from('crawl_progress')
         .delete()
         .eq('crawl_id', meta.crawl_id)
         .eq('user_id', userId)
         .eq('stop_index', index);
+
+      if (error) {
+        console.error('[SponsorDetail] Failed to remove stop progress:', error);
+        return;
+      }
+
       updated = checkedStops.filter((i) => i !== index);
     } else {
-      await supabase.from('crawl_progress').insert({
+      const { error } = await supabase.from('crawl_progress').insert({
         crawl_id: meta.crawl_id,
         user_id: userId,
         stop_index: index,
+        completed_at: new Date().toISOString(),
       });
+
+      if (error) {
+        console.error('[SponsorDetail] Failed to save stop progress:', error);
+        return;
+      }
+
       updated = [...checkedStops, index];
     }
 
     setCheckedStops(updated);
   };
 
-  /* 🆕 Save edits */
   const handleSave = async () => {
     const supabase = supabaseBrowser();
 
@@ -235,7 +284,7 @@ export default function SponsorDetail({ crawl }: Props) {
       .eq('creator_id', meta.creator_id);
 
     if (error) {
-      alert('Failed to update crawl.');
+      alert('Failed to update flow.');
       return;
     }
 
@@ -244,11 +293,11 @@ export default function SponsorDetail({ crawl }: Props) {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto p-4">
-
+    <div className="mx-auto max-w-2xl space-y-6 p-4">
       {meta.is_sponsored && (
-        <div className="p-4 bg-orange-50 border-l-4 border-orange-400 rounded-md">
-          <h2 className="text-lg font-semibold">🍹 Hosted Crawl</h2>
+        <div className="rounded-md border-l-4 border-orange-400 bg-orange-50 p-4">
+          <h2 className="text-lg font-semibold">🍹 Sponsored Flow</h2>
+
           <p className="text-sm text-muted-foreground">
             Someone planned the good times — you just need to join.
           </p>
@@ -256,16 +305,15 @@ export default function SponsorDetail({ crawl }: Props) {
       )}
 
       <div className="space-y-2">
-
         {isEditing ? (
           <input
             value={editedTitle}
             onChange={(e) => setEditedTitle(e.target.value)}
-            className="w-full border rounded px-3 py-2 text-2xl font-bold"
+            className="w-full rounded border px-3 py-2 text-2xl font-bold"
           />
         ) : (
           <h1 className="text-2xl font-bold">
-            {meta.title ?? 'Untitled Crawl'}
+            {meta.title ?? 'Untitled Flow'}
           </h1>
         )}
 
@@ -273,10 +321,10 @@ export default function SponsorDetail({ crawl }: Props) {
           <textarea
             value={editedDescription}
             onChange={(e) => setEditedDescription(e.target.value)}
-            className="w-full border rounded px-3 py-2 whitespace-pre-line"
+            className="w-full rounded border px-3 py-2 whitespace-pre-line"
           />
         ) : (
-          <p className="text-muted-foreground whitespace-pre-line">
+          <p className="whitespace-pre-line text-muted-foreground">
             {meta.description ?? ''}
           </p>
         )}
@@ -292,6 +340,7 @@ export default function SponsorDetail({ crawl }: Props) {
             <Button onClick={handleSave}>
               Save Changes
             </Button>
+
             <Button
               variant="outline"
               onClick={() => {
@@ -306,7 +355,7 @@ export default function SponsorDetail({ crawl }: Props) {
         )}
 
         {meta.sponsor_name && (
-          <p className="text-sm text-purple-600 font-semibold">
+          <p className="text-sm font-semibold text-purple-600">
             Sponsored by {meta.sponsor_name}
           </p>
         )}
@@ -331,12 +380,15 @@ export default function SponsorDetail({ crawl }: Props) {
             <p className="text-sm text-muted-foreground">
               {currentCount} of {maxCapacity} spots claimed
             </p>
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+
+            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
               <div
                 className={`h-2 ${
                   currentCount / maxCapacity > 0.8 ? 'bg-red-500' : 'bg-green-500'
                 }`}
-                style={{ width: `${Math.min((currentCount / maxCapacity) * 100, 100)}%` }}
+                style={{
+                  width: `${Math.min((currentCount / maxCapacity) * 100, 100)}%`,
+                }}
               />
             </div>
           </div>
@@ -351,21 +403,25 @@ export default function SponsorDetail({ crawl }: Props) {
         </div>
       </div>
 
-      {/* ---------- EXISTING UI BELOW UNCHANGED ---------- */}
+      <RSVPButton
+        crawlId={meta.crawl_id}
+        slug={meta.slug ?? ''}
+      />
 
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold">🗺️ Itinerary:</h3>
+        <h3 className="text-sm font-semibold">🗺️ Flow Stops</h3>
 
         {venues.length === 0 ? (
           <div className="text-sm text-muted-foreground">
-            Loading itinerary...
+            Loading flow stops...
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {venues.map((v) => (
-                <Card key={v.id} className="p-3 flex items-center space-x-3">
+                <Card key={v.id} className="flex items-center space-x-3 p-3">
                   <div className="text-2xl">{getEmojiForVenue(v.name)}</div>
+
                   <div>
                     <div className="font-medium">
                       {v.instagram_handle ? (
@@ -381,6 +437,7 @@ export default function SponsorDetail({ crawl }: Props) {
                         v.name
                       )}
                     </div>
+
                     <div className="text-xs text-muted-foreground">
                       {v.city}
                     </div>
@@ -402,32 +459,120 @@ export default function SponsorDetail({ crawl }: Props) {
       </div>
 
       {venues.length > 0 && (
-        <div className="p-4 border rounded-md bg-gray-50">
-          <h3 className="text-sm font-semibold mb-2">✅ Track Your Progress</h3>
-          <ul className="space-y-2">
-            {venues.map((v, i) => (
-              <li key={v.id} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={checkedStops.includes(i)}
-                  onChange={() => toggleStop(i)}
-                  className="cursor-pointer"
-                />
-                <span className="text-sm">{v.name}</span>
-              </li>
-            ))}
+        <div className="rounded-xl border bg-gradient-to-br from-indigo-50 to-white p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+                Active Flow
+              </p>
+
+              <h3 className="text-lg font-semibold">
+                {flowCompleted
+                  ? 'Flow completed'
+                  : flowStarted
+                    ? 'Keep roaming'
+                    : 'Start this flow'}
+              </h3>
+
+              <p className="text-sm text-muted-foreground">
+                Check in at each stop to build progress, earn XP, and complete the crawl.
+              </p>
+            </div>
+
+            <div className="rounded-full border px-3 py-1 text-sm font-semibold">
+              +{estimatedXP} XP
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="mb-2 flex justify-between text-xs text-muted-foreground">
+              <span>
+                {completedStops} of {totalStops} stops
+              </span>
+
+              <span>{progressPercent}% complete</span>
+            </div>
+
+            <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-indigo-600 transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {!flowStarted && !flowCompleted && (
+            <Button
+              type="button"
+              className="mt-4 w-full bg-indigo-600 text-white hover:bg-indigo-700"
+              onClick={() => {
+                const firstStopButton = document.getElementById('flow-stop-0');
+                firstStopButton?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
+              }}
+            >
+              ▶ Start Flow
+            </Button>
+          )}
+
+          <ul className="mt-4 space-y-2">
+            {venues.map((v, i) => {
+              const checked = checkedStops.includes(i);
+
+              return (
+                <li
+                  key={v.id}
+                  className="flex items-center justify-between rounded-lg border bg-white p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <button
+                      id={`flow-stop-${i}`}
+                      type="button"
+                      onClick={() => toggleStop(i)}
+                      className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold ${
+                        checked
+                          ? 'border-indigo-600 bg-indigo-600 text-white'
+                          : 'border-gray-300 text-gray-400'
+                      }`}
+                    >
+                      {checked ? '✓' : i + 1}
+                    </button>
+
+                    <div>
+                      <p className="text-sm font-medium">{v.name}</p>
+
+                      <p className="text-xs text-muted-foreground">
+                        {checked ? '+25 XP checked in' : 'Tap to check in'}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
+
+          {flowCompleted && (
+            <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-3">
+              <p className="text-sm font-semibold text-green-700">
+                Flow complete. Badge unlocked: Crawl Finisher.
+              </p>
+
+              <p className="text-xs text-green-700/80">
+                This completion now contributes to your Roam Passport.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      <RSVPButton
-        crawlId={meta.crawl_id}
-        slug={meta.slug ?? ''}
-      />
-
       {attendeesWithDetails.length > 0 && (
         <div className="space-y-2 pt-4">
-          <h3 className="text-sm font-semibold">People joining:</h3>
+          <h3 className="text-sm font-semibold">
+            People joining this flow:
+          </h3>
+
           <div className="grid grid-cols-2 gap-2">
             {attendeesWithDetails.map((a) => (
               <Card key={a.rsvp_user_id}>
