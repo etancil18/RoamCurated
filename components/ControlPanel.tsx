@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -82,6 +82,13 @@ export function ControlPanel({
   onHostGeneratedFlow,
 }: ControlPanelProps) {
   const [isScheduled, setIsScheduled] = useState(false)
+  const [flowReadyCollapsed, setFlowReadyCollapsed] = useState(false)
+
+  useEffect(() => {
+    if (!hasGeneratedRoute) {
+      setFlowReadyCollapsed(false)
+    }
+  }, [hasGeneratedRoute])
 
   const handleTravelModeChange = (val: string) => {
     if (!val) return
@@ -118,21 +125,84 @@ export function ControlPanel({
 
   return (
     <div
-  className="
-    fixed top-16 left-0 right-0 z-[4000]
-    max-h-[calc(100vh-4rem)]
-    overflow-y-auto
-    bg-white dark:bg-zinc-950
-    border-b border-zinc-300 dark:border-zinc-700
-    px-3 py-2
-    text-xs
-    grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6
-    gap-2
-    items-center
-    rounded-b-xl
-    shadow-sm
-  "
->
+      className="
+        fixed top-16 left-0 right-0 z-[4000]
+        max-h-[calc(100vh-4rem)]
+        overflow-y-auto
+        bg-white dark:bg-zinc-950
+        border-b border-zinc-300 dark:border-zinc-700
+        px-3 py-2
+        text-xs
+        grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6
+        gap-2
+        items-center
+        rounded-b-xl
+        shadow-sm
+      "
+    >
+      {hasGeneratedRoute && !flowReadyCollapsed && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-b-xl border-b border-indigo-500/40 bg-white/95 px-3 py-3 backdrop-blur-md dark:bg-zinc-950/95">
+          <div className="w-full rounded-lg border border-indigo-500/40 bg-indigo-50 p-3 shadow-lg dark:bg-indigo-950/40">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
+                  Flow Ready
+                </p>
+
+                <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                  {generatedRouteStopCount} stops • +{generatedRouteStopCount * 25 + 100} XP available
+                </p>
+
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Start this route as a playable flow or publish it as a crawl.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFlowReadyCollapsed(true)
+                  logEvent('flow_ready_collapsed', {
+                    metadata: { city, stops: generatedRouteStopCount },
+                  })
+                }}
+                className="rounded-full border border-indigo-500/30 px-2 py-0.5 text-xs text-indigo-700 hover:bg-indigo-100 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+                aria-label="Close Flow Ready panel"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <Button
+                className="h-8 flex-1 text-xs bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={() => {
+                  onStartGeneratedFlow?.()
+                  logEvent('generated_flow_started', {
+                    metadata: { city, stops: generatedRouteStopCount },
+                  })
+                }}
+              >
+                ▶ Start Flow
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-8 flex-1 text-xs border-indigo-500 text-indigo-700 dark:text-indigo-300"
+                onClick={() => {
+                  onHostGeneratedFlow?.()
+                  logEvent('generated_flow_host_clicked', {
+                    metadata: { city, stops: generatedRouteStopCount },
+                  })
+                }}
+              >
+                Host as Crawl
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-0.5">
         <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Mode</Label>
         <ToggleGroup
@@ -296,53 +366,6 @@ export function ControlPanel({
             />
           </div>
         </>
-      )}
-
-      {hasGeneratedRoute && (
-        <div className="col-span-2 md:col-span-4 lg:col-span-6 rounded-lg border border-indigo-500/40 bg-indigo-50 p-3 dark:bg-indigo-950/40">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
-                Flow Ready
-              </p>
-
-              <p className="text-sm font-semibold text-zinc-900 dark:text-white">
-                {generatedRouteStopCount} stops • +{generatedRouteStopCount * 25 + 100} XP available
-              </p>
-
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                Start this route as a playable flow or publish it as a crawl.
-              </p>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                className="h-8 text-xs bg-indigo-600 text-white hover:bg-indigo-700"
-                onClick={() => {
-                  onStartGeneratedFlow?.()
-                  logEvent('generated_flow_started', {
-                    metadata: { city, stops: generatedRouteStopCount },
-                  })
-                }}
-              >
-                ▶ Start Flow
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-8 text-xs border-indigo-500 text-indigo-700 dark:text-indigo-300"
-                onClick={() => {
-                  onHostGeneratedFlow?.()
-                  logEvent('generated_flow_host_clicked', {
-                    metadata: { city, stops: generatedRouteStopCount },
-                  })
-                }}
-              >
-                Host as Crawl
-              </Button>
-            </div>
-          </div>
-        </div>
       )}
 
       <div className="space-y-1">
