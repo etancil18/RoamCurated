@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { supabaseBrowser, getCurrentUserId } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +11,16 @@ type PassportStats = {
   joinedCrawls: number
   pastCrawls: number
   savedProperties: number
+  completedFlows: number
+  completedFlowStops: number
+}
+
+type ActiveFlow = {
+  id: string
+  title: string | null
+  city: string | null
+  venue_ids: string[] | null
+  started_at: string | null
 }
 
 export default function RoamPassport() {
@@ -20,7 +31,12 @@ export default function RoamPassport() {
     joinedCrawls: 0,
     pastCrawls: 0,
     savedProperties: 0,
+    completedFlows: 0,
+    completedFlowStops: 0,
   })
+
+  const [activeFlow, setActiveFlow] = useState<ActiveFlow | null>(null)
+  const [activeFlowCompletedStops, setActiveFlowCompletedStops] = useState(0)
 
   const [loading, setLoading] = useState(true)
 
@@ -36,7 +52,13 @@ export default function RoamPassport() {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
 
-      const [{ data: hosted }, { data: rsvps }, { data: properties }] =
+      const [
+        { data: hosted },
+        { data: rsvps },
+        { data: properties },
+        { data: activeFlowData },
+        { data: completedFlows },
+      ] =
         await Promise.all([
           supabase
             .from('crawl_events')
@@ -58,6 +80,19 @@ export default function RoamPassport() {
             .from('saved_properties')
             .select('property_id')
             .eq('user_id', userId),
+
+          supabase
+            .from('active_flow_sessions')
+            .select('id, title, city, venue_ids, started_at')
+            .eq('user_id', userId)
+            .eq('status', 'active')
+            .maybeSingle(),
+
+          supabase
+            .from('active_flow_sessions')
+            .select('id, venue_ids')
+            .eq('user_id', userId)
+            .eq('status', 'completed'),
         ])
 
       const joined = rsvps ?? []
@@ -68,12 +103,34 @@ export default function RoamPassport() {
         return new Date(crawl.datetime) < today
       })
 
+      let completedActiveStops = 0
+
+      if (activeFlowData?.id) {
+        const { data: activeProgress } = await supabase
+          .from('active_flow_progress')
+          .select('venue_id')
+          .eq('session_id', activeFlowData.id)
+          .eq('user_id', userId)
+
+        completedActiveStops = activeProgress?.length ?? 0
+      }
+
+      const completedFlowStops =
+        completedFlows?.reduce((sum, flow: any) => {
+          return sum + (Array.isArray(flow.venue_ids) ? flow.venue_ids.length : 0)
+        }, 0) ?? 0
+
       setStats({
         hostedCrawls: hosted?.length ?? 0,
         joinedCrawls: joined.length,
         pastCrawls: past.length,
         savedProperties: properties?.length ?? 0,
+        completedFlows: completedFlows?.length ?? 0,
+        completedFlowStops,
       })
+
+      setActiveFlow(activeFlowData ?? null)
+      setActiveFlowCompletedStops(completedActiveStops)
 
       setLoading(false)
     }
@@ -86,13 +143,21 @@ export default function RoamPassport() {
       stats.hostedCrawls * 75 +
       stats.joinedCrawls * 25 +
       stats.pastCrawls * 100 +
-      stats.savedProperties * 10
+      stats.savedProperties * 10 +
+      stats.completedFlows * 100 +
+      stats.completedFlowStops * 25
     )
   }, [stats])
 
   const level = Math.max(1, Math.floor(xp / 250) + 1)
   const progressToNextLevel = xp % 250
   const progressPercent = (progressToNextLevel / 250) * 100
+
+  const activeFlowTotalStops = activeFlow?.venue_ids?.length ?? 0
+  const activeFlowProgressPercent =
+    activeFlowTotalStops > 0
+      ? Math.round((activeFlowCompletedStops / activeFlowTotalStops) * 100)
+      : 0
 
   const badges = [
     {
@@ -106,6 +171,10 @@ export default function RoamPassport() {
     {
       label: 'Crawl Finisher',
       unlocked: stats.pastCrawls > 0,
+    },
+    {
+      label: 'Flow Finisher',
+      unlocked: stats.completedFlows > 0,
     },
     {
       label: 'Guide Saver',
@@ -159,10 +228,40 @@ export default function RoamPassport() {
         </div>
       </div>
 
+      {activeFlow && (
+        <Link href={`/flow/${activeFlow.id}`}>
+          <div className="rounded-xl border border-indigo-500/40 bg-indigo-950/30 p-5 transition hover:border-indigo-400/70">
+            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-400">
+              Current Active Flow
+            </p>
+
+            <h3 className="mt-2 text-lg font-semibold text-white">
+              {activeFlow.title ?? 'Roam Flow'}
+            </h3>
+
+            <p className="mt-1 text-sm text-neutral-400">
+              {activeFlow.city ?? 'City'} • {activeFlowCompletedStops} of{' '}
+              {activeFlowTotalStops} stops complete
+            </p>
+
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-800">
+              <div
+                className="h-full rounded-full bg-indigo-500"
+                style={{ width: `${activeFlowProgressPercent}%` }}
+              />
+            </div>
+
+            <p className="mt-3 text-sm font-medium text-indigo-300">
+              Resume Flow →
+            </p>
+          </div>
+        </Link>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-4">
         <StatCard label="Hosted" value={stats.hostedCrawls} />
         <StatCard label="Joined" value={stats.joinedCrawls} />
-        <StatCard label="Completed" value={stats.pastCrawls} />
+        <StatCard label="Completed" value={stats.pastCrawls + stats.completedFlows} />
         <StatCard label="Saved Guides" value={stats.savedProperties} />
       </div>
 

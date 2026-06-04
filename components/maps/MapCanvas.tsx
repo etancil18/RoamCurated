@@ -37,16 +37,11 @@ const DEFAULT_FOCUS_ZOOM = 16
 
 function normalizeSearchableList(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) {
-    return value
-      .map((item: string) => item.trim())
-      .filter(Boolean)
+    return value.map((item: string) => item.trim()).filter(Boolean)
   }
 
   if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map((item: string) => item.trim())
-      .filter(Boolean)
+    return value.split(',').map((item: string) => item.trim()).filter(Boolean)
   }
 
   return []
@@ -102,7 +97,6 @@ export default function MapCanvas({
   const [enableScrollZoom, setEnableScrollZoom] = useState(false)
   const [returnFocusZoom, setReturnFocusZoom] = useState<number | null>(null)
 
-  // 🔥 Live minute tick for real-time marker updates
   const [minuteTick, setMinuteTick] = useState(0)
 
   useEffect(() => {
@@ -116,12 +110,10 @@ export default function MapCanvas({
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, LeafletMarker>>({})
 
-  // ✅ Canonical city-relative time (single source of truth)
   const nowForCity = useMemo(() => {
     return selectedCity ? getCityNow(selectedCity) : null
   }, [selectedCity, minuteTick])
 
-  // ✅ Custom Start Icon (hydration-safe)
   const customStartIcon = useMemo(() => {
     if (typeof window === 'undefined') return undefined
     const L = require('leaflet')
@@ -134,7 +126,6 @@ export default function MapCanvas({
     })
   }, [])
 
-  // ✅ SSR-safe Leaflet icon patch
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -183,7 +174,6 @@ export default function MapCanvas({
     }
   }, [])
 
-  // ✅ Restore city / zoom context from richer back URL
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -205,7 +195,6 @@ export default function MapCanvas({
     }
   }, [onCityChange])
 
-  // ✅ Default city centering when no explicit venue-focus coords are present
   useEffect(() => {
     if (!selectedCity || !mapRef.current || customStart) return
     const config = CITY_CONFIGS[selectedCity]
@@ -214,7 +203,6 @@ export default function MapCanvas({
     }
   }, [selectedCity, customStart])
 
-  // ✅ Explicit venue-return focus keeps zoom, user pin clicks only re-center without changing zoom
   useEffect(() => {
     if (!mapRef.current || !customStart) return
 
@@ -233,7 +221,6 @@ export default function MapCanvas({
     })
   }, [customStart, selectedCity, mapZoom, returnFocusZoom])
 
-  // ✅ When a route is generated, center it without forcing a zoom change
   useEffect(() => {
     if (!mapRef.current || visibleRoute.length < 2) return
 

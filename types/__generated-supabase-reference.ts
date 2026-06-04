@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_flow_progress: {
+        Row: {
+          checked_in_at: string
+          created_at: string
+          id: string
+          session_id: string
+          stop_index: number
+          user_id: string
+          venue_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          created_at?: string
+          id?: string
+          session_id: string
+          stop_index: number
+          user_id: string
+          venue_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          created_at?: string
+          id?: string
+          session_id?: string
+          stop_index?: number
+          user_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_flow_progress_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      active_flow_sessions: {
+        Row: {
+          city: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          source: string
+          started_at: string
+          status: string
+          theme_id: string | null
+          title: string | null
+          travel_mode: string | null
+          updated_at: string
+          user_id: string
+          venue_ids: string[]
+        }
+        Insert: {
+          city?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          source?: string
+          started_at?: string
+          status?: string
+          theme_id?: string | null
+          title?: string | null
+          travel_mode?: string | null
+          updated_at?: string
+          user_id: string
+          venue_ids?: string[]
+        }
+        Update: {
+          city?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          source?: string
+          started_at?: string
+          status?: string
+          theme_id?: string | null
+          title?: string | null
+          travel_mode?: string | null
+          updated_at?: string
+          user_id?: string
+          venue_ids?: string[]
+        }
+        Relationships: []
+      }
       crawl_events: {
         Row: {
           city: string | null

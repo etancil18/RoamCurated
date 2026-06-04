@@ -31,6 +31,10 @@ interface ControlPanelProps {
   setMarkerDisplayMode: (mode: 'color' | 'emoji') => void
   onGenerateRoute: (plannedStartAt?: string | Date) => void
   onClearRoute: () => void
+  hasGeneratedRoute?: boolean
+  generatedRouteStopCount?: number
+  onStartGeneratedFlow?: () => void
+  onHostGeneratedFlow?: () => void
 }
 
 const themes = [
@@ -72,6 +76,10 @@ export function ControlPanel({
   setMarkerDisplayMode,
   onGenerateRoute,
   onClearRoute,
+  hasGeneratedRoute = false,
+  generatedRouteStopCount = 0,
+  onStartGeneratedFlow,
+  onHostGeneratedFlow,
 }: ControlPanelProps) {
   const [isScheduled, setIsScheduled] = useState(false)
 
@@ -288,6 +296,53 @@ export function ControlPanel({
             />
           </div>
         </>
+      )}
+
+      {hasGeneratedRoute && (
+        <div className="col-span-2 md:col-span-4 lg:col-span-6 rounded-lg border border-indigo-500/40 bg-indigo-50 p-3 dark:bg-indigo-950/40">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
+                Flow Ready
+              </p>
+
+              <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                {generatedRouteStopCount} stops • +{generatedRouteStopCount * 25 + 100} XP available
+              </p>
+
+              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                Start this route as a playable flow or publish it as a crawl.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                className="h-8 text-xs bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={() => {
+                  onStartGeneratedFlow?.()
+                  logEvent('generated_flow_started', {
+                    metadata: { city, stops: generatedRouteStopCount },
+                  })
+                }}
+              >
+                ▶ Start Flow
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-8 text-xs border-indigo-500 text-indigo-700 dark:text-indigo-300"
+                onClick={() => {
+                  onHostGeneratedFlow?.()
+                  logEvent('generated_flow_host_clicked', {
+                    metadata: { city, stops: generatedRouteStopCount },
+                  })
+                }}
+              >
+                Host as Crawl
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="space-y-1">

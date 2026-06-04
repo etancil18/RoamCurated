@@ -166,6 +166,57 @@ export default function MapWrapper() {
     setConfidenceTier(null)
   }, [])
 
+  const handleStartGeneratedFlow = async () => {
+    if (!route || route.length < 2) return
+
+    try {
+      const res = await fetch('/api/active-flow/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          city: selectedCity,
+          title: selectedThemeId ? `${selectedThemeId} Flow` : 'Roam Flow',
+          source: 'map',
+          venue_ids: route.map((venue) => venue.id),
+          theme_id: selectedThemeId || null,
+          travel_mode: travelMode,
+        }),
+      })
+
+      const json = await res.json()
+
+      if (!res.ok) {
+        if (res.status === 409 && json.activeSession?.id && inBrowser()) {
+          window.location.href = `/flow/${json.activeSession.id}`
+          return
+        }
+
+        alert(json.error ?? 'Could not start flow.')
+        return
+      }
+
+      if (json.session?.id && inBrowser()) {
+        window.location.href = `/flow/${json.session.id}`
+      }
+    } catch (err) {
+      console.error('Start Flow Error:', err)
+      alert('Something went wrong starting this flow.')
+    }
+  }
+
+  const handleHostGeneratedFlow = () => {
+    if (!route || route.length < 2) return
+
+    const slugs = route
+      .map((venue) => venue.slug ?? venue.id)
+      .filter(Boolean)
+      .join(',')
+
+    if (inBrowser()) {
+      window.location.href = `/sponsor-crawl?slugs=${slugs}`
+    }
+  }
+
   const handleGenerateRoute = async () => {
     if (!selectedCity) return
 
@@ -398,6 +449,10 @@ export default function MapWrapper() {
     setCrawlDate={setCrawlDate}
     crawlTime={crawlTime}
     setCrawlTime={setCrawlTime}
+    hasGeneratedRoute={!!route && route.length > 1}
+    generatedRouteStopCount={route?.length ?? 0}
+    onStartGeneratedFlow={handleStartGeneratedFlow}
+    onHostGeneratedFlow={handleHostGeneratedFlow}
   />
 )}
 

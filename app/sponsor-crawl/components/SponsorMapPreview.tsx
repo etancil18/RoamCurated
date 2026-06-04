@@ -19,6 +19,7 @@ type Props = {
   heightPx?: number
   useStreetPolyline?: boolean
   themeTag?: string
+  travelMode?: 'walking' | 'cycling' | 'driving'
 }
 
 const vibeColorMap: Record<string, string> = {
@@ -29,7 +30,12 @@ const vibeColorMap: Record<string, string> = {
   Default: '#6366f1',
 }
 
-// Fix marker icons
+const mapboxProfileMap = {
+  walking: 'walking',
+  cycling: 'cycling',
+  driving: 'driving',
+} as const
+
 delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -42,10 +48,11 @@ L.Icon.Default.mergeOptions({
 
 export default function SponsorMapPreview({
   venues,
-  mapboxAccessToken,
+  mapboxAccessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? '',
   heightPx = 300,
   useStreetPolyline = true,
   themeTag = 'Default',
+  travelMode = 'walking',
 }: Props) {
   const [path, setPath] = useState<[number, number][]>([])
   const containerRef = useRef<HTMLDivElement | null>(null)
@@ -53,35 +60,45 @@ export default function SponsorMapPreview({
   const coords = useMemo(
     () =>
       venues
-        .filter(v => typeof v.lat === 'number' && typeof v.lon === 'number')
-        .map(v => [v.lon, v.lat] as [number, number]),
+        .filter((v) => typeof v.lat === 'number' && typeof v.lon === 'number')
+        .map((v) => [v.lon, v.lat] as [number, number]),
     [venues]
   )
 
   useEffect(() => {
+    const fallbackPath = coords.map(([lng, lat]) => [lat, lng] as [number, number])
+
     if (!useStreetPolyline || !mapboxAccessToken || coords.length < 2) {
-      setPath(coords.map(([lng, lat]) => [lat, lng]))
+      setPath(fallbackPath)
       return
     }
 
     async function fetchPolyline() {
       try {
         const coordStr = coords.map(([lng, lat]) => `${lng},${lat}`).join(';')
+        const profile = mapboxProfileMap[travelMode] ?? 'walking'
+
         const res = await fetch(
-          `https://api.mapbox.com/directions/v5/mapbox/cycling/${coordStr}?geometries=geojson&access_token=${mapboxAccessToken}`
+          `https://api.mapbox.com/directions/v5/mapbox/${profile}/${coordStr}?geometries=geojson&overview=full&access_token=${mapboxAccessToken}`
         )
+
         const json = await res.json()
-        const g = json.routes?.[0]?.geometry?.coordinates
-        if (g?.length) {
-          setPath(g.map(([lng, lat]: [number, number]) => [lat, lng]))
+        const geometry = json.routes?.[0]?.geometry?.coordinates
+
+        if (geometry?.length) {
+          setPath(
+            geometry.map(([lng, lat]: [number, number]) => [lat, lng])
+          )
+        } else {
+          setPath(fallbackPath)
         }
       } catch {
-        setPath(coords.map(([lng, lat]) => [lat, lng]))
+        setPath(fallbackPath)
       }
     }
 
     fetchPolyline()
-  }, [coords, mapboxAccessToken, useStreetPolyline])
+  }, [coords, mapboxAccessToken, useStreetPolyline, travelMode])
 
   const routeColor = vibeColorMap[themeTag] ?? vibeColorMap.Default
 
