@@ -10,9 +10,8 @@ import { nanoid } from 'nanoid'
 import ReplaceStopModal from '@/components/modals/ReplaceStopModal'
 import FavoritesModal from '@/components/modals/FavoritesModal'
 import EventsModal from '@/components/modals/EventsModal'
-import HostCrawlModal from '@/components/modals/HostCrawlModal'
 import { logEvent } from '@/lib/logEvent'
-import { getHref, getOrigin, inBrowser } from '@/lib/browser'
+import { getOrigin, inBrowser } from '@/lib/browser'
 
 export type CrawlControlProps = {
   venues: Venue[]
@@ -20,7 +19,7 @@ export type CrawlControlProps = {
   onRoute: (route: Venue[]) => void
   selectedThemeId: string
   customStart?: { lat: number; lon: number } | null
-  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | null
+  city: 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la' | null
   onGenerateRoute: () => Promise<void>
 }
 
@@ -34,7 +33,6 @@ export default function CrawlControl({
   onGenerateRoute,
 }: CrawlControlProps) {
   const [loading, setLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
   const [modalData, setModalData] = useState({
     target: null,
     options: [],
@@ -46,7 +44,6 @@ export default function CrawlControl({
   })
   const [showFavoritesModal, setShowFavoritesModal] = useState(false)
   const [showEventsModal, setShowEventsModal] = useState(false)
-  const [showHostModal, setShowHostModal] = useState(false)
   const [showCrawlInfo, setShowCrawlInfo] = useState(false)
 
   const {
@@ -114,25 +111,6 @@ export default function CrawlControl({
     }
   }
 
-  function handleExportToMaps() {
-    if (!Array.isArray(route) || route.length < 2) return
-
-    logEvent('crawl_exported', {
-      metadata: {
-        num_stops: route.length,
-        city,
-        theme_id: selectedThemeId,
-      },
-    })
-
-    const base = 'https://www.google.com/maps/dir/'
-    const waypoints = route.map((v) => `${v.lat},${v.lon}`).join('/')
-
-    if (typeof window !== 'undefined') {
-      window.open(`${base}${waypoints}`, '_blank', 'noopener,noreferrer')
-    }
-  }
-
   function handleInsertFavoriteAt(newVenue: Venue, index: number) {
     if (!route) return
     if (route.find((r) => r.slug === newVenue.slug)) {
@@ -164,52 +142,6 @@ export default function CrawlControl({
     logEvent('event_added_to_crawl', {
       venue_id: newVenue.id,
       metadata: { index, city },
-    })
-  }
-
-  function handleCopyLink() {
-    if (!Array.isArray(route) || route.length === 0 || typeof window === 'undefined') return
-
-    const ids = route.map((v) => v.id ?? v.name).join(',')
-    const href = getHref()
-    const url = new URL(href)
-    url.searchParams.set('route', ids)
-
-    if (window.navigator?.clipboard) {
-      window.navigator.clipboard.writeText(url.toString()).then(() => {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      })
-
-      logEvent('crawl_link_copied', {
-        metadata: {
-          num_stops: route.length,
-          city,
-        },
-      })
-    }
-  }
-
-  function handleClear() {
-    onRoute([])
-    setShowCrawlInfo(false)
-
-    if (inBrowser()) {
-      const href = getHref()
-      const url = new URL(href)
-      url.searchParams.delete('route')
-      if (typeof window !== 'undefined') {
-        window.history.replaceState(null, '', url.toString())
-      }
-    }
-
-    setCopied(false)
-
-    logEvent('crawl_cleared', {
-      metadata: {
-        previous_num_stops: route?.length ?? 0,
-        city,
-      },
     })
   }
 
@@ -286,23 +218,33 @@ export default function CrawlControl({
               ))}
             </ol>
 
-            <div className="pt-2 border-t border-white/20 flex flex-wrap gap-1">
-              <button onClick={handleSaveToCloud} className="px-2 py-1 bg-blue-500 rounded text-[10px]">Save</button>
-              <button onClick={handleExportToMaps} className="px-2 py-1 bg-green-500 rounded text-[10px]">Maps</button>
-              <button onClick={() => setShowFavoritesModal(true)} className="px-2 py-1 bg-yellow-500 rounded text-[10px]">Fav</button>
-              <button onClick={() => setShowEventsModal(true)} className="px-2 py-1 bg-stone-700 rounded text-[10px]">Events</button>
-              <button onClick={() => setShowHostModal(true)} className="px-2 py-1 bg-fuchsia-600 rounded text-[10px]">Host</button>
-              <button onClick={handleCopyLink} className="px-2 py-1 bg-purple-700 rounded text-[10px]">
-                {copied ? 'Copied' : 'Link'}
+           <div className="grid grid-cols-3 gap-2 border-t border-white/20 pt-2">
+              <button
+                onClick={handleSaveToCloud}
+                className="rounded bg-blue-500 px-3 py-2 text-[11px] font-semibold"
+              >
+                Save
               </button>
-              <button onClick={handleClear} className="px-2 py-1 bg-red-500 rounded text-[10px]">Clear</button>
+
+              <button
+                onClick={() => setShowFavoritesModal(true)}
+                className="rounded bg-yellow-500 px-3 py-2 text-[11px] font-semibold text-black"
+              >
+                Favorites
+              </button>
+
+              <button
+                onClick={() => setShowEventsModal(true)}
+                className="rounded bg-fuchsia-700 px-3 py-2 text-[11px] font-semibold"
+              >
+                Events
+              </button>
             </div>
           </div>
 
           <ReplaceStopModal {...{ modalData, handleReplaceStop, handleRemoveStop, setModalData }} />
           <FavoritesModal show={showFavoritesModal} favorites={favorites} loading={loadingFavorites} route={route ?? []} city={city ?? 'atl'} onInsert={handleInsertFavoriteAt} onClose={() => setShowFavoritesModal(false)} />
           <EventsModal show={showEventsModal} interestedEvents={interestedEvents} loading={loadingEvents} route={route ?? []} city={city ?? 'atl'} onInsert={handleInsertEventAt} onClose={() => setShowEventsModal(false)} />
-          <HostCrawlModal show={showHostModal} route={route ?? []} onClose={() => setShowHostModal(false)} />
         </div>
       ) : (
         <div className="fixed bottom-3 left-3 z-[2000]">
