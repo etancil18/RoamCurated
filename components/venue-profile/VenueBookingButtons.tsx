@@ -34,6 +34,8 @@ function getProviderLabel(provider: string): string {
       return "OpenTable"
     case "tock":
       return "Tock"
+    case "sevenrooms":
+      return "SevenRooms"
     case "manual":
       return "Reserve"
     default:

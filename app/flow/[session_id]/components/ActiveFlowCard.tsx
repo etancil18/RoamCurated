@@ -1,9 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import UberRideButton from '@/components/rideshare/UberRideButton'
+import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
 
 type ActiveFlowSession = {
   id: string
@@ -26,6 +28,10 @@ type Venue = {
   lat?: number | null
   lon?: number | null
   instagram_handle?: string | null
+  booking_options?: {
+    provider: string
+    url: string
+  }[] | null
 }
 
 type ProgressRow = {
@@ -54,6 +60,7 @@ export default function ActiveFlowCard({
   const [completing, setCompleting] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [localProgress, setLocalProgress] = useState<ProgressRow[]>(progress)
+  const [segmentMinutesByVenueId, setSegmentMinutesByVenueId] = useState<Record<string, number>>({})
 
   const checkedVenueIds = useMemo(() => {
     return new Set(localProgress.map((row) => row.venue_id))
@@ -77,6 +84,59 @@ export default function ActiveFlowCard({
   const currentVenue = orderedVenues.find(
     (venue) => !checkedVenueIds.has(venue.id)
   )
+
+  useEffect(() => {
+    async function loadSegmentDurations() {
+      if (orderedVenues.length < 2) return
+
+      const nextDurations: Record<string, number> = {}
+
+      for (let i = 1; i < orderedVenues.length; i++) {
+        const from = orderedVenues[i - 1]
+        const to = orderedVenues[i]
+
+        if (
+          typeof from.lat !== 'number' ||
+          typeof from.lon !== 'number' ||
+          typeof to.lat !== 'number' ||
+          typeof to.lon !== 'number'
+        ) {
+          continue
+        }
+
+        try {
+          const res = await fetch('/api/mapbox', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              origin: {
+                lat: from.lat,
+                lng: from.lon,
+              },
+              destination: {
+                lat: to.lat,
+                lng: to.lon,
+              },
+              waypoints: [],
+              travelMode: 'driving',
+            }),
+          })
+
+          const json = await res.json()
+
+          if (res.ok && typeof json.duration === 'number') {
+            nextDurations[to.id] = Math.round(json.duration / 60)
+          }
+        } catch (err) {
+          console.error('[ActiveFlowCard] Failed to load segment duration:', err)
+        }
+      }
+
+      setSegmentMinutesByVenueId(nextDurations)
+    }
+
+    loadSegmentDurations()
+  }, [orderedVenues])
 
   const handleCheckIn = async (venueId: string, stopIndex: number) => {
     if (flowCompleted || flowCancelled) return
@@ -285,6 +345,12 @@ export default function ActiveFlowCard({
           {orderedVenues.map((venue, index) => {
             const checked = checkedVenueIds.has(venue.id)
             const isCurrent = currentVenue?.id === venue.id
+            const previousVenue = index > 0 ? orderedVenues[index - 1] : null
+            const travelMinutes = segmentMinutesByVenueId[venue.id] ?? null
+            const showUber =
+              index > 0 &&
+              typeof travelMinutes === 'number' &&
+              travelMinutes > 5
 
             return (
               <div
@@ -334,6 +400,41 @@ export default function ActiveFlowCard({
                     </Button>
                   )}
                 </div>
+
+                <VenueBookingButtons
+                  bookingOptions={venue.booking_options ?? null}
+                  compact
+                />
+
+                {showUber && (
+                  <div className="mt-3 border-t border-neutral-800 pt-3">
+                    <UberRideButton
+                      pickup={{
+                        name: previousVenue?.name ?? null,
+                        address: previousVenue?.city ?? null,
+                        lat: previousVenue?.lat ?? null,
+                        lon: previousVenue?.lon ?? null,
+                      }}
+                      dropoff={{
+                        name: venue.name,
+                        address: venue.city ?? null,
+                        lat: venue.lat ?? null,
+                        lon: venue.lon ?? null,
+                      }}
+                      travelMinutes={travelMinutes}
+                      fromVenueId={previousVenue?.id ?? null}
+                      toVenueId={venue.id}
+                      compact
+                      className="w-full"
+                      metadata={{
+                        ride_context: 'active_flow_interstop',
+                        active_flow_session_id: session.id,
+                        stop_index: index,
+                        travel_mode: session.travel_mode,
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             )
           })}

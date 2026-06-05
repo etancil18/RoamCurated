@@ -43,7 +43,7 @@ export type LeaveEarlyByHours = 1 | 2 | 3 | 4
 
 // ---------- Booking Layer ----------
 
-export type BookingProvider = "opentable" | "resy" | "tock" | "manual"
+export type BookingProvider = "opentable" | "resy" | "tock" | "sevenrooms" | "manual"
 
 export type VenueBookingOption = {
   provider: BookingProvider | string

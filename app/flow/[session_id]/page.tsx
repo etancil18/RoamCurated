@@ -19,6 +19,10 @@ type Venue = {
   lat: number | null
   lon: number | null
   instagram_handle: string | null
+  booking_options?: {
+    provider: string
+    url: string
+  }[]
 }
 
 function normalizeTravelMode(
@@ -83,9 +87,44 @@ export default async function ActiveFlowPage({ params }: PageProps) {
     console.error('[flow/page] Venue fetch error:', venueError)
   }
 
-  const venues: Venue[] = venueIds
-    .map((venueId) => venueData?.find((venue) => venue.id === venueId))
-    .filter((venue): venue is Venue => Boolean(venue))
+  const { data: bookingData, error: bookingError } = await supabase
+    .from('venue_bookings')
+    .select('venue_id, provider, url')
+    .in('venue_id', venueIds)
+
+  if (bookingError) {
+    console.error('[flow/page] Venue booking fetch error:', bookingError)
+  }
+
+  const venues: Venue[] = venueIds.reduce<Venue[]>((acc, venueId) => {
+    const venue = venueData?.find((venue) => venue.id === venueId)
+    if (!venue || !venue.name) return acc
+
+    acc.push({
+      id: venue.id,
+      name: venue.name,
+      city: venue.city,
+      lat: venue.lat,
+      lon: venue.lon,
+      instagram_handle: venue.instagram_handle,
+      booking_options:
+        bookingData
+          ?.filter(
+            (booking) =>
+              booking.venue_id === venueId &&
+              typeof booking.provider === 'string' &&
+              booking.provider.trim().length > 0 &&
+              typeof booking.url === 'string' &&
+              booking.url.trim().length > 0
+          )
+          .map((booking) => ({
+            provider: booking.provider as string,
+            url: booking.url,
+          })) ?? [],
+    })
+
+    return acc
+  }, [])
 
   const { data: progressData, error: progressError } = await supabase
     .from('active_flow_progress')
@@ -123,6 +162,7 @@ export default async function ActiveFlowPage({ params }: PageProps) {
           venues={venues}
           completedVenueIds={completedVenueIds}
           currentVenueId={currentVenueId}
+          travelMode={normalizeTravelMode(session.travel_mode) ?? 'walking'}
           heightPx={320}
         />
 
