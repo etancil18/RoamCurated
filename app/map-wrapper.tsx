@@ -76,6 +76,7 @@ export default function MapWrapper() {
 
     if (cityParam) {
       setSelectedCity(cityParam)
+      setIsPanelOpen(true)
     }
 
     if (latParam && lonParam) {
@@ -164,6 +165,10 @@ export default function MapWrapper() {
     setRoute(undefined)
     setCustomStart(null)
     setConfidenceTier(null)
+
+    if (slug) {
+      setIsPanelOpen(true)
+    }
   }, [])
 
   const handleStartGeneratedFlow = async () => {
