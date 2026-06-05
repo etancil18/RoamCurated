@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import UberRideButton from '@/components/rideshare/UberRideButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
+import FlowShareActions from './FlowShareActions'
 
 type ActiveFlowSession = {
   id: string
@@ -28,6 +29,7 @@ type Venue = {
   lat?: number | null
   lon?: number | null
   instagram_handle?: string | null
+  address?: string | null
   booking_options?: {
     provider: string
     url: string
@@ -336,6 +338,14 @@ export default function ActiveFlowCard({
         </CardContent>
       </Card>
 
+      {(flowCompleted || completedStops >= 3) && (
+        <FlowShareActions
+          session={session}
+          venues={orderedVenues}
+          progress={localProgress}
+        />
+      )}
+
       <Card className="border-neutral-800 bg-neutral-950 text-white">
         <CardContent className="space-y-3 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
@@ -411,13 +421,16 @@ export default function ActiveFlowCard({
                     <UberRideButton
                       pickup={{
                         name: previousVenue?.name ?? null,
-                        address: previousVenue?.city ?? null,
+                        address:
+                          previousVenue?.address ??
+                          previousVenue?.city ??
+                          null,
                         lat: previousVenue?.lat ?? null,
                         lon: previousVenue?.lon ?? null,
                       }}
                       dropoff={{
                         name: venue.name,
-                        address: venue.city ?? null,
+                        address: venue.address ?? venue.city ?? null,
                         lat: venue.lat ?? null,
                         lon: venue.lon ?? null,
                       }}
@@ -431,6 +444,13 @@ export default function ActiveFlowCard({
                         active_flow_session_id: session.id,
                         stop_index: index,
                         travel_mode: session.travel_mode,
+                        pickup_name: previousVenue?.name ?? null,
+                        pickup_address:
+                          previousVenue?.address ??
+                          previousVenue?.city ??
+                          null,
+                        dropoff_name: venue.name,
+                        dropoff_address: venue.address ?? venue.city ?? null,
                       }}
                     />
                   </div>

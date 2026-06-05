@@ -16,6 +16,7 @@ type Venue = {
   id: string
   name: string
   city: string | null
+  address: string | null
   lat: number | null
   lon: number | null
   instagram_handle: string | null
@@ -43,6 +44,16 @@ function normalizeStatus(
   }
 
   return 'active'
+}
+
+function normalizeExternalUrl(url: string): string {
+  const trimmed = url.trim()
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed
+  }
+
+  return `https://${trimmed.replace(/^\/+/, '')}`
 }
 
 export default async function ActiveFlowPage({ params }: PageProps) {
@@ -80,7 +91,7 @@ export default async function ActiveFlowPage({ params }: PageProps) {
 
   const { data: venueData, error: venueError } = await supabase
     .from('venues')
-    .select('id, name, city, lat, lon, instagram_handle')
+    .select('id, name, city, address, lat, lon, instagram_handle')
     .in('id', venueIds)
 
   if (venueError) {
@@ -104,6 +115,7 @@ export default async function ActiveFlowPage({ params }: PageProps) {
       id: venue.id,
       name: venue.name,
       city: venue.city,
+      address: venue.address ?? null,
       lat: venue.lat,
       lon: venue.lon,
       instagram_handle: venue.instagram_handle,
@@ -119,7 +131,7 @@ export default async function ActiveFlowPage({ params }: PageProps) {
           )
           .map((booking) => ({
             provider: booking.provider as string,
-            url: booking.url,
+            url: normalizeExternalUrl(booking.url),
           })) ?? [],
     })
 
