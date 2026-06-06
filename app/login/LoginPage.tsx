@@ -28,14 +28,12 @@ export default function LoginPage() {
       return
     }
 
-    // 🔹 Try existing user login first
     const { error: signInError } =
       await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-    // 🔹 If login succeeds → proceed exactly as before
     if (!signInError) {
       await supabase.auth.getSession()
       setLoading(false)
@@ -43,7 +41,6 @@ export default function LoginPage() {
       return
     }
 
-    // 🔹 If login fails → attempt instant signup
     const { error: signUpError } =
       await supabase.auth.signUp({
         email,
@@ -56,12 +53,10 @@ export default function LoginPage() {
       return
     }
 
-    // 🔥 Force cookie/session write for new user
     await supabase.auth.getSession()
 
     setLoading(false)
 
-    // 🔥 Hard redirect so middleware immediately sees auth
     window.location.href = '/'
   }
 
@@ -131,43 +126,44 @@ export default function LoginPage() {
 
             <div className="max-w-xl space-y-6">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400">
-                Editorial travel-tech
+                Playable city discovery
               </p>
 
               <h1 className="text-4xl font-semibold leading-tight text-zinc-900 dark:text-white xl:text-5xl">
-                Roam your city better
+                Turn your city into a playable itinerary.
               </h1>
 
               <p className="max-w-lg text-lg leading-8 text-zinc-600 dark:text-zinc-300">
-                From coffee to cocktails to full neighborhood flows, we’ll help
-                you move with intent.
+                Build flows around your mood, check in as you move, earn
+                Passport progress, and share the route when the night is worth
+                remembering.
               </p>
 
               <div className="grid max-w-xl grid-cols-1 gap-3 pt-4 sm:grid-cols-3">
                 <div className="rounded-2xl border border-zinc-200/80 bg-white/70 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/60">
                   <p className="text-sm font-medium text-zinc-900 dark:text-white">
-                    Explore curated maps
+                    Generate a Flow
                   </p>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    Discover neighborhoods through locally curated spots, hidden gems, and cultural hubs.
+                    Pick a city, vibe, and travel mode. Roam builds the route.
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-zinc-200/80 bg-white/70 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/60">
                   <p className="text-sm font-medium text-zinc-900 dark:text-white">
-                    Plan around live events
+                    Check In & Complete
                   </p>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    Generate day and nightlife routes synced to concerts, pop-ups, screenings, and local happenings.
+                    Move stop by stop, track progress, earn XP, and unlock badges.
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-zinc-200/80 bg-white/70 p-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/60">
                   <p className="text-sm font-medium text-zinc-900 dark:text-white">
-                    Build your own guides
+                    Share the Snapshot
                   </p>
                   <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                    Build and share neighborhood guides that feel editorial, personal, and deeply rooted in the city.
+                    Save your route as a story-style card after completing your flow.
                   </p>
                 </div>
               </div>
@@ -204,7 +200,8 @@ export default function LoginPage() {
                 </h2>
 
                 <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-                  Enter your email and password to sign in or create your account.
+                  Sign in to save your Passport, resume active flows, host crawls,
+                  and keep your city history.
                 </p>
               </div>
 
@@ -254,9 +251,15 @@ export default function LoginPage() {
                       : 'bg-zinc-900 hover:-translate-y-0.5 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200'
                   }`}
                 >
-                  {loading ? 'Processing...' : 'Sign In / Sign Up'}
+                  {loading ? 'Processing...' : 'Continue to Roam'}
                 </button>
               </form>
+
+              <div className="mt-5 grid gap-2 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-400">
+                <p>✓ Save active flows</p>
+                <p>✓ Track XP and badges</p>
+                <p>✓ Host and share city crawls</p>
+              </div>
 
               <button
                 type="button"
@@ -280,7 +283,7 @@ export default function LoginPage() {
 
               <div className="mt-8 border-t border-zinc-200 pt-5 dark:border-zinc-800">
                 <p className="text-center text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-                  Your saved spots, routes, and neighborhood guides live here.
+                  Your saved spots, flows, Passport progress, and city snapshots live here.
                 </p>
               </div>
             </div>
