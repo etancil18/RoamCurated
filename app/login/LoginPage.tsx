@@ -114,16 +114,6 @@ export default function LoginPage() {
           </div>
 
           <div className="relative z-10">
-            <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/10 px-4 py-2 shadow-2xl backdrop-blur">
-              <img
-                src="/favicon-new.ico"
-                alt="Roam logo"
-                className="h-6 w-6 rounded-sm"
-              />
-              <span className="text-sm font-semibold tracking-wide text-white">
-                ROAM
-              </span>
-            </div>
 
             <div className="max-w-xl space-y-6">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
