@@ -90,7 +90,9 @@ export default function SponsorCrawlPage() {
         return;
       }
 
-      router.push(`/sponsor/${data.public_id ?? data.slug}`);
+      const redirectSlug = data.public_id ?? data.slug;
+
+      router.push(`/sponsor/${redirectSlug}`);
     } catch (err) {
       console.error('Unexpected error:', err);
       alert('An unexpected error occurred.');
@@ -255,7 +257,7 @@ export default function SponsorCrawlPage() {
         <p className="text-xs text-muted-foreground dark:text-neutral-400">
           {isPublic
             ? 'Visible to everyone in search, discovery, and future rankings.'
-            : 'Only accessible via direct link.'}
+            : 'Hidden from discovery. Still accessible via direct link.'}
         </p>
 
         <div className="flex items-center justify-between pt-2">

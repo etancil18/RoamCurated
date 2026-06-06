@@ -33,7 +33,7 @@ export default function CrawlSearch() {
         .from('crawl_events')
         .select('id, title, slug, public_id, datetime, city')
         .eq('is_public', true)
-        .ilike('title', `%${query}%`)
+        .or(`title.ilike.%${query}%,city.ilike.%${query}%`)
         .order('datetime', { ascending: true })
         .limit(10);
 
@@ -42,7 +42,7 @@ export default function CrawlSearch() {
       }
 
       setLoading(false);
-    }, 300); // debounce
+    }, 300);
 
     return () => clearTimeout(delay);
   }, [query]);
@@ -65,12 +65,16 @@ export default function CrawlSearch() {
       {results.length > 0 && (
         <div className="grid gap-2">
           {results.map((crawl) => (
-            <Link key={crawl.id} href={`/sponsor/${crawl.public_id ?? crawl.slug}`}>
+            <Link
+              key={crawl.id}
+              href={`/sponsor/${crawl.public_id ?? crawl.slug}`}
+            >
               <Card className="hover:shadow-md transition cursor-pointer bg-white dark:bg-neutral-800 border dark:border-neutral-700">
                 <CardContent className="p-3">
                   <p className="font-medium text-gray-900 dark:text-white">
                     {crawl.title}
                   </p>
+
                   <p className="text-xs text-muted-foreground dark:text-neutral-400">
                     {crawl.city} •{' '}
                     {crawl.datetime

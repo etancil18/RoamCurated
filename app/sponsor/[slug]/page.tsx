@@ -16,6 +16,30 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
+type SponsorVenueWithActions = {
+  id: string;
+  name: string;
+  city: string | null;
+  address: string | null;
+  lat: number | null;
+  lon: number | null;
+  instagram_handle: string | null;
+  booking_options: {
+    provider: string;
+    url: string;
+  }[];
+};
+
+function normalizeExternalUrl(url: string): string {
+  const trimmed = url.trim();
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
+  return `https://${trimmed.replace(/^\/+/, '')}`;
+}
+
 export default async function SponsorPage({ params }: PageProps) {
   const { slug } = await params;
   const supabase = await createServerClient();
@@ -36,9 +60,11 @@ export default async function SponsorPage({ params }: PageProps) {
       max_capacity,
       rsvp_enabled,
       slug,
-      creator_id
+      public_id,
+      creator_id,
+      is_public
     `)
-    .eq('slug', slug)
+    .or(`public_id.eq.${slug},slug.eq.${slug}`)
     .limit(1);
 
   const crawl = data?.[0] ?? null;
@@ -56,6 +82,61 @@ export default async function SponsorPage({ params }: PageProps) {
       </div>
     );
   }
+
+  const venueIds = Array.isArray(crawl.venue_ids)
+    ? crawl.venue_ids.filter(Boolean)
+    : [];
+
+  const { data: venueData, error: venueError } = await supabase
+    .from('venues')
+    .select('id, name, city, address, lat, lon, instagram_handle')
+    .in('id', venueIds);
+
+  if (venueError) {
+    console.error('[sponsor/page] Venue fetch error:', venueError);
+  }
+
+  const { data: bookingData, error: bookingError } = await supabase
+    .from('venue_bookings')
+    .select('venue_id, provider, url')
+    .in('venue_id', venueIds);
+
+  if (bookingError) {
+    console.error('[sponsor/page] Venue booking fetch error:', bookingError);
+  }
+
+  const venues: SponsorVenueWithActions[] = venueIds.reduce<
+    SponsorVenueWithActions[]
+  >((acc, venueId) => {
+    const venue = venueData?.find((item) => item.id === venueId);
+    if (!venue || !venue.name) return acc;
+
+    acc.push({
+      id: venue.id,
+      name: venue.name,
+      city: venue.city,
+      address: venue.address ?? null,
+      lat: venue.lat,
+      lon: venue.lon,
+      instagram_handle: venue.instagram_handle,
+      booking_options:
+        bookingData
+          ?.filter(
+            (booking) =>
+              booking.venue_id === venueId &&
+              typeof booking.provider === 'string' &&
+              booking.provider.trim().length > 0 &&
+              typeof booking.url === 'string' &&
+              booking.url.trim().length > 0
+          )
+          .map((booking) => ({
+            provider: booking.provider as string,
+            url: normalizeExternalUrl(booking.url),
+          })) ?? [],
+    });
+
+    return acc;
+  }, []);
 
   const { data: attendees, error: rsvpError } = await supabase.rpc(
     'get_crawl_with_attendees',
@@ -97,7 +178,8 @@ export default async function SponsorPage({ params }: PageProps) {
     max_capacity: crawl.max_capacity ?? null,
     full_name: a.full_name ?? null,
     creator_id: crawl.creator_id,
-    slug: crawl.slug,
+    slug: crawl.public_id ?? crawl.slug,
+    venues,
   }));
 
   return (
@@ -119,7 +201,7 @@ export default async function SponsorPage({ params }: PageProps) {
       <SharePreview
         title={crawl.title ?? ''}
         city={crawl.city ?? ''}
-        slug={crawl.slug ?? ''}
+        slug={crawl.public_id ?? crawl.slug ?? ''}
       />
 
       {isGoing && (

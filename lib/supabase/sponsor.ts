@@ -24,8 +24,13 @@ export async function createSponsorCrawl(payload: SponsorCrawlPayload) {
 
   const { data, error } = await supabase
     .from('crawl_events')
-    .insert({ ...payload, creator_id, public_id })
-    .select('slug, public_id')
+    .insert({
+      ...payload,
+      creator_id,
+      public_id,
+      is_public: payload.is_public ?? true,
+    })
+    .select('slug, public_id, is_public')
     .single();
 
   return { data, error };
@@ -53,7 +58,8 @@ export async function getSponsorCrawlBySlug(slug: string) {
       rsvp_enabled,
       slug,
       public_id,
-      creator_id
+      creator_id,
+      is_public
     `)
     .or(`public_id.eq.${slug},slug.eq.${slug}`)
     .single();

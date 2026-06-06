@@ -35,11 +35,13 @@ export async function GET(req: NextRequest) {
       max_capacity,
       rsvp_enabled,
       slug,
+      public_id,
       creator_id,
-      created_at
+      created_at,
+      is_public
       `
     )
-    .eq('slug', slug)
+    .or(`public_id.eq.${slug},slug.eq.${slug}`)
     .single();
 
   if (crawlError || !crawl) {

@@ -8,7 +8,19 @@ import { Button } from '@/components/ui/button';
 import SponsorMapPreview from '@/app/sponsor-crawl/components/SponsorMapPreview';
 import RSVPButton from './RSVPButton';
 import SponsorEditButton from './SponsorEditButton';
+import FlowVenueActions from '@/components/flows/FlowVenueActions';
+import SponsorFlowShareActions from './SponsorFlowShareActions';
 import { supabaseBrowser } from '@/lib/supabase/client';
+
+type BookingOption = {
+  provider: string;
+  url: string;
+};
+
+type SponsorVenueWithActions = SponsorVenue & {
+  address?: string | null;
+  booking_options?: BookingOption[] | null;
+};
 
 async function fetchAttendeeDetails(userIds: string[]) {
   const supabase = supabaseBrowser();
@@ -51,12 +63,23 @@ function getEmojiForVenue(name: string): string {
   return venueMoodEmojiMap.default;
 }
 
+function normalizeExternalUrl(url: string): string {
+  const trimmed = url.trim();
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+
+  return `https://${trimmed.replace(/^\/+/, '')}`;
+}
+
 export default function SponsorDetail({ crawl }: Props) {
-  const [venues, setVenues] = useState<SponsorVenue[]>([]);
+  const [venues, setVenues] = useState<SponsorVenueWithActions[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [checkedStops, setCheckedStops] = useState<number[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [attendeesWithDetails, setAttendeesWithDetails] = useState<any[]>([]);
+  const [segmentMinutesByVenueId, setSegmentMinutesByVenueId] = useState<Record<string, number>>({});
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
@@ -165,11 +188,18 @@ export default function SponsorDetail({ crawl }: Props) {
 
   useEffect(() => {
     const fetchVenues = async () => {
+      const preloadedVenues = (meta as any).venues;
+
+      if (Array.isArray(preloadedVenues) && preloadedVenues.length > 0) {
+        setVenues(preloadedVenues);
+        return;
+      }
+
       const supabase = supabaseBrowser();
 
       const { data, error } = await supabase
         .from('venues')
-        .select('id, name, city, lat, lon, instagram_handle')
+        .select('id, name, city, address, lat, lon, instagram_handle')
         .in('id', meta.venue_ids);
 
       if (error) {
@@ -179,16 +209,40 @@ export default function SponsorDetail({ crawl }: Props) {
 
       if (!data) return;
 
-      const ordered: SponsorVenue[] = meta.venue_ids
+      const { data: bookingData, error: bookingError } = await supabase
+        .from('venue_bookings')
+        .select('venue_id, provider, url')
+        .in('venue_id', meta.venue_ids);
+
+      if (bookingError) {
+        console.error('[SponsorDetail] Venue booking fetch failed:', bookingError);
+      }
+
+      const ordered: SponsorVenueWithActions[] = meta.venue_ids
         .map((id) => data.find((v) => v.id === id))
         .filter((v): v is NonNullable<typeof v> => !!v)
-        .map((v): SponsorVenue => ({
+        .map((v): SponsorVenueWithActions => ({
           id: v.id,
           name: v.name ?? '',
           city: v.city ?? '',
+          address: v.address ?? null,
           lat: v.lat ?? 0,
           lon: v.lon ?? 0,
           instagram_handle: v.instagram_handle ?? null,
+          booking_options:
+            bookingData
+              ?.filter(
+                (booking) =>
+                  booking.venue_id === v.id &&
+                  typeof booking.provider === 'string' &&
+                  booking.provider.trim().length > 0 &&
+                  typeof booking.url === 'string' &&
+                  booking.url.trim().length > 0
+              )
+              .map((booking) => ({
+                provider: booking.provider as string,
+                url: normalizeExternalUrl(booking.url),
+              })) ?? [],
         }));
 
       setVenues(ordered);
@@ -196,6 +250,59 @@ export default function SponsorDetail({ crawl }: Props) {
 
     if (meta.venue_ids?.length) fetchVenues();
   }, [meta]);
+
+  useEffect(() => {
+    async function loadSegmentDurations() {
+      if (venues.length < 2) return;
+
+      const nextDurations: Record<string, number> = {};
+
+      for (let i = 1; i < venues.length; i++) {
+        const from = venues[i - 1];
+        const to = venues[i];
+
+        if (
+          typeof from.lat !== 'number' ||
+          typeof from.lon !== 'number' ||
+          typeof to.lat !== 'number' ||
+          typeof to.lon !== 'number'
+        ) {
+          continue;
+        }
+
+        try {
+          const res = await fetch('/api/mapbox', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              origin: {
+                lat: from.lat,
+                lng: from.lon,
+              },
+              destination: {
+                lat: to.lat,
+                lng: to.lon,
+              },
+              waypoints: [],
+              travelMode: 'driving',
+            }),
+          });
+
+          const json = await res.json();
+
+          if (res.ok && typeof json.duration === 'number') {
+            nextDurations[to.id] = Math.round(json.duration / 60);
+          }
+        } catch (err) {
+          console.error('[SponsorDetail] Failed to load segment duration:', err);
+        }
+      }
+
+      setSegmentMinutesByVenueId(nextDurations);
+    }
+
+    loadSegmentDurations();
+  }, [venues]);
 
   useEffect(() => {
     const loadProgress = async () => {
@@ -418,32 +525,49 @@ export default function SponsorDetail({ crawl }: Props) {
         ) : (
           <>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {venues.map((v) => (
-                <Card key={v.id} className="flex items-center space-x-3 p-3">
-                  <div className="text-2xl">{getEmojiForVenue(v.name)}</div>
+              {venues.map((v, index) => {
+                const previousVenue = index > 0 ? venues[index - 1] : null;
+                const travelMinutes = segmentMinutesByVenueId[v.id] ?? null;
 
-                  <div>
-                    <div className="font-medium">
-                      {v.instagram_handle ? (
-                        <a
-                          href={`https://instagram.com/${v.instagram_handle.replace(/^@/, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {v.name}
-                        </a>
-                      ) : (
-                        v.name
-                      )}
+                return (
+                  <Card key={v.id} className="flex flex-col space-y-3 p-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-2xl">{getEmojiForVenue(v.name)}</div>
+
+                      <div>
+                        <div className="font-medium">
+                          {v.instagram_handle ? (
+                            <a
+                              href={`https://instagram.com/${v.instagram_handle.replace(/^@/, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {v.name}
+                            </a>
+                          ) : (
+                            v.name
+                          )}
+                        </div>
+
+                        <div className="text-xs text-muted-foreground">
+                          {v.address ?? v.city}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="text-xs text-muted-foreground">
-                      {v.city}
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                    <FlowVenueActions
+                      venue={v}
+                      previousVenue={previousVenue}
+                      travelMinutes={travelMinutes}
+                      flowId={meta.crawl_id}
+                      context="hosted_flow"
+                      stopIndex={index}
+                      compact
+                    />
+                  </Card>
+                );
+              })}
             </div>
 
             <div className="mt-2">
@@ -524,28 +648,30 @@ export default function SponsorDetail({ crawl }: Props) {
               return (
                 <li
                   key={v.id}
-                  className="flex items-center justify-between rounded-lg border bg-white p-3"
+                  className="rounded-lg border bg-white p-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <button
-                      id={`flow-stop-${i}`}
-                      type="button"
-                      onClick={() => toggleStop(i)}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold ${
-                        checked
-                          ? 'border-indigo-600 bg-indigo-600 text-white'
-                          : 'border-gray-300 text-gray-400'
-                      }`}
-                    >
-                      {checked ? '✓' : i + 1}
-                    </button>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <button
+                        id={`flow-stop-${i}`}
+                        type="button"
+                        onClick={() => toggleStop(i)}
+                        className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold ${
+                          checked
+                            ? 'border-indigo-600 bg-indigo-600 text-white'
+                            : 'border-gray-300 text-gray-400'
+                        }`}
+                      >
+                        {checked ? '✓' : i + 1}
+                      </button>
 
-                    <div>
-                      <p className="text-sm font-medium">{v.name}</p>
+                      <div>
+                        <p className="text-sm font-medium">{v.name}</p>
 
-                      <p className="text-xs text-muted-foreground">
-                        {checked ? '+25 XP checked in' : 'Tap to check in'}
-                      </p>
+                        <p className="text-xs text-muted-foreground">
+                          {checked ? '+25 XP checked in' : 'Tap to check in'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </li>
@@ -565,6 +691,19 @@ export default function SponsorDetail({ crawl }: Props) {
             </div>
           )}
         </div>
+      )}
+
+      {venues.length > 0 && (
+        <SponsorFlowShareActions
+          crawlId={meta.crawl_id}
+          title={meta.title}
+          city={meta.city}
+          datetime={meta.datetime}
+          venues={venues}
+          checkedStops={checkedStops}
+          totalStops={totalStops}
+          flowCompleted={flowCompleted}
+        />
       )}
 
       {attendeesWithDetails.length > 0 && (
