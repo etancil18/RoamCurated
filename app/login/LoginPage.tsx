@@ -116,9 +116,6 @@ export default function LoginPage() {
           <div className="relative z-10">
 
             <div className="max-w-xl space-y-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
-                Playable city discovery
-              </p>
 
               <h1 className="text-5xl font-black leading-[0.98] tracking-tight text-white xl:text-6xl">
                 Turn your city into a playable itinerary.

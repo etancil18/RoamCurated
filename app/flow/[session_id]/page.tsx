@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import ActiveFlowCard from './components/ActiveFlowCard'
 import FlowMap from './components/FlowMap'
 import FlowProgress from './components/FlowProgress'
+import FlowRouteLauncher from '@/components/flows/FlowRouteLauncher'
 
 export const dynamic = 'force-dynamic'
 
@@ -176,6 +177,13 @@ export default async function ActiveFlowPage({ params }: PageProps) {
           currentVenueId={currentVenueId}
           travelMode={normalizeTravelMode(session.travel_mode) ?? 'walking'}
           heightPx={320}
+        />
+
+        <FlowRouteLauncher
+          venues={venues}
+          travelMode={normalizeTravelMode(session.travel_mode) ?? 'walking'}
+          flowId={session.id}
+          source="active_flow"
         />
 
         <FlowProgress

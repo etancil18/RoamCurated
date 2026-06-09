@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
 import OutingMap from "@/components/events/OutingMap"
-import OutingShareActions from "@/components/outings/OutingShareActions"
-import OutingRideActions from "@/components/outings/OutingRideActions"
+import StartFlowFromOutingButton from "@/components/flows/StartFlowFromOutingButton"
 
 export const dynamic = "force-dynamic"
 
@@ -53,6 +52,16 @@ type PlannedOutingStopRow = {
   distance_meters_from_prev: number | null
   metadata: unknown
   venue: VenueRow | VenueRow[] | null
+}
+
+type ActiveFlowSessionRow = {
+  id: string
+  user_id: string
+  title: string | null
+  city: string | null
+  source: string | null
+  status: string
+  venue_ids: string[] | null
 }
 
 type OutingMapAnchor = {
@@ -243,6 +252,13 @@ export default async function EventOutingPage({ params }: Props) {
 
   const city = outing.city ?? anchor.venue?.city ?? stops[0]?.venue?.city ?? ""
 
+  const { data: existingActiveFlow } = await supabase
+    .from("active_flow_sessions")
+    .select("id, user_id, title, city, source, status, venue_ids")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .maybeSingle<ActiveFlowSessionRow>()
+
   await logPlannedOutingViewed({
     supabase,
     userId: user.id,
@@ -256,62 +272,68 @@ export default async function EventOutingPage({ params }: Props) {
     anchorVenueId: anchor.venue?.id ?? null,
   })
 
+  const draftPath = `/events/${eventId}/outing/${outing.id}`
+  const shareText = encodeURIComponent(
+    outing.plan_summary ?? anchor.title ?? "View this Roam event flow"
+  )
+
   return (
     <main className="mx-auto max-w-5xl space-y-4 px-4 pb-4 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">
-          {humanizeMode(outing.mode)} Plan
+          {humanizeMode(outing.mode)} Flow Draft
         </p>
         <h1 className="text-2xl font-bold">
-          {outing.plan_summary ?? anchor.title ?? "Outing Route"}
+          {outing.plan_summary ?? anchor.title ?? "Event Flow"}
         </h1>
         <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
           {city ? <span>{city}</span> : null}
           {outing.confidence_score != null ? (
             <span>Confidence {Math.round(outing.confidence_score * 100)}%</span>
           ) : null}
-          {anchor.startsAt ? (
-            <span>{formatDateTime(anchor.startsAt)}</span>
-          ) : null}
+          {anchor.startsAt ? <span>{formatDateTime(anchor.startsAt)}</span> : null}
         </div>
       </div>
 
-      <OutingShareActions
-        plannedOutingId={outing.id}
-        eventId={eventId}
-        city={city}
-        mode={outing.mode}
-        summary={outing.plan_summary}
-        anchorTitle={anchor.title}
-        anchorVenue={{
-          id: anchor.venue?.id ?? "anchor-event",
-          name: anchor.venue?.name ?? anchor.title ?? "Event",
-          title: anchor.title,
-          lat: anchor.venue?.lat ?? null,
-          lon: anchor.venue?.lon ?? null,
-          city,
-        }}
-        eventStartsAt={anchor.startsAt}
-        stops={stops.map((stop) => ({
-          ...stop,
-          lat: stop.venue?.lat ?? null,
-          lon: stop.venue?.lon ?? null,
-        }))}
-      />
+      <div className="rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-indigo-300">
+              {existingActiveFlow ? "Flow already in progress" : "Ready to execute this Flow?"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {existingActiveFlow
+                ? "Resume your active flow to keep checking in, tracking progress, and completing your route."
+                : "Start this event flow to check in, track progress, complete it, and save it to your Passport."}
+            </p>
+          </div>
 
-      <OutingRideActions
-        plannedOutingId={outing.id}
-        eventId={eventId}
-        stops={stops.map((stop) => ({
-          id: stop.id,
-          venueId: stop.venueId,
-          title: stop.title ?? stop.venue?.name ?? "Stop",
-          address: stop.venue?.address ?? null,
-          lat: stop.venue?.lat ?? null,
-          lon: stop.venue?.lon ?? null,
-          travelMinutesFromPrev: stop.travelMinutesFromPrev,
-        }))}
-      />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <StartFlowFromOutingButton
+              eventId={eventId}
+              plannedOutingId={outing.id}
+              existingSessionId={existingActiveFlow?.id ?? null}
+              label={existingActiveFlow ? "Resume Flow" : "Start Flow"}
+              loadingLabel={existingActiveFlow ? "Opening Flow…" : "Starting Flow…"}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            />
+
+            <a
+              href={draftPath}
+              className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-neutral-800"
+            >
+              Copy Link
+            </a>
+
+            <a
+              href={`mailto:?subject=Roam Flow&body=${shareText}%0A%0A${draftPath}`}
+              className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-neutral-800"
+            >
+              Share Flow
+            </a>
+          </div>
+        </div>
+      </div>
 
       <OutingMap
         plannedOutingId={outing.id}
@@ -377,10 +399,7 @@ function normalizeVenueRelation(
   return Array.isArray(venue) ? venue[0] ?? null : venue
 }
 
-function readMetadataString(
-  metadata: unknown,
-  key: string
-): string | null {
+function readMetadataString(metadata: unknown, key: string): string | null {
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
     return null
   }

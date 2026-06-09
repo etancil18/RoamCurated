@@ -121,8 +121,6 @@ export default function OutingMap({
 
   const [travelMode, setTravelMode] = useState<"walking" | "driving">("walking")
   const [orderedStops, setOrderedStops] = useState<Stop[]>(stops)
-  const [shareFeedback, setShareFeedback] = useState("Share Route")
-  const [routeChooserOpen, setRouteChooserOpen] = useState(false)
 
   useEffect(() => {
     setOrderedStops(stops)
@@ -298,108 +296,6 @@ export default function OutingMap({
     })
   }
 
-  function openExternalUrl(url: string) {
-    const opened = window.open(url, "_blank", "noopener,noreferrer")
-
-    if (!opened) {
-      window.location.href = url
-    }
-  }
-
-  function openGoogleMaps() {
-    if (!anchorVenue || routeStops.length === 0) return
-
-    const route = buildDisplayRoute({
-      mode,
-      anchorVenue,
-      routeStops,
-    })
-
-    if (route.length < 2) return
-
-    safeLogEvent("outing_route_google_maps_clicked", baseLogMetadata())
-
-    const origin = route[0]
-    const destination = route[route.length - 1]
-    const waypoints = route
-      .slice(1, -1)
-      .map((v) => `${v.lat},${v.lon}`)
-      .join("|")
-
-    const url = new URL("https://www.google.com/maps/dir/")
-    url.searchParams.set("api", "1")
-    url.searchParams.set("origin", `${origin.lat},${origin.lon}`)
-    url.searchParams.set("destination", `${destination.lat},${destination.lon}`)
-    url.searchParams.set("travelmode", travelMode)
-
-    if (waypoints) {
-      url.searchParams.set("waypoints", waypoints)
-    }
-
-    openExternalUrl(url.toString())
-  }
-
-  function openAppleMaps() {
-    if (!anchorVenue || routeStops.length === 0) return
-
-    const route = buildDisplayRoute({
-      mode,
-      anchorVenue,
-      routeStops,
-    })
-
-    if (route.length < 2) return
-
-    safeLogEvent("outing_route_apple_maps_clicked", baseLogMetadata())
-
-    const origin = route[0]
-    const destination = route[route.length - 1]
-    const dirFlag = travelMode === "driving" ? "d" : "w"
-
-    const url =
-      `https://maps.apple.com/?saddr=${origin.lat},${origin.lon}` +
-      `&daddr=${destination.lat},${destination.lon}` +
-      `&dirflg=${dirFlag}`
-
-    openExternalUrl(url)
-  }
-
-  async function shareRoute() {
-    if (typeof window === "undefined") return
-
-    const url = window.location.href
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: anchor.title ?? "Outing Route",
-          text: `Check out this outing route in ${city}.`,
-          url,
-        })
-        return
-      }
-
-      await navigator.clipboard.writeText(url)
-      setShareFeedback("Link Copied")
-      window.setTimeout(() => {
-        setShareFeedback("Share Route")
-      }, 1800)
-    } catch {
-      try {
-        await navigator.clipboard.writeText(url)
-        setShareFeedback("Link Copied")
-        window.setTimeout(() => {
-          setShareFeedback("Share Route")
-        }, 1800)
-      } catch {
-        setShareFeedback("Unable to Share")
-        window.setTimeout(() => {
-          setShareFeedback("Share Route")
-        }, 1800)
-      }
-    }
-  }
-
   function goBackToEvent() {
     safeLogEvent("outing_back_to_events_clicked", baseLogMetadata())
     router.push(`/events`)
@@ -569,90 +465,9 @@ export default function OutingMap({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              safeLogEvent("outing_start_route_clicked", baseLogMetadata())
-              setRouteChooserOpen(true)
-            }}
-            disabled={!anchorVenue || routeStops.length === 0}
-            className="w-full"
-          >
-            Start Route
-          </Button>
-
-          <Button variant="secondary" onClick={goBackToEvent} className="w-full">
-            Back to Events
-          </Button>
-        </div>
-
-        {routeChooserOpen ? (
-          <div
-            className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/80 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:items-center sm:pb-4"
-            role="dialog"
-            aria-modal="true"
-            onClick={() => {
-              safeLogEvent("outing_route_chooser_cancelled", {
-                ...baseLogMetadata(),
-                cancel_source: "backdrop",
-              })
-              setRouteChooserOpen(false)
-            }}
-          >
-            <div
-              className="w-full max-w-sm rounded-2xl border border-neutral-700 bg-neutral-950 p-5 text-white shadow-2xl"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="mb-5">
-                <p className="text-lg font-semibold text-white">Start route</p>
-                <p className="mt-1 text-sm leading-5 text-neutral-300">
-                  Choose your preferred maps app.
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setRouteChooserOpen(false)
-                    openGoogleMaps()
-                  }}
-                  className="h-12 w-full justify-start border-neutral-700 bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white"
-                >
-                  Open in Google Maps
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setRouteChooserOpen(false)
-                    openAppleMaps()
-                  }}
-                  className="h-12 w-full justify-start border-neutral-700 bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white"
-                >
-                  Open in Apple Maps
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    safeLogEvent("outing_route_chooser_cancelled", {
-                      ...baseLogMetadata(),
-                      cancel_source: "button",
-                    })
-                    setRouteChooserOpen(false)
-                  }}
-                  className="h-11 w-full text-neutral-300 hover:bg-neutral-900 hover:text-white"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : null}
-      </div>
+      <Button variant="secondary" onClick={goBackToEvent} className="w-full">
+        Back to Events
+      </Button>
 
       {orderedStops.length === 0 && (
         <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
