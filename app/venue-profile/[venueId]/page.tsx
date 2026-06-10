@@ -7,7 +7,7 @@ import SocialLinks from '@/components/venue-profile/SocialLinks'
 import VenueHours from '@/components/venue-profile/VenueHours'
 import LiveStatusPill from '@/components/venue-profile/LiveStatusPill'
 import EventCarousel from '@/components/venue-profile/EventCarousel'
-import FollowButton from '@/components/venue-profile/FollowButton'
+import VenueVisitButton from '@/components/venue-profile/VenueVisitButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
 
 import {
@@ -236,17 +236,22 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
            dark:bg-neutral-950 dark:text-gray-100"
     >
       <div className="sticky top-16 z-30 -mx-4 bg-white/95 px-4 py-3 backdrop-blur dark:bg-neutral-950/95 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
-  <Link
-    href={backToMapHref}
-    className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium
+        <Link
+          href={backToMapHref}
+          className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium
                text-blue-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800
                dark:border-zinc-700 dark:bg-zinc-900 dark:text-blue-400 dark:hover:bg-zinc-800 dark:hover:text-blue-300"
-  >
-    ← Back to {normalizedVenue.city ?? 'Map'}
-  </Link>
-</div>
+        >
+          ← Back to {normalizedVenue.city ?? 'Map'}
+        </Link>
+      </div>
 
       <HeroBanner venue={normalizedVenue} />
+
+      <VenueVisitButton
+        venueId={venueId}
+        venueName={normalizedVenue.name}
+      />
 
       {normalizedVenue.description && (
         <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -279,8 +284,6 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
           interestedEventIds={interestedEventIds}
         />
       )}
-
-      <FollowButton venueId={venueId} />
     </div>
   )
 }

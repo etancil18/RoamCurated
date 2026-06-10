@@ -286,6 +286,189 @@ export type Database = {
           },
         ]
       }
+      event_discovery_runs: {
+        Row: {
+          ai_detection_json: Json | null
+          checked_at: string | null
+          content_hash: string | null
+          created_at: string | null
+          error_message: string | null
+          event_signal_score: number | null
+          id: string
+          possible_event_count: number | null
+          raw_html: string | null
+          raw_text: string | null
+          source_id: string
+          source_url: string | null
+          status: string | null
+          venue_id: string
+        }
+        Insert: {
+          ai_detection_json?: Json | null
+          checked_at?: string | null
+          content_hash?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          event_signal_score?: number | null
+          id?: string
+          possible_event_count?: number | null
+          raw_html?: string | null
+          raw_text?: string | null
+          source_id: string
+          source_url?: string | null
+          status?: string | null
+          venue_id: string
+        }
+        Update: {
+          ai_detection_json?: Json | null
+          checked_at?: string | null
+          content_hash?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          event_signal_score?: number | null
+          id?: string
+          possible_event_count?: number | null
+          raw_html?: string | null
+          raw_text?: string | null
+          source_id?: string
+          source_url?: string | null
+          status?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_discovery_runs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "venue_event_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_discovery_runs_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "event_discovery_runs_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_drafts: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          description: string | null
+          discovery_run_id: string | null
+          duplicate_score: number | null
+          ends_at: string | null
+          event_signal_score: number | null
+          extracted_json: Json | null
+          id: string
+          missing_fields: string[] | null
+          price_info: string | null
+          raw_item_id: string | null
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          source_type: string | null
+          source_url: string | null
+          starts_at: string | null
+          status: string | null
+          tags: string[] | null
+          ticket_link: string | null
+          timezone: string | null
+          title: string | null
+          updated_at: string | null
+          venue_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          description?: string | null
+          discovery_run_id?: string | null
+          duplicate_score?: number | null
+          ends_at?: string | null
+          event_signal_score?: number | null
+          extracted_json?: Json | null
+          id?: string
+          missing_fields?: string[] | null
+          price_info?: string | null
+          raw_item_id?: string | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          source_type?: string | null
+          source_url?: string | null
+          starts_at?: string | null
+          status?: string | null
+          tags?: string[] | null
+          ticket_link?: string | null
+          timezone?: string | null
+          title?: string | null
+          updated_at?: string | null
+          venue_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          description?: string | null
+          discovery_run_id?: string | null
+          duplicate_score?: number | null
+          ends_at?: string | null
+          event_signal_score?: number | null
+          extracted_json?: Json | null
+          id?: string
+          missing_fields?: string[] | null
+          price_info?: string | null
+          raw_item_id?: string | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          source_type?: string | null
+          source_url?: string | null
+          starts_at?: string | null
+          status?: string | null
+          tags?: string[] | null
+          ticket_link?: string | null
+          timezone?: string | null
+          title?: string | null
+          updated_at?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_drafts_discovery_run_id_fkey"
+            columns: ["discovery_run_id"]
+            isOneToOne: false
+            referencedRelation: "event_discovery_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_drafts_raw_item_id_fkey"
+            columns: ["raw_item_id"]
+            isOneToOne: false
+            referencedRelation: "raw_ingestion_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_drafts_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "event_drafts_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_interests: {
         Row: {
           city: string | null
@@ -1189,6 +1372,83 @@ export type Database = {
           },
         ]
       }
+      raw_ingestion_items: {
+        Row: {
+          content_hash: string | null
+          created_at: string | null
+          discovery_run_id: string | null
+          error_message: string | null
+          id: string
+          raw_html: string | null
+          raw_text: string
+          source_id: string | null
+          source_type: string
+          source_url: string | null
+          status: string | null
+          updated_at: string | null
+          venue_id: string
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string | null
+          discovery_run_id?: string | null
+          error_message?: string | null
+          id?: string
+          raw_html?: string | null
+          raw_text: string
+          source_id?: string | null
+          source_type: string
+          source_url?: string | null
+          status?: string | null
+          updated_at?: string | null
+          venue_id: string
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string | null
+          discovery_run_id?: string | null
+          error_message?: string | null
+          id?: string
+          raw_html?: string | null
+          raw_text?: string
+          source_id?: string | null
+          source_type?: string
+          source_url?: string | null
+          status?: string | null
+          updated_at?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raw_ingestion_items_discovery_run_id_fkey"
+            columns: ["discovery_run_id"]
+            isOneToOne: false
+            referencedRelation: "event_discovery_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "raw_ingestion_items_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "venue_event_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "raw_ingestion_items_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "raw_ingestion_items_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recurring_events: {
         Row: {
           created_at: string | null
@@ -1659,6 +1919,69 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_event_sources: {
+        Row: {
+          check_frequency: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          last_checked_at: string | null
+          notes: string | null
+          reliability_score: number | null
+          source_label: string | null
+          source_type: string
+          source_url: string | null
+          updated_at: string | null
+          venue_id: string
+        }
+        Insert: {
+          check_frequency?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          last_checked_at?: string | null
+          notes?: string | null
+          reliability_score?: number | null
+          source_label?: string | null
+          source_type: string
+          source_url?: string | null
+          updated_at?: string | null
+          venue_id: string
+        }
+        Update: {
+          check_frequency?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          last_checked_at?: string | null
+          notes?: string | null
+          reliability_score?: number | null
+          source_label?: string | null
+          source_type?: string
+          source_url?: string | null
+          updated_at?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_event_sources_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_event_sources_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_followers: {
         Row: {
           created_at: string | null
@@ -1873,6 +2196,51 @@ export type Database = {
           },
         ]
       }
+      venue_visits: {
+        Row: {
+          created_at: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+          venue_id: string
+          visited_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+          venue_id: string
+          visited_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+          venue_id?: string
+          visited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_visits_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_visits_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venues: {
         Row: {
           access_token: string | null
@@ -1883,19 +2251,28 @@ export type Database = {
           description: string | null
           duration: number | null
           energy_ramp: number | null
+          event_check_frequency: string | null
+          event_discovery_status: string | null
+          event_likelihood_score: number | null
+          event_source_notes: string | null
+          events_url: string | null
           hours: Json | null
           id: string
           instagram_handle: string | null
+          last_event_check_at: string | null
+          last_verified_at: string | null
           lat: number | null
           lon: number | null
           name: string | null
           price: string | null
+          profile_status: string | null
           slug: string | null
           tags: string[] | null
           tier: string | null
           time_category: string[] | null
           type: string[] | null
           vibe: string[] | null
+          website_url: string | null
         }
         Insert: {
           access_token?: string | null
@@ -1906,19 +2283,28 @@ export type Database = {
           description?: string | null
           duration?: number | null
           energy_ramp?: number | null
+          event_check_frequency?: string | null
+          event_discovery_status?: string | null
+          event_likelihood_score?: number | null
+          event_source_notes?: string | null
+          events_url?: string | null
           hours?: Json | null
           id?: string
           instagram_handle?: string | null
+          last_event_check_at?: string | null
+          last_verified_at?: string | null
           lat?: number | null
           lon?: number | null
           name?: string | null
           price?: string | null
+          profile_status?: string | null
           slug?: string | null
           tags?: string[] | null
           tier?: string | null
           time_category?: string[] | null
           type?: string[] | null
           vibe?: string[] | null
+          website_url?: string | null
         }
         Update: {
           access_token?: string | null
@@ -1929,19 +2315,28 @@ export type Database = {
           description?: string | null
           duration?: number | null
           energy_ramp?: number | null
+          event_check_frequency?: string | null
+          event_discovery_status?: string | null
+          event_likelihood_score?: number | null
+          event_source_notes?: string | null
+          events_url?: string | null
           hours?: Json | null
           id?: string
           instagram_handle?: string | null
+          last_event_check_at?: string | null
+          last_verified_at?: string | null
           lat?: number | null
           lon?: number | null
           name?: string | null
           price?: string | null
+          profile_status?: string | null
           slug?: string | null
           tags?: string[] | null
           tier?: string | null
           time_category?: string[] | null
           type?: string[] | null
           vibe?: string[] | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -2430,19 +2825,28 @@ export type Database = {
           description: string | null
           duration: number | null
           energy_ramp: number | null
+          event_check_frequency: string | null
+          event_discovery_status: string | null
+          event_likelihood_score: number | null
+          event_source_notes: string | null
+          events_url: string | null
           hours: Json | null
           id: string
           instagram_handle: string | null
+          last_event_check_at: string | null
+          last_verified_at: string | null
           lat: number | null
           lon: number | null
           name: string | null
           price: string | null
+          profile_status: string | null
           slug: string | null
           tags: string[] | null
           tier: string | null
           time_category: string[] | null
           type: string[] | null
           vibe: string[] | null
+          website_url: string | null
         }[]
         SetofOptions: {
           from: "*"

@@ -13,6 +13,7 @@ type PassportStats = {
   savedProperties: number
   completedFlows: number
   completedFlowStops: number
+  venueVisits: number
 }
 
 type ActiveFlow = {
@@ -33,6 +34,7 @@ export default function RoamPassport() {
     savedProperties: 0,
     completedFlows: 0,
     completedFlowStops: 0,
+    venueVisits: 0,
   })
 
   const [activeFlow, setActiveFlow] = useState<ActiveFlow | null>(null)
@@ -58,6 +60,7 @@ export default function RoamPassport() {
         { data: properties },
         { data: activeFlowData },
         { data: completedFlows },
+        { data: venueVisits },
       ] =
         await Promise.all([
           supabase
@@ -93,6 +96,11 @@ export default function RoamPassport() {
             .select('id, venue_ids')
             .eq('user_id', userId)
             .eq('status', 'completed'),
+
+          supabase
+            .from('venue_visits')
+            .select('id')
+            .eq('user_id', userId),
         ])
 
       const joined = rsvps ?? []
@@ -127,6 +135,7 @@ export default function RoamPassport() {
         savedProperties: properties?.length ?? 0,
         completedFlows: completedFlows?.length ?? 0,
         completedFlowStops,
+        venueVisits: venueVisits?.length ?? 0,
       })
 
       setActiveFlow(activeFlowData ?? null)
@@ -145,7 +154,8 @@ export default function RoamPassport() {
       stats.pastCrawls * 100 +
       stats.savedProperties * 10 +
       stats.completedFlows * 100 +
-      stats.completedFlowStops * 25
+      stats.completedFlowStops * 25 +
+      stats.venueVisits * 10
     )
   }, [stats])
 
@@ -180,6 +190,10 @@ export default function RoamPassport() {
       label: 'Guide Saver',
       unlocked: stats.savedProperties > 0,
     },
+    {
+      label: 'Taste Builder',
+      unlocked: stats.venueVisits > 0,
+    },
   ]
 
   if (loading) {
@@ -204,7 +218,7 @@ export default function RoamPassport() {
             </h2>
 
             <p className="mt-1 text-sm text-neutral-400">
-              Your movement, hosted crawls, saved guides, and city progress.
+              Your movement, hosted crawls, saved guides, venue visits, and city progress.
             </p>
           </div>
 
@@ -258,10 +272,11 @@ export default function RoamPassport() {
         </Link>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-5">
         <StatCard label="Hosted" value={stats.hostedCrawls} />
         <StatCard label="Joined" value={stats.joinedCrawls} />
         <StatCard label="Completed" value={stats.pastCrawls + stats.completedFlows} />
+        <StatCard label="Visited" value={stats.venueVisits} />
         <StatCard label="Saved Guides" value={stats.savedProperties} />
       </div>
 
