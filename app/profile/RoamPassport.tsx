@@ -13,6 +13,8 @@ type PassportStats = {
   savedProperties: number
   completedFlows: number
   completedFlowStops: number
+  hostedFlowStops: number
+  completedHostedFlows: number
   venueVisits: number
 }
 
@@ -34,6 +36,8 @@ export default function RoamPassport() {
     savedProperties: 0,
     completedFlows: 0,
     completedFlowStops: 0,
+    hostedFlowStops: 0,
+    completedHostedFlows: 0,
     venueVisits: 0,
   })
 
@@ -61,6 +65,7 @@ export default function RoamPassport() {
         { data: activeFlowData },
         { data: completedFlows },
         { data: venueVisits },
+        { data: crawlProgress },
       ] =
         await Promise.all([
           supabase
@@ -101,6 +106,11 @@ export default function RoamPassport() {
             .from('venue_visits')
             .select('id')
             .eq('user_id', userId),
+
+          supabase
+            .from('crawl_progress')
+            .select('crawl_id, venue_id')
+            .eq('user_id', userId),
         ])
 
       const joined = rsvps ?? []
@@ -128,6 +138,39 @@ export default function RoamPassport() {
           return sum + (Array.isArray(flow.venue_ids) ? flow.venue_ids.length : 0)
         }, 0) ?? 0
 
+      const hostedFlowStops = crawlProgress?.length ?? 0
+
+      const crawlIds = [
+        ...new Set(
+          (crawlProgress ?? [])
+            .map((row: any) => row.crawl_id)
+            .filter(Boolean)
+        ),
+      ]
+
+      let completedHostedFlows = 0
+
+      if (crawlIds.length > 0) {
+        const { data: crawlEvents } = await supabase
+          .from('crawl_events')
+          .select('id, venue_ids')
+          .in('id', crawlIds)
+
+        completedHostedFlows =
+          crawlEvents?.filter((crawl: any) => {
+            const requiredStops = Array.isArray(crawl.venue_ids)
+              ? crawl.venue_ids.length
+              : 0
+
+            const completedStops =
+              crawlProgress?.filter(
+                (progressRow: any) => progressRow.crawl_id === crawl.id
+              ).length ?? 0
+
+            return requiredStops > 0 && completedStops >= requiredStops
+          }).length ?? 0
+      }
+
       setStats({
         hostedCrawls: hosted?.length ?? 0,
         joinedCrawls: joined.length,
@@ -135,6 +178,8 @@ export default function RoamPassport() {
         savedProperties: properties?.length ?? 0,
         completedFlows: completedFlows?.length ?? 0,
         completedFlowStops,
+        hostedFlowStops,
+        completedHostedFlows,
         venueVisits: venueVisits?.length ?? 0,
       })
 
@@ -155,6 +200,8 @@ export default function RoamPassport() {
       stats.savedProperties * 10 +
       stats.completedFlows * 100 +
       stats.completedFlowStops * 25 +
+      stats.hostedFlowStops * 25 +
+      stats.completedHostedFlows * 100 +
       stats.venueVisits * 10
     )
   }, [stats])
@@ -180,7 +227,7 @@ export default function RoamPassport() {
     },
     {
       label: 'Crawl Finisher',
-      unlocked: stats.pastCrawls > 0,
+      unlocked: stats.pastCrawls > 0 || stats.completedHostedFlows > 0,
     },
     {
       label: 'Flow Finisher',
@@ -275,7 +322,7 @@ export default function RoamPassport() {
       <div className="grid gap-3 sm:grid-cols-5">
         <StatCard label="Hosted" value={stats.hostedCrawls} />
         <StatCard label="Joined" value={stats.joinedCrawls} />
-        <StatCard label="Completed" value={stats.pastCrawls + stats.completedFlows} />
+        <StatCard label="Completed" value={stats.pastCrawls + stats.completedFlows + stats.completedHostedFlows} />
         <StatCard label="Visited" value={stats.venueVisits} />
         <StatCard label="Saved Guides" value={stats.savedProperties} />
       </div>

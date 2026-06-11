@@ -124,6 +124,20 @@ export default function Navbar() {
               <div className="py-2">
                 {user ? (
                   <>
+                  <Link
+                    href="/how-it-works"
+                    onClick={() => handleNavClick('how-it-works')}
+                    className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                  >
+                    How It Works
+                  </Link>
+                  <Link
+                      href="/"
+                      onClick={() => handleNavClick('maps')}
+                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                    >
+                      Maps
+                    </Link>
                    <Link
                       href="/events"
                       onClick={() => handleNavClick('events')}
@@ -132,11 +146,11 @@ export default function Navbar() {
                       Events
                    </Link>
                    <Link
-                      href="/"
-                      onClick={() => handleNavClick('maps')}
+                      href="/sponsor-crawl"
+                      onClick={() => handleNavClick('sponsor-crawl')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
-                      Maps
+                      Host a Flow
                     </Link>
                    <Link
                       href="/hosts"
@@ -144,13 +158,6 @@ export default function Navbar() {
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Build a Guide
-                    </Link>
-                    <Link
-                      href="/sponsor-crawl"
-                      onClick={() => handleNavClick('sponsor-crawl')}
-                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
-                    >
-                      Host a Flow
                     </Link>
                     <Link
                       href="/favorites"
