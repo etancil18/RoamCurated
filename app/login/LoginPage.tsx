@@ -37,7 +37,7 @@ export default function LoginPage() {
     if (!signInError) {
       await supabase.auth.getSession()
       setLoading(false)
-      window.location.href = '/events'
+      window.location.href = '/welcome'
       return
     }
 
@@ -57,7 +57,7 @@ export default function LoginPage() {
 
     setLoading(false)
 
-    window.location.href = '/'
+    window.location.href = '/welcome'
   }
 
   async function handleForgotPassword() {
@@ -114,9 +114,7 @@ export default function LoginPage() {
           </div>
 
           <div className="relative z-10">
-
             <div className="max-w-xl space-y-6">
-
               <h1 className="text-5xl font-black leading-[0.98] tracking-tight text-white xl:text-6xl">
                 Turn your city into a playable itinerary.
               </h1>

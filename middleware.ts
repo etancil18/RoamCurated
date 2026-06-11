@@ -48,7 +48,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (isLogin && user) {
-    return NextResponse.redirect(new URL("/events", req.url))
+    return NextResponse.redirect(new URL("/welcome", req.url))
   }
 
   if (

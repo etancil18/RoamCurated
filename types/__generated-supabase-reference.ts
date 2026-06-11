@@ -1218,6 +1218,7 @@ export type Database = {
           deleted_at: string | null
           frequency: string | null
           full_name: string | null
+          has_seen_roam_intro: boolean
           home_neighborhood: string | null
           id: string
           instagram_handle: string | null
@@ -1236,6 +1237,7 @@ export type Database = {
           deleted_at?: string | null
           frequency?: string | null
           full_name?: string | null
+          has_seen_roam_intro?: boolean
           home_neighborhood?: string | null
           id: string
           instagram_handle?: string | null
@@ -1254,6 +1256,7 @@ export type Database = {
           deleted_at?: string | null
           frequency?: string | null
           full_name?: string | null
+          has_seen_roam_intro?: boolean
           home_neighborhood?: string | null
           id?: string
           instagram_handle?: string | null

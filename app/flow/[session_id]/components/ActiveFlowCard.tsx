@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import UberRideButton from '@/components/rideshare/UberRideButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
 import FlowShareActions from './FlowShareActions'
+import FlowVenueRatingPrompt from './FlowVenueRatingPrompt'
 
 type ActiveFlowSession = {
   id: string
@@ -337,6 +338,16 @@ export default function ActiveFlowCard({
           )}
         </CardContent>
       </Card>
+
+      {(flowCompleted || flowCancelled) && completedStops >= 1 && (
+        <FlowVenueRatingPrompt
+          sessionId={session.id}
+          venues={orderedVenues}
+          progress={localProgress}
+          flowCompleted={flowCompleted}
+          flowCancelled={flowCancelled}
+        />
+      )}
 
       {(flowCompleted || completedStops >= 3) && (
         <FlowShareActions
