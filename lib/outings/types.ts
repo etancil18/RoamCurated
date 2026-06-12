@@ -73,6 +73,7 @@ export type EventRecord = {
   id: string
   title: string | null
   description: string | null
+  archetype?: string | null
   starts_at: string | null
   ends_at: string | null
   tags: string[] | null

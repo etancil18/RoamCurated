@@ -4,10 +4,22 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useEvents } from '@/hooks/useEvents'
 import OutingPlannerModal from '@/components/events/OutingPlannerModal'
+import EventCheckInButton from '@/components/events/EventCheckInButton'
+import EventXPBadge from '@/components/events/EventXPBadge'
+import EventSocialGroupBadge from '@/components/events/EventSocialGroupBadge'
 import { logEvent } from '@/lib/logEvent'
 
 type EventWithTicket = ReturnType<typeof useEvents>['events'][number] & {
   ticket_link?: string | null
+  social_group_id?: string | null
+  xp_reward?: number | null
+  checkin_enabled?: boolean | null
+  social_group?: {
+    id?: string | null
+    name?: string | null
+    slug?: string | null
+    logo_url?: string | null
+  } | null
 }
 
 const AVAILABLE_CITIES = [
@@ -15,13 +27,10 @@ const AVAILABLE_CITIES = [
   'nyc',
   'lisbon',
   'porto',
-
-  // 🇬🇧 London
   'london',
-
-  // 🇺🇸 Los Angeles
   'la',
 ]
+
 const AVAILABLE_TAGS = ['music', 'rooftop', 'gallery', 'food', 'comedy']
 
 function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
@@ -63,12 +72,12 @@ export default function EventsPage() {
   }, [city])
 
   const { events, loading, error, refetch } = useEvents(
-  city as 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la',
-  7,
-  selectedTags,
-  true,
-  30
-)
+    city as 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la',
+    7,
+    selectedTags,
+    true,
+    30
+  )
 
   const toggleTag = (tag: string) => {
     const nextTags = selectedTags.includes(tag)
@@ -300,12 +309,24 @@ export default function EventsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {filteredEvents.map((ev: EventWithTicket) => {
             const isExpanded = expandedEventId === ev.id
+
             return (
               <div
                 key={ev.id}
                 className="border rounded-lg p-5 bg-neutral-900 text-neutral-100 shadow-sm flex flex-col justify-between"
               >
                 <div>
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <EventXPBadge xpReward={ev.xp_reward ?? 25} />
+
+                    <EventSocialGroupBadge
+                      socialGroupId={ev.social_group_id ?? ev.social_group?.id ?? null}
+                      socialGroupName={ev.social_group?.name ?? null}
+                      socialGroupSlug={ev.social_group?.slug ?? null}
+                      logoUrl={ev.social_group?.logo_url ?? null}
+                    />
+                  </div>
+
                   <h2 className="text-2xl font-semibold mb-1">{ev.title}</h2>
 
                   {ev.starts_at && (
@@ -384,6 +405,23 @@ export default function EventsPage() {
                       ? '⭐ Interested'
                       : '⭐ I\'m Interested'}
                   </button>
+
+                  {ev.checkin_enabled !== false && (
+                    <EventCheckInButton
+                      eventId={ev.id}
+                      xpReward={ev.xp_reward ?? 25}
+                      socialGroupId={ev.social_group_id ?? null}
+                      onCheckedIn={({ xpAwarded, alreadyCheckedIn, socialGroupId }) => {
+                        safeLogEvent('event_checked_in_from_events_page', {
+                          event_id: ev.id,
+                          city,
+                          xp_awarded: xpAwarded,
+                          already_checked_in: alreadyCheckedIn,
+                          social_group_id: socialGroupId,
+                        })
+                      }}
+                    />
+                  )}
 
                   <button
                     type="button"

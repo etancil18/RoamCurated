@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabaseServerApi } from "@/lib/supabase/server-api"
+import { normalizeEventArchetypeForStorage } from "@/lib/outings/eventArchetypes"
 import type { EventInsert, Json } from "@/types/supabase"
 
 /**
@@ -14,7 +15,6 @@ export async function POST(
   const supabase = await supabaseServerApi()
   const body = await req.json()
 
-  // ✅ Check for authenticated user (RLS-safe)
   const {
     data: { user },
     error: authError,
@@ -28,10 +28,36 @@ export async function POST(
   console.log("✅ Authenticated user:", user.id)
 
   const timezone = body.timezone ?? "America/New_York"
+  const archetype = normalizeEventArchetypeForStorage(body.archetype)
+
   const normalizedTimes = normalizeEventTimes(
     body.starts_at ?? body.startsAt ?? null,
     body.ends_at ?? body.endsAt ?? null
   )
+
+  const checkinEnabled =
+    typeof body.checkin_enabled === "boolean"
+      ? body.checkin_enabled
+      : typeof body.checkinEnabled === "boolean"
+        ? body.checkinEnabled
+        : true
+
+  const parsedXpReward = Number.parseInt(
+    String(body.xp_reward ?? body.xpReward ?? 25),
+    10
+  )
+
+  const xpReward =
+    checkinEnabled && Number.isFinite(parsedXpReward) && parsedXpReward > 0
+      ? parsedXpReward
+      : 0
+
+  const socialGroupId =
+    typeof body.social_group_id === "string" && body.social_group_id.trim().length > 0
+      ? body.social_group_id.trim()
+      : typeof body.socialGroupId === "string" && body.socialGroupId.trim().length > 0
+        ? body.socialGroupId.trim()
+        : null
 
   const validated: EventInsert = {
     venue_id: venueId,
@@ -48,6 +74,10 @@ export async function POST(
     ends_at: normalizedTimes.ends_at,
     timezone,
     is_active: body.is_active ?? true,
+    checkin_enabled: checkinEnabled,
+    xp_reward: xpReward,
+    social_group_id: socialGroupId,
+    archetype,
     created_at: null,
     updated_at: null,
   }
@@ -62,6 +92,7 @@ export async function POST(
         venue_id,
         title,
         description,
+        archetype,
         starts_at,
         ends_at,
         tags,
@@ -72,6 +103,9 @@ export async function POST(
         permalink,
         is_active,
         timezone,
+        checkin_enabled,
+        xp_reward,
+        social_group_id,
         created_at,
         updated_at,
         venue:venues (

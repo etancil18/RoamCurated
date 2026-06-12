@@ -106,6 +106,8 @@ export default function ProfileForm() {
       intent_level:intentLevel,
       social_comfort:socialComfort,
       days_out:daysOut,
+      has_seen_roam_intro: true,
+      updated_at: new Date().toISOString(),
 
     }
 

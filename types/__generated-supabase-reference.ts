@@ -286,6 +286,48 @@ export type Database = {
           },
         ]
       }
+      event_checkins: {
+        Row: {
+          checked_in_at: string
+          event_id: string
+          id: string
+          social_group_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          event_id: string
+          id?: string
+          social_group_id?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          event_id?: string
+          id?: string
+          social_group_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_checkins_social_group_id_fkey"
+            columns: ["social_group_id"]
+            isOneToOne: false
+            referencedRelation: "social_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_discovery_runs: {
         Row: {
           ai_detection_json: Json | null
@@ -749,8 +791,55 @@ export type Database = {
           },
         ]
       }
+      event_xp_ledger: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          reason: string
+          social_group_id: string | null
+          user_id: string
+          xp_amount: number
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          reason?: string
+          social_group_id?: string | null
+          user_id: string
+          xp_amount?: number
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          reason?: string
+          social_group_id?: string | null
+          user_id?: string
+          xp_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_xp_ledger_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_xp_ledger_social_group_id_fkey"
+            columns: ["social_group_id"]
+            isOneToOne: false
+            referencedRelation: "social_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
+          archetype: string | null
+          checkin_enabled: boolean
           created_at: string | null
           description: string | null
           ends_at: string | null
@@ -759,6 +848,7 @@ export type Database = {
           permalink: string | null
           price_info: string | null
           raw_payload: Json | null
+          social_group_id: string | null
           source: string | null
           source_type: string | null
           starts_at: string | null
@@ -768,8 +858,11 @@ export type Database = {
           title: string | null
           updated_at: string | null
           venue_id: string | null
+          xp_reward: number
         }
         Insert: {
+          archetype?: string | null
+          checkin_enabled?: boolean
           created_at?: string | null
           description?: string | null
           ends_at?: string | null
@@ -778,6 +871,7 @@ export type Database = {
           permalink?: string | null
           price_info?: string | null
           raw_payload?: Json | null
+          social_group_id?: string | null
           source?: string | null
           source_type?: string | null
           starts_at?: string | null
@@ -787,8 +881,11 @@ export type Database = {
           title?: string | null
           updated_at?: string | null
           venue_id?: string | null
+          xp_reward?: number
         }
         Update: {
+          archetype?: string | null
+          checkin_enabled?: boolean
           created_at?: string | null
           description?: string | null
           ends_at?: string | null
@@ -797,6 +894,7 @@ export type Database = {
           permalink?: string | null
           price_info?: string | null
           raw_payload?: Json | null
+          social_group_id?: string | null
           source?: string | null
           source_type?: string | null
           starts_at?: string | null
@@ -806,8 +904,16 @@ export type Database = {
           title?: string | null
           updated_at?: string | null
           venue_id?: string | null
+          xp_reward?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "events_social_group_id_fkey"
+            columns: ["social_group_id"]
+            isOneToOne: false
+            referencedRelation: "social_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "events_venue_id_fkey"
             columns: ["venue_id"]
@@ -1693,6 +1799,71 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      social_group_members: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "social_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          owner_user_id: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_user_id?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_user_id?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       spatial_ref_sys: {
         Row: {

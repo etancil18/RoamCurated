@@ -6,6 +6,7 @@ import { supabaseBrowser } from '@/lib/supabase/client'
 import RecurringEventAdmin from './recurringeventadmin'
 import EventsAdmin from './eventsadmin'
 import EventJourneysAdmin from './EventJourneysAdmin'
+import SocialGroupsAdmin from './components/SocialGroupsAdmin'
 import type { Database } from '@/types/supabase'
 
 export type VenueSummary = Pick<
@@ -47,6 +48,8 @@ export default function VenueAdminPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-12">
+      <SocialGroupsAdmin />
+
       <EventsAdmin
         selectedVenue={selectedVenueId}
         onVenueChange={setSelectedVenueId}

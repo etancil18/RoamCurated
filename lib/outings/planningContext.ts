@@ -22,6 +22,8 @@ import type {
   VenueRecord,
 } from "./types"
 
+import { normalizeEventArchetypeForPlanner } from "./eventArchetypes"
+
 export type BuildPlanningContextInput = {
   mode: PlanMode
   event: EventRecord
@@ -73,7 +75,9 @@ export function buildPlanningContext(
     input.event.description ?? "",
   ])
 
-  const eventArchetype = inferEventArchetype(eventTags)
+  const eventArchetype = input.event.archetype
+  ? normalizeEventArchetypeForPlanner(input.event.archetype)
+  : inferEventArchetype(eventTags)
 
   const plannedStartAt = inferPlannedStartAt(
     input.mode,

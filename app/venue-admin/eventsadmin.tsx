@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabaseBrowser } from '@/lib/supabase/client'
 import type { Database } from '@/types/supabase'
+import { EVENT_ARCHETYPES } from '@/lib/outings/eventArchetypes'
 import {
   Command,
   CommandInput,
@@ -15,20 +16,28 @@ const allowedEmails = ['evantancil@gmail.com', 'otheradmin@example.com']
 
 type VenueSummary = Pick<Database['public']['Tables']['venues']['Row'], 'id' | 'name' | 'city'>
 
+type SocialGroupSummary = {
+  id: string
+  name: string
+  slug: string
+}
+
 type EventsAdminProps = {
   selectedVenue: string
   onVenueChange: (venueId: string) => void
+  refreshSocialGroupsSignal?: number
 }
 
 export default function EventsAdmin({
   selectedVenue,
   onVenueChange,
+  refreshSocialGroupsSignal = 0,
 }: EventsAdminProps) {
   const supabase = supabaseBrowser()
 
   const [venuesByCity, setVenuesByCity] = useState<Record<string, VenueSummary[]>>({})
+  const [socialGroups, setSocialGroups] = useState<SocialGroupSummary[]>([])
   const [selectedCity, setSelectedCity] = useState<string>('')
-
   const [searchQuery, setSearchQuery] = useState<string>('')
 
   const [form, setForm] = useState({
@@ -41,13 +50,16 @@ export default function EventsAdmin({
     price_info: '',
     description: '',
     ticket_link: '',
+    checkin_enabled: true,
+    xp_reward: '25',
+    social_group_id: '',
+    archetype: 'other',
   })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  // Load venues grouped by city
   useEffect(() => {
     async function loadVenuesByCity() {
       const { data: cityRows } = await supabase
@@ -78,14 +90,34 @@ export default function EventsAdmin({
     loadVenuesByCity()
   }, [supabase])
 
+  useEffect(() => {
+    async function loadSocialGroups() {
+      const { data, error } = await supabase
+        .from('social_groups')
+        .select('id, name, slug')
+        .order('name', { ascending: true })
+
+      if (error) {
+        console.error('Failed to load social groups:', error)
+        return
+      }
+
+      setSocialGroups(data ?? [])
+    }
+
+    loadSocialGroups()
+  }, [supabase, refreshSocialGroupsSignal])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedVenue) return setError('Please select a venue')
+
     setLoading(true)
     setError(null)
     setSuccess(false)
 
     const endDateForPayload = form.end_date || form.date
+    const parsedXpReward = Number.parseInt(form.xp_reward, 10)
 
     const payload = {
       title: form.title.trim(),
@@ -104,6 +136,12 @@ export default function EventsAdmin({
       source_type: 'portal',
       source: 'venue-admin',
       is_active: true,
+      checkin_enabled: form.checkin_enabled,
+      xp_reward: form.checkin_enabled && Number.isFinite(parsedXpReward) && parsedXpReward > 0
+        ? parsedXpReward
+        : 0,
+      social_group_id: form.social_group_id || null,
+      archetype: form.archetype,
     }
 
     const res = await fetch(`/api/venues/${selectedVenue}/events`, {
@@ -113,6 +151,7 @@ export default function EventsAdmin({
     })
 
     const json = await res.json()
+
     if (!res.ok) {
       setError(json.details || json.error || 'Error submitting event')
     } else {
@@ -127,8 +166,13 @@ export default function EventsAdmin({
         price_info: '',
         description: '',
         ticket_link: '',
+        checkin_enabled: true,
+        xp_reward: '25',
+        social_group_id: '',
+        archetype: 'other',
       })
     }
+
     setLoading(false)
   }
 
@@ -203,6 +247,25 @@ export default function EventsAdmin({
         )}
 
         <div>
+          <label className="block mb-1 font-medium">Social Group / Organizer</label>
+          <select
+            value={form.social_group_id}
+            onChange={(e) => setForm({ ...form, social_group_id: e.target.value })}
+            className="w-full border p-2 rounded"
+          >
+            <option value="">-- No Social Group --</option>
+            {socialGroups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-sm text-gray-500">
+            Links check-ins and XP to a group dashboard.
+          </p>
+        </div>
+
+        <div>
           <label className="block mb-1 font-medium">Event Title</label>
           <input
             required
@@ -212,6 +275,25 @@ export default function EventsAdmin({
             className="w-full border p-2 rounded"
             placeholder="Live Music at Midtown Bar"
           />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Event Archetype</label>
+          <select
+            required
+            value={form.archetype}
+            onChange={(e) => setForm({ ...form, archetype: e.target.value })}
+            className="w-full border p-2 rounded"
+          >
+            {EVENT_ARCHETYPES.map((archetype) => (
+              <option key={archetype.value} value={archetype.value}>
+                {archetype.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-sm text-gray-500">
+            Used by the outing planner to choose better before/after stops.
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -264,6 +346,45 @@ export default function EventsAdmin({
               className="w-full border p-2 rounded"
             />
           </div>
+        </div>
+
+        <div className="rounded-lg border p-4 space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <label className="font-medium">Enable Event XP</label>
+              <p className="text-sm text-gray-500">
+                Allows users to check in and earn XP for this event.
+              </p>
+            </div>
+
+            <input
+              type="checkbox"
+              checked={form.checkin_enabled}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  checkin_enabled: e.target.checked,
+                  xp_reward: e.target.checked ? form.xp_reward || '25' : '0',
+                })
+              }
+              className="h-5 w-5"
+            />
+          </div>
+
+          {form.checkin_enabled && (
+            <div>
+              <label className="block mb-1 font-medium">XP Reward</label>
+              <input
+                type="number"
+                min="1"
+                max="500"
+                value={form.xp_reward}
+                onChange={(e) => setForm({ ...form, xp_reward: e.target.value })}
+                className="w-full border p-2 rounded"
+                placeholder="25"
+              />
+            </div>
+          )}
         </div>
 
         <div>

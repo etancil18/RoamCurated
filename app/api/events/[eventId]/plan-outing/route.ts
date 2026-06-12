@@ -81,6 +81,7 @@ export async function POST(
           id,
           title,
           description,
+          archetype,
           starts_at,
           ends_at,
           tags,

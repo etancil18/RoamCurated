@@ -16,6 +16,8 @@ type PassportStats = {
   hostedFlowStops: number
   completedHostedFlows: number
   venueVisits: number
+  eventXp: number
+  eventCheckins: number
 }
 
 type ActiveFlow = {
@@ -39,6 +41,8 @@ export default function RoamPassport() {
     hostedFlowStops: 0,
     completedHostedFlows: 0,
     venueVisits: 0,
+    eventXp: 0,
+    eventCheckins: 0,
   })
 
   const [activeFlow, setActiveFlow] = useState<ActiveFlow | null>(null)
@@ -66,6 +70,8 @@ export default function RoamPassport() {
         { data: completedFlows },
         { data: venueVisits },
         { data: crawlProgress },
+        { data: eventXpLedger },
+        { data: eventCheckins },
       ] =
         await Promise.all([
           supabase
@@ -111,6 +117,16 @@ export default function RoamPassport() {
             .from('crawl_progress')
             .select('crawl_id, venue_id')
             .eq('user_id', userId),
+
+          supabase
+            .from('event_xp_ledger')
+            .select('xp_amount')
+            .eq('user_id', userId),
+
+          supabase
+            .from('event_checkins')
+            .select('id')
+            .eq('user_id', userId),
         ])
 
       const joined = rsvps ?? []
@@ -139,6 +155,11 @@ export default function RoamPassport() {
         }, 0) ?? 0
 
       const hostedFlowStops = crawlProgress?.length ?? 0
+
+      const eventXp =
+        eventXpLedger?.reduce((sum, row: any) => {
+          return sum + (typeof row.xp_amount === 'number' ? row.xp_amount : 0)
+        }, 0) ?? 0
 
       const crawlIds = [
         ...new Set(
@@ -181,6 +202,8 @@ export default function RoamPassport() {
         hostedFlowStops,
         completedHostedFlows,
         venueVisits: venueVisits?.length ?? 0,
+        eventXp,
+        eventCheckins: eventCheckins?.length ?? 0,
       })
 
       setActiveFlow(activeFlowData ?? null)
@@ -194,6 +217,7 @@ export default function RoamPassport() {
 
   const xp = useMemo(() => {
     return (
+      stats.eventXp +
       stats.hostedCrawls * 75 +
       stats.joinedCrawls * 25 +
       stats.pastCrawls * 100 +
@@ -219,7 +243,11 @@ export default function RoamPassport() {
   const badges = [
     {
       label: 'Roaming',
-      unlocked: stats.joinedCrawls > 0 || stats.hostedCrawls > 0,
+      unlocked: stats.joinedCrawls > 0 || stats.hostedCrawls > 0 || stats.eventCheckins > 0,
+    },
+    {
+      label: 'Event Explorer',
+      unlocked: stats.eventCheckins > 0,
     },
     {
       label: 'Flow Creator',
@@ -265,7 +293,7 @@ export default function RoamPassport() {
             </h2>
 
             <p className="mt-1 text-sm text-neutral-400">
-              Your movement, hosted crawls, saved guides, venue visits, and city progress.
+              Your movement, events, hosted crawls, saved guides, venue visits, and city progress.
             </p>
           </div>
 
@@ -319,10 +347,11 @@ export default function RoamPassport() {
         </Link>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-6">
         <StatCard label="Hosted" value={stats.hostedCrawls} />
         <StatCard label="Joined" value={stats.joinedCrawls} />
         <StatCard label="Completed" value={stats.pastCrawls + stats.completedFlows + stats.completedHostedFlows} />
+        <StatCard label="Event Check-ins" value={stats.eventCheckins} />
         <StatCard label="Visited" value={stats.venueVisits} />
         <StatCard label="Saved Guides" value={stats.savedProperties} />
       </div>
