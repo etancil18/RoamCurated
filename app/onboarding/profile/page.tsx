@@ -41,6 +41,7 @@ export default function OnboardingProfilePage() {
 
   const [form, setForm] = useState({
     full_name: '',
+    username: '',
     instagram_handle: '',
     age_range: '',
     home_neighborhood: '',
@@ -56,6 +57,14 @@ export default function OnboardingProfilePage() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  function normalizeUsername(value: string) {
+    return value
+      .toLowerCase()
+      .replace(/^@+/, '')
+      .replace(/[^a-z0-9_]/g, '')
+      .slice(0, 30)
+  }
 
   function toggleArrayField(
     field: 'preferred_vibes' | 'interest_categories' | 'days_out',
@@ -76,6 +85,11 @@ export default function OnboardingProfilePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (form.username.trim().length < 3) {
+      setError('Username must be at least 3 characters.')
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -106,13 +120,14 @@ export default function OnboardingProfilePage() {
 
   const completedSignals =
     Number(Boolean(form.full_name.trim())) +
+    Number(Boolean(form.username.trim())) +
     Number(Boolean(form.home_neighborhood.trim())) +
     Number(form.preferred_vibes.length > 0) +
     Number(form.interest_categories.length > 0) +
     Number(Boolean(form.frequency)) +
     Number(Boolean(form.crawl_type))
 
-  const progressPercent = Math.min(100, Math.round((completedSignals / 6) * 100))
+  const progressPercent = Math.min(100, Math.round((completedSignals / 7) * 100))
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#05060a] text-white">
@@ -181,6 +196,32 @@ export default function OnboardingProfilePage() {
                   className="field-input"
                   placeholder="Your name"
                 />
+              </Field>
+
+              <Field label="Username">
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500">
+                    @
+                  </span>
+                  <input
+                    required
+                    type="text"
+                    minLength={3}
+                    maxLength={30}
+                    value={form.username}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        username: normalizeUsername(e.target.value),
+                      })
+                    }
+                    className="field-input pl-8"
+                    placeholder="citycurator"
+                  />
+                </div>
+                <p className="mt-2 text-xs text-neutral-500">
+                  3–30 characters. Letters, numbers, and underscores only.
+                </p>
               </Field>
 
               <Field label="Instagram optional">

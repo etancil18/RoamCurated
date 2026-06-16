@@ -3,6 +3,7 @@ import { supabaseServerApi } from '@/lib/supabase/server-api'
 
 type OnboardingProfilePayload = {
   full_name?: unknown
+  username?: unknown
   instagram_handle?: unknown
   age_range?: unknown
   home_neighborhood?: unknown
@@ -30,9 +31,18 @@ export async function POST(req: Request) {
     }
 
     const body = (await req.json()) as OnboardingProfilePayload
+    const username = cleanUsername(body.username)
+
+    if (!username) {
+      return NextResponse.json(
+        { error: 'Username is required' },
+        { status: 400 }
+      )
+    }
 
     const payload = {
       id: user.id,
+      username,
       full_name: cleanString(body.full_name),
       instagram_handle: cleanInstagram(body.instagram_handle),
       age_range: cleanString(body.age_range),
@@ -60,6 +70,13 @@ export async function POST(req: Request) {
     if (error) {
       console.error('Profile onboarding upsert error:', error)
 
+      if (error.code === '23505') {
+        return NextResponse.json(
+          { error: 'Username is already taken' },
+          { status: 409 }
+        )
+      }
+
       return NextResponse.json(
         {
           error: 'Failed to save onboarding profile',
@@ -81,6 +98,20 @@ export async function POST(req: Request) {
       { status: 500 }
     )
   }
+}
+
+function cleanUsername(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+
+  const cleaned = value
+    .trim()
+    .toLowerCase()
+    .replace(/^@+/, '')
+    .replace(/[^a-z0-9_]/g, '')
+
+  if (cleaned.length < 3 || cleaned.length > 30) return null
+
+  return cleaned
 }
 
 function cleanString(value: unknown): string | null {

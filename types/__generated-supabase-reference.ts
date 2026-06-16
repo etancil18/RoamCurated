@@ -1318,6 +1318,8 @@ export type Database = {
       profiles: {
         Row: {
           age_range: string | null
+          avatar_url: string | null
+          bio: string | null
           crawl_type: string | null
           created_at: string | null
           days_out: string[] | null
@@ -1330,13 +1332,22 @@ export type Database = {
           instagram_handle: string | null
           intent_level: string | null
           interest_categories: string[] | null
+          is_public: boolean | null
           personality_style: string | null
           preferred_vibes: string[] | null
+          show_checkins: boolean | null
+          show_completed_flows: boolean | null
+          show_saved_guides: boolean | null
+          show_social_groups: boolean | null
+          show_xp: boolean | null
           social_comfort: string | null
           updated_at: string | null
+          username: string | null
         }
         Insert: {
           age_range?: string | null
+          avatar_url?: string | null
+          bio?: string | null
           crawl_type?: string | null
           created_at?: string | null
           days_out?: string[] | null
@@ -1349,13 +1360,22 @@ export type Database = {
           instagram_handle?: string | null
           intent_level?: string | null
           interest_categories?: string[] | null
+          is_public?: boolean | null
           personality_style?: string | null
           preferred_vibes?: string[] | null
+          show_checkins?: boolean | null
+          show_completed_flows?: boolean | null
+          show_saved_guides?: boolean | null
+          show_social_groups?: boolean | null
+          show_xp?: boolean | null
           social_comfort?: string | null
           updated_at?: string | null
+          username?: string | null
         }
         Update: {
           age_range?: string | null
+          avatar_url?: string | null
+          bio?: string | null
           crawl_type?: string | null
           created_at?: string | null
           days_out?: string[] | null
@@ -1368,10 +1388,17 @@ export type Database = {
           instagram_handle?: string | null
           intent_level?: string | null
           interest_categories?: string[] | null
+          is_public?: boolean | null
           personality_style?: string | null
           preferred_vibes?: string[] | null
+          show_checkins?: boolean | null
+          show_completed_flows?: boolean | null
+          show_saved_guides?: boolean | null
+          show_social_groups?: boolean | null
+          show_xp?: boolean | null
           social_comfort?: string | null
           updated_at?: string | null
+          username?: string | null
         }
         Relationships: []
       }
@@ -1900,6 +1927,27 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
           id?: string
         }
         Relationships: []
