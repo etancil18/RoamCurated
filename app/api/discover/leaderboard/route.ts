@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+import { getPassportSnapshot } from '@/lib/passport/score'
 
 type ProfileRow = {
   id: string
@@ -81,12 +82,20 @@ export async function GET() {
       )
     }
 
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
     const [
       { data: xpRows },
       { data: followRows },
       { data: followingRows },
       { data: completedFlowRows },
       { data: checkinRows },
+      { data: hostedRows },
+      { data: rsvpRows },
+      { data: savedPropertyRows },
+      { data: venueVisitRows },
+      { data: crawlProgressRows },
     ] = await Promise.all([
       supabase
         .from('event_xp_ledger')
@@ -108,13 +117,45 @@ export async function GET() {
 
       supabase
         .from('active_flow_sessions')
-        .select('user_id')
+        .select('user_id, venue_ids')
         .eq('status', 'completed')
         .in('user_id', profileIds),
 
       supabase
         .from('event_checkins')
         .select('user_id')
+        .in('user_id', profileIds),
+
+      supabase
+        .from('crawl_events')
+        .select('id, creator_id')
+        .in('creator_id', profileIds),
+
+      supabase
+        .from('crawl_rsvps')
+        .select(`
+          user_id,
+          crawl_id,
+          crawl_events (
+            id,
+            datetime
+          )
+        `)
+        .in('user_id', profileIds),
+
+      supabase
+        .from('saved_properties')
+        .select('user_id, property_id')
+        .in('user_id', profileIds),
+
+      supabase
+        .from('venue_visits')
+        .select('user_id')
+        .in('user_id', profileIds),
+
+      supabase
+        .from('crawl_progress')
+        .select('user_id, crawl_id')
         .in('user_id', profileIds),
     ])
 
@@ -137,12 +178,19 @@ export async function GET() {
     }
 
     const completedFlowsByUserId = new Map<string, number>()
+    const completedFlowStopsByUserId = new Map<string, number>()
     for (const row of completedFlowRows ?? []) {
       const userId = row.user_id as string
+      const stopCount = Array.isArray(row.venue_ids) ? row.venue_ids.length : 0
 
       completedFlowsByUserId.set(
         userId,
         (completedFlowsByUserId.get(userId) ?? 0) + 1
+      )
+
+      completedFlowStopsByUserId.set(
+        userId,
+        (completedFlowStopsByUserId.get(userId) ?? 0) + stopCount
       )
     }
 
@@ -156,15 +204,133 @@ export async function GET() {
       )
     }
 
+    const hostedCrawlsByUserId = new Map<string, number>()
+    for (const row of hostedRows ?? []) {
+      const userId = row.creator_id as string
+
+      hostedCrawlsByUserId.set(
+        userId,
+        (hostedCrawlsByUserId.get(userId) ?? 0) + 1
+      )
+    }
+
+    const joinedCrawlsByUserId = new Map<string, number>()
+    const pastCrawlsByUserId = new Map<string, number>()
+    for (const row of rsvpRows ?? []) {
+      const userId = row.user_id as string
+      const crawl = (row as any).crawl_events
+
+      joinedCrawlsByUserId.set(
+        userId,
+        (joinedCrawlsByUserId.get(userId) ?? 0) + 1
+      )
+
+      if (crawl?.datetime && new Date(crawl.datetime) < today) {
+        pastCrawlsByUserId.set(
+          userId,
+          (pastCrawlsByUserId.get(userId) ?? 0) + 1
+        )
+      }
+    }
+
+    const savedPropertiesByUserId = new Map<string, number>()
+    for (const row of savedPropertyRows ?? []) {
+      const userId = row.user_id as string
+
+      savedPropertiesByUserId.set(
+        userId,
+        (savedPropertiesByUserId.get(userId) ?? 0) + 1
+      )
+    }
+
+    const venueVisitsByUserId = new Map<string, number>()
+    for (const row of venueVisitRows ?? []) {
+      const userId = row.user_id as string
+
+      venueVisitsByUserId.set(
+        userId,
+        (venueVisitsByUserId.get(userId) ?? 0) + 1
+      )
+    }
+
+    const hostedFlowStopsByUserId = new Map<string, number>()
+    const crawlIds = [
+      ...new Set(
+        (crawlProgressRows ?? [])
+          .map((row: any) => row.crawl_id)
+          .filter(Boolean)
+      ),
+    ]
+
+    for (const row of crawlProgressRows ?? []) {
+      const userId = row.user_id as string
+
+      hostedFlowStopsByUserId.set(
+        userId,
+        (hostedFlowStopsByUserId.get(userId) ?? 0) + 1
+      )
+    }
+
+    const completedHostedFlowsByUserId = new Map<string, number>()
+
+    if (crawlIds.length > 0) {
+      const { data: crawlEvents } = await supabase
+        .from('crawl_events')
+        .select('id, venue_ids')
+        .in('id', crawlIds)
+
+      for (const profileId of profileIds) {
+        const userProgressRows =
+          crawlProgressRows?.filter((row: any) => row.user_id === profileId) ?? []
+
+        const userCrawlIds = [
+          ...new Set(
+            userProgressRows
+              .map((row: any) => row.crawl_id)
+              .filter(Boolean)
+          ),
+        ]
+
+        let completedHostedFlows = 0
+
+        for (const crawlId of userCrawlIds) {
+          const crawl = crawlEvents?.find((row: any) => row.id === crawlId)
+          const requiredStops = Array.isArray((crawl as any)?.venue_ids)
+            ? (crawl as any).venue_ids.length
+            : 0
+
+          const completedStops =
+            userProgressRows.filter((row: any) => row.crawl_id === crawlId)
+              .length ?? 0
+
+          if (requiredStops > 0 && completedStops >= requiredStops) {
+            completedHostedFlows += 1
+          }
+        }
+
+        completedHostedFlowsByUserId.set(profileId, completedHostedFlows)
+      }
+    }
+
     const followingIds = new Set(
       (followingRows ?? []).map((row) => row.following_id as string)
     )
 
     const rankedUsers: LeaderboardUser[] = profiles
-      .filter((profile) => profile.id !== user?.id)
       .map((profile) => {
-        const hiddenXp = xpByUserId.get(profile.id) ?? 0
-        const passportLevel = Math.max(1, Math.floor(hiddenXp / 250) + 1)
+        const { level: passportLevel } = getPassportSnapshot({
+          hostedCrawls: hostedCrawlsByUserId.get(profile.id) ?? 0,
+          joinedCrawls: joinedCrawlsByUserId.get(profile.id) ?? 0,
+          pastCrawls: pastCrawlsByUserId.get(profile.id) ?? 0,
+          savedProperties: savedPropertiesByUserId.get(profile.id) ?? 0,
+          completedFlows: completedFlowsByUserId.get(profile.id) ?? 0,
+          completedFlowStops: completedFlowStopsByUserId.get(profile.id) ?? 0,
+          hostedFlowStops: hostedFlowStopsByUserId.get(profile.id) ?? 0,
+          completedHostedFlows: completedHostedFlowsByUserId.get(profile.id) ?? 0,
+          venueVisits: venueVisitsByUserId.get(profile.id) ?? 0,
+          eventXp: xpByUserId.get(profile.id) ?? 0,
+          eventCheckins: checkinsByUserId.get(profile.id) ?? 0,
+        })
 
         return {
           id: profile.id,

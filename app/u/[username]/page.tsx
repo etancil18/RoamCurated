@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import FollowButton from '@/components/profile/FollowButton'
+import { getPassportSnapshot } from '@/lib/passport/score'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,14 +75,21 @@ export default async function PublicUserProfilePage({ params }: Props) {
     notFound()
   }
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
   const [
     { count: followersCount },
     { count: followingCount },
     { data: existingFollow },
+    { data: hosted },
+    { data: rsvps },
+    { data: savedProperties },
+    { data: completedFlows },
+    { data: venueVisits },
+    { data: crawlProgress },
     { data: xpRows },
-    { count: completedFlowsCount },
     { count: checkinsCount },
-    { count: savedGuidesCount },
     { count: socialGroupsCount },
   ] = await Promise.all([
     supabase
@@ -103,6 +111,47 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .maybeSingle()
       : Promise.resolve({ data: null }),
 
+    supabase
+      .from('crawl_events')
+      .select('id')
+      .eq('creator_id', profile.id),
+
+    supabase
+      .from('crawl_rsvps')
+      .select(`
+        crawl_id,
+        crawl_events (
+          id,
+          datetime
+        )
+      `)
+      .eq('user_id', profile.id),
+
+    profile.show_saved_guides === false
+      ? Promise.resolve({ data: [] })
+      : supabase
+          .from('saved_properties')
+          .select('property_id')
+          .eq('user_id', profile.id),
+
+    profile.show_completed_flows === false
+      ? Promise.resolve({ data: [] })
+      : supabase
+          .from('active_flow_sessions')
+          .select('id, venue_ids')
+          .eq('user_id', profile.id)
+          .eq('status', 'completed'),
+
+    supabase
+      .from('venue_visits')
+      .select('id')
+      .eq('user_id', profile.id),
+
+    supabase
+      .from('crawl_progress')
+      .select('crawl_id')
+      .eq('user_id', profile.id),
+
     profile.show_xp === false
       ? Promise.resolve({ data: [] })
       : supabase
@@ -110,26 +159,11 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .select('xp_amount')
           .eq('user_id', profile.id),
 
-    profile.show_completed_flows === false
-      ? Promise.resolve({ count: 0 })
-      : supabase
-          .from('active_flow_sessions')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', profile.id)
-          .eq('status', 'completed'),
-
     profile.show_checkins === false
       ? Promise.resolve({ count: 0 })
       : supabase
           .from('event_checkins')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', profile.id),
-
-    profile.show_saved_guides === false
-      ? Promise.resolve({ count: 0 })
-      : supabase
-          .from('saved_properties')
-          .select('property_id', { count: 'exact', head: true })
           .eq('user_id', profile.id),
 
     profile.show_social_groups === false
@@ -140,11 +174,70 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .eq('user_id', profile.id),
   ])
 
-  const hiddenXp = (xpRows ?? []).reduce((sum, row: any) => {
-    return sum + (row.xp_amount ?? 0)
-  }, 0)
+  const joined = rsvps ?? []
 
-  const passportLevel = Math.max(1, Math.floor(hiddenXp / 250) + 1)
+  const pastCrawls = joined.filter((r: any) => {
+    const crawl = r.crawl_events
+    if (!crawl?.datetime) return false
+    return new Date(crawl.datetime) < today
+  })
+
+  const completedFlowStops =
+    completedFlows?.reduce((sum: number, flow: any) => {
+      return sum + (Array.isArray(flow.venue_ids) ? flow.venue_ids.length : 0)
+    }, 0) ?? 0
+
+  const hostedFlowStops = crawlProgress?.length ?? 0
+
+  const eventXp =
+    xpRows?.reduce((sum: number, row: any) => {
+      return sum + (typeof row.xp_amount === 'number' ? row.xp_amount : 0)
+    }, 0) ?? 0
+
+  const crawlIds = [
+    ...new Set(
+      (crawlProgress ?? [])
+        .map((row: any) => row.crawl_id)
+        .filter(Boolean)
+    ),
+  ]
+
+  let completedHostedFlows = 0
+
+  if (crawlIds.length > 0) {
+    const { data: crawlEvents } = await supabase
+      .from('crawl_events')
+      .select('id, venue_ids')
+      .in('id', crawlIds)
+
+    completedHostedFlows =
+      crawlEvents?.filter((crawl: any) => {
+        const requiredStops = Array.isArray(crawl.venue_ids)
+          ? crawl.venue_ids.length
+          : 0
+
+        const completedStops =
+          crawlProgress?.filter(
+            (progressRow: any) => progressRow.crawl_id === crawl.id
+          ).length ?? 0
+
+        return requiredStops > 0 && completedStops >= requiredStops
+      }).length ?? 0
+  }
+
+  const { level: passportLevel } = getPassportSnapshot({
+    hostedCrawls: hosted?.length ?? 0,
+    joinedCrawls: joined.length,
+    pastCrawls: pastCrawls.length,
+    savedProperties: savedProperties?.length ?? 0,
+    completedFlows: completedFlows?.length ?? 0,
+    completedFlowStops,
+    hostedFlowStops,
+    completedHostedFlows,
+    venueVisits: venueVisits?.length ?? 0,
+    eventXp,
+    eventCheckins: checkinsCount ?? 0,
+  })
 
   return (
     <main className="min-h-screen bg-black px-4 pb-10 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white">
@@ -218,7 +311,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
             <Stat label="Passport Level" value={passportLevel} />
           )}
           {profile.show_completed_flows !== false && (
-            <Stat label="Flows" value={completedFlowsCount ?? 0} />
+            <Stat label="Flows" value={completedFlows?.length ?? 0} />
           )}
         </section>
 
@@ -228,7 +321,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
           )}
 
           {profile.show_saved_guides !== false && (
-            <Stat label="Saved Guides" value={savedGuidesCount ?? 0} />
+            <Stat label="Saved Guides" value={savedProperties?.length ?? 0} />
           )}
 
           {profile.show_social_groups !== false && (

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { supabaseBrowser, getCurrentUserId } from '@/lib/supabase/client'
+import { getPassportSnapshot } from '@/lib/passport/score'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -115,7 +116,7 @@ export default function RoamPassport() {
 
           supabase
             .from('crawl_progress')
-            .select('crawl_id, venue_id')
+            .select('crawl_id')
             .eq('user_id', userId),
 
           supabase
@@ -215,24 +216,12 @@ export default function RoamPassport() {
     loadPassport()
   }, [supabase])
 
-  const xp = useMemo(() => {
-    return (
-      stats.eventXp +
-      stats.hostedCrawls * 75 +
-      stats.joinedCrawls * 25 +
-      stats.pastCrawls * 100 +
-      stats.savedProperties * 10 +
-      stats.completedFlows * 100 +
-      stats.completedFlowStops * 25 +
-      stats.hostedFlowStops * 25 +
-      stats.completedHostedFlows * 100 +
-      stats.venueVisits * 10
-    )
-  }, [stats])
-
-  const level = Math.max(1, Math.floor(xp / 250) + 1)
-  const progressToNextLevel = xp % 250
-  const progressPercent = (progressToNextLevel / 250) * 100
+  const {
+    xp,
+    level,
+    progressToNextLevel,
+    progressPercent,
+  } = useMemo(() => getPassportSnapshot(stats), [stats])
 
   const activeFlowTotalStops = activeFlow?.venue_ids?.length ?? 0
   const activeFlowProgressPercent =
