@@ -160,11 +160,11 @@ export default function Navbar() {
                       Build a Guide
                     </Link>
                     <Link
-                      href="/favorites"
-                      onClick={() => handleNavClick('favorites')}
+                      href="/discover"
+                      onClick={() => handleNavClick('discover')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
-                      Favorites
+                      Discover
                     </Link>
                     <Link
                       href="/profile"

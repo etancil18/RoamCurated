@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import FollowButton from '@/components/profile/FollowButton'
@@ -139,13 +140,31 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .eq('user_id', profile.id),
   ])
 
-  const eventXp = (xpRows ?? []).reduce((sum, row: any) => {
+  const hiddenXp = (xpRows ?? []).reduce((sum, row: any) => {
     return sum + (row.xp_amount ?? 0)
   }, 0)
+
+  const passportLevel = Math.max(1, Math.floor(hiddenXp / 250) + 1)
 
   return (
     <main className="min-h-screen bg-black px-4 pb-10 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white">
       <div className="mx-auto max-w-4xl space-y-6">
+        {isOwnProfile ? (
+          <Link
+            href="/profile"
+            className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:text-white"
+          >
+            Edit Profile
+          </Link>
+        ) : (
+          <Link
+            href="/discover"
+            className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:text-white"
+          >
+            ← Back to Discover
+          </Link>
+        )}
+
         <section className="rounded-[2rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 to-black p-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 text-4xl">
@@ -195,7 +214,9 @@ export default async function PublicUserProfilePage({ params }: Props) {
         <section className="grid gap-3 sm:grid-cols-4">
           <Stat label="Followers" value={followersCount ?? 0} />
           <Stat label="Following" value={followingCount ?? 0} />
-          {profile.show_xp !== false && <Stat label="Event XP" value={eventXp} />}
+          {profile.show_xp !== false && (
+            <Stat label="Passport Level" value={passportLevel} />
+          )}
           {profile.show_completed_flows !== false && (
             <Stat label="Flows" value={completedFlowsCount ?? 0} />
           )}
