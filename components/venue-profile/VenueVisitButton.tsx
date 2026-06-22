@@ -104,18 +104,50 @@ export default function VenueVisitButton({
   }, [venueId])
 
   const getCurrentPosition = () =>
-    new Promise<GeolocationPosition>((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported on this device.'))
-        return
-      }
+  new Promise<GeolocationPosition>((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation is not supported on this device.'))
+      return
+    }
 
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
+    let settled = false
+
+    const hardTimeout = window.setTimeout(() => {
+      if (settled) return
+
+      settled = true
+
+      reject(
+        new Error(
+          'Location check timed out. Make sure location access is enabled for Roam.'
+        )
+      )
+    }, 12000)
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (settled) return
+
+        settled = true
+        window.clearTimeout(hardTimeout)
+
+        resolve(position)
+      },
+      (error) => {
+        if (settled) return
+
+        settled = true
+        window.clearTimeout(hardTimeout)
+
+        reject(error)
+      },
+      {
         enableHighAccuracy: true,
-        timeout: 15000,
+        timeout: 10000,
         maximumAge: 0,
-      })
-    })
+      }
+    )
+  })
 
   const openRatingModal = async () => {
     if (saving || checkingLocation) return
