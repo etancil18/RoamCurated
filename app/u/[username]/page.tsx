@@ -91,6 +91,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
     { data: xpRows },
     { count: checkinsCount },
     { count: socialGroupsCount },
+    { data: snapshots },
   ] = await Promise.all([
     supabase
       .from('user_follows')
@@ -172,6 +173,16 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .from('social_group_members')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', profile.id),
+
+    supabase
+      .from('flow_snapshots' as any)
+      .select(
+        'id, title, city, cover_image_url, route_summary, checked_in_count, total_stops, created_at'
+      )
+      .eq('user_id', profile.id)
+      .eq('visibility', 'public')
+      .order('created_at', { ascending: false })
+      .limit(9),
   ])
 
   const joined = rsvps ?? []
@@ -328,6 +339,47 @@ export default async function PublicUserProfilePage({ params }: Props) {
             <Stat label="Social Groups" value={socialGroupsCount ?? 0} />
           )}
         </section>
+
+        {snapshots && snapshots.length > 0 && (
+          <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+                Flow Snapshots
+              </h2>
+
+              <p className="text-xs text-neutral-500">
+                Latest 9
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {snapshots.map((snapshot: any) => (
+                <div
+                  key={snapshot.id}
+                  className="group relative aspect-square overflow-hidden rounded-xl border border-neutral-800 bg-black"
+                >
+                  <img
+                    src={snapshot.cover_image_url}
+                    alt={snapshot.title ?? 'Roam flow snapshot'}
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+
+                  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100">
+                    <div className="p-2">
+                      <p className="line-clamp-1 text-xs font-semibold text-white">
+                        {snapshot.title ?? 'Roam Flow'}
+                      </p>
+
+                      <p className="mt-0.5 text-[10px] text-neutral-300">
+                        {snapshot.checked_in_count ?? 0}/{snapshot.total_stops ?? 0} stops
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">

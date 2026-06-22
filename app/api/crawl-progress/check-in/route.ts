@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 
-type CheckInActiveFlowBody = {
-  session_id?: string
+type CheckInCrawlProgressBody = {
+  crawl_id?: string
   venue_id?: string
   stop_index?: number
   user_lat?: number
   user_lon?: number
-  location_accuracy_meters?: number
+  location_accuracy_meters?: number | null
   device_timestamp?: string
 }
 
@@ -31,9 +31,9 @@ export async function POST(req: Request) {
       )
     }
 
-    const body = (await req.json()) as CheckInActiveFlowBody
+    const body = (await req.json()) as CheckInCrawlProgressBody
 
-    const sessionId = body.session_id
+    const crawlId = body.crawl_id
     const venueId = body.venue_id
     const stopIndex = body.stop_index
     const userLat = body.user_lat
@@ -41,9 +41,9 @@ export async function POST(req: Request) {
     const locationAccuracyMeters = body.location_accuracy_meters
     const deviceTimestamp = body.device_timestamp
 
-    if (!sessionId) {
+    if (!crawlId) {
       return NextResponse.json(
-        { error: 'Missing session_id.' },
+        { error: 'Missing crawl_id.' },
         { status: 400 }
       )
     }
@@ -87,43 +87,35 @@ export async function POST(req: Request) {
       )
     }
 
-    const { data: session, error: sessionError } = await supabase
-      .from('active_flow_sessions')
-      .select('id, user_id, venue_ids, status')
-      .eq('id', sessionId)
-      .eq('user_id', user.id)
+    const { data: crawl, error: crawlError } = await supabase
+      .from('crawl_events')
+      .select('id, venue_ids')
+      .eq('id', crawlId)
       .maybeSingle()
 
-    if (sessionError) {
-      console.error('[active-flow/check-in] Session fetch failed:', sessionError)
+    if (crawlError) {
+      console.error('[crawl-progress/check-in] Crawl fetch failed:', crawlError)
 
       return NextResponse.json(
-        { error: 'Could not fetch active flow.' },
+        { error: 'Could not fetch hosted flow.' },
         { status: 500 }
       )
     }
 
-    if (!session) {
+    if (!crawl) {
       return NextResponse.json(
-        { error: 'Flow not found.' },
+        { error: 'Hosted flow not found.' },
         { status: 404 }
       )
     }
 
-    if (session.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Only active flows can be checked into.' },
-        { status: 400 }
-      )
-    }
-
-    const venueIds = Array.isArray(session.venue_ids)
-      ? session.venue_ids.filter(Boolean)
+    const venueIds = Array.isArray(crawl.venue_ids)
+      ? crawl.venue_ids.filter(Boolean)
       : []
 
     if (!venueIds.includes(venueId)) {
       return NextResponse.json(
-        { error: 'Venue is not part of this flow.' },
+        { error: 'Venue is not part of this hosted flow.' },
         { status: 400 }
       )
     }
@@ -142,7 +134,7 @@ export async function POST(req: Request) {
       .maybeSingle()
 
     if (venueError) {
-      console.error('[active-flow/check-in] Venue fetch failed:', venueError)
+      console.error('[crawl-progress/check-in] Venue fetch failed:', venueError)
 
       return NextResponse.json(
         { error: 'Could not verify venue location.' },
@@ -187,39 +179,66 @@ export async function POST(req: Request) {
 
     const now = new Date().toISOString()
 
-    const { data: progress, error: upsertError } = await supabase
-      .from('active_flow_progress')
-      .upsert(
-        {
-          session_id: sessionId,
-          user_id: user.id,
-          venue_id: venueId,
-          stop_index: stopIndex,
-          checked_in_at: now,
-          user_lat: userLat,
-          user_lon: userLon,
-          distance_meters: distanceMeters,
-          location_accuracy_meters:
-            typeof locationAccuracyMeters === 'number' &&
-            Number.isFinite(locationAccuracyMeters)
-              ? locationAccuracyMeters
-              : null,
-          geo_verified: true,
-          check_in_source: 'geo',
-          device_timestamp:
-            typeof deviceTimestamp === 'string' && deviceTimestamp.trim().length > 0
-              ? deviceTimestamp
-              : null,
-        },
-        {
-          onConflict: 'session_id,user_id,venue_id',
-        }
-      )
-      .select('*')
-      .single()
+    const checkInPayload = {
+      crawl_id: crawlId,
+      user_id: user.id,
+      venue_id: venueId,
+      stop_index: stopIndex,
+      completed_at: now,
+      user_lat: userLat,
+      user_lon: userLon,
+      distance_meters: distanceMeters,
+      location_accuracy_meters:
+        typeof locationAccuracyMeters === 'number' &&
+        Number.isFinite(locationAccuracyMeters)
+          ? locationAccuracyMeters
+          : null,
+      geo_verified: true,
+      check_in_source: 'geo',
+      device_timestamp:
+        typeof deviceTimestamp === 'string' && deviceTimestamp.trim().length > 0
+          ? deviceTimestamp
+          : null,
+    }
 
-    if (upsertError || !progress) {
-      console.error('[active-flow/check-in] Check-in upsert failed:', upsertError)
+    const { data: existingProgress, error: existingError } = await supabase
+      .from('crawl_progress')
+      .select('*')
+      .eq('crawl_id', crawlId)
+      .eq('user_id', user.id)
+      .eq('stop_index', stopIndex)
+      .maybeSingle()
+
+    if (existingError) {
+      console.error(
+        '[crawl-progress/check-in] Existing progress check failed:',
+        existingError
+      )
+
+      return NextResponse.json(
+        { error: 'Could not check existing progress.' },
+        { status: 500 }
+      )
+    }
+
+    const { data: progress, error: progressError } = existingProgress
+      ? await supabase
+          .from('crawl_progress')
+          .update(checkInPayload as any)
+          .eq('id', existingProgress.id)
+          .select('*')
+          .single()
+      : await supabase
+          .from('crawl_progress')
+          .insert(checkInPayload as any)
+          .select('*')
+          .single()
+
+    if (progressError || !progress) {
+      console.error(
+        '[crawl-progress/check-in] Check-in write failed:',
+        progressError
+      )
 
       return NextResponse.json(
         { error: 'Could not check in.' },
@@ -227,14 +246,33 @@ export async function POST(req: Request) {
       )
     }
 
-    const { data: progressRows, error: progressError } = await supabase
-      .from('active_flow_progress')
-      .select('venue_id')
-      .eq('session_id', sessionId)
+    const { error: rsvpUpdateError } = await supabase
+      .from('crawl_rsvps')
+      .update({
+        checked_in_at: now,
+      })
+      .eq('crawl_id', crawlId)
+      .eq('user_id', user.id)
+      .is('checked_in_at', null)
+
+    if (rsvpUpdateError) {
+      console.error(
+        '[crawl-progress/check-in] RSVP attendance summary update failed:',
+        rsvpUpdateError
+      )
+    }
+
+    const { data: progressRows, error: progressRowsError } = await supabase
+      .from('crawl_progress')
+      .select('stop_index')
+      .eq('crawl_id', crawlId)
       .eq('user_id', user.id)
 
-    if (progressError) {
-      console.error('[active-flow/check-in] Progress refresh failed:', progressError)
+    if (progressRowsError) {
+      console.error(
+        '[crawl-progress/check-in] Progress refresh failed:',
+        progressRowsError
+      )
 
       return NextResponse.json(
         { error: 'Check-in saved, but progress could not be refreshed.' },
@@ -242,13 +280,12 @@ export async function POST(req: Request) {
       )
     }
 
-    const completedVenueIds = new Set(
+    const completedStops = new Set(
       (progressRows ?? [])
-        .map((row) => row.venue_id)
-        .filter(Boolean)
-    )
+        .map((row) => row.stop_index)
+        .filter((value): value is number => typeof value === 'number')
+    ).size
 
-    const completedStops = completedVenueIds.size
     const totalStops = venueIds.length
     const flowCompleted = completedStops === totalStops
 
@@ -265,7 +302,7 @@ export async function POST(req: Request) {
       { status: 200 }
     )
   } catch (err) {
-    console.error('[active-flow/check-in] Unexpected error:', err)
+    console.error('[crawl-progress/check-in] Unexpected error:', err)
 
     return NextResponse.json(
       { error: 'Unexpected error checking in.' },

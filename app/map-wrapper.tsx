@@ -90,20 +90,30 @@ export default function MapWrapper() {
   }, [])
 
   useEffect(() => {
-    if (!venues.length || !inBrowser()) return
-    const params = new URLSearchParams(window.location.search)
-    const routeParam = params.get('route')
-    if (!routeParam) return
+  if (!venues.length || !inBrowser()) return
 
-    const ids = routeParam.split(',')
-    const matched = ids
-      .map((id) => venues.find((v) => v.id === id || v.name === id))
-      .filter((v): v is Venue => !!v)
+  const params = new URLSearchParams(window.location.search)
+  const routeParam = params.get('route')
 
-    if (matched.length > 0) {
-      setRoute(matched)
-    }
-  }, [venues])
+  if (typeof routeParam !== 'string' || routeParam.trim().length === 0) {
+    return
+  }
+
+  const ids = routeParam
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean)
+
+  if (ids.length === 0) return
+
+  const matched = ids
+    .map((id) => venues.find((v) => v.id === id || v.name === id))
+    .filter((v): v is Venue => !!v)
+
+  if (matched.length > 0) {
+    setRoute(matched)
+  }
+}, [venues])
 
   const filteredVenues = useMemo(() => {
     return venues.filter((v) => {

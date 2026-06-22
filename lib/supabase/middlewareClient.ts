@@ -24,8 +24,8 @@ export async function initAuth(
     }
   )
 
-  // trigger session refresh / validation
-  await supabase.auth.getSession()
+  // trigger authenticated user validation / cookie refresh
+  await supabase.auth.getUser()
 
   // Return the response — Supabase modifies cookies on internal response,
   // so we need to return that to propagate cookie changes to client

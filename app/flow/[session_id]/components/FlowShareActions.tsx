@@ -70,6 +70,7 @@ export default function FlowShareActions({
   const [routeLine, setRouteLine] = useState<RouteLinePoint[]>([])
   const [routeLineLoading, setRouteLineLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [snapshotSaved, setSnapshotSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const checkedVenueIds = useMemo(() => {
@@ -123,6 +124,10 @@ export default function FlowShareActions({
       ? `I completed ${checkedInCount} stops on Roam.`
       : `I checked in to ${checkedInCount} stops on Roam.`
 
+  const routeSummary = checkedStops
+    .map((stop) => stop.title ?? `Stop ${stop.stopOrder}`)
+    .join(' → ')
+
   const fetchSnapshotRouteLine = async () => {
     setRouteLineLoading(true)
 
@@ -169,10 +174,7 @@ export default function FlowShareActions({
       const fullRouteData = await fullRouteRes.json().catch(() => null)
       const fullRouteLine = extractRouteLineFromMapboxResponse(fullRouteData)
 
-      if (
-        fullRouteRes.ok &&
-        fullRouteLine.length > validStops.length
-      ) {
+      if (fullRouteRes.ok && fullRouteLine.length > validStops.length) {
         setRouteLine(fullRouteLine)
 
         safeLogEvent('flow_snapshot_route_loaded', {
@@ -290,9 +292,10 @@ export default function FlowShareActions({
     })
   }
 
-  const downloadSnapshot = async () => {
+  const saveSnapshotToProfile = async () => {
     setExporting(true)
     setError(null)
+    setSnapshotSaved(false)
 
     try {
       if (routeLine.length === 0) {
@@ -307,14 +310,36 @@ export default function FlowShareActions({
         throw new Error('Failed to create snapshot image')
       }
 
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `roam-flow-${session.id}.png`
-      link.click()
-      URL.revokeObjectURL(url)
+      const file = new File([blob], `roam-flow-${session.id}.png`, {
+        type: 'image/png',
+      })
 
-      safeLogEvent('flow_snapshot_downloaded', {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('source_type', 'active_flow')
+      formData.append('source_id', session.id)
+      formData.append('title', session.title ?? 'Roam Flow')
+      formData.append('city', session.city ?? '')
+      formData.append('status', snapshotStatus)
+      formData.append('route_summary', routeSummary)
+      formData.append('checked_in_count', String(checkedInCount))
+      formData.append('total_stops', String(totalStops))
+      formData.append('visibility', 'public')
+
+      const res = await fetch('/api/flow-snapshots/save', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const payload = await res.json().catch(() => null)
+
+      if (!res.ok) {
+        throw new Error(payload?.error || 'Failed to save snapshot')
+      }
+
+      setSnapshotSaved(true)
+
+      safeLogEvent('flow_snapshot_saved_to_profile', {
         session_id: session.id,
         city: session.city,
         status: session.status,
@@ -323,11 +348,11 @@ export default function FlowShareActions({
       })
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Failed to export snapshot'
+        err instanceof Error ? err.message : 'Failed to save snapshot'
 
       setError(message)
 
-      safeLogEvent('flow_snapshot_download_failed', {
+      safeLogEvent('flow_snapshot_save_to_profile_failed', {
         session_id: session.id,
         city: session.city,
         status: session.status,
@@ -466,14 +491,24 @@ export default function FlowShareActions({
 
             <button
               type="button"
-              onClick={() => void downloadSnapshot()}
+              onClick={() => void saveSnapshotToProfile()}
               disabled={exporting}
               className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Save Snapshot
+              {exporting
+                ? 'Saving...'
+                : snapshotSaved
+                  ? 'Saved to Profile'
+                  : 'Save Snapshot'}
             </button>
           </div>
         </div>
+
+        {snapshotSaved ? (
+          <p className="mt-3 text-sm text-emerald-400">
+            Snapshot saved to your public profile.
+          </p>
+        ) : null}
 
         {error ? (
           <p className="mt-3 text-sm text-red-400">{error}</p>
@@ -696,4 +731,8 @@ function decodePolyline(encoded: string, precision: number): RouteLinePoint[] {
   }
 
   return coordinates
+}
+
+function degreesToRadians(value: number) {
+  return (value * Math.PI) / 180
 }

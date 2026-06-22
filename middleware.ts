@@ -11,13 +11,11 @@ export async function middleware(req: NextRequest) {
   // Create a Supabase server client using request cookies
   const supabase = await createServerClient(res)
 
-  // Get the session from cookies
+  // Get the authenticated user from Supabase Auth
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession()
-
-  const user = session?.user ?? null
+  } = await supabase.auth.getUser()
 
   const pathname = req.nextUrl.pathname
   console.log(`🔍 [Middleware] Path: ${pathname}`)

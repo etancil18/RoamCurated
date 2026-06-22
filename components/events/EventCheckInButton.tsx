@@ -26,6 +26,24 @@ export default function EventCheckInButton({
   const [checkedIn, setCheckedIn] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
+  const getCurrentPosition = () =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported on this device.'))
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        resolve,
+        reject,
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0,
+        }
+      )
+    })
+
   const handleCheckIn = async () => {
     if (loading || checkedIn || disabled) return
 
@@ -33,8 +51,23 @@ export default function EventCheckInButton({
     setMessage(null)
 
     try {
+      const position = await getCurrentPosition()
+
+      const userLat = position.coords.latitude
+      const userLon = position.coords.longitude
+      const accuracy = position.coords.accuracy
+
       const res = await fetch(`/api/events/${eventId}/check-in`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_lat: userLat,
+          user_lon: userLon,
+          location_accuracy_meters: accuracy,
+          device_timestamp: new Date().toISOString(),
+        }),
       })
 
       const payload = await res.json().catch(() => null)
@@ -65,9 +98,33 @@ export default function EventCheckInButton({
         alreadyCheckedIn,
         socialGroupId,
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Event check-in error:', error)
-      setMessage('Check-in failed')
+
+      if (
+        error?.code === 1 ||
+        error?.message?.toLowerCase().includes('permission')
+      ) {
+        setMessage(
+          'Location access is required to check into this event.'
+        )
+      } else if (
+        error?.code === 2 ||
+        error?.message?.toLowerCase().includes('unavailable')
+      ) {
+        setMessage(
+          'Unable to determine your location. Please try again.'
+        )
+      } else if (
+        error?.code === 3 ||
+        error?.message?.toLowerCase().includes('timeout')
+      ) {
+        setMessage(
+          'Location request timed out. Please try again.'
+        )
+      } else {
+        setMessage('Check-in failed')
+      }
     } finally {
       setLoading(false)
     }
@@ -87,7 +144,11 @@ export default function EventCheckInButton({
             : 'bg-purple-600 hover:bg-purple-700'
         }`}
       >
-        {loading ? 'Checking in…' : checkedIn ? '✅ Checked In' : `✅ Check In +${xpReward ?? 25} XP`}
+        {loading
+          ? 'Checking in…'
+          : checkedIn
+          ? '✅ Checked In'
+          : `✅ Check In +${xpReward ?? 25} XP`}
       </button>
 
       {message && (

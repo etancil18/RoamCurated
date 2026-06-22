@@ -4,21 +4,21 @@
 import { supabaseBrowser } from './client';
 
 /**
- * Returns the current user's ID from the Supabase session.
+ * Returns the current authenticated user's ID.
  * If not logged in, returns null.
  */
 export async function getCurrentUserId(): Promise<string | null> {
   const supabase = supabaseBrowser();
 
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession();
+  } = await supabase.auth.getUser();
 
   if (error) {
-    console.error('Error fetching session:', error.message);
+    console.error('Error fetching user:', error.message);
     return null;
   }
 
-  return session?.user?.id ?? null;
+  return user?.id ?? null;
 }

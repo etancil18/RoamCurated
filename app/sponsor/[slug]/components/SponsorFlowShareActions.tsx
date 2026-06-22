@@ -63,16 +63,14 @@ export default function SponsorFlowShareActions({
   const [routeLine, setRouteLine] = useState<RouteLinePoint[]>([])
   const [routeLineLoading, setRouteLineLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [snapshotSaved, setSnapshotSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const checkedStopSet = useMemo(() => {
-    return new Set(checkedStops)
-  }, [checkedStops])
+  const checkedStopSet = useMemo(() => new Set(checkedStops), [checkedStops])
 
   const snapshotStops = useMemo(() => {
     return venues.reduce<SponsorFlowShareStop[]>((acc, venue, index) => {
       const includeStop = flowCompleted || checkedStopSet.has(index)
-
       if (!includeStop) return acc
 
       acc.push({
@@ -92,7 +90,6 @@ export default function SponsorFlowShareActions({
 
   const checkedInCount = snapshotStops.length
   const canShareSnapshot = flowCompleted || checkedInCount >= 3
-
   const snapshotStatus = flowCompleted ? 'completed' : 'partial'
 
   const shareTitle = title
@@ -102,6 +99,10 @@ export default function SponsorFlowShareActions({
   const shareText = flowCompleted
     ? `I completed ${checkedInCount} stops on this hosted Roam Flow.`
     : `I checked in to ${checkedInCount} stops on this hosted Roam Flow.`
+
+  const routeSummary = snapshotStops
+    .map((stop) => stop.title ?? `Stop ${stop.stopOrder}`)
+    .join(' → ')
 
   const fetchSnapshotRouteLine = async () => {
     setRouteLineLoading(true)
@@ -128,14 +129,8 @@ export default function SponsorFlowShareActions({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          origin: {
-            lat: originStop.lat,
-            lng: originStop.lon,
-          },
-          destination: {
-            lat: destinationStop.lat,
-            lng: destinationStop.lon,
-          },
+          origin: { lat: originStop.lat, lng: originStop.lon },
+          destination: { lat: destinationStop.lat, lng: destinationStop.lon },
           waypoints: waypointStops.map((stop) => ({
             lat: stop.lat,
             lng: stop.lon,
@@ -174,14 +169,8 @@ export default function SponsorFlowShareActions({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            origin: {
-              lat: from.lat,
-              lng: from.lon,
-            },
-            destination: {
-              lat: to.lat,
-              lng: to.lon,
-            },
+            origin: { lat: from.lat, lng: from.lon },
+            destination: { lat: to.lat, lng: to.lon },
             waypoints: [],
             travelMode: 'walking',
             geometries: 'geojson',
@@ -262,9 +251,10 @@ export default function SponsorFlowShareActions({
     })
   }
 
-  const downloadSnapshot = async () => {
+  const saveSnapshotToProfile = async () => {
     setExporting(true)
     setError(null)
+    setSnapshotSaved(false)
 
     try {
       if (routeLine.length === 0) {
@@ -279,14 +269,36 @@ export default function SponsorFlowShareActions({
         throw new Error('Failed to create snapshot image')
       }
 
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `roam-hosted-flow-${crawlId}.png`
-      link.click()
-      URL.revokeObjectURL(url)
+      const file = new File([blob], `roam-hosted-flow-${crawlId}.png`, {
+        type: 'image/png',
+      })
 
-      safeLogEvent('sponsor_flow_snapshot_downloaded', {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('source_type', 'hosted_flow')
+      formData.append('source_id', crawlId)
+      formData.append('title', title ?? 'Hosted Roam Flow')
+      formData.append('city', city ?? '')
+      formData.append('status', snapshotStatus)
+      formData.append('route_summary', routeSummary)
+      formData.append('checked_in_count', String(checkedInCount))
+      formData.append('total_stops', String(totalStops))
+      formData.append('visibility', 'public')
+
+      const res = await fetch('/api/flow-snapshots/save', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const payload = await res.json().catch(() => null)
+
+      if (!res.ok) {
+        throw new Error(payload?.error || 'Failed to save snapshot')
+      }
+
+      setSnapshotSaved(true)
+
+      safeLogEvent('sponsor_flow_snapshot_saved_to_profile', {
         crawl_id: crawlId,
         city,
         checked_in_count: checkedInCount,
@@ -294,11 +306,11 @@ export default function SponsorFlowShareActions({
       })
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : 'Failed to export snapshot'
+        err instanceof Error ? err.message : 'Failed to save snapshot'
 
       setError(message)
 
-      safeLogEvent('sponsor_flow_snapshot_download_failed', {
+      safeLogEvent('sponsor_flow_snapshot_save_to_profile_failed', {
         crawl_id: crawlId,
         city,
         checked_in_count: checkedInCount,
@@ -432,14 +444,24 @@ export default function SponsorFlowShareActions({
 
             <button
               type="button"
-              onClick={() => void downloadSnapshot()}
+              onClick={() => void saveSnapshotToProfile()}
               disabled={exporting}
               className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Save Snapshot
+              {exporting
+                ? 'Saving...'
+                : snapshotSaved
+                  ? 'Saved to Profile'
+                  : 'Save Snapshot'}
             </button>
           </div>
         </div>
+
+        {snapshotSaved ? (
+          <p className="mt-3 text-sm text-emerald-400">
+            Snapshot saved to your public profile.
+          </p>
+        ) : null}
 
         {error ? (
           <p className="mt-3 text-sm text-red-400">{error}</p>
@@ -497,13 +519,7 @@ export default function SponsorFlowShareActions({
 
             <div className="flex items-center justify-center bg-neutral-950 p-4">
               <div className="mx-auto w-full max-w-[320px] overflow-hidden rounded-xl border border-neutral-800 bg-black">
-                <div
-                  className="relative mx-auto"
-                  style={{
-                    width: 320,
-                    height: 568,
-                  }}
-                >
+                <div className="relative mx-auto" style={{ width: 320, height: 568 }}>
                   <div
                     className="absolute left-1/2 top-0"
                     style={{
@@ -547,9 +563,7 @@ function extractRouteLineFromMapboxResponse(data: any): RouteLinePoint[] {
   for (const candidate of candidates) {
     const parsed = parseRouteGeometry(candidate)
 
-    if (parsed.length >= 2) {
-      return parsed
-    }
+    if (parsed.length >= 2) return parsed
   }
 
   return []
@@ -566,10 +580,7 @@ function parseRouteGeometry(value: unknown): RouteLinePoint[] {
           typeof coord[0] === 'number' &&
           typeof coord[1] === 'number'
         ) {
-          return {
-            lon: coord[0],
-            lat: coord[1],
-          }
+          return { lon: coord[0], lat: coord[1] }
         }
 
         return null

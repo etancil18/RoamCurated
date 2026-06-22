@@ -7,12 +7,51 @@ type RouteContext = {
   }>
 }
 
-export async function POST(_request: Request, context: RouteContext) {
+type EventCheckInBody = {
+  user_lat?: number
+  user_lon?: number
+  location_accuracy_meters?: number | null
+  device_timestamp?: string
+}
+
+const BASE_CHECK_IN_RADIUS_METERS = 125
+const FLEXIBLE_RADIUS_METERS = 75
+const MAX_REASONABLE_ACCURACY_METERS = 250
+
+export async function POST(request: Request, context: RouteContext) {
   try {
     const { eventId } = await context.params
 
     if (!eventId) {
       return NextResponse.json({ error: 'Missing eventId' }, { status: 400 })
+    }
+
+    const body = (await request.json().catch(() => ({}))) as EventCheckInBody
+
+    const userLat = body.user_lat
+    const userLon = body.user_lon
+    const locationAccuracyMeters = body.location_accuracy_meters
+    const deviceTimestamp = body.device_timestamp
+
+    if (!isValidLatitude(userLat) || !isValidLongitude(userLon)) {
+      return NextResponse.json(
+        { error: 'Location is required to check in.' },
+        { status: 400 }
+      )
+    }
+
+    if (
+      typeof locationAccuracyMeters === 'number' &&
+      Number.isFinite(locationAccuracyMeters) &&
+      locationAccuracyMeters > MAX_REASONABLE_ACCURACY_METERS
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'We could not confirm your location accurately enough. Try again closer to the event venue.',
+        },
+        { status: 400 }
+      )
     }
 
     const supabase = await supabaseServerApi()
@@ -34,7 +73,7 @@ export async function POST(_request: Request, context: RouteContext) {
 
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('id, social_group_id, xp_reward, checkin_enabled')
+      .select('id, venue_id, social_group_id, xp_reward, checkin_enabled')
       .eq('id', eventId)
       .maybeSingle()
 
@@ -54,6 +93,62 @@ export async function POST(_request: Request, context: RouteContext) {
       return NextResponse.json(
         { error: 'Check-in is disabled for this event' },
         { status: 403 }
+      )
+    }
+
+    if (!event.venue_id) {
+      return NextResponse.json(
+        { error: 'This event does not have a venue location for check-in.' },
+        { status: 400 }
+      )
+    }
+
+    const { data: venue, error: venueError } = await supabase
+      .from('venues')
+      .select('id, lat, lon')
+      .eq('id', event.venue_id)
+      .maybeSingle()
+
+    if (venueError) {
+      console.error('Check-in venue lookup error:', venueError)
+      return NextResponse.json(
+        { error: 'Failed to verify event venue', details: venueError.message },
+        { status: 500 }
+      )
+    }
+
+    if (!venue || !isValidLatitude(venue.lat) || !isValidLongitude(venue.lon)) {
+      return NextResponse.json(
+        { error: 'This event venue does not have a valid check-in location.' },
+        { status: 400 }
+      )
+    }
+
+    const distanceMeters = calculateDistanceMeters({
+      fromLat: userLat,
+      fromLon: userLon,
+      toLat: venue.lat,
+      toLon: venue.lon,
+    })
+
+    const accuracyBuffer =
+      typeof locationAccuracyMeters === 'number' &&
+      Number.isFinite(locationAccuracyMeters)
+        ? locationAccuracyMeters
+        : 0
+
+    const geoVerified =
+      distanceMeters <= BASE_CHECK_IN_RADIUS_METERS ||
+      distanceMeters <= FLEXIBLE_RADIUS_METERS + accuracyBuffer
+
+    if (!geoVerified) {
+      return NextResponse.json(
+        {
+          error: 'You need to be closer to the event venue to check in.',
+          distanceMeters: Math.round(distanceMeters),
+          requiredDistanceMeters: BASE_CHECK_IN_RADIUS_METERS,
+        },
+        { status: 400 }
       )
     }
 
@@ -93,7 +188,21 @@ export async function POST(_request: Request, context: RouteContext) {
         user_id: user.id,
         social_group_id: event.social_group_id ?? null,
         source: 'event_page',
-      })
+        user_lat: userLat,
+        user_lon: userLon,
+        distance_meters: distanceMeters,
+        location_accuracy_meters:
+          typeof locationAccuracyMeters === 'number' &&
+          Number.isFinite(locationAccuracyMeters)
+            ? locationAccuracyMeters
+            : null,
+        geo_verified: true,
+        check_in_source: 'geo',
+        device_timestamp:
+          typeof deviceTimestamp === 'string' && deviceTimestamp.trim().length > 0
+            ? deviceTimestamp
+            : null,
+      } as any)
 
     if (checkinError) {
       console.error('Event check-in insert error:', checkinError)
@@ -150,6 +259,8 @@ export async function POST(_request: Request, context: RouteContext) {
       checkedIn: true,
       alreadyCheckedIn: false,
       xpAwarded,
+      geoVerified: true,
+      distanceMeters: Math.round(distanceMeters),
     })
   } catch (error) {
     console.error('Unexpected event check-in error:', error)
@@ -162,4 +273,56 @@ export async function POST(_request: Request, context: RouteContext) {
       { status: 500 }
     )
   }
+}
+
+function isValidLatitude(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= -90 &&
+    value <= 90
+  )
+}
+
+function isValidLongitude(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= -180 &&
+    value <= 180
+  )
+}
+
+function calculateDistanceMeters({
+  fromLat,
+  fromLon,
+  toLat,
+  toLon,
+}: {
+  fromLat: number
+  fromLon: number
+  toLat: number
+  toLon: number
+}) {
+  const earthRadiusMeters = 6371000
+
+  const fromLatRad = degreesToRadians(fromLat)
+  const toLatRad = degreesToRadians(toLat)
+  const deltaLatRad = degreesToRadians(toLat - fromLat)
+  const deltaLonRad = degreesToRadians(toLon - fromLon)
+
+  const a =
+    Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
+    Math.cos(fromLatRad) *
+      Math.cos(toLatRad) *
+      Math.sin(deltaLonRad / 2) *
+      Math.sin(deltaLonRad / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  return earthRadiusMeters * c
+}
+
+function degreesToRadians(value: number) {
+  return (value * Math.PI) / 180
 }

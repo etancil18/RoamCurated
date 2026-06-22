@@ -16,30 +16,51 @@ export type Database = {
     Tables: {
       active_flow_progress: {
         Row: {
+          check_in_source: string
           checked_in_at: string
           created_at: string
+          device_timestamp: string | null
+          distance_meters: number | null
+          geo_verified: boolean
           id: string
+          location_accuracy_meters: number | null
           session_id: string
           stop_index: number
           user_id: string
+          user_lat: number | null
+          user_lon: number | null
           venue_id: string
         }
         Insert: {
+          check_in_source?: string
           checked_in_at?: string
           created_at?: string
+          device_timestamp?: string | null
+          distance_meters?: number | null
+          geo_verified?: boolean
           id?: string
+          location_accuracy_meters?: number | null
           session_id: string
           stop_index: number
           user_id: string
+          user_lat?: number | null
+          user_lon?: number | null
           venue_id: string
         }
         Update: {
+          check_in_source?: string
           checked_in_at?: string
           created_at?: string
+          device_timestamp?: string | null
+          distance_meters?: number | null
+          geo_verified?: boolean
           id?: string
+          location_accuracy_meters?: number | null
           session_id?: string
           stop_index?: number
           user_id?: string
+          user_lat?: number | null
+          user_lon?: number | null
           venue_id?: string
         }
         Relationships: [
@@ -215,25 +236,46 @@ export type Database = {
       }
       crawl_progress: {
         Row: {
+          check_in_source: string
           completed_at: string | null
           crawl_id: string | null
+          device_timestamp: string | null
+          distance_meters: number | null
+          geo_verified: boolean
           id: string
+          location_accuracy_meters: number | null
           stop_index: number
           user_id: string | null
+          user_lat: number | null
+          user_lon: number | null
         }
         Insert: {
+          check_in_source?: string
           completed_at?: string | null
           crawl_id?: string | null
+          device_timestamp?: string | null
+          distance_meters?: number | null
+          geo_verified?: boolean
           id?: string
+          location_accuracy_meters?: number | null
           stop_index: number
           user_id?: string | null
+          user_lat?: number | null
+          user_lon?: number | null
         }
         Update: {
+          check_in_source?: string
           completed_at?: string | null
           crawl_id?: string | null
+          device_timestamp?: string | null
+          distance_meters?: number | null
+          geo_verified?: boolean
           id?: string
+          location_accuracy_meters?: number | null
           stop_index?: number
           user_id?: string | null
+          user_lat?: number | null
+          user_lon?: number | null
         }
         Relationships: [
           {
@@ -288,28 +330,49 @@ export type Database = {
       }
       event_checkins: {
         Row: {
+          check_in_source: string
           checked_in_at: string
+          device_timestamp: string | null
+          distance_meters: number | null
           event_id: string
+          geo_verified: boolean
           id: string
+          location_accuracy_meters: number | null
           social_group_id: string | null
           source: string
           user_id: string
+          user_lat: number | null
+          user_lon: number | null
         }
         Insert: {
+          check_in_source?: string
           checked_in_at?: string
+          device_timestamp?: string | null
+          distance_meters?: number | null
           event_id: string
+          geo_verified?: boolean
           id?: string
+          location_accuracy_meters?: number | null
           social_group_id?: string | null
           source?: string
           user_id: string
+          user_lat?: number | null
+          user_lon?: number | null
         }
         Update: {
+          check_in_source?: string
           checked_in_at?: string
+          device_timestamp?: string | null
+          distance_meters?: number | null
           event_id?: string
+          geo_verified?: boolean
           id?: string
+          location_accuracy_meters?: number | null
           social_group_id?: string | null
           source?: string
           user_id?: string
+          user_lat?: number | null
+          user_lon?: number | null
         }
         Relationships: [
           {
@@ -971,6 +1034,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      flow_snapshots: {
+        Row: {
+          checked_in_count: number
+          city: string | null
+          cover_image_url: string
+          created_at: string
+          id: string
+          route_summary: string | null
+          source_id: string
+          source_type: string
+          status: string | null
+          title: string | null
+          total_stops: number
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          checked_in_count?: number
+          city?: string | null
+          cover_image_url: string
+          created_at?: string
+          id?: string
+          route_summary?: string | null
+          source_id: string
+          source_type: string
+          status?: string | null
+          title?: string | null
+          total_stops?: number
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          checked_in_count?: number
+          city?: string | null
+          cover_image_url?: string
+          created_at?: string
+          id?: string
+          route_summary?: string | null
+          source_id?: string
+          source_type?: string
+          status?: string | null
+          title?: string | null
+          total_stops?: number
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
       }
       planned_outing_events: {
         Row: {
@@ -2420,29 +2534,50 @@ export type Database = {
       }
       venue_visits: {
         Row: {
+          check_in_source: string
           created_at: string
+          device_timestamp: string | null
+          distance_meters: number | null
+          geo_verified: boolean
           id: string
+          location_accuracy_meters: number | null
           rating: number
           updated_at: string
           user_id: string
+          user_lat: number | null
+          user_lon: number | null
           venue_id: string
           visited_at: string
         }
         Insert: {
+          check_in_source?: string
           created_at?: string
+          device_timestamp?: string | null
+          distance_meters?: number | null
+          geo_verified?: boolean
           id?: string
+          location_accuracy_meters?: number | null
           rating: number
           updated_at?: string
           user_id: string
+          user_lat?: number | null
+          user_lon?: number | null
           venue_id: string
           visited_at?: string
         }
         Update: {
+          check_in_source?: string
           created_at?: string
+          device_timestamp?: string | null
+          distance_meters?: number | null
+          geo_verified?: boolean
           id?: string
+          location_accuracy_meters?: number | null
           rating?: number
           updated_at?: string
           user_id?: string
+          user_lat?: number | null
+          user_lon?: number | null
           venue_id?: string
           visited_at?: string
         }

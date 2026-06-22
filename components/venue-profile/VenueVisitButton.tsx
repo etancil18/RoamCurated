@@ -95,6 +95,20 @@ export default function VenueVisitButton({
     }
   }, [venueId])
 
+  const getCurrentPosition = () =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported on this device.'))
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      })
+    })
+
   const openRatingModal = () => {
     setError(null)
     setDraftRating(rating)
@@ -111,6 +125,8 @@ export default function VenueVisitButton({
     setError(null)
 
     try {
+      const position = await getCurrentPosition()
+
       const res = await fetch(`/api/venue-profile/${venueId}/visit`, {
         method: visited ? 'PATCH' : 'POST',
         headers: {
@@ -118,6 +134,10 @@ export default function VenueVisitButton({
         },
         body: JSON.stringify({
           rating: draftRating,
+          user_lat: position.coords.latitude,
+          user_lon: position.coords.longitude,
+          location_accuracy_meters: position.coords.accuracy,
+          device_timestamp: new Date().toISOString(),
         }),
       })
 
@@ -137,9 +157,27 @@ export default function VenueVisitButton({
       setRating(nextRating)
       setDraftRating(nextRating)
       setModalOpen(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error('[VenueVisitButton] Failed to save visit:', err)
-      setError(err instanceof Error ? err.message : 'Failed to save visit')
+
+      if (
+        err?.code === 1 ||
+        err?.message?.toLowerCase().includes('permission')
+      ) {
+        setError('Location access is required to mark this venue as visited.')
+      } else if (
+        err?.code === 2 ||
+        err?.message?.toLowerCase().includes('unavailable')
+      ) {
+        setError('Unable to determine your location. Please try again.')
+      } else if (
+        err?.code === 3 ||
+        err?.message?.toLowerCase().includes('timeout')
+      ) {
+        setError('Location request timed out. Please try again.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to save visit')
+      }
     } finally {
       setSaving(false)
     }

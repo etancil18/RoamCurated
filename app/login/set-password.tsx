@@ -21,7 +21,7 @@ export default function SetPasswordPage() {
   )
 
   useEffect(() => {
-    void supabase.auth.getSession()
+    void supabase.auth.getUser()
   }, [supabase])
 
   useEffect(() => {
@@ -104,7 +104,9 @@ export default function SetPasswordPage() {
         </form>
 
         {error && (
-          <p className="text-red-600 dark:text-red-400 text-center mt-4">⚠️ {error}</p>
+          <p className="text-red-600 dark:text-red-400 text-center mt-4">
+            ⚠️ {error}
+          </p>
         )}
 
         {successMessage && (

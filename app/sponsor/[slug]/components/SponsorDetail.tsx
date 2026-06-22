@@ -22,6 +22,63 @@ type SponsorVenueWithActions = SponsorVenue & {
   booking_options?: BookingOption[] | null;
 };
 
+type GeoLocationPayload = {
+  user_lat: number;
+  user_lon: number;
+  location_accuracy_meters: number | null;
+  device_timestamp: string;
+};
+
+function getCurrentLocationForCheckIn(): Promise<GeoLocationPayload> {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      reject(new Error('Location is not available on this device.'));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          user_lat: position.coords.latitude,
+          user_lon: position.coords.longitude,
+          location_accuracy_meters:
+            typeof position.coords.accuracy === 'number'
+              ? position.coords.accuracy
+              : null,
+          device_timestamp: new Date(position.timestamp).toISOString(),
+        });
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          reject(new Error('Location permission is required to check in.'));
+          return;
+        }
+
+        if (error.code === error.POSITION_UNAVAILABLE) {
+          reject(
+            new Error(
+              'We could not confirm your location. Try again near the venue entrance.'
+            )
+          );
+          return;
+        }
+
+        if (error.code === error.TIMEOUT) {
+          reject(new Error('Location check timed out. Please try again.'));
+          return;
+        }
+
+        reject(new Error('Could not get your current location.'));
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
+  });
+}
+
 async function fetchAttendeeDetails(userIds: string[]) {
   const supabase = supabaseBrowser();
 
@@ -77,6 +134,7 @@ export default function SponsorDetail({ crawl }: Props) {
   const [venues, setVenues] = useState<SponsorVenueWithActions[]>([]);
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [checkedStops, setCheckedStops] = useState<number[]>([]);
+  const [checkingStopIndex, setCheckingStopIndex] = useState<number | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [attendeesWithDetails, setAttendeesWithDetails] = useState<any[]>([]);
   const [segmentMinutesByVenueId, setSegmentMinutesByVenueId] = useState<Record<string, number>>({});
@@ -339,12 +397,20 @@ export default function SponsorDetail({ crawl }: Props) {
       return;
     }
 
-    const supabase = supabaseBrowser();
+    const venue = venues[index];
+
+    if (!venue) {
+      alert('Could not find this flow stop.');
+      return;
+    }
+
     const alreadyChecked = checkedStops.includes(index);
 
     let updated: number[];
 
     if (alreadyChecked) {
+      const supabase = supabaseBrowser();
+
       const { error } = await supabase
         .from('crawl_progress')
         .delete()
@@ -359,19 +425,45 @@ export default function SponsorDetail({ crawl }: Props) {
 
       updated = checkedStops.filter((i) => i !== index);
     } else {
-      const { error } = await supabase.from('crawl_progress').insert({
-        crawl_id: meta.crawl_id,
-        user_id: userId,
-        stop_index: index,
-        completed_at: new Date().toISOString(),
-      });
+      setCheckingStopIndex(index);
 
-      if (error) {
-        console.error('[SponsorDetail] Failed to save stop progress:', error);
+      try {
+        const location = await getCurrentLocationForCheckIn();
+
+        const res = await fetch('/api/crawl-progress/check-in', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            crawl_id: meta.crawl_id,
+            venue_id: venue.id,
+            stop_index: index,
+            user_lat: location.user_lat,
+            user_lon: location.user_lon,
+            location_accuracy_meters: location.location_accuracy_meters,
+            device_timestamp: location.device_timestamp,
+          }),
+        });
+
+        const json = await res.json().catch(() => null);
+
+        if (!res.ok) {
+          alert(json?.error ?? 'Could not check in.');
+          return;
+        }
+
+        updated = [...checkedStops, index];
+      } catch (err) {
+        console.error('[SponsorDetail] Failed to geo-check hosted flow stop:', err);
+        alert(
+          err instanceof Error
+            ? err.message
+            : 'Unexpected error checking in.'
+        );
         return;
+      } finally {
+        setCheckingStopIndex(null);
       }
-
-      updated = [...checkedStops, index];
     }
 
     setCheckedStops(updated);
@@ -644,6 +736,7 @@ export default function SponsorDetail({ crawl }: Props) {
           <ul className="mt-4 space-y-2">
             {venues.map((v, i) => {
               const checked = checkedStops.includes(i);
+              const checkingThisStop = checkingStopIndex === i;
 
               return (
                 <li
@@ -655,11 +748,16 @@ export default function SponsorDetail({ crawl }: Props) {
                       <button
                         id={`flow-stop-${i}`}
                         type="button"
+                        disabled={checkingStopIndex !== null}
                         onClick={() => toggleStop(i)}
                         className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold ${
                           checked
                             ? 'border-indigo-600 bg-indigo-600 text-white'
                             : 'border-gray-300 text-gray-400'
+                        } ${
+                          checkingStopIndex !== null
+                            ? 'cursor-not-allowed opacity-70'
+                            : ''
                         }`}
                       >
                         {checked ? '✓' : i + 1}
@@ -669,7 +767,11 @@ export default function SponsorDetail({ crawl }: Props) {
                         <p className="text-sm font-medium">{v.name}</p>
 
                         <p className="text-xs text-muted-foreground">
-                          {checked ? '+25 XP checked in' : 'Tap to check in'}
+                          {checkingThisStop
+                            ? 'Checking location...'
+                            : checked
+                              ? '+25 XP checked in'
+                              : 'Tap to check in'}
                         </p>
                       </div>
                     </div>

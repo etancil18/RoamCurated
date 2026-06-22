@@ -35,7 +35,7 @@ export default function LoginPage() {
       })
 
     if (!signInError) {
-      await supabase.auth.getSession()
+      await supabase.auth.getUser()
       setLoading(false)
       window.location.href = '/welcome'
       return
@@ -53,7 +53,7 @@ export default function LoginPage() {
       return
     }
 
-    await supabase.auth.getSession()
+    await supabase.auth.getUser()
 
     setLoading(false)
 
