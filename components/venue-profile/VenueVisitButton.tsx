@@ -46,6 +46,7 @@ export default function VenueVisitButton({
   const [draftRating, setDraftRating] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [checkingLocation, setCheckingLocation] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [verifiedLocation, setVerifiedLocation] = useState<VerifiedLocation | null>(null)
@@ -117,9 +118,9 @@ export default function VenueVisitButton({
     })
 
   const openRatingModal = async () => {
-    if (saving) return
+    if (saving || checkingLocation) return
 
-    setSaving(true)
+    setCheckingLocation(true)
     setError(null)
 
     try {
@@ -182,10 +183,14 @@ export default function VenueVisitButton({
       ) {
         setError('Location request timed out. Please try again.')
       } else {
-        setError(err instanceof Error ? err.message : 'You need to be closer to this venue.')
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'You need to be closer to this venue.'
+        )
       }
     } finally {
-      setSaving(false)
+      setCheckingLocation(false)
     }
   }
 
@@ -291,7 +296,7 @@ export default function VenueVisitButton({
         <button
           type="button"
           onClick={() => void openRatingModal()}
-          disabled={saving}
+          disabled={saving || checkingLocation}
           className={[
             'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
             visited
@@ -310,7 +315,7 @@ export default function VenueVisitButton({
           ) : (
             <span className="inline-flex items-center gap-2">
               <span>📍</span>
-              <span>{saving ? 'Checking location…' : 'Check In'}</span>
+              <span>{checkingLocation ? 'Checking location…' : 'Check In'}</span>
             </span>
           )}
         </button>
