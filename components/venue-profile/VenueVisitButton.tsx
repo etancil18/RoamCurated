@@ -15,6 +15,13 @@ type VisitStatusResponse = {
   error?: string
 }
 
+type VerifiedLocation = {
+  user_lat: number
+  user_lon: number
+  location_accuracy_meters: number | null
+  device_timestamp: string
+}
+
 function isValidRating(value: unknown): value is number {
   return (
     typeof value === 'number' &&
@@ -26,7 +33,6 @@ function isValidRating(value: unknown): value is number {
 
 function renderStars(rating: number | null) {
   if (!rating) return null
-
   return '★'.repeat(rating)
 }
 
@@ -42,6 +48,7 @@ export default function VenueVisitButton({
   const [saving, setSaving] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [verifiedLocation, setVerifiedLocation] = useState<VerifiedLocation | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -109,10 +116,77 @@ export default function VenueVisitButton({
       })
     })
 
-  const openRatingModal = () => {
+  const openRatingModal = async () => {
+    if (saving) return
+
+    setSaving(true)
     setError(null)
-    setDraftRating(rating)
-    setModalOpen(true)
+
+    try {
+      const position = await getCurrentPosition()
+
+      const nextLocation: VerifiedLocation = {
+        user_lat: position.coords.latitude,
+        user_lon: position.coords.longitude,
+        location_accuracy_meters:
+          typeof position.coords.accuracy === 'number'
+            ? position.coords.accuracy
+            : null,
+        device_timestamp: new Date().toISOString(),
+      }
+
+      const params = new URLSearchParams({
+        check_proximity: '1',
+        user_lat: String(nextLocation.user_lat),
+        user_lon: String(nextLocation.user_lon),
+        location_accuracy_meters: String(
+          nextLocation.location_accuracy_meters ?? ''
+        ),
+        device_timestamp: nextLocation.device_timestamp,
+      })
+
+      const res = await fetch(
+        `/api/venue-profile/${venueId}/visit?${params.toString()}`,
+        {
+          method: 'GET',
+        }
+      )
+
+      const json = (await res.json().catch(() => null)) as
+        | VisitStatusResponse
+        | null
+
+      if (!res.ok) {
+        throw new Error(json?.error || 'You need to be closer to this venue.')
+      }
+
+      setVerifiedLocation(nextLocation)
+      setDraftRating(rating)
+      setModalOpen(true)
+    } catch (err: any) {
+      console.error('[VenueVisitButton] Proximity check failed:', err)
+
+      if (
+        err?.code === 1 ||
+        err?.message?.toLowerCase().includes('permission')
+      ) {
+        setError('Location access is required to mark this venue as visited.')
+      } else if (
+        err?.code === 2 ||
+        err?.message?.toLowerCase().includes('unavailable')
+      ) {
+        setError('Unable to determine your location. Please try again.')
+      } else if (
+        err?.code === 3 ||
+        err?.message?.toLowerCase().includes('timeout')
+      ) {
+        setError('Location request timed out. Please try again.')
+      } else {
+        setError(err instanceof Error ? err.message : 'You need to be closer to this venue.')
+      }
+    } finally {
+      setSaving(false)
+    }
   }
 
   const saveVisit = async () => {
@@ -125,7 +199,9 @@ export default function VenueVisitButton({
     setError(null)
 
     try {
-      const position = await getCurrentPosition()
+      const location = verifiedLocation ?? (() => {
+        throw new Error('Location must be verified before rating this venue.')
+      })()
 
       const res = await fetch(`/api/venue-profile/${venueId}/visit`, {
         method: visited ? 'PATCH' : 'POST',
@@ -134,10 +210,7 @@ export default function VenueVisitButton({
         },
         body: JSON.stringify({
           rating: draftRating,
-          user_lat: position.coords.latitude,
-          user_lon: position.coords.longitude,
-          location_accuracy_meters: position.coords.accuracy,
-          device_timestamp: new Date().toISOString(),
+          ...location,
         }),
       })
 
@@ -157,27 +230,10 @@ export default function VenueVisitButton({
       setRating(nextRating)
       setDraftRating(nextRating)
       setModalOpen(false)
-    } catch (err: any) {
+      setVerifiedLocation(null)
+    } catch (err) {
       console.error('[VenueVisitButton] Failed to save visit:', err)
-
-      if (
-        err?.code === 1 ||
-        err?.message?.toLowerCase().includes('permission')
-      ) {
-        setError('Location access is required to mark this venue as visited.')
-      } else if (
-        err?.code === 2 ||
-        err?.message?.toLowerCase().includes('unavailable')
-      ) {
-        setError('Unable to determine your location. Please try again.')
-      } else if (
-        err?.code === 3 ||
-        err?.message?.toLowerCase().includes('timeout')
-      ) {
-        setError('Location request timed out. Please try again.')
-      } else {
-        setError(err instanceof Error ? err.message : 'Failed to save visit')
-      }
+      setError(err instanceof Error ? err.message : 'Failed to save visit')
     } finally {
       setSaving(false)
     }
@@ -203,6 +259,7 @@ export default function VenueVisitButton({
       setVisited(false)
       setRating(null)
       setDraftRating(null)
+      setVerifiedLocation(null)
       setModalOpen(false)
     } catch (err) {
       console.error('[VenueVisitButton] Failed to remove visit:', err)
@@ -233,7 +290,7 @@ export default function VenueVisitButton({
       <div className="space-y-2">
         <button
           type="button"
-          onClick={openRatingModal}
+          onClick={() => void openRatingModal()}
           disabled={saving}
           className={[
             'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
@@ -253,7 +310,7 @@ export default function VenueVisitButton({
           ) : (
             <span className="inline-flex items-center gap-2">
               <span>📍</span>
-              <span>Been Here</span>
+              <span>{saving ? 'Checking location…' : 'Check In'}</span>
             </span>
           )}
         </button>
@@ -273,6 +330,7 @@ export default function VenueVisitButton({
         onClose={() => {
           if (!saving) {
             setDraftRating(rating)
+            setVerifiedLocation(null)
             setModalOpen(false)
           }
         }}

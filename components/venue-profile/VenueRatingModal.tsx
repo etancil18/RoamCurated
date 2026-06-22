@@ -67,7 +67,17 @@ export default function VenueRatingModal({
           <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-cyan-400/20 blur-2xl" />
           <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-indigo-400/20 blur-2xl" />
 
-          <div className="relative">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            aria-label="Close rating modal"
+            className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/10 text-lg font-semibold text-white/80 transition hover:bg-white/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            ×
+          </button>
+
+          <div className="relative pr-10">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
               Venue Memory
             </p>

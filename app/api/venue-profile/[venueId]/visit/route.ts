@@ -185,7 +185,7 @@ async function verifyVenueLocation({
   }
 }
 
-export async function GET(_req: NextRequest, context: RouteContext) {
+export async function GET(req: NextRequest, context: RouteContext) {
   const { venueId } = await context.params
   const supabase = await supabaseServerApi()
 
@@ -199,6 +199,37 @@ export async function GET(_req: NextRequest, context: RouteContext) {
       { visited: false, rating: null },
       { status: 200 }
     )
+  }
+
+  const url = new URL(req.url)
+  const checkProximity = url.searchParams.get('check_proximity') === '1'
+
+  if (checkProximity) {
+    const userLat = Number(url.searchParams.get('user_lat'))
+    const userLon = Number(url.searchParams.get('user_lon'))
+    const rawAccuracy = url.searchParams.get('location_accuracy_meters')
+    const locationAccuracyMeters =
+      rawAccuracy && rawAccuracy.trim().length > 0
+        ? Number(rawAccuracy)
+        : null
+
+    const geoResult = await verifyVenueLocation({
+      supabase,
+      venueId,
+      userLat,
+      userLon,
+      locationAccuracyMeters,
+    })
+
+    if (!geoResult.ok) {
+      return geoResult.response
+    }
+
+    return NextResponse.json({
+      proximityVerified: true,
+      geoVerified: true,
+      distanceMeters: Math.round(geoResult.distanceMeters),
+    })
   }
 
   const { data, error } = await supabase
