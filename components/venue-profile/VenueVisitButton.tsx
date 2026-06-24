@@ -104,53 +104,60 @@ export default function VenueVisitButton({
   }, [venueId])
 
   const getCurrentPosition = () =>
-  new Promise<GeolocationPosition>((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation is not supported on this device.'))
-      return
-    }
-
-    let settled = false
-
-    const hardTimeout = window.setTimeout(() => {
-      if (settled) return
-
-      settled = true
-
-      reject(
-        new Error(
-          'Location check timed out. Make sure location access is enabled for Roam.'
-        )
-      )
-    }, 12000)
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (settled) return
-
-        settled = true
-        window.clearTimeout(hardTimeout)
-
-        resolve(position)
-      },
-      (error) => {
-        if (settled) return
-
-        settled = true
-        window.clearTimeout(hardTimeout)
-
-        reject(error)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported on this device.'))
+        return
       }
-    )
-  })
+
+      let settled = false
+
+      const hardTimeout = window.setTimeout(() => {
+        if (settled) return
+
+        settled = true
+
+        reject(
+          new Error(
+            'Location check timed out. Make sure location access is enabled for Roam.'
+          )
+        )
+      }, 12000)
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (settled) return
+
+          settled = true
+          window.clearTimeout(hardTimeout)
+
+          resolve(position)
+        },
+        (error) => {
+          if (settled) return
+
+          settled = true
+          window.clearTimeout(hardTimeout)
+
+          reject(error)
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      )
+    })
 
   const openRatingModal = async () => {
     if (saving || checkingLocation) return
+
+    if (visited) {
+      setError(null)
+      setDraftRating(rating)
+      setModalOpen(true)
+      return
+    }
 
     setCheckingLocation(true)
     setError(null)
@@ -236,9 +243,9 @@ export default function VenueVisitButton({
     setError(null)
 
     try {
-      const location = verifiedLocation ?? (() => {
+      if (!visited && !verifiedLocation) {
         throw new Error('Location must be verified before rating this venue.')
-      })()
+      }
 
       const res = await fetch(`/api/venue-profile/${venueId}/visit`, {
         method: visited ? 'PATCH' : 'POST',
@@ -247,7 +254,7 @@ export default function VenueVisitButton({
         },
         body: JSON.stringify({
           rating: draftRating,
-          ...location,
+          ...(visited ? {} : verifiedLocation),
         }),
       })
 

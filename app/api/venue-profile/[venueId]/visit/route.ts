@@ -248,10 +248,49 @@ export async function GET(req: NextRequest, context: RouteContext) {
     )
   }
 
+  if (data) {
+    return NextResponse.json({
+      visited: true,
+      rating: data.rating ?? null,
+      visit: data,
+      proofSource: 'venue_visits',
+    })
+  }
+
+  const { data: activeFlowProof, error: activeFlowProofError } = await supabase
+    .from('active_flow_progress')
+    .select('id, checked_in_at, venue_id, user_id')
+    .eq('venue_id', venueId)
+    .eq('user_id', user.id)
+    .order('checked_in_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (activeFlowProofError) {
+    console.error(
+      '[venue visit][GET] Active flow proof check failed:',
+      activeFlowProofError
+    )
+
+    return NextResponse.json(
+      { error: 'Failed to verify flow check-in status' },
+      { status: 500 }
+    )
+  }
+
+  if (activeFlowProof) {
+    return NextResponse.json({
+      visited: true,
+      rating: null,
+      visit: null,
+      proofSource: 'active_flow_progress',
+    })
+  }
+
   return NextResponse.json({
-    visited: Boolean(data),
-    rating: data?.rating ?? null,
-    visit: data ?? null,
+    visited: false,
+    rating: null,
+    visit: null,
   })
 }
 
@@ -358,13 +397,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   }
 
   const body = (await req.json().catch(() => ({}))) as VenueVisitBody
-  const {
-    rating,
-    user_lat: userLat,
-    user_lon: userLon,
-    location_accuracy_meters: locationAccuracyMeters,
-    device_timestamp: deviceTimestamp,
-  } = body
+  const { rating } = body
 
   if (!isValidRating(rating)) {
     return NextResponse.json(
@@ -373,66 +406,133 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     )
   }
 
-  const geoResult = await verifyVenueLocation({
-    supabase,
-    venueId,
-    userLat: userLat as number,
-    userLon: userLon as number,
-    locationAccuracyMeters,
-  })
+  const now = new Date().toISOString()
 
-  if (!geoResult.ok) {
-    return geoResult.response
-  }
-
-  const { data, error } = await supabase
+  const { data: existingVisit, error: existingVisitError } = await supabase
     .from('venue_visits')
-    .update({
-      rating,
-      updated_at: new Date().toISOString(),
-      user_lat: userLat,
-      user_lon: userLon,
-      distance_meters: geoResult.distanceMeters,
-      location_accuracy_meters:
-        typeof locationAccuracyMeters === 'number' &&
-        Number.isFinite(locationAccuracyMeters)
-          ? locationAccuracyMeters
-          : null,
-      geo_verified: true,
-      check_in_source: 'geo',
-      device_timestamp:
-        typeof deviceTimestamp === 'string' && deviceTimestamp.trim().length > 0
-          ? deviceTimestamp
-          : null,
-    })
+    .select('id')
     .eq('venue_id', venueId)
     .eq('user_id', user.id)
-    .select('id, rating, visited_at, created_at, updated_at')
     .maybeSingle()
 
-  if (error) {
-    console.error('[venue visit][PATCH] Failed:', error)
+  if (existingVisitError) {
+    console.error('[venue visit][PATCH] Existing visit check failed:', existingVisitError)
 
     return NextResponse.json(
-      { error: 'Failed to update venue rating' },
+      { error: 'Failed to verify existing venue visit' },
       { status: 500 }
     )
   }
 
-  if (!data) {
+  if (existingVisit) {
+    const { data, error } = await supabase
+      .from('venue_visits')
+      .update({
+        rating,
+        updated_at: now,
+      })
+      .eq('id', existingVisit.id)
+      .select('id, rating, visited_at, created_at, updated_at')
+      .maybeSingle()
+
+    if (error) {
+      console.error('[venue visit][PATCH] Failed:', error)
+
+      return NextResponse.json(
+        { error: 'Failed to update venue rating' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      visited: true,
+      rating: data?.rating ?? rating,
+      visit: data,
+    })
+  }
+
+  const { data: activeFlowProof, error: activeFlowProofError } = await supabase
+    .from('active_flow_progress')
+    .select(
+      'id, checked_in_at, user_lat, user_lon, distance_meters, location_accuracy_meters, geo_verified, check_in_source, device_timestamp'
+    )
+    .eq('venue_id', venueId)
+    .eq('user_id', user.id)
+    .order('checked_in_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (activeFlowProofError) {
+    console.error(
+      '[venue visit][PATCH] Active flow proof check failed:',
+      activeFlowProofError
+    )
+
     return NextResponse.json(
-      { error: 'Visit not found' },
-      { status: 404 }
+      { error: 'Failed to verify flow check-in proof' },
+      { status: 500 }
     )
   }
 
-  return NextResponse.json({
-    visited: true,
-    rating: data.rating,
-    visit: data,
-    geoVerified: true,
-    distanceMeters: Math.round(geoResult.distanceMeters),
-  })
+  if (activeFlowProof) {
+    const visitedAt =
+      typeof activeFlowProof.checked_in_at === 'string' &&
+      activeFlowProof.checked_in_at.trim().length > 0
+        ? activeFlowProof.checked_in_at
+        : now
+
+    const { data, error } = await supabase
+      .from('venue_visits')
+      .upsert(
+        {
+          user_id: user.id,
+          venue_id: venueId,
+          rating,
+          visited_at: visitedAt,
+          user_lat: activeFlowProof.user_lat ?? null,
+          user_lon: activeFlowProof.user_lon ?? null,
+          distance_meters: activeFlowProof.distance_meters ?? null,
+          location_accuracy_meters:
+            activeFlowProof.location_accuracy_meters ?? null,
+          geo_verified: activeFlowProof.geo_verified === true,
+          check_in_source: 'active_flow',
+          device_timestamp: activeFlowProof.device_timestamp ?? null,
+          updated_at: now,
+        } as any,
+        {
+          onConflict: 'user_id,venue_id',
+        }
+      )
+      .select('id, rating, visited_at, created_at, updated_at')
+      .single()
+
+    if (error) {
+      console.error(
+        '[venue visit][PATCH] Failed to backfill venue visit from active flow:',
+        error
+      )
+
+      return NextResponse.json(
+        { error: 'Failed to save venue rating from flow check-in' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      visited: true,
+      rating: data.rating,
+      visit: data,
+      proofSource: 'active_flow_progress',
+    })
+  }
+
+  return NextResponse.json(
+    {
+      error:
+        'Visit not found. Check in at this venue before rating it.',
+    },
+    { status: 404 }
+  )
 }
 
 export async function DELETE(_req: NextRequest, context: RouteContext) {

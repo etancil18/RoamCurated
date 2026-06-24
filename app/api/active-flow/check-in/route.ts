@@ -187,6 +187,17 @@ export async function POST(req: Request) {
 
     const now = new Date().toISOString()
 
+    const normalizedLocationAccuracyMeters =
+      typeof locationAccuracyMeters === 'number' &&
+      Number.isFinite(locationAccuracyMeters)
+        ? locationAccuracyMeters
+        : null
+
+    const normalizedDeviceTimestamp =
+      typeof deviceTimestamp === 'string' && deviceTimestamp.trim().length > 0
+        ? deviceTimestamp
+        : null
+
     const { data: progress, error: upsertError } = await supabase
       .from('active_flow_progress')
       .upsert(
@@ -199,17 +210,10 @@ export async function POST(req: Request) {
           user_lat: userLat,
           user_lon: userLon,
           distance_meters: distanceMeters,
-          location_accuracy_meters:
-            typeof locationAccuracyMeters === 'number' &&
-            Number.isFinite(locationAccuracyMeters)
-              ? locationAccuracyMeters
-              : null,
+          location_accuracy_meters: normalizedLocationAccuracyMeters,
           geo_verified: true,
           check_in_source: 'geo',
-          device_timestamp:
-            typeof deviceTimestamp === 'string' && deviceTimestamp.trim().length > 0
-              ? deviceTimestamp
-              : null,
+          device_timestamp: normalizedDeviceTimestamp,
         },
         {
           onConflict: 'session_id,user_id,venue_id',
@@ -224,6 +228,34 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: 'Could not check in.' },
         { status: 500 }
+      )
+    }
+
+    const { error: venueVisitError } = await supabase
+      .from('venue_visits')
+      .upsert(
+        {
+          user_id: user.id,
+          venue_id: venueId,
+          visited_at: now,
+          user_lat: userLat,
+          user_lon: userLon,
+          distance_meters: distanceMeters,
+          location_accuracy_meters: normalizedLocationAccuracyMeters,
+          geo_verified: true,
+          check_in_source: 'active_flow',
+          device_timestamp: normalizedDeviceTimestamp,
+          updated_at: now,
+        } as any,
+        {
+          onConflict: 'user_id,venue_id',
+        }
+      )
+
+    if (venueVisitError) {
+      console.error(
+        '[active-flow/check-in] Venue visit sync failed:',
+        venueVisitError
       )
     }
 
