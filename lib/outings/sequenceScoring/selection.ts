@@ -19,6 +19,7 @@ import {
   getMaxAfterInterstopMeters,
   getMaxAfterLocalFallbackMeters,
   getMaxBeforeInterstopMeters,
+  isSpatiallyCoherentInterstop,
   isTooFarForAfterFirstStop,
   isTooFarForBeforeFirstStop,
 } from "./geometry"
@@ -686,7 +687,7 @@ function isDaytimeArtFlexibleSlotMatch(
   timeZone: string
 ): boolean {
   if (context.mode !== "full") return false
-  if (context.eventArchetype !== "art") return false
+  if (normalizeSelectionArchetype(context.eventArchetype) !== "arts_culture") return false
 
   const types = normalizeVenueTypes([
     ...(candidate.type ?? []),
@@ -931,9 +932,22 @@ export function isCandidateEligibleForSlot(
   const prevToCandidate = previous ? getDistanceBetweenVenues(previous, candidate) : null
 
   if (hasDisallowedBackToBackType(previous, candidate, slot)) {
-  return false
-}
+    return false
+  }
 
+  if (
+    !passesSpatialCoherenceGate({
+      candidate,
+      previous,
+      previousDistanceMeters: prevToCandidate,
+      slot,
+      context,
+      relaxed,
+      selectedSlotVenues,
+    })
+  ) {
+    return false
+  }
 
   if (slot.phase === "before") {
     const maxInterstop = getMaxBeforeInterstopMeters(
@@ -1083,6 +1097,121 @@ export function isCandidateEligibleForSlot(
   return true
 }
 
+function passesSpatialCoherenceGate({
+  candidate,
+  previous,
+  previousDistanceMeters,
+  slot,
+  context,
+  relaxed,
+  selectedSlotVenues,
+}: {
+  candidate: CandidateVenue
+  previous: CandidateVenue | null
+  previousDistanceMeters: number | null
+  slot: PlanningSlot
+  context: PlanningContext
+  relaxed: boolean
+  selectedSlotVenues: SelectedSlotVenue[]
+}): boolean {
+  if (!previous || previousDistanceMeters == null) return true
+
+  const normalizedArchetype = normalizeSelectionArchetype(context.eventArchetype)
+  const candidateAnchorDistance = candidate.distanceMeters
+  const previousAnchorDistance = previous.distanceMeters
+
+  const isWalkIntent = context.mobility === "walk"
+  const isNightlifeLike =
+    normalizedArchetype === "nightlife" ||
+    normalizedArchetype === "music" ||
+    normalizedArchetype === "comedy"
+
+  const hardWalkInterstopLimit =
+    slot.phase === "before"
+      ? getMaxBeforeInterstopMeters("walk", relaxed, context)
+      : getMaxAfterInterstopMeters("walk", relaxed, context)
+
+  const hardRideInterstopLimit =
+    slot.phase === "before"
+      ? getMaxBeforeInterstopMeters(context.mobility, relaxed, context)
+      : getMaxAfterInterstopMeters(context.mobility, relaxed, context)
+
+  if (isWalkIntent && previousDistanceMeters > hardWalkInterstopLimit) {
+    return false
+  }
+
+  if (previousDistanceMeters > hardRideInterstopLimit) {
+    return false
+  }
+
+  if (
+    slot.phase === "before" &&
+    slot.index > 0 &&
+    candidateAnchorDistance != null &&
+    previousAnchorDistance != null
+  ) {
+    const allowedBacktrackMeters = relaxed ? 450 : 250
+
+    if (candidateAnchorDistance > previousAnchorDistance + allowedBacktrackMeters) {
+      return false
+    }
+  }
+
+  if (
+    context.mode === "full" &&
+    slot.phase === "before" &&
+    candidateAnchorDistance != null
+  ) {
+    const maxBeforeAnchorDistance =
+      context.mobility === "walk"
+        ? relaxed
+          ? 1700
+          : 1400
+        : context.mobility === "short_ride"
+        ? relaxed
+          ? 3200
+          : 2800
+        : relaxed
+        ? 5000
+        : 4500
+
+    if (candidateAnchorDistance > maxBeforeAnchorDistance) {
+      return false
+    }
+  }
+
+  if (
+    isNightlifeLike &&
+    slot.phase === "before" &&
+    slot.role === "food" &&
+    previousDistanceMeters > (relaxed ? 2600 : 1800)
+  ) {
+    return false
+  }
+
+  if (slot.phase === "after") {
+    const afterSelections = selectedSlotVenues.filter(
+      (selection) => selection.slot.phase === "after"
+    )
+
+    if (afterSelections.length > 0) {
+      const previousAfterVenue = afterSelections[afterSelections.length - 1]?.venue ?? null
+      const afterPrevDistance = previousAfterVenue
+        ? getDistanceBetweenVenues(previousAfterVenue, candidate)
+        : previousDistanceMeters
+
+      if (
+        afterPrevDistance != null &&
+        afterPrevDistance > getMaxAfterInterstopMeters(context.mobility, relaxed, context)
+      ) {
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
 function isDirectionallyConsistentFromAfterStops(
   afterSelections: SelectedSlotVenue[],
   candidate: CandidateVenue,
@@ -1123,6 +1252,15 @@ function isDirectionallyConsistentFromAfterStops(
     (outboundMagnitude * stepMagnitude)
 
   return dot >= 0.42
+}
+
+function normalizeSelectionArchetype(archetype: string | null | undefined): string {
+  if (archetype === "art") return "arts_culture"
+  if (archetype === "sports") return "social_sports"
+  if (archetype === "festival") return "market"
+  if (archetype === "general") return "other"
+
+  return archetype ?? "other"
 }
 
 function isBeforeDinnerFoodSlot({

@@ -34,6 +34,8 @@ type PlannedOutingStopRecord = {
   id: string
   planned_outing_id: string
   stop_order: number | null
+  role: string | null
+  metadata: Json | null
   planned_outing: PlannedOutingRelation
 }
 
@@ -83,6 +85,8 @@ export async function POST(
           id,
           planned_outing_id,
           stop_order,
+          role,
+          metadata,
           planned_outing:planned_outings (
             id,
             user_id
@@ -113,7 +117,11 @@ export async function POST(
       event_type: eventType,
       position: position ?? stopRecord.stop_order ?? null,
       dwell_time_seconds: dwellTimeSeconds,
-      metadata,
+      metadata: mergeStopArchetypeMetadata({
+        requestMetadata: metadata,
+        stopMetadata: stopRecord.metadata,
+        stopRole: stopRecord.role,
+      }),
     }
 
     const { data: insertedEvent, error: insertError } = await supabase
@@ -202,4 +210,47 @@ function normalizeMetadata(value?: Json): Json {
 function normalizeOutingRelation(outing: PlannedOutingRelation) {
   if (!outing) return null
   return Array.isArray(outing) ? outing[0] ?? null : outing
+}
+
+function mergeStopArchetypeMetadata({
+  requestMetadata,
+  stopMetadata,
+  stopRole,
+}: {
+  requestMetadata: Json
+  stopMetadata: Json | null
+  stopRole: string | null
+}): Json {
+  const requestObject = jsonObject(requestMetadata)
+  const stopObject = jsonObject(stopMetadata)
+
+  return {
+    ...requestObject,
+    eventArchetype:
+      requestObject.eventArchetype ?? stopObject.eventArchetype ?? null,
+    semanticRole:
+      requestObject.semanticRole ?? stopObject.semanticRole ?? null,
+    slotPhase:
+      requestObject.slotPhase ?? stopObject.slotPhase ?? stopObject.phase ?? null,
+    slotIndex:
+      requestObject.slotIndex ?? stopObject.slotIndex ?? null,
+    phase:
+      requestObject.phase ?? stopObject.phase ?? null,
+    role:
+      requestObject.role ?? stopRole ?? null,
+    venueType:
+      requestObject.venueType ?? stopObject.venueType ?? null,
+    displayType:
+      requestObject.displayType ?? stopObject.displayType ?? null,
+    selectedPass:
+      requestObject.selectedPass ?? stopObject.selectedPass ?? null,
+  } as Json
+}
+
+function jsonObject(value: Json | null | undefined): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {}
+  }
+
+  return value as Record<string, unknown>
 }

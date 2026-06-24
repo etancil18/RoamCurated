@@ -1,10 +1,12 @@
 // app/api/events/[eventId]/plan-outing/route.ts
+// Fully ready to drop in.
 
 import { NextResponse } from "next/server"
 import { CITY_CONFIGS } from "@/config/cities"
 import { generateEventOutingPlan } from "@/lib/outings/generateEventOutingPlan"
 import { buildPlanningContext } from "@/lib/outings/planningContext"
 import { persistGeneratedOutingPlan } from "@/lib/outings/persistGeneratedOutingPlan"
+import { getEventArchetypePlanningProfile } from "@/lib/outings/eventArchetypes"
 import {
   qualifiesForLateNightReducedFullFallback,
   qualifiesForLateNightSingleStopFallback,
@@ -21,6 +23,7 @@ import { supabaseServerApi } from "@/lib/supabase/server-api"
 import { normalizeVenueTypes } from "@/lib/outings/sequenceScoring/helpers"
 import type {
   Budget,
+  CityPlanningConfig,
   EventRecord,
   LeaveEarlyByHours,
   Mobility,
@@ -34,6 +37,10 @@ const ALLOWED_MODES: PlanMode[] = ["before", "after", "full"]
 const ALLOWED_BUDGETS: Budget[] = ["$", "$$", "$$$", "$$$$"]
 const ALLOWED_MOBILITY: Mobility[] = ["walk", "short_ride", "any"]
 const ALLOWED_LEAVE_EARLY_BY_HOURS: LeaveEarlyByHours[] = [1, 2, 3, 4]
+
+type PlannerFailureCode =
+  | "late_night_low_coverage"
+  | "insufficient_venue_coverage"
 
 type VenueBookingRow = {
   provider: string | null
@@ -187,13 +194,13 @@ export async function POST(
           )
         `
       )
-        .eq("city", city)
-        .neq("id", anchorVenue?.id ?? "")
-        .not("type", "is", null)
-        .not("vibe", "is", null)
-        .not("lat", "is", null)
-        .not("lon", "is", null)
-        .limit(400)
+      .eq("city", city)
+      .neq("id", anchorVenue?.id ?? "")
+      .not("type", "is", null)
+      .not("vibe", "is", null)
+      .not("lat", "is", null)
+      .not("lon", "is", null)
+      .limit(400)
 
     if (venuesError) {
       return NextResponse.json(
@@ -245,6 +252,7 @@ export async function POST(
             arrival: slot.targetArrivalAt?.toISOString?.(),
             departure: slot.targetDepartureAt?.toISOString?.(),
             flexibleRole: slot.flexibleRole,
+            semanticRole: slot.semanticRole ?? null,
           })),
         },
         null,
@@ -253,7 +261,13 @@ export async function POST(
     )
 
     const archetypeFilteredVenueCandidates = venueCandidates.filter((venue) =>
-      venueAllowedForArchetype(venue, debugPlanningContext.eventArchetype)
+      venueAllowedForArchetype({
+        venue,
+        eventArchetype: debugPlanningContext.eventArchetype,
+        anchorVenue,
+        mobility,
+        cityPlanning,
+      })
     )
 
     const generatedPlan = generateEventOutingPlan({
@@ -350,6 +364,7 @@ export async function POST(
             debugPlanningContext.effectiveExitAt?.toISOString?.() ??
             null,
           candidateVenueCount: venueCandidates.length,
+          filteredCandidateVenueCount: archetypeFilteredVenueCandidates.length,
           generatedStopCount: generatedPlan.stops.length,
           minimumRequiredStops,
           reducedFullCoverageSufficient,
@@ -361,6 +376,10 @@ export async function POST(
           reducedBeforeSingleStopFallbackApplied,
           leaveEarlyCoverageSufficient,
           daytimeCultureReducedFullFallbackApplied,
+          eventArchetype: generatedPlan.eventArchetype,
+          semanticRoles: generatedPlan.stops.map(
+            (stop) => stop.metadata?.semanticRole ?? null
+          ),
           scoreBreakdown: generatedPlan.scoreBreakdown,
           debug: generatedPlan.debug ?? null,
         },
@@ -370,12 +389,35 @@ export async function POST(
     )
 
     if (failedToGenerateStops || generatedPlan.stops.length < minimumRequiredStops) {
+      const plannerFailureCode = resolvePlannerFailureCode({
+        mode,
+        startsAt: debugPlanningContext.startsAt,
+        estimatedEndAt: debugPlanningContext.estimatedEndAt,
+        effectiveExitAt: debugPlanningContext.effectiveExitAt ?? null,
+        timeZone,
+        generatedStopCount: generatedPlan.stops.length,
+        minimumRequiredStops,
+        failedToGenerateStops,
+      })
+
+      const plannerSuggestedModes = getSuggestedModesForPlannerFailure({
+        code: plannerFailureCode,
+        mode,
+      })
+
+      const plannerErrorMessage =
+        plannerFailureCode === "late_night_low_coverage"
+          ? "Late-night venue coverage is limited around this event. There may not be enough reliable options open after it ends."
+          : "Insufficient venue coverage to generate a credible outing plan for this event"
+
       console.warn(
         "insufficient outing coverage",
         JSON.stringify(
           {
             eventId,
             mode,
+            plannerFailureCode,
+            suggestedModes: plannerSuggestedModes,
             minimumRequiredStops,
             failedToGenerateStops,
             lateNightSingleStopFallbackApplied,
@@ -394,10 +436,15 @@ export async function POST(
               null,
             generatedStopCount: generatedPlan.stops.length,
             candidateVenueCount: venueCandidates.length,
+            filteredCandidateVenueCount: archetypeFilteredVenueCandidates.length,
             city,
             timeZone,
             cityPlanning,
             daytimeCultureReducedFullFallbackApplied,
+            eventArchetype: generatedPlan.eventArchetype,
+            semanticRoles: generatedPlan.stops.map(
+              (stop) => stop.metadata?.semanticRole ?? null
+            ),
             scoreBreakdown: generatedPlan.scoreBreakdown,
             debug: generatedPlan.debug ?? null,
           },
@@ -408,8 +455,9 @@ export async function POST(
 
       return NextResponse.json(
         {
-          error:
-            "Insufficient venue coverage to generate a credible outing plan for this event",
+          error: plannerErrorMessage,
+          code: plannerFailureCode,
+          suggestedModes: plannerSuggestedModes,
           debug: generatedPlan.debug ?? null,
           scoreBreakdown: generatedPlan.scoreBreakdown,
         },
@@ -442,6 +490,10 @@ export async function POST(
         city,
         timeZone,
         cityPlanning,
+        eventArchetype: generatedPlan.eventArchetype,
+        semanticRoles: generatedPlan.stops.map(
+          (stop) => stop.metadata?.semanticRole ?? null
+        ),
         leaveEarlyByHours,
         plannedExitAt: generatedPlan.plannedExitAt ?? plannedExitAt,
         effectiveExitAt:
@@ -497,6 +549,10 @@ export async function POST(
       bookingOptions: stop.bookingOptions ?? null,
       reservationRecommended: stop.reservationRecommended ?? false,
       recommendedReservationAt: stop.recommendedReservationAt ?? null,
+      eventArchetype: stop.metadata?.eventArchetype ?? generatedPlan.eventArchetype,
+      semanticRole: stop.metadata?.semanticRole ?? null,
+      slotPhase: stop.metadata?.slotPhase ?? stop.phase ?? null,
+      slotIndex: stop.metadata?.slotIndex ?? stop.stopOrder - 1,
     }))
 
     return NextResponse.json({
@@ -578,25 +634,58 @@ function venueMatchesBudget(
   return venuePrice <= selectedBudget
 }
 
-function venueAllowedForArchetype(
-  venue: VenueRecord,
+function venueAllowedForArchetype({
+  venue,
+  eventArchetype,
+  anchorVenue,
+  mobility,
+  cityPlanning,
+}: {
+  venue: VenueRecord
   eventArchetype: string
-): boolean {
-  if (eventArchetype !== "networking") return true
-
-  const blockedNetworkingTypes = [
-    "activity",
-    "lifestyle",
-    "gallery",
-    "museum",
-    "bookstore",
-    "library",
-    "showroom",
-  ]
-
+  anchorVenue: VenueRecord | null
+  mobility: Mobility
+  cityPlanning: CityPlanningConfig | null
+}): boolean {
+  const profile = getEventArchetypePlanningProfile(eventArchetype)
   const venueTypes = normalizeVenueTypes(venue.type)
 
-  return !blockedNetworkingTypes.some((type) => venueTypes.includes(type))
+  if (
+    profile.discouragedVenueTypes.some((type) =>
+      venueTypes.includes(type)
+    )
+  ) {
+    return false
+  }
+
+  if (
+    anchorVenue?.lat == null ||
+    anchorVenue.lon == null ||
+    venue.lat == null ||
+    venue.lon == null
+  ) {
+    return true
+  }
+
+  const distanceMeters = haversineMeters(
+    anchorVenue.lat,
+    anchorVenue.lon,
+    venue.lat,
+    venue.lon
+  )
+
+  const cityAnchorLimit =
+    cityPlanning?.distances.maxAnchorDistanceMeters[mobility] ?? null
+
+  const archetypeAnchorLimit =
+    mobility === "walk" ? profile.walkRadiusMeters : profile.rideRadiusMeters
+
+  const effectiveLimit =
+    cityAnchorLimit != null
+      ? Math.min(cityAnchorLimit, archetypeAnchorLimit)
+      : archetypeAnchorLimit
+
+  return distanceMeters <= effectiveLimit
 }
 
 function normalizeMobility(mobility?: string | null): Mobility {
@@ -729,4 +818,120 @@ function enrichVenueWithBookingOptions(
 
 function minimumStopsForMode(mode: PlanMode): number {
   return mode === "full" ? 3 : 2
+}
+
+function resolvePlannerFailureCode({
+  mode,
+  startsAt,
+  estimatedEndAt,
+  effectiveExitAt,
+  timeZone,
+  generatedStopCount,
+  minimumRequiredStops,
+  failedToGenerateStops,
+}: {
+  mode: PlanMode
+  startsAt: Date
+  estimatedEndAt: Date
+  effectiveExitAt: Date | null
+  timeZone: string
+  generatedStopCount: number
+  minimumRequiredStops: number
+  failedToGenerateStops: boolean
+}): PlannerFailureCode {
+  if (
+    mode !== "before" &&
+    (failedToGenerateStops || generatedStopCount < minimumRequiredStops) &&
+    isLateNightLowCoverageContext({
+      startsAt,
+      estimatedEndAt,
+      effectiveExitAt,
+      timeZone,
+    })
+  ) {
+    return "late_night_low_coverage"
+  }
+
+  return "insufficient_venue_coverage"
+}
+
+function isLateNightLowCoverageContext({
+  startsAt,
+  estimatedEndAt,
+  effectiveExitAt,
+  timeZone,
+}: {
+  startsAt: Date
+  estimatedEndAt: Date
+  effectiveExitAt: Date | null
+  timeZone: string
+}): boolean {
+  const effectiveEndAt = effectiveExitAt ?? estimatedEndAt
+  const startDay = getCalendarDayKey(startsAt, timeZone)
+  const endDay = getCalendarDayKey(effectiveEndAt, timeZone)
+  const endHour = getHourFractionInTimeZone(effectiveEndAt, timeZone)
+
+  return startDay !== endDay || endHour < 4
+}
+
+function getSuggestedModesForPlannerFailure({
+  code,
+  mode,
+}: {
+  code: PlannerFailureCode
+  mode: PlanMode
+}): PlanMode[] {
+  if (code !== "late_night_low_coverage") return []
+
+  if (mode === "after") return ["before", "full"]
+  if (mode === "full") return ["before"]
+  return []
+}
+
+function getCalendarDayKey(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date)
+}
+
+function getHourFractionInTimeZone(date: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date)
+
+  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? 0)
+  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? 0)
+
+  return hour + minute / 60
+}
+
+function haversineMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const earthRadiusMeters = 6371e3
+
+  const phi1 = toRad(lat1)
+  const phi2 = toRad(lat2)
+  const deltaPhi = toRad(lat2 - lat1)
+  const deltaLambda = toRad(lon2 - lon1)
+
+  const a =
+    Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+    Math.cos(phi1) *
+      Math.cos(phi2) *
+      Math.sin(deltaLambda / 2) *
+      Math.sin(deltaLambda / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return Math.round(earthRadiusMeters * c)
 }

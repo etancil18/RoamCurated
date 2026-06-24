@@ -40,6 +40,10 @@ type Stop = {
   travelMode: string | null
   travelMinutesFromPrev: number | null
   distanceMetersFromPrev: number | null
+  eventArchetype?: string | null
+  semanticRole?: string | null
+  slotPhase?: "before" | "after" | string | null
+  slotIndex?: number | null
   venue: {
     id: string
     name: string | null
@@ -245,6 +249,7 @@ export default function OutingMap({
       mode,
       travel_mode: travelMode,
       stop_count: routeStops.length,
+      event_archetype: orderedStops[0]?.eventArchetype ?? null,
     }
   }
 
@@ -257,6 +262,7 @@ export default function OutingMap({
       from_index: index,
       to_index: index - 1,
       stop_id: orderedStops[index]?.id,
+      semantic_role: orderedStops[index]?.semanticRole ?? null,
     })
 
     setOrderedStops((prev) => {
@@ -281,6 +287,7 @@ export default function OutingMap({
       from_index: index,
       to_index: index + 1,
       stop_id: orderedStops[index]?.id,
+      semantic_role: orderedStops[index]?.semanticRole ?? null,
     })
 
     setOrderedStops((prev) => {
@@ -306,6 +313,10 @@ export default function OutingMap({
 
     if (stop.displayType || stop.venueType || stop.role) {
       parts.push(humanizeStopType(stop.displayType ?? stop.venueType ?? stop.role))
+    }
+
+    if (stop.semanticRole) {
+      parts.push(humanizeStopType(stop.semanticRole))
     }
 
     if (stop.plannedArrivalAt) {

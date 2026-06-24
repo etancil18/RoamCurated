@@ -14,11 +14,69 @@ type PlanningDistanceSource =
   | null
   | undefined
 
+type NormalizedPlanningArchetype =
+  | "social_sports"
+  | "music"
+  | "networking"
+  | "food_drink"
+  | "arts_culture"
+  | "wellness"
+  | "nightlife"
+  | "community"
+  | "comedy"
+  | "market"
+  | "other"
+
+const FULL_FLOW_BEFORE_INTERSTOP_COHERENCE_METERS: Record<
+  Mobility,
+  { strict: number; relaxed: number }
+> = {
+  walk: { strict: 1600, relaxed: 2200 },
+  short_ride: { strict: 2600, relaxed: 3200 },
+  any: { strict: 4200, relaxed: 5200 },
+}
+
+const FULL_FLOW_AFTER_INTERSTOP_COHERENCE_METERS: Record<
+  Mobility,
+  { strict: number; relaxed: number }
+> = {
+  walk: { strict: 1200, relaxed: 1700 },
+  short_ride: { strict: 2200, relaxed: 3000 },
+  any: { strict: 3600, relaxed: 4600 },
+}
+
+const ARCHETYPE_DISTANCE_MULTIPLIERS: Record<
+  NormalizedPlanningArchetype,
+  { before: number; after: number }
+> = {
+  social_sports: { before: 1.05, after: 1.05 },
+  music: { before: 1, after: 1.05 },
+  networking: { before: 0.9, after: 0.9 },
+  food_drink: { before: 0.9, after: 0.9 },
+  arts_culture: { before: 0.95, after: 0.95 },
+  wellness: { before: 0.85, after: 0.85 },
+  nightlife: { before: 0.95, after: 1.1 },
+  community: { before: 0.9, after: 0.9 },
+  comedy: { before: 1, after: 1 },
+  market: { before: 0.85, after: 0.85 },
+  other: { before: 1, after: 1 },
+}
+
 function isCityPlanningConfig(value: unknown): value is CityPlanningConfig {
   return (
     typeof value === "object" &&
     value !== null &&
     "distances" in value
+  )
+}
+
+function isPlanningContext(value: unknown): value is PlanningContext {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "mode" in value &&
+    "mobility" in value &&
+    "eventArchetype" in value
   )
 }
 
@@ -32,6 +90,12 @@ function resolveCityPlanning(
   }
 
   return source.cityPlanning ?? null
+}
+
+function resolvePlanningContext(
+  source?: PlanningDistanceSource
+): PlanningContext | null {
+  return isPlanningContext(source) ? source : null
 }
 
 function applyRelaxedDistance(base: number, relaxed = false): number {
@@ -172,15 +236,30 @@ export function getMaxBeforeInterstopMeters(
   source?: PlanningDistanceSource
 ): number {
   const cityPlanning = resolveCityPlanning(source)
+  const context = resolvePlanningContext(source)
+
   const value = relaxed
     ? cityPlanning?.distances.beforeInterstopMeters.relaxed
     : cityPlanning?.distances.beforeInterstopMeters.strict
 
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value
+  const cityLimit =
+    typeof value === "number" && Number.isFinite(value)
+      ? value
+      : relaxed
+        ? 4500
+        : 3500
+
+  if (!context || context.mode !== "full") {
+    return cityLimit
   }
 
-  return relaxed ? 4500 : 3500
+  const coherenceLimit = getFullFlowInterstopCoherenceLimitMeters({
+    context,
+    phase: "before",
+    relaxed,
+  })
+
+  return Math.min(cityLimit, coherenceLimit)
 }
 
 export function getMaxAfterInterstopMeters(
@@ -189,17 +268,38 @@ export function getMaxAfterInterstopMeters(
   source?: PlanningDistanceSource
 ): number {
   const cityPlanning = resolveCityPlanning(source)
+  const context = resolvePlanningContext(source)
+
   const value = relaxed
     ? cityPlanning?.distances.afterInterstopMeters.relaxed
     : cityPlanning?.distances.afterInterstopMeters.strict
 
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value
+  const cityLimit =
+    typeof value === "number" && Number.isFinite(value)
+      ? value
+      : mobility === "walk"
+        ? relaxed
+          ? 1200
+          : 900
+        : mobility === "short_ride"
+          ? relaxed
+            ? 2200
+            : 1600
+          : relaxed
+            ? 3200
+            : 2400
+
+  if (!context || context.mode !== "full") {
+    return cityLimit
   }
 
-  if (mobility === "walk") return relaxed ? 1200 : 900
-  if (mobility === "short_ride") return relaxed ? 2200 : 1600
-  return relaxed ? 3200 : 2400
+  const coherenceLimit = getFullFlowInterstopCoherenceLimitMeters({
+    context,
+    phase: "after",
+    relaxed,
+  })
+
+  return Math.min(cityLimit, coherenceLimit)
 }
 
 export function getMaxAfterLocalFallbackMeters(
@@ -334,4 +434,78 @@ export function isDirectionallyConsistentFromAnchorRoute({
     (outboundMagnitude * stepMagnitude)
 
   return dot >= minimumDot
+}
+
+export function getFullFlowInterstopCoherenceLimitMeters({
+  context,
+  phase,
+  relaxed = false,
+}: {
+  context: PlanningContext
+  phase: "before" | "after"
+  relaxed?: boolean
+}): number {
+  const table =
+    phase === "before"
+      ? FULL_FLOW_BEFORE_INTERSTOP_COHERENCE_METERS
+      : FULL_FLOW_AFTER_INTERSTOP_COHERENCE_METERS
+
+  const base = relaxed
+    ? table[context.mobility].relaxed
+    : table[context.mobility].strict
+
+  const archetype = normalizePlanningArchetype(context.eventArchetype)
+  const multiplier = ARCHETYPE_DISTANCE_MULTIPLIERS[archetype][phase]
+
+  return Math.round(base * multiplier)
+}
+
+export function isSpatiallyCoherentInterstop({
+  distanceMeters,
+  context,
+  slot,
+  relaxed = false,
+}: {
+  distanceMeters: number | null
+  context: PlanningContext
+  slot: PlanningSlot
+  relaxed?: boolean
+}): boolean {
+  if (distanceMeters == null) return true
+  if (context.mode !== "full") return true
+
+  const limit = getFullFlowInterstopCoherenceLimitMeters({
+    context,
+    phase: slot.phase,
+    relaxed,
+  })
+
+  return distanceMeters <= limit
+}
+
+function normalizePlanningArchetype(
+  value: string | null | undefined
+): NormalizedPlanningArchetype {
+  if (value === "art") return "arts_culture"
+  if (value === "sports") return "social_sports"
+  if (value === "festival") return "market"
+  if (value === "general") return "other"
+
+  if (
+    value === "social_sports" ||
+    value === "music" ||
+    value === "networking" ||
+    value === "food_drink" ||
+    value === "arts_culture" ||
+    value === "wellness" ||
+    value === "nightlife" ||
+    value === "community" ||
+    value === "comedy" ||
+    value === "market" ||
+    value === "other"
+  ) {
+    return value
+  }
+
+  return "other"
 }

@@ -25,6 +25,7 @@ export function desiredRolesFor(
   leaveEarlyByHours?: LeaveEarlyByHours | null
 ): StopRole[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
+  const canonicalArchetype = normalizePlanningArchetype(archetype)
   const beforeDaypart = getDaypart(startsAt, resolvedTimeZone)
   const afterDaypart = getDaypart(addMinutes(estimatedEndAt, 30), resolvedTimeZone)
   const lateNightAfterEvent = endsAfterMidnight(
@@ -34,12 +35,12 @@ export function desiredRolesFor(
   )
 
   if (mode === "before") {
-    return desiredBeforeRoles(archetype, beforeDaypart)
+    return desiredBeforeRoles(canonicalArchetype, beforeDaypart)
   }
 
   if (mode === "after") {
     return desiredAfterRoles(
-      archetype,
+      canonicalArchetype,
       afterDaypart,
       lateNightAfterEvent,
       leaveEarlyByHours
@@ -47,7 +48,7 @@ export function desiredRolesFor(
   }
 
   return desiredFullRoles(
-    archetype,
+    canonicalArchetype,
     beforeDaypart,
     afterDaypart,
     lateNightAfterEvent,
@@ -59,19 +60,21 @@ export function desiredBeforeRoles(
   archetype: string,
   daypart: Daypart
 ): StopRole[] {
-  if (archetype === "networking") {
-  if (daypart === "breakfast" || daypart === "brunch" || daypart === "lunch") {
-    return ["food"]
-  }
+  const canonicalArchetype = normalizePlanningArchetype(archetype)
 
-  if (daypart === "dinner") {
+  if (canonicalArchetype === "networking") {
+    if (daypart === "breakfast" || daypart === "brunch" || daypart === "lunch") {
+      return ["food"]
+    }
+
+    if (daypart === "dinner") {
+      return ["drink"]
+    }
+
     return ["drink"]
   }
 
-  return ["drink"]
-}
-
-  if (archetype === "market") {
+  if (canonicalArchetype === "market") {
     if (daypart === "breakfast" || daypart === "brunch") {
       return ["coffee", "activity"]
     }
@@ -82,45 +85,53 @@ export function desiredBeforeRoles(
     return ["drink", "activity"]
   }
 
-  if (archetype === "food_drink") {
+  if (canonicalArchetype === "food_drink") {
     if (daypart === "breakfast" || daypart === "brunch") return ["coffee"]
     if (daypart === "lunch") return ["activity", "drink"]
     if (daypart === "dinner") return ["drink", "activity"]
     return ["drink"]
   }
 
+  if (canonicalArchetype === "wellness") {
+    if (daypart === "breakfast" || daypart === "brunch") return ["coffee"]
+    if (daypart === "lunch") return ["coffee", "food"]
+    return ["coffee", "activity"]
+  }
+
   if (daypart === "breakfast") {
-    if (archetype === "art") return ["coffee", "activity"]
-    if (archetype === "festival") return ["coffee", "food"]
-    if (archetype === "music") return ["coffee", "food"]
+    if (canonicalArchetype === "arts_culture") return ["coffee", "activity"]
+    if (canonicalArchetype === "market") return ["coffee", "food"]
+    if (canonicalArchetype === "music") return ["coffee", "food"]
     return ["coffee", "food"]
   }
 
   if (daypart === "brunch") {
-    if (archetype === "art") return ["coffee", "food"]
-    if (archetype === "festival") return ["food", "activity"]
-    if (archetype === "music") return ["coffee", "food"]
+    if (canonicalArchetype === "arts_culture") return ["coffee", "food"]
+    if (canonicalArchetype === "market") return ["food", "activity"]
+    if (canonicalArchetype === "music") return ["coffee", "food"]
     return ["coffee", "food"]
   }
 
   if (daypart === "lunch") {
-    if (archetype === "art") return ["activity", "food"]
-    if (archetype === "sports") return ["food", "drink"]
-    if (archetype === "music") return ["coffee", "food"]
+    if (canonicalArchetype === "arts_culture") return ["activity", "food"]
+    if (canonicalArchetype === "social_sports") return ["food", "drink"]
+    if (canonicalArchetype === "music") return ["coffee", "food"]
     return ["food", "activity"]
   }
 
   if (daypart === "dinner") {
-    if (archetype === "sports") return ["food", "drink"]
-    if (archetype === "music") return ["food", "drink"]
-    if (archetype === "comedy") return ["food", "drink"]
-    if (archetype === "art") return ["food", "activity"]
+    if (canonicalArchetype === "social_sports") return ["food", "drink"]
+    if (canonicalArchetype === "music") return ["food", "drink"]
+    if (canonicalArchetype === "comedy") return ["food", "drink"]
+    if (canonicalArchetype === "nightlife") return ["drink", "food"]
+    if (canonicalArchetype === "arts_culture") return ["food", "activity"]
     return ["food", "drink"]
   }
 
   if (daypart === "late_night") {
-    if (archetype === "music") return ["food", "drink"]
-    if (archetype === "comedy") return ["food", "drink"]
+    if (canonicalArchetype === "music") return ["food", "drink"]
+    if (canonicalArchetype === "comedy") return ["food", "drink"]
+    if (canonicalArchetype === "nightlife") return ["drink", "food"]
     return ["drink", "food"]
   }
 
@@ -133,27 +144,35 @@ export function desiredAfterRoles(
   lateNightAfterEvent = false,
   leaveEarlyByHours?: LeaveEarlyByHours | null
 ): StopRole[] {
-  if (archetype === "networking") {
-  if (lateNightAfterEvent || daypart === "late_night") {
-    return ["drink"]
+  const canonicalArchetype = normalizePlanningArchetype(archetype)
+
+  if (canonicalArchetype === "networking") {
+    if (lateNightAfterEvent || daypart === "late_night") {
+      return ["drink"]
+    }
+
+    if (daypart === "dinner") {
+      return ["food", "drink"]
+    }
+
+    return ["drink", "food"]
   }
 
-  if (daypart === "dinner") {
-    return ["food", "drink"]
-  }
-
-  return ["drink", "food"]
-}
-
-  if (archetype === "market") {
+  if (canonicalArchetype === "market") {
     if (lateNightAfterEvent || daypart === "late_night") return ["drink"]
     if (daypart === "dinner") return ["drink"]
     return ["coffee", "drink"]
   }
 
-  if (archetype === "food_drink") {
+  if (canonicalArchetype === "food_drink") {
     if (lateNightAfterEvent || daypart === "late_night") return ["drink"]
     return ["drink", "dessert"]
+  }
+
+  if (canonicalArchetype === "wellness") {
+    if (daypart === "breakfast" || daypart === "brunch") return ["coffee", "food"]
+    if (daypart === "lunch") return ["food", "activity"]
+    return ["food", "drink"]
   }
 
   if (lateNightAfterEvent && !leaveEarlyByHours) {
@@ -161,19 +180,23 @@ export function desiredAfterRoles(
   }
 
   if (leaveEarlyByHours) {
-    if (lateNightAfterEvent || daypart === "late_night" || archetype === "music") {
+    if (
+      lateNightAfterEvent ||
+      daypart === "late_night" ||
+      canonicalArchetype === "music"
+    ) {
       return ["drink"]
     }
 
     if (daypart === "breakfast") return ["coffee"]
 
     if (daypart === "brunch" || daypart === "lunch") {
-      if (archetype === "art") return ["activity"]
+      if (canonicalArchetype === "arts_culture") return ["activity"]
       return ["food"]
     }
 
     if (daypart === "dinner") {
-      if (archetype === "art") return ["food"]
+      if (canonicalArchetype === "arts_culture") return ["food"]
       return ["drink"]
     }
 
@@ -185,21 +208,23 @@ export function desiredAfterRoles(
   }
 
   if (daypart === "brunch" || daypart === "lunch") {
-    if (archetype === "art") return ["activity", "food"]
+    if (canonicalArchetype === "arts_culture") return ["activity", "food"]
     return ["food", "drink"]
   }
 
   if (daypart === "dinner") {
-    if (archetype === "art") return ["food", "drink"]
-    if (archetype === "music") return ["drink", "food"]
-    if (archetype === "comedy") return ["drink", "food"]
+    if (canonicalArchetype === "arts_culture") return ["food", "drink"]
+    if (canonicalArchetype === "music") return ["drink", "food"]
+    if (canonicalArchetype === "comedy") return ["drink", "food"]
+    if (canonicalArchetype === "nightlife") return ["drink", "food"]
     return ["drink", "food"]
   }
 
   if (daypart === "late_night") {
-    if (archetype === "music") return ["drink"]
-    if (archetype === "comedy") return ["drink", "food"]
-    if (archetype === "sports") return ["drink", "food"]
+    if (canonicalArchetype === "music") return ["drink"]
+    if (canonicalArchetype === "comedy") return ["drink", "food"]
+    if (canonicalArchetype === "social_sports") return ["drink", "food"]
+    if (canonicalArchetype === "nightlife") return ["drink", "food"]
     return ["drink"]
   }
 
@@ -213,27 +238,28 @@ export function desiredFullRoles(
   lateNightAfterEvent = false,
   leaveEarlyByHours?: LeaveEarlyByHours | null
 ): StopRole[] {
-  const beforeRoles = desiredBeforeRoles(archetype, beforeDaypart)
+  const canonicalArchetype = normalizePlanningArchetype(archetype)
+  const beforeRoles = desiredBeforeRoles(canonicalArchetype, beforeDaypart)
   const firstBefore = beforeRoles[0] ?? "food"
   const secondBefore =
     beforeRoles[1] ?? (firstBefore === "food" ? "activity" : "food")
 
-  if (archetype === "networking") {
-  const beforeRole: StopRole =
-    beforeDaypart === "breakfast" ||
-    beforeDaypart === "brunch" ||
-    beforeDaypart === "lunch"
-      ? "food"
-      : "drink"
+  if (canonicalArchetype === "networking") {
+    const beforeRole: StopRole =
+      beforeDaypart === "breakfast" ||
+      beforeDaypart === "brunch" ||
+      beforeDaypart === "lunch"
+        ? "food"
+        : "drink"
 
-  if (leaveEarlyByHours || lateNightAfterEvent || afterDaypart === "late_night") {
-    return [beforeRole, "drink"]
+    if (leaveEarlyByHours || lateNightAfterEvent || afterDaypart === "late_night") {
+      return [beforeRole, "drink"]
+    }
+
+    return [beforeRole, afterDaypart === "dinner" ? "food" : "drink", "drink"]
   }
 
-  return [beforeRole, afterDaypart === "dinner" ? "food" : "drink", "drink"]
-}
-
-  if (archetype === "market") {
+  if (canonicalArchetype === "market") {
     return [
       beforeDaypart === "breakfast" || beforeDaypart === "brunch"
         ? "coffee"
@@ -243,7 +269,7 @@ export function desiredFullRoles(
     ]
   }
 
-  if (archetype === "food_drink") {
+  if (canonicalArchetype === "food_drink") {
     if (leaveEarlyByHours || lateNightAfterEvent || afterDaypart === "late_night") {
       return [
         beforeDaypart === "breakfast" || beforeDaypart === "brunch"
@@ -263,10 +289,20 @@ export function desiredFullRoles(
     ]
   }
 
+  if (canonicalArchetype === "wellness") {
+    return [
+      beforeDaypart === "breakfast" || beforeDaypart === "brunch"
+        ? "coffee"
+        : "food",
+      "activity",
+      "food",
+    ]
+  }
+
   if (leaveEarlyByHours) {
     const singleAfterRole =
       desiredAfterRoles(
-        archetype,
+        canonicalArchetype,
         afterDaypart,
         lateNightAfterEvent,
         leaveEarlyByHours
@@ -276,7 +312,7 @@ export function desiredFullRoles(
   }
 
   if (lateNightAfterEvent || afterDaypart === "late_night") {
-    if (archetype === "art") {
+    if (canonicalArchetype === "arts_culture") {
       return [
         beforeDaypart === "breakfast" ? "coffee" : "activity",
         "food",
@@ -284,7 +320,7 @@ export function desiredFullRoles(
       ]
     }
 
-    if (archetype === "festival") {
+    if (canonicalArchetype === "market") {
       return [
         beforeDaypart === "breakfast" ? "coffee" : "food",
         "activity",
@@ -295,8 +331,8 @@ export function desiredFullRoles(
     return [firstBefore, secondBefore, "drink"]
   }
 
-  const second = desiredAfterRoles(archetype, afterDaypart)[0] ?? "drink"
-  const third = desiredAfterRoles(archetype, afterDaypart)[1] ?? "drink"
+  const second = desiredAfterRoles(canonicalArchetype, afterDaypart)[0] ?? "drink"
+  const third = desiredAfterRoles(canonicalArchetype, afterDaypart)[1] ?? "drink"
 
   const roles: StopRole[] = [firstBefore, second, third]
 
@@ -308,13 +344,13 @@ export function desiredFullRoles(
     roles[2] = roles[2] === "drink" ? "food" : "drink"
   }
 
-  if (archetype === "art" && beforeDaypart !== "late_night") {
+  if (canonicalArchetype === "arts_culture" && beforeDaypart !== "late_night") {
     roles[0] = beforeDaypart === "breakfast" ? "coffee" : "activity"
     roles[1] = "food"
     roles[2] = "dessert"
   }
 
-  if (archetype === "festival") {
+  if (canonicalArchetype === "market") {
     roles[0] = beforeDaypart === "breakfast" ? "coffee" : "food"
     roles[1] = "activity"
     roles[2] = "dessert"
@@ -398,6 +434,15 @@ function getCalendarDayKey(date: Date, timeZone: string): string {
   const day = parts.find((part) => part.type === "day")?.value ?? "00"
 
   return `${year}-${month}-${day}`
+}
+
+function normalizePlanningArchetype(archetype: string | null | undefined): string {
+  if (archetype === "art") return "arts_culture"
+  if (archetype === "sports") return "social_sports"
+  if (archetype === "festival") return "market"
+  if (archetype === "general") return "other"
+
+  return archetype ?? "other"
 }
 
 function normalizeTimeZone(timeZone?: string | null): string {

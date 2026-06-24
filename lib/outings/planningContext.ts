@@ -22,7 +22,10 @@ import type {
   VenueRecord,
 } from "./types"
 
-import { normalizeEventArchetypeForPlanner } from "./eventArchetypes"
+import {
+  getSemanticRoleForSlot,
+  normalizeEventArchetypeForPlanner,
+} from "./eventArchetypes"
 
 export type BuildPlanningContextInput = {
   mode: PlanMode
@@ -76,8 +79,8 @@ export function buildPlanningContext(
   ])
 
   const eventArchetype = input.event.archetype
-  ? normalizeEventArchetypeForPlanner(input.event.archetype)
-  : inferEventArchetype(eventTags)
+    ? normalizeEventArchetypeForPlanner(input.event.archetype)
+    : inferEventArchetype(eventTags)
 
   const plannedStartAt = inferPlannedStartAt(
     input.mode,
@@ -206,6 +209,8 @@ export function inferEventArchetype(tags: string[]): string {
         "maker",
         "flea",
         "bazaar",
+        "festival",
+        "fair",
       ].includes(t)
     )
   ) {
@@ -275,18 +280,26 @@ export function inferEventArchetype(tags: string[]): string {
   }
 
   if (tags.some((t) => ["game", "sports", "match"].includes(t))) {
-    return "sports"
+    return "social_sports"
   }
 
   if (tags.some((t) => ["gallery", "art", "museum", "exhibit"].includes(t))) {
-    return "art"
+    return "arts_culture"
   }
 
-  if (tags.some((t) => ["festival", "fair"].includes(t))) {
-    return "festival"
+  if (
+    tags.some((t) =>
+      ["wellness", "fitness", "yoga", "pilates", "run", "meditation", "breathwork"].includes(t)
+    )
+  ) {
+    return "wellness"
   }
 
-  return "general"
+  if (tags.some((t) => ["nightlife", "party", "club", "dj"].includes(t))) {
+    return "nightlife"
+  }
+
+  return "other"
 }
 
 export function normalizeBudget(budget?: Budget | null): Budget | null {
@@ -396,7 +409,7 @@ function buildPlanningSlots({
   const resolvedTimeZone = normalizeTimeZone(timeZone)
 
   if (mode === "before") {
-    return buildBeforeSlots(desiredRoles, startsAt, resolvedTimeZone)
+    return buildBeforeSlots(desiredRoles, startsAt, resolvedTimeZone, archetype)
   }
 
   if (mode === "after") {
@@ -422,7 +435,8 @@ function buildPlanningSlots({
 function buildBeforeSlots(
   desiredRoles: StopRole[],
   startsAt: Date,
-  timeZone?: string | null
+  timeZone?: string | null,
+  archetype = "other"
 ): PlanningSlot[] {
   const finalDeparture = addMinutes(startsAt, -BEFORE_EVENT_BUFFER_MINUTES)
   const slots: PlanningSlot[] = new Array(desiredRoles.length)
@@ -449,8 +463,13 @@ function buildBeforeSlots(
         "before",
         arrival,
         resolvedTimeZone,
-        "general"
+        archetype
       ),
+      semanticRole: getSemanticRoleForSlot({
+        archetype,
+        phase: "before",
+        index,
+      }),
     }
 
     nextBoundary = addMinutes(arrival, -INTERSTOP_TRAVEL_BUFFER_MINUTES)
@@ -463,7 +482,7 @@ function buildAfterSlots(
   desiredRoles: StopRole[],
   estimatedEndAt: Date,
   timeZone?: string | null,
-  archetype = "general"
+  archetype = "other"
 ): PlanningSlot[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
 
@@ -487,6 +506,11 @@ function buildAfterSlots(
         resolvedTimeZone,
         archetype
       ),
+      semanticRole: getSemanticRoleForSlot({
+        archetype,
+        phase: "after",
+        index,
+      }),
     }
   })
 }
@@ -497,7 +521,7 @@ function buildFullSlots(
   estimatedEndAt: Date,
   lateNightFullFallback = false,
   timeZone?: string | null,
-  archetype = "general"
+  archetype = "other"
 ): PlanningSlot[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
 
@@ -505,13 +529,16 @@ function buildFullSlots(
   const beforeRoles = desiredRoles.slice(0, beforeCount)
   const afterRoles = desiredRoles.slice(beforeCount)
 
-  const beforeSlots = buildBeforeSlots(beforeRoles, startsAt, resolvedTimeZone).map(
-    (slot, index) => ({
-      ...slot,
-      index,
-      strictProgression: index > 0,
-    })
-  )
+  const beforeSlots = buildBeforeSlots(
+    beforeRoles,
+    startsAt,
+    resolvedTimeZone,
+    archetype
+  ).map((slot, index) => ({
+    ...slot,
+    index,
+    strictProgression: index > 0,
+  }))
 
   const afterSlots = buildAfterSlots(
     afterRoles,
@@ -542,7 +569,7 @@ function flexibleRoleForPlanningSlot(
   phase: SlotPhase,
   arrival: Date,
   timeZone: string,
-  archetype = "general"
+  archetype = "other"
 ): StopRole | null {
   const daypart = getDaypart(arrival, timeZone)
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
+import type { Json } from '@/types/supabase'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +24,7 @@ type PlannedOutingRow = {
   anchor_title: string | null
   anchor_starts_at: string | null
   anchor_ends_at: string | null
+  metadata: Json | null
 }
 
 type PlannedOutingStopRow = {
@@ -30,6 +32,7 @@ type PlannedOutingStopRow = {
   venue_id: string | null
   stop_order: number | null
   travel_mode: string | null
+  metadata: Json | null
 }
 
 type ActiveFlowSessionInsert = {
@@ -76,7 +79,8 @@ export async function POST(_request: Request, { params }: Props) {
         plan_summary,
         anchor_title,
         anchor_starts_at,
-        anchor_ends_at
+        anchor_ends_at,
+        metadata
       `
     )
     .eq('id', plannedOutingId)
@@ -93,7 +97,7 @@ export async function POST(_request: Request, { params }: Props) {
 
   const { data: stops, error: stopsError } = await supabase
     .from('planned_outing_stops')
-    .select('id, venue_id, stop_order, travel_mode')
+    .select('id, venue_id, stop_order, travel_mode, metadata')
     .eq('planned_outing_id', plannedOutingId)
     .order('stop_order', { ascending: true })
     .returns<PlannedOutingStopRow[]>()
@@ -185,6 +189,8 @@ export async function POST(_request: Request, { params }: Props) {
     stopCount: venueIds.length,
     confidenceScore: outing.confidence_score,
     anchorVenueId: outing.venue_id,
+    eventArchetype: readPlannerEventArchetype(outing.metadata) ?? readFirstStopEventArchetype(stops ?? []),
+    semanticRoles: readStopSemanticRoles(stops ?? []),
   })
 
   return NextResponse.json({
@@ -257,6 +263,8 @@ async function logEventFlowStarted({
   stopCount,
   confidenceScore,
   anchorVenueId,
+  eventArchetype,
+  semanticRoles,
 }: {
   supabase: Awaited<ReturnType<typeof createServerClient>>
   userId: string
@@ -268,6 +276,8 @@ async function logEventFlowStarted({
   stopCount: number
   confidenceScore: number | null
   anchorVenueId: string | null
+  eventArchetype: string | null
+  semanticRoles: Array<string | null>
 }): Promise<void> {
   try {
     await supabase.from('planned_outing_events').insert({
@@ -282,10 +292,46 @@ async function logEventFlowStarted({
         stopCount,
         confidenceScore,
         anchorVenueId,
+        eventArchetype,
+        semanticRoles,
         source: 'event_flow',
       },
     })
   } catch (error) {
     console.warn('[start-flow] Failed to log event_flow_started:', error)
   }
+}
+
+function readPlannerEventArchetype(metadata: Json | null): string | null {
+  const object = jsonObject(metadata)
+  const planner = jsonObject(object.planner as Json | null)
+  const value = planner.eventArchetype
+
+  return typeof value === 'string' && value.trim().length > 0 ? value : null
+}
+
+function readFirstStopEventArchetype(stops: PlannedOutingStopRow[]): string | null {
+  for (const stop of stops) {
+    const value = jsonObject(stop.metadata).eventArchetype
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value
+    }
+  }
+
+  return null
+}
+
+function readStopSemanticRoles(stops: PlannedOutingStopRow[]): Array<string | null> {
+  return stops.map((stop) => {
+    const value = jsonObject(stop.metadata).semanticRole
+    return typeof value === 'string' && value.trim().length > 0 ? value : null
+  })
+}
+
+function jsonObject(value: Json | null | undefined): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {}
+  }
+
+  return value as Record<string, unknown>
 }

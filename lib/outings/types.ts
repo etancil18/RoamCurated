@@ -91,6 +91,7 @@ export type PlanningSlot = {
   dwellMinutes: number
   strictProgression: boolean
   flexibleRole?: StopRole | null
+  semanticRole?: string | null
 }
 
 export type PlanningContext = {
@@ -212,6 +213,10 @@ export type GeneratedOutingStop = {
     displayType?: string | null
     appliedDisplayType?: string | null
     selectedPass?: SelectionPass | null
+    eventArchetype?: string | null
+    semanticRole?: string | null
+    slotPhase?: SlotPhase | null
+    slotIndex?: number | null
   } | null
 
   bookingOptions?: VenueBookingOption[] | null
@@ -306,6 +311,10 @@ export type PlannedOutingStopRecord = {
     bookingOptions?: VenueBookingOption[] | null
     reservationRecommended?: boolean
     recommendedReservationAt?: string | null
+    eventArchetype?: string | null
+    semanticRole?: string | null
+    slotPhase?: SlotPhase | null
+    slotIndex?: number | null
   } | null
 }
 

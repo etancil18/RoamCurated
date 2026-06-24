@@ -406,7 +406,7 @@ export default function EventsPage() {
                       : '⭐ I\'m Interested'}
                   </button>
 
-                  {ev.checkin_enabled !== false && (
+                  {ev.checkin_enabled === true && (
                     <EventCheckInButton
                       eventId={ev.id}
                       xpReward={ev.xp_reward ?? 25}

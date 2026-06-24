@@ -128,8 +128,16 @@ type PlanOutingResponse = {
   scoreBreakdown?: ScoreBreakdown
 }
 
+type PlannerFailureCode =
+  | "late_night_low_coverage"
+  | "insufficient_coverage"
+  | null
+
 type PlanOutingErrorResponse = {
   error?: string
+  message?: string
+  code?: PlannerFailureCode
+  suggestedModes?: PlanMode[]
   debug?: PlanDebug | null
   scoreBreakdown?: ScoreBreakdown
 }
@@ -192,6 +200,10 @@ export default function OutingPlannerModal({
   const [loading, setLoading] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [plannerFailureCode, setPlannerFailureCode] =
+    useState<PlannerFailureCode>(null)
+  const [suggestedModes, setSuggestedModes] = useState<PlanMode[]>([])
+
   const [plan, setPlan] = useState<PlanOutingResponse | null>(null)
   const [plannerDebug, setPlannerDebug] = useState<PlanDebug | null>(null)
   const [scoreBreakdown, setScoreBreakdown] =
@@ -278,6 +290,8 @@ export default function OutingPlannerModal({
   useEffect(() => {
     if (!open) {
       setError(null)
+      setPlannerFailureCode(null)
+      setSuggestedModes([])
       setPlan(null)
       setPlannerDebug(null)
       setScoreBreakdown(null)
@@ -386,6 +400,9 @@ export default function OutingPlannerModal({
       const activeMode = nextMode ?? modeRef.current
       setError(null)
 
+      setPlannerFailureCode(null)
+      setSuggestedModes([])
+
       if (isRegenerate) {
         setRegenerating(true)
       } else {
@@ -446,11 +463,24 @@ export default function OutingPlannerModal({
           const debugData = data && "debug" in data ? data.debug ?? null : null
           const scoreData =
             data && "scoreBreakdown" in data ? data.scoreBreakdown ?? null : null
+          const failureCode =
+            data && "code" in data ? data.code ?? null : null
+          const nextSuggestedModes =
+            data &&
+            "suggestedModes" in data &&
+            Array.isArray(data.suggestedModes)
+              ? data.suggestedModes.filter((value): value is PlanMode =>
+                  value === "before" || value === "after" || value === "full"
+                )
+              : []
 
           setPlannerDebug(debugData)
           setScoreBreakdown(scoreData)
+          setPlannerFailureCode(failureCode)
+          setSuggestedModes(nextSuggestedModes)
 
           const message =
+            (data && "message" in data && data.message) ||
             (data && "error" in data && data.error) ||
             "Failed to generate outing plan"
 
@@ -458,6 +488,8 @@ export default function OutingPlannerModal({
             event_id: event.id,
             mode: activeMode,
             reason: message,
+            failure_code: failureCode,
+            suggested_modes: nextSuggestedModes,
             status: res.status,
             score_breakdown: scoreData,
             debug: debugData,
@@ -483,6 +515,8 @@ export default function OutingPlannerModal({
         })
 
         setPlan(successData)
+        setPlannerFailureCode(null)
+        setSuggestedModes([])
         setPlannerDebug(successData.debug ?? null)
         setScoreBreakdown(successData.scoreBreakdown ?? null)
         setMode(activeMode)
@@ -868,7 +902,40 @@ export default function OutingPlannerModal({
                     <p className="mt-2 text-sm text-red-200">{error}</p>
                   </div>
 
-                  {(scoreBreakdown || plannerDebug) && (
+                  {plannerFailureCode === "late_night_low_coverage" ? (
+                    <div className="rounded-xl border border-indigo-900 bg-indigo-950/30 p-5">
+                      <p className="text-sm font-medium text-indigo-300">
+                        Late-night options are limited
+                      </p>
+
+                      <p className="mt-2 text-sm leading-6 text-indigo-100">
+                        This event ends very late, and most venues in the area are likely closed
+                        or winding down around that time. Roam could not confidently build a
+                        quality post-event itinerary.
+                      </p>
+
+                      {suggestedModes.length > 0 ? (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {suggestedModes.map((suggestedMode) => (
+                            <button
+                              key={suggestedMode}
+                              type="button"
+                              onClick={() => void handleModeChange(suggestedMode)}
+                              disabled={loading || regenerating}
+                              className="rounded-full border border-indigo-700 bg-indigo-900/40 px-3 py-1.5 text-xs font-medium text-indigo-100 hover:bg-indigo-900/60"
+                            >
+                              Try {MODE_LABELS[suggestedMode]}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      <p className="mt-4 text-xs text-indigo-200/80">
+                        You may have better results planning before the event or leaving a few
+                        hours early.
+                      </p>
+                    </div>
+                  ) : (scoreBreakdown || plannerDebug) ? (
                     <div className="space-y-4 rounded-xl border border-amber-900 bg-amber-950/30 p-5">
                       <div>
                         <p className="text-sm font-medium text-amber-300">
@@ -936,22 +1003,58 @@ export default function OutingPlannerModal({
                               </div>
 
                               <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                                <DiagnosticCard label="Candidates" value={String(slot.candidatesTotal)} compact />
-                                <DiagnosticCard label="Role matches" value={String(slot.matchedRole)} compact />
-                                <DiagnosticCard label="Passed hard constraints" value={String(slot.passedHardConstraints)} compact />
-                                <DiagnosticCard label="Rejected: used" value={String(slot.rejectionCounts.used)} compact />
-                                <DiagnosticCard label="Rejected: role" value={String(slot.rejectionCounts.role)} compact />
-                                <DiagnosticCard label="Rejected: geometry" value={String(slot.rejectionCounts.geometry)} compact />
-                                <DiagnosticCard label="Rejected: temporal" value={String(slot.rejectionCounts.temporal)} compact />
-                                <DiagnosticCard label="Rejected: hours" value={String(slot.rejectionCounts.hours)} compact />
-                                <DiagnosticCard label="Rejected: missing data" value={String(slot.rejectionCounts.missing_data)} compact />
+                                <DiagnosticCard
+                                  label="Candidates"
+                                  value={String(slot.candidatesTotal)}
+                                  compact
+                                />
+                                <DiagnosticCard
+                                  label="Role matches"
+                                  value={String(slot.matchedRole)}
+                                  compact
+                                />
+                                <DiagnosticCard
+                                  label="Passed hard constraints"
+                                  value={String(slot.passedHardConstraints)}
+                                  compact
+                                />
+                                <DiagnosticCard
+                                  label="Rejected: used"
+                                  value={String(slot.rejectionCounts.used)}
+                                  compact
+                                />
+                                <DiagnosticCard
+                                  label="Rejected: role"
+                                  value={String(slot.rejectionCounts.role)}
+                                  compact
+                                />
+                                <DiagnosticCard
+                                  label="Rejected: geometry"
+                                  value={String(slot.rejectionCounts.geometry)}
+                                  compact
+                                />
+                                <DiagnosticCard
+                                  label="Rejected: temporal"
+                                  value={String(slot.rejectionCounts.temporal)}
+                                  compact
+                                />
+                                <DiagnosticCard
+                                  label="Rejected: hours"
+                                  value={String(slot.rejectionCounts.hours)}
+                                  compact
+                                />
+                                <DiagnosticCard
+                                  label="Rejected: missing data"
+                                  value={String(slot.rejectionCounts.missing_data)}
+                                  compact
+                                />
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : null}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               ) : plan ? (
                 <div className="space-y-4">

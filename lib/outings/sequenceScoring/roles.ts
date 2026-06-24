@@ -149,6 +149,7 @@ export function getAcceptableRolesForSlot(
 ): StopRole[] {
   const roles: StopRole[] = [slot.role]
   const types = normalizeVenueTypes(candidate.type)
+  const eventArchetype = normalizeRoleArchetype(context.eventArchetype)
 
   const timeZone = resolvePlannerTimeZone(context)
   const hour = getHourFractionInTimeZone(
@@ -161,7 +162,7 @@ export function getAcceptableRolesForSlot(
   }
 
   if (
-    context.eventArchetype === "networking" &&
+    eventArchetype === "networking" &&
     hasAnyType(types, [
       "coffee",
       "tea",
@@ -186,6 +187,30 @@ export function getAcceptableRolesForSlot(
     if (slot.role === "food") roles.push("coffee", "drink", "activity")
     if (slot.role === "drink") roles.push("food", "coffee", "activity")
     if (slot.role === "activity") roles.push("coffee", "drink", "food")
+  }
+
+  if (
+    eventArchetype === "wellness" &&
+    hasAnyType(types, [
+      "coffee",
+      "tea",
+      "cafe",
+      "café",
+      "juice",
+      "smoothie",
+      "salad",
+      "healthy",
+      "park",
+      "garden",
+      "fitness",
+      "pilates",
+      "yoga",
+      "spa",
+    ])
+  ) {
+    if (slot.role === "coffee") roles.push("food", "activity")
+    if (slot.role === "food") roles.push("coffee", "activity")
+    if (slot.role === "activity") roles.push("coffee", "food")
   }
 
   if (
@@ -334,4 +359,13 @@ function isEarlyDinnerCompatibleVenueType(types: string[]): boolean {
   const isFallbackDrink = hasAnyType(types, ["cocktail", "wine bar"])
 
   return isHybridDinnerDrink || isFallbackDrink
+}
+
+function normalizeRoleArchetype(archetype: string | null | undefined): string {
+  if (archetype === "art") return "arts_culture"
+  if (archetype === "sports") return "social_sports"
+  if (archetype === "festival") return "market"
+  if (archetype === "general") return "other"
+
+  return archetype ?? "other"
 }

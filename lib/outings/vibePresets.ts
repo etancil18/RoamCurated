@@ -497,7 +497,6 @@ high_energy: {
   ],
   preferredTypes: [
     "bar",
-    "cocktail",
     "club",
     "rooftop",
     "lounge",

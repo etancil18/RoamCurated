@@ -74,7 +74,8 @@ export function computeSequentialCandidateScore<TCandidate extends CandidateVenu
       score += computeAfterExpansionBonus(
         previousToCandidateDistance,
         anchorDistance,
-        context.mobility
+        context.mobility,
+        context
       )
       score += computeAfterDirectionalConsistencyBonus(
         selectedSoFar,
@@ -86,7 +87,9 @@ export function computeSequentialCandidateScore<TCandidate extends CandidateVenu
     }
   }
 
+  score += computeVenueSequenceCoherenceScore(previous, candidate, slot, context)
   score += computeModeSpecificVenueBias(candidate, slot, context)
+  score += scoreArchetypeFit(candidate, context, slot)
   score += computePhaseAwarePreferenceBias(candidate, slot, context)
 
   return score
@@ -190,15 +193,17 @@ export function computeAfterFirstStopDistanceBonus(
 export function computeAfterExpansionBonus(
   previousToCandidateDistance: number | null,
   anchorDistance: number | null,
-  mobility: Mobility
+  mobility: Mobility,
+  context?: PlanningContext
 ): number {
   let score = 0
 
   if (previousToCandidateDistance != null) {
-    const strictMax = getMaxAfterInterstopMeters(mobility, false)
+    const strictMax = getMaxAfterInterstopMeters(mobility, false, context)
+
     if (previousToCandidateDistance <= strictMax * 0.5) score += 12
     else if (previousToCandidateDistance <= strictMax * 0.8) score += 6
-    else if (previousToCandidateDistance > strictMax) score -= 18
+    else if (previousToCandidateDistance > strictMax) score -= 30
   }
 
   if (anchorDistance != null && anchorDistance > 6000) score -= 10
@@ -214,7 +219,10 @@ export function computeAfterDirectionalConsistencyBonus<
   slot: PlanningSlot,
   previousToCandidateDistance: number | null
 ): number {
-  const maxLocalFallbackMeters = getMaxAfterLocalFallbackMeters(context.mobility)
+  const maxLocalFallbackMeters = getMaxAfterLocalFallbackMeters(
+    context.mobility,
+    context
+  )
   const previous = selectedSoFar[selectedSoFar.length - 1] ?? null
 
   if (
@@ -236,7 +244,184 @@ export function computeAfterDirectionalConsistencyBonus<
     return 12
   }
 
-  return -18
+  return -24
+}
+
+export function computeVenueSequenceCoherenceScore(
+  previous: Pick<VenueRecord, "type" | "tags" | "vibe"> | null,
+  candidate: Pick<VenueRecord, "type" | "tags" | "vibe">,
+  slot: PlanningSlot,
+  context: PlanningContext
+): number {
+  if (!previous) return 0
+
+  const previousTypes = normalizeVenueTypes(previous.type)
+  const candidateTypes = normalizeVenueTypes(candidate.type)
+
+  const previousVibes = normalizeStringArray(previous.vibe)
+  const candidateVibes = normalizeStringArray(candidate.vibe)
+
+  const previousTags = normalizeStringArray(previous.tags)
+  const candidateTags = normalizeStringArray(candidate.tags)
+
+  const sharedVibes = countSharedValues(previousVibes, candidateVibes)
+  const sharedTags = countSharedValues(previousTags, candidateTags)
+  const sharedTypes = countSharedValues(previousTypes, candidateTypes)
+
+  let score = 0
+
+  score += Math.min(sharedVibes, 3) * 5
+  score += Math.min(sharedTags, 3) * 3
+  score += Math.min(sharedTypes, 2) * 2
+
+  score += computeCompatibleTypeFamilyBonus(previousTypes, candidateTypes, slot, context)
+  score -= computeSequenceClashPenalty(previousTypes, candidateTypes, previousVibes, candidateVibes)
+
+  if (context.vibeTags.length > 0) {
+    const expandedVibeTags = expandVibeTags(context.vibeTags)
+    const candidateAffinity = countSharedValues(
+      uniqueStrings([...candidateTypes, ...candidateTags, ...candidateVibes]),
+      expandedVibeTags
+    )
+    const previousAffinity = countSharedValues(
+      uniqueStrings([...previousTypes, ...previousTags, ...previousVibes]),
+      expandedVibeTags
+    )
+
+    if (candidateAffinity > 0 && previousAffinity > 0) {
+      score += Math.min(candidateAffinity + previousAffinity, 4)
+    }
+  }
+
+  return Math.max(-18, Math.min(18, score))
+}
+
+function countSharedValues(a: string[], b: string[]): number {
+  if (a.length === 0 || b.length === 0) return 0
+
+  const bSet = new Set(b)
+  return uniqueStrings(a).filter((value) => bSet.has(value)).length
+}
+
+function computeCompatibleTypeFamilyBonus(
+  previousTypes: string[],
+  candidateTypes: string[],
+  slot: PlanningSlot,
+  context: PlanningContext
+): number {
+  let score = 0
+  const archetype = normalizeScoringArchetype(context.eventArchetype)
+
+  const bothNightlife =
+    hasAnyType(previousTypes, [
+      "bar",
+      "cocktail",
+      "lounge",
+      "speakeasy",
+      "rooftop",
+      "club",
+      "wine bar",
+      "brewery",
+    ]) &&
+    hasAnyType(candidateTypes, [
+      "bar",
+      "cocktail",
+      "lounge",
+      "speakeasy",
+      "rooftop",
+      "club",
+      "wine bar",
+      "brewery",
+    ])
+
+  const bothConversationFriendly =
+    hasAnyType(previousTypes, [
+      "coffee",
+      "cafe",
+      "café",
+      "wine bar",
+      "cocktail",
+      "lounge",
+      "hotel lobby",
+      "social club",
+      "bookstore",
+    ]) &&
+    hasAnyType(candidateTypes, [
+      "coffee",
+      "cafe",
+      "café",
+      "wine bar",
+      "cocktail",
+      "lounge",
+      "hotel lobby",
+      "social club",
+      "bookstore",
+    ])
+
+  const bothCulture =
+    hasAnyType(previousTypes, ["gallery", "museum", "bookstore", "library", "lifestyle"]) &&
+    hasAnyType(candidateTypes, ["gallery", "museum", "bookstore", "library", "lifestyle"])
+
+  const mealToDrink =
+    hasAnyType(previousTypes, ["restaurant", "dinner", "lunch", "brunch"]) &&
+    hasAnyType(candidateTypes, ["bar", "cocktail", "wine bar", "lounge", "dessert"])
+
+  const drinkToMeal =
+    hasAnyType(previousTypes, ["bar", "cocktail", "wine bar", "lounge", "rooftop"]) &&
+    hasAnyType(candidateTypes, ["restaurant", "dinner", "late night", "dessert"])
+
+  if (slot.phase === "after" && bothNightlife) score += 8
+  if (slot.phase === "before" && (mealToDrink || drinkToMeal)) score += 7
+  if (archetype === "networking" && bothConversationFriendly) score += 8
+  if (archetype === "arts_culture" && bothCulture) score += 6
+  if (archetype === "nightlife" && bothNightlife) score += 6
+  if (archetype === "food_drink" && (mealToDrink || drinkToMeal)) score += 6
+
+  return score
+}
+
+function computeSequenceClashPenalty(
+  previousTypes: string[],
+  candidateTypes: string[],
+  previousVibes: string[],
+  candidateVibes: string[]
+): number {
+  let penalty = 0
+
+  const previousQuiet =
+    hasAnyType(previousTypes, ["library", "bookstore", "museum", "gallery", "spa"]) ||
+    hasAnyType(previousVibes, ["quiet", "calm", "intimate", "relaxed"])
+
+  const candidateHighEnergy =
+    hasAnyType(candidateTypes, ["club", "sports bar", "dive bar"]) ||
+    hasAnyType(candidateVibes, ["high-energy", "loud", "party", "rowdy"])
+
+  const previousHighEnergy =
+    hasAnyType(previousTypes, ["club", "sports bar", "dive bar"]) ||
+    hasAnyType(previousVibes, ["high-energy", "loud", "party", "rowdy"])
+
+  const candidateQuiet =
+    hasAnyType(candidateTypes, ["library", "bookstore", "museum", "gallery", "spa"]) ||
+    hasAnyType(candidateVibes, ["quiet", "calm", "intimate", "relaxed"])
+
+  if (previousQuiet && candidateHighEnergy) penalty += 8
+  if (previousHighEnergy && candidateQuiet) penalty += 8
+
+  if (
+    hasAnyType(previousTypes, ["wellness", "yoga", "pilates", "spa"]) &&
+    hasAnyType(candidateTypes, ["club", "dive bar", "sports bar"])
+  ) {
+    penalty += 12
+  }
+
+  if (
+    hasAnyType(previousTypes, ["coffee", "breakfast", "bakery"]) &&
+    hasAnyType(candidateTypes, ["club", "speakeasy"])
+  ) {
+    penalty += 8
+  }
+
+  return penalty
 }
 
 export function computeModeSpecificVenueBias(
@@ -518,10 +703,9 @@ export function scoreGroupFit(
 
 export function scoreArchetypeFit(
   venue: Pick<VenueRecord, "type" | "vibe" | "tags">,
-  context: PlanningContext
+  context: PlanningContext,
+  slot?: PlanningSlot
 ): number {
-  if (context.mode === "before") return 0
-
   const types = normalizeVenueTypes(venue.type)
   const tags = uniqueStrings([
     ...normalizeStringArray(venue.type),
@@ -529,87 +713,203 @@ export function scoreArchetypeFit(
     ...normalizeStringArray(venue.tags),
   ])
 
+  const archetype = normalizeScoringArchetype(context.eventArchetype)
+  const phase = slot?.phase ?? (context.mode === "before" ? "before" : "after")
+
   let score = 0
 
-  if (context.eventArchetype === "music") {
-    if (hasAnyType(types, ["club", "cocktail", "bar", "lounge", "rooftop", "music"])) {
-      score += 8
+  if (archetype === "music") {
+    if (phase === "before") {
+      if (hasAnyType(types, ["restaurant", "dinner", "cocktail", "bar", "wine bar", "lounge"])) {
+        score += 12
+      }
+      if (hasAnyType(types, ["coffee", "breakfast", "library", "spa"])) score -= 10
+    } else {
+      if (hasAnyType(types, ["bar", "cocktail", "lounge", "rooftop", "late night", "club", "speakeasy"])) {
+        score += 14
+      }
+      if (hasAnyType(types, ["coffee", "breakfast", "museum", "library", "spa"])) score -= 16
     }
+
+    if (hasAnyType(types, ["music"])) score += 4
     if (tags.some((t) => ["live", "music", "show"].includes(t))) score += 4
   }
 
-  if (context.eventArchetype === "art") {
-    if (hasAnyType(types, ["gallery", "museum", "bookstore", "wine", "wine bar"])) {
-      score += 8
+  if (archetype === "arts_culture") {
+    if (phase === "before") {
+      if (hasAnyType(types, ["gallery", "museum", "bookstore", "wine bar", "cocktail", "cafe", "café"])) {
+        score += 12
+      }
+    } else {
+      if (hasAnyType(types, ["restaurant", "dinner", "wine bar", "cocktail", "lounge", "dessert"])) {
+        score += 12
+      }
+    }
+
+    if (hasAnyType(types, ["sports bar", "club", "fitness"])) score -= 12
+  }
+
+  if (archetype === "social_sports") {
+    if (hasAnyType(types, ["sports bar", "bar", "brewery", "restaurant", "dinner", "lunch"])) {
+      score += 12
+    }
+
+    if (hasAnyType(types, ["spa", "library", "showroom"])) score -= 10
+  }
+
+  if (archetype === "market") {
+    if (phase === "before") {
+      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch"])) {
+        score += 14
+      }
+    } else {
+      if (hasAnyType(types, ["brunch", "lunch", "cafe", "café", "bookstore", "park", "garden", "gallery", "dessert"])) {
+        score += 12
+      }
+
+      if (hasAnyType(types, ["club", "speakeasy", "sports bar"])) score -= 14
     }
   }
 
-  if (context.eventArchetype === "sports") {
-    if (hasAnyType(types, ["sports bar", "bar", "brewery"])) score += 8
+  if (archetype === "food_drink") {
+    if (phase === "before") {
+      if (hasAnyType(types, ["wine bar", "cocktail", "bar", "cafe", "café", "bakery", "restaurant"])) {
+        score += 10
+      }
+    } else {
+      if (hasAnyType(types, ["dessert", "wine bar", "cocktail", "lounge", "bar"])) {
+        score += 12
+      }
+    }
+
+    if (hasAnyType(types, ["fitness", "library", "showroom"])) score -= 10
   }
 
-  if (context.eventArchetype === "festival") {
-    if (hasAnyType(types, ["market", "club", "music", "dessert"])) score += 6
+  if (archetype === "wellness") {
+    if (hasAnyType(types, ["coffee", "tea", "cafe", "café", "juice", "smoothie", "salad", "healthy", "park", "garden"])) {
+      score += 14
+    }
+
+    if (hasAnyType(types, ["club", "sports bar", "dive bar", "cocktail", "speakeasy"])) {
+      score -= 20
+    }
   }
 
-  if (context.eventArchetype === "networking") {
-  if (
-    hasAnyType(types, [
-      "cocktail",
-      "wine bar",
-      "bar",
-      "lounge",
-      "rooftop",
-      "hotel bar",
-      "hotel lobby",
-      "social club",
-      "coworking",
-      "speakeasy",
-      "dinner",
-      "lunch",
-    ])
-  ) {
-    score += 10
+  if (archetype === "nightlife") {
+    if (phase === "before") {
+      if (hasAnyType(types, ["cocktail", "bar", "restaurant", "dinner", "rooftop", "lounge"])) {
+        score += 12
+      }
+    } else {
+      if (hasAnyType(types, ["club", "bar", "cocktail", "lounge", "speakeasy", "late night", "rooftop"])) {
+        score += 16
+      }
+    }
+
+    if (hasAnyType(types, ["breakfast", "library", "spa"])) score -= 12
   }
 
-  if (
-    hasAnyType(types, [
-      "activity",
-      "lifestyle",
-      "gallery",
-      "museum",
-      "bookstore",
-      "library",
-      "showroom",
-    ])
-  ) {
-    score -= 100
+  if (archetype === "community") {
+    if (phase === "before") {
+      if (hasAnyType(types, ["coffee", "cafe", "café", "restaurant", "park", "bookstore"])) {
+        score += 8
+      }
+    } else {
+      if (hasAnyType(types, ["restaurant", "bar", "brewery", "coffee", "dessert"])) {
+        score += 8
+      }
+    }
+
+    if (hasAnyType(types, ["club", "speakeasy"])) score -= 8
   }
 
-  if (
-    tags.some((tag) =>
-      [
-        "networking",
-        "mixer",
-        "founders",
-        "startup",
-        "professional",
-        "community",
-        "meetup",
-        "industry",
-        "social",
-        "conversation",
+  if (archetype === "comedy") {
+    if (phase === "before") {
+      if (hasAnyType(types, ["restaurant", "dinner", "bar", "cocktail", "brewery"])) {
+        score += 12
+      }
+    } else {
+      if (hasAnyType(types, ["bar", "cocktail", "lounge", "dessert", "late night"])) {
+        score += 12
+      }
+    }
+
+    if (hasAnyType(types, ["breakfast", "library", "spa"])) score -= 10
+  }
+
+  if (archetype === "networking") {
+    if (
+      hasAnyType(types, [
+        "cocktail",
+        "wine bar",
+        "bar",
         "lounge",
-      ].includes(tag)
-    )
-  ) {
-    score += 6
+        "rooftop",
+        "hotel bar",
+        "hotel lobby",
+        "social club",
+        "coworking",
+        "speakeasy",
+        "restaurant",
+        "dinner",
+        "lunch",
+        "cafe",
+        "café",
+        "coffee",
+      ])
+    ) {
+      score += 12
+    }
+
+    if (
+      hasAnyType(types, [
+        "activity",
+        "lifestyle",
+        "gallery",
+        "museum",
+        "bookstore",
+        "library",
+        "showroom",
+      ])
+    ) {
+      score -= 30
+    }
+
+    if (
+      tags.some((tag) =>
+        [
+          "networking",
+          "mixer",
+          "founders",
+          "startup",
+          "professional",
+          "community",
+          "meetup",
+          "industry",
+          "social",
+          "conversation",
+          "lounge",
+        ].includes(tag)
+      )
+    ) {
+      score += 6
+    }
+
+    if (hasAnyType(types, ["club", "sports bar", "fitness", "spa"])) {
+      score -= 8
+    }
   }
 
-  if (hasAnyType(types, ["club", "sports bar", "fitness", "spa"])) {
-    score -= 8
-  }
-}
+  if (tags.some((tag) => tag === archetype)) score += 4
 
   return score
+}
+
+function normalizeScoringArchetype(archetype: string | null | undefined): string {
+  if (archetype === "art") return "arts_culture"
+  if (archetype === "sports") return "social_sports"
+  if (archetype === "festival") return "market"
+  if (archetype === "general") return "other"
+
+  return archetype ?? "other"
 }

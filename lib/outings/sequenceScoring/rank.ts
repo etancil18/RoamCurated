@@ -98,7 +98,7 @@ function scoreNetworkingVenueFit(
   venue: VenueRecord,
   context: PlanningContext
 ): number {
-  if (context.eventArchetype !== "networking") return 0
+  if (normalizeRankingArchetype(context.eventArchetype) !== "networking") return 0
 
   const tokens = normalizeVenueTokens(venue)
   let score = 0
@@ -196,4 +196,13 @@ function getDesiredRoles(context: PlanningContext): StopRole[] {
 
 function uniqueRoles(roles: StopRole[]): StopRole[] {
   return Array.from(new Set(roles))
+}
+
+function normalizeRankingArchetype(archetype: string | null | undefined): string {
+  if (archetype === "art") return "arts_culture"
+  if (archetype === "sports") return "social_sports"
+  if (archetype === "festival") return "market"
+  if (archetype === "general") return "other"
+
+  return archetype ?? "other"
 }

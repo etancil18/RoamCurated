@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { EventRecord } from '@/types/supabase'
+import { EVENT_ARCHETYPES } from '@/lib/outings/eventArchetypes'
 
 interface EventFormProps {
   venueId: string
@@ -29,12 +30,14 @@ export default function EventForm({
     const payload = {
       title: formData.get('title'),
       description: formData.get('description'),
+      archetype: formData.get('archetype') || 'other',
       starts_at: formData.get('starts_at'),
       ends_at: formData.get('ends_at'),
       tags: formData.get('tags')
         ? String(formData.get('tags')).split(',').map((t) => t.trim())
         : null,
       price_info: formData.get('price_info'),
+      ticket_link: formData.get('ticket_link'),
       source_type: 'portal',
       source: 'portal',
     }
@@ -66,7 +69,6 @@ export default function EventForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Success */}
       {success && (
         <p className="text-green-600 font-medium">
           {mode === 'edit'
@@ -75,10 +77,8 @@ export default function EventForm({
         </p>
       )}
 
-      {/* Error */}
       {error && <p className="text-red-600 font-medium">{error}</p>}
 
-      {/* Title */}
       <div>
         <label className="block mb-1 font-medium">Event Title</label>
         <input
@@ -91,7 +91,6 @@ export default function EventForm({
         />
       </div>
 
-      {/* Description */}
       <div>
         <label className="block mb-1 font-medium">Description</label>
         <textarea
@@ -102,7 +101,21 @@ export default function EventForm({
         />
       </div>
 
-      {/* Start Time */}
+      <div>
+        <label className="block mb-1 font-medium">Event Archetype</label>
+        <select
+          name="archetype"
+          defaultValue={(event as EventRecord & { archetype?: string | null })?.archetype ?? 'other'}
+          className="w-full border p-2 rounded"
+        >
+          {EVENT_ARCHETYPES.map((archetype) => (
+            <option key={archetype.value} value={archetype.value}>
+              {archetype.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div>
         <label className="block mb-1 font-medium">Start Time</label>
         <input
@@ -114,7 +127,6 @@ export default function EventForm({
         />
       </div>
 
-      {/* End Time */}
       <div>
         <label className="block mb-1 font-medium">End Time</label>
         <input
@@ -125,7 +137,6 @@ export default function EventForm({
         />
       </div>
 
-      {/* Tags */}
       <div>
         <label className="block mb-1 font-medium">Tags (comma separated)</label>
         <input
@@ -137,7 +148,6 @@ export default function EventForm({
         />
       </div>
 
-      {/* Price Info */}
       <div>
         <label className="block mb-1 font-medium">Price Info</label>
         <input
@@ -149,7 +159,6 @@ export default function EventForm({
         />
       </div>
 
-      {/* Ticket Link */}
       <div>
         <label className="block mb-1 font-medium">Ticket Link (optional)</label>
         <input
@@ -161,7 +170,6 @@ export default function EventForm({
         />
       </div>
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={loading}

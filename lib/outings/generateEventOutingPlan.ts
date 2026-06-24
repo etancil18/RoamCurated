@@ -8,12 +8,18 @@ import {
   generatePlanStops,
   rankVenueCandidates,
 } from "./sequenceScoring"
+import {
+  estimateTravelMinutes,
+  getDistanceBetweenVenues,
+  inferTravelMode,
+} from "./sequenceScoring/geometry"
 import { qualifiesForReducedBeforeSingleStopFallback } from "./sequenceScoring/daytime"
 import type {
   GenerateEventOutingPlanInput,
   GenerateEventOutingPlanResult,
   GeneratedOutingStop,
   PlanMode,
+  PlanningContext,
 } from "./types"
 
 function annotateBookingRecommendations({
@@ -52,6 +58,142 @@ function annotateBookingRecommendations({
   )
 }
 
+function annotateArchetypeMetadata({
+  stops,
+  eventArchetype,
+}: {
+  stops: GeneratedOutingStop[]
+  eventArchetype: string
+}): GeneratedOutingStop[] {
+  return stops.map((stop) => ({
+    ...stop,
+    metadata: {
+      ...(stop.metadata ?? {}),
+      eventArchetype: stop.metadata?.eventArchetype ?? eventArchetype,
+      semanticRole: stop.metadata?.semanticRole ?? null,
+      slotPhase: stop.metadata?.slotPhase ?? stop.phase ?? null,
+      slotIndex: stop.metadata?.slotIndex ?? stop.stopOrder - 1,
+    },
+  }))
+}
+
+function normalizeFullModeAfterTransitions({
+  stops,
+  context,
+}: {
+  stops: GeneratedOutingStop[]
+  context: PlanningContext
+}): GeneratedOutingStop[] {
+  let hasSeenAfterStop = false
+
+  return stops.map((stop) => {
+    const isFirstAfterStopInFullMode =
+      context.mode === "full" && stop.phase === "after" && !hasSeenAfterStop
+
+    if (stop.phase === "after") {
+      hasSeenAfterStop = true
+    }
+
+    if (!isFirstAfterStopInFullMode || !context.anchorVenue) {
+      return stop
+    }
+
+    const distanceFromAnchor = getDistanceBetweenVenues(context.anchorVenue, {
+      lat: stop.lat ?? null,
+      lon: stop.lon ?? null,
+    })
+
+    return {
+      ...stop,
+      distanceMetersFromPrev: distanceFromAnchor,
+      travelMode: inferTravelMode(context.mobility, distanceFromAnchor, context),
+      travelMinutesFromPrev: estimateTravelMinutes(
+        context.mobility,
+        distanceFromAnchor,
+        context
+      ),
+    }
+  })
+}
+
+function enforceSpatialCoherence({
+  stops,
+  context,
+}: {
+  stops: GeneratedOutingStop[]
+  context: PlanningContext
+}): GeneratedOutingStop[] {
+  const coherentStops: GeneratedOutingStop[] = []
+
+  for (const stop of stops) {
+    if (isStopSpatiallyCoherent(stop, coherentStops, context)) {
+      coherentStops.push(stop)
+    }
+  }
+
+  return coherentStops.map((stop, index) => ({
+    ...stop,
+    stopOrder: index + 1,
+  }))
+}
+
+function isStopSpatiallyCoherent(
+  stop: GeneratedOutingStop,
+  acceptedStops: GeneratedOutingStop[],
+  context: PlanningContext
+): boolean {
+  if (stop.distanceMetersFromPrev == null) return true
+
+  const previousAccepted = acceptedStops[acceptedStops.length - 1] ?? null
+
+  if (!previousAccepted) {
+    return stop.distanceMetersFromPrev <= getMaxAnchorDistanceMeters(context)
+  }
+
+  if (stop.phase === "after") {
+    return stop.distanceMetersFromPrev <= getMaxAfterInterstopMeters(context)
+  }
+
+  return stop.distanceMetersFromPrev <= getMaxBeforeInterstopMeters(context)
+}
+
+function getMaxAnchorDistanceMeters(context: PlanningContext): number {
+  const cityValue =
+    context.cityPlanning?.distances.maxAnchorDistanceMeters[context.mobility]
+
+  if (typeof cityValue === "number" && Number.isFinite(cityValue)) {
+    return cityValue
+  }
+
+  if (context.mobility === "walk") return 1400
+  if (context.mobility === "short_ride") return 2800
+  return 4500
+}
+
+function getMaxBeforeInterstopMeters(context: PlanningContext): number {
+  const cityValue = context.cityPlanning?.distances.beforeInterstopMeters.strict
+
+  if (typeof cityValue === "number" && Number.isFinite(cityValue)) {
+    return cityValue
+  }
+
+  if (context.mobility === "walk") return 2400
+  if (context.mobility === "short_ride") return 3500
+  return 5000
+}
+
+function getMaxAfterInterstopMeters(context: PlanningContext): number {
+  const cityValue = context.cityPlanning?.distances.afterInterstopMeters.strict
+
+  if (typeof cityValue === "number" && Number.isFinite(cityValue)) {
+    return cityValue
+  }
+
+  if (context.mobility === "walk") return 900
+  if (context.mobility === "short_ride") return 1600
+  return 2400
+}
+
 export function generateEventOutingPlan(
   input: GenerateEventOutingPlanInput
 ): GenerateEventOutingPlanResult {
@@ -71,9 +213,22 @@ export function generateEventOutingPlan(
   const rankedCandidates = rankVenueCandidates(input.candidateVenues, context)
 
   const rawStops = generatePlanStops(rankedCandidates, context)
+  const routeNormalizedStops = normalizeFullModeAfterTransitions({
+    stops: rawStops,
+    context,
+  })
+  const coherentStops = enforceSpatialCoherence({
+    stops: routeNormalizedStops,
+    context,
+  })
+  const archetypeAnnotatedStops = annotateArchetypeMetadata({
+    stops: coherentStops,
+    eventArchetype: context.eventArchetype,
+  })
+
   const stops = annotateBookingRecommendations({
     mode: input.mode,
-    stops: rawStops,
+    stops: archetypeAnnotatedStops,
   })
 
   const debug = buildSelectionDebug(rankedCandidates, context)

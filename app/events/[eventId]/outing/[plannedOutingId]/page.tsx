@@ -95,6 +95,10 @@ type OutingMapStop = {
   travelMode: string | null
   travelMinutesFromPrev: number | null
   distanceMetersFromPrev: number | null
+  eventArchetype?: string | null
+  semanticRole?: string | null
+  slotPhase?: string | null
+  slotIndex?: number | null
   venue: {
     id: string
     name: string | null
@@ -236,6 +240,10 @@ export default async function EventOutingPage({ params }: Props) {
       travelMode: stop.travel_mode,
       travelMinutesFromPrev: stop.travel_minutes_from_prev,
       distanceMetersFromPrev: stop.distance_meters_from_prev,
+      eventArchetype: readMetadataString(stop.metadata, "eventArchetype"),
+      semanticRole: readMetadataString(stop.metadata, "semanticRole"),
+      slotPhase: readMetadataString(stop.metadata, "slotPhase"),
+      slotIndex: readMetadataNumber(stop.metadata, "slotIndex"),
       venue: venue
         ? {
             id: venue.id,
@@ -270,6 +278,8 @@ export default async function EventOutingPage({ params }: Props) {
     confidenceScore: outing.confidence_score,
     stopCount: stops.length,
     anchorVenueId: anchor.venue?.id ?? null,
+    eventArchetype: stops[0]?.eventArchetype ?? null,
+    semanticRoles: stops.map((stop) => stop.semanticRole ?? null),
   })
 
   const draftPath = `/events/${eventId}/outing/${outing.id}`
@@ -360,6 +370,8 @@ async function logPlannedOutingViewed({
   confidenceScore,
   stopCount,
   anchorVenueId,
+  eventArchetype,
+  semanticRoles,
 }: {
   supabase: Awaited<ReturnType<typeof createServerClient>>
   userId: string
@@ -371,6 +383,8 @@ async function logPlannedOutingViewed({
   confidenceScore: number | null
   stopCount: number
   anchorVenueId: string | null
+  eventArchetype: string | null
+  semanticRoles: Array<string | null>
 }): Promise<void> {
   try {
     await supabase.from("planned_outing_events").insert({
@@ -385,6 +399,8 @@ async function logPlannedOutingViewed({
         confidenceScore,
         stopCount,
         anchorVenueId,
+        eventArchetype,
+        semanticRoles,
       },
     })
   } catch (error) {
@@ -406,6 +422,15 @@ function readMetadataString(metadata: unknown, key: string): string | null {
 
   const value = (metadata as Record<string, unknown>)[key]
   return typeof value === "string" && value.trim().length > 0 ? value : null
+}
+
+function readMetadataNumber(metadata: unknown, key: string): number | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    return null
+  }
+
+  const value = (metadata as Record<string, unknown>)[key]
+  return typeof value === "number" && Number.isFinite(value) ? value : null
 }
 
 function humanizeMode(mode: "before" | "after" | "full"): string {

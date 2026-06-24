@@ -299,7 +299,9 @@ export function isLateNightFallbackVenueTemporallyEligible(
   candidate: RoleCompatibleVenue & VenueRecord,
   slot: PlanningSlot,
   context: PlanningContext,
-  timeZone: string
+  timeZone: string,
+  relaxed = false,
+  allowMissingOrUncertainHours = false
 ): boolean {
   if (!isLateNightAfterFallbackContext(context, slot)) return false
   if (!isLateNightNightlifeType(candidate)) return false
@@ -324,12 +326,22 @@ export function isLateNightFallbackVenueTemporallyEligible(
     return true
   }
 
-  return isVenueOpenForLateNightFallbackWindow(
-    candidate as VenueWithHours,
-    arrival,
-    timeZone,
-    LATE_NIGHT_MIN_VIABLE_WINDOW_MINUTES
-  )
+  if (
+    isVenueOpenForLateNightFallbackWindow(
+      candidate as VenueWithHours,
+      arrival,
+      timeZone,
+      LATE_NIGHT_MIN_VIABLE_WINDOW_MINUTES
+    )
+  ) {
+    return true
+  }
+
+  if (allowMissingOrUncertainHours || relaxed) {
+    return isLateNightSoftFallbackEligible(candidate, arrival, timeZone)
+  }
+
+  return false
 }
 
 export function parseTimeToMinutes(value: string): number | null {
@@ -365,6 +377,30 @@ function isVenueOpenForLateNightFallbackWindow(
       arrivalAbsoluteMinutes <= window.close &&
       window.close >= arrivalAbsoluteMinutes + minimumWindowMinutes
   )
+}
+
+function isLateNightSoftFallbackEligible(
+  candidate: RoleCompatibleVenue & VenueRecord,
+  arrival: Date,
+  timeZone: string
+): boolean {
+  const hour = getHourFractionInTimeZone(arrival, timeZone)
+  const types = normalizeVenueTypes(candidate.type)
+
+  if (hour < 0 || hour > 4.5) return false
+
+  return hasAnyType(types, [
+    "bar",
+    "cocktail",
+    "cocktails",
+    "lounge",
+    "speakeasy",
+    "club",
+    "rooftop",
+    "late night",
+    "hotel bar",
+    "social club",
+  ])
 }
 
 function getLateNightAbsoluteArrivalMinutes(

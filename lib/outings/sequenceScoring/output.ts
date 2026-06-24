@@ -82,11 +82,11 @@ export function generatePlanStops(
       plannedArrivalAt: slot.targetArrivalAt.toISOString(),
       plannedDepartureAt: slot.targetDepartureAt.toISOString(),
       dwellMinutes: slot.dwellMinutes,
-      travelMode: inferTravelMode(context.mobility, distanceFromPrev),
+      travelMode: inferTravelMode(context.mobility, distanceFromPrev, context),
       travelMinutesFromPrev:
         index === 0
           ? defaultTravelMinutesForFirstSlot(context, slot)
-          : estimateTravelMinutes(context.mobility, distanceFromPrev),
+          : estimateTravelMinutes(context.mobility, distanceFromPrev, context),
       distanceMetersFromPrev: distanceFromPrev,
       lat: venue.lat ?? null,
       lon: venue.lon ?? null,
@@ -102,6 +102,10 @@ export function generatePlanStops(
         displayType,
         appliedDisplayType: displayType,
         selectedPass: selectedStopsWithSlots[index]?.selectedPass ?? null,
+        eventArchetype: context.eventArchetype,
+        semanticRole: slot.semanticRole ?? null,
+        slotPhase: slot.phase,
+        slotIndex: slot.index,
       },
     }
   })
@@ -257,11 +261,8 @@ export function computeConfidenceScore(
 
   if (context.anchorVenue?.lat != null && context.anchorVenue?.lon != null) score += 0.1
   if (context.eventTags.length > 0) score += 0.1
-  if (
-    stops.every(
-      (s) => s.distanceMetersFromPrev == null || s.distanceMetersFromPrev < 3000
-    )
-  ) {
+
+  if (stops.every((stop) => stopDistanceIsCoherent(stop, context))) {
     score += 0.1
   }
 
@@ -356,6 +357,7 @@ function fallbackSlotForIndex(
     strictProgression:
       phase === "before" ? index > 0 : context.mode === "after" ? index === 0 : index === 1,
     flexibleRole: null,
+    semanticRole: null,
   }
 }
 
@@ -505,4 +507,27 @@ function qualifiesForLeaveEarlyReducedCoverage(
   }
 
   return false
+}
+
+function stopDistanceIsCoherent(
+  stop: GeneratedOutingStop,
+  context: PlanningContext
+): boolean {
+  if (stop.distanceMetersFromPrev == null) return true
+
+  const cityPlanning = context.cityPlanning
+
+  if (stop.phase === "after") {
+    const afterLimit =
+      cityPlanning?.distances.afterInterstopMeters.relaxed ??
+      (context.mobility === "walk" ? 1400 : context.mobility === "short_ride" ? 2200 : 3200)
+
+    return stop.distanceMetersFromPrev <= afterLimit
+  }
+
+  const beforeLimit =
+    cityPlanning?.distances.beforeInterstopMeters.relaxed ??
+    (context.mobility === "walk" ? 2400 : context.mobility === "short_ride" ? 4500 : 6000)
+
+  return stop.distanceMetersFromPrev <= beforeLimit
 }

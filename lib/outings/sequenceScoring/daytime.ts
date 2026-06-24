@@ -45,6 +45,10 @@ export function qualifiesForReducedBeforeSingleStopFallback(
     return isMorningCompatibleStop(stop)
   }
 
+  if (isSocialSportsBeforeEventContext(context)) {
+    return stop.role === "food" || stop.role === "drink"
+  }
+
   if (isLateNightMusicBeforeEventContext(context)) {
     return stop.role === "food" || stop.role === "drink"
   }
@@ -93,9 +97,12 @@ export function isEarlyDayBeforeEventContext(context: PlanningContext): boolean 
   const timeZone = resolvePlannerTimeZone(context)
   const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
 
-  // Accept morning and late-morning starts.
-  // Noon and slightly after can still reasonably support a single pre-event stop.
   return eventStartHour <= 12.5
+}
+
+function isSocialSportsBeforeEventContext(context: PlanningContext): boolean {
+  const archetype = normalizeDaytimeArchetype(context.eventArchetype)
+  return archetype === "social_sports"
 }
 
 function isLateNightMusicBeforeEventContext(context: PlanningContext): boolean {
@@ -163,4 +170,9 @@ function stopHasAnyVenueType(
   ])
 
   return hasAnyType(inferredTypes, expectedTypes)
+}
+
+function normalizeDaytimeArchetype(archetype: string | null | undefined): string {
+  if (archetype === "sports") return "social_sports"
+  return archetype ?? "other"
 }

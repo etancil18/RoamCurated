@@ -72,15 +72,23 @@ export function isLateNightNightlifeType(
   const types = normalizeVenueTypes(venue.type)
   return hasAnyType(types, [
     "bar",
+    "bars",
     "lounge",
     "club",
     "cocktail",
+    "cocktails",
     "speakeasy",
     "rooftop",
     "wine bar",
+    "brewery",
+    "late night",
+    "dessert bar",
     "hotel bar",
     "hotel lobby",
     "social club",
+    "nightlife",
+    "music",
+    "dj",
   ])
 }
 
@@ -110,14 +118,29 @@ function isQualifyingLateNightStop(
           "bar",
           "lounge",
           "cocktail",
+          "cocktails",
           "speakeasy",
           "rooftop",
           "wine bar",
           "hotel bar",
           "hotel lobby",
           "social club",
+          "late night",
         ]
-      : ["bar", "lounge", "club", "cocktail", "speakeasy", "rooftop"]
+      : [
+          "bar",
+          "lounge",
+          "club",
+          "cocktail",
+          "cocktails",
+          "speakeasy",
+          "rooftop",
+          "wine bar",
+          "brewery",
+          "late night",
+          "dessert bar",
+          "nightlife",
+        ]
 
   if (!allowedTypes.includes(appliedType)) {
     return false
