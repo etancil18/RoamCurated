@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import FollowButton from '@/components/profile/FollowButton'
+import ShareProfileButton from '@/components/profile/ShareProfileButton'
 import { getPassportSnapshot } from '@/lib/passport/score'
 
 export const dynamic = 'force-dynamic'
@@ -253,21 +254,28 @@ export default async function PublicUserProfilePage({ params }: Props) {
   return (
     <main className="min-h-screen bg-black px-4 pb-10 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white">
       <div className="mx-auto max-w-4xl space-y-6">
-        {isOwnProfile ? (
-          <Link
-            href="/profile"
-            className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:text-white"
-          >
-            Edit Profile
-          </Link>
-        ) : (
-          <Link
-            href="/discover"
-            className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:text-white"
-          >
-            ← Back to Discover
-          </Link>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {isOwnProfile ? (
+            <Link
+              href="/profile"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:text-white"
+            >
+              Edit Profile
+            </Link>
+          ) : (
+            <Link
+              href="/discover"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:text-white"
+            >
+              ← Back to Discover
+            </Link>
+          )}
+
+          <ShareProfileButton
+            username={profile.username}
+            fullName={profile.full_name}
+          />
+        </div>
 
         <section className="rounded-[2rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 to-black p-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
