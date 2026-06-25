@@ -57,6 +57,10 @@ export function qualifiesForReducedBeforeSingleStopFallback(
     return stop.role === "coffee" || stop.role === "food" || stop.role === "drink"
   }
 
+  if (isGeneralEveningBeforeEventContext(context)) {
+    return stop.role === "food" || stop.role === "drink"
+  }
+
   return false
 }
 
@@ -117,6 +121,13 @@ function isNetworkingBeforeEventContext(context: PlanningContext): boolean {
   const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
 
   return context.eventArchetype === "networking" && eventStartHour >= 15
+}
+
+function isGeneralEveningBeforeEventContext(context: PlanningContext): boolean {
+  const timeZone = resolvePlannerTimeZone(context)
+  const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
+
+  return eventStartHour >= 15
 }
 
 export function isMorningCompatibleStop(stop: MorningTypedStop): boolean {
