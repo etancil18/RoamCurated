@@ -3,6 +3,8 @@
 import { useMemo, useRef, useState } from 'react'
 import { logEvent } from '@/lib/logEvent'
 import FlowShareCard from './FlowShareCard'
+import FlowPassportSticker from './FlowPassportSticker'
+import StickerComposer from '@/components/flows/StickerComposer'
 
 type RouteLinePoint = {
   lat: number
@@ -72,6 +74,10 @@ export default function FlowShareActions({
   const [exporting, setExporting] = useState(false)
   const [snapshotSaved, setSnapshotSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const stickerExportRef = useRef<HTMLDivElement>(null)
+  const [stickerOpen, setStickerOpen] = useState(false)
+  const [stickerVariant, setStickerVariant] = useState<'stamp' | 'route'>('stamp')
+  const [stickerExportIntent, setStickerExportIntent] = useState<'save' | 'share'>('save')
 
   const checkedVenueIds = useMemo(() => {
     return new Set(progress.map((row) => row.venue_id))
@@ -292,6 +298,53 @@ export default function FlowShareActions({
     })
   }
 
+  const exportStickerTarget = async (
+      target: HTMLElement,
+      fileName: string,
+      share = false
+    ) => {
+      setExporting(true)
+      setError(null)
+
+      try {
+        const { toBlob } = await import('html-to-image')
+
+        const blob = await toBlob(target, {
+          pixelRatio: 3,
+          backgroundColor: 'transparent',
+          cacheBust: true,
+        })
+
+        if (!blob) {
+          throw new Error('Failed to create sticker image')
+        }
+
+        const file = new File([blob], fileName, {
+          type: 'image/png',
+        })
+
+        if (share && navigator.canShare?.({ files: [file] })) {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            files: [file],
+          })
+          return
+        }
+
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileName
+        link.click()
+        URL.revokeObjectURL(url)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to export sticker')
+      } finally {
+        setExporting(false)
+      }
+    }
+
   const saveSnapshotToProfile = async () => {
     setExporting(true)
     setError(null)
@@ -458,151 +511,218 @@ export default function FlowShareActions({
   if (!canShareSnapshot) return null
 
   return (
-    <>
-      <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-white">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-indigo-300">
-              Share your flow
-            </p>
+  <>
+    <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-white">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-indigo-300">
+            Share your flow
+          </p>
 
-            <p className="mt-1 text-sm text-neutral-400">
-              Save or share a story-style snapshot of your route.
-            </p>
-          </div>
+          <p className="mt-1 text-sm text-neutral-400">
+            Save or share a story-style snapshot of your route.
+          </p>
+        </div>
 
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          <button
+            type="button"
+            onClick={openSnapshotPreview}
+            className="rounded-lg border border-indigo-800 bg-indigo-950/50 px-4 py-2 text-sm font-medium text-indigo-200 hover:bg-indigo-900/60"
+          >
+            Open Snapshot Preview
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void shareSnapshotImage()}
+            disabled={exporting}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {exporting ? 'Preparing...' : 'Share Snapshot'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void saveSnapshotToProfile()}
+            disabled={exporting}
+            className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {exporting
+              ? 'Saving...'
+              : snapshotSaved
+                ? 'Saved to Profile'
+                : 'Save Snapshot'}
+          </button>
+
+          <div className="mt-1 flex w-full flex-wrap gap-2 border-t border-neutral-800 pt-3">
             <button
               type="button"
-              onClick={openSnapshotPreview}
-              className="rounded-lg border border-indigo-800 bg-indigo-950/50 px-4 py-2 text-sm font-medium text-indigo-200 hover:bg-indigo-900/60"
+              onClick={() => {
+                setStickerVariant('stamp')
+                setStickerExportIntent('save')
+                setStickerOpen(true)
+              }}
+              disabled={exporting}
+              className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-900/50 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Open Snapshot Preview
+              Save Passport Sticker
             </button>
 
             <button
               type="button"
-              onClick={() => void shareSnapshotImage()}
+              onClick={() => {
+                setStickerVariant('route')
+                setStickerExportIntent('save')
+                setStickerOpen(true)
+              }}
+              disabled={exporting}
+              className="rounded-lg border border-cyan-700 bg-cyan-950/40 px-4 py-2 text-sm font-medium text-cyan-200 hover:bg-cyan-900/50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Save Route Sticker
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStickerVariant('stamp')
+                setStickerExportIntent('share')
+                setStickerOpen(true)
+              }}
               disabled={exporting}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {exporting ? 'Preparing...' : 'Share Snapshot'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => void saveSnapshotToProfile()}
-              disabled={exporting}
-              className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {exporting
-                ? 'Saving...'
-                : snapshotSaved
-                  ? 'Saved to Profile'
-                  : 'Save Snapshot'}
+              Share Sticker
             </button>
           </div>
         </div>
-
-        {snapshotSaved ? (
-          <p className="mt-3 text-sm text-emerald-400">
-            Snapshot saved to your public profile.
-          </p>
-        ) : null}
-
-        {error ? (
-          <p className="mt-3 text-sm text-red-400">{error}</p>
-        ) : null}
-      </section>
-
-      <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none">
-        <div ref={exportRef}>
-          <FlowShareCard
-            city={session.city}
-            title={session.title}
-            status={snapshotStatus}
-            startedAt={session.started_at}
-            completedAt={session.completed_at}
-            checkedInCount={checkedInCount}
-            totalStops={totalStops}
-            stops={checkedStops}
-            routeLine={routeLine}
-            variant="export"
-          />
-        </div>
       </div>
 
-      {snapshotOpen ? (
+      {snapshotSaved ? (
+        <p className="mt-3 text-sm text-emerald-400">
+          Snapshot saved to your public profile.
+        </p>
+      ) : null}
+
+      {error ? (
+        <p className="mt-3 text-sm text-red-400">{error}</p>
+      ) : null}
+    </section>
+
+    <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none">
+      <div ref={exportRef}>
+        <FlowShareCard
+          city={session.city}
+          title={session.title}
+          status={snapshotStatus}
+          startedAt={session.started_at}
+          completedAt={session.completed_at}
+          checkedInCount={checkedInCount}
+          totalStops={totalStops}
+          stops={checkedStops}
+          routeLine={routeLine}
+          variant="export"
+        />
+      </div>
+    </div>
+
+    <StickerComposer
+      open={stickerOpen}
+      title="Roam Passport Sticker"
+      exporting={exporting}
+      onClose={() => setStickerOpen(false)}
+      onExport={(target) =>
+        exportStickerTarget(
+          target,
+          `roam-passport-sticker-${session.id}.png`,
+          stickerExportIntent === 'share'
+        )
+      }
+      sticker={
+        <FlowPassportSticker
+          title={session.title}
+          city={session.city}
+          completedAt={session.completed_at}
+          checkedInCount={checkedInCount}
+          totalStops={totalStops}
+          stops={checkedStops}
+          xpEarned={checkedInCount * 25}
+          variant={stickerVariant}
+        />
+      }
+    />
+
+    {snapshotOpen ? (
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+        role="dialog"
+        aria-modal="true"
+        onClick={closeSnapshotPreview}
+      >
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
-          role="dialog"
-          aria-modal="true"
-          onClick={closeSnapshotPreview}
+          className="relative z-[10000] max-h-[92vh] w-full max-w-md overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 shadow-2xl"
+          onClick={(event) => event.stopPropagation()}
         >
-          <div
-            className="relative z-[10000] max-h-[92vh] w-full max-w-md overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  Flow Snapshot Preview
-                </p>
+          <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-white">
+                Flow Snapshot Preview
+              </p>
 
-                <p className="text-xs text-neutral-400">
-                  {routeLineLoading
-                    ? 'Loading routed line...'
-                    : 'Story-style flow card'}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeSnapshotPreview}
-                className="rounded-lg border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-900"
-              >
-                Close
-              </button>
+              <p className="text-xs text-neutral-400">
+                {routeLineLoading
+                  ? 'Loading routed line...'
+                  : 'Story-style flow card'}
+              </p>
             </div>
 
-            <div className="flex items-center justify-center bg-neutral-950 p-4">
-              <div className="mx-auto w-full max-w-[320px] overflow-hidden rounded-xl border border-neutral-800 bg-black">
+            <button
+              type="button"
+              onClick={closeSnapshotPreview}
+              className="rounded-lg border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-900"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center bg-neutral-950 p-4">
+            <div className="mx-auto w-full max-w-[320px] overflow-hidden rounded-xl border border-neutral-800 bg-black">
+              <div
+                className="relative mx-auto"
+                style={{
+                  width: 320,
+                  height: 568,
+                }}
+              >
                 <div
-                  className="relative mx-auto"
+                  className="absolute left-1/2 top-0"
                   style={{
-                    width: 320,
-                    height: 568,
+                    width: 1080,
+                    transform: 'translateX(-50%) scale(0.2963)',
+                    transformOrigin: 'top center',
                   }}
                 >
-                  <div
-                    className="absolute left-1/2 top-0"
-                    style={{
-                      width: 1080,
-                      transform: 'translateX(-50%) scale(0.2963)',
-                      transformOrigin: 'top center',
-                    }}
-                  >
-                    <FlowShareCard
-                      city={session.city}
-                      title={session.title}
-                      status={snapshotStatus}
-                      startedAt={session.started_at}
-                      completedAt={session.completed_at}
-                      checkedInCount={checkedInCount}
-                      totalStops={totalStops}
-                      stops={checkedStops}
-                      routeLine={routeLine}
-                      variant="preview"
-                    />
-                  </div>
+                  <FlowShareCard
+                    city={session.city}
+                    title={session.title}
+                    status={snapshotStatus}
+                    startedAt={session.started_at}
+                    completedAt={session.completed_at}
+                    checkedInCount={checkedInCount}
+                    totalStops={totalStops}
+                    stops={checkedStops}
+                    routeLine={routeLine}
+                    variant="preview"
+                  />
                 </div>
               </div>
             </div>
           </div>
         </div>
-      ) : null}
-    </>
-  )
+      </div>
+    ) : null}
+  </>
+)
 }
 
 function extractRouteLineFromMapboxResponse(data: any): RouteLinePoint[] {
