@@ -222,13 +222,13 @@ export default function ProfileForm() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Home Neighborhood
+              Home City
             </label>
 
             <Input
               value={homeNeighborhood}
               onChange={(e)=>setHomeNeighborhood(e.target.value)}
-              placeholder="Midtown, East Atlanta, etc."
+              placeholder="London, New York City, Atlanta, etc."
             />
           </div>
         </section>

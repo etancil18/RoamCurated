@@ -236,7 +236,7 @@ export default function OnboardingProfilePage() {
                 />
               </Field>
 
-              <Field label="Home Neighborhood">
+              <Field label="Home City">
                 <input
                   type="text"
                   value={form.home_neighborhood}
@@ -244,7 +244,7 @@ export default function OnboardingProfilePage() {
                     setForm({ ...form, home_neighborhood: e.target.value })
                   }
                   className="field-input"
-                  placeholder="Midtown, Buckhead, Williamsburg..."
+                  placeholder="London, New York City, Atlanta, etc."
                 />
               </Field>
 
