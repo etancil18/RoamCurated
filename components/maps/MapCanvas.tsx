@@ -5,9 +5,14 @@ import {
   TileLayer,
   useMap,
   Marker,
+  useMapEvents,
 } from 'react-leaflet'
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
+import type {
+  Map as LeafletMap,
+  Marker as LeafletMarker,
+  LatLngBounds,
+} from 'leaflet'
 
 import {
   VenueMarker,
@@ -47,6 +52,28 @@ function normalizeSearchableList(value: string | string[] | undefined): string[]
   return []
 }
 
+function getVenueRenderLimit(zoom: number): number {
+  if (zoom < 11) return 0
+  if (zoom < 12) return 10
+  if (zoom < 13) return 24
+  if (zoom < 14) return 45
+  if (zoom < 15) return 75
+  if (zoom < 16) return 120
+  return 220
+}
+
+function distanceScoreFromCenter(
+  venue: Venue,
+  center: { lat: number; lng: number } | null
+): number {
+  if (!center) return 0
+  if (!Number.isFinite(venue.lat) || !Number.isFinite(venue.lon)) return -100000
+
+  const latDiff = venue.lat - center.lat
+  const lonDiff = venue.lon - center.lng
+  return -Math.sqrt(latDiff * latDiff + lonDiff * lonDiff)
+}
+
 function MapRefSetter({
   mapRef,
 }: {
@@ -63,6 +90,42 @@ function MapRefSetter({
       mapRef.current = null
     }
   }, [map, mapRef])
+
+  return null
+}
+
+function MapViewportTracker({
+  onViewportChange,
+}: {
+  onViewportChange: (viewport: {
+    zoom: number
+    bounds: LatLngBounds
+    center: { lat: number; lng: number }
+  }) => void
+}) {
+  const map = useMap()
+
+  const updateViewport = useCallback(() => {
+    const center = map.getCenter()
+
+    onViewportChange({
+      zoom: map.getZoom(),
+      bounds: map.getBounds(),
+      center: {
+        lat: center.lat,
+        lng: center.lng,
+      },
+    })
+  }, [map, onViewportChange])
+
+  useEffect(() => {
+    updateViewport()
+  }, [updateViewport])
+
+  useMapEvents({
+    zoomend: updateViewport,
+    moveend: updateViewport,
+  })
 
   return null
 }
@@ -96,6 +159,12 @@ export default function MapCanvas({
   const [showCitySelector, setShowCitySelector] = useState(true)
   const [enableScrollZoom, setEnableScrollZoom] = useState(false)
   const [returnFocusZoom, setReturnFocusZoom] = useState<number | null>(null)
+  const [currentZoom, setCurrentZoom] = useState(USA_ZOOM)
+  const [mapBounds, setMapBounds] = useState<LatLngBounds | null>(null)
+  const [mapCenterPoint, setMapCenterPoint] = useState<{
+    lat: number
+    lng: number
+  } | null>(null)
 
   const [minuteTick, setMinuteTick] = useState(0)
 
@@ -109,6 +178,7 @@ export default function MapCanvas({
 
   const mapRef = useRef<LeafletMap | null>(null)
   const markerRefs = useRef<Record<string, LeafletMarker>>({})
+  const viewportSignatureRef = useRef<string | null>(null)
 
   const nowForCity = useMemo(() => {
     return selectedCity ? getCityNow(selectedCity) : null
@@ -167,6 +237,33 @@ export default function MapCanvas({
 
   const lineColor =
     THEME_COLORS[themeId ?? ''] ?? 'cyan'
+
+  const handleViewportChange = useCallback(
+    ({
+      zoom,
+      bounds,
+      center,
+    }: {
+      zoom: number
+      bounds: LatLngBounds
+      center: { lat: number; lng: number }
+    }) => {
+      const nextSignature = [
+        zoom,
+        bounds.toBBoxString(),
+        center.lat.toFixed(5),
+        center.lng.toFixed(5),
+      ].join(':')
+
+      if (viewportSignatureRef.current === nextSignature) return
+
+      viewportSignatureRef.current = nextSignature
+      setCurrentZoom(zoom)
+      setMapBounds(bounds)
+      setMapCenterPoint(center)
+    },
+    []
+  )
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -260,6 +357,66 @@ export default function MapCanvas({
     })
   }, [allVenues, venues, searchTerm])
 
+  const renderedVenues = useMemo(() => {
+    if (visibleRoute.length > 1) return visibleRoute
+    if (!selectedCity) return []
+
+    const renderLimit = getVenueRenderLimit(currentZoom)
+    if (renderLimit <= 0) return []
+
+    const term = searchTerm.trim().toLowerCase()
+    const hasSearch = term.length > 0
+
+    const candidates = filteredVenues.filter((venue) => {
+      if (!Number.isFinite(venue.lat) || !Number.isFinite(venue.lon)) {
+        return false
+      }
+
+      if (!mapBounds) return true
+
+      return mapBounds.contains([venue.lat, venue.lon])
+    })
+
+    return candidates
+      .map((venue) => {
+        const hasEvent = Boolean(eventsByVenueId[venue.id]?.length)
+        const typeList = normalizeSearchableList(venue.type)
+        const tagList = normalizeSearchableList(venue.tags)
+        const vibeList = normalizeSearchableList(venue.vibe)
+
+        const searchable = [
+          venue.name ?? '',
+          ...typeList,
+          ...tagList,
+          ...vibeList,
+        ]
+          .join(' ')
+          .toLowerCase()
+
+        const searchBoost = hasSearch && searchable.includes(term) ? 90 : 0
+        const eventBoost = hasEvent ? 140 : 0
+        const densityBoost = currentZoom >= 15 ? 20 : 0
+        const centerScore = distanceScoreFromCenter(venue, mapCenterPoint) * 400
+
+        return {
+          venue,
+          score: eventBoost + searchBoost + densityBoost + centerScore,
+        }
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, renderLimit)
+      .map((entry) => entry.venue)
+  }, [
+    visibleRoute,
+    selectedCity,
+    currentZoom,
+    searchTerm,
+    filteredVenues,
+    mapBounds,
+    mapCenterPoint,
+    eventsByVenueId,
+  ])
+
   return (
     <div className="h-screen w-screen relative">
       <div className="fixed left-3 top-[calc(4rem+3.25rem)] z-[4590]">
@@ -290,6 +447,8 @@ export default function MapCanvas({
       >
         <MapRefSetter mapRef={mapRef} />
 
+        <MapViewportTracker onViewportChange={handleViewportChange} />
+
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution="&copy; CartoDB"
@@ -313,21 +472,19 @@ export default function MapCanvas({
 
         {selectedCity &&
           nowForCity &&
-          (visibleRoute.length > 1 ? visibleRoute : filteredVenues).map(
-            (venue: Venue, idx: number) => (
-              <VenueMarker
-                key={venue.id}
-                venue={venue}
-                index={idx}
-                city={selectedCity}
-                nowForCity={nowForCity}
-                isRouteMode={visibleRoute.length > 0}
-                markerDisplayMode={markerDisplayMode}
-                markerRefs={markerRefs}
-                eventsByVenueId={eventsByVenueId}
-              />
-            )
-          )}
+          renderedVenues.map((venue: Venue, idx: number) => (
+            <VenueMarker
+              key={venue.id}
+              venue={venue}
+              index={idx}
+              city={selectedCity}
+              nowForCity={nowForCity}
+              isRouteMode={visibleRoute.length > 0}
+              markerDisplayMode={markerDisplayMode}
+              markerRefs={markerRefs}
+              eventsByVenueId={eventsByVenueId}
+            />
+          ))}
 
         {userPosition && (
           <UserLocationMarker position={userPosition} />
