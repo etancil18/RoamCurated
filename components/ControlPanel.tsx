@@ -228,7 +228,7 @@ export function ControlPanel({
                 className={inputBase}
                 aria-label="Theme"
               >
-                <option value="">{selectedThemeLabel}</option>
+                <option value="">Pick vibe</option>
                 {themes.map((theme) => (
                   <option key={theme.id} value={theme.id}>
                     {theme.label}
@@ -242,7 +242,7 @@ export function ControlPanel({
                 className={inputBase}
                 aria-label="Travel mode"
               >
-                <option value="walking">🚶 {travelModeLabel}</option>
+                <option value="walking">🚶 Walk</option>
                 <option value="cycling">🚲 Bike</option>
                 <option value="driving">🚗 Drive</option>
               </select>
