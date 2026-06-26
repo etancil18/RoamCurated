@@ -83,6 +83,7 @@ export function ControlPanel({
 }: ControlPanelProps) {
   const [isScheduled, setIsScheduled] = useState(false)
   const [flowReadyCollapsed, setFlowReadyCollapsed] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   useEffect(() => {
     if (!hasGeneratedRoute) {
@@ -92,6 +93,12 @@ export function ControlPanel({
 
   const showFlowReady = hasGeneratedRoute && !flowReadyCollapsed
   const showControlPanel = !showFlowReady
+
+  const selectedThemeLabel =
+    themes.find((theme) => theme.id === selectedThemeId)?.label ?? 'Pick vibe'
+
+  const travelModeLabel =
+    travelMode === 'walking' ? 'Walk' : travelMode === 'cycling' ? 'Bike' : 'Drive'
 
   const handleTravelModeChange = (val: string) => {
     if (!val) return
@@ -117,21 +124,22 @@ export function ControlPanel({
           })()
         : undefined
 
+    setAdvancedOpen(false)
     setFlowReadyCollapsed(false)
     logEvent('generate_clicked', { metadata: { city, plannedStartAt } })
     onGenerateRoute(plannedStartAt)
   }
 
   const inputBase =
-    'w-full h-8 px-2 border rounded text-base md:text-xs scale-[0.97] origin-left bg-white text-zinc-900 ' +
+    'w-full h-9 px-2 border rounded-lg text-sm bg-white text-zinc-900 ' +
     'dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-600 ' +
     'focus:outline-none focus:ring-1 focus:ring-blue-500'
 
   return (
     <>
       {showFlowReady && (
-        <div className="fixed left-3 right-3 top-[calc(4rem+0.75rem)] z-[4500] md:left-auto md:right-4 md:w-[440px]">
-          <div className="rounded-xl border border-indigo-500/40 bg-indigo-50/95 p-3 shadow-xl backdrop-blur-md dark:bg-indigo-950/90">
+        <div className="fixed left-3 right-3 bottom-5 z-[4500] md:left-auto md:right-4 md:top-20 md:bottom-auto md:w-[440px]">
+          <div className="rounded-2xl border border-indigo-500/40 bg-indigo-50/95 p-3 shadow-2xl backdrop-blur-md dark:bg-indigo-950/90">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
@@ -164,7 +172,7 @@ export function ControlPanel({
 
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
               <Button
-                className="h-8 text-xs bg-indigo-600 text-white hover:bg-indigo-700"
+                className="h-9 text-xs bg-indigo-600 text-white hover:bg-indigo-700"
                 onClick={() => {
                   onStartGeneratedFlow?.()
                   logEvent('generated_flow_started', {
@@ -172,12 +180,12 @@ export function ControlPanel({
                   })
                 }}
               >
-                ▶ Start Flow
+                ▶ Start
               </Button>
 
               <Button
                 variant="outline"
-                className="h-8 text-xs border-indigo-500 text-indigo-700 dark:text-indigo-300"
+                className="h-9 text-xs border-indigo-500 text-indigo-700 dark:text-indigo-300"
                 onClick={() => {
                   logEvent('generated_route_retry_clicked', {
                     metadata: { city, stops: generatedRouteStopCount },
@@ -185,12 +193,12 @@ export function ControlPanel({
                   void handleGenerateClick()
                 }}
               >
-                Retry Route
+                Retry
               </Button>
 
               <Button
                 variant="outline"
-                className="h-8 text-xs border-indigo-500 text-indigo-700 dark:text-indigo-300"
+                className="h-9 text-xs border-indigo-500 text-indigo-700 dark:text-indigo-300"
                 onClick={() => {
                   onHostGeneratedFlow?.()
                   logEvent('generated_flow_host_clicked', {
@@ -198,7 +206,7 @@ export function ControlPanel({
                   })
                 }}
               >
-                Host as Crawl
+                Host
               </Button>
             </div>
           </div>
@@ -206,205 +214,239 @@ export function ControlPanel({
       )}
 
       {showControlPanel && (
-        <div
-          className="
-            fixed top-16 left-0 right-0 z-[4000]
-            max-h-[calc(100vh-4rem)]
-            overflow-y-auto
-            bg-white dark:bg-zinc-950
-            border-b border-zinc-300 dark:border-zinc-700
-            px-3 py-2
-            text-xs
-            grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6
-            gap-2
-            items-center
-            rounded-b-xl
-            shadow-sm
-          "
-        >
-          <div className="space-y-0.5">
-            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Mode</Label>
-            <ToggleGroup
-              type="single"
-              value={travelMode}
-              onValueChange={handleTravelModeChange}
-              className="w-full gap-1"
-            >
-              {['walking', 'cycling', 'driving'].map((m, i) => (
-                <ToggleGroupItem
-                  key={m}
-                  value={m}
-                  className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
-                >
-                  {['🚶', '🚲', '🚗'][i]}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-
-          <div className="space-y-0.5">
-            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Marker</Label>
-            <ToggleGroup
-              type="single"
-              value={markerDisplayMode}
-              onValueChange={handleMarkerDisplayModeChange}
-              className="w-full gap-1"
-            >
-              <ToggleGroupItem
-                value="color"
-                className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+        <div className="fixed left-3 right-3 bottom-5 z-[4000] md:left-1/2 md:right-auto md:w-[720px] md:-translate-x-1/2">
+          <div className="rounded-2xl border border-zinc-300 bg-white/95 p-3 text-xs shadow-2xl backdrop-blur-md dark:border-zinc-700 dark:bg-zinc-950/95">
+            <div className="grid grid-cols-[1fr_96px] gap-2 md:grid-cols-[1.2fr_120px_120px]">
+              <select
+                value={selectedThemeId}
+                onChange={(e) => {
+                  setSelectedThemeId(e.target.value)
+                  logEvent('theme_selected', {
+                    metadata: { themeId: e.target.value, city },
+                  })
+                }}
+                className={inputBase}
+                aria-label="Theme"
               >
-                Color
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="emoji"
-                className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+                <option value="">{selectedThemeLabel}</option>
+                {themes.map((theme) => (
+                  <option key={theme.id} value={theme.id}>
+                    {theme.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={travelMode}
+                onChange={(e) => handleTravelModeChange(e.target.value)}
+                className={inputBase}
+                aria-label="Travel mode"
               >
-                Emoji
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
+                <option value="walking">🚶 {travelModeLabel}</option>
+                <option value="cycling">🚲 Bike</option>
+                <option value="driving">🚗 Drive</option>
+              </select>
 
-          <div className="space-y-0.5">
-            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Search</Label>
-            <input
-              type="text"
-              placeholder="search..."
-              value={searchTerm}
-              onChange={(e) => {
-                const val = e.target.value
-                setSearchTerm(val)
-                logEvent('search_updated', { metadata: { value: val } })
-              }}
-              className={inputBase}
-            />
-          </div>
-
-          <div className="space-y-0.5">
-            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Theme</Label>
-            <select
-              value={selectedThemeId}
-              onChange={(e) => {
-                setSelectedThemeId(e.target.value)
-                logEvent('theme_selected', { metadata: { themeId: e.target.value, city } })
-              }}
-              className={inputBase}
-            >
-              <option value="">Theme</option>
-              {themes.map((t) => (
-                <option key={t.id} value={t.id}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-0.5">
-            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Price</Label>
-            <select
-              value={selectedPrice}
-              onChange={(e) => {
-                setSelectedPrice(e.target.value)
-                logEvent('price_selected', { metadata: { price: e.target.value, city } })
-              }}
-              className={inputBase}
-            >
-              <option value="">Any</option>
-              {prices.slice(1).map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-0.5">
-            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Distance</Label>
-            <select
-              value={tightness}
-              onChange={(e) => {
-                setTightness(e.target.value as any)
-                logEvent('tightness_changed', { metadata: { tightness: e.target.value, city } })
-              }}
-              className={inputBase}
-            >
-              <option value="tight">Compact</option>
-              <option value="medium">Balanced</option>
-              <option value="loose">Spread Out</option>
-            </select>
-          </div>
-
-          <div className="space-y-0.5">
-            <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Crawl</Label>
-            <ToggleGroup
-              type="single"
-              value={isScheduled ? 'scheduled' : 'now'}
-              onValueChange={(val) => {
-                if (!val) return
-                setIsScheduled(val === 'scheduled')
-                logEvent('crawl_mode_toggled', { metadata: { mode: val, city } })
-              }}
-              className="w-full gap-1"
-            >
-              <ToggleGroupItem
-                value="now"
-                className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+              <Button
+                className="h-9 text-xs bg-blue-600 text-white hover:bg-blue-700"
+                onClick={handleGenerateClick}
               >
-                Now
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="scheduled"
-                className="flex-1 h-8 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
-              >
-                Scheduled
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
+                Generate
+              </Button>
+            </div>
 
-          {isScheduled && (
-            <>
-              <div className="space-y-0.5">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Date</Label>
-                <input
-                  type="date"
-                  value={crawlDate}
-                  onChange={(e) => {
-                    setCrawlDate(e.target.value)
-                    logEvent('crawl_date_selected', { metadata: { date: e.target.value, city } })
-                  }}
-                  className={inputBase}
-                />
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAdvancedOpen((prev) => !prev)
+                  logEvent('control_panel_advanced_toggled', {
+                    metadata: { city, open: !advancedOpen },
+                  })
+                }}
+                className="rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              >
+                {advancedOpen ? 'Hide filters' : 'Filters'}
+              </button>
+
+              <div className="truncate text-[11px] text-zinc-500 dark:text-zinc-400">
+                {selectedThemeId ? selectedThemeLabel : 'Free explore'} · {travelModeLabel} · {tightness}
               </div>
+            </div>
 
-              <div className="space-y-0.5">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Time</Label>
-                <input
-                  type="time"
-                  value={crawlTime}
-                  onChange={(e) => {
-                    setCrawlTime(e.target.value)
-                    logEvent('crawl_time_selected', { metadata: { time: e.target.value, city } })
-                  }}
-                  className={inputBase}
-                />
+            {advancedOpen && (
+              <div className="mt-3 grid max-h-[44vh] grid-cols-2 gap-2 overflow-y-auto border-t border-zinc-200 pt-3 dark:border-zinc-800 md:grid-cols-4">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                    Search
+                  </Label>
+                  <input
+                    type="text"
+                    placeholder="search..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setSearchTerm(val)
+                      logEvent('search_updated', { metadata: { value: val } })
+                    }}
+                    className={inputBase}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                    Price
+                  </Label>
+                  <select
+                    value={selectedPrice}
+                    onChange={(e) => {
+                      setSelectedPrice(e.target.value)
+                      logEvent('price_selected', {
+                        metadata: { price: e.target.value, city },
+                      })
+                    }}
+                    className={inputBase}
+                  >
+                    <option value="">Any</option>
+                    {prices.slice(1).map((price) => (
+                      <option key={price} value={price}>
+                        {price}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                    Distance
+                  </Label>
+                  <select
+                    value={tightness}
+                    onChange={(e) => {
+                      setTightness(e.target.value as any)
+                      logEvent('tightness_changed', {
+                        metadata: { tightness: e.target.value, city },
+                      })
+                    }}
+                    className={inputBase}
+                  >
+                    <option value="tight">Compact</option>
+                    <option value="medium">Balanced</option>
+                    <option value="loose">Spread Out</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                    Marker
+                  </Label>
+                  <ToggleGroup
+                    type="single"
+                    value={markerDisplayMode}
+                    onValueChange={handleMarkerDisplayModeChange}
+                    className="w-full gap-1"
+                  >
+                    <ToggleGroupItem
+                      value="color"
+                      className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+                    >
+                      Color
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="emoji"
+                      className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+                    >
+                      Emoji
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                    Crawl
+                  </Label>
+                  <ToggleGroup
+                    type="single"
+                    value={isScheduled ? 'scheduled' : 'now'}
+                    onValueChange={(val) => {
+                      if (!val) return
+                      setIsScheduled(val === 'scheduled')
+                      logEvent('crawl_mode_toggled', {
+                        metadata: { mode: val, city },
+                      })
+                    }}
+                    className="w-full gap-1"
+                  >
+                    <ToggleGroupItem
+                      value="now"
+                      className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+                    >
+                      Now
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="scheduled"
+                      className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600"
+                    >
+                      Later
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+
+                {isScheduled && (
+                  <>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                        Date
+                      </Label>
+                      <input
+                        type="date"
+                        value={crawlDate}
+                        onChange={(e) => {
+                          setCrawlDate(e.target.value)
+                          logEvent('crawl_date_selected', {
+                            metadata: { date: e.target.value, city },
+                          })
+                        }}
+                        className={inputBase}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                        Time
+                      </Label>
+                      <input
+                        type="time"
+                        value={crawlTime}
+                        onChange={(e) => {
+                          setCrawlTime(e.target.value)
+                          logEvent('crawl_time_selected', {
+                            metadata: { time: e.target.value, city },
+                          })
+                        }}
+                        className={inputBase}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                    Route
+                  </Label>
+                  <Button
+                    variant="outline"
+                    className="h-9 w-full text-xs border border-zinc-500 dark:border-zinc-600 dark:text-zinc-100"
+                    onClick={() => {
+                      onClearRoute()
+                      logEvent('route_cleared', { metadata: { city } })
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
-            </>
-          )}
-
-          <div className="space-y-1">
-            <Button
-              className="w-full h-8 text-xs border border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
-              onClick={handleGenerateClick}
-            >
-              Generate
-            </Button>
-
-            <Button
-              variant="outline"
-              className="w-full h-8 text-xs border border-zinc-500 dark:border-zinc-600 dark:text-zinc-100"
-              onClick={() => {
-                onClearRoute()
-                logEvent('route_cleared', { metadata: { city } })
-              }}
-            >
-              Clear
-            </Button>
+            )}
           </div>
         </div>
       )}
