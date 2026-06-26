@@ -252,7 +252,7 @@ export default function MapCanvas({
       )
 
       const tagsArray = normalizeSearchableList(venue.tags)
-      const tagsMatch = tagsArray.some((tag: string) =>
+      const tagsMatch = tagsArray.some((tag) =>
         tag.toLowerCase().includes(term)
       )
 
@@ -262,10 +262,11 @@ export default function MapCanvas({
 
   return (
     <div className="h-screen w-screen relative">
-      <div className="fixed bottom-3 right-3 z-[2000]">
+      <div className="fixed left-3 top-[calc(4rem+3.25rem)] z-[4590]">
         <button
+          type="button"
           onClick={() => setShowCitySelector((prev) => !prev)}
-          className="bg-black/80 text-white px-2 py-1 rounded text-xs shadow backdrop-blur-sm"
+          className="rounded-lg bg-black/80 px-3 py-2 text-xs font-medium text-white shadow-lg backdrop-blur-sm transition hover:bg-black/90"
         >
           {showCitySelector ? 'Hide Cities' : '🌆 Choose City'}
         </button>

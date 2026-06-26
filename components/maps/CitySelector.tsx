@@ -18,33 +18,40 @@ export default function CitySelector({
   return (
     <div
       className={`
-        fixed left-1/2 -translate-x-1/2 z-[3900]
-        ${panelOpen ? 'top-44' : 'top-20'}
-        bg-neutral-900/90 backdrop-blur-md
-        border border-neutral-700
-        rounded-xl shadow-xl
-        px-4 py-3
-        max-w-screen w-[95%] sm:w-auto
-        overflow-x-auto
+        fixed left-1/2 z-[3900] -translate-x-1/2
+        ${
+          panelOpen
+            ? 'bottom-[calc(env(safe-area-inset-bottom)+11.5rem)]'
+            : 'bottom-[calc(env(safe-area-inset-bottom)+3.25rem)]'
+        }
+        w-[min(calc(100vw-1.5rem),420px)]
+        rounded-2xl border border-neutral-700
+        bg-neutral-900/90 px-3 py-2
+        shadow-2xl backdrop-blur-md
+        transition-all duration-200
       `}
     >
-      <div className="flex gap-2 items-center flex-nowrap min-w-max">
-        <span className="text-sm text-neutral-400 whitespace-nowrap mr-2">
-          Select a city:
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+          City
         </span>
 
         <button
           onClick={() => onSelectCity(null)}
           className={`
-            px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition
-            ${selectedCity === null
-              ? 'bg-white text-black font-semibold'
-              : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}
+            rounded-full px-2.5 py-1 text-xs transition
+            ${
+              selectedCity === null
+                ? 'bg-white text-black font-semibold'
+                : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+            }
           `}
         >
-          🗺️ All Cities
+          All
         </button>
+      </div>
 
+      <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
         {cities.map(([slug, city]) => {
           const isActive = slug === selectedCity
 
@@ -53,10 +60,12 @@ export default function CitySelector({
               key={slug}
               onClick={() => onSelectCity(slug)}
               className={`
-                px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition
-                ${isActive
-                  ? 'bg-white text-black font-semibold'
-                  : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}
+                shrink-0 rounded-full px-3 py-1.5 text-sm transition
+                ${
+                  isActive
+                    ? 'bg-white text-black font-semibold'
+                    : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                }
               `}
             >
               {city.name}

@@ -92,7 +92,7 @@ export function ControlPanel({
   }, [hasGeneratedRoute])
 
   const showFlowReady = hasGeneratedRoute && !flowReadyCollapsed
-  const showControlPanel = !showFlowReady
+  const showControlPanel = true
 
   const selectedThemeLabel =
     themes.find((theme) => theme.id === selectedThemeId)?.label ?? 'Pick vibe'
@@ -138,7 +138,7 @@ export function ControlPanel({
   return (
     <>
       {showFlowReady && (
-        <div className="fixed left-3 right-3 bottom-5 z-[4500] md:left-auto md:right-4 md:top-20 md:bottom-auto md:w-[440px]">
+        <div className="fixed left-3 right-3 bottom-[7.25rem] z-[4500] md:left-auto md:right-4 md:top-20 md:bottom-auto md:w-[440px]">
           <div className="rounded-2xl border border-indigo-500/40 bg-indigo-50/95 p-3 shadow-2xl backdrop-blur-md dark:bg-indigo-950/90">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -170,7 +170,7 @@ export function ControlPanel({
               </button>
             </div>
 
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-3 gap-2">
               <Button
                 className="h-9 text-xs bg-indigo-600 text-white hover:bg-indigo-700"
                 onClick={() => {
@@ -214,9 +214,9 @@ export function ControlPanel({
       )}
 
       {showControlPanel && (
-        <div className="fixed left-3 right-3 bottom-5 z-[4000] md:left-1/2 md:right-auto md:w-[720px] md:-translate-x-1/2">
+        <div className="fixed left-1/2 bottom-5 z-[4000] w-[min(92vw,420px)] -translate-x-1/2 md:w-[720px]">
           <div className="rounded-2xl border border-zinc-300 bg-white/95 p-3 text-xs shadow-2xl backdrop-blur-md dark:border-zinc-700 dark:bg-zinc-950/95">
-            <div className="grid grid-cols-[1fr_96px] gap-2 md:grid-cols-[1.2fr_120px_120px]">
+            <div className="grid grid-cols-[1fr_88px] gap-2 md:grid-cols-[1.2fr_120px_120px]">
               <select
                 value={selectedThemeId}
                 onChange={(e) => {
@@ -248,7 +248,7 @@ export function ControlPanel({
               </select>
 
               <Button
-                className="h-9 text-xs bg-blue-600 text-white hover:bg-blue-700"
+                className="col-span-2 h-9 text-xs bg-blue-600 text-white hover:bg-blue-700 md:col-span-1"
                 onClick={handleGenerateClick}
               >
                 Generate
@@ -275,7 +275,7 @@ export function ControlPanel({
             </div>
 
             {advancedOpen && (
-              <div className="mt-3 grid max-h-[44vh] grid-cols-2 gap-2 overflow-y-auto border-t border-zinc-200 pt-3 dark:border-zinc-800 md:grid-cols-4">
+              <div className="mt-3 grid max-h-[36vh] grid-cols-2 gap-2 overflow-y-auto border-t border-zinc-200 pt-3 dark:border-zinc-800 md:max-h-[44vh] md:grid-cols-4">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
                     Search

@@ -90,30 +90,30 @@ export default function MapWrapper() {
   }, [])
 
   useEffect(() => {
-  if (!venues.length || !inBrowser()) return
+    if (!venues.length || !inBrowser()) return
 
-  const params = new URLSearchParams(window.location.search)
-  const routeParam = params.get('route')
+    const params = new URLSearchParams(window.location.search)
+    const routeParam = params.get('route')
 
-  if (typeof routeParam !== 'string' || routeParam.trim().length === 0) {
-    return
-  }
+    if (typeof routeParam !== 'string' || routeParam.trim().length === 0) {
+      return
+    }
 
-  const ids = routeParam
-    .split(',')
-    .map((id) => id.trim())
-    .filter(Boolean)
+    const ids = routeParam
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean)
 
-  if (ids.length === 0) return
+    if (ids.length === 0) return
 
-  const matched = ids
-    .map((id) => venues.find((v) => v.id === id || v.name === id))
-    .filter((v): v is Venue => !!v)
+    const matched = ids
+      .map((id) => venues.find((v) => v.id === id || v.name === id))
+      .filter((v): v is Venue => !!v)
 
-  if (matched.length > 0) {
-    setRoute(matched)
-  }
-}, [venues])
+    if (matched.length > 0) {
+      setRoute(matched)
+    }
+  }, [venues])
 
   const filteredVenues = useMemo(() => {
     return venues.filter((v) => {
@@ -238,17 +238,13 @@ export default function MapWrapper() {
     setRouteErrorMessage(null)
 
     const fallbackCoords: Record<string, { lat: number; lon: number }> = {
-  atl: { lat: 33.749, lon: -84.388 },
-  nyc: { lat: 40.73061, lon: -73.935242 },
-  lisbon: { lat: 38.7223, lon: -9.1393 },
-  porto: { lat: 41.1579, lon: -8.6291 },
-
-  // 🇬🇧 London
-  london: { lat: 51.5072, lon: -0.1276 },
-
-  // 🇺🇸 Los Angeles
-  la: { lat: 34.0522, lon: -118.2437 },
-}
+      atl: { lat: 33.749, lon: -84.388 },
+      nyc: { lat: 40.73061, lon: -73.935242 },
+      lisbon: { lat: 38.7223, lon: -9.1393 },
+      porto: { lat: 41.1579, lon: -8.6291 },
+      london: { lat: 51.5072, lon: -0.1276 },
+      la: { lat: 34.0522, lon: -118.2437 },
+    }
 
     const startLat = customStart?.lat ?? fallbackCoords[selectedCity]?.lat ?? 37.8
     const startLon = customStart?.lon ?? fallbackCoords[selectedCity]?.lon ?? -96.9
@@ -270,7 +266,6 @@ export default function MapWrapper() {
       let stages: any[] | undefined
       let tier: Tier = 'commit'
 
-      // ───────────────── PROMPT FLOW ─────────────────
       if (searchPrompt?.trim()) {
         const parseRes = await fetch('/api/parseprompt', {
           method: 'POST',
@@ -306,7 +301,6 @@ export default function MapWrapper() {
         }
       }
 
-      // ───────────────── THEME FLOW ─────────────────
       if (!finalRoute && selectedThemeId) {
         const themeRes = await fetch('/api/generate-theme', {
           method: 'POST',
@@ -330,7 +324,6 @@ export default function MapWrapper() {
         }
       }
 
-      // ───────────────── FREE EXPLORE ─────────────────
       if (!finalRoute) {
         const crawlRes = await fetch('/api/generate-crawl', {
           method: 'POST',
@@ -354,14 +347,12 @@ export default function MapWrapper() {
         }
       }
 
-      // ───────────────── FAILURE ─────────────────
       if (!finalRoute || finalRoute.length === 0) {
         setRoute(undefined)
         setRouteErrorMessage('We couldn’t build a crawl right now.')
         return
       }
 
-      // ───────────────── APPLY ROUTE ─────────────────
       setRoute(finalRoute)
       setRouteErrorMessage(null)
       setConfidenceTier(tierUsed)
@@ -373,7 +364,6 @@ export default function MapWrapper() {
         window.history.replaceState(null, '', url.toString())
       }
 
-      // ───────────────── MAPBOX + LOGGING ─────────────────
       const origin = { lat: finalRoute[0].lat, lng: finalRoute[0].lon }
       const destination = {
         lat: finalRoute.at(-1)!.lat,
@@ -421,17 +411,20 @@ export default function MapWrapper() {
     }
   }
 
+  const hasGeneratedRoute = !!route && route.length > 1
+
   return (
     <main className="h-screen w-screen relative overflow-hidden">
       <LeafletSetup />
+
       <button
         onClick={() => setIsPanelOpen(!isPanelOpen)}
-        className="fixed bottom-12 right-3 z-[2000] bg-black/80 text-white px-2 py-1 rounded text-xs shadow backdrop-blur-sm"
+        className="fixed left-3 top-20 z-[4600] rounded-lg bg-black/80 px-3 py-2 text-xs font-medium text-white shadow-lg backdrop-blur-sm transition hover:bg-black/90"
       >
         {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
       </button>
 
-      {isPanelOpen && (
+{isPanelOpen && (
   <ControlPanel
     city={
       selectedCity as
@@ -464,7 +457,7 @@ export default function MapWrapper() {
     setCrawlDate={setCrawlDate}
     crawlTime={crawlTime}
     setCrawlTime={setCrawlTime}
-    hasGeneratedRoute={!!route && route.length > 1}
+    hasGeneratedRoute={hasGeneratedRoute}
     generatedRouteStopCount={route?.length ?? 0}
     onStartGeneratedFlow={handleStartGeneratedFlow}
     onHostGeneratedFlow={handleHostGeneratedFlow}
@@ -472,7 +465,7 @@ export default function MapWrapper() {
 )}
 
 {routeErrorMessage && (
-  <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded shadow z-[1050] text-sm max-w-md text-center">
+  <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded shadow z-[4700] text-sm max-w-md text-center">
     {routeErrorMessage}
   </div>
 )}
