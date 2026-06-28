@@ -31,6 +31,8 @@ type Venue = {
   lon?: number | null
   instagram_handle?: string | null
   address?: string | null
+  description?: string | null
+  contact?: string[] | string | null
   booking_options?: {
     provider: string
     url: string
@@ -109,6 +111,55 @@ function getCurrentLocationForCheckIn(): Promise<GeoLocationPayload> {
   })
 }
 
+function normalizeExternalUrl(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  if (trimmed.startsWith('@')) {
+    return `https://instagram.com/${trimmed.slice(1)}`
+  }
+
+  if (
+    trimmed.includes('instagram.com/') ||
+    trimmed.includes('www.instagram.com/')
+  ) {
+    return trimmed.startsWith('http') ? trimmed : `https://${trimmed}`
+  }
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed
+  }
+
+  if (trimmed.includes('.') && !trimmed.includes(' ')) {
+    return `https://${trimmed.replace(/^\/+/, '')}`
+  }
+
+  return null
+}
+
+function getVenuePrimaryUrl(venue: Venue): string | null {
+  if (venue.instagram_handle?.trim()) {
+    return normalizeExternalUrl(
+      venue.instagram_handle.startsWith('@')
+        ? venue.instagram_handle
+        : `@${venue.instagram_handle}`
+    )
+  }
+
+  const contactValues = Array.isArray(venue.contact)
+    ? venue.contact
+    : typeof venue.contact === 'string'
+      ? [venue.contact]
+      : []
+
+  for (const value of contactValues) {
+    const url = normalizeExternalUrl(value)
+    if (url) return url
+  }
+
+  return null
+}
+
 export default function ActiveFlowCard({
   session,
   venues,
@@ -121,6 +172,8 @@ export default function ActiveFlowCard({
   const [cancelling, setCancelling] = useState(false)
   const [localProgress, setLocalProgress] = useState<ProgressRow[]>(progress)
   const [segmentMinutesByVenueId, setSegmentMinutesByVenueId] = useState<Record<string, number>>({})
+  const [expandedDescriptionVenueIds, setExpandedDescriptionVenueIds] =
+    useState<Set<string>>(new Set())
 
   const checkedVenueIds = useMemo(() => {
     return new Set(localProgress.map((row) => row.venue_id))
@@ -197,6 +250,20 @@ export default function ActiveFlowCard({
 
     loadSegmentDurations()
   }, [orderedVenues])
+
+  const toggleVenueDescription = (venueId: string) => {
+    setExpandedDescriptionVenueIds((prev) => {
+      const next = new Set(prev)
+
+      if (next.has(venueId)) {
+        next.delete(venueId)
+      } else {
+        next.add(venueId)
+      }
+
+      return next
+    })
+  }
 
   const handleCheckIn = async (venueId: string, stopIndex: number) => {
     if (flowCompleted || flowCancelled) return
@@ -439,6 +506,10 @@ export default function ActiveFlowCard({
               index > 0 &&
               typeof travelMinutes === 'number' &&
               travelMinutes > 5
+            const venueUrl = getVenuePrimaryUrl(venue)
+            const description = venue.description?.trim() ?? ''
+            const hasDescription = description.length > 0
+            const descriptionExpanded = expandedDescriptionVenueIds.has(venue.id)
 
             return (
               <div
@@ -452,14 +523,47 @@ export default function ActiveFlowCard({
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-neutral-500">
                       Stop {index + 1}
                     </p>
 
-                    <p className="mt-1 font-medium">
-                      {venue.name}
-                    </p>
+                    {venueUrl ? (
+                      <a
+                        href={venueUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block font-medium text-cyan-300 underline-offset-4 hover:text-cyan-200 hover:underline"
+                      >
+                        {venue.name}
+                      </a>
+                    ) : (
+                      <p className="mt-1 font-medium">
+                        {venue.name}
+                      </p>
+                    )}
+
+                    {hasDescription && (
+                      <div className="mt-2">
+                        <p
+                          className={`text-xs leading-5 text-neutral-400 ${
+                            descriptionExpanded ? '' : 'line-clamp-2'
+                          }`}
+                        >
+                          {description}
+                        </p>
+
+                        {description.length > 120 && (
+                          <button
+                            type="button"
+                            onClick={() => toggleVenueDescription(venue.id)}
+                            className="mt-1 text-xs font-medium text-cyan-400 hover:text-cyan-300"
+                          >
+                            {descriptionExpanded ? 'Show less' : 'Read more'}
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                     {venue.city && (
                       <p className="mt-1 text-xs text-neutral-500">
@@ -469,12 +573,13 @@ export default function ActiveFlowCard({
                   </div>
 
                   {checked ? (
-                    <div className="rounded-full border border-green-500/40 px-3 py-1 text-xs text-green-300">
+                    <div className="shrink-0 rounded-full border border-green-500/40 px-3 py-1 text-xs text-green-300">
                       ✓ Checked in
                     </div>
                   ) : (
                     <Button
                       size="sm"
+                      className="shrink-0"
                       disabled={
                         Boolean(checkingInVenueId) ||
                         flowCompleted ||

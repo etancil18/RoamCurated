@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 import ActiveFlowCard from './components/ActiveFlowCard'
+import BackToRouteButton from './components/BackToRouteButton'
 import FlowMap from './components/FlowMap'
 import FlowProgress from './components/FlowProgress'
 import FlowRouteLauncher from '@/components/flows/FlowRouteLauncher'
@@ -21,6 +22,8 @@ type Venue = {
   lat: number | null
   lon: number | null
   instagram_handle: string | null
+  contact?: string[] | string | null
+  description?: string | null
   booking_options?: {
     provider: string
     url: string
@@ -92,7 +95,7 @@ export default async function ActiveFlowPage({ params }: PageProps) {
 
   const { data: venueData, error: venueError } = await supabase
     .from('venues')
-    .select('id, name, city, address, lat, lon, instagram_handle')
+    .select('id, name, city, address, lat, lon, instagram_handle, contact, description')
     .in('id', venueIds)
 
   if (venueError) {
@@ -120,6 +123,8 @@ export default async function ActiveFlowPage({ params }: PageProps) {
       lat: venue.lat,
       lon: venue.lon,
       instagram_handle: venue.instagram_handle,
+      contact: venue.contact ?? null,
+      description: venue.description ?? null,
       booking_options:
         bookingData
           ?.filter(
@@ -165,6 +170,8 @@ export default async function ActiveFlowPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-black px-4 pb-10 text-white">
       <div className="mx-auto max-w-3xl space-y-6 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
+        <BackToRouteButton />
+
         <ActiveFlowCard
           session={normalizedSession}
           venues={venues}
