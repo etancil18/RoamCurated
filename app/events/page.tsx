@@ -35,7 +35,11 @@ const AVAILABLE_TAGS = ['music', 'rooftop', 'gallery', 'food', 'comedy']
 
 function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
   try {
-    void Promise.resolve(logEvent(eventName, metadata))
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
   } catch (error) {
     console.warn('logEvent failed:', eventName, error)
   }

@@ -1,11 +1,24 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { logEvent } from '@/lib/logEvent'
 
 type ShareProfileButtonProps = {
   username: string | null
   fullName?: string | null
   className?: string
+}
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
 }
 
 export default function ShareProfileButton({
@@ -39,6 +52,11 @@ export default function ShareProfileButton({
   async function handleShare() {
     if (!profileUrl || sharing) return
 
+    safeLogEvent('profile_share_clicked', {
+      username,
+      has_full_name: Boolean(fullName),
+    })
+
     setSharing(true)
     setCopied(false)
 
@@ -50,26 +68,56 @@ export default function ShareProfileButton({
           url: profileUrl,
         })
 
+        safeLogEvent('profile_shared_native', {
+          username,
+          has_full_name: Boolean(fullName),
+        })
+
         return
       }
 
       await navigator.clipboard.writeText(profileUrl)
       setCopied(true)
 
+      safeLogEvent('profile_share_link_copied', {
+        username,
+        has_full_name: Boolean(fullName),
+      })
+
       window.setTimeout(() => {
         setCopied(false)
       }, 2200)
     } catch (error) {
-      if ((error as Error)?.name === 'AbortError') return
+      if ((error as Error)?.name === 'AbortError') {
+        safeLogEvent('profile_share_aborted', {
+          username,
+          has_full_name: Boolean(fullName),
+        })
+        return
+      }
 
       try {
         await navigator.clipboard.writeText(profileUrl)
         setCopied(true)
 
+        safeLogEvent('profile_share_fallback_link_copied', {
+          username,
+          has_full_name: Boolean(fullName),
+        })
+
         window.setTimeout(() => {
           setCopied(false)
         }, 2200)
       } catch (clipboardError) {
+        safeLogEvent('profile_share_failed', {
+          username,
+          has_full_name: Boolean(fullName),
+          message:
+            clipboardError instanceof Error
+              ? clipboardError.message
+              : 'Failed to share profile',
+        })
+
         console.error('[ShareProfileButton] Failed to share profile:', clipboardError)
       }
     } finally {

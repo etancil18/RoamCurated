@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { logEvent } from '@/lib/logEvent'
 
 type Props = {
   eventId: string
@@ -17,6 +18,18 @@ type Props = {
       [key: string]: unknown
     }
   }) => void
+}
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
 }
 
 export default function StartFlowFromOutingButton({
@@ -36,10 +49,22 @@ export default function StartFlowFromOutingButton({
   const handleStartFlow = async () => {
     if (loading || disabled) return
 
+    safeLogEvent(existingSessionId ? 'outing_flow_resume_clicked' : 'outing_flow_start_clicked', {
+      event_id: eventId,
+      planned_outing_id: plannedOutingId,
+      existing_session_id: existingSessionId,
+    })
+
     setLoading(true)
     setError(null)
 
     if (existingSessionId) {
+      safeLogEvent('outing_flow_resume_opened', {
+        event_id: eventId,
+        planned_outing_id: plannedOutingId,
+        existing_session_id: existingSessionId,
+      })
+
       router.push(`/flow/${existingSessionId}`)
       return
     }
@@ -80,6 +105,14 @@ export default function StartFlowFromOutingButton({
           text ||
           `Could not start this flow. Server returned ${res.status}.`
 
+        safeLogEvent('outing_flow_start_failed', {
+          event_id: eventId,
+          planned_outing_id: plannedOutingId,
+          status: res.status,
+          status_text: res.statusText,
+          message,
+        })
+
         setError(message)
         return
       }
@@ -88,15 +121,34 @@ export default function StartFlowFromOutingButton({
 
       if (!sessionId || typeof sessionId !== 'string') {
         console.error('[StartFlowFromOutingButton] Missing session id:', json)
+
+        safeLogEvent('outing_flow_start_missing_session_id', {
+          event_id: eventId,
+          planned_outing_id: plannedOutingId,
+        })
+
         setError('Flow started, but no session was returned.')
         return
       }
+
+      safeLogEvent('outing_flow_started', {
+        event_id: eventId,
+        planned_outing_id: plannedOutingId,
+        session_id: sessionId,
+      })
 
       onStarted?.(json)
 
       router.push(`/flow/${sessionId}`)
     } catch (err) {
       console.error('[StartFlowFromOutingButton] Failed to start flow:', err)
+
+      safeLogEvent('outing_flow_start_error', {
+        event_id: eventId,
+        planned_outing_id: plannedOutingId,
+        message: err instanceof Error ? err.message : 'Unexpected error starting this flow.',
+      })
+
       setError('Unexpected error starting this flow.')
     } finally {
       setLoading(false)

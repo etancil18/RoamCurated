@@ -7,11 +7,26 @@ import UserCrawls from "./UserCrawls"
 import SavedProperties from "./SavedProperties"
 import RoamPassport from "./RoamPassport"
 import { supabaseBrowser } from "@/lib/supabase/client"
+import { logEvent } from "@/lib/logEvent"
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn("logEvent failed:", eventName, error)
+  }
+}
 
 export default function UserProfilePage() {
   const [username, setUsername] = useState<string | null>(null)
 
   useEffect(() => {
+    safeLogEvent("profile_page_viewed")
+
     async function loadUsername() {
       const supabase = supabaseBrowser()
 
@@ -51,6 +66,11 @@ export default function UserProfilePage() {
           {username ? (
             <Link
               href={`/u/${username}`}
+              onClick={() =>
+                safeLogEvent("profile_public_profile_clicked", {
+                  username,
+                })
+              }
               className="rounded-full border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400 hover:bg-cyan-500/20"
             >
               View Public Profile →

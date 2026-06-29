@@ -76,6 +76,15 @@ export default async function PublicUserProfilePage({ params }: Props) {
     notFound()
   }
 
+  await logPublicProfileViewed({
+    supabase,
+    viewerUserId: user?.id ?? null,
+    profileUserId: profile.id,
+    username: profile.username,
+    isOwnProfile,
+    isPublic,
+  })
+
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -402,6 +411,45 @@ export default async function PublicUserProfilePage({ params }: Props) {
       </div>
     </main>
   )
+}
+
+async function logPublicProfileViewed({
+  supabase,
+  viewerUserId,
+  profileUserId,
+  username,
+  isOwnProfile,
+  isPublic,
+}: {
+  supabase: Awaited<ReturnType<typeof createServerClient>>
+  viewerUserId: string | null
+  profileUserId: string
+  username: string | null
+  isOwnProfile: boolean
+  isPublic: boolean
+}): Promise<void> {
+  try {
+    await supabase.from('user_impressions').insert(
+      [
+        {
+          impression_type: 'public_profile_viewed',
+          user_id: viewerUserId,
+          venue_id: null,
+          crawl_id: null,
+          metadata: {
+            profile_user_id: profileUserId,
+            username,
+            is_own_profile: isOwnProfile,
+            is_public: isPublic,
+          },
+          created_at: new Date().toISOString(),
+        },
+      ],
+      { returning: 'minimal' } as any
+    )
+  } catch (error) {
+    console.warn('Failed to log public_profile_viewed:', error)
+  }
 }
 
 function Stat({

@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
+import { logEvent } from '@/lib/logEvent'
+
 type FlowPassportStickerVariant = 'stamp' | 'route'
 
 type FlowPassportStickerStop = {
@@ -23,6 +26,18 @@ type Props = {
   passportLevel?: number | string | null
   xpEarned?: number | null
   variant?: FlowPassportStickerVariant
+}
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
 }
 
 function formatDate(value?: string | null) {
@@ -93,6 +108,22 @@ export default function FlowPassportSticker({
     typeof xpEarned === 'number' && Number.isFinite(xpEarned)
       ? `XP +${xpEarned}`
       : `XP +${safeCheckedInCount * 25}`
+
+  useEffect(() => {
+    safeLogEvent('flow_passport_sticker_rendered', {
+      city,
+      variant,
+      checked_in_count: safeCheckedInCount,
+      total_stops: safeTotalStops,
+      stop_count: stops.length,
+      has_completed_at: Boolean(completedAt),
+      has_passport_level: passportLevel !== null && passportLevel !== undefined,
+      xp_earned:
+        typeof xpEarned === 'number' && Number.isFinite(xpEarned)
+          ? xpEarned
+          : safeCheckedInCount * 25,
+    })
+  }, [])
 
   if (variant === 'route') {
     return (

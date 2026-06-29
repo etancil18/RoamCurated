@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { logEvent } from '@/lib/logEvent'
 
 type RouteLinePoint = {
   lat: number
@@ -39,6 +40,14 @@ type RoutePoint = {
   stopOrder: number
 }
 
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(logEvent(eventName, { metadata }))
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
+}
+
 export default function FlowShareCard({
   city = null,
   title = null,
@@ -57,6 +66,19 @@ export default function FlowShareCard({
   const validStops = useMemo(() => {
     return displayStops.filter(hasValidStopCoordinate)
   }, [displayStops])
+
+  useEffect(() => {
+    if (variant !== 'preview') return
+
+    safeLogEvent('flow_share_card_preview_rendered', {
+      city,
+      status,
+      checked_in_count: checkedInCount ?? stops.length,
+      total_stops: totalStops ?? stops.length,
+      stop_count: stops.length,
+      valid_coordinate_count: validStops.length,
+    })
+  }, [])
 
   useEffect(() => {
     async function loadMapboxRouteLine() {
@@ -124,8 +146,30 @@ export default function FlowShareCard({
 
         if (routedLine.length >= 2) {
           setMapboxRouteLine(routedLine)
+
+          safeLogEvent('flow_share_card_route_loaded', {
+            city,
+            status,
+            variant,
+            checked_in_count: checkedInCount ?? stops.length,
+            total_stops: totalStops ?? stops.length,
+            stop_count: stops.length,
+            valid_coordinate_count: validStops.length,
+            route_point_count: routedLine.length,
+          })
         }
       } catch (error) {
+        safeLogEvent('flow_share_card_route_failed', {
+          city,
+          status,
+          variant,
+          checked_in_count: checkedInCount ?? stops.length,
+          total_stops: totalStops ?? stops.length,
+          stop_count: stops.length,
+          valid_coordinate_count: validStops.length,
+          message: error instanceof Error ? error.message : 'Unknown route error',
+        })
+
         console.warn('[FlowShareCard] Mapbox snapshot route failed:', error)
       }
     }

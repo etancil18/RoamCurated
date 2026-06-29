@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { logEvent } from '@/lib/logEvent'
 
 type Props = {
   sessionId: string
@@ -14,6 +15,18 @@ type Props = {
     xpEarned?: number
     badgeUnlocked?: string
   }) => void
+}
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
 }
 
 export default function CompleteFlowButton({
@@ -29,6 +42,10 @@ export default function CompleteFlowButton({
   const handleComplete = async () => {
     if (disabled || completed || cancelled || loading) return
 
+    safeLogEvent('complete_flow_button_clicked', {
+      session_id: sessionId,
+    })
+
     setLoading(true)
 
     try {
@@ -43,13 +60,30 @@ export default function CompleteFlowButton({
       const json = await res.json()
 
       if (!res.ok) {
+        safeLogEvent('complete_flow_failed', {
+          session_id: sessionId,
+          status: res.status,
+          error: json.error ?? null,
+        })
+
         alert(json.error ?? 'Could not complete flow.')
         return
       }
 
+      safeLogEvent('complete_flow_succeeded', {
+        session_id: sessionId,
+        xp_earned: json?.xpEarned ?? null,
+        badge_unlocked: json?.badgeUnlocked ?? null,
+      })
+
       onCompleted?.(json)
       router.refresh()
     } catch (err) {
+      safeLogEvent('complete_flow_error', {
+        session_id: sessionId,
+        message: err instanceof Error ? err.message : 'Unexpected error completing flow.',
+      })
+
       console.error('[CompleteFlowButton] Complete failed:', err)
       alert('Unexpected error completing flow.')
     } finally {

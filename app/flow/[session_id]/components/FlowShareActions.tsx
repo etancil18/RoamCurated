@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { logEvent } from '@/lib/logEvent'
 import FlowShareCard from './FlowShareCard'
 import FlowPassportSticker from './FlowPassportSticker'
@@ -133,6 +133,18 @@ export default function FlowShareActions({
   const routeSummary = checkedStops
     .map((stop) => stop.title ?? `Stop ${stop.stopOrder}`)
     .join(' → ')
+
+  useEffect(() => {
+    if (!canShareSnapshot) return
+
+    safeLogEvent('flow_share_actions_viewed', {
+      session_id: session.id,
+      city: session.city,
+      status: session.status,
+      checked_in_count: checkedInCount,
+      total_stops: totalStops,
+    })
+  }, [])
 
   const fetchSnapshotRouteLine = async () => {
     setRouteLineLoading(true)
@@ -306,6 +318,16 @@ export default function FlowShareActions({
       setExporting(true)
       setError(null)
 
+      safeLogEvent('flow_sticker_export_started', {
+        session_id: session.id,
+        city: session.city,
+        status: session.status,
+        checked_in_count: checkedInCount,
+        total_stops: totalStops,
+        sticker_variant: stickerVariant,
+        export_intent: share ? 'share' : 'save',
+      })
+
       try {
         const { toBlob } = await import('html-to-image')
 
@@ -329,6 +351,16 @@ export default function FlowShareActions({
             text: shareText,
             files: [file],
           })
+
+          safeLogEvent('flow_sticker_shared', {
+            session_id: session.id,
+            city: session.city,
+            status: session.status,
+            checked_in_count: checkedInCount,
+            total_stops: totalStops,
+            sticker_variant: stickerVariant,
+          })
+
           return
         }
 
@@ -338,8 +370,34 @@ export default function FlowShareActions({
         link.download = fileName
         link.click()
         URL.revokeObjectURL(url)
+
+        safeLogEvent(
+          share ? 'flow_sticker_share_download_fallback' : 'flow_sticker_saved',
+          {
+            session_id: session.id,
+            city: session.city,
+            status: session.status,
+            checked_in_count: checkedInCount,
+            total_stops: totalStops,
+            sticker_variant: stickerVariant,
+          }
+        )
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to export sticker')
+        const message =
+          err instanceof Error ? err.message : 'Failed to export sticker'
+
+        setError(message)
+
+        safeLogEvent('flow_sticker_export_failed', {
+          session_id: session.id,
+          city: session.city,
+          status: session.status,
+          checked_in_count: checkedInCount,
+          total_stops: totalStops,
+          sticker_variant: stickerVariant,
+          export_intent: share ? 'share' : 'save',
+          message,
+        })
       } finally {
         setExporting(false)
       }
@@ -349,6 +407,14 @@ export default function FlowShareActions({
     setExporting(true)
     setError(null)
     setSnapshotSaved(false)
+
+    safeLogEvent('flow_snapshot_save_to_profile_clicked', {
+      session_id: session.id,
+      city: session.city,
+      status: session.status,
+      checked_in_count: checkedInCount,
+      total_stops: totalStops,
+    })
 
     try {
       if (routeLine.length === 0) {
@@ -421,6 +487,14 @@ export default function FlowShareActions({
   const shareSnapshotImage = async () => {
     setExporting(true)
     setError(null)
+
+    safeLogEvent('flow_snapshot_share_clicked', {
+      session_id: session.id,
+      city: session.city,
+      status: session.status,
+      checked_in_count: checkedInCount,
+      total_stops: totalStops,
+    })
 
     try {
       if (routeLine.length === 0) {
@@ -506,6 +580,14 @@ export default function FlowShareActions({
 
   const closeSnapshotPreview = () => {
     setSnapshotOpen(false)
+
+    safeLogEvent('flow_snapshot_preview_closed', {
+      session_id: session.id,
+      city: session.city,
+      status: session.status,
+      checked_in_count: checkedInCount,
+      total_stops: totalStops,
+    })
   }
 
   if (!canShareSnapshot) return null
@@ -562,6 +644,15 @@ export default function FlowShareActions({
                 setStickerVariant('stamp')
                 setStickerExportIntent('save')
                 setStickerOpen(true)
+                safeLogEvent('flow_sticker_composer_opened', {
+                  session_id: session.id,
+                  city: session.city,
+                  status: session.status,
+                  checked_in_count: checkedInCount,
+                  total_stops: totalStops,
+                  sticker_variant: 'stamp',
+                  export_intent: 'save',
+                })
               }}
               disabled={exporting}
               className="rounded-lg border border-amber-700 bg-amber-950/40 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-900/50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -575,6 +666,15 @@ export default function FlowShareActions({
                 setStickerVariant('route')
                 setStickerExportIntent('save')
                 setStickerOpen(true)
+                safeLogEvent('flow_sticker_composer_opened', {
+                  session_id: session.id,
+                  city: session.city,
+                  status: session.status,
+                  checked_in_count: checkedInCount,
+                  total_stops: totalStops,
+                  sticker_variant: 'route',
+                  export_intent: 'save',
+                })
               }}
               disabled={exporting}
               className="rounded-lg border border-cyan-700 bg-cyan-950/40 px-4 py-2 text-sm font-medium text-cyan-200 hover:bg-cyan-900/50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -588,6 +688,15 @@ export default function FlowShareActions({
                 setStickerVariant('stamp')
                 setStickerExportIntent('share')
                 setStickerOpen(true)
+                safeLogEvent('flow_sticker_composer_opened', {
+                  session_id: session.id,
+                  city: session.city,
+                  status: session.status,
+                  checked_in_count: checkedInCount,
+                  total_stops: totalStops,
+                  sticker_variant: 'stamp',
+                  export_intent: 'share',
+                })
               }}
               disabled={exporting}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -630,7 +739,18 @@ export default function FlowShareActions({
       open={stickerOpen}
       title="Roam Passport Sticker"
       exporting={exporting}
-      onClose={() => setStickerOpen(false)}
+      onClose={() => {
+        setStickerOpen(false)
+        safeLogEvent('flow_sticker_composer_closed', {
+          session_id: session.id,
+          city: session.city,
+          status: session.status,
+          checked_in_count: checkedInCount,
+          total_stops: totalStops,
+          sticker_variant: stickerVariant,
+          export_intent: stickerExportIntent,
+        })
+      }}
       onExport={(target) =>
         exportStickerTarget(
           target,

@@ -8,6 +8,7 @@ import UberRideButton from '@/components/rideshare/UberRideButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
 import FlowShareActions from './FlowShareActions'
 import FlowVenueRatingPrompt from './FlowVenueRatingPrompt'
+import { logEvent } from '@/lib/logEvent'
 
 type ActiveFlowSession = {
   id: string
@@ -59,6 +60,18 @@ type Props = {
   session: ActiveFlowSession
   venues: Venue[]
   progress: ProgressRow[]
+}
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
 }
 
 function getCurrentLocationForCheckIn(): Promise<GeoLocationPayload> {
@@ -199,6 +212,18 @@ export default function ActiveFlowCard({
   )
 
   useEffect(() => {
+    safeLogEvent('active_flow_card_viewed', {
+      session_id: session.id,
+      city: session.city,
+      source: session.source,
+      status: session.status,
+      travel_mode: session.travel_mode,
+      stop_count: session.venue_ids.length,
+      completed_stop_count: progress.length,
+    })
+  }, [])
+
+  useEffect(() => {
     async function loadSegmentDurations() {
       if (orderedVenues.length < 2) return
 
@@ -252,6 +277,12 @@ export default function ActiveFlowCard({
   }, [orderedVenues])
 
   const toggleVenueDescription = (venueId: string) => {
+    safeLogEvent('active_flow_venue_description_toggled', {
+      session_id: session.id,
+      venue_id: venueId,
+      city: session.city,
+    })
+
     setExpandedDescriptionVenueIds((prev) => {
       const next = new Set(prev)
 
@@ -267,6 +298,13 @@ export default function ActiveFlowCard({
 
   const handleCheckIn = async (venueId: string, stopIndex: number) => {
     if (flowCompleted || flowCancelled) return
+
+    safeLogEvent('active_flow_check_in_clicked', {
+      session_id: session.id,
+      venue_id: venueId,
+      stop_index: stopIndex,
+      city: session.city,
+    })
 
     setCheckingInVenueId(venueId)
 
@@ -290,6 +328,15 @@ export default function ActiveFlowCard({
       const json = await res.json()
 
       if (!res.ok) {
+        safeLogEvent('active_flow_check_in_failed', {
+          session_id: session.id,
+          venue_id: venueId,
+          stop_index: stopIndex,
+          city: session.city,
+          status: res.status,
+          error: json.error ?? null,
+        })
+
         alert(json.error ?? 'Could not check in.')
         return
       }
@@ -311,8 +358,23 @@ export default function ActiveFlowCard({
         ]
       })
 
+      safeLogEvent('active_flow_check_in_completed', {
+        session_id: session.id,
+        venue_id: venueId,
+        stop_index: stopIndex,
+        city: session.city,
+      })
+
       router.refresh()
     } catch (err) {
+      safeLogEvent('active_flow_check_in_error', {
+        session_id: session.id,
+        venue_id: venueId,
+        stop_index: stopIndex,
+        city: session.city,
+        message: err instanceof Error ? err.message : 'Unexpected error',
+      })
+
       console.error('[ActiveFlowCard] Check-in failed:', err)
       alert(
         err instanceof Error
@@ -326,6 +388,13 @@ export default function ActiveFlowCard({
 
   const handleCompleteFlow = async () => {
     if (!allStopsChecked || flowCompleted || flowCancelled) return
+
+    safeLogEvent('active_flow_complete_clicked', {
+      session_id: session.id,
+      city: session.city,
+      completed_stop_count: completedStops,
+      total_stop_count: totalStops,
+    })
 
     setCompleting(true)
 
@@ -345,6 +414,13 @@ export default function ActiveFlowCard({
         return
       }
 
+      safeLogEvent('active_flow_completed', {
+        session_id: session.id,
+        city: session.city,
+        completed_stop_count: completedStops,
+        total_stop_count: totalStops,
+      })
+
       router.refresh()
     } catch (err) {
       console.error('[ActiveFlowCard] Complete failed:', err)
@@ -357,11 +433,24 @@ export default function ActiveFlowCard({
   const handleCancelFlow = async () => {
     if (flowCompleted || flowCancelled) return
 
+    safeLogEvent('active_flow_cancel_clicked', {
+      session_id: session.id,
+      city: session.city,
+      completed_stop_count: completedStops,
+      total_stop_count: totalStops,
+    })
+
     const confirmed = window.confirm(
       'End this active flow? Your checked-in stops will remain saved, but the flow will no longer be active.'
     )
 
-    if (!confirmed) return
+    if (!confirmed) {
+      safeLogEvent('active_flow_cancel_aborted', {
+        session_id: session.id,
+        city: session.city,
+      })
+      return
+    }
 
     setCancelling(true)
 
@@ -380,6 +469,13 @@ export default function ActiveFlowCard({
         alert(json.error ?? 'Could not cancel flow.')
         return
       }
+
+      safeLogEvent('active_flow_cancelled', {
+        session_id: session.id,
+        city: session.city,
+        completed_stop_count: completedStops,
+        total_stop_count: totalStops,
+      })
 
       router.refresh()
     } catch (err) {
@@ -533,6 +629,15 @@ export default function ActiveFlowCard({
                         href={venueUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() =>
+                          safeLogEvent('active_flow_venue_link_clicked', {
+                            session_id: session.id,
+                            venue_id: venue.id,
+                            venue_name: venue.name,
+                            stop_index: index,
+                            city: session.city,
+                          })
+                        }
                         className="mt-1 block font-medium text-cyan-300 underline-offset-4 hover:text-cyan-200 hover:underline"
                       >
                         {venue.name}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import UberRideButton from '@/components/rideshare/UberRideButton'
 import { logEvent } from '@/lib/logEvent'
 
@@ -22,6 +23,18 @@ type Props = {
   progress: ProgressRow[]
 }
 
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
+}
+
 export default function ActiveFlowRideActions({
   sessionId,
   venues,
@@ -31,6 +44,23 @@ export default function ActiveFlowRideActions({
 
   const currentVenue =
     venues.find((venue) => !checkedVenueIds.has(venue.id)) ?? null
+
+  const hasCurrentVenueCoordinates =
+    typeof currentVenue?.lat === 'number' &&
+    typeof currentVenue?.lon === 'number'
+
+  useEffect(() => {
+    if (!currentVenue || !hasCurrentVenueCoordinates) return
+
+    safeLogEvent('active_flow_ride_actions_viewed', {
+      session_id: sessionId,
+      venue_id: currentVenue.id,
+      venue_name: currentVenue.name,
+      city: currentVenue.city ?? null,
+      completed_stop_count: progress.length,
+      total_stop_count: venues.length,
+    })
+  }, [sessionId, currentVenue, hasCurrentVenueCoordinates, progress.length, venues.length])
 
   if (!currentVenue) return null
 

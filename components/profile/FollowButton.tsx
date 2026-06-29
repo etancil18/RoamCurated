@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { logEvent } from '@/lib/logEvent'
 
 type FollowButtonProps = {
   userId: string
@@ -15,6 +16,18 @@ type FollowResponse = {
   followersCount?: number
   error?: string
   details?: string
+}
+
+function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn('logEvent failed:', eventName, error)
+  }
 }
 
 export default function FollowButton({
@@ -32,6 +45,15 @@ export default function FollowButton({
 
   async function toggleFollow() {
     if (loading || disabled) return
+
+    const action = isFollowing ? 'unfollow' : 'follow'
+
+    safeLogEvent('profile_follow_button_clicked', {
+      profile_user_id: userId,
+      action,
+      initial_is_following: isFollowing,
+      followers_count: followersCount ?? null,
+    })
 
     setLoading(true)
     setError(null)
@@ -69,10 +91,23 @@ export default function FollowButton({
         setFollowersCount(json.followersCount)
       }
 
+      safeLogEvent('profile_follow_updated', {
+        profile_user_id: userId,
+        action,
+        is_following: json?.isFollowing ?? !previousIsFollowing,
+        followers_count: json?.followersCount ?? null,
+      })
+
       router.refresh()
     } catch (err) {
       setIsFollowing(previousIsFollowing)
       setFollowersCount(previousFollowersCount)
+
+      safeLogEvent('profile_follow_update_failed', {
+        profile_user_id: userId,
+        action,
+        message: err instanceof Error ? err.message : 'Failed to update follow',
+      })
 
       setError(
         err instanceof Error
