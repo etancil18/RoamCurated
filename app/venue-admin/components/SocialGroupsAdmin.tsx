@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { supabaseBrowser } from '@/lib/supabase/client'
 
 type SocialGroup = {
   id: string
@@ -25,6 +26,9 @@ type CreateSocialGroupResponse = {
   details?: string
 }
 
+const LOGO_BUCKET = 'social-group-logos'
+const MAX_LOGO_SIZE_BYTES = 5 * 1024 * 1024
+
 export default function SocialGroupsAdmin() {
   const [groups, setGroups] = useState<SocialGroup[]>([])
   const [form, setForm] = useState({
@@ -34,6 +38,9 @@ export default function SocialGroupsAdmin() {
     logo_url: '',
     owner_user_id: '',
   })
+
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
 
   const [loadingGroups, setLoadingGroups] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -45,6 +52,20 @@ export default function SocialGroupsAdmin() {
   useEffect(() => {
     loadGroups()
   }, [])
+
+  useEffect(() => {
+    if (!logoFile) {
+      setLogoPreviewUrl(null)
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(logoFile)
+    setLogoPreviewUrl(objectUrl)
+
+    return () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [logoFile])
 
   async function loadGroups() {
     setLoadingGroups(true)
@@ -70,6 +91,56 @@ export default function SocialGroupsAdmin() {
     }
   }
 
+  function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+
+    if (!file) {
+      setLogoFile(null)
+      return
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Logo must be an image file')
+      setLogoFile(null)
+      return
+    }
+
+    if (file.size > MAX_LOGO_SIZE_BYTES) {
+      setError('Logo must be smaller than 5MB')
+      setLogoFile(null)
+      return
+    }
+
+    setError(null)
+    setLogoFile(file)
+  }
+
+  async function uploadLogoFile(file: File, slug: string): Promise<string> {
+    const supabase = supabaseBrowser()
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'png'
+    const safeSlug = slugify(slug) || 'social-group'
+    const filePath = `${safeSlug}/${Date.now()}.${extension}`
+
+    const { error: uploadError } = await supabase.storage
+      .from(LOGO_BUCKET)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      })
+
+    if (uploadError) {
+      throw new Error(uploadError.message)
+    }
+
+    const { data } = supabase.storage.from(LOGO_BUCKET).getPublicUrl(filePath)
+
+    if (!data.publicUrl) {
+      throw new Error('Failed to generate logo URL')
+    }
+
+    return data.publicUrl
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
@@ -91,6 +162,10 @@ export default function SocialGroupsAdmin() {
     setSuccess(null)
 
     try {
+      const uploadedLogoUrl = logoFile
+        ? await uploadLogoFile(logoFile, slug)
+        : form.logo_url.trim() || null
+
       const res = await fetch('/api/social-groups', {
         method: 'POST',
         headers: {
@@ -100,7 +175,7 @@ export default function SocialGroupsAdmin() {
           name,
           slug,
           description: form.description.trim() || null,
-          logo_url: form.logo_url.trim() || null,
+          logo_url: uploadedLogoUrl,
           owner_user_id: form.owner_user_id.trim() || undefined,
         }),
       })
@@ -121,6 +196,8 @@ export default function SocialGroupsAdmin() {
         logo_url: '',
         owner_user_id: '',
       })
+
+      setLogoFile(null)
 
       await loadGroups()
     } catch (err) {
@@ -197,8 +274,49 @@ export default function SocialGroupsAdmin() {
           />
         </div>
 
+        <div className="space-y-3">
+          <label className="mb-1 block font-medium">Logo Upload</label>
+
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900">
+              {logoPreviewUrl || form.logo_url ? (
+                <img
+                  src={logoPreviewUrl || form.logo_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl">👥</span>
+              )}
+            </div>
+
+            <div className="flex-1">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={handleLogoFileChange}
+                className="w-full rounded border p-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              />
+
+              <p className="mt-1 text-xs text-neutral-500">
+                Upload PNG, JPG, WEBP, or GIF. Max 5MB.
+              </p>
+            </div>
+          </div>
+
+          {logoFile && (
+            <button
+              type="button"
+              onClick={() => setLogoFile(null)}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Remove selected logo
+            </button>
+          )}
+        </div>
+
         <div>
-          <label className="mb-1 block font-medium">Logo URL</label>
+          <label className="mb-1 block font-medium">Logo URL fallback</label>
           <input
             type="url"
             value={form.logo_url}
@@ -206,6 +324,9 @@ export default function SocialGroupsAdmin() {
             className="w-full rounded border p-2 dark:border-neutral-700 dark:bg-neutral-900"
             placeholder="https://example.com/logo.png"
           />
+          <p className="mt-1 text-xs text-neutral-500">
+            Optional. Used only if no logo file is uploaded.
+          </p>
         </div>
 
         <div>

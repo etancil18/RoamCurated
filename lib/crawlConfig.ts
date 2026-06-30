@@ -226,8 +226,8 @@ export const crawlThemes: CrawlTheme[] = [
   themeId: "date-night",
   name: "Date Night",
   description: "Romance, dim lights, and dessert to close the evening.",
-  stageFlow: [ ["dinner", "cocktail", "wine bar", "gallery"],
-    ["cocktail", "gallery", "music", "rooftop"],
+  stageFlow: [ ["wine bar", "gallery"],
+    ["cocktail", "dinner", "gallery", "music", "rooftop"],
     ["cocktail", "lounge", "speakeasy"],
     "dessert"
   ],

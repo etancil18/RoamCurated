@@ -17,6 +17,8 @@ import {
 
 type Tier = 'commit' | 'constrain' | 'clarify'
 
+const MIN_QUALITY_STOPS = 3
+
 function normalizeSearchableList(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) {
     return value
@@ -295,7 +297,7 @@ export default function MapWrapper() {
         })
 
         const data = await crawlRes.json()
-        if (crawlRes.ok && Array.isArray(data.route) && data.route.length > 0) {
+        if (crawlRes.ok && Array.isArray(data.route) && data.route.length >= MIN_QUALITY_STOPS) {
           finalRoute = data.route
           tierUsed = data.tier ?? tier
         }
@@ -317,7 +319,7 @@ export default function MapWrapper() {
         })
 
         const data = await themeRes.json()
-        if (themeRes.ok && Array.isArray(data.route) && data.route.length > 0) {
+        if (themeRes.ok && Array.isArray(data.route) && data.route.length >= MIN_QUALITY_STOPS) {
           finalRoute = data.route
           tierUsed = null
           setConfidenceTier(null)
@@ -340,16 +342,18 @@ export default function MapWrapper() {
         })
 
         const data = await crawlRes.json()
-        if (crawlRes.ok && Array.isArray(data.route) && data.route.length > 0) {
+        if (crawlRes.ok && Array.isArray(data.route) && data.route.length >= MIN_QUALITY_STOPS) {
           finalRoute = data.route
           tierUsed = data.tier ?? 'commit'
           setConfidenceTier(tierUsed)
         }
       }
 
-      if (!finalRoute || finalRoute.length === 0) {
+      if (!finalRoute || finalRoute.length < MIN_QUALITY_STOPS) {
         setRoute(undefined)
-        setRouteErrorMessage('We couldn’t build a crawl right now.')
+        setRouteErrorMessage(
+          'We couldn’t build a strong enough crawl nearby. Try a looser distance setting, a different start point, or another theme.'
+        )
         return
       }
 
@@ -424,70 +428,70 @@ export default function MapWrapper() {
         {isPanelOpen ? 'Hide Panel' : 'Show Panel'}
       </button>
 
-{isPanelOpen && (
-  <ControlPanel
-    city={
-      selectedCity as
-        | 'atl'
-        | 'nyc'
-        | 'lisbon'
-        | 'porto'
-        | 'london'
-        | 'la'
-        | null
-    }
-    onCityChange={setSelectedCity}
-    searchTerm={searchTerm}
-    setSearchTerm={setSearchTerm}
-    searchPrompt={searchPrompt}
-    setSearchPrompt={setSearchPrompt}
-    selectedThemeId={selectedThemeId}
-    setSelectedThemeId={setSelectedThemeId}
-    selectedPrice={selectedPrice}
-    setSelectedPrice={setSelectedPrice}
-    travelMode={travelMode}
-    setTravelMode={setTravelMode}
-    markerDisplayMode={markerDisplayMode}
-    setMarkerDisplayMode={setMarkerDisplayMode}
-    onGenerateRoute={handleGenerateRoute}
-    onClearRoute={handleClearRoute}
-    tightness={tightness}
-    setTightness={setTightness}
-    crawlDate={crawlDate}
-    setCrawlDate={setCrawlDate}
-    crawlTime={crawlTime}
-    setCrawlTime={setCrawlTime}
-    hasGeneratedRoute={hasGeneratedRoute}
-    generatedRouteStopCount={route?.length ?? 0}
-    onStartGeneratedFlow={handleStartGeneratedFlow}
-    onHostGeneratedFlow={handleHostGeneratedFlow}
-  />
-)}
+      {isPanelOpen && (
+        <ControlPanel
+          city={
+            selectedCity as
+              | 'atl'
+              | 'nyc'
+              | 'lisbon'
+              | 'porto'
+              | 'london'
+              | 'la'
+              | null
+          }
+          onCityChange={setSelectedCity}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          searchPrompt={searchPrompt}
+          setSearchPrompt={setSearchPrompt}
+          selectedThemeId={selectedThemeId}
+          setSelectedThemeId={setSelectedThemeId}
+          selectedPrice={selectedPrice}
+          setSelectedPrice={setSelectedPrice}
+          travelMode={travelMode}
+          setTravelMode={setTravelMode}
+          markerDisplayMode={markerDisplayMode}
+          setMarkerDisplayMode={setMarkerDisplayMode}
+          onGenerateRoute={handleGenerateRoute}
+          onClearRoute={handleClearRoute}
+          tightness={tightness}
+          setTightness={setTightness}
+          crawlDate={crawlDate}
+          setCrawlDate={setCrawlDate}
+          crawlTime={crawlTime}
+          setCrawlTime={setCrawlTime}
+          hasGeneratedRoute={hasGeneratedRoute}
+          generatedRouteStopCount={route?.length ?? 0}
+          onStartGeneratedFlow={handleStartGeneratedFlow}
+          onHostGeneratedFlow={handleHostGeneratedFlow}
+        />
+      )}
 
-{routeErrorMessage && (
-  <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded shadow z-[4700] text-sm max-w-md text-center">
-    {routeErrorMessage}
-  </div>
-)}
+      {routeErrorMessage && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded shadow z-[4700] text-sm max-w-md text-center">
+          {routeErrorMessage}
+        </div>
+      )}
 
-<CrawlControl
-  venues={visibleVenues}
-  route={route}
-  onRoute={setRoute}
-  selectedThemeId={selectedThemeId}
-  customStart={customStart}
-  city={
-    selectedCity as
-      | 'atl'
-      | 'nyc'
-      | 'lisbon'
-      | 'porto'
-      | 'london'
-      | 'la'
-      | null
-  }
-  onGenerateRoute={handleGenerateRoute}
-/>
+      <CrawlControl
+        venues={visibleVenues}
+        route={route}
+        onRoute={setRoute}
+        selectedThemeId={selectedThemeId}
+        customStart={customStart}
+        city={
+          selectedCity as
+            | 'atl'
+            | 'nyc'
+            | 'lisbon'
+            | 'porto'
+            | 'london'
+            | 'la'
+            | null
+        }
+        onGenerateRoute={handleGenerateRoute}
+      />
 
       {hasMounted && (
         <Suspense fallback={<div className="text-center p-4 text-white">Loading map…</div>}>

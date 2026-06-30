@@ -8,11 +8,13 @@ import {
   tagMatchScore,
 } from "@/utils/typeUtils";
 
+type SupportedCity = "nyc" | "atl" | "lisbon" | "porto" | "london" | "la";
+
 /**
  * City-specific curved distance scoring
  */
 function distanceScore(
-  city: "nyc" | "atl" | "lisbon" | "porto",
+  city: SupportedCity,
   meters: number
 ): number {
   // 🇺🇸 New York (very dense)
@@ -21,6 +23,22 @@ function distanceScore(
     if (meters < 1000) return 0.6;
     if (meters < 1500) return 0.2;
     return -meters / 1000;
+  }
+
+  // 🇬🇧 London (dense, transit/walking-friendly)
+  if (city === "london") {
+    if (meters < 600) return 1;
+    if (meters < 1200) return 0.6;
+    if (meters < 2000) return 0.2;
+    return -meters / 1200;
+  }
+
+  // 🇺🇸 Los Angeles (sprawled, looser distance tolerance)
+  if (city === "la") {
+    if (meters < 1800) return 1;
+    if (meters < 4000) return 0.6;
+    if (meters < 7000) return 0.2;
+    return -meters / 2500;
   }
 
   // 🇵🇹 Porto (compact but slightly looser than NYC)
@@ -55,7 +73,7 @@ export function computeScore(
   theme: CrawlTheme,
   origin: { lat: number; lon: number },
   lastVenue: Venue | null,
-  city: "nyc" | "atl" | "lisbon" | "porto" = "atl",
+  city: SupportedCity = "atl",
   weight?: {
     vibe?: number;
     tag?: number;
@@ -136,7 +154,7 @@ export function sortVenuesByScore(
   theme: CrawlTheme,
   origin: { lat: number; lon: number },
   lastVenue: Venue | null,
-  city: "nyc" | "atl" | "lisbon" | "porto" = "atl",
+  city: SupportedCity = "atl",
   weight?: {
     vibe?: number;
     tag?: number;

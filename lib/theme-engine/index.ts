@@ -3,6 +3,7 @@ import { themeById } from "@/lib/crawlConfig";
 import { sortVenuesByScore } from "@/lib/theme-engine/scorer-fixed";
 import { selectCandidates } from "@/lib/theme-engine/selector";
 import { generateStageFlow, resolveStageEntry } from "@/lib/theme-engine/planner-fixed";
+import { applyTransitionScore } from "@/lib/theme-engine/transitions";
 import { getDistanceMeters } from "@/utils/geoUtils";
 import { DateTime } from "luxon";
 
@@ -23,8 +24,59 @@ const CITY_DISTANCE_THRESHOLDS: Record<
   la: { tight: 1800, medium: 4000, loose: 7000 },
 };
 
+const CANDIDATE_PASSES = [
+  {
+    name: "strict",
+    relaxationLevel: "strict",
+    legMultiplier: 1,
+    radiusMultiplier: 1,
+  },
+  {
+    name: "relax-theme",
+    relaxationLevel: "relax-theme",
+    legMultiplier: 1.25,
+    radiusMultiplier: 1.15,
+  },
+  {
+    name: "relax-daypart",
+    relaxationLevel: "relax-daypart",
+    legMultiplier: 1.5,
+    radiusMultiplier: 1.3,
+  },
+  {
+    name: "relax-type",
+    relaxationLevel: "relax-type",
+    legMultiplier: 1.75,
+    radiusMultiplier: 1.5,
+  },
+] as const;
+
 function estimateTravelMinutes(distanceMeters: number): number {
   return Math.max(5, Math.round(distanceMeters / 80));
+}
+
+function normalizeStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .flatMap((item) => item.split(","))
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function venueIsEvent(venue: Venue): boolean {
+  const venueTypes = normalizeStringList(venue.type);
+  return venueTypes.includes("event") || (venue as any).liveEvent === true;
 }
 
 export interface ThemeRouteOptions {
@@ -72,11 +124,7 @@ export async function generateThemeRoute({
   );
 
   if (eventOnly) {
-    pool = pool.filter(
-      (v) =>
-        (v as any).liveEvent === true ||
-        (Array.isArray(v.type) && v.type.includes("event"))
-    );
+    pool = pool.filter((v) => venueIsEvent(v));
   }
 
   if (pool.length === 0) {
@@ -119,63 +167,87 @@ export async function generateThemeRoute({
       continue;
     }
 
-    let candidates = selectCandidates({
-      venues: pool,
-      stageType: desiredType,
-      selected: new Set(route.map((v) => v.id ?? v.name)),
-      theme,
-      stageArrivalTime: currentTime,
-      relaxedMode: relaxedTimeFiltering,
-      windowMinutes: DEFAULTS.fallbackWindowMinutes,
-      currentLat: lastLat,
-      currentLon: lastLon,
-    });
+    let sorted: Venue[] = [];
+    let matchedPassName: string | null = null;
 
-    candidates = candidates.filter((v) => {
-      const legDistance = getDistanceMeters(lastLat, lastLon, v.lat, v.lon);
-      const originDistance = getDistanceMeters(userLat, userLon, v.lat, v.lon);
+    for (const pass of CANDIDATE_PASSES) {
+      let candidates = selectCandidates({
+        venues: pool,
+        stageType: desiredType,
+        selected: new Set(route.map((v) => v.id ?? v.name)),
+        theme,
+        stageArrivalTime: currentTime,
+        relaxedMode: relaxedTimeFiltering,
+        windowMinutes: DEFAULTS.fallbackWindowMinutes,
+        currentLat: lastLat,
+        currentLon: lastLon,
+        relaxationLevel: pass.relaxationLevel,
+      });
 
-      return (
-        legDistance <= effectiveMaxDistance &&
-        originDistance <= effectiveRouteRadius
+      candidates = candidates.filter((v) => {
+        const legDistance = getDistanceMeters(lastLat, lastLon, v.lat, v.lon);
+        const originDistance = getDistanceMeters(userLat, userLon, v.lat, v.lon);
+
+        return (
+          legDistance <= effectiveMaxDistance * pass.legMultiplier &&
+          originDistance <= effectiveRouteRadius * pass.radiusMultiplier
+        );
+      });
+
+      candidates = candidates.map((v) => {
+        const base = { ...v } as any;
+        const now = new Date();
+
+        if (venueIsEvent(v)) {
+          const eventStart = new Date((v as any).starts_at ?? now);
+          const timeDiffHours =
+            Math.abs(eventStart.getTime() - now.getTime()) / 3600000;
+
+          let eventBoost = 3;
+          if (timeDiffHours <= 2) eventBoost = 5;
+          if (timeDiffHours <= 0.5) eventBoost = 7;
+
+          base._eventBoost = eventBoost;
+        }
+
+        return base;
+      });
+
+      sorted = sortVenuesByScore(
+        candidates,
+        theme,
+        { lat: lastLat, lon: lastLon },
+        route[route.length - 1] || null
       );
-    });
 
-    candidates = candidates.map((v) => {
-      const base = { ...v } as any;
-      const now = new Date();
+      sorted = sorted.map((v) => {
+        const boostedScore = (v._score ?? 0) + ((v as any)._eventBoost ?? 0);
+        return { ...v, _score: boostedScore };
+      });
 
-      if ((v as any).liveEvent || v.type?.includes("event")) {
-        const eventStart = new Date((v as any).starts_at ?? now);
-        const timeDiffHours = Math.abs(eventStart.getTime() - now.getTime()) / 3600000;
+      sorted = sorted.map((v) =>
+        applyTransitionScore(
+          v,
+          route[route.length - 1] || null,
+          desiredType
+        )
+      );
 
-        let eventBoost = 600;
-        if (timeDiffHours <= 2) eventBoost = 1000;
-        if (timeDiffHours <= 0.5) eventBoost = 1300;
+      sorted.sort((a, b) => (b._score ?? 0) - (a._score ?? 0));
 
-        base._eventBoost = eventBoost;
+      if (sorted.length > 0) {
+        matchedPassName = pass.name;
+        break;
       }
-
-      return base;
-    });
-
-    let sorted = sortVenuesByScore(
-      candidates,
-      theme,
-      { lat: lastLat, lon: lastLon },
-      route[route.length - 1] || null
-    );
-
-    sorted = sorted.map((v) => {
-      const boostedScore = (v._score ?? 0) + (v._eventBoost ?? 0);
-      return { ...v, _score: boostedScore };
-    });
-
-    sorted.sort((a, b) => (b._score ?? 0) - (a._score ?? 0));
+    }
 
     if (sorted.length === 0) {
       console.warn(`⚠️ No candidates for stage ${i} (${desiredType}). Skipping...`);
       continue;
+    }
+
+    if (matchedPassName && matchedPassName !== "strict") {
+      console.info(`🪜 Stage ${i} (${desiredType}) matched via fallback pass: ${matchedPassName}`);
     }
 
     const next = sorted[0];

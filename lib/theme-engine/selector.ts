@@ -80,6 +80,12 @@ const TYPE_MATCH_MAP: Record<string, string[]> = {
   juice: ["juice", "smoothie", "acai", "cleanse", "organic"],
 };
 
+type RelaxationLevel =
+  | "strict"
+  | "relax-theme"
+  | "relax-daypart"
+  | "relax-type";
+
 function normalizeStringList(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value
@@ -123,6 +129,7 @@ export function selectCandidates({
   windowMinutes = 90,
   currentLat,
   currentLon,
+  relaxationLevel = "strict",
 }: {
   venues: Venue[];
   stageType: string;
@@ -133,6 +140,7 @@ export function selectCandidates({
   windowMinutes?: number;
   currentLat?: number;
   currentLon?: number;
+  relaxationLevel?: RelaxationLevel;
 }): Venue[] {
   const now = DateTime.now().setZone(stageArrivalTime.zone);
   const isFutureCrawl = stageArrivalTime.toMillis() > now.toMillis();
@@ -140,6 +148,11 @@ export function selectCandidates({
     relaxedMode && isFutureCrawl
       ? Math.max(windowMinutes, 45)
       : windowMinutes;
+
+  const shouldEnforceType = relaxationLevel !== "relax-type";
+  const shouldEnforceDaypart =
+    relaxationLevel === "strict" || relaxationLevel === "relax-theme";
+  const shouldEnforceTheme = relaxationLevel === "strict";
 
   return venues.filter((v) => {
     const venueId = v.id || v.name;
@@ -158,7 +171,13 @@ export function selectCandidates({
       if (!match) return false;
     }
 
-    if (!isEventVenue && !matchesVenueType(v.type, stageType)) return false;
+    if (
+      shouldEnforceType &&
+      !isEventVenue &&
+      !matchesVenueType(v.type, stageType)
+    ) {
+      return false;
+    }
 
     const candidateArrivalTime =
       typeof currentLat === "number" && typeof currentLon === "number"
@@ -178,9 +197,19 @@ export function selectCandidates({
 
     if (!(openNow || opensSoon)) return false;
 
-    if (!daypartAllowedAtTime(v, candidateArrivalTime)) return false;
+    if (
+      shouldEnforceDaypart &&
+      !daypartAllowedAtTime(v, candidateArrivalTime)
+    ) {
+      return false;
+    }
 
-    if (!matchesThemeFilters(v, theme.filters ?? {})) return false;
+    if (
+      shouldEnforceTheme &&
+      !matchesThemeFilters(v, theme.filters ?? {})
+    ) {
+      return false;
+    }
 
     return true;
   });
