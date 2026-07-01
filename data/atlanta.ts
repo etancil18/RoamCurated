@@ -42090,7 +42090,7 @@ const atlantaData = [
     },
     "timeCategory": "evening, late",
     "energyRamp": 1,
-    "tags": "mezcal, tequila, cocktails, agave, spirits, martinis, vinyl, djs, late, mixology",
+    "tags": "mezcal, tequila, cocktails, agave, spirits, martinis, vinyl, djs, late, mixology, date, aesthetic, vibe",
     "price": "$$$",
     "duration": 1
   },

@@ -30,6 +30,33 @@ const MORNING_COMPATIBLE_VENUE_TYPES = [
   "pilates",
 ]
 
+const SOCIAL_SPORTS_DAYTIME_COMPATIBLE_TYPES = [
+  "coffee",
+  "cafe",
+  "café",
+  "bakery",
+  "breakfast",
+  "brunch",
+  "lunch",
+  "restaurant",
+  "sports bar",
+  "brewery",
+  "bar",
+  "patio",
+]
+
+const SOCIAL_SPORTS_EVENING_COMPATIBLE_TYPES = [
+  "restaurant",
+  "dinner",
+  "bar",
+  "sports bar",
+  "brewery",
+  "pub",
+  "rooftop",
+  "lounge",
+  "late night",
+]
+
 export function qualifiesForReducedBeforeSingleStopFallback(
   stops: GeneratedOutingStop[],
   context: PlanningContext
@@ -41,12 +68,12 @@ export function qualifiesForReducedBeforeSingleStopFallback(
   if (stop.phase !== "before") return false
   if (stop.metadata?.selectedPass === "emergency") return false
 
-  if (isEarlyDayBeforeEventContext(context)) {
-    return isMorningCompatibleStop(stop)
+  if (isSocialSportsBeforeEventContext(context)) {
+    return isSocialSportsCompatibleStop(stop, context)
   }
 
-  if (isSocialSportsBeforeEventContext(context)) {
-    return stop.role === "food" || stop.role === "drink"
+  if (isEarlyDayBeforeEventContext(context)) {
+    return isMorningCompatibleStop(stop)
   }
 
   if (isLateNightMusicBeforeEventContext(context)) {
@@ -69,6 +96,11 @@ export function qualifiesForDaytimeCultureReducedFullFallback(
   context: PlanningContext
 ): boolean {
   if (context.mode !== "full") return false
+
+  if (normalizeDaytimeArchetype(context.eventArchetype) === "social_sports") {
+    return qualifiesForSocialSportsReducedFullFallback(stops, context)
+  }
+
   if (context.eventArchetype !== "art" && context.eventArchetype !== "networking") {
     return false
   }
@@ -107,6 +139,84 @@ export function isEarlyDayBeforeEventContext(context: PlanningContext): boolean 
 function isSocialSportsBeforeEventContext(context: PlanningContext): boolean {
   const archetype = normalizeDaytimeArchetype(context.eventArchetype)
   return archetype === "social_sports"
+}
+
+function qualifiesForSocialSportsReducedFullFallback(
+  stops: GeneratedOutingStop[],
+  context: PlanningContext
+): boolean {
+  if (stops.length < 1) return false
+
+  const hasEmergencyStop = stops.some(
+    (stop) => stop.metadata?.selectedPass === "emergency"
+  )
+
+  if (hasEmergencyStop) return false
+
+  const timeZone = resolvePlannerTimeZone(context)
+  const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
+  const eventEndHour = getHourFractionInTimeZone(
+    context.effectiveExitAt ?? context.estimatedEndAt,
+    timeZone
+  )
+
+  const beforeStops = stops.filter((stop) => stop.phase === "before")
+  const afterStops = stops.filter((stop) => stop.phase === "after")
+
+  const hasCompatibleBeforeStop = beforeStops.some((stop) =>
+    isSocialSportsCompatibleStop(stop, context)
+  )
+  const hasCompatibleAfterStop = afterStops.some((stop) =>
+    isSocialSportsCompatibleStop(stop, context)
+  )
+
+  if (eventStartHour < 12.5) {
+    return hasCompatibleBeforeStop || hasCompatibleAfterStop
+  }
+
+  if (eventStartHour < 17) {
+    return hasCompatibleBeforeStop || hasCompatibleAfterStop
+  }
+
+  if (eventStartHour >= 17 || eventEndHour >= 17) {
+    return hasCompatibleBeforeStop || hasCompatibleAfterStop
+  }
+
+  return false
+}
+
+function isSocialSportsCompatibleStop(
+  stop: MorningTypedStop,
+  context: PlanningContext
+): boolean {
+  const timeZone = resolvePlannerTimeZone(context)
+  const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
+  const eventEndHour = getHourFractionInTimeZone(
+    context.effectiveExitAt ?? context.estimatedEndAt,
+    timeZone
+  )
+
+  if (eventStartHour < 11) {
+    return (
+      stop.role === "coffee" ||
+      isMorningCompatibleStop(stop) ||
+      stopHasAnyVenueType(stop, SOCIAL_SPORTS_DAYTIME_COMPATIBLE_TYPES)
+    )
+  }
+
+  if (eventStartHour < 17 && eventEndHour < 17) {
+    return (
+      stop.role === "food" ||
+      stop.role === "coffee" ||
+      stopHasAnyVenueType(stop, SOCIAL_SPORTS_DAYTIME_COMPATIBLE_TYPES)
+    )
+  }
+
+  return (
+    stop.role === "food" ||
+    stop.role === "drink" ||
+    stopHasAnyVenueType(stop, SOCIAL_SPORTS_EVENING_COMPATIBLE_TYPES)
+  )
 }
 
 function isLateNightMusicBeforeEventContext(context: PlanningContext): boolean {

@@ -46,6 +46,9 @@ export async function GET(req: Request) {
       source_type,
       timezone,
       is_active,
+      checkin_enabled,
+      xp_reward,
+      social_group_id,
       created_at,
       updated_at,
       ticket_link,
@@ -57,6 +60,12 @@ export async function GET(req: Request) {
         lon,
         city,
         cover
+      ),
+      social_group:social_groups (
+        id,
+        name,
+        slug,
+        logo_url
       ),
       event_interests(count)
     `
@@ -116,6 +125,9 @@ export async function GET(req: Request) {
         ends_at: ev.ends_at,
         venue_city: ev.venue?.city,
         is_active: ev.is_active,
+        checkin_enabled: ev.checkin_enabled,
+        xp_reward: ev.xp_reward,
+        social_group_id: ev.social_group_id,
         interest_count: ev.interest_count,
       }))
     )

@@ -38,6 +38,46 @@ type CandidateVenueLike = VenueRecord & {
   score: number
 }
 
+const SOCIAL_SPORTS_DAYTIME_TYPES = [
+  "coffee",
+  "cafe",
+  "café",
+  "bakery",
+  "breakfast",
+  "brunch",
+  "tea",
+  "juice",
+  "matcha",
+  "lunch",
+  "restaurant",
+  "patio",
+  "market",
+]
+
+const SOCIAL_SPORTS_GROUP_TYPES = [
+  "sports bar",
+  "bar",
+  "brewery",
+  "pub",
+  "beer garden",
+  "restaurant",
+  "lunch",
+  "brunch",
+  "casual food",
+  "patio",
+]
+
+const SOCIAL_SPORTS_BAD_MORNING_TYPES = [
+  "club",
+  "speakeasy",
+  "dive bar",
+  "late night",
+  "fine dining",
+  "spa",
+  "library",
+  "showroom",
+]
+
 export function computeSequentialCandidateScore<TCandidate extends CandidateVenueLike>(
   candidate: TCandidate,
   selectedSoFar: TCandidate[],
@@ -275,6 +315,7 @@ export function computeVenueSequenceCoherenceScore(
   score += Math.min(sharedTypes, 2) * 2
 
   score += computeCompatibleTypeFamilyBonus(previousTypes, candidateTypes, slot, context)
+  score += computeSocialSportsSequenceBonus(previousTypes, candidateTypes, slot, context)
   score -= computeSequenceClashPenalty(previousTypes, candidateTypes, previousVibes, candidateVibes)
 
   if (context.vibeTags.length > 0) {
@@ -293,7 +334,7 @@ export function computeVenueSequenceCoherenceScore(
     }
   }
 
-  return Math.max(-18, Math.min(18, score))
+  return Math.max(-18, Math.min(22, score))
 }
 
 function countSharedValues(a: string[], b: string[]): number {
@@ -380,6 +421,56 @@ function computeCompatibleTypeFamilyBonus(
   return score
 }
 
+function computeSocialSportsSequenceBonus(
+  previousTypes: string[],
+  candidateTypes: string[],
+  slot: PlanningSlot,
+  context: PlanningContext
+): number {
+  if (normalizeScoringArchetype(context.eventArchetype) !== "social_sports") {
+    return 0
+  }
+
+  const referenceHour = getHourFractionInTimeZone(
+    slot.targetArrivalAt,
+    resolvePlannerTimeZone(context)
+  )
+
+  const daytime = referenceHour < 17
+  let score = 0
+
+  const breakfastToMatchMeal =
+    hasAnyType(previousTypes, ["coffee", "cafe", "café", "bakery", "breakfast", "tea"]) &&
+    hasAnyType(candidateTypes, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub"])
+
+  const matchMealToSocial =
+    hasAnyType(previousTypes, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub"]) &&
+    hasAnyType(candidateTypes, ["sports bar", "brewery", "bar", "pub", "patio", "beer garden", "restaurant"])
+
+  const bothGroupCasual =
+    hasAnyType(previousTypes, SOCIAL_SPORTS_GROUP_TYPES) &&
+    hasAnyType(candidateTypes, SOCIAL_SPORTS_GROUP_TYPES)
+
+  const bothDaytimeCompatible =
+    hasAnyType(previousTypes, SOCIAL_SPORTS_DAYTIME_TYPES) &&
+    hasAnyType(candidateTypes, SOCIAL_SPORTS_DAYTIME_TYPES)
+
+  if (daytime && breakfastToMatchMeal) score += 10
+  if (daytime && matchMealToSocial) score += 8
+  if (daytime && bothDaytimeCompatible) score += 6
+  if (bothGroupCasual) score += 7
+
+  if (
+    daytime &&
+    hasAnyType(previousTypes, ["coffee", "breakfast", "bakery", "cafe", "café"]) &&
+    hasAnyType(candidateTypes, ["club", "speakeasy", "late night"])
+  ) {
+    score -= 14
+  }
+
+  return score
+}
+
 function computeSequenceClashPenalty(
   previousTypes: string[],
   candidateTypes: string[],
@@ -451,6 +542,10 @@ export function computeModeSpecificVenueBias(
     ) {
       return -30
     }
+  }
+
+  if (normalizeScoringArchetype(context.eventArchetype) === "social_sports") {
+    return computeSocialSportsModeSpecificVenueBias(types, slot, referenceHour)
   }
 
   if (slot.phase === "before") {
@@ -539,6 +634,98 @@ export function computeModeSpecificVenueBias(
   return 0
 }
 
+function computeSocialSportsModeSpecificVenueBias(
+  types: string[],
+  slot: PlanningSlot,
+  referenceHour: number
+): number {
+  const morning = referenceHour < 11
+  const midday = referenceHour >= 11 && referenceHour < 15
+  const afternoon = referenceHour >= 15 && referenceHour < 18
+  const evening = referenceHour >= 18
+
+  if (slot.phase === "before") {
+    if (morning) {
+      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch", "tea", "juice", "matcha"])) {
+        return 24
+      }
+      if (hasAnyType(types, ["restaurant", "lunch", "sports bar", "brewery", "pub"])) {
+        return 8
+      }
+      if (hasAnyType(types, SOCIAL_SPORTS_BAD_MORNING_TYPES)) {
+        return -24
+      }
+    }
+
+    if (midday) {
+      if (hasAnyType(types, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub", "patio"])) {
+        return 22
+      }
+      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery"])) {
+        return 8
+      }
+      if (hasAnyType(types, ["club", "speakeasy", "late night"])) {
+        return -18
+      }
+    }
+
+    if (afternoon) {
+      if (hasAnyType(types, ["lunch", "restaurant", "sports bar", "brewery", "bar", "pub", "patio"])) {
+        return 18
+      }
+      if (hasAnyType(types, ["breakfast", "spa", "library"])) {
+        return -14
+      }
+    }
+
+    if (evening) {
+      if (hasAnyType(types, ["sports bar", "brewery", "bar", "restaurant", "dinner", "pub"])) {
+        return 18
+      }
+      if (hasAnyType(types, ["spa", "library", "showroom"])) {
+        return -14
+      }
+    }
+  }
+
+  if (slot.phase === "after") {
+    if (morning || midday) {
+      if (hasAnyType(types, ["brunch", "lunch", "restaurant", "cafe", "café", "coffee", "bakery", "patio"])) {
+        return 22
+      }
+      if (hasAnyType(types, ["sports bar", "brewery", "pub", "bar", "beer garden"])) {
+        return 14
+      }
+      if (hasAnyType(types, ["club", "speakeasy", "late night", "dinner"])) {
+        return -18
+      }
+    }
+
+    if (afternoon) {
+      if (hasAnyType(types, ["sports bar", "brewery", "bar", "pub", "restaurant", "lunch", "patio"])) {
+        return 18
+      }
+      if (hasAnyType(types, ["coffee", "cafe", "café", "dessert"])) {
+        return 8
+      }
+      if (hasAnyType(types, ["spa", "library", "showroom"])) {
+        return -12
+      }
+    }
+
+    if (evening) {
+      if (hasAnyType(types, ["sports bar", "bar", "brewery", "pub", "restaurant", "dinner", "late night"])) {
+        return 18
+      }
+      if (hasAnyType(types, ["breakfast", "library", "spa"])) {
+        return -18
+      }
+    }
+  }
+
+  return 0
+}
+
 function computePhaseAwarePreferenceBias(
   candidate: Pick<VenueRecord, "type" | "tags" | "vibe">,
   slot: PlanningSlot,
@@ -561,6 +748,22 @@ function computePhaseAwarePreferenceBias(
     hasAnyType(types, ["cocktail", "wine bar", "bar", "lounge", "rooftop"])
   ) {
     score += 6
+  }
+
+  if (normalizeScoringArchetype(context.eventArchetype) === "social_sports") {
+    if (
+      slot.phase === "before" &&
+      hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch", "lunch", "restaurant"])
+    ) {
+      score += 6
+    }
+
+    if (
+      slot.phase === "after" &&
+      hasAnyType(types, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "bar", "pub", "patio"])
+    ) {
+      score += 6
+    }
   }
 
   return score
@@ -715,6 +918,9 @@ export function scoreArchetypeFit(
 
   const archetype = normalizeScoringArchetype(context.eventArchetype)
   const phase = slot?.phase ?? (context.mode === "before" ? "before" : "after")
+  const referenceHour = slot
+    ? getHourFractionInTimeZone(slot.targetArrivalAt, resolvePlannerTimeZone(context))
+    : null
 
   let score = 0
 
@@ -750,11 +956,74 @@ export function scoreArchetypeFit(
   }
 
   if (archetype === "social_sports") {
-    if (hasAnyType(types, ["sports bar", "bar", "brewery", "restaurant", "dinner", "lunch"])) {
-      score += 12
+    const morningOrMidday = referenceHour == null || referenceHour < 15
+    const daytime = referenceHour == null || referenceHour < 17
+
+    if (phase === "before") {
+      if (
+        morningOrMidday &&
+        hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch", "tea", "juice", "matcha"])
+      ) {
+        score += 18
+      }
+
+      if (
+        daytime &&
+        hasAnyType(types, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub", "patio"])
+      ) {
+        score += 14
+      }
+
+      if (
+        !daytime &&
+        hasAnyType(types, ["sports bar", "bar", "brewery", "restaurant", "dinner", "pub"])
+      ) {
+        score += 14
+      }
+    } else {
+      if (
+        daytime &&
+        hasAnyType(types, ["brunch", "lunch", "restaurant", "cafe", "café", "coffee", "bakery", "patio"])
+      ) {
+        score += 16
+      }
+
+      if (
+        hasAnyType(types, ["sports bar", "bar", "brewery", "pub", "restaurant", "casual food", "beer garden", "patio"])
+      ) {
+        score += 14
+      }
     }
 
-    if (hasAnyType(types, ["spa", "library", "showroom"])) score -= 10
+    if (
+      tags.some((tag) =>
+        [
+          "sports",
+          "soccer",
+          "match",
+          "matchday",
+          "watch party",
+          "watch-party",
+          "game day",
+          "gameday",
+          "pub",
+          "patio",
+          "group-friendly",
+          "casual",
+          "lively",
+        ].includes(tag)
+      )
+    ) {
+      score += 8
+    }
+
+    if (hasAnyType(types, SOCIAL_SPORTS_BAD_MORNING_TYPES)) {
+      score -= daytime ? 18 : 8
+    }
+
+    if (hasAnyType(types, ["spa", "library", "showroom", "fine dining"])) {
+      score -= 14
+    }
   }
 
   if (archetype === "market") {

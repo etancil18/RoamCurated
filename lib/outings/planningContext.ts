@@ -96,13 +96,22 @@ export function buildPlanningContext(
     timeZone
   )
 
-  const desiredRoles = desiredRolesFor(
-    input.mode,
-    eventArchetype,
-    startsAt,
-    effectiveExitAt,
-    timeZone,
-    leaveEarlyByHours
+  const desiredRoles = normalizeDesiredRolesForContext(
+    desiredRolesFor(
+      input.mode,
+      eventArchetype,
+      startsAt,
+      effectiveExitAt,
+      timeZone,
+      leaveEarlyByHours
+    ),
+    {
+      mode: input.mode,
+      eventArchetype,
+      startsAt,
+      effectiveExitAt,
+      timeZone,
+    }
   )
 
   const slots = buildPlanningSlots({
@@ -183,7 +192,30 @@ export function inferEventDurationMinutes(event: EventRecord): number {
     return 120
   }
 
-  if (tags.some((t) => ["game", "sports", "match"].includes(t))) return 150
+  if (
+    tags.some((t) =>
+      [
+        "game",
+        "games",
+        "sports",
+        "sport",
+        "match",
+        "matchday",
+        "soccer",
+        "football",
+        "fifa",
+        "world",
+        "cup",
+        "watch",
+        "watchparty",
+        "watch-party",
+        "tailgate",
+        "pregame",
+      ].includes(t)
+    )
+  ) {
+    return 150
+  }
 
   if (tags.some((t) => ["gallery", "art", "exhibit", "museum"].includes(t))) {
     return 90
@@ -279,7 +311,28 @@ export function inferEventArchetype(tags: string[]): string {
     return "comedy"
   }
 
-  if (tags.some((t) => ["game", "sports", "match"].includes(t))) {
+  if (
+    tags.some((t) =>
+      [
+        "game",
+        "games",
+        "sports",
+        "sport",
+        "match",
+        "matchday",
+        "soccer",
+        "football",
+        "fifa",
+        "world",
+        "cup",
+        "watch",
+        "watchparty",
+        "watch-party",
+        "tailgate",
+        "pregame",
+      ].includes(t)
+    )
+  ) {
     return "social_sports"
   }
 
@@ -355,13 +408,13 @@ function inferPlannedStartAt(
   }
 
   if (mode === "before") {
-    if (startHour < 11) return addMinutes(startsAt, -120)
-    if (startHour < 15) return addMinutes(startsAt, -120)
+    if (startHour < 11) return addMinutes(startsAt, -105)
+    if (startHour < 15) return addMinutes(startsAt, -115)
     if (startHour < 19) return addMinutes(startsAt, -105)
     return addMinutes(startsAt, -100)
   }
 
-  if (startHour < 12) return addMinutes(startsAt, -120)
+  if (startHour < 12) return addMinutes(startsAt, -105)
   if (startHour < 18) return addMinutes(startsAt, -90)
   return addMinutes(startsAt, -75)
 }
@@ -379,11 +432,13 @@ function inferPlannedEndAt(
   }
 
   if (mode === "after") {
+    if (endHour < 11) return addMinutes(estimatedEndAt, 95)
     if (endHour < 17) return addMinutes(estimatedEndAt, 120)
     if (endHour < 21) return addMinutes(estimatedEndAt, 150)
     return addMinutes(estimatedEndAt, 180)
   }
 
+  if (endHour < 11) return addMinutes(estimatedEndAt, 95)
   if (endHour < 17) return addMinutes(estimatedEndAt, 120)
   if (endHour < 21) return addMinutes(estimatedEndAt, 150)
   return addMinutes(estimatedEndAt, 180)
@@ -446,7 +501,7 @@ function buildBeforeSlots(
 
   for (let index = desiredRoles.length - 1; index >= 0; index -= 1) {
     const role = desiredRoles[index]
-    const dwellMinutes = dwellMinutesForRole(role, "before")
+    const dwellMinutes = dwellMinutesForRole(role, "before", startsAt, resolvedTimeZone, archetype)
     const departure = nextBoundary
     const arrival = addMinutes(departure, -dwellMinutes)
 
@@ -485,10 +540,22 @@ function buildAfterSlots(
   archetype = "other"
 ): PlanningSlot[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
+  const socialSportsDaytime = isSocialSportsDaytimeContext(
+    archetype,
+    estimatedEndAt,
+    resolvedTimeZone
+  )
+  const spacingMinutes = socialSportsDaytime ? 65 : 80
 
   return desiredRoles.map((role, index) => {
-    const dwellMinutes = dwellMinutesForRole(role, "after")
-    const arrival = addMinutes(estimatedEndAt, 20 + index * 80)
+    const arrival = addMinutes(estimatedEndAt, 20 + index * spacingMinutes)
+    const dwellMinutes = dwellMinutesForRole(
+      role,
+      "after",
+      arrival,
+      resolvedTimeZone,
+      archetype
+    )
     const departure = addMinutes(arrival, dwellMinutes)
 
     return {
@@ -525,7 +592,14 @@ function buildFullSlots(
 ): PlanningSlot[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
 
-  const beforeCount = desiredRoles.length >= 3 ? 2 : 1
+  const beforeCount =
+    archetype === "social_sports" &&
+    getHourFractionInTimeZone(startsAt, resolvedTimeZone) < 13
+      ? 1
+      : desiredRoles.length >= 3
+        ? 2
+        : 1
+
   const beforeRoles = desiredRoles.slice(0, beforeCount)
   const afterRoles = desiredRoles.slice(beforeCount)
 
@@ -554,7 +628,73 @@ function buildFullSlots(
   return [...beforeSlots, ...afterSlots]
 }
 
-function dwellMinutesForRole(role: StopRole, phase: SlotPhase): number {
+function normalizeDesiredRolesForContext(
+  roles: StopRole[],
+  context: {
+    mode: PlanMode
+    eventArchetype: string
+    startsAt: Date
+    effectiveExitAt: Date
+    timeZone: string
+  }
+): StopRole[] {
+  if (context.eventArchetype !== "social_sports") return roles
+
+  const startHour = getHourFractionInTimeZone(context.startsAt, context.timeZone)
+  const exitHour = getHourFractionInTimeZone(context.effectiveExitAt, context.timeZone)
+  const isMorningOrMidday = startHour < 13
+  const isDaytimeExit = exitHour < 17
+
+  if (context.mode === "before" && isMorningOrMidday) {
+    return roles.map((role, index) => {
+      if (index === 0) return role === "drink" ? "coffee" : role
+      if (role === "drink") return "food"
+      return role
+    })
+  }
+
+  if (context.mode === "after" && isDaytimeExit) {
+    return roles.map((role, index) => {
+      if (index === 0 && role === "drink") return "food"
+      if (role === "drink") return "food"
+      return role
+    })
+  }
+
+  if (context.mode === "full" && isMorningOrMidday) {
+    return roles.map((role, index) => {
+      if (index === 0) return "coffee"
+      if (role === "drink" && isDaytimeExit) return "food"
+      return role
+    })
+  }
+
+  return roles
+}
+
+function dwellMinutesForRole(
+  role: StopRole,
+  phase: SlotPhase,
+  referenceAt?: Date,
+  timeZone?: string | null,
+  archetype = "other"
+): number {
+  const resolvedTimeZone = normalizeTimeZone(timeZone)
+  const referenceHour = referenceAt
+    ? getHourFractionInTimeZone(referenceAt, resolvedTimeZone)
+    : null
+  const socialSportsDaytime =
+    archetype === "social_sports" &&
+    (referenceHour == null || referenceHour < 17)
+
+  if (socialSportsDaytime) {
+    if (role === "food") return phase === "before" ? 60 : 70
+    if (role === "drink") return phase === "before" ? 50 : 60
+    if (role === "coffee") return 35
+    if (role === "activity") return 45
+    if (role === "dessert") return 35
+  }
+
   if (role === "food") return phase === "before" ? 75 : 90
   if (role === "drink") return phase === "before" ? 60 : 90
   if (role === "coffee") return 40
@@ -572,11 +712,28 @@ function flexibleRoleForPlanningSlot(
   archetype = "other"
 ): StopRole | null {
   const daypart = getDaypart(arrival, timeZone)
+  const arrivalHour = getHourFractionInTimeZone(arrival, timeZone)
+
+  if (archetype === "social_sports") {
+    if (arrivalHour < 11) {
+      if (role === "food") return "coffee"
+      if (role === "drink") return "coffee"
+    }
+
+    if (arrivalHour < 15) {
+      if (role === "drink") return "food"
+      if (role === "coffee") return "food"
+    }
+
+    if (phase === "after" && arrivalHour < 17 && role === "drink") {
+      return "food"
+    }
+  }
 
   if (
     phase === "before" &&
     role === "food" &&
-    getHourFractionInTimeZone(arrival, timeZone) < DINNER_MINIMUM_LOCAL_HOUR
+    arrivalHour < DINNER_MINIMUM_LOCAL_HOUR
   ) {
     return "drink"
   }
@@ -620,6 +777,17 @@ function flexibleRoleFor(role: StopRole, phase: SlotPhase): StopRole | null {
   if (role === "food") return "drink"
 
   return null
+}
+
+function isSocialSportsDaytimeContext(
+  archetype: string,
+  referenceAt: Date,
+  timeZone: string
+): boolean {
+  return (
+    archetype === "social_sports" &&
+    getHourFractionInTimeZone(referenceAt, timeZone) < 17
+  )
 }
 
 function normalizeTimeZone(timeZone?: string | null): string {

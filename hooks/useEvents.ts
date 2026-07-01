@@ -9,7 +9,16 @@ type Event = {
   price_info: string | null
   description?: string | null
   is_active: boolean
+  checkin_enabled?: boolean | null
+  xp_reward?: number | null
+  social_group_id?: string | null
   interest_count?: number
+  social_group?: {
+    id?: string | null
+    name?: string | null
+    slug?: string | null
+    logo_url?: string | null
+  } | null
   venue: {
     id: string
     name: string

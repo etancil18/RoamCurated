@@ -308,6 +308,12 @@ export async function POST(
         debugPlanningContext
       )
 
+    const socialSportsSingleStopFallbackApplied =
+      qualifiesForSocialSportsSingleStopFallback(
+        generatedPlan.stops,
+        debugPlanningContext
+      )
+
     const leaveEarlyCoverageSufficient = qualifiesForLeaveEarlyCoverage(
       generatedPlan.stops,
       mode,
@@ -335,6 +341,7 @@ export async function POST(
       lateNightSingleStopFallbackApplied ||
       lateNightReducedFullFallbackApplied ||
       reducedBeforeSingleStopFallbackApplied ||
+      socialSportsSingleStopFallbackApplied ||
       leaveEarlyCoverageSufficient
         ? Math.max(generatedPlan.stops.length, 1)
         : minimumStopsForMode(mode)
@@ -374,6 +381,7 @@ export async function POST(
           lateNightSingleStopFallbackApplied,
           lateNightReducedFullFallbackApplied,
           reducedBeforeSingleStopFallbackApplied,
+          socialSportsSingleStopFallbackApplied,
           leaveEarlyCoverageSufficient,
           daytimeCultureReducedFullFallbackApplied,
           eventArchetype: generatedPlan.eventArchetype,
@@ -423,6 +431,7 @@ export async function POST(
             lateNightSingleStopFallbackApplied,
             lateNightReducedFullFallbackApplied,
             reducedBeforeSingleStopFallbackApplied,
+            socialSportsSingleStopFallbackApplied,
             leaveEarlyCoverageSufficient,
             reducedFullCoverageSufficient,
             leaveEarlyByHours,
@@ -516,6 +525,7 @@ export async function POST(
         lateNightSingleStopFallbackApplied,
         lateNightReducedFullFallbackApplied,
         reducedBeforeSingleStopFallbackApplied,
+        socialSportsSingleStopFallbackApplied,
         leaveEarlyCoverageSufficient,
         daytimeCultureReducedFullFallbackApplied,
       },
@@ -754,13 +764,8 @@ function qualifiesForLeaveEarlyCoverage(
   const afterStops = stops.filter((stop) => stop.phase === "after").length
   const beforeStops = stops.filter((stop) => stop.phase === "before").length
 
-  if (mode === "after") {
-    return afterStops >= 1
-  }
-
-  if (mode === "full") {
-    return beforeStops >= 1 && afterStops >= 1
-  }
+  if (mode === "after") return afterStops >= 1
+  if (mode === "full") return beforeStops >= 1 && afterStops >= 1
 
   return false
 }
@@ -775,6 +780,43 @@ function qualifiesForReducedFullCoverage(
   const afterStops = stops.filter((stop) => stop.phase === "after").length
 
   return beforeStops >= 1 && afterStops >= 1
+}
+
+function qualifiesForSocialSportsSingleStopFallback(
+  stops: Array<{
+    role?: string | null
+    phase?: "before" | "after" | null
+    metadata?: {
+      selectedPass?: string | null
+    } | null
+  }>,
+  context: {
+    mode: PlanMode
+    eventArchetype?: string | null
+  }
+): boolean {
+  if (context.eventArchetype !== "social_sports") return false
+  if (stops.length !== 1) return false
+
+  const stop = stops[0]
+  if (stop.metadata?.selectedPass === "emergency") return false
+
+  if (context.mode === "before") {
+    return stop.phase === "before" && (stop.role === "food" || stop.role === "drink")
+  }
+
+  if (context.mode === "after") {
+    return stop.phase === "after" && (stop.role === "food" || stop.role === "drink")
+  }
+
+  if (context.mode === "full") {
+    return (
+      (stop.phase === "before" || stop.phase === "after") &&
+      (stop.role === "food" || stop.role === "drink" || stop.role === "coffee")
+    )
+  }
+
+  return false
 }
 
 function normalizeVenueRelation(
@@ -831,9 +873,9 @@ function resolvePlannerFailureCode({
   failedToGenerateStops,
 }: {
   mode: PlanMode
-  startsAt: Date
-  estimatedEndAt: Date
-  effectiveExitAt: Date | null
+  startsAt?: Date | null
+  estimatedEndAt?: Date | null
+  effectiveExitAt?: Date | null
   timeZone: string
   generatedStopCount: number
   minimumRequiredStops: number
@@ -861,12 +903,14 @@ function isLateNightLowCoverageContext({
   effectiveExitAt,
   timeZone,
 }: {
-  startsAt: Date
-  estimatedEndAt: Date
-  effectiveExitAt: Date | null
+  startsAt?: Date | null
+  estimatedEndAt?: Date | null
+  effectiveExitAt?: Date | null
   timeZone: string
 }): boolean {
-  const effectiveEndAt = effectiveExitAt ?? estimatedEndAt
+  const effectiveEndAt = effectiveExitAt ?? estimatedEndAt ?? null
+  if (!startsAt || !effectiveEndAt) return false
+
   const startDay = getCalendarDayKey(startsAt, timeZone)
   const endDay = getCalendarDayKey(effectiveEndAt, timeZone)
   const endHour = getHourFractionInTimeZone(effectiveEndAt, timeZone)
@@ -885,6 +929,7 @@ function getSuggestedModesForPlannerFailure({
 
   if (mode === "after") return ["before", "full"]
   if (mode === "full") return ["before"]
+
   return []
 }
 
