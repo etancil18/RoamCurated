@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 
 const SNAPSHOT_BUCKET = 'flow-snapshots'
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024
 
 const ALLOWED_SOURCE_TYPES = new Set(['active_flow', 'hosted_flow'])
 const ALLOWED_STATUSES = new Set(['active', 'completed', 'cancelled', 'partial'])
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     const checkedInCount = numberValue(formData.get('checked_in_count')) ?? 0
     const totalStops = numberValue(formData.get('total_stops')) ?? 0
 
-    if (!(file instanceof File)) {
+    if (!isUploadedFile(file)) {
       return NextResponse.json(
         { error: 'Missing snapshot image file.' },
         { status: 400 }
@@ -167,6 +167,15 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
+}
+
+function isUploadedFile(value: unknown): value is Blob {
+  return (
+    value instanceof Blob &&
+    typeof value.size === 'number' &&
+    typeof value.type === 'string' &&
+    typeof value.arrayBuffer === 'function'
+  )
 }
 
 function stringValue(value: FormDataEntryValue | null): string | null {
