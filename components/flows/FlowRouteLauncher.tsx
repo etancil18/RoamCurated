@@ -25,11 +25,7 @@ type Props = {
 
 function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
   try {
-    void Promise.resolve(
-      logEvent(eventName, {
-        metadata,
-      })
-    )
+    void Promise.resolve(logEvent(eventName, { metadata }))
   } catch (error) {
     console.warn('logEvent failed:', eventName, error)
   }
@@ -65,19 +61,17 @@ export default function FlowRouteLauncher({
     }
   }
 
-  function openExternalUrl(url: string) {
-    const opened = window.open(url, '_blank', 'noopener,noreferrer')
+  function openExternalUrl(primaryUrl: string, fallbackUrl?: string) {
+    window.location.href = primaryUrl
 
-    if (!opened) {
-      window.location.href = url
+    if (fallbackUrl) {
+      window.setTimeout(() => {
+        window.open(fallbackUrl, '_blank', 'noopener,noreferrer')
+      }, 900)
     }
   }
 
-  function openGoogleMaps() {
-    if (!canLaunchRoute) return
-
-    safeLogEvent('flow_route_google_maps_clicked', baseLogMetadata())
-
+  function buildGoogleMapsWebUrl() {
     const origin = routeVenues[0]
     const destination = routeVenues[routeVenues.length - 1]
     const waypoints = routeVenues
@@ -98,7 +92,25 @@ export default function FlowRouteLauncher({
       url.searchParams.set('waypoints', waypoints)
     }
 
-    openExternalUrl(url.toString())
+    return url.toString()
+  }
+
+  function openGoogleMaps() {
+    if (!canLaunchRoute) return
+
+    safeLogEvent('flow_route_google_maps_clicked', baseLogMetadata())
+
+    const origin = routeVenues[0]
+    const destination = routeVenues[routeVenues.length - 1]
+    const directionsMode =
+      travelMode === 'cycling' ? 'bicycling' : travelMode
+
+    const appUrl =
+      `comgooglemaps://?saddr=${origin.lat},${origin.lon}` +
+      `&daddr=${destination.lat},${destination.lon}` +
+      `&directionsmode=${directionsMode}`
+
+    openExternalUrl(appUrl, buildGoogleMapsWebUrl())
   }
 
   function openAppleMaps() {
@@ -111,12 +123,17 @@ export default function FlowRouteLauncher({
     const dirFlag =
       travelMode === 'driving' ? 'd' : travelMode === 'walking' ? 'w' : 'r'
 
-    const url =
+    const appUrl =
+      `maps://?saddr=${origin.lat},${origin.lon}` +
+      `&daddr=${destination.lat},${destination.lon}` +
+      `&dirflg=${dirFlag}`
+
+    const fallbackUrl =
       `https://maps.apple.com/?saddr=${origin.lat},${origin.lon}` +
       `&daddr=${destination.lat},${destination.lon}` +
       `&dirflg=${dirFlag}`
 
-    openExternalUrl(url)
+    openExternalUrl(appUrl, fallbackUrl)
   }
 
   return (

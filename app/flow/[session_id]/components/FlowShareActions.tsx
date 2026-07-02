@@ -370,7 +370,7 @@ export default function FlowShareActions({
           throw new Error('Failed to create transparent route sticker')
         }
 
-        const fileName = `roam-route-sticker-strava-style-${session.id}.png`
+        const fileName = `roam-route-sticker-clear-style-${session.id}.png`
 
         const file = new File([blob], fileName, {
           type: 'image/png',

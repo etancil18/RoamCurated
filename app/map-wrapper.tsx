@@ -69,6 +69,12 @@ export default function MapWrapper() {
   }, [])
 
   useEffect(() => {
+  if (route && route.length > 1) {
+    setIsPanelOpen(false)
+  }
+}, [route])
+
+  useEffect(() => {
     if (!inBrowser()) return
 
     const params = new URLSearchParams(window.location.search)
@@ -491,6 +497,10 @@ export default function MapWrapper() {
             | null
         }
         onGenerateRoute={handleGenerateRoute}
+        hasGeneratedRoute={hasGeneratedRoute}
+        generatedRouteStopCount={route?.length ?? 0}
+        onStartGeneratedFlow={handleStartGeneratedFlow}
+        onHostGeneratedFlow={handleHostGeneratedFlow}
       />
 
       {hasMounted && (

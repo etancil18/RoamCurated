@@ -21,6 +21,10 @@ export type CrawlControlProps = {
   customStart?: { lat: number; lon: number } | null
   city: 'atl' | 'nyc' | 'lisbon' | 'porto' | 'london' | 'la' | null
   onGenerateRoute: () => Promise<void>
+  hasGeneratedRoute?: boolean
+  generatedRouteStopCount?: number
+  onStartGeneratedFlow?: () => void
+  onHostGeneratedFlow?: () => void
 }
 
 export default function CrawlControl({
@@ -31,6 +35,10 @@ export default function CrawlControl({
   customStart,
   city,
   onGenerateRoute,
+  hasGeneratedRoute = false,
+  generatedRouteStopCount = 0,
+  onStartGeneratedFlow,
+  onHostGeneratedFlow,
 }: CrawlControlProps) {
   const [loading, setLoading] = useState(false)
   const [modalData, setModalData] = useState({
@@ -45,19 +53,13 @@ export default function CrawlControl({
   const [showFavoritesModal, setShowFavoritesModal] = useState(false)
   const [showEventsModal, setShowEventsModal] = useState(false)
   const [showCrawlInfo, setShowCrawlInfo] = useState(false)
+  const [panelHidden, setPanelHidden] = useState(false)
 
-  const {
-    favorites,
-    loading: loadingFavorites,
-  } = useFavorites(city ?? 'atl')
+  const { favorites, loading: loadingFavorites } = useFavorites(city ?? 'atl')
 
   const {
     interested: interestedEvents,
     loading: loadingEvents,
-    error: interestError,
-    markInterest,
-    removeInterest,
-    refresh,
   } = useInterestedEvents()
 
   async function handleGenerate() {
@@ -180,65 +182,199 @@ export default function CrawlControl({
     setModalData({ target: null, options: [], index: null })
   }
 
-  const themeName = selectedThemeId ? themeById[selectedThemeId]?.description : null
+  const themeName = selectedThemeId
+    ? themeById[selectedThemeId]?.description
+    : null
+
+  const hasRoute = Array.isArray(route) && route.length > 0
+  const shouldShowPanel = !panelHidden && (hasRoute || showCrawlInfo || hasGeneratedRoute)
+  const stopCount = generatedRouteStopCount || route?.length || 0
+  const availableXp = stopCount * 25 + 100
+
+  if (panelHidden) {
+    return (
+      <>
+        <div className="fixed bottom-3 left-3 z-[2000]">
+          <button
+            onClick={() => {
+              setPanelHidden(false)
+              setShowCrawlInfo(true)
+              logEvent('crawl_control_panel_shown', {
+                metadata: { city, route_length: route?.length ?? 0 },
+              })
+            }}
+            className="rounded-full border border-white/15 bg-black/80 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm"
+          >
+            Show Panel
+          </button>
+        </div>
+
+        <ReplaceStopModal {...{ modalData, handleReplaceStop, handleRemoveStop, setModalData }} />
+        <FavoritesModal show={showFavoritesModal} favorites={favorites} loading={loadingFavorites} route={route ?? []} city={city ?? 'atl'} onInsert={handleInsertFavoriteAt} onClose={() => setShowFavoritesModal(false)} />
+        <EventsModal show={showEventsModal} interestedEvents={interestedEvents} loading={loadingEvents} route={route ?? []} city={city ?? 'atl'} onInsert={handleInsertEventAt} onClose={() => setShowEventsModal(false)} />
+      </>
+    )
+  }
 
   return (
     <>
-      {(Array.isArray(route) && route.length > 0) || showCrawlInfo ? (
-        <div className="fixed bottom-3 left-3 z-[2000] w-[45vw] max-w-xs bg-black/70 backdrop-blur-sm text-white px-2 py-2 rounded-lg shadow-lg text-xs">
-          <div className="space-y-1">
-            <h3 className="font-medium uppercase tracking-wide opacity-80">
-              Your Stops:
-            </h3>
+      {shouldShowPanel ? (
+        <div className="fixed bottom-3 left-3 z-[2000] w-[min(92vw,380px)] overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/90 text-xs text-white shadow-2xl backdrop-blur-xl">
+          <div className="bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-indigo-500/[0.08] px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
 
-            {themeName && (
-              <p className="text-[10px] text-gray-300 italic">
-                Theme: {themeName}
+                <h3 className="mt-1 text-sm font-black uppercase tracking-wide text-white">
+                  Your Stops
+                </h3>
+
+                {themeName && (
+                  <p className="mt-1 line-clamp-2 text-[11px] italic leading-5 text-white/65">
+                    {themeName}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setPanelHidden(true)
+                  logEvent('crawl_control_panel_hidden', {
+                    metadata: { city, route_length: route?.length ?? 0 },
+                  })
+                }}
+                className="rounded-full border border-white/15 bg-black/30 px-3 py-1 text-[10px] font-medium text-white/70 hover:bg-white/10"
+              >
+                Hide
+              </button>
+            </div>
+
+            {hasRoute ? (
+              <ol className="mt-3 max-h-36 space-y-1.5 overflow-y-auto">
+                {route?.map((stop, i) => (
+                  <li
+                    key={i}
+                    className="group flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-black/20 px-2.5 py-2"
+                  >
+                    <a
+                      href={stop.link || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex min-w-0 items-center gap-2 text-blue-300"
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-black text-white">
+                        {i + 1}
+                      </span>
+                      <span className="truncate">{stop.name}</span>
+                    </a>
+
+                    <button
+                      onClick={() => handleModifyStop(stop, i)}
+                      className="shrink-0 rounded-full px-1.5 text-sm text-red-400 hover:bg-red-500/10"
+                      aria-label={`Modify ${stop.name}`}
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/60">
+                Generate a route to see your stops here.
               </p>
             )}
 
-            <ol className="list-decimal pl-4 space-y-0.5 max-h-32 overflow-y-auto">
-              {route?.map((stop, i) => (
-                <li key={i} className="flex items-center justify-between gap-1 text-xs">
-                  <a
-                    href={stop.link || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 truncate max-w-[140px]"
-                  >
-                    {stop.name}
-                  </a>
+            {hasGeneratedRoute ? (
+              <div className="mt-4 rounded-2xl border border-indigo-400/30 bg-indigo-500/10 p-3 shadow-inner">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-indigo-300">
+                      Flow Ready
+                    </p>
+
+                    <p className="mt-1 text-sm font-black text-white">
+                      {stopCount} stops • +{availableXp} XP
+                    </p>
+
+                    <p className="mt-0.5 text-[11px] text-white/55">
+                      Start now, retry the route, or host it.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid grid-cols-3 gap-2">
                   <button
-                    onClick={() => handleModifyStop(stop, i)}
-                    className="text-red-400 text-[10px] ml-1"
+                    type="button"
+                    onClick={() => {
+                      onStartGeneratedFlow?.()
+                      logEvent('generated_flow_started', {
+                        metadata: { city, stops: stopCount },
+                      })
+                    }}
+                    disabled={!onStartGeneratedFlow}
+                    className="rounded-xl bg-indigo-500 px-3 py-2.5 text-[12px] font-bold text-white shadow-lg shadow-indigo-950/30 hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    ❌
+                    ▶ Start
                   </button>
-                </li>
-              ))}
-            </ol>
 
-           <div className="grid grid-cols-3 gap-2 border-t border-white/20 pt-2">
-              <button
-                onClick={handleSaveToCloud}
-                className="rounded bg-blue-500 px-3 py-2 text-[11px] font-semibold"
-              >
-                Save
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logEvent('generated_route_retry_clicked', {
+                        metadata: { city, stops: stopCount },
+                      })
+                      void handleGenerate()
+                    }}
+                    disabled={loading}
+                    className="rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-[12px] font-bold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {loading ? 'Retrying…' : 'Retry'}
+                  </button>
 
-              <button
-                onClick={() => setShowFavoritesModal(true)}
-                className="rounded bg-yellow-500 px-3 py-2 text-[11px] font-semibold text-black"
-              >
-                Favorites
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onHostGeneratedFlow?.()
+                      logEvent('generated_flow_host_clicked', {
+                        metadata: { city, stops: stopCount },
+                      })
+                    }}
+                    disabled={!onHostGeneratedFlow}
+                    className="rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-[12px] font-bold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Host
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
-              <button
-                onClick={() => setShowEventsModal(true)}
-                className="rounded bg-fuchsia-700 px-3 py-2 text-[11px] font-semibold"
-              >
-                Events
-              </button>
+            <div className="mt-4 border-t border-white/10 pt-3">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.24em] text-white/35">
+                Route Tools
+              </p>
+
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={handleSaveToCloud}
+                  className="rounded-xl bg-blue-500 px-3 py-2.5 text-[11px] font-bold text-white hover:bg-blue-400"
+                >
+                  Save
+                </button>
+
+                <button
+                  onClick={() => setShowFavoritesModal(true)}
+                  className="rounded-xl bg-yellow-400 px-3 py-2.5 text-[11px] font-bold text-black hover:bg-yellow-300"
+                >
+                  Favorites
+                </button>
+
+                <button
+                  onClick={() => setShowEventsModal(true)}
+                  className="rounded-xl bg-fuchsia-600 px-3 py-2.5 text-[11px] font-bold text-white hover:bg-fuchsia-500"
+                >
+                  Events
+                </button>
+              </div>
             </div>
           </div>
 
@@ -249,8 +385,11 @@ export default function CrawlControl({
       ) : (
         <div className="fixed bottom-3 left-3 z-[2000]">
           <button
-            onClick={() => setShowCrawlInfo(true)}
-            className="bg-black/80 text-white px-2 py-1 rounded text-xs shadow"
+            onClick={() => {
+              setShowCrawlInfo(true)
+              setPanelHidden(false)
+            }}
+            className="rounded-full bg-black/80 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm"
           >
             📋 Crawl
           </button>
