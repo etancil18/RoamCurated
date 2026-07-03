@@ -77,9 +77,12 @@ export type Database = {
         Row: {
           city: string | null
           completed_at: string | null
+          completed_stops: number
           created_at: string
           id: string
+          metadata: Json
           source: string
+          source_id: string | null
           started_at: string
           status: string
           theme_id: string | null
@@ -92,9 +95,12 @@ export type Database = {
         Insert: {
           city?: string | null
           completed_at?: string | null
+          completed_stops?: number
           created_at?: string
           id?: string
+          metadata?: Json
           source?: string
+          source_id?: string | null
           started_at?: string
           status?: string
           theme_id?: string | null
@@ -107,9 +113,12 @@ export type Database = {
         Update: {
           city?: string | null
           completed_at?: string | null
+          completed_stops?: number
           created_at?: string
           id?: string
+          metadata?: Json
           source?: string
+          source_id?: string | null
           started_at?: string
           status?: string
           theme_id?: string | null

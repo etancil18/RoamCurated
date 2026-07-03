@@ -5,9 +5,11 @@ type StartActiveFlowBody = {
   city?: string | null
   title?: string | null
   source?: string | null
+  source_id?: string | null
   venue_ids?: string[]
   theme_id?: string | null
   travel_mode?: 'walking' | 'cycling' | 'driving'
+  metadata?: Record<string, unknown> | null
 }
 
 export async function POST(req: Request) {
@@ -48,6 +50,23 @@ export async function POST(req: Request) {
       )
     }
 
+    const source =
+      typeof body.source === 'string' && body.source.trim().length > 0
+        ? body.source.trim()
+        : 'map'
+
+    const sourceId =
+      typeof body.source_id === 'string' && body.source_id.trim().length > 0
+        ? body.source_id.trim()
+        : null
+
+    const metadata =
+      body.metadata &&
+      typeof body.metadata === 'object' &&
+      !Array.isArray(body.metadata)
+        ? body.metadata
+        : {}
+
     const { data: existingActiveFlow, error: existingError } = await supabase
       .from('active_flow_sessions')
       .select('id, title, city, started_at')
@@ -74,19 +93,23 @@ export async function POST(req: Request) {
       )
     }
 
+    const insertPayload = {
+      user_id: user.id,
+      title: body.title?.trim() || 'Roam Flow',
+      city: body.city ?? null,
+      source,
+      source_id: sourceId,
+      venue_ids: venueIds,
+      theme_id: body.theme_id ?? null,
+      travel_mode: travelMode,
+      status: 'active',
+      started_at: new Date().toISOString(),
+      metadata,
+    } as any
+
     const { data: session, error: insertError } = await supabase
       .from('active_flow_sessions')
-      .insert({
-        user_id: user.id,
-        title: body.title?.trim() || 'Roam Flow',
-        city: body.city ?? null,
-        source: body.source ?? 'map',
-        venue_ids: venueIds,
-        theme_id: body.theme_id ?? null,
-        travel_mode: travelMode,
-        status: 'active',
-        started_at: new Date().toISOString(),
-      })
+      .insert(insertPayload)
       .select('*')
       .single()
 
@@ -102,6 +125,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         session,
+        redirectTo: `/flow/${session.id}`,
       },
       { status: 201 }
     )

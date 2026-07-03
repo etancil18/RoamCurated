@@ -71,21 +71,21 @@ const DEFAULT_PER_STOP_MINUTES = 45
 const DEFAULT_TRANSITION_MINUTES = 8
 
 const DEFAULT_TITLE_BY_THEME: Record<string, string> = {
-  dateNight: 'Date Night',
-  nightOut: 'Night Out',
-  morningFlow: 'Easy Morning',
-  soloExplorer: 'Solo Explore',
+  dateNight: 'Date Night Flow',
+  nightOut: 'Night Out Flow',
+  morningFlow: 'Morning Reset',
+  soloExplorer: 'Solo Local Loop',
 }
 
 const DEFAULT_SUBTITLE_BY_THEME: Record<string, string> = {
   dateNight:
-    'A polished sequence for drinks, dinner, and an easy final stop.',
+    'A low-friction evening sequence built around dinner, drinks, and a natural close.',
   nightOut:
-    'Start casual, build energy, and end somewhere lively nearby.',
+    'A higher-energy route that starts grounded and builds toward a livelier finish.',
   morningFlow:
-    'Coffee, a light reset, and an easy local flow to start the day.',
+    'A contextual morning route for coffee, movement, browsing, and an easy local reset.',
   soloExplorer:
-    'A flexible local route for browsing, coffee, and a good solo stop.',
+    'A flexible route for exploring nearby without overcommitting your day.',
 }
 
 export function buildCrawlVM(
@@ -124,6 +124,9 @@ export function buildCrawlVM(
     cleanText(crawl.metadata?.bestTimeLabel) ||
     inferBestTimeLabel(theme, rawStops)
 
+  const sequenceLabel = inferSequenceLabel(rawStops)
+  const confidenceLabel = inferConfidenceLabel(rawStops, totalWalkMinutes)
+
   const title =
     cleanText(crawl.title) ||
     options.titleOverrides?.[theme] ||
@@ -132,6 +135,7 @@ export function buildCrawlVM(
 
   const subtitle =
     options.subtitleOverrides?.[theme] ||
+    buildContextualSubtitle(theme, rawStops, sequenceLabel) ||
     DEFAULT_SUBTITLE_BY_THEME[theme] ||
     buildSubtitleFromTheme(theme, rawStops.length)
 
@@ -140,6 +144,8 @@ export function buildCrawlVM(
     estimatedDurationLabel,
     totalWalkLabel,
     bestTimeLabel,
+    sequenceLabel,
+    confidenceLabel,
   })
 
   return {
@@ -148,7 +154,7 @@ export function buildCrawlVM(
     title,
     subtitle,
     chips,
-    ctaLabel: 'View Route',
+    ctaLabel: 'Start Flow',
     href: cleanText(crawl.href) || undefined,
     stops,
     totalStopsLabel: formatStopCountLabel(rawStops.length),
@@ -181,7 +187,8 @@ function buildStopVM(stop: CrawlStopLike, index: number): CrawlStopVM {
     order: index + 1,
     venueId,
     venueName,
-    venueHref: cleanText(stop.venue?.link) || (venueId ? `/venue-profile/${venueId}` : '#'),
+    venueHref:
+      cleanText(stop.venue?.link) || (venueId ? `/venue-profile/${venueId}` : '#'),
     description: cleanDescription(stop.venue?.description),
     stageLabel: humanizeStageLabel({
       matchedType,
@@ -203,29 +210,27 @@ function buildChips({
   estimatedDurationLabel,
   totalWalkLabel,
   bestTimeLabel,
+  sequenceLabel,
+  confidenceLabel,
 }: {
   stopCount: number
   estimatedDurationLabel: string | null
   totalWalkLabel: string | null
   bestTimeLabel: string | null
+  sequenceLabel: string | null
+  confidenceLabel: string | null
 }) {
   const chips: string[] = []
 
   chips.push(formatStopCountLabel(stopCount))
 
-  if (estimatedDurationLabel) {
-    chips.push(estimatedDurationLabel)
-  }
+  if (estimatedDurationLabel) chips.push(estimatedDurationLabel)
+  if (totalWalkLabel) chips.push(totalWalkLabel)
+  if (bestTimeLabel) chips.push(bestTimeLabel)
+  if (sequenceLabel) chips.push(sequenceLabel)
+  if (confidenceLabel) chips.push(confidenceLabel)
 
-  if (totalWalkLabel) {
-    chips.push(totalWalkLabel)
-  }
-
-  if (bestTimeLabel) {
-    chips.push(bestTimeLabel)
-  }
-
-  return chips.slice(0, 4)
+  return chips.slice(0, 5)
 }
 
 function normalizeTheme(theme: string | null | undefined) {
@@ -260,33 +265,35 @@ function humanizeStageLabel({
 
   const value = (matchedType || desiredType || stageType || '').toLowerCase()
 
-  if (!value) {
-    return index === 0 ? 'Start' : 'Next stop'
+  if (!value) return index === 0 ? 'Start' : 'Next stop'
+
+  if (matchesAny(value, ['coffee', 'cafe', 'café', 'bakery', 'tea'])) {
+    return index === 0 ? 'Easy start' : 'Coffee stop'
   }
 
-  if (matchesAny(value, ['coffee', 'cafe', 'café', 'bakery'])) {
-    return index === 0 ? 'Coffee start' : 'Coffee stop'
-  }
-
-  if (matchesAny(value, ['restaurant', 'dinner', 'kitchen'])) {
-    return 'Dinner'
-  }
+  if (matchesAny(value, ['breakfast', 'brunch'])) return 'Morning bite'
+  if (matchesAny(value, ['lunch'])) return 'Lunch stop'
+  if (matchesAny(value, ['restaurant', 'dinner', 'kitchen'])) return 'Meal stop'
 
   if (matchesAny(value, ['bar', 'wine bar', 'cocktail', 'pub', 'brewery'])) {
-    return index === 0 ? 'Drinks start' : 'Drinks'
+    return index === 0 ? 'Drinks start' : 'Social stop'
+  }
+
+  if (matchesAny(value, ['club', 'dance', 'speakeasy', 'lounge'])) {
+    return 'Energy build'
   }
 
   if (matchesAny(value, ['gallery', 'museum', 'shop', 'retail', 'lifestyle'])) {
-    return 'Browse'
+    return 'Browse stop'
   }
 
-  if (matchesAny(value, ['fitness', 'yoga', 'spa', 'wellness'])) {
-    return 'Reset'
+  if (matchesAny(value, ['park', 'garden', 'market'])) return 'Wander stop'
+
+  if (matchesAny(value, ['fitness', 'yoga', 'spa', 'wellness', 'pilates'])) {
+    return 'Reset stop'
   }
 
-  if (matchesAny(value, ['dessert', 'ice cream'])) {
-    return 'Sweet stop'
-  }
+  if (matchesAny(value, ['dessert', 'ice cream', 'bakery'])) return 'Sweet close'
 
   return sentenceCase(value)
 }
@@ -300,24 +307,22 @@ function humanizeTypeLabel(type: string) {
   if (value === 'restaurant') return 'Restaurant'
   if (value === 'lifestyle') return 'Lifestyle'
   if (value === 'fitness') return 'Fitness'
+  if (value === 'speakeasy') return 'Speakeasy'
+  if (value === 'random gem') return 'Local gem'
 
   return sentenceCase(value)
 }
 
 function inferBestTimeLabel(theme: string, stops: CrawlStopLike[]) {
-  if (theme === 'morningFlow') return 'Best in the morning'
+  if (theme === 'morningFlow') return 'Best this morning'
   if (theme === 'dateNight') return 'Best after 6 PM'
-  if (theme === 'nightOut') return 'Best later in the evening'
-  if (theme === 'soloExplorer') return 'Good anytime'
+  if (theme === 'nightOut') return 'Best later tonight'
+  if (theme === 'soloExplorer') return 'Good daytime flow'
 
-  const types = stops
-    .map((stop) =>
-      cleanText(stop.matchedType || stop.desiredType || stop.stageType)?.toLowerCase()
-    )
-    .filter((value): value is string => Boolean(value))
+  const types = getStopTypes(stops)
 
   if (types.some((value) => matchesAny(value, ['coffee', 'cafe', 'café', 'bakery']))) {
-    return 'Best earlier in the day'
+    return 'Best earlier today'
   }
 
   if (
@@ -326,6 +331,115 @@ function inferBestTimeLabel(theme: string, stops: CrawlStopLike[]) {
     )
   ) {
     return 'Best after 6 PM'
+  }
+
+  return null
+}
+
+function inferSequenceLabel(stops: CrawlStopLike[]) {
+  const types = getStopTypes(stops)
+
+  if (types.length < 2) return null
+
+  const hasCoffee = types.some((type) =>
+    matchesAny(type, ['coffee', 'cafe', 'café', 'bakery', 'breakfast'])
+  )
+  const hasMeal = types.some((type) =>
+    matchesAny(type, ['brunch', 'lunch', 'dinner', 'restaurant'])
+  )
+  const hasDrink = types.some((type) =>
+    matchesAny(type, ['bar', 'cocktail', 'wine bar', 'brewery', 'lounge'])
+  )
+  const hasBrowse = types.some((type) =>
+    matchesAny(type, ['gallery', 'museum', 'bookstore', 'lifestyle', 'park'])
+  )
+  const hasReset = types.some((type) =>
+    matchesAny(type, ['fitness', 'yoga', 'spa', 'wellness'])
+  )
+
+  if (hasCoffee && hasBrowse) return 'Low-pressure sequence'
+  if (hasCoffee && hasMeal) return 'Natural day build'
+  if (hasMeal && hasDrink) return 'Meal → drinks'
+  if (hasReset && hasCoffee) return 'Reset → reward'
+  if (hasBrowse && hasMeal) return 'Explore → eat'
+  if (hasDrink) return 'Social sequence'
+
+  return 'Contextual route'
+}
+
+function inferConfidenceLabel(stops: CrawlStopLike[], totalWalkMinutes: number) {
+  if (stops.length >= 3 && totalWalkMinutes > 0 && totalWalkMinutes <= 25) {
+    return 'Tight route'
+  }
+
+  if (stops.length >= 2 && totalWalkMinutes > 0 && totalWalkMinutes <= 40) {
+    return 'Walkable flow'
+  }
+
+  if (stops.length >= 2) return 'Flexible route'
+
+  return null
+}
+
+function buildContextualSubtitle(
+  theme: string,
+  stops: CrawlStopLike[],
+  sequenceLabel: string | null
+) {
+  const types = getStopTypes(stops)
+
+  const hasCoffee = types.some((type) =>
+    matchesAny(type, ['coffee', 'cafe', 'café', 'bakery', 'breakfast'])
+  )
+  const hasMeal = types.some((type) =>
+    matchesAny(type, ['brunch', 'lunch', 'dinner', 'restaurant'])
+  )
+  const hasDrink = types.some((type) =>
+    matchesAny(type, ['bar', 'cocktail', 'wine bar', 'brewery', 'lounge'])
+  )
+  const hasBrowse = types.some((type) =>
+    matchesAny(type, ['gallery', 'museum', 'bookstore', 'lifestyle', 'park'])
+  )
+  const hasReset = types.some((type) =>
+    matchesAny(type, ['fitness', 'yoga', 'spa', 'wellness'])
+  )
+
+  if (theme === 'morningFlow') {
+    if (hasReset && hasCoffee) {
+      return 'Start with a reset, add coffee, then keep the morning light and local.'
+    }
+
+    if (hasCoffee && hasBrowse) {
+      return 'A low-pressure morning route for coffee, browsing, and getting oriented.'
+    }
+  }
+
+  if (theme === 'dateNight') {
+    if (hasMeal && hasDrink) {
+      return 'A clean evening arc: eat well, shift into drinks, and avoid overthinking the plan.'
+    }
+
+    return 'A polished nearby route for a better-than-random evening out.'
+  }
+
+  if (theme === 'nightOut') {
+    if (hasMeal && hasDrink) {
+      return 'Start grounded with food, then build into a more social second half.'
+    }
+
+    return 'A livelier local sequence designed to build energy without breaking the route.'
+  }
+
+  if (theme === 'soloExplorer') {
+    if (hasCoffee && hasBrowse) {
+      return 'An easy solo route with enough structure to get moving and enough flexibility to linger.'
+    }
+
+    return 'A flexible local loop for exploring nearby on your own terms.'
+  }
+
+  if (sequenceLabel) {
+    return `${sequenceLabel} built from nearby stops that make sense together.`
   }
 
   return null
@@ -425,6 +539,14 @@ function estimateWalkMinutes(distanceMeters: number) {
 
   const rawMinutes = distanceMeters / 80
   return Math.max(1, Math.round(rawMinutes))
+}
+
+function getStopTypes(stops: CrawlStopLike[]) {
+  return stops
+    .map((stop) =>
+      cleanText(stop.matchedType || stop.desiredType || stop.stageType)?.toLowerCase()
+    )
+    .filter((value): value is string => Boolean(value))
 }
 
 function positiveIntOrNull(value: number | null | undefined) {

@@ -5,6 +5,24 @@ type CompleteActiveFlowBody = {
   session_id?: string
 }
 
+function getCompletionBonus(source: string | null | undefined) {
+  if (source === 'property_guide' || source === 'property_crawl') return 150
+  if (source === 'property_event_journey' || source === 'event_journey') return 125
+  return 100
+}
+
+function getBadgeUnlocked(source: string | null | undefined) {
+  if (source === 'property_guide' || source === 'property_crawl') {
+    return 'Stay Explorer'
+  }
+
+  if (source === 'property_event_journey' || source === 'event_journey') {
+    return 'Event Explorer'
+  }
+
+  return 'Flow Finisher'
+}
+
 export async function POST(req: Request) {
   try {
     const supabase = await createServerClient()
@@ -33,7 +51,9 @@ export async function POST(req: Request) {
 
     const { data: session, error: sessionError } = await supabase
       .from('active_flow_sessions')
-      .select('id, user_id, venue_ids, status, completed_at')
+      .select(
+        'id, user_id, venue_ids, status, completed_at, source, source_id, title, city, metadata, completed_stops'
+      )
       .eq('id', sessionId)
       .eq('user_id', user.id)
       .maybeSingle()
@@ -117,6 +137,10 @@ export async function POST(req: Request) {
     }
 
     const completedAt = new Date().toISOString()
+    const completedStops = completedVenueIds.size
+    const completionBonus = getCompletionBonus(session.source)
+    const xpEarned = venueIds.length * 25 + completionBonus
+    const badgeUnlocked = getBadgeUnlocked(session.source)
 
     const { data: updatedSession, error: updateError } = await supabase
       .from('active_flow_sessions')
@@ -124,7 +148,8 @@ export async function POST(req: Request) {
         status: 'completed',
         completed_at: completedAt,
         updated_at: completedAt,
-      })
+        completed_stops: completedStops,
+      } as any)
       .eq('id', sessionId)
       .eq('user_id', user.id)
       .select('*')
@@ -142,8 +167,12 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         session: updatedSession,
-        xpEarned: venueIds.length * 25 + 100,
-        badgeUnlocked: 'Flow Finisher',
+        xpEarned,
+        badgeUnlocked,
+        completedStops,
+        totalStops: venueIds.length,
+        source: session.source ?? null,
+        sourceId: session.source_id ?? null,
       },
       { status: 200 }
     )

@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 
 import { Card, CardContent } from '@/components/ui/card'
-import StartCrawlButton from './StartCrawlButton'
+import StartFlowButton from '@/components/property/StartFlowButton'
 
 import type { PropertyCrawlCard } from '@/lib/property/getPropertyGuideData'
 import { logEvent } from '@/lib/logEvent'
@@ -43,10 +44,10 @@ export default function PropertyCrawls({
 }: Props) {
   if (!crawls || crawls.length === 0) {
     return (
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Suggested Routes</h2>
+      <section className="space-y-3 text-white">
+        <h2 className="text-sm font-semibold text-white">Suggested Routes</h2>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm leading-6 text-neutral-400">
           We&apos;re still mapping the best nearby plans. In the meantime, use
           the map and nearby venues to explore what&apos;s close.
         </p>
@@ -55,8 +56,14 @@ export default function PropertyCrawls({
   }
 
   return (
-    <section className="space-y-4">
-      <h2 className="text-sm font-semibold">Suggested Routes</h2>
+    <section className="space-y-4 text-white">
+      <div className="space-y-1">
+        <h2 className="text-sm font-semibold text-white">Suggested Routes</h2>
+        <p className="text-sm leading-6 text-neutral-400">
+          Contextual nearby flows ranked for the current day, time, walkability,
+          and sequence quality.
+        </p>
+      </div>
 
       <div className="grid gap-4">
         {crawls.map(({ crawl, vm }, index) => (
@@ -126,6 +133,23 @@ function PropertyCrawlCardView({
     [crawl.venues, replacementsByStopIndex]
   )
 
+  const venueIds = useMemo(
+    () => effectiveVenues.map((venue) => venue.id).filter(Boolean),
+    [effectiveVenues]
+  )
+
+  const routeContext = useMemo(
+    () =>
+      buildRouteContext({
+        theme: vm.theme,
+        stopCount: venueIds.length,
+        totalWalkMinutes: vm.totalWalkMinutes,
+        bestTimeLabel: vm.bestTimeLabel,
+        position,
+      }),
+    [position, venueIds.length, vm.bestTimeLabel, vm.theme, vm.totalWalkMinutes]
+  )
+
   useEffect(() => {
     if (impressionLoggedRef.current) return
     impressionLoggedRef.current = true
@@ -143,6 +167,8 @@ function PropertyCrawlCardView({
         total_crawls: totalCrawls,
         stop_count: vm.stops.length,
         venue_ids: crawl.venues.map((venue) => venue.id),
+        route_context_label: routeContext.label,
+        route_confidence: routeContext.confidence,
       },
     })
   }, [
@@ -152,6 +178,8 @@ function PropertyCrawlCardView({
     property.id,
     property.name,
     property.slug,
+    routeContext.confidence,
+    routeContext.label,
     totalCrawls,
     vm.id,
     vm.stops.length,
@@ -173,6 +201,8 @@ function PropertyCrawlCardView({
         total_crawls: totalCrawls,
         stop_count: vm.stops.length,
         venue_ids: effectiveVenues.map((venue) => venue.id),
+        route_context_label: routeContext.label,
+        route_confidence: routeContext.confidence,
       },
     })
   }
@@ -215,33 +245,67 @@ function PropertyCrawlCardView({
   }
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-5 space-y-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-2">
+    <Card className="overflow-hidden border border-neutral-800 bg-neutral-950 text-white shadow-2xl shadow-black/30">
+      <CardContent className="space-y-4 p-4 sm:p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
+              <Chip tone="strong">{routeContext.label}</Chip>
+              <Chip>{routeContext.confidence}</Chip>
               {vm.chips.map((chip) => (
                 <Chip key={chip}>{chip}</Chip>
               ))}
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-semibold">{vm.title}</h3>
-              <p className="text-sm text-muted-foreground">{vm.subtitle}</p>
+              <h3 className="text-xl font-semibold tracking-tight text-white sm:text-lg">
+                {vm.title}
+              </h3>
+              <p className="max-w-2xl text-sm leading-6 text-neutral-300">
+                {vm.subtitle}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-3 text-sm leading-6 text-neutral-300">
+              <span className="font-semibold text-white">
+                Why this works:
+              </span>{' '}
+              {routeContext.reason}
             </div>
           </div>
 
-          <div onClickCapture={handleStartCrawlClick}>
-            <StartCrawlButton
-              venues={effectiveVenues}
+          <div
+            className="w-full shrink-0 md:w-auto"
+            onClickCapture={handleStartCrawlClick}
+          >
+            <StartFlowButton
+              title={vm.title}
               city={property.city}
               propertyId={property.id}
               propertySlug={property.slug}
+              venueIds={venueIds}
+              source="property_crawl"
+              travelMode="walking"
+              label="Start Flow"
+              metadata={{
+                property_id: property.id,
+                property_name: property.name,
+                property_slug: property.slug ?? null,
+                crawl_vm_id: vm.id,
+                crawl_title: vm.title,
+                crawl_subtitle: vm.subtitle,
+                position,
+                total_crawls: totalCrawls,
+                stop_count: venueIds.length,
+                swapped_stop_count: Object.keys(replacementsByStopIndex).length,
+                route_context_label: routeContext.label,
+                route_confidence: routeContext.confidence,
+              }}
             />
           </div>
         </div>
 
-        <div className="space-y-3 border-t pt-4">
+        <div className="space-y-3 border-t border-neutral-800 pt-4">
           {vm.stops.map((stop, stopIndex) => {
             const currentVenue = effectiveVenues[stopIndex]
             const currentVenueDescription =
@@ -258,15 +322,15 @@ function PropertyCrawlCardView({
             return (
               <div
                 key={stop.id}
-                className="flex items-start gap-3 rounded-lg border p-3"
+                className="flex items-start gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3 transition hover:border-cyan-400/50 hover:bg-neutral-900/90"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-black text-neutral-950">
                   {stop.order}
                 </div>
 
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-cyan-300">
                       {stop.stageLabel}
                     </span>
 
@@ -274,7 +338,7 @@ function PropertyCrawlCardView({
                       <Chip>{stop.walkTimeFromPreviousLabel}</Chip>
                     )}
 
-                    {hasReplacement && <Chip>Swapped</Chip>}
+                    {hasReplacement && <Chip tone="accent">Swapped</Chip>}
                   </div>
 
                   <Link
@@ -298,20 +362,20 @@ function PropertyCrawlCardView({
                         },
                       })
                     }}
-                    className="font-medium hover:underline"
+                    className="block text-base font-semibold leading-snug text-white hover:text-cyan-200 hover:underline"
                   >
                     {currentVenue?.name ?? stop.venueName}
                   </Link>
 
                   {currentVenueDescription && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm leading-6 text-neutral-400">
                       {currentVenueDescription}
                     </p>
                   )}
 
                   {nearbyVenues.length > 0 && swapCandidates.length > 0 && (
                     <div className="space-y-2">
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-3">
                         <button
                           type="button"
                           onClick={() =>
@@ -319,7 +383,7 @@ function PropertyCrawlCardView({
                               prev === stopIndex ? null : stopIndex
                             )
                           }
-                          className="text-xs font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                          className="text-xs font-semibold text-cyan-300 underline underline-offset-4 hover:text-cyan-100"
                         >
                           {openSwapStopIndex === stopIndex
                             ? 'Hide nearby swaps'
@@ -330,7 +394,7 @@ function PropertyCrawlCardView({
                           <button
                             type="button"
                             onClick={() => handleResetStop(stopIndex)}
-                            className="text-xs font-medium text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                            className="text-xs font-semibold text-neutral-300 underline underline-offset-4 hover:text-white"
                           >
                             Reset stop
                           </button>
@@ -338,8 +402,8 @@ function PropertyCrawlCardView({
                       </div>
 
                       {openSwapStopIndex === stopIndex && (
-                        <div className="space-y-2 rounded-md bg-muted/40 p-3">
-                          <p className="text-xs font-medium text-muted-foreground">
+                        <div className="space-y-2 rounded-lg border border-neutral-800 bg-neutral-950 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
                             Nearby replacements
                           </p>
 
@@ -349,15 +413,15 @@ function PropertyCrawlCardView({
                                 key={candidate.id}
                                 type="button"
                                 onClick={() => handleSwapStop(stopIndex, candidate)}
-                                className="block w-full rounded-md border bg-background px-3 py-2 text-left transition hover:bg-muted"
+                                className="block w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-left transition hover:border-cyan-400/50 hover:bg-neutral-800"
                               >
                                 <div className="space-y-1">
-                                  <p className="text-sm font-medium">
+                                  <p className="text-sm font-semibold text-white">
                                     {candidate.name}
                                   </p>
 
                                   {candidate.description && (
-                                    <p className="line-clamp-2 text-xs text-muted-foreground">
+                                    <p className="line-clamp-2 text-xs leading-5 text-neutral-400">
                                       {candidate.description}
                                     </p>
                                   )}
@@ -377,6 +441,60 @@ function PropertyCrawlCardView({
       </CardContent>
     </Card>
   )
+}
+
+function buildRouteContext({
+  theme,
+  stopCount,
+  totalWalkMinutes,
+  bestTimeLabel,
+  position,
+}: {
+  theme: string
+  stopCount: number
+  totalWalkMinutes: number | null
+  bestTimeLabel: string | null
+  position: number
+}) {
+  const lowWalk = typeof totalWalkMinutes === 'number' && totalWalkMinutes <= 18
+  const compact = stopCount > 0 && stopCount <= 4
+
+  const confidence =
+    position === 0 && lowWalk
+      ? 'High-confidence fit'
+      : lowWalk || compact
+        ? 'Strong fit'
+        : 'Flexible fit'
+
+  const label =
+    position === 0
+      ? 'Best match now'
+      : bestTimeLabel?.includes('Best')
+        ? bestTimeLabel
+        : 'Contextual pick'
+
+  const themeReason =
+    theme === 'morningFlow'
+      ? 'the stops match a lighter daytime rhythm and avoid forcing nightlife too early.'
+      : theme === 'soloExplorer'
+        ? 'the sequence balances browsing, food, and low-pressure discovery.'
+        : theme === 'dateNight'
+          ? 'the route builds naturally around dinner, drinks, and a polished close.'
+          : theme === 'nightOut'
+            ? 'the stops ramp energy without making the route feel scattered.'
+            : 'the route keeps the sequence intuitive and locally useful.'
+
+  const walkReason = lowWalk
+    ? ' It also keeps walking friction low.'
+    : totalWalkMinutes
+      ? ' It gives you a fuller route with a little more walking.'
+      : ''
+
+  return {
+    label,
+    confidence,
+    reason: `${themeReason}${walkReason}`,
+  }
 }
 
 function getSwapCandidates({
@@ -484,9 +602,27 @@ function getStageSwapLabel(stageLabel: string) {
   return 'stops'
 }
 
-function Chip({ children }: { children: React.ReactNode }) {
+function Chip({
+  children,
+  tone = 'default',
+}: {
+  children: ReactNode
+  tone?: 'default' | 'strong' | 'accent'
+}) {
+  const className =
+    tone === 'strong'
+      ? 'border-cyan-300/40 bg-cyan-300 text-neutral-950'
+      : tone === 'accent'
+        ? 'border-emerald-400/40 bg-emerald-400/10 text-emerald-200'
+        : 'border-neutral-700 bg-neutral-900 text-neutral-300'
+
   return (
-    <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium text-muted-foreground">
+    <span
+      className={[
+        'inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold',
+        className,
+      ].join(' ')}
+    >
       {children}
     </span>
   )

@@ -158,10 +158,10 @@ type GetPropertyGuideDataParams = {
 }
 
 const THEME_RANK: Record<string, number> = {
-  dateNight: 0,
-  nightOut: 1,
-  morningFlow: 2,
-  soloExplorer: 3,
+  morningFlow: 0,
+  soloExplorer: 1,
+  dateNight: 2,
+  nightOut: 3,
 }
 
 function normalizeCityKey(input?: string | null) {
@@ -272,6 +272,145 @@ function uniqueById<T extends { id: string }>(items: T[]) {
   return result
 }
 
+function distanceMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) {
+  const R = 6371e3
+  const φ1 = (lat1 * Math.PI) / 180
+  const φ2 = (lat2 * Math.PI) / 180
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180
+
+  const a =
+    Math.sin(Δφ / 2) ** 2 +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  return Math.round(R * c)
+}
+
+function getDistanceFromPreviousMeters({
+  property,
+  venues,
+  stopIndex,
+}: {
+  property: { lat: number; lon: number }
+  venues: Array<{ lat: number; lon: number }>
+  stopIndex: number
+}) {
+  const current = venues[stopIndex]
+  if (!current) return null
+
+  const previous =
+    stopIndex === 0
+      ? property
+      : venues[stopIndex - 1]
+
+  if (!previous) return null
+
+  return distanceMeters(previous.lat, previous.lon, current.lat, current.lon)
+}
+
+function getBestTimeLabelForTheme(theme: string, now: DateTime) {
+  const hour = now.hour + now.minute / 60
+
+  if (theme === 'morningFlow') {
+    return hour < 12 ? 'Best right now' : 'Best tomorrow morning'
+  }
+
+  if (theme === 'soloExplorer') {
+    if (hour >= 10 && hour < 17) return 'Good right now'
+    if (hour < 10) return 'Best late morning'
+    return 'Best tomorrow daytime'
+  }
+
+  if (theme === 'dateNight') {
+    if (hour >= 17 && hour < 21.5) return 'Best tonight'
+    if (hour < 17) return 'Best after 6 PM'
+    return 'Best tomorrow night'
+  }
+
+  if (theme === 'nightOut') {
+    if (hour >= 19 && hour <= 23.5) return 'Best tonight'
+    if (hour < 19) return 'Best later tonight'
+    return 'Best tomorrow night'
+  }
+
+  return null
+}
+
+function getThemeContextScore(theme: string, now: DateTime) {
+  const hour = now.hour + now.minute / 60
+
+  if (theme === 'morningFlow') {
+    if (hour >= 6 && hour < 11.5) return 0
+    if (hour >= 11.5 && hour < 15) return 4
+    return 20
+  }
+
+  if (theme === 'soloExplorer') {
+    if (hour >= 9 && hour < 18) return 0
+    if (hour >= 18 && hour < 21) return 5
+    return 14
+  }
+
+  if (theme === 'dateNight') {
+    if (hour >= 16.5 && hour < 21.5) return 0
+    if (hour >= 12 && hour < 16.5) return 6
+    return 12
+  }
+
+  if (theme === 'nightOut') {
+    if (hour >= 18.5 && hour <= 23.5) return 0
+    if (hour >= 15 && hour < 18.5) return 7
+    return 16
+  }
+
+  return 99
+}
+
+function getTitleOverrides(now: DateTime): Partial<Record<string, string>> {
+  const hour = now.hour + now.minute / 60
+
+  return {
+    morningFlow:
+      hour < 12 ? 'This Morning Flow' : 'Tomorrow Morning Reset',
+    soloExplorer:
+      hour >= 10 && hour < 17 ? 'Explore Near Here Now' : 'Easy Local Explore',
+    dateNight:
+      hour >= 16.5 ? 'Tonight’s Date Night Flow' : 'Date Night Near Here',
+    nightOut:
+      hour >= 18.5 ? 'Tonight’s Night Out Flow' : 'Night Out Near Here',
+  }
+}
+
+function getSubtitleOverrides(now: DateTime): Partial<Record<string, string>> {
+  const hour = now.hour + now.minute / 60
+
+  return {
+    morningFlow:
+      hour < 12
+        ? 'A timely nearby sequence for coffee, reset, and a clean start to the day.'
+        : 'A low-friction morning plan to save for the next good start.',
+    soloExplorer:
+      hour >= 10 && hour < 17
+        ? 'A daytime-friendly route for getting oriented without overcommitting.'
+        : 'A flexible local route for browsing, coffee, and an easy solo stop.',
+    dateNight:
+      hour >= 16.5
+        ? 'A dinner-and-drinks sequence that fits the current evening window.'
+        : 'A polished nearby evening route for when you want the plan ready.',
+    nightOut:
+      hour >= 18.5
+        ? 'A social route that builds energy while keeping the stops walkable.'
+        : 'A higher-energy route to keep in your pocket for later tonight.',
+  }
+}
+
 function isJourneyRelevantNow(
   journey: EventJourneyRecord,
   nowForCity: DateTime,
@@ -331,29 +470,47 @@ function buildPropertyCrawlCards(
       Boolean(entry && entry.crawl && Array.isArray(entry.crawl.venues))
   )
 
+  const titleOverrides = getTitleOverrides(now)
+  const subtitleOverrides = getSubtitleOverrides(now)
+
   return validCrawls
     .map((entry, index) => {
-      const vm = buildCrawlVM({
-        id: `${entry.theme}-${index}`,
-        theme: entry.theme,
-        stops: (entry.crawl.venues ?? []).map((venue, stopIndex) => ({
-          venue: {
-            id: venue.id,
-            name: venue.name,
-            link: `/venue-profile/${venue.id}`,
-            description:
-              typeof (venue as { description?: string | null }).description ===
-              'string'
-                ? (venue as { description?: string | null }).description ?? null
-                : null,
+      const bestTimeLabel = getBestTimeLabelForTheme(entry.theme, now)
+
+      const vm = buildCrawlVM(
+        {
+          id: `${entry.theme}-${index}`,
+          theme: entry.theme,
+          stops: (entry.crawl.venues ?? []).map((venue, stopIndex) => ({
+            venue: {
+              id: venue.id,
+              name: venue.name,
+              link: `/venue-profile/${venue.id}`,
+              description:
+                typeof (venue as { description?: string | null }).description ===
+                'string'
+                  ? (venue as { description?: string | null }).description ?? null
+                  : null,
+            },
+            matchedType: entry.crawl.stages?.[stopIndex]?.matchedType ?? null,
+            desiredType: entry.crawl.stages?.[stopIndex]?.stageTypes?.[0] ?? null,
+            stageType: entry.crawl.stages?.[stopIndex]?.stageTypes?.[0] ?? null,
+            distanceFromPreviousMeters: getDistanceFromPreviousMeters({
+              property,
+              venues: entry.crawl.venues as Array<{ lat: number; lon: number }>,
+              stopIndex,
+            }),
+            isAnchor: stopIndex === entry.crawl.venues.length - 1,
+          })),
+          metadata: {
+            bestTimeLabel,
           },
-          matchedType: entry.crawl.stages?.[stopIndex]?.matchedType ?? null,
-          desiredType: entry.crawl.stages?.[stopIndex]?.stageTypes?.[0] ?? null,
-          stageType: entry.crawl.stages?.[stopIndex]?.stageTypes?.[0] ?? null,
-          distanceFromPreviousMeters: null,
-          isAnchor: stopIndex === entry.crawl.venues.length - 1,
-        })),
-      })
+        },
+        {
+          titleOverrides,
+          subtitleOverrides,
+        }
+      )
 
       return {
         id: vm.id,
@@ -363,6 +520,13 @@ function buildPropertyCrawlCards(
       }
     })
     .sort((a, b) => {
+      const aContextScore = getThemeContextScore(a.theme, now)
+      const bContextScore = getThemeContextScore(b.theme, now)
+
+      if (aContextScore !== bContextScore) {
+        return aContextScore - bContextScore
+      }
+
       const aRank = THEME_RANK[a.theme] ?? 999
       const bRank = THEME_RANK[b.theme] ?? 999
       return aRank - bRank

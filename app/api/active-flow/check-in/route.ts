@@ -42,17 +42,11 @@ export async function POST(req: Request) {
     const deviceTimestamp = body.device_timestamp
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: 'Missing session_id.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Missing session_id.' }, { status: 400 })
     }
 
     if (!venueId) {
-      return NextResponse.json(
-        { error: 'Missing venue_id.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Missing venue_id.' }, { status: 400 })
     }
 
     if (
@@ -60,10 +54,7 @@ export async function POST(req: Request) {
       !Number.isInteger(stopIndex) ||
       stopIndex < 0
     ) {
-      return NextResponse.json(
-        { error: 'Invalid stop_index.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid stop_index.' }, { status: 400 })
     }
 
     if (!isValidLatitude(userLat) || !isValidLongitude(userLon)) {
@@ -89,7 +80,9 @@ export async function POST(req: Request) {
 
     const { data: session, error: sessionError } = await supabase
       .from('active_flow_sessions')
-      .select('id, user_id, venue_ids, status')
+      .select(
+        'id, user_id, venue_ids, status, source, source_id, title, city, metadata, completed_stops'
+      )
       .eq('id', sessionId)
       .eq('user_id', user.id)
       .maybeSingle()
@@ -104,10 +97,7 @@ export async function POST(req: Request) {
     }
 
     if (!session) {
-      return NextResponse.json(
-        { error: 'Flow not found.' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Flow not found.' }, { status: 404 })
     }
 
     if (session.status !== 'active') {
@@ -284,6 +274,22 @@ export async function POST(req: Request) {
     const totalStops = venueIds.length
     const flowCompleted = completedStops === totalStops
 
+    const { error: sessionProgressUpdateError } = await supabase
+      .from('active_flow_sessions')
+      .update({
+        completed_stops: completedStops,
+        updated_at: now,
+      } as any)
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+
+    if (sessionProgressUpdateError) {
+      console.error(
+        '[active-flow/check-in] Session completed_stops cache update failed:',
+        sessionProgressUpdateError
+      )
+    }
+
     return NextResponse.json(
       {
         progress,
@@ -293,6 +299,8 @@ export async function POST(req: Request) {
         xpEarned: 25,
         geoVerified: true,
         distanceMeters: Math.round(distanceMeters),
+        source: session.source ?? null,
+        sourceId: session.source_id ?? null,
       },
       { status: 200 }
     )

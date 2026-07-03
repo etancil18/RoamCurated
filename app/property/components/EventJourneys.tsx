@@ -4,14 +4,21 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 
 import { Card, CardContent } from '@/components/ui/card'
+import StartFlowButton from '@/components/property/StartFlowButton'
 import type { EventJourneyVM } from '@/lib/view-models/buildEventJourneyVM'
 import { logEvent } from '@/lib/logEvent'
 
 type Props = {
   journeys: EventJourneyVM[]
+  property?: {
+    id?: string | null
+    name?: string | null
+    slug?: string | null
+    city?: string | null
+  } | null
 }
 
-export default function EventJourneys({ journeys }: Props) {
+export default function EventJourneys({ journeys, property = null }: Props) {
   const safeJourneys = (journeys ?? []).filter(
     (journey): journey is EventJourneyVM =>
       Boolean(
@@ -32,6 +39,7 @@ export default function EventJourneys({ journeys }: Props) {
         <EventJourneyCard
           key={journey.id}
           journey={journey}
+          property={property}
           position={index}
           totalJourneys={safeJourneys.length}
         />
@@ -42,14 +50,18 @@ export default function EventJourneys({ journeys }: Props) {
 
 function EventJourneyCard({
   journey,
+  property,
   position,
   totalJourneys,
 }: {
   journey: EventJourneyVM
+  property?: Props['property']
   position: number
   totalJourneys: number
 }) {
   const impressionLoggedRef = useRef(false)
+  const venueIds = journey.stops.map((stop) => stop.id).filter(Boolean)
+  const canStartFlow = venueIds.length >= 2
 
   useEffect(() => {
     if (impressionLoggedRef.current) return
@@ -65,12 +77,16 @@ function EventJourneyCard({
         position,
         total_journeys: totalJourneys,
         has_href: Boolean(journey.href),
+        can_start_flow: canStartFlow,
         stop_count: journey.stops.length,
         route_style_label: journey.routeStyleLabel,
         total_stops_label: journey.totalStopsLabel,
+        property_id: property?.id ?? null,
+        property_slug: property?.slug ?? null,
+        property_name: property?.name ?? null,
       },
     })
-  }, [journey, position, totalJourneys])
+  }, [journey, position, totalJourneys, canStartFlow, property])
 
   const handleJourneyClick = () => {
     void logEvent('event_journey_clicked', {
@@ -144,29 +160,53 @@ function EventJourneyCard({
               </p>
             )}
 
+            {canStartFlow && (
+              <StartFlowButton
+                title={journey.title}
+                city={property?.city ?? null}
+                propertyId={journey.id}
+                propertySlug={property?.slug ?? null}
+                venueIds={venueIds}
+                source="property_event_journey"
+                travelMode="walking"
+                label="Start Event Flow"
+                className="rounded-full px-4 py-2 text-sm"
+                metadata={{
+                  property_id: property?.id ?? null,
+                  property_slug: property?.slug ?? null,
+                  property_name: property?.name ?? null,
+                  event_journey_id: journey.id,
+                  event_name: journey.eventName,
+                  destination_name: journey.destinationName,
+                  route_style_label: journey.routeStyleLabel,
+                  total_stops_label: journey.totalStopsLabel,
+                  status_label: journey.statusLabel,
+                  position,
+                  total_journeys: totalJourneys,
+                }}
+              />
+            )}
+
             {journey.href ? (
               <Link
                 href={journey.href}
                 onClick={handleJourneyClick}
-                className="inline-flex items-center rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90"
+                className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium transition hover:bg-muted"
               >
-                {journey.ctaLabel}
+                Preview Route
               </Link>
-            ) : (
+            ) : !canStartFlow ? (
               <div className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium text-muted-foreground">
                 {journey.ctaLabel}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
         {journey.stops.length > 0 ? (
           <div className="space-y-3 border-t pt-4">
             {journey.stops.map((stop) => (
-              <div
-                key={stop.id}
-                className="flex items-start gap-3 rounded-lg border p-3"
-              >
+              <div key={stop.id} className="flex items-start gap-3 rounded-lg border p-3">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
                   {stop.order}
                 </div>
@@ -176,11 +216,8 @@ function EventJourneyCard({
                     <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       {stop.roleLabel}
                     </span>
-
                     {stop.isCurated && <Chip>Curated</Chip>}
-                    {stop.walkTimeFromPreviousLabel && (
-                      <Chip>{stop.walkTimeFromPreviousLabel}</Chip>
-                    )}
+                    {stop.walkTimeFromPreviousLabel && <Chip>{stop.walkTimeFromPreviousLabel}</Chip>}
                     {stop.confidenceLabel && <Chip>{stop.confidenceLabel}</Chip>}
                     {stop.tradeoffLabel && <Chip>{stop.tradeoffLabel}</Chip>}
                   </div>
@@ -223,9 +260,7 @@ function EventJourneyCard({
                   )}
 
                   {stop.selectionReason && (
-                    <p className="text-xs text-muted-foreground">
-                      {stop.selectionReason}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{stop.selectionReason}</p>
                   )}
                 </div>
               </div>
@@ -296,11 +331,7 @@ function StopDescription({
 
   return (
     <div className="space-y-1">
-      <p
-        className={`text-sm text-muted-foreground ${
-          expanded ? '' : 'line-clamp-2'
-        }`}
-      >
+      <p className={`text-sm text-muted-foreground ${expanded ? '' : 'line-clamp-2'}`}>
         {description}
       </p>
 

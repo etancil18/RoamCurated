@@ -1,12 +1,15 @@
+// app/property/[city]/[slug]/page.tsx
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { DateTime } from 'luxon'
+import type { ReactNode } from 'react'
 
 import PropertyMap from '@/components/maps/PropertyMap'
 import { Card, CardContent } from '@/components/ui/card'
 import PropertyCrawls from '@/app/property/components/PropertyCrawls'
 import EventJourneys from '@/app/property/components/EventJourneys'
 import SavePropertyButton from '../../components/SavePropertyButton'
+import PropertyVenueCheckInButton from '@/components/property/PropertyVenueCheckInButton'
 
 import { getPropertyGuideData } from '@/lib/property/getPropertyGuideData'
 import { buildEventJourneyVMs } from '@/lib/view-models/buildEventJourneyVM'
@@ -34,23 +37,25 @@ export default async function PropertyPage({ params }: PageProps) {
   const { city, slug } = await params
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    'https://roam-curated.vercel.app'
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://roam-curated.vercel.app'
 
   const guideUrl = `${baseUrl}/open/property/${city}/${slug}`
 
-  const guideQrImageUrl =
-    `https://api.qrserver.com/v1/create-qr-code/?size=440x440&data=${encodeURIComponent(guideUrl)}`
+  const guideQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=440x440&data=${encodeURIComponent(
+    guideUrl
+  )}`
 
   const guide = await getPropertyGuideData({ city, slug })
 
   if (!guide.property) {
     return (
-      <div className="max-w-2xl mx-auto text-center p-6">
-        <h2 className="text-xl font-bold">Property not found</h2>
-        <p className="text-muted-foreground">
-          This guide may not exist or may have been removed.
-        </p>
+      <div className="min-h-screen bg-neutral-950 px-6 py-24 text-white">
+        <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-white/[0.03] p-8 text-center shadow-2xl">
+          <h2 className="text-xl font-bold">Property not found</h2>
+          <p className="mt-2 text-sm text-neutral-400">
+            This guide may not exist or may have been removed.
+          </p>
+        </div>
       </div>
     )
   }
@@ -92,10 +97,7 @@ export default async function PropertyPage({ params }: PageProps) {
   }))
 
   const hasFlexibleEventJourneys = guide.eventJourneyCards.some((journey) => {
-    const policy = String(journey.arrivalPolicy ?? '')
-      .trim()
-      .toLowerCase()
-
+    const policy = String(journey.arrivalPolicy ?? '').trim().toLowerCase()
     return policy === 'midpoint_deadline' || policy === 'window'
   })
 
@@ -126,402 +128,323 @@ export default async function PropertyPage({ params }: PageProps) {
         num_map_venues: mapVenuesForMap.length,
       },
     }),
-
-    ...(eventJourneyVMs.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'event_journeys_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_journeys: eventJourneyVMs.length,
-              journey_ids: eventJourneyVMs.map((journey) => journey.id),
-            },
-          }),
-        ]
-      : []),
-
-    ...(guide.propertyCrawlCards.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'property_crawls_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_property_crawls: guide.propertyCrawlCards.length,
-              crawl_ids: guide.propertyCrawlCards.map((crawl) => crawl.id),
-            },
-          }),
-        ]
-      : []),
-
-    ...(mapVenuesForMap.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'property_map_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_map_venues: mapVenuesForMap.length,
-            },
-          }),
-        ]
-      : []),
-
-    ...(guide.nearbyEvents.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'property_nearby_events_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_nearby_events: guide.nearbyEvents.length,
-              nearby_event_ids: guide.nearbyEvents
-                .map((event: any) => event?.id)
-                .filter(Boolean),
-            },
-          }),
-        ]
-      : []),
-
-    ...(hostPickCards.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'property_host_picks_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_venues: hostPickCards.length,
-              venue_ids: hostPickCards.map((venue) => venue.id),
-            },
-          }),
-        ]
-      : []),
-
-    ...(coffeeCards.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'property_coffee_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_venues: coffeeCards.length,
-              venue_ids: coffeeCards.map((venue) => venue.id),
-            },
-          }),
-        ]
-      : []),
-
-    ...(barCards.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'property_bars_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_venues: barCards.length,
-              venue_ids: barCards.map((venue) => venue.id),
-            },
-          }),
-        ]
-      : []),
-
-    ...(dinnerCards.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'property_dinner_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_venues: dinnerCards.length,
-              venue_ids: dinnerCards.map((venue) => venue.id),
-            },
-          }),
-        ]
-      : []),
-
-    ...(wellnessCards.length > 0
-      ? [
-          logEventServer({
-            impression_type: 'property_wellness_section_impression',
-            metadata: {
-              property_id: guide.property.id,
-              property_slug: guide.property.slug,
-              property_name: guide.property.name,
-              city: guide.property.city,
-              num_venues: wellnessCards.length,
-              venue_ids: wellnessCards.map((venue) => venue.id),
-            },
-          }),
-        ]
-      : []),
   ])
 
   return (
-    <main className="mx-auto max-w-5xl space-y-10 px-6 pb-6 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
-      <section>
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-semibold">{guide.property.name}</h1>
+    <main className="min-h-screen bg-neutral-950 text-white">
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.16),_transparent_34%),radial-gradient(circle_at_70%_10%,_rgba(99,102,241,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.13),_transparent_34%)]" />
 
-                <p className="text-muted-foreground">
-                  {guide.property.city}
-                  {typeof guide.property.host_name === 'string' &&
-                    guide.property.host_name.trim().length > 0 &&
-                    ` • Hosted by ${guide.property.host_name}`}
-                </p>
+      <div className="relative z-10 mx-auto max-w-6xl space-y-10 px-5 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] md:px-8">
+        <section>
+          <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-2xl backdrop-blur">
+            <div className="relative p-6 md:p-8">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
 
-                <p className="text-sm text-muted-foreground max-w-2xl">
-                  Best coffee, dinner, bars, and event routes within walking
-                  distance.
-                </p>
+              <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+                <div className="max-w-3xl space-y-5">
+                  <div className="flex flex-wrap gap-2">
+                    <Pill>Roam Stay Guide</Pill>
+                    <Pill>{guide.property.city}</Pill>
+                    {guide.property.host_name ? (
+                      <Pill>Hosted by {guide.property.host_name}</Pill>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-3">
+                    <h1 className="text-4xl font-black leading-[0.95] tracking-tight text-white md:text-6xl">
+                      {guide.property.name}
+                    </h1>
+
+                    <p className="max-w-2xl text-base leading-7 text-neutral-300 md:text-lg">
+                      Unlock the neighborhood around your stay. Start a local
+                      flow, check into nearby spots, and turn movement into
+                      Passport progress.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <HeroStat
+                      label="Launchable flows"
+                      value={String(guide.propertyCrawlCards.length)}
+                    />
+                    <HeroStat
+                      label="Nearby stops"
+                      value={String(mapVenuesForMap.length)}
+                    />
+                    <HeroStat
+                      label="Event routes"
+                      value={String(eventJourneyVMs.length)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 flex-col gap-3">
+                  <SavePropertyButton
+                    propertyId={guide.property.id}
+                    city={guide.property.city}
+                    slug={guide.property.slug}
+                  />
+
+                  <a
+                    href="#guide-qr-modal"
+                    className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
+                  >
+                    View QR
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div
+          id="guide-qr-modal"
+          className="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/85 px-4 py-8 target:flex"
+        >
+          <a href="#" aria-label="Close QR modal" className="absolute inset-0" />
+
+          <Card className="relative z-[10000] w-full max-w-sm overflow-hidden border-white/10 bg-neutral-950 text-white">
+            <CardContent className="space-y-5 p-6 text-center">
+              <div className="flex items-start justify-between gap-4 text-left">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold">Guest QR Code</h2>
+                  <p className="text-sm text-neutral-400">
+                    Guests can scan this code to open this neighborhood guide
+                    instantly on their phone.
+                  </p>
+                </div>
+
+                <a
+                  href="#"
+                  aria-label="Close QR modal"
+                  className="rounded-full border border-white/15 px-3 py-1 text-sm font-medium text-white hover:bg-white/10"
+                >
+                  ×
+                </a>
               </div>
 
-              <SavePropertyButton
-                propertyId={guide.property.id}
-                city={guide.property.city}
-                slug={guide.property.slug}
-              />
-            </div>
+              <div className="flex justify-center">
+                <div className="rounded-2xl bg-white p-4">
+                  <img
+                    src={guideQrImageUrl}
+                    alt={`QR code for ${guide.property.name}`}
+                    className="h-[220px] w-[220px]"
+                  />
+                </div>
+              </div>
 
-            <div className="flex flex-wrap gap-2 pt-1">
-              {eventJourneyVMs.length > 0 ? (
-                <a
-                  href="#event-journeys"
-                  className="inline-flex items-center rounded-full bg-black text-white px-4 py-2 text-sm font-medium hover:opacity-90"
-                >
-                  View event routes
-                </a>
-              ) : (
-                <a
-                  href="#suggested-crawls"
-                  className="inline-flex items-center rounded-full bg-black text-white px-4 py-2 text-sm font-medium hover:opacity-90"
-                >
-                  Start nearby route
-                </a>
-              )}
-
-              <a
-                href="#guide-qr-modal"
-                className="inline-flex items-center rounded-full border px-4 py-2 text-sm font-medium hover:bg-muted"
-              >
-                View QR
-              </a>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      <div
-        id="guide-qr-modal"
-        className="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/80 px-4 py-8 target:flex"
-      >
-        <a
-          href="#"
-          aria-label="Close QR modal"
-          className="absolute inset-0"
-        />
-
-        <Card className="relative z-[10000] w-full max-w-sm">
-          <CardContent className="space-y-5 p-6 text-center">
-            <div className="flex items-start justify-between gap-4 text-left">
               <div className="space-y-1">
-                <h2 className="text-lg font-semibold">
-                  Guest QR Code
-                </h2>
-
-                <p className="text-sm text-muted-foreground">
-                  Guests can scan this code to open this neighborhood guide
-                  instantly on their phone.
-                </p>
+                <p className="text-sm font-medium">{guide.property.name}</p>
+                <p className="break-all text-xs text-neutral-500">{guideUrl}</p>
               </div>
-
-              <a
-                href="#"
-                aria-label="Close QR modal"
-                className="rounded-full border px-3 py-1 text-sm font-medium hover:bg-muted"
-              >
-                ×
-              </a>
-            </div>
-
-            <div className="flex justify-center">
-              <div className="rounded-2xl bg-white p-4">
-                <img
-                  src={guideQrImageUrl}
-                  alt={`QR code for ${guide.property.name}`}
-                  className="h-[220px] w-[220px]"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-sm font-medium">
-                {guide.property.name}
-              </p>
-
-              <p className="break-all text-xs text-muted-foreground">
-                {guideUrl}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {guide.property.welcome_description && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Welcome
-          </h2>
-
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-sm leading-7 text-muted-foreground whitespace-pre-line">
-                {guide.property.welcome_description}
-              </p>
             </CardContent>
           </Card>
-        </section>
-      )}
-
-      {eventJourneyVMs.length > 0 && (
-        <section id="event-journeys" className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Event Journeys
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {eventJourneyIntroCopy}
-            </p>
-          </div>
-
-          <EventJourneys journeys={eventJourneyVMs} />
-        </section>
-      )}
-
-      <section id="neighborhood-map" className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Neighborhood Map
-        </h2>
-
-        <div className="rounded-xl overflow-hidden border h-[420px]">
-          <PropertyMap property={guide.property} venues={mapVenuesForMap as any} />
-        </div>
-      </section>
-
-      <section id="suggested-crawls" className="space-y-3">
-        <div className="space-y-1">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Suggested Routes
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Ready-to-go nearby plans for coffee, dinner, drinks, and easy local
-            exploration.
-          </p>
         </div>
 
-        <PropertyCrawls
-          property={guide.property}
-          crawls={guide.propertyCrawlCards}
-          nearbyVenues={nearbySwapVenues}
-        />
-      </section>
+        {guide.property.welcome_description && (
+          <SectionShell eyebrow="Welcome" title="Your local launchpad">
+            <Card className="border-white/10 bg-white/[0.04] text-white backdrop-blur">
+              <CardContent className="p-6">
+                <p className="whitespace-pre-line text-sm leading-7 text-neutral-300">
+                  {guide.property.welcome_description}
+                </p>
+              </CardContent>
+            </Card>
+          </SectionShell>
+        )}
 
-      {guide.nearbyEvents.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Events Nearby
-          </h2>
+        <SectionShell
+          eyebrow="Neighborhood Map"
+          title="See what’s unlockable nearby"
+          subtitle="A visual layer of the closest places, host picks, and neighborhood options around this stay."
+        >
+          <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-black shadow-2xl">
+            <div className="h-[430px]">
+              <PropertyMap
+                property={guide.property}
+                venues={mapVenuesForMap as any}
+              />
+            </div>
+          </div>
+        </SectionShell>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            {guide.nearbyEvents.map((ev: any) => (
-              <Card key={ev.id}>
-                <CardContent className="p-4 space-y-1">
-                  <p className="font-medium">{ev.title}</p>
+        <SectionShell
+          eyebrow="Start a Local Flow"
+          title="Pick an experience, then move"
+          subtitle="Ready-to-go routes become active flows with check-ins, progress, and completion credit."
+          id="suggested-crawls"
+        >
+          <PropertyCrawls
+            property={guide.property}
+            crawls={guide.propertyCrawlCards}
+            nearbyVenues={nearbySwapVenues}
+          />
+        </SectionShell>
 
-                  <p className="text-xs text-muted-foreground">
-                    {ev.venue_name}
-                  </p>
+        {eventJourneyVMs.length > 0 && (
+          <SectionShell
+            eyebrow="Event Journeys"
+            title="Make the event part of the roam"
+            subtitle={eventJourneyIntroCopy}
+            id="event-journeys"
+          >
+            <EventJourneys
+              journeys={eventJourneyVMs}
+              property={{
+                id: guide.property.id,
+                name: guide.property.name,
+                slug: guide.property.slug,
+                city: guide.property.city,
+              }}
+            />
+          </SectionShell>
+        )}
 
-                  <p className="text-xs text-muted-foreground">
-                    {DateTime.fromISO(ev.starts_at)
-                      .setZone(guide.timezone)
-                      .toFormat('M/d h:mm a')}
-                  </p>
+        <section id="explore-one-stop" className="space-y-8">
+          <SectionHeader
+            eyebrow="Nearby Check-ins"
+            title="Explore one stop at a time"
+            subtitle="Not every guest wants a full route. Check into individual places and still build proof of movement."
+          />
 
-                  <Link
-                    href={`/venue-profile/${ev.venue_id}`}
-                    className="text-xs text-blue-600 underline"
-                  >
-                    View Venue
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="space-y-8">
+            {hostPickCards.length > 0 && (
+              <VenueSection
+                title="Host Picks"
+                subtitle="High-trust local recommendations curated for this property."
+                venues={hostPickCards.slice(0, 6)}
+                property={guide.property}
+              />
+            )}
+
+            {coffeeCards.length > 0 && (
+              <VenueSection
+                title="☕ Coffee Nearby"
+                subtitle="Good coffee, quick breakfast, and easy daytime starts."
+                venues={coffeeCards.slice(0, 5)}
+                property={guide.property}
+              />
+            )}
+
+            {barCards.length > 0 && (
+              <VenueSection
+                title="🍸 Bars Nearby"
+                subtitle="Strong nearby options for drinks before or after dinner."
+                venues={barCards.slice(0, 5)}
+                property={guide.property}
+              />
+            )}
+
+            {dinnerCards.length > 0 && (
+              <VenueSection
+                title="🍽 Dinner Nearby"
+                subtitle="Best nearby places for a full meal or an easy evening out."
+                venues={dinnerCards.slice(0, 5)}
+                property={guide.property}
+              />
+            )}
+
+            {wellnessCards.length > 0 && (
+              <VenueSection
+                title="🧘 Wellness Nearby"
+                subtitle="Reset, move, or recharge close to the property."
+                venues={wellnessCards.slice(0, 5)}
+                property={guide.property}
+              />
+            )}
           </div>
         </section>
-      )}
 
-      {hostPickCards.length > 0 && (
-        <VenueSection
-          title="Host Picks"
-          subtitle="High-trust local recommendations curated for this property."
-          venues={hostPickCards.slice(0, 6)}
-        />
-      )}
+        {guide.nearbyEvents.length > 0 && (
+          <SectionShell
+            eyebrow="Events Nearby"
+            title="Happening around this stay"
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              {guide.nearbyEvents.map((ev: any) => (
+                <Card
+                  key={ev.id}
+                  className="border-white/10 bg-white/[0.04] text-white transition hover:bg-white/[0.07]"
+                >
+                  <CardContent className="space-y-2 p-4">
+                    <p className="font-semibold">{ev.title}</p>
+                    <p className="text-xs text-neutral-400">{ev.venue_name}</p>
+                    <p className="text-xs text-neutral-400">
+                      {DateTime.fromISO(ev.starts_at)
+                        .setZone(guide.timezone)
+                        .toFormat('M/d h:mm a')}
+                    </p>
 
-      <section className="space-y-6">
-        {coffeeCards.length > 0 && (
-          <VenueSection
-            title="☕ Coffee Nearby"
-            subtitle="Good coffee, quick breakfast, and easy daytime starts."
-            venues={coffeeCards.slice(0, 5)}
-          />
+                    <Link
+                      href={`/venue-profile/${ev.venue_id}`}
+                      className="text-xs font-medium text-cyan-300 underline underline-offset-4"
+                    >
+                      View Venue
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </SectionShell>
         )}
-
-        {barCards.length > 0 && (
-          <VenueSection
-            title="🍸 Bars Nearby"
-            subtitle="Strong nearby options for drinks before or after dinner."
-            venues={barCards.slice(0, 5)}
-          />
-        )}
-
-        {dinnerCards.length > 0 && (
-          <VenueSection
-            title="🍽 Dinner Nearby"
-            subtitle="Best nearby places for a full meal or an easy evening out."
-            venues={dinnerCards.slice(0, 5)}
-          />
-        )}
-
-        {wellnessCards.length > 0 && (
-          <VenueSection
-            title="🧘 Wellness Nearby"
-            subtitle="Reset, move, or recharge close to the property."
-            venues={wellnessCards.slice(0, 5)}
-          />
-        )}
-      </section>
+      </div>
     </main>
+  )
+}
+
+function SectionShell({
+  eyebrow,
+  title,
+  subtitle,
+  id,
+  children,
+}: {
+  eyebrow: string
+  title: string
+  subtitle?: string
+  id?: string
+  children: ReactNode
+}) {
+  return (
+    <section id={id} className="space-y-4">
+      <SectionHeader eyebrow={eyebrow} title={title} subtitle={subtitle} />
+      {children}
+    </section>
+  )
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  subtitle,
+}: {
+  eyebrow: string
+  title: string
+  subtitle?: string
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-300">
+        {eyebrow}
+      </p>
+      <h2 className="text-2xl font-black tracking-tight text-white md:text-3xl">
+        {title}
+      </h2>
+      {subtitle ? (
+        <p className="max-w-3xl text-sm leading-6 text-neutral-400">
+          {subtitle}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function HeroStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+      <p className="text-2xl font-black text-white">{value}</p>
+      <p className="mt-1 text-xs font-medium text-neutral-400">{label}</p>
+    </div>
   )
 }
 
@@ -529,62 +452,98 @@ function VenueSection({
   title,
   subtitle,
   venues,
+  property,
 }: {
   title: string
   subtitle?: string
   venues: VenueCardVM[]
+  property: {
+    id: string
+    name: string
+    city: string
+    slug: string
+  }
 }) {
   return (
     <div className="space-y-3">
       <div className="space-y-1">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        {subtitle ? (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
-        ) : null}
+        <h3 className="text-base font-bold text-white">{title}</h3>
+        {subtitle ? <p className="text-sm text-neutral-400">{subtitle}</p> : null}
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
         {venues.map((venue) => (
-          <Link key={venue.id} href={venue.href}>
-            <Card className="h-full cursor-pointer transition hover:shadow-md">
-              <CardContent className="flex items-start gap-3 p-4">
+          <Card
+            key={venue.id}
+            className="group h-full overflow-hidden border-white/10 bg-white/[0.04] text-white transition hover:border-cyan-300/30 hover:bg-white/[0.07]"
+          >
+            <CardContent className="flex items-start gap-3 p-4">
+              <Link href={venue.href} className="shrink-0">
                 <img
                   src={venue.imageUrl || '/placeholder-venue.jpg'}
-                  className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                  className="h-20 w-20 rounded-2xl object-cover ring-1 ring-white/10"
                   alt={venue.name}
                 />
+              </Link>
 
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{venue.name}</p>
+              <div className="min-w-0 flex-1 space-y-3">
+                <div className="space-y-1">
+                  <Link href={venue.href} className="block hover:underline">
+                    <p className="text-sm font-bold text-white">{venue.name}</p>
+                  </Link>
 
-                    {venue.description && (
-                      <p className="line-clamp-2 text-xs text-muted-foreground">
-                        {venue.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {venue.chips.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {venue.chips.map((chip) => (
-                        <Chip key={chip}>{chip}</Chip>
-                      ))}
-                    </div>
+                  {venue.description && (
+                    <p className="line-clamp-2 text-xs leading-5 text-neutral-400">
+                      {venue.description}
+                    </p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
+
+                {venue.chips.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {venue.chips.map((chip) => (
+                      <Chip key={chip}>{chip}</Chip>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  <PropertyVenueCheckInButton
+                    venueId={venue.id}
+                    venueName={venue.name}
+                    city={property.city}
+                    propertyId={property.id}
+                    propertySlug={property.slug}
+                    propertyName={property.name}
+                  />
+
+                  <Link
+                    href={venue.href}
+                    className="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10"
+                  >
+                    View
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>
   )
 }
 
-function Chip({ children }: { children: React.ReactNode }) {
+function Pill({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium text-muted-foreground">
+    <span className="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-cyan-100">
+      {children}
+    </span>
+  )
+}
+
+function Chip({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-neutral-300">
       {children}
     </span>
   )

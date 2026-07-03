@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     const { data: session, error: sessionError } = await supabase
       .from('active_flow_sessions')
-      .select('id, user_id, status')
+      .select('id, user_id, status, source, source_id, title, city, metadata')
       .eq('id', sessionId)
       .eq('user_id', user.id)
       .maybeSingle()
@@ -63,7 +63,12 @@ export async function POST(req: Request) {
 
     if (session.status === 'cancelled') {
       return NextResponse.json(
-        { session, message: 'Flow already cancelled.' },
+        {
+          session,
+          message: 'Flow already cancelled.',
+          source: session.source ?? null,
+          sourceId: session.source_id ?? null,
+        },
         { status: 200 }
       )
     }
@@ -93,6 +98,8 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         session: updatedSession,
+        source: updatedSession.source ?? null,
+        sourceId: updatedSession.source_id ?? null,
       },
       { status: 200 }
     )
