@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 type Crawl = {
@@ -34,35 +33,53 @@ function formatCountdown(datetime: string | null) {
   return parts.join(' ')
 }
 
-export default function UserCrawls() {
+function formatDate(datetime: string | null) {
+  if (!datetime) return 'No date'
 
+  return new Date(datetime).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function formatCity(city: string | null) {
+  if (!city) return 'City TBD'
+
+  return city
+    .replaceAll('-', ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+export default function UserCrawls() {
   const [hosted, setHosted] = useState<Crawl[]>([])
   const [upcoming, setUpcoming] = useState<Crawl[]>([])
   const [past, setPast] = useState<Crawl[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [showAllHosted,setShowAllHosted] = useState(false)
-  const [showAllUpcoming,setShowAllUpcoming] = useState(false)
-  const [showAllPast,setShowAllPast] = useState(false)
+  const [showAllHosted, setShowAllHosted] = useState(false)
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false)
+  const [showAllPast, setShowAllPast] = useState(false)
 
   useEffect(() => {
-
     async function loadCrawls() {
-
       const {
         data: { user },
       } = await supabase.auth.getUser()
 
-      if (!user) return
+      if (!user) {
+        setLoading(false)
+        return
+      }
 
       const today = new Date()
-      today.setHours(0,0,0,0)
+      today.setHours(0, 0, 0, 0)
 
       const { data: hostedData } = await supabase
         .from('crawl_events')
         .select('id, title, slug, public_id, datetime, city')
         .eq('creator_id', user.id)
-        .order('datetime',{ ascending:true })
+        .order('datetime', { ascending: true })
 
       const { data: rsvpData } = await supabase
         .from('crawl_rsvps')
@@ -80,31 +97,29 @@ export default function UserCrawls() {
         .eq('user_id', user.id)
 
       const formattedRsvps =
-        rsvpData?.map((r:any)=>r.crawl_events).filter(Boolean) ?? []
+        rsvpData?.map((r: any) => r.crawl_events).filter(Boolean) ?? []
 
-      const upcomingCrawls:Crawl[] = []
-      const pastCrawls:Crawl[] = []
+      const upcomingCrawls: Crawl[] = []
+      const pastCrawls: Crawl[] = []
 
-      formattedRsvps.forEach((crawl)=>{
-
-        if(!crawl.datetime){
+      formattedRsvps.forEach((crawl) => {
+        if (!crawl.datetime) {
           upcomingCrawls.push(crawl)
-        } else if(new Date(crawl.datetime) >= today){
+        } else if (new Date(crawl.datetime) >= today) {
           upcomingCrawls.push(crawl)
         } else {
           pastCrawls.push(crawl)
         }
-
       })
 
       upcomingCrawls.sort(
-        (a,b)=>
+        (a, b) =>
           new Date(a.datetime ?? '').getTime() -
           new Date(b.datetime ?? '').getTime()
       )
 
       pastCrawls.sort(
-        (a,b)=>
+        (a, b) =>
           new Date(b.datetime ?? '').getTime() -
           new Date(a.datetime ?? '').getTime()
       )
@@ -113,257 +128,231 @@ export default function UserCrawls() {
       setUpcoming(upcomingCrawls)
       setPast(pastCrawls)
       setLoading(false)
-
     }
 
     loadCrawls()
+  }, [])
 
-  },[])
-
-  const removeRsvp = async (crawlId:string) => {
-
+  const removeRsvp = async (crawlId: string) => {
     const {
-      data:{ user },
+      data: { user },
     } = await supabase.auth.getUser()
 
-    if(!user) return
+    if (!user) return
 
     const { error } = await supabase
       .from('crawl_rsvps')
       .delete()
-      .eq('crawl_id',crawlId)
-      .eq('user_id',user.id)
+      .eq('crawl_id', crawlId)
+      .eq('user_id', user.id)
 
-    if(error){
-      console.error('Failed to remove RSVP:',error)
+    if (error) {
+      console.error('Failed to remove RSVP:', error)
       return
     }
 
-    setUpcoming(prev => prev.filter(c => c.id !== crawlId))
-
+    setUpcoming((prev) => prev.filter((crawl) => crawl.id !== crawlId))
   }
 
-  if(loading){
+  if (loading) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Loading your crawls…
+      <p className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-neutral-400">
+        Loading your Flows…
       </p>
     )
   }
 
   const nextCrawl = upcoming[0]
 
-  const hostedVisible = showAllHosted ? hosted : hosted.slice(0,3)
-  const upcomingVisible = showAllUpcoming ? upcoming : upcoming.slice(0,3)
-  const pastVisible = showAllPast ? past : past.slice(0,3)
+  const hostedVisible = showAllHosted ? hosted : hosted.slice(0, 3)
+  const upcomingVisible = showAllUpcoming ? upcoming : upcoming.slice(0, 3)
+  const pastVisible = showAllPast ? past : past.slice(0, 3)
 
   return (
+    <div className="space-y-4">
+      <CrawlGroup
+        title="Hosted"
+        count={hosted.length}
+        emptyText="You haven’t hosted any Flows yet."
+        showMore={hosted.length > 3}
+        expanded={showAllHosted}
+        onToggle={() => setShowAllHosted((prev) => !prev)}
+      >
+        {hostedVisible.map((crawl) => (
+          <CrawlRow
+            key={crawl.id}
+            crawl={crawl}
+            href={`/sponsor/${crawl.public_id ?? crawl.slug}`}
+          />
+        ))}
+      </CrawlGroup>
 
-    <div className="space-y-12">
+      <CrawlGroup
+        title="Upcoming"
+        count={upcoming.length}
+        emptyText="You haven’t joined any upcoming Flows."
+        showMore={upcoming.length > 3}
+        expanded={showAllUpcoming}
+        onToggle={() => setShowAllUpcoming((prev) => !prev)}
+      >
+        {upcomingVisible.map((crawl) => {
+          const isNext = nextCrawl?.id === crawl.id
+          const countdown = formatCountdown(crawl.datetime)
 
-      {/* Hosted */}
-
-      <section className="space-y-4">
-
-        <h2 className="text-lg font-semibold">
-          🎉 Hosted Crawls
-        </h2>
-
-        {hosted.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            You haven’t hosted any crawls yet.
-          </p>
-        )}
-
-        <div className="grid gap-3">
-
-          {hostedVisible.map((crawl)=>(
-            <Link key={crawl.id} href={`/sponsor/${crawl.public_id ?? crawl.slug}`}>
-
-              <Card className="hover:shadow-md transition cursor-pointer">
-
-                <CardContent className="p-4">
-
-                  <p className="font-medium text-foreground">
-                    {crawl.title}
-                  </p>
-
-                  <p className="text-xs text-muted-foreground">
-                    {crawl.city} •{' '}
-                    {crawl.datetime
-                      ? new Date(crawl.datetime).toLocaleDateString()
-                      : 'No date'}
-                  </p>
-
-                </CardContent>
-
-              </Card>
-
-            </Link>
-          ))}
-
-        </div>
-
-        {hosted.length > 3 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={()=>setShowAllHosted(!showAllHosted)}
-          >
-            {showAllHosted ? 'Show less' : 'See more'}
-          </Button>
-        )}
-
-      </section>
-
-      {/* Upcoming */}
-
-      <section className="space-y-4">
-
-        <h2 className="text-lg font-semibold">
-          🗓️ Upcoming Crawls
-        </h2>
-
-        {upcoming.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            You haven’t joined any upcoming crawls.
-          </p>
-        )}
-
-        <div className="grid gap-3">
-
-          {upcomingVisible.map((crawl)=>{
-
-            const isNext = nextCrawl?.id === crawl.id
-            const countdown = formatCountdown(crawl.datetime)
-
-            return (
-
-              <Link key={crawl.id} href={`/sponsor/${crawl.public_id ?? crawl.slug}`}>
-
-                <Card
-                  className={`transition cursor-pointer hover:shadow-md ${
-                    isNext ? 'border-primary' : ''
-                  }`}
+          return (
+            <CrawlRow
+              key={crawl.id}
+              crawl={crawl}
+              href={`/sponsor/${crawl.public_id ?? crawl.slug}`}
+              eyebrow={isNext ? 'Your next Flow' : undefined}
+              highlight={isNext}
+              countdown={countdown}
+              action={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 rounded-full border-neutral-700 bg-black/30 px-3 text-xs text-neutral-300 hover:bg-neutral-900 hover:text-white"
+                  onClick={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    removeRsvp(crawl.id)
+                  }}
                 >
+                  Remove RSVP
+                </Button>
+              }
+            />
+          )
+        })}
+      </CrawlGroup>
 
-                  <CardContent className="p-4 space-y-1">
-
-                    <p className="font-medium text-foreground">
-                      {crawl.title}
-                    </p>
-
-                    <p className="text-xs text-muted-foreground">
-                      {crawl.city} •{' '}
-                      {crawl.datetime
-                        ? new Date(crawl.datetime).toLocaleDateString()
-                        : 'No date'}
-                    </p>
-
-                    {countdown && (
-                      <p className="text-xs text-primary">
-                        Starts in {countdown}
-                      </p>
-                    )}
-
-                    {isNext && (
-                      <p className="text-xs font-semibold text-primary">
-                        Your next crawl
-                      </p>
-                    )}
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="mt-2"
-                      onClick={(e)=>{
-                        e.preventDefault()
-                        e.stopPropagation()
-                        removeRsvp(crawl.id)
-                      }}
-                    >
-                      Remove RSVP
-                    </Button>
-
-                  </CardContent>
-
-                </Card>
-
-              </Link>
-
-            )
-
-          })}
-
-        </div>
-
-        {upcoming.length > 3 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={()=>setShowAllUpcoming(!showAllUpcoming)}
-          >
-            {showAllUpcoming ? 'Show less' : 'See more'}
-          </Button>
-        )}
-
-      </section>
-
-      {/* Past */}
-
-      <section className="space-y-4">
-
-        <h2 className="text-lg font-semibold">
-          📜 Past Crawls
-        </h2>
-
-        {past.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No past crawls yet.
-          </p>
-        )}
-
-        <div className="grid gap-3">
-
-          {pastVisible.map((crawl)=>(
-            <Link key={crawl.id} href={`/sponsor/${crawl.public_id ?? crawl.slug}`}>
-
-              <Card className="hover:shadow-md transition cursor-pointer opacity-80">
-
-                <CardContent className="p-4">
-
-                  <p className="font-medium text-foreground">
-                    {crawl.title}
-                  </p>
-
-                  <p className="text-xs text-muted-foreground">
-                    {crawl.city} •{' '}
-                    {crawl.datetime
-                      ? new Date(crawl.datetime).toLocaleDateString()
-                      : 'No date'}
-                  </p>
-
-                </CardContent>
-
-              </Card>
-
-            </Link>
-          ))}
-
-        </div>
-
-        {past.length > 3 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={()=>setShowAllPast(!showAllPast)}
-          >
-            {showAllPast ? 'Show less' : 'See more'}
-          </Button>
-        )}
-
-      </section>
-
+      <CrawlGroup
+        title="Past"
+        count={past.length}
+        emptyText="No past Flows yet."
+        showMore={past.length > 3}
+        expanded={showAllPast}
+        onToggle={() => setShowAllPast((prev) => !prev)}
+      >
+        {pastVisible.map((crawl) => (
+          <CrawlRow
+            key={crawl.id}
+            crawl={crawl}
+            href={`/sponsor/${crawl.public_id ?? crawl.slug}`}
+            muted
+          />
+        ))}
+      </CrawlGroup>
     </div>
+  )
+}
+
+function CrawlGroup({
+  title,
+  count,
+  emptyText,
+  children,
+  showMore,
+  expanded,
+  onToggle,
+}: {
+  title: string
+  count: number
+  emptyText: string
+  children: React.ReactNode
+  showMore: boolean
+  expanded: boolean
+  onToggle: () => void
+}) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-neutral-800/80 bg-black/25">
+      <div className="flex items-center justify-between gap-3 border-b border-neutral-900 px-4 py-3">
+        <div>
+          <h3 className="text-sm font-semibold text-neutral-100">{title}</h3>
+          <p className="mt-0.5 text-xs text-neutral-500">
+            {count} {count === 1 ? 'Flow' : 'Flows'}
+          </p>
+        </div>
+
+        {showMore ? (
+          <button
+            type="button"
+            onClick={onToggle}
+            className="rounded-full border border-neutral-800 px-3 py-1 text-xs font-medium text-neutral-400 transition hover:border-cyan-400/40 hover:text-cyan-300"
+          >
+            {expanded ? 'Show less' : 'See more'}
+          </button>
+        ) : null}
+      </div>
+
+      {count === 0 ? (
+        <div className="px-4 py-5">
+          <p className="text-sm text-neutral-500">{emptyText}</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-neutral-900">{children}</div>
+      )}
+    </section>
+  )
+}
+
+function CrawlRow({
+  crawl,
+  href,
+  eyebrow,
+  countdown,
+  action,
+  highlight = false,
+  muted = false,
+}: {
+  crawl: Crawl
+  href: string
+  eyebrow?: string
+  countdown?: string | null
+  action?: React.ReactNode
+  highlight?: boolean
+  muted?: boolean
+}) {
+  return (
+    <Link
+      href={href}
+      className={[
+        'group flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-white/[0.04]',
+        highlight ? 'bg-indigo-500/[0.07]' : '',
+        muted ? 'opacity-80' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <div className="min-w-0">
+        {eyebrow ? (
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-300">
+            {eyebrow}
+          </p>
+        ) : null}
+
+        <p className="truncate text-sm font-semibold text-neutral-100">
+          {crawl.title}
+        </p>
+
+        <p className="mt-0.5 text-xs text-neutral-500">
+          {formatCity(crawl.city)} • {formatDate(crawl.datetime)}
+        </p>
+
+        {countdown ? (
+          <p className="mt-1 text-xs font-medium text-indigo-300">
+            Starts in {countdown}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2">
+        {action}
+
+        <span className="hidden rounded-full border border-neutral-800 px-2.5 py-1 text-xs font-medium text-neutral-500 transition group-hover:border-cyan-400/40 group-hover:text-cyan-300 sm:inline-flex">
+          Open →
+        </span>
+      </div>
+    </Link>
   )
 }

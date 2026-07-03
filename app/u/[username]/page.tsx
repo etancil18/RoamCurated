@@ -467,6 +467,33 @@ function Stat({
   )
 }
 
+const CHIP_LABELS: Record<string, string> = {
+  chill: 'Chill',
+  romantic: 'Romantic',
+  upbeat: 'Upbeat',
+  trendy: 'Trendy',
+  social: 'Social',
+  cozy: 'Cozy',
+  high_energy: 'High Energy',
+  art: 'Art',
+  hidden_gems: 'Hidden Gems',
+  live_events: 'Live Events',
+  music: 'Music',
+  dancing: 'Dancing',
+  foodie_spots: 'Foodie Spots',
+}
+
+function formatChipLabel(value: string) {
+  return (
+    CHIP_LABELS[value] ??
+    value
+      .replace(/_/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  )
+}
+
 function ChipGroup({
   title,
   values,
@@ -485,9 +512,9 @@ function ChipGroup({
           {values.map((value) => (
             <span
               key={value}
-              className="rounded-full border border-neutral-800 bg-black px-3 py-1 text-sm text-neutral-300"
+              className="rounded-full border border-cyan-500/15 bg-gradient-to-b from-neutral-900 to-black px-4 py-2 text-sm font-medium text-neutral-200 transition hover:border-cyan-400/40 hover:text-white"
             >
-              {value}
+              {formatChipLabel(value)}
             </span>
           ))}
         </div>
