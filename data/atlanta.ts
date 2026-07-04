@@ -42592,6 +42592,50 @@ const atlantaData = [
     "tags": "pancakes, biscuits, omelets, grits, bacon, coffee, waffles, hashbrowns, sandwiches, breakfast",
     "price": "$$",
     "duration": 1
+  },
+  {
+    "id": "c5f0d714-609c-4acd-ad89-b4c5de8a41bf",
+    "slug": "read-the-room-atl",
+    "name": "Read The Room",
+    "vibe": "clandestine, analog, immersive, artdeco, intimate, transportive",
+    "type": ["cocktail", "lounge"],
+    "lat": "33.7589028",
+    "lon": "-84.364802",
+    "link": "https://www.instagram.com/readtheroom.atl/",
+    "cover": "img/venues/read-the-room-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: Closed",
+      "Friday: 5:00 PM–2:30 AM",
+      "Saturday: 5:00 PM–2:30 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": null,
+      "fri": { "open": 17, "close": 26.5 },
+      "sat": { "open": 17, "close": 26.5 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "-",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, dj, vinyl, listening, records, arepas, samosas, aperitifs, hifi, selectors, soul",
+    "price": "$$",
+    "duration": 1
   }
 ]
 
