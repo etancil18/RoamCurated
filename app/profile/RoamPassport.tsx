@@ -336,10 +336,13 @@ export default function RoamPassport() {
         </Link>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <StatCard label="Hosted" value={stats.hostedCrawls} />
         <StatCard label="Joined" value={stats.joinedCrawls} />
-        <StatCard label="Completed" value={stats.pastCrawls + stats.completedFlows + stats.completedHostedFlows} />
+        <StatCard
+          label="Completed"
+          value={stats.pastCrawls + stats.completedFlows + stats.completedHostedFlows}
+        />
         <StatCard label="Event Check-ins" value={stats.eventCheckins} />
         <StatCard label="Visited" value={stats.venueVisits} />
         <StatCard label="Saved Guides" value={stats.savedProperties} />
@@ -379,10 +382,14 @@ function StatCard({
   value: number
 }) {
   return (
-    <Card className="border-neutral-800 bg-neutral-950">
-      <CardContent className="p-4">
-        <p className="text-2xl font-semibold text-white">{value}</p>
-        <p className="mt-1 text-xs text-neutral-500">{label}</p>
+    <Card className="border-neutral-800 bg-neutral-950/90">
+      <CardContent className="flex min-h-[88px] flex-col justify-between p-3 sm:min-h-[96px] sm:p-4">
+        <p className="text-2xl font-semibold leading-none text-white sm:text-3xl">
+          {value}
+        </p>
+        <p className="mt-2 text-[11px] font-medium leading-tight text-neutral-500 sm:text-xs">
+          {label}
+        </p>
       </CardContent>
     </Card>
   )

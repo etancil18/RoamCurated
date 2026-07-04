@@ -7,15 +7,9 @@ import {
   fallbackFlowFromStage,
 } from '@/utils/stageUtils'
 
-import {
-  isVenueOpenNow,
-  daypartAllowedAtTime,
-} from '@/utils/timeUtils'
+import { isVenueOpenNow, daypartAllowedAtTime } from '@/utils/timeUtils'
 
-import {
-  venueMatchesAnyType,
-  getVenueTypes,
-} from '@/lib/venues/typeMatching'
+import { venueMatchesAnyType, getVenueTypes } from '@/lib/venues/typeMatching'
 
 /* ------------------------------------------------ */
 /* Types                                            */
@@ -37,11 +31,9 @@ export type ThemedCrawlResult = {
   crawl: CrawlResult
 }
 
-type CrawlTheme =
-  | 'dateNight'
-  | 'nightOut'
-  | 'morningFlow'
-  | 'soloExplorer'
+type CrawlTheme = 'dateNight' | 'nightOut' | 'morningFlow' | 'soloExplorer'
+
+type MealBucket = 'breakfast' | 'lunch' | 'dinner' | null
 
 type CrawlGenerationOpts = {
   durationHours?: number
@@ -63,6 +55,24 @@ const IDEAL_WALK_MIN_METERS = 180
 const IDEAL_WALK_MAX_METERS = 950
 const SOFT_WALK_MAX_METERS = 1400
 const HARD_INTERSTOP_MAX_METERS = 1800
+
+const BREAKFAST_LIKE_TYPES = [
+  'breakfast',
+  'brunch',
+  'coffee',
+  'cafe',
+  'café',
+  'bakery',
+]
+
+const LUNCH_LIKE_TYPES = ['lunch', 'restaurant']
+const DINNER_LIKE_TYPES = ['dinner', 'restaurant', 'kitchen']
+
+const MEAL_INTENT_TYPES = [
+  ...BREAKFAST_LIKE_TYPES,
+  ...LUNCH_LIKE_TYPES,
+  ...DINNER_LIKE_TYPES,
+]
 
 /* ------------------------------------------------ */
 /* Stage Type Exclusions                            */
@@ -108,10 +118,9 @@ const THEME_STAGE_FLOWS: Record<CrawlTheme, readonly (readonly string[])[]> = {
 
   morningFlow: [
     ['fitness', 'yoga', 'pilates'],
-    ['coffee', 'cafe', 'bakery'],
+    ['breakfast', 'brunch', 'coffee', 'cafe', 'café', 'bakery'],
     ['park', 'garden', 'market'],
     ['spa', 'bookstore'],
-    ['lunch', 'cafe', 'café'],
   ],
 
   soloExplorer: [
@@ -119,7 +128,7 @@ const THEME_STAGE_FLOWS: Record<CrawlTheme, readonly (readonly string[])[]> = {
     ['gallery', 'bookstore', 'lifestyle'],
     ['park', 'garden'],
     ['lunch', 'wine bar', 'dessert'],
-    ['gallery', 'random gem'],
+    ['dinner', 'restaurant', 'gallery', 'random gem'],
   ],
 }
 
@@ -186,13 +195,11 @@ function normalizeStringList(value: string | string[] | undefined): string[] {
 
 function venueMatchesTags(venue: Venue, tags: string[]) {
   const venueTags = normalizeStringList(venue.tags)
-
   return tags.some((tag) => venueTags.includes(tag.toLowerCase()))
 }
 
 function venueMatchesVibe(venue: Venue, vibes: string[]) {
   const venueVibes = normalizeStringList(venue.vibe)
-
   return vibes.some((vibe) => venueVibes.includes(vibe.toLowerCase()))
 }
 
@@ -243,27 +250,100 @@ function getMatchedStageType(venue: Venue, stageTypes: readonly string[]) {
   return venueTypes[0] ?? null
 }
 
+function isLunchLikeType(value: string | null) {
+  if (!value) return false
+  return LUNCH_LIKE_TYPES.includes(value.toLowerCase())
+}
+
+function isEarlyDayMealType(value: string | null) {
+  if (!value) return false
+  return BREAKFAST_LIKE_TYPES.includes(value.toLowerCase())
+}
+
+function inferMealBucketFromTypes(types: string[], now: DateTime): MealBucket {
+  const hour = getHour(now)
+
+  if (hasAnyType(types, ['breakfast'])) return 'breakfast'
+
+  if (hasAnyType(types, ['brunch'])) {
+    return isWeekend(now) || hour < 14 ? 'breakfast' : 'lunch'
+  }
+
+  if (hasAnyType(types, ['coffee', 'cafe', 'café', 'bakery'])) {
+    return hour < 14 ? 'breakfast' : null
+  }
+
+  if (hasAnyType(types, ['lunch'])) return 'lunch'
+  if (hasAnyType(types, ['dinner'])) return 'dinner'
+
+  if (hasAnyType(types, ['restaurant', 'kitchen'])) {
+    if (hour < 11) return 'breakfast'
+    if (hour < 16.5) return 'lunch'
+    return 'dinner'
+  }
+
+  return null
+}
+
+function stageHasMealIntent(stageTypes: readonly string[]) {
+  return stageTypes.some((type) => MEAL_INTENT_TYPES.includes(type.toLowerCase()))
+}
+
+function shouldRejectDuplicateMealBucket({
+  venue,
+  now,
+  usedMealBuckets,
+}: {
+  venue: Venue
+  now: DateTime
+  usedMealBuckets: Set<MealBucket>
+}) {
+  const bucket = inferMealBucketFromTypes(getVenueTypes(venue), now)
+  if (!bucket) return false
+  return usedMealBuckets.has(bucket)
+}
+
+function resolveContextualMatchedType({
+  venue,
+  stageTypes,
+  previousMatchedTypes,
+}: {
+  venue: Venue
+  stageTypes: readonly string[]
+  previousMatchedTypes: string[]
+}) {
+  const matchedType = getMatchedStageType(venue, stageTypes)
+
+  const alreadyHadLunch = previousMatchedTypes.some(isLunchLikeType)
+  const stageCanBeDinner = stageTypes.some((type) =>
+    DINNER_LIKE_TYPES.includes(type.toLowerCase())
+  )
+
+  if (
+    alreadyHadLunch &&
+    stageCanBeDinner &&
+    !isEarlyDayMealType(matchedType)
+  ) {
+    return 'dinner'
+  }
+
+  return matchedType
+}
+
 function shouldSkipForThemeDistinctness(
   venueId: string,
   opts?: CrawlGenerationOpts
 ) {
   const stageIndex = opts?.stageIndex ?? 0
 
-  if (stageIndex > 1) {
-    return false
-  }
+  if (stageIndex > 1) return false
 
   const stronglyDiscouraged =
     opts?.stronglyDiscouragedVenueIds?.has(venueId) ?? false
   const discouraged = opts?.discouragedVenueIds?.has(venueId) ?? false
 
-  if (stageIndex === 0) {
-    return stronglyDiscouraged || discouraged
-  }
-
-  if (stageIndex === 1) {
-    return stronglyDiscouraged || discouraged
-  }
+  if (stageIndex === 0) return stronglyDiscouraged || discouraged
+  if (stageIndex === 1) return stronglyDiscouraged || discouraged
 
   return false
 }
@@ -301,7 +381,7 @@ function scoreThemeTimeFit(theme: CrawlTheme | undefined, now: DateTime) {
   }
 
   if (theme === 'nightOut') {
-    if (hour >= 18 && hour <= 2) return 18
+    if (hour >= 18 || hour <= 2) return 18
     if (hour >= 16.5) return 5
     return -26
   }
@@ -465,7 +545,7 @@ function scoreSequenceCoherence(
 
   if (previousCoffee && candidateCoffee) score -= 22
   if (previousMeal && candidateCoffee) score -= 20
-  if (previousMeal && candidateMeal) score -= 8
+  if (previousMeal && candidateMeal) score -= 18
   if (previousBrowse && candidateBrowse) score -= 4
 
   return score
@@ -576,6 +656,7 @@ function selectVenueForStage(
   stageTypes: readonly string[],
   usedIds: Set<string>,
   usedTypes: Record<string, number>,
+  usedMealBuckets: Set<MealBucket>,
   now: DateTime,
   originLat: number,
   originLon: number,
@@ -647,11 +728,27 @@ function selectVenueForStage(
         continue
       }
 
+      if (
+        stageHasMealIntent(stageTypes) &&
+        shouldRejectDuplicateMealBucket({
+          venue: v,
+          now,
+          usedMealBuckets,
+        })
+      ) {
+        continue
+      }
+
       const typeKey = venueTypes[0] ?? 'unknown'
 
       if ((usedTypes[typeKey] ?? 0) >= 2) continue
 
       usedTypes[typeKey] = (usedTypes[typeKey] ?? 0) + 1
+
+      const mealBucket = inferMealBucketFromTypes(venueTypes, now)
+      if (mealBucket) {
+        usedMealBuckets.add(mealBucket)
+      }
 
       return v
     }
@@ -698,6 +795,7 @@ export function generateCrawl(
 
   const usedIds = new Set<string>()
   const usedTypes: Record<string, number> = {}
+  const usedMealBuckets = new Set<MealBucket>()
 
   const stages: CrawlStageResult[] = []
   const selectedVenues: Venue[] = []
@@ -714,6 +812,7 @@ export function generateCrawl(
       stageTypes,
       usedIds,
       usedTypes,
+      usedMealBuckets,
       now,
       currentLat,
       currentLon,
@@ -728,11 +827,22 @@ export function generateCrawl(
 
     usedIds.add(venue.id)
 
+    const previousMatchedTypes = stages
+      .map((stage) => stage.matchedType)
+      .filter((value): value is string => Boolean(value))
+
+    const matchedType = resolveContextualMatchedType({
+      venue,
+      stageTypes,
+      previousMatchedTypes,
+    })
+
     stages.push({
       stageTypes,
       venue,
-      matchedType: getMatchedStageType(venue, stageTypes),
+      matchedType,
     })
+
     selectedVenues.push(venue)
 
     currentLat = venue.lat

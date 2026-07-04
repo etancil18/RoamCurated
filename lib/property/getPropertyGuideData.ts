@@ -456,7 +456,9 @@ function isJourneyAvailableToday(
 function buildPropertyCrawlCards(
   nearbyVenues: NormalizedVenue[],
   property: { id: string; lat: number; lon: number; city: string; slug: string },
-  now: DateTime
+  now: DateTime,
+  allCityVenueById: Map<string, NormalizedVenue>,
+  dbCityVenueById: Map<string, VenueLike>
 ): PropertyCrawlCard[] {
   const generatedCrawls = generatePropertyCrawls(
     nearbyVenues as any,
@@ -477,30 +479,68 @@ function buildPropertyCrawlCards(
     .map((entry, index) => {
       const bestTimeLabel = getBestTimeLabelForTheme(entry.theme, now)
 
+      const hydratedVenues: ThemedCrawlResult['crawl']['venues'] = (
+  entry.crawl.venues ?? []
+).map((venue) => {
+  const canonicalVenue = allCityVenueById.get(venue.id)
+  const dbVenue = dbCityVenueById.get(venue.id)
+
+  const hydratedType =
+    canonicalVenue?.type ?? dbVenue?.type ?? venue.type ?? undefined
+
+  const description =
+    typeof dbVenue?.description === 'string' &&
+    dbVenue.description.trim().length > 0
+      ? dbVenue.description
+      : typeof canonicalVenue?.description === 'string' &&
+          canonicalVenue.description.trim().length > 0
+        ? canonicalVenue.description
+        : typeof (venue as { description?: string | null }).description ===
+              'string' &&
+            (venue as { description?: string | null }).description?.trim().length
+          ? (venue as { description?: string | null }).description ?? null
+          : null
+
+  const hydratedCover =
+    canonicalVenue?.cover ?? dbVenue?.cover ?? venue.cover ?? undefined
+
+  return {
+    ...venue,
+    ...canonicalVenue,
+    type: hydratedType === null ? undefined : hydratedType,
+    cover: hydratedCover === null ? undefined : hydratedCover,
+    slug: canonicalVenue?.slug ?? dbVenue?.slug ?? venue.slug ?? undefined,
+    link: `/venue-profile/${venue.id}`,
+    description,
+  }
+}) as ThemedCrawlResult['crawl']['venues']
+
+const hydratedCrawl: ThemedCrawlResult['crawl'] = {
+  ...entry.crawl,
+  venues: hydratedVenues,
+}
+
       const vm = buildCrawlVM(
         {
           id: `${entry.theme}-${index}`,
           theme: entry.theme,
-          stops: (entry.crawl.venues ?? []).map((venue, stopIndex) => ({
+          stops: hydratedVenues.map((venue, stopIndex) => ({
             venue: {
               id: venue.id,
               name: venue.name,
               link: `/venue-profile/${venue.id}`,
               description:
-                typeof (venue as { description?: string | null }).description ===
-                'string'
-                  ? (venue as { description?: string | null }).description ?? null
-                  : null,
+                (venue as { description?: string | null }).description ?? null,
             },
-            matchedType: entry.crawl.stages?.[stopIndex]?.matchedType ?? null,
-            desiredType: entry.crawl.stages?.[stopIndex]?.stageTypes?.[0] ?? null,
-            stageType: entry.crawl.stages?.[stopIndex]?.stageTypes?.[0] ?? null,
+            matchedType: hydratedCrawl.stages?.[stopIndex]?.matchedType ?? null,
+            desiredType: hydratedCrawl.stages?.[stopIndex]?.stageTypes?.[0] ?? null,
+            stageType: hydratedCrawl.stages?.[stopIndex]?.stageTypes?.[0] ?? null,
             distanceFromPreviousMeters: getDistanceFromPreviousMeters({
               property,
-              venues: entry.crawl.venues as Array<{ lat: number; lon: number }>,
+              venues: hydratedVenues as Array<{ lat: number; lon: number }>,
               stopIndex,
             }),
-            isAnchor: stopIndex === entry.crawl.venues.length - 1,
+            isAnchor: stopIndex === hydratedVenues.length - 1,
           })),
           metadata: {
             bestTimeLabel,
@@ -515,7 +555,7 @@ function buildPropertyCrawlCards(
       return {
         id: vm.id,
         theme: entry.theme,
-        crawl: entry.crawl,
+        crawl: hydratedCrawl,
         vm,
       }
     })
@@ -634,6 +674,7 @@ export async function getPropertyGuideData({
       venues (
         id,
         name,
+        description,
         lat,
         lon,
         city,
@@ -717,16 +758,18 @@ export async function getPropertyGuideData({
   const nearbyEvents = (nearbyEventsData as NearbyEventRow[] | null) ?? []
 
   const propertyCrawlCards = buildPropertyCrawlCards(
-    nearbyVenues,
-    {
-      id: property.id,
-      lat: property.lat,
-      lon: property.lon,
-      city: property.city,
-      slug: property.slug,
-    },
-    nowForCity
-  )
+  nearbyVenues,
+  {
+    id: property.id,
+    lat: property.lat,
+    lon: property.lon,
+    city: property.city,
+    slug: property.slug,
+  },
+  nowForCity,
+  allCityVenueById,
+  dbCityVenueById
+)
 
   const sevenDaysFromNow = nowForCity.plus({ days: 7 }).toISO()
 

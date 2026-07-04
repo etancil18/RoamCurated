@@ -267,9 +267,7 @@ function PropertyCrawlCardView({
             </div>
 
             <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-3 text-sm leading-6 text-neutral-300">
-              <span className="font-semibold text-white">
-                Why this works:
-              </span>{' '}
+              <span className="font-semibold text-white">Why this works:</span>{' '}
               {routeContext.reason}
             </div>
           </div>
@@ -368,9 +366,7 @@ function PropertyCrawlCardView({
                   </Link>
 
                   {currentVenueDescription && (
-                    <p className="text-sm leading-6 text-neutral-400">
-                      {currentVenueDescription}
-                    </p>
+                    <StopDescription description={currentVenueDescription} />
                   )}
 
                   {nearbyVenues.length > 0 && swapCandidates.length > 0 && (
@@ -440,6 +436,28 @@ function PropertyCrawlCardView({
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function StopDescription({ description }: { description: string }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className="space-y-1">
+      <button
+        type="button"
+        onClick={() => setExpanded((prev) => !prev)}
+        className="text-xs font-semibold text-cyan-300 underline underline-offset-4 hover:text-cyan-100"
+      >
+        {expanded ? 'Hide Description' : 'View Description'}
+      </button>
+
+      {expanded && (
+        <p className="max-w-2xl text-sm leading-6 text-neutral-400">
+          {description}
+        </p>
+      )}
+    </div>
   )
 }
 
