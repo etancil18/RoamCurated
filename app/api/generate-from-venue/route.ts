@@ -2,9 +2,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
+import { CITY_CONFIGS } from '@/config/cities'
 import { buildRouteContext } from '@/lib/routes/buildContext'
 import { estimateArrivalTime } from '@/lib/routes/arrivalTime'
-import { filterRouteCandidates } from '@/lib/routes/candidateFilter'
+import {
+  filterRouteCandidates,
+  summarizeRejections,
+} from '@/lib/routes/candidateFilter'
 import { explainRoute } from '@/lib/routes/explainRoute'
 import { scorePersonalization } from '@/lib/routes/personalization'
 import { scoreVenue } from '@/lib/routes/scoreVenue'
@@ -56,8 +60,8 @@ export async function POST(req: NextRequest) {
       | GenerateRouteFromVenueRequest
       | null
 
-    if (!body?.venueId) {
-      return errorResponse('Missing venueId', 400)
+    if (!body?.venueId && !body?.venueSlug && !body?.venueName) {
+      return errorResponse('Missing venue identifier', 400)
     }
 
     const supabase = await createServerClient()
@@ -70,11 +74,18 @@ export async function POST(req: NextRequest) {
     const tightness = sanitizeTightness(body.tightness)
     const maxStops = sanitizeMaxStops(body.maxStops)
 
-    const { data: anchorVenue, error: anchorError } = await supabase
-      .from('venues')
-      .select('*')
-      .eq('id', body.venueId)
-      .maybeSingle<VenueRow>()
+    let anchorQuery = supabase.from('venues').select('*')
+
+    if (body.venueId) {
+      anchorQuery = anchorQuery.eq('id', body.venueId)
+    } else if (body.venueSlug) {
+      anchorQuery = anchorQuery.eq('slug', body.venueSlug)
+    } else if (body.venueName) {
+    anchorQuery = anchorQuery.eq('name', body.venueName)
+    }
+
+    const { data: anchorVenue, error: anchorError } =
+      await anchorQuery.maybeSingle<VenueRow>()
 
     if (anchorError || !anchorVenue) {
       return errorResponse('Starting venue not found', 404)
@@ -85,6 +96,10 @@ export async function POST(req: NextRequest) {
     }
 
     const city = body.city ?? anchorVenue.city ?? null
+    const timezone =
+      city && CITY_CONFIGS[city]?.timezone
+        ? CITY_CONFIGS[city].timezone
+        : null
 
     let venuesQuery = supabase.from('venues').select('*')
 
@@ -141,70 +156,119 @@ export async function POST(req: NextRequest) {
         travelMode,
       })
 
-      const { candidates, rejected } = filterRouteCandidates({
-        venues,
-        anchorVenue,
-        previousStop,
-        stage,
-        arrivalAt: arrivalSeed.arriveAt,
-        selectedVenueIds,
-        travelMode,
-        maxDistanceMeters: context.maxDistanceMeters,
-        requireStageMatch: false,
-        excludeLikelyClosed: false,
-      })
+      const passes = [
+        {
+          label: 'strict',
+          requireStageMatch: true,
+          excludeLikelyClosed: true,
+          maxDistanceMeters: context.maxDistanceMeters,
+        },
+        {
+          label: 'relaxed_stage',
+          requireStageMatch: false,
+          excludeLikelyClosed: true,
+          maxDistanceMeters: context.maxDistanceMeters,
+        },
+        {
+          label: 'wider_fallback',
+          requireStageMatch: false,
+          excludeLikelyClosed: true,
+          maxDistanceMeters: Math.round(context.maxDistanceMeters * 1.5),
+        },
+      ]
 
-      rejectedCount += rejected.length
-      candidateCount += candidates.length
+      let selected: any = null
+      let selectedPass: string | null = null
+      const passDebug: NonNullable<
+        NonNullable<RouteGenerationDebug['stageAttempts']>[number]['passes']
+      > = []
 
-      const scored = candidates
-        .map((candidate) => {
-          const arrivalEstimate = estimateArrivalTime({
-            fromVenue: previousStop,
-            toVenue: candidate,
-            startAt: currentStartAt,
-            dwellMinutes: selectedStops.length === 0 ? 0 : stage.dwellMinutes,
-            travelMode,
-          })
-
-          const baseScore = scoreVenue({
-            candidate,
-            previousStop,
-            anchorVenue,
-            stage,
-            arrivalAt: arrivalEstimate.arriveAt,
-            travelMode,
-            selectedVenueIds,
-            previousRouteTypes: selectedStops.flatMap((stop) => stop.candidateTypes),
-            preferredVibes: context.preferredVibes,
-            preferredTags: context.preferredTags,
-            maxDistanceMeters: context.maxDistanceMeters,
-            idealDistanceMeters: context.idealDistanceMeters,
-          })
-
-          const personalizationScore = scorePersonalization({
-            venue: candidate,
-            personalization,
-          })
-
-          return {
-            candidate,
-            arrivalEstimate,
-            baseScore,
-            finalScore: baseScore.score + personalizationScore.score,
-            personalizationReasons: personalizationScore.reasons,
-          }
+      for (const pass of passes) {
+        const { candidates, rejected } = filterRouteCandidates({
+          venues,
+          anchorVenue,
+          previousStop,
+          stage,
+          arrivalAt: arrivalSeed.arriveAt,
+          selectedVenueIds,
+          travelMode,
+          maxDistanceMeters: pass.maxDistanceMeters,
+          requireStageMatch: pass.requireStageMatch,
+          excludeLikelyClosed: pass.excludeLikelyClosed,
+          timezone,
         })
-        .sort((a, b) => b.finalScore - a.finalScore)
 
-      const selected = scored[0]
+        rejectedCount += rejected.length
+        candidateCount += candidates.length
 
-      stageAttempts?.push({
+        const scored = candidates
+          .map((candidate) => {
+            const arrivalEstimate = estimateArrivalTime({
+              fromVenue: previousStop,
+              toVenue: candidate,
+              startAt: currentStartAt,
+              dwellMinutes: selectedStops.length === 0 ? 0 : stage.dwellMinutes,
+              travelMode,
+            })
+
+            const baseScore = scoreVenue({
+              candidate,
+              previousStop,
+              anchorVenue,
+              stage,
+              arrivalAt: arrivalEstimate.arriveAt,
+              travelMode,
+              selectedVenueIds,
+              previousRouteTypes: selectedStops.flatMap((stop) => stop.candidateTypes),
+              preferredVibes: context.preferredVibes,
+              preferredTags: context.preferredTags,
+              maxDistanceMeters: pass.maxDistanceMeters,
+              idealDistanceMeters: context.idealDistanceMeters,
+              timezone,
+            })
+
+            const personalizationScore = scorePersonalization({
+              venue: candidate,
+              personalization,
+            })
+
+            return {
+              candidate,
+              arrivalEstimate,
+              baseScore,
+              finalScore: baseScore.score + personalizationScore.score,
+              personalizationReasons: personalizationScore.reasons,
+            }
+          })
+          .sort((a, b) => b.finalScore - a.finalScore)
+
+        const top = scored[0] ?? null
+
+        passDebug.push({
+          pass: pass.label,
+          candidateCount: candidates.length,
+          rejectedCount: rejected.length,
+          rejectionCounts: summarizeRejections(rejected),
+          topScore: top?.finalScore ?? null,
+          topVenueId: top?.candidate.id ?? null,
+          topVenueName: top?.candidate.name ?? null,
+        })
+
+        if (top && top.finalScore >= 0) {
+          selected = top
+          selectedPass = pass.label
+          break
+        }
+      }
+
+      stageAttempts.push({
         stageId: stage.id,
         stageLabel: stage.label,
-        candidateCount: candidates.length,
+        candidateCount: passDebug.reduce((sum, pass) => sum + pass.candidateCount, 0),
         selectedVenueId: selected?.candidate.id ?? null,
         selectedVenueName: selected?.candidate.name ?? null,
+        selectedPass,
+        passes: passDebug,
       })
 
       if (!selected || selected.finalScore < 0) {
@@ -314,16 +378,18 @@ export async function POST(req: NextRequest) {
       totalDwellMinutes,
       totalRouteMinutes: totalTravelMinutes + totalDwellMinutes,
       createdAt: new Date().toISOString(),
-      debug: {
-        rejectedCount,
-        candidateCount,
-        selectedCount: selectedStops.length,
-        stageAttempts,
-        warnings:
-          selectedStops.length === 0
-            ? ['No strong contextual stops were selected.']
-            : [],
-      },
+      debug: body.debug === false
+        ? undefined
+        : {
+            rejectedCount,
+            candidateCount,
+            selectedCount: selectedStops.length,
+            stageAttempts,
+            warnings:
+              selectedStops.length === 0
+                ? ['No strong contextual stops were selected.']
+                : [],
+          },
     }
 
     return NextResponse.json({

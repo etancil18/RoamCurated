@@ -5,6 +5,7 @@ import {
   type RouteStage,
   getRouteStageForHour,
   isHourWithinStageWindow,
+  getDayKindFromWeekday,
 } from './routeStages'
 import {
   type NormalizedVenueType,
@@ -39,6 +40,7 @@ export function inferStartingStage({
 }): InferStartingStageResult {
   const date = coerceDate(plannedStartAt ?? new Date())
   const hour = date.getHours()
+  const dayKind = getDayKindFromWeekday(date.getDay() === 0 ? 7 : date.getDay())
   const anchorTypes = normalizeVenueTypes(anchorVenue)
 
   if (anchorTypes.length === 0) {
@@ -54,26 +56,33 @@ export function inferStartingStage({
     stage.types.some((stageType) =>
       anchorTypes.some((type) => normalizeKey(type) === normalizeKey(stageType))
     )
-  )
+  ).filter((stage) => stageAllowedForContext(stage, hour, dayKind))
 
   if (typeMatchedStages.length === 0) {
     return {
       stage: getRouteStageForHour(hour),
       confidence: 'low',
-      reason: 'Venue type did not match a route stage, so Roam inferred the starting stage from time of day.',
+      reason: 'Venue type did not match a contextual route stage, so Roam inferred the starting stage from time of day.',
       anchorTypes,
     }
   }
 
   const timeAndTypeMatchedStages = typeMatchedStages
     .filter((stage) => isHourWithinStageWindow(hour, stage))
-    .sort((a, b) => b.order - a.order)
+    .sort((a, b) => {
+      const aDistance = getHourDistanceToStageWindow(hour, a)
+      const bDistance = getHourDistanceToStageWindow(hour, b)
+
+      if (aDistance !== bDistance) return aDistance - bDistance
+
+      return a.order - b.order
+    })
 
   if (timeAndTypeMatchedStages[0]) {
     return {
       stage: timeAndTypeMatchedStages[0],
       confidence: 'high',
-      reason: `Venue type and arrival time both fit ${timeAndTypeMatchedStages[0].label}.`,
+      reason: `Venue type, arrival time, and ${dayKind} context fit ${timeAndTypeMatchedStages[0].label}.`,
       anchorTypes,
     }
   }
@@ -84,7 +93,7 @@ export function inferStartingStage({
     return {
       stage: nearestStage,
       confidence: 'medium',
-      reason: `Venue type fits ${nearestStage.label}, even though the selected time is slightly outside its preferred window.`,
+      reason: `Venue type fits ${nearestStage.label}, adjusted for ${dayKind} context and selected time.`,
       anchorTypes,
     }
   }
@@ -104,6 +113,24 @@ export function inferStartingStageOnly(params: {
   return inferStartingStage(params).stage
 }
 
+function stageAllowedForContext(
+  stage: RouteStage,
+  hour: number,
+  dayKind: 'weekday' | 'weekend'
+): boolean {
+  const normalizedHour = normalizeHour(hour)
+
+  if (stage.id === 'night_out' && normalizedHour < 17) return false
+  if (stage.id === 'dinner' && normalizedHour < 14) return false
+  if (stage.id === 'early_evening' && normalizedHour < 13) return false
+
+  if (dayKind === 'weekday') {
+    if (stage.id === 'night_out' && normalizedHour < 18) return false
+  }
+
+  return true
+}
+
 function getNearestStageByTime(stages: RouteStage[], hour: number) {
   return [...stages].sort((a, b) => {
     const aDistance = getHourDistanceToStageWindow(hour, a)
@@ -111,7 +138,7 @@ function getNearestStageByTime(stages: RouteStage[], hour: number) {
 
     if (aDistance !== bDistance) return aDistance - bDistance
 
-    return b.order - a.order
+    return a.order - b.order
   })[0] ?? null
 }
 

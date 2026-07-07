@@ -1,11 +1,16 @@
 // lib/routes/candidateFilter.ts
 
+import { DateTime } from 'luxon'
 import type { RouteStage } from './routeStages'
 import {
   type NormalizedVenueType,
   hasAnyVenueType,
   normalizeVenueTypes,
 } from './venueTypeNormalization'
+import {
+  hasHoursForDayFromHours,
+  isVenueOpenAtTimeFromHours,
+} from '@/utils/hoursTimeUtils'
 
 export type CandidateFilterTravelMode = 'walking' | 'cycling' | 'driving'
 
@@ -65,6 +70,7 @@ export type CandidateFilterParams = {
   maxDistanceMeters?: number
   requireStageMatch?: boolean
   excludeLikelyClosed?: boolean
+  timezone?: string | null
 }
 
 const DEFAULT_MAX_DISTANCE_METERS_BY_MODE: Record<
@@ -87,6 +93,7 @@ export function filterRouteCandidates({
   maxDistanceMeters = DEFAULT_MAX_DISTANCE_METERS_BY_MODE[travelMode],
   requireStageMatch = false,
   excludeLikelyClosed = false,
+  timezone = null,
 }: CandidateFilterParams): CandidateFilterResult {
   const candidates: CandidateFilterVenue[] = []
   const rejected: CandidateFilterRejectedVenue[] = []
@@ -109,6 +116,7 @@ export function filterRouteCandidates({
       distanceMeters,
       requireStageMatch,
       excludeLikelyClosed,
+      timezone,
     })
 
     if (rejectionReason) {
@@ -130,6 +138,18 @@ export function filterRouteCandidates({
   }
 }
 
+export function summarizeRejections(
+  rejected: CandidateFilterRejectedVenue[]
+): Partial<Record<CandidateFilterReason, number>> {
+  return rejected.reduce<Partial<Record<CandidateFilterReason, number>>>(
+    (acc, item) => {
+      acc[item.reason] = (acc[item.reason] ?? 0) + 1
+      return acc
+    },
+    {}
+  )
+}
+
 export function getCandidateRejectionReason({
   venue,
   anchorVenue,
@@ -140,6 +160,7 @@ export function getCandidateRejectionReason({
   distanceMeters,
   requireStageMatch = false,
   excludeLikelyClosed = false,
+  timezone = null,
 }: {
   venue: CandidateFilterVenue
   anchorVenue: CandidateFilterVenue
@@ -150,6 +171,7 @@ export function getCandidateRejectionReason({
   distanceMeters: number | null
   requireStageMatch?: boolean
   excludeLikelyClosed?: boolean
+  timezone?: string | null
 }): CandidateFilterReason | null {
   if (isSameVenue(venue, anchorVenue)) {
     return 'same_as_anchor'
@@ -190,7 +212,7 @@ export function getCandidateRejectionReason({
   if (
     excludeLikelyClosed &&
     arrivalAt &&
-    isLikelyClosedAtArrival(venue, arrivalAt)
+    isLikelyClosedAtArrival(venue, arrivalAt, timezone)
   ) {
     return 'likely_closed'
   }
@@ -205,7 +227,7 @@ export function venueMatchesStage(
   const venueTypes = normalizeVenueTypes(venue)
   const stageTypes = stage.types
     .map((type) => normalizeRouteStageType(type))
-    .filter(Boolean) as NormalizedVenueType[]
+    .filter((type): type is NormalizedVenueType => Boolean(type))
 
   if (venueTypes.length === 0 || stageTypes.length === 0) {
     return false
@@ -216,49 +238,26 @@ export function venueMatchesStage(
 
 export function isLikelyClosedAtArrival(
   venue: CandidateFilterVenue,
-  arrivalAt: Date
+  arrivalAt: Date,
+  timezone: string | null = null
 ): boolean {
-  if (!Array.isArray(venue.hours)) {
-    return false
-  }
-
-  const dayName = arrivalAt.toLocaleDateString('en-US', {
-    weekday: 'long',
-  })
-
-  const todayLine = venue.hours.find(
-    (line) =>
-      typeof line === 'string' &&
-      line.toLowerCase().startsWith(dayName.toLowerCase())
-  )
-
-  if (!todayLine || typeof todayLine !== 'string') {
-    return false
-  }
-
-  const lower = todayLine.toLowerCase()
-
-  if (lower.includes('closed')) {
+  if (!venue.hours) {
     return true
   }
 
-  const ranges = parseHourRanges(todayLine)
+  const arrivalDateTime = timezone
+    ? DateTime.fromJSDate(arrivalAt).setZone(timezone)
+    : DateTime.fromJSDate(arrivalAt)
 
-  if (ranges.length === 0) {
-    return false
+  if (!arrivalDateTime.isValid) {
+    return true
   }
 
-  const arrivalMinutes = arrivalAt.getHours() * 60 + arrivalAt.getMinutes()
+  if (!hasHoursForDayFromHours(venue.hours, arrivalDateTime)) {
+    return true
+  }
 
-  const isOpen = ranges.some(({ startMinutes, endMinutes }) => {
-    if (startMinutes <= endMinutes) {
-      return arrivalMinutes >= startMinutes && arrivalMinutes <= endMinutes
-    }
-
-    return arrivalMinutes >= startMinutes || arrivalMinutes <= endMinutes
-  })
-
-  return !isOpen
+  return !isVenueOpenAtTimeFromHours(venue, arrivalDateTime)
 }
 
 export function getDistanceFromComparisonVenue(
@@ -401,106 +400,6 @@ function normalizeRouteStageType(value: string): NormalizedVenueType | null {
   }
 
   return aliases[normalized] ?? null
-}
-
-function parseHourRanges(line: string): Array<{
-  startMinutes: number
-  endMinutes: number
-}> {
-  const afterColon = line.includes(':')
-    ? line.split(':').slice(1).join(':')
-    : line
-
-  const ranges = afterColon
-    .split(/,|;/)
-    .map((part) => part.trim())
-    .filter(Boolean)
-
-  return ranges
-    .map((range) => {
-      const match = range.match(
-        /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i
-      )
-
-      if (!match) return null
-
-      const [
-        ,
-        startHourRaw,
-        startMinuteRaw,
-        startMeridiemRaw,
-        endHourRaw,
-        endMinuteRaw,
-        endMeridiemRaw,
-      ] = match
-
-      const endMeridiem = endMeridiemRaw?.toLowerCase()
-      const startMeridiem =
-        startMeridiemRaw?.toLowerCase() ??
-        inferStartMeridiem(
-          Number(startHourRaw),
-          Number(endHourRaw),
-          endMeridiem
-        )
-
-      return {
-        startMinutes: toMinutes({
-          hour: Number(startHourRaw),
-          minute: Number(startMinuteRaw ?? 0),
-          meridiem: startMeridiem,
-        }),
-        endMinutes: toMinutes({
-          hour: Number(endHourRaw),
-          minute: Number(endMinuteRaw ?? 0),
-          meridiem: endMeridiem ?? startMeridiem,
-        }),
-      }
-    })
-    .filter(
-      (
-        value
-      ): value is {
-        startMinutes: number
-        endMinutes: number
-      } => Boolean(value)
-    )
-}
-
-function inferStartMeridiem(
-  startHour: number,
-  endHour: number,
-  endMeridiem?: string
-) {
-  if (endMeridiem === 'am') return 'am'
-
-  if (endMeridiem === 'pm') {
-    if (startHour <= endHour && startHour !== 12) return 'pm'
-    return 'am'
-  }
-
-  return startHour >= 7 && startHour <= 11 ? 'am' : 'pm'
-}
-
-function toMinutes({
-  hour,
-  minute,
-  meridiem,
-}: {
-  hour: number
-  minute: number
-  meridiem?: string
-}) {
-  let normalizedHour = hour
-
-  if (meridiem === 'am') {
-    normalizedHour = hour === 12 ? 0 : hour
-  }
-
-  if (meridiem === 'pm') {
-    normalizedHour = hour === 12 ? 12 : hour + 12
-  }
-
-  return normalizedHour * 60 + minute
 }
 
 function calculateDistanceMeters({

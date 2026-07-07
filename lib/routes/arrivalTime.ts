@@ -1,5 +1,7 @@
 // lib/routes/arrivalTime.ts
 
+import { DateTime } from 'luxon'
+
 export type ArrivalTimeTravelMode = 'walking' | 'cycling' | 'driving'
 
 export type ArrivalVenue = {
@@ -194,11 +196,25 @@ export function coerceDate(value: Date | string): Date {
   return new Date()
 }
 
-export function getLocalHour(date: Date | string): number {
-  return coerceDate(date).getHours()
+export function getLocalHour(
+  date: Date | string,
+  timezone: string | null = null
+): number {
+  const safeDate = coerceDate(date)
+
+  if (!timezone) {
+    return safeDate.getHours()
+  }
+
+  const zoned = DateTime.fromJSDate(safeDate).setZone(timezone)
+
+  return zoned.isValid ? zoned.hour : safeDate.getHours()
 }
 
-export function getLocalDayKey(date: Date | string):
+export function getLocalDayKey(
+  date: Date | string,
+  timezone: string | null = null
+):
   | 'sun'
   | 'mon'
   | 'tue'
@@ -206,8 +222,14 @@ export function getLocalDayKey(date: Date | string):
   | 'thu'
   | 'fri'
   | 'sat' {
+  const safeDate = coerceDate(date)
+
+  const dayIndex = timezone
+    ? DateTime.fromJSDate(safeDate).setZone(timezone).weekday % 7
+    : safeDate.getDay()
+
   return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][
-    coerceDate(date).getDay()
+    Number.isFinite(dayIndex) ? dayIndex : safeDate.getDay()
   ] as 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'
 }
 

@@ -210,7 +210,22 @@ export default function MapCanvas({
         city?: string
       }>
 
-      const nextRoute = customEvent.detail?.route
+      console.log('[MapCanvas received generated route event]', customEvent.detail)
+
+      const directRoute = customEvent.detail?.route
+      const fallbackRoute = customEvent.detail?.generatedRoute?.stops
+        ?.map((stop: any) => stop?.venue)
+        .filter(Boolean)
+
+      const nextRoute = Array.isArray(directRoute) && directRoute.length > 0
+        ? directRoute
+        : fallbackRoute
+
+      console.log('[MapCanvas generated route resolved]', {
+        directRouteLength: Array.isArray(directRoute) ? directRoute.length : 0,
+        fallbackRouteLength: Array.isArray(fallbackRoute) ? fallbackRoute.length : 0,
+        nextRouteLength: Array.isArray(nextRoute) ? nextRoute.length : 0,
+      })
 
       if (!Array.isArray(nextRoute) || nextRoute.length < 2) return
 

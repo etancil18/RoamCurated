@@ -1,13 +1,14 @@
 // lib/routes/buildContext.ts
 
 import {
-  ROUTE_STAGES,
   type RouteStage,
   type RouteStageId,
   getCandidateStagesAfter,
-  getRouteStageForHour,
-  isHourWithinStageWindow,
+  getDayKindFromWeekday,
 } from './routeStages'
+import {
+  inferStartingStage as inferStartingStageDetailed,
+} from './inferStartingStage'
 import {
   type NormalizedVenueType,
   normalizeVenueTypes,
@@ -109,11 +110,17 @@ export function buildRouteContext({
   const safePlannedStartAt = coerceDate(plannedStartAt ?? new Date())
   const localHour = getLocalHour(safePlannedStartAt)
   const weekdayKey = getLocalDayKey(safePlannedStartAt)
+  const dayKind = getDayKindFromWeekday(
+    safePlannedStartAt.getDay() === 0 ? 7 : safePlannedStartAt.getDay()
+  )
   const anchorTypes = normalizeVenueTypes(anchorVenue)
-  const startingStage = inferStartingStage({
-    anchorTypes,
+
+  const startingStageResult = inferStartingStageDetailed({
+    anchorVenue,
     plannedStartAt: safePlannedStartAt,
   })
+
+  const startingStage = startingStageResult.stage
 
   const safeMaxStops = sanitizeMaxStops(maxStops)
   const distanceConfig = DISTANCE_BY_TIGHTNESS_AND_MODE[travelMode][tightness]
@@ -137,6 +144,7 @@ export function buildRouteContext({
       startingStage,
       localHour,
       maxStops: safeMaxStops,
+      dayKind,
     }),
     preferredVibes,
     preferredTags,
@@ -151,54 +159,31 @@ export function inferStartingStage({
   anchorTypes: NormalizedVenueType[]
   plannedStartAt: Date | string
 }): RouteStage {
-  const date = coerceDate(plannedStartAt)
-  const hour = date.getHours()
-
-  const matchingStages = ROUTE_STAGES.filter((stage) => {
-    const stageTypes = new Set(stage.types.map(normalizeStageTypeLike))
-    const hasTypeMatch = anchorTypes.some((type) =>
-      stageTypes.has(normalizeStageTypeLike(type))
-    )
-
-    return hasTypeMatch
-  })
-
-  if (matchingStages.length === 0) {
-    return getRouteStageForHour(hour)
-  }
-
-  const timeMatched = matchingStages
-    .filter((stage) => isHourWithinStageWindow(hour, stage))
-    .sort((a, b) => b.order - a.order)
-
-  if (timeMatched[0]) {
-    return timeMatched[0]
-  }
-
-  const futureMatched = matchingStages
-    .filter((stage) => stage.preferredStartHour >= hour)
-    .sort((a, b) => a.preferredStartHour - b.preferredStartHour)
-
-  if (futureMatched[0]) {
-    return futureMatched[0]
-  }
-
-  return matchingStages.sort((a, b) => b.order - a.order)[0] ?? getRouteStageForHour(hour)
+  return inferStartingStageDetailed({
+    anchorVenue: {
+      types: anchorTypes,
+    },
+    plannedStartAt,
+  }).stage
 }
 
 export function getCandidateStagesForContext({
   startingStage,
   localHour,
   maxStops,
+  dayKind = null,
 }: {
   startingStage: RouteStage
   localHour: number
   maxStops: number
+  dayKind?: 'weekday' | 'weekend' | null
 }): RouteStage[] {
   const stagesAfterCurrent = getCandidateStagesAfter({
     stageId: startingStage.id as RouteStageId,
     maxStages: Math.max(1, maxStops - 1),
     includeCurrentStage: false,
+    dayKind,
+    startHour: localHour,
   })
 
   const timeRelevantStages = stagesAfterCurrent.filter((stage) => {
@@ -228,19 +213,6 @@ export function getContextSummary(context: RouteContext): string {
 function sanitizeMaxStops(value: number) {
   if (!Number.isFinite(value)) return DEFAULT_MAX_STOPS
   return Math.max(2, Math.min(8, Math.round(value)))
-}
-
-function normalizeStageTypeLike(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/['’]/g, '')
-    .replace(/&/g, ' and ')
-    .replace(/[–—-]/g, '-')
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
 }
 
 function formatHour(hour: number) {

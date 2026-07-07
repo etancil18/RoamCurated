@@ -2,7 +2,10 @@
 
 import { buildRouteContext } from './buildContext'
 import { estimateArrivalTime } from './arrivalTime'
-import { filterRouteCandidates } from './candidateFilter'
+import {
+  filterRouteCandidates,
+  summarizeRejections,
+} from './candidateFilter'
 import { explainRoute } from './explainRoute'
 import { scorePersonalization, type UserRoutePersonalization } from './personalization'
 import { scoreVenue } from './scoreVenue'
@@ -17,7 +20,8 @@ import type {
   RouteVenue,
 } from '@/types/route'
 
-export type GenerateRouteFromVenueVenue = RouteVenue & {
+export type GenerateRouteFromVenueVenue = Omit<RouteVenue, 'id'> & {
+  id?: string | null
   is_active?: boolean | null
   active?: boolean | null
   permanently_closed?: boolean | null
@@ -37,6 +41,7 @@ export type GenerateRouteFromVenueParams = {
   preferredTags?: string[]
   personalization?: UserRoutePersonalization | null
   includeDebug?: boolean
+  timezone?: string | null
 }
 
 const DEFAULT_MAX_STOPS = 5
@@ -54,9 +59,11 @@ export function generateRouteFromVenue({
   preferredTags = [],
   personalization = null,
   includeDebug = true,
+  timezone = null,
 }: GenerateRouteFromVenueParams): GeneratedRoute {
   const safeMaxStops = sanitizeMaxStops(maxStops)
-  const selectedVenueIds = new Set<string>([anchorVenue.id])
+  const anchorKey = getVenueKey(anchorVenue) ?? 'anchor'
+  const selectedVenueIds = new Set<string>([anchorKey])
   const selectedStops: RouteStop[] = []
 
   const context = buildRouteContext({
@@ -99,70 +106,125 @@ export function generateRouteFromVenue({
       travelMode,
     })
 
-    const { candidates, rejected } = filterRouteCandidates({
-      venues,
-      anchorVenue,
-      previousStop,
-      stage,
-      arrivalAt: arrivalSeed.arriveAt,
-      selectedVenueIds,
-      travelMode,
-      maxDistanceMeters: context.maxDistanceMeters,
-      requireStageMatch: false,
-      excludeLikelyClosed: false,
-    })
+    const passes = [
+      {
+        label: 'strict',
+        requireStageMatch: true,
+        excludeLikelyClosed: true,
+        maxDistanceMeters: context.maxDistanceMeters,
+      },
+      {
+        label: 'relaxed_stage',
+        requireStageMatch: false,
+        excludeLikelyClosed: true,
+        maxDistanceMeters: context.maxDistanceMeters,
+      },
+      {
+        label: 'wider_fallback',
+        requireStageMatch: false,
+        excludeLikelyClosed: true,
+        maxDistanceMeters: Math.round(context.maxDistanceMeters * 1.5),
+      },
+    ]
 
-    rejectedCount += rejected.length
-    candidateCount += candidates.length
+    let selected: any = null
+    let selectedPass: string | null = null
+    const passDebug: NonNullable<
+      NonNullable<RouteGenerationDebug['stageAttempts']>[number]['passes']
+    > = []
 
-    const scoredCandidates = candidates
-      .map((candidate) => {
-        const arrivalEstimate = estimateArrivalTime({
-          fromVenue: previousStop,
-          toVenue: candidate,
-          startAt: currentStartAt,
-          dwellMinutes: selectedStops.length === 0 ? 0 : stage.dwellMinutes,
-          travelMode,
-        })
-
-        const baseScore = scoreVenue({
-          candidate,
-          previousStop,
-          anchorVenue,
-          stage,
-          arrivalAt: arrivalEstimate.arriveAt,
-          travelMode,
-          selectedVenueIds,
-          previousRouteTypes: selectedStops.flatMap((stop) => stop.candidateTypes),
-          preferredVibes: context.preferredVibes,
-          preferredTags: context.preferredTags,
-          maxDistanceMeters: context.maxDistanceMeters,
-          idealDistanceMeters: context.idealDistanceMeters,
-        })
-
-        const personalizationScore = scorePersonalization({
-          venue: candidate,
-          personalization,
-        })
-
-        return {
-          candidate,
-          arrivalEstimate,
-          baseScore,
-          personalizationScore,
-          finalScore: baseScore.score + personalizationScore.score,
-        }
+    for (const pass of passes) {
+      const { candidates, rejected } = filterRouteCandidates({
+        venues,
+        anchorVenue,
+        previousStop,
+        stage,
+        arrivalAt: arrivalSeed.arriveAt,
+        selectedVenueIds,
+        travelMode,
+        maxDistanceMeters: pass.maxDistanceMeters,
+        requireStageMatch: pass.requireStageMatch,
+        excludeLikelyClosed: pass.excludeLikelyClosed,
+        timezone,
       })
-      .sort((a, b) => b.finalScore - a.finalScore)
 
-    const selected = scoredCandidates[0]
+      rejectedCount += rejected.length
+      candidateCount += candidates.length
+
+      const scoredCandidates = candidates
+        .filter((candidate) => {
+          const candidateKey = getVenueKey(candidate)
+          return candidateKey ? !selectedVenueIds.has(candidateKey) : false
+        })
+        .map((candidate) => {
+          const arrivalEstimate = estimateArrivalTime({
+            fromVenue: previousStop,
+            toVenue: candidate,
+            startAt: currentStartAt,
+            dwellMinutes: selectedStops.length === 0 ? 0 : stage.dwellMinutes,
+            travelMode,
+          })
+
+          const baseScore = scoreVenue({
+            candidate,
+            previousStop,
+            anchorVenue,
+            stage,
+            arrivalAt: arrivalEstimate.arriveAt,
+            travelMode,
+            selectedVenueIds,
+            previousRouteTypes: selectedStops.flatMap((stop) => stop.candidateTypes),
+            preferredVibes: context.preferredVibes,
+            preferredTags: context.preferredTags,
+            maxDistanceMeters: pass.maxDistanceMeters,
+            idealDistanceMeters: context.idealDistanceMeters,
+            timezone,
+          })
+
+          const personalizationScore = scorePersonalization({
+            venue: candidate,
+            personalization,
+          })
+
+          return {
+            candidate,
+            arrivalEstimate,
+            baseScore,
+            personalizationScore,
+            finalScore: baseScore.score + personalizationScore.score,
+          }
+        })
+        .sort((a, b) => b.finalScore - a.finalScore)
+
+      const top = scoredCandidates[0] ?? null
+
+      passDebug.push({
+        pass: pass.label,
+        candidateCount: candidates.length,
+        rejectedCount: rejected.length,
+        rejectionCounts: summarizeRejections(rejected),
+        topScore: top?.finalScore ?? null,
+        topVenueId: getVenueKey(top?.candidate) ?? null,
+        topVenueName: top?.candidate.name ?? null,
+      })
+
+      if (top && top.finalScore >= 0) {
+        selected = top
+        selectedPass = pass.label
+        break
+      }
+    }
+
+    const selectedCandidateKey = getVenueKey(selected?.candidate)
 
     stageAttempts.push({
       stageId: stage.id,
       stageLabel: stage.label,
-      candidateCount: candidates.length,
-      selectedVenueId: selected?.candidate.id ?? null,
+      candidateCount: passDebug.reduce((sum, pass) => sum + pass.candidateCount, 0),
+      selectedVenueId: selectedCandidateKey,
       selectedVenueName: selected?.candidate.name ?? null,
+      selectedPass,
+      passes: passDebug,
     })
 
     if (!selected || selected.finalScore < 0) {
@@ -170,14 +232,14 @@ export function generateRouteFromVenue({
       continue
     }
 
-    if (!selected.candidate.id) continue
+    if (!selectedCandidateKey) continue
 
-    selectedVenueIds.add(selected.candidate.id)
+    selectedVenueIds.add(selectedCandidateKey)
 
     const selectedCandidate = selected.candidate as GenerateRouteFromVenueVenue
 
     const routeStop: RouteStop = {
-      id: `${anchorVenue.id}-${selected.candidate.id}-${selectedStops.length + 1}`,
+      id: `${anchorKey}-${selectedCandidateKey}-${selectedStops.length + 1}`,
       stopOrder: selectedStops.length + 2,
       venue: normalizeRouteVenue(selectedCandidate),
       stageId: stage.id,
@@ -206,7 +268,7 @@ export function generateRouteFromVenue({
   }
 
   const anchorStop: RouteStop = {
-    id: `${anchorVenue.id}-anchor`,
+    id: `${anchorKey}-anchor`,
     stopOrder: 1,
     venue: normalizeRouteVenue(anchorVenue),
     stageId: context.startingStage.id,
@@ -248,7 +310,7 @@ export function generateRouteFromVenue({
     status: selectedStops.length > 0 ? 'success' : 'failed',
     source,
     context: {
-      anchorVenueId: anchorVenue.id,
+      anchorVenueId: anchorKey,
       anchorVenueName: anchorVenue.name,
       anchorTypes: context.anchorTypes,
       city: city ?? anchorVenue.city ?? null,
@@ -289,9 +351,11 @@ export function generateRouteFromVenue({
 }
 
 function normalizeRouteVenue(venue: GenerateRouteFromVenueVenue): RouteVenue {
+  const venueKey = getVenueKey(venue) ?? 'unknown-venue'
+
   return {
     ...venue,
-    id: venue.id,
+    id: venueKey,
     name: venue.name,
     slug: venue.slug ?? null,
     city: venue.city ?? null,
@@ -336,6 +400,14 @@ function normalizeListLikeValue(value: unknown): any {
   }
 
   return value ?? null
+}
+
+function getVenueKey(venue: {
+  id?: string | null
+  slug?: string | null
+  name?: string | null
+} | null | undefined) {
+  return venue?.id ?? venue?.slug ?? venue?.name ?? null
 }
 
 function sanitizeMaxStops(value: number) {

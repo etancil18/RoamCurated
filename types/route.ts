@@ -21,6 +21,17 @@ export type RouteGenerationStatus =
   | 'partial'
   | 'failed'
 
+export type RouteRejectionReason =
+  | 'same_as_anchor'
+  | 'already_selected'
+  | 'missing_coordinates'
+  | 'invalid_coordinates'
+  | 'inactive'
+  | 'permanently_closed'
+  | 'too_far'
+  | 'weak_stage_match'
+  | 'likely_closed'
+
 export type RouteVenue = {
   id: string
   name: string
@@ -142,18 +153,31 @@ export type RouteGenerationDebug = {
   rejectedCount?: number
   candidateCount?: number
   selectedCount?: number
+  rejectionCounts?: Partial<Record<RouteRejectionReason, number>>
   stageAttempts?: Array<{
     stageId: RouteStageId
     stageLabel: string
     candidateCount: number
     selectedVenueId?: string | null
     selectedVenueName?: string | null
+    selectedPass?: string | null
+    passes?: Array<{
+      pass: string
+      candidateCount: number
+      rejectedCount: number
+      rejectionCounts?: Partial<Record<RouteRejectionReason, number>>
+      topScore?: number | null
+      topVenueId?: string | null
+      topVenueName?: string | null
+    }>
   }>
   warnings?: string[]
 }
 
 export type GenerateRouteFromVenueRequest = {
-  venueId: string
+  venueId?: string | null
+  venueSlug?: string | null
+  venueName?: string | null
   city?: string | null
   plannedStartAt?: string | null
   travelMode?: RouteTravelMode
@@ -162,6 +186,7 @@ export type GenerateRouteFromVenueRequest = {
   source?: RouteGenerationSource
   preferredVibes?: string[]
   preferredTags?: string[]
+  debug?: boolean
 }
 
 export type GenerateRouteFromVenueResponse = {

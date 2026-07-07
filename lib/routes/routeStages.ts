@@ -13,6 +13,7 @@ export type RouteStageId =
   | 'night_out'
 
 export type RouteStageIntensity = 'low' | 'medium' | 'high'
+export type RouteDayKind = 'weekday' | 'weekend'
 
 export type RouteStage = {
   id: RouteStageId
@@ -35,7 +36,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     label: 'Coffee / Bakery',
     shortLabel: 'Coffee',
     description: 'A light first stop for coffee, tea, pastry, or an easy neighborhood start.',
-    types: ['coffee', 'cafe', 'bakery', 'tea', 'juice_bar', 'smoothie'],
+    types: ['coffee', 'cafe', 'café', 'bakery', 'tea', 'juice_bar', 'smoothie'],
     preferredStartHour: 7,
     preferredEndHour: 11,
     dwellMinutes: 35,
@@ -47,7 +48,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     label: 'Movement / Wellness',
     shortLabel: 'Wellness',
     description: 'Fitness, yoga, pilates, spa, wellness, or light movement before the day opens up.',
-    types: ['fitness', 'yoga', 'pilates', 'spa', 'wellness', 'walk', 'nature'],
+    types: ['fitness', 'yoga', 'pilates', 'spa', 'wellness', 'walk', 'nature', 'park', 'garden'],
     preferredStartHour: 7,
     preferredEndHour: 12,
     dwellMinutes: 60,
@@ -59,7 +60,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     label: 'Breakfast / Brunch',
     shortLabel: 'Brunch',
     description: 'A proper morning or late-morning food stop.',
-    types: ['breakfast', 'brunch', 'market', 'food_court'],
+    types: ['breakfast', 'brunch', 'bakery', 'cafe', 'café', 'restaurant', 'bistro', 'market', 'food_court'],
     preferredStartHour: 8,
     preferredEndHour: 14,
     dwellMinutes: 75,
@@ -71,7 +72,22 @@ export const ROUTE_STAGES: RouteStage[] = [
     label: 'Morning Culture',
     shortLabel: 'Culture',
     description: 'Bookstores, galleries, museums, gardens, parks, and easy cultural stops.',
-    types: ['park', 'garden', 'bookstore', 'bookshop', 'library', 'gallery', 'museum'],
+    types: [
+      'park',
+      'garden',
+      'nature',
+      'bookstore',
+      'bookshop',
+      'library',
+      'gallery',
+      'museum',
+      'theater',
+      'theatre',
+      'cinema',
+      'show',
+      'comedy',
+      'music',
+    ],
     preferredStartHour: 10,
     preferredEndHour: 16,
     dwellMinutes: 50,
@@ -83,7 +99,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     label: 'Lifestyle / Hidden Gem',
     shortLabel: 'Lifestyle',
     description: 'A flexible discovery stop for shopping, design, showroom, lifestyle, or random gems.',
-    types: ['lifestyle', 'showroom', 'random_gem', 'market', 'workspace'],
+    types: ['lifestyle', 'showroom', 'random_gem', 'market', 'workspace', 'bookstore', 'bookshop', 'gallery'],
     preferredStartHour: 11,
     preferredEndHour: 18,
     dwellMinutes: 45,
@@ -95,7 +111,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     label: 'Lunch',
     shortLabel: 'Lunch',
     description: 'A midday meal anchor.',
-    types: ['lunch', 'restaurant', 'bistro', 'bistrot', 'cafe', 'café'],
+    types: ['lunch', 'restaurant', 'bistro', 'bistrot', 'cafe', 'café', 'bakery', 'market', 'food_court'],
     preferredStartHour: 11,
     preferredEndHour: 15,
     dwellMinutes: 75,
@@ -110,6 +126,8 @@ export const ROUTE_STAGES: RouteStage[] = [
     types: [
       'park',
       'garden',
+      'nature',
+      'walk',
       'bookstore',
       'bookshop',
       'library',
@@ -118,11 +136,16 @@ export const ROUTE_STAGES: RouteStage[] = [
       'activity',
       'class',
       'theater',
+      'theatre',
       'cinema',
       'show',
       'comedy',
+      'music',
       'lifestyle',
       'random_gem',
+      'showroom',
+      'market',
+      'workspace',
     ],
     preferredStartHour: 12,
     preferredEndHour: 18,
@@ -147,6 +170,8 @@ export const ROUTE_STAGES: RouteStage[] = [
       'happy hour',
       'brewery',
       'pub',
+      'bar',
+      'speakeasy',
     ],
     preferredStartHour: 16,
     preferredEndHour: 20,
@@ -192,6 +217,10 @@ export const ROUTE_STAGES: RouteStage[] = [
       'event_space',
       'event space',
       'stadium',
+      'theater',
+      'theatre',
+      'show',
+      'comedy',
     ],
     preferredStartHour: 19,
     preferredEndHour: 2,
@@ -201,6 +230,32 @@ export const ROUTE_STAGES: RouteStage[] = [
 ]
 
 export const DEFAULT_ROUTE_STAGE_COUNT = 5
+
+const WEEKDAY_PROGRESSION_BY_STAGE: Record<RouteStageId, RouteStageId[]> = {
+  early_coffee: ['morning_culture', 'midday_lifestyle', 'lunch', 'afternoon_explore', 'early_evening'],
+  morning_movement: ['early_coffee', 'breakfast_brunch', 'morning_culture', 'lunch', 'afternoon_explore'],
+  breakfast_brunch: ['morning_culture', 'midday_lifestyle', 'lunch', 'afternoon_explore', 'early_evening'],
+  morning_culture: ['midday_lifestyle', 'lunch', 'afternoon_explore', 'early_evening', 'dinner'],
+  midday_lifestyle: ['lunch', 'afternoon_explore', 'early_evening', 'dinner', 'night_out'],
+  lunch: ['afternoon_explore', 'midday_lifestyle', 'early_evening', 'dinner', 'night_out'],
+  afternoon_explore: ['midday_lifestyle', 'early_evening', 'dinner', 'night_out'],
+  early_evening: ['dinner', 'night_out'],
+  dinner: ['early_evening', 'night_out'],
+  night_out: ['dinner', 'night_out'],
+}
+
+const WEEKEND_PROGRESSION_BY_STAGE: Record<RouteStageId, RouteStageId[]> = {
+  early_coffee: ['breakfast_brunch', 'morning_culture', 'midday_lifestyle', 'lunch', 'afternoon_explore'],
+  morning_movement: ['early_coffee', 'breakfast_brunch', 'morning_culture', 'midday_lifestyle', 'lunch'],
+  breakfast_brunch: ['morning_culture', 'midday_lifestyle', 'afternoon_explore', 'early_evening', 'dinner'],
+  morning_culture: ['breakfast_brunch', 'midday_lifestyle', 'lunch', 'afternoon_explore', 'early_evening'],
+  midday_lifestyle: ['afternoon_explore', 'lunch', 'early_evening', 'dinner', 'night_out'],
+  lunch: ['afternoon_explore', 'midday_lifestyle', 'early_evening', 'dinner', 'night_out'],
+  afternoon_explore: ['midday_lifestyle', 'early_evening', 'dinner', 'night_out'],
+  early_evening: ['dinner', 'night_out'],
+  dinner: ['early_evening', 'night_out'],
+  night_out: ['dinner', 'night_out'],
+}
 
 export function getRouteStageById(stageId: RouteStageId) {
   return ROUTE_STAGES.find((stage) => stage.id === stageId) ?? null
@@ -224,11 +279,25 @@ export function getCandidateStagesAfter({
   stageId,
   maxStages = DEFAULT_ROUTE_STAGE_COUNT,
   includeCurrentStage = false,
+  dayKind = null,
+  startHour = null,
 }: {
   stageId: RouteStageId
   maxStages?: number
   includeCurrentStage?: boolean
+  dayKind?: RouteDayKind | null
+  startHour?: number | null
 }) {
+  if (dayKind) {
+    return getContextualCandidateStagesAfter({
+      stageId,
+      maxStages,
+      includeCurrentStage,
+      dayKind,
+      startHour,
+    })
+  }
+
   const currentStage = getRouteStageById(stageId)
 
   if (!currentStage) {
@@ -242,6 +311,49 @@ export function getCandidateStagesAfter({
         : stage.order > currentStage.order
     )
     .slice(0, maxStages)
+}
+
+export function getContextualCandidateStagesAfter({
+  stageId,
+  maxStages = DEFAULT_ROUTE_STAGE_COUNT,
+  includeCurrentStage = false,
+  dayKind,
+  startHour = null,
+}: {
+  stageId: RouteStageId
+  maxStages?: number
+  includeCurrentStage?: boolean
+  dayKind: RouteDayKind
+  startHour?: number | null
+}) {
+  const progression =
+    dayKind === 'weekend'
+      ? WEEKEND_PROGRESSION_BY_STAGE[stageId]
+      : WEEKDAY_PROGRESSION_BY_STAGE[stageId]
+
+  const ids = includeCurrentStage ? [stageId, ...progression] : progression
+  const normalizedStartHour =
+    typeof startHour === 'number' && Number.isFinite(startHour)
+      ? normalizeHour(startHour)
+      : null
+
+  return ids
+    .map((id) => getRouteStageById(id))
+    .filter((stage): stage is RouteStage => Boolean(stage))
+    .filter((stage) => {
+      if (normalizedStartHour === null) return true
+
+      if (stage.id === 'night_out' && normalizedStartHour < 17) return false
+      if (stage.id === 'dinner' && normalizedStartHour < 14) return false
+      if (stage.id === 'early_evening' && normalizedStartHour < 13) return false
+
+      return true
+    })
+    .slice(0, maxStages)
+}
+
+export function getDayKindFromWeekday(weekday: number): RouteDayKind {
+  return weekday === 6 || weekday === 7 ? 'weekend' : 'weekday'
 }
 
 export function getStagesForHourWindow({
@@ -284,9 +396,13 @@ export function normalizeStageType(value: string) {
   return value
     .trim()
     .toLowerCase()
-    .replaceAll('-', '-')
-    .replaceAll('&', 'and')
-    .replace(/[\s-]+/g, '_')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/['’]/g, '')
+    .replace(/&/g, ' and ')
+    .replace(/[–—-]/g, '-')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
 }
 
 function normalizeHour(hour: number) {
@@ -326,7 +442,6 @@ function expandHourWindow(startHour: number, endHour: number) {
     cursor = normalizeHour(cursor + 1)
 
     if (cursor === end) break
-
     if (hours.length >= 24) break
   }
 

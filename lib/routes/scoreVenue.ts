@@ -1,5 +1,6 @@
 // lib/routes/scoreVenue.ts
 
+import { DateTime } from 'luxon'
 import type { RouteStage } from './routeStages'
 import {
   getStageTypeSet,
@@ -8,7 +9,6 @@ import {
 } from './routeStages'
 import {
   type NormalizedVenueType,
-  hasAnyVenueType,
   isCultureType,
   isDrinkType,
   isMealType,
@@ -16,6 +16,10 @@ import {
   isWellnessType,
   normalizeVenueTypes,
 } from './venueTypeNormalization'
+import {
+  hasHoursForDayFromHours,
+  isVenueOpenAtTimeFromHours,
+} from '@/utils/hoursTimeUtils'
 
 export type ScoreVenueTravelMode = 'walking' | 'cycling' | 'driving'
 
@@ -51,6 +55,7 @@ export type VenueScoreReason = {
     | 'route_backtrack_penalty'
     | 'missing_coordinates'
     | 'same_venue'
+    | 'contextual_mismatch'
   label: string
   delta: number
 }
@@ -80,6 +85,7 @@ export type ScoreVenueParams = {
   preferredTags?: string[]
   maxDistanceMeters?: number
   idealDistanceMeters?: number
+  timezone?: string | null
 }
 
 const DEFAULT_MAX_DISTANCE_METERS_BY_MODE: Record<ScoreVenueTravelMode, number> = {
@@ -95,8 +101,8 @@ const DEFAULT_IDEAL_DISTANCE_METERS_BY_MODE: Record<ScoreVenueTravelMode, number
 }
 
 const SCORE_BOUNDS = {
-  min: -60,
-  max: 140,
+  min: -80,
+  max: 150,
 }
 
 export function scoreVenue({
@@ -112,6 +118,7 @@ export function scoreVenue({
   preferredTags = [],
   maxDistanceMeters = DEFAULT_MAX_DISTANCE_METERS_BY_MODE[travelMode],
   idealDistanceMeters = DEFAULT_IDEAL_DISTANCE_METERS_BY_MODE[travelMode],
+  timezone = null,
 }: ScoreVenueParams): VenueScoreResult {
   const reasons: VenueScoreReason[] = []
   const candidateId = candidate.id ?? null
@@ -171,6 +178,11 @@ export function scoreVenue({
   const candidateTypes = normalizeVenueTypes(candidate)
   const previousTypes = previousStop ? normalizeVenueTypes(previousStop) : []
   const anchorTypes = anchorVenue ? normalizeVenueTypes(anchorVenue) : []
+  const arrivalDateTime = timezone
+    ? DateTime.fromJSDate(arrivalAt).setZone(timezone)
+    : DateTime.fromJSDate(arrivalAt)
+  const hour = arrivalDateTime.isValid ? arrivalDateTime.hour : arrivalAt.getHours()
+  const dayKind = getDayKindFromDateTime(arrivalDateTime, arrivalAt)
   const stageFit = scoreStageFit(candidateTypes, stage)
 
   reasons.push({
@@ -182,7 +194,22 @@ export function scoreVenue({
     delta: stageFit,
   })
 
-  const openConfidence = inferOpenConfidence(candidate, arrivalAt)
+  const contextualMismatch = scoreContextualMismatch({
+    candidateTypes,
+    stage,
+    hour,
+    dayKind,
+  })
+
+  if (contextualMismatch !== 0) {
+    reasons.push({
+      key: 'contextual_mismatch',
+      label: 'Penalized because this stop does not fit the day/time context.',
+      delta: contextualMismatch,
+    })
+  }
+
+  const openConfidence = inferOpenConfidence(candidate, arrivalAt, timezone)
   const openScore = scoreOpenConfidence(openConfidence)
 
   reasons.push({
@@ -191,15 +218,14 @@ export function scoreVenue({
     delta: openScore,
   })
 
-  const hour = arrivalAt.getHours()
-  const timeScore = isHourWithinStageWindow(hour, stage) ? 14 : -8
+  const timeScore = isHourWithinStageWindow(hour, stage) ? 18 : -18
 
   reasons.push({
     key: 'time_fit',
     label:
       timeScore > 0
         ? 'Arrival time fits this type of stop.'
-        : 'Arrival time is slightly outside the preferred window.',
+        : 'Arrival time is outside the preferred window.',
     delta: timeScore,
   })
 
@@ -299,6 +325,8 @@ export function scoreVenue({
     previousTypes,
     anchorTypes,
     stage,
+    hour,
+    dayKind,
   })
 
   if (progressionScore !== 0) {
@@ -307,7 +335,7 @@ export function scoreVenue({
       label:
         progressionScore > 0
           ? 'Creates a natural progression from the previous stop.'
-          : 'Feels repetitive after the previous stop.',
+          : 'Feels repetitive or contextually off after the previous stop.',
       delta: progressionScore,
     })
   }
@@ -361,7 +389,7 @@ function scoreStageFit(candidateTypes: NormalizedVenueType[], stage: RouteStage)
   )
 
   if (directMatches.length > 0) {
-    return Math.min(42, 28 + directMatches.length * 7)
+    return Math.min(52, 36 + directMatches.length * 8)
   }
 
   const stageTypes = Array.from(stageTypeSet)
@@ -370,43 +398,87 @@ function scoreStageFit(candidateTypes: NormalizedVenueType[], stage: RouteStage)
     stageTypes.some((type) => ['lunch', 'dinner', 'breakfast', 'brunch', 'restaurant'].includes(type)) &&
     candidateTypes.some(isMealType)
   ) {
-    return 18
+    return 8
   }
 
   if (
     stageTypes.some((type) => ['bar', 'cocktail', 'wine_bar', 'lounge'].includes(type)) &&
     candidateTypes.some(isDrinkType)
   ) {
-    return 18
+    return 8
   }
 
   if (
     stageTypes.some((type) => ['gallery', 'museum', 'bookstore', 'park'].includes(type)) &&
     candidateTypes.some((type) => isCultureType(type) || isOutdoorType(type))
   ) {
-    return 16
+    return 10
   }
 
   if (
     stageTypes.some((type) => ['fitness', 'wellness', 'yoga'].includes(type)) &&
     candidateTypes.some(isWellnessType)
   ) {
-    return 16
+    return 10
   }
 
-  return -14
+  return -48
+}
+
+function scoreContextualMismatch({
+  candidateTypes,
+  stage,
+  hour,
+  dayKind,
+}: {
+  candidateTypes: NormalizedVenueType[]
+  stage: RouteStage
+  hour: number
+  dayKind: 'weekday' | 'weekend'
+}) {
+  const normalizedHour = normalizeHour(hour)
+  const hasDrink = candidateTypes.some(isDrinkType)
+  const hasMeal = candidateTypes.some(isMealType)
+  const hasNightlife = candidateTypes.some((type) =>
+    [
+      'bar',
+      'sports_bar',
+      'club',
+      'speakeasy',
+      'lounge',
+      'late_night',
+      'music',
+    ].includes(normalizeStageType(type))
+  )
+
+  if (hasNightlife && normalizedHour < 16) return -72
+  if (hasDrink && normalizedHour < 15) return -54
+  if (stage.id === 'night_out' && normalizedHour < 18) return -70
+  if (stage.id === 'dinner' && normalizedHour < 15) return -45
+  if (stage.id === 'early_evening' && normalizedHour < 14) return -36
+
+  if (dayKind === 'weekday') {
+    if (hasNightlife && normalizedHour < 18) return -58
+    if (hasDrink && normalizedHour < 16) return -38
+  }
+
+  if (stage.id === 'early_coffee' && hasMeal && !candidateTypes.some((type) => ['coffee', 'cafe', 'bakery', 'tea'].includes(normalizeStageType(type)))) {
+    return -24
+  }
+
+  return 0
 }
 
 function scoreOpenConfidence(openConfidence: OpenConfidence) {
   switch (openConfidence) {
     case 'confirmed_open':
-      return 34
+      return 38
     case 'likely_open':
       return 18
     case 'unknown':
-      return -2
+      return -24
     case 'likely_closed':
-      return -42
+      return -80
   }
 }
 
@@ -455,32 +527,49 @@ function scoreCategoryProgression({
   previousTypes,
   anchorTypes,
   stage,
+  hour,
+  dayKind,
 }: {
   candidateTypes: NormalizedVenueType[]
   previousTypes: NormalizedVenueType[]
   anchorTypes: NormalizedVenueType[]
   stage: RouteStage
+  hour: number
+  dayKind: 'weekday' | 'weekend'
 }) {
   if (previousTypes.length === 0 && anchorTypes.length === 0) return 0
 
+  const normalizedHour = normalizeHour(hour)
   const previousMeal = previousTypes.some(isMealType)
   const previousDrink = previousTypes.some(isDrinkType)
   const previousCulture = previousTypes.some(isCultureType)
   const previousWellness = previousTypes.some(isWellnessType)
+  const previousCoffee = previousTypes.some((type) =>
+    ['coffee', 'cafe', 'bakery', 'tea'].includes(normalizeStageType(type))
+  )
 
   const candidateMeal = candidateTypes.some(isMealType)
   const candidateDrink = candidateTypes.some(isDrinkType)
   const candidateCulture = candidateTypes.some(isCultureType)
   const candidateOutdoor = candidateTypes.some(isOutdoorType)
   const candidateWellness = candidateTypes.some(isWellnessType)
+  const candidateLifestyle = candidateTypes.some((type) =>
+    ['lifestyle', 'market', 'random_gem', 'showroom', 'workspace'].includes(normalizeStageType(type))
+  )
+
+  if (previousCoffee && normalizedHour < 12) {
+    if (candidateCulture || candidateOutdoor || candidateLifestyle) return 18
+    if (candidateMeal && dayKind === 'weekend') return 12
+    if (candidateDrink) return -44
+  }
 
   if (previousMeal && (candidateCulture || candidateOutdoor)) return 14
   if (previousMeal && candidateDrink && stage.order >= 8) return 16
   if ((previousCulture || previousWellness) && candidateMeal) return 10
   if (previousDrink && candidateMeal && stage.order <= 9) return 8
-  if (previousDrink && candidateDrink) return -10
-  if (previousMeal && candidateMeal) return -12
-  if (previousWellness && candidateWellness) return -8
+  if (previousDrink && candidateDrink) return -16
+  if (previousMeal && candidateMeal) return -14
+  if (previousWellness && candidateWellness) return -10
 
   return 4
 }
@@ -501,7 +590,7 @@ function scoreDuplicateTypePenalty({
 
   if (duplicateCount === 0) return 0
 
-  return -Math.min(24, duplicateCount * 8)
+  return -Math.min(28, duplicateCount * 9)
 }
 
 function scoreBacktrackPenalty({
@@ -590,148 +679,28 @@ function priceRank(value?: string | null) {
 
 function inferOpenConfidence(
   venue: ScoreVenueInputVenue,
-  arrivalAt: Date
+  arrivalAt: Date,
+  timezone: string | null = null
 ): OpenConfidence {
-  const dayParts = venue.dayParts
-
-  if (dayParts && typeof dayParts === 'object') {
-    const dayKey = getDayKey(arrivalAt)
-    const dayPart = dayParts[dayKey]
-
-    if (typeof dayPart === 'string' && dayPart.trim().length > 0) {
-      return 'likely_open'
-    }
-  }
-
-  if (!Array.isArray(venue.hours)) {
-    return 'unknown'
-  }
-
-  const dayName = arrivalAt.toLocaleDateString('en-US', { weekday: 'long' })
-  const todayLine = venue.hours.find(
-    (line) =>
-      typeof line === 'string' &&
-      line.toLowerCase().startsWith(dayName.toLowerCase())
-  )
-
-  if (!todayLine || typeof todayLine !== 'string') {
-    return 'unknown'
-  }
-
-  const lower = todayLine.toLowerCase()
-
-  if (lower.includes('closed')) {
+  if (!venue.hours) {
     return 'likely_closed'
   }
 
-  const hourRanges = parseHourRanges(todayLine)
+  const arrivalDateTime = timezone
+    ? DateTime.fromJSDate(arrivalAt).setZone(timezone)
+    : DateTime.fromJSDate(arrivalAt)
 
-  if (hourRanges.length === 0) {
-    return 'unknown'
+  if (!arrivalDateTime.isValid) {
+    return 'likely_closed'
   }
 
-  const arrivalMinutes = arrivalAt.getHours() * 60 + arrivalAt.getMinutes()
-
-  const isOpen = hourRanges.some(({ startMinutes, endMinutes }) => {
-    if (startMinutes <= endMinutes) {
-      return arrivalMinutes >= startMinutes && arrivalMinutes <= endMinutes
-    }
-
-    return arrivalMinutes >= startMinutes || arrivalMinutes <= endMinutes
-  })
-
-  return isOpen ? 'confirmed_open' : 'likely_closed'
-}
-
-function parseHourRanges(line: string): Array<{
-  startMinutes: number
-  endMinutes: number
-}> {
-  const afterColon = line.includes(':')
-    ? line.split(':').slice(1).join(':')
-    : line
-
-  const ranges = afterColon
-    .split(/,|;/)
-    .map((part) => part.trim())
-    .filter(Boolean)
-
-  return ranges
-    .map((range) => {
-      const match = range.match(
-        /(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i
-      )
-
-      if (!match) return null
-
-      const [, startHourRaw, startMinuteRaw, startMeridiemRaw, endHourRaw, endMinuteRaw, endMeridiemRaw] = match
-
-      const endMeridiem = endMeridiemRaw?.toLowerCase()
-      const startMeridiem =
-        startMeridiemRaw?.toLowerCase() ??
-        inferStartMeridiem(Number(startHourRaw), Number(endHourRaw), endMeridiem)
-
-      const startMinutes = toMinutes({
-        hour: Number(startHourRaw),
-        minute: Number(startMinuteRaw ?? 0),
-        meridiem: startMeridiem,
-      })
-
-      const endMinutes = toMinutes({
-        hour: Number(endHourRaw),
-        minute: Number(endMinuteRaw ?? 0),
-        meridiem: endMeridiem ?? startMeridiem,
-      })
-
-      return {
-        startMinutes,
-        endMinutes,
-      }
-    })
-    .filter(
-      (
-        value
-      ): value is {
-        startMinutes: number
-        endMinutes: number
-      } => Boolean(value)
-    )
-}
-
-function inferStartMeridiem(
-  startHour: number,
-  endHour: number,
-  endMeridiem?: string
-) {
-  if (endMeridiem === 'am') return 'am'
-  if (endMeridiem === 'pm') {
-    if (startHour <= endHour && startHour !== 12) return 'pm'
-    return 'am'
+  if (!hasHoursForDayFromHours(venue.hours, arrivalDateTime)) {
+    return 'likely_closed'
   }
 
-  return startHour >= 7 && startHour <= 11 ? 'am' : 'pm'
-}
-
-function toMinutes({
-  hour,
-  minute,
-  meridiem,
-}: {
-  hour: number
-  minute: number
-  meridiem?: string
-}) {
-  let normalizedHour = hour
-
-  if (meridiem === 'am') {
-    normalizedHour = hour === 12 ? 0 : hour
-  }
-
-  if (meridiem === 'pm') {
-    normalizedHour = hour === 12 ? 12 : hour + 12
-  }
-
-  return normalizedHour * 60 + minute
+  return isVenueOpenAtTimeFromHours(venue, arrivalDateTime)
+    ? 'confirmed_open'
+    : 'likely_closed'
 }
 
 function extractSearchableValues(value: unknown): string[] {
@@ -850,6 +819,21 @@ function degreesToRadians(value: number) {
   return (value * Math.PI) / 180
 }
 
-function getDayKey(date: Date) {
-  return ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()]
+function getDayKindFromDateTime(
+  dateTime: DateTime,
+  fallbackDate: Date
+): 'weekday' | 'weekend' {
+  if (dateTime.isValid) {
+    return dateTime.weekday === 6 || dateTime.weekday === 7
+      ? 'weekend'
+      : 'weekday'
+  }
+
+  const day = fallbackDate.getDay()
+  return day === 0 || day === 6 ? 'weekend' : 'weekday'
+}
+
+function normalizeHour(hour: number) {
+  if (!Number.isFinite(hour)) return 0
+  return ((Math.floor(hour) % 24) + 24) % 24
 }

@@ -49,6 +49,10 @@ function formatListValue(value: unknown): string {
   return ''
 }
 
+function getVenueKey(venue: Venue) {
+  return venue.id ?? venue.slug ?? venue.name ?? null
+}
+
 export default function VenueMarker({
   venue: v,
   index,
@@ -61,6 +65,9 @@ export default function VenueMarker({
 }: Props) {
   const [generatingRoute, setGeneratingRoute] = useState(false)
   const [generateRouteError, setGenerateRouteError] = useState<string | null>(null)
+
+  const venueKey = getVenueKey(v)
+  const canGenerateRoute = Boolean(venueKey)
 
   const isOpen = useMemo(() => isVenueOpenNow(v, nowForCity), [v, nowForCity])
 
@@ -198,17 +205,33 @@ export default function VenueMarker({
   const primaryImage = v.slug ? `/img/venues/${v.slug}.jpg` : firstCandidate
 
   const generateRouteFromVenue = async () => {
-    if (!v.id || generatingRoute) return
+    if (generatingRoute) return
+
+    if (!canGenerateRoute) {
+      setGenerateRouteError('This venue is missing an id, slug, and name.')
+      console.warn('[generateRouteFromVenue] missing venue identifier', v)
+      return
+    }
+
+    console.log('[generate route click]', {
+      id: v.id,
+      slug: v.slug,
+      name: v.name,
+      city,
+    })
 
     setGeneratingRoute(true)
     setGenerateRouteError(null)
 
+    let payload: any = null
+
     try {
       logVenueImpression('generate_from_venue_clicked', {
-        venue_id: v.id,
+        venue_id: venueKey ?? 'unknown',
         metadata: {
           city,
           name: v.name,
+          slug: v.slug ?? null,
           source: 'map_marker_popup',
         },
       })
@@ -217,17 +240,28 @@ export default function VenueMarker({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          venueId: v.id,
+          venueId: v.id ?? null,
+          venueSlug: v.slug ?? null,
+          venueName: v.name ?? null,
           city,
-          plannedStartAt: nowForCity.toISO(),
+          plannedStartAt: nowForCity.plus({ minutes: 15 }).toISO(),
           travelMode: 'walking',
           tightness: 'medium',
           maxStops: 5,
           source: 'map_marker',
+          debug: true,
         }),
       })
 
-      const payload = await res.json().catch(() => null)
+      payload = await res.json().catch(() => null)
+
+      console.log('[generate route payload]', payload)
+
+      console.log('[generate route response]', {
+        ok: res.ok,
+        status: res.status,
+        statusText: res.statusText,
+      })
 
       if (!res.ok || !payload?.route?.stops?.length) {
         throw new Error(payload?.error || 'Could not generate a route from this venue.')
@@ -237,26 +271,39 @@ export default function VenueMarker({
         .map((stop: any) => stop.venue)
         .filter(Boolean)
 
-      window.dispatchEvent(
-        new CustomEvent('roam:generated-route-from-venue', {
-          detail: {
-            route: generatedVenues,
-            generatedRoute: payload.route,
-            anchorVenueId: v.id,
-            city,
-          },
-        })
-      )
+      console.log('[generated venues before dispatch]', generatedVenues)
+
+      try {
+        window.dispatchEvent(
+          new CustomEvent('roam:generated-route-from-venue', {
+            detail: {
+              route: generatedVenues,
+              generatedRoute: payload.route,
+              anchorVenueId: venueKey,
+              city,
+            },
+          })
+        )
+
+        console.log('[generated route event dispatched]')
+      } catch (dispatchError) {
+        console.error('[generated route dispatch failed]', dispatchError)
+        throw dispatchError
+      }
 
       logVenueImpression('generate_from_venue_succeeded', {
-        venue_id: v.id,
+        venue_id: venueKey ?? 'unknown',
         metadata: {
           city,
           name: v.name,
+          slug: v.slug ?? null,
           stop_count: generatedVenues.length,
+          debug: payload?.route?.debug ?? null,
         },
       })
     } catch (error) {
+      console.error('[generate route from venue failed after payload]', error, payload)
+
       const message =
         error instanceof Error
           ? error.message
@@ -265,11 +312,13 @@ export default function VenueMarker({
       setGenerateRouteError(message)
 
       logVenueImpression('generate_from_venue_failed', {
-        venue_id: v.id,
+        venue_id: venueKey ?? 'unknown',
         metadata: {
           city,
           name: v.name,
+          slug: v.slug ?? null,
           message,
+          debug: payload?.route?.debug ?? null,
         },
       })
     } finally {
@@ -288,13 +337,14 @@ export default function VenueMarker({
       }}
       eventHandlers={{
         click: () => {
-          if (v?.id) {
+          if (venueKey) {
             logVenueImpression('map_marker_click', {
-              venue_id: v.id,
+              venue_id: venueKey,
               metadata: {
                 screen: 'map_marker',
                 city,
                 name: v.name,
+                slug: v.slug ?? null,
                 marker_display_mode: markerDisplayMode,
               },
             })
@@ -366,11 +416,21 @@ export default function VenueMarker({
             <div className="space-y-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm">
               <button
                 type="button"
-                onClick={() => void generateRouteFromVenue()}
-                disabled={generatingRoute || !v.id}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  void generateRouteFromVenue()
+                }}
+                disabled={generatingRoute || !canGenerateRoute}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 px-3 py-2.5 text-xs font-black text-white shadow-sm transition hover:from-indigo-500 hover:to-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span>{generatingRoute ? 'Building…' : '✨ Generate Route'}</span>
+                <span>
+                  {generatingRoute
+                    ? 'Building…'
+                    : canGenerateRoute
+                      ? '✨ Generate Route'
+                      : 'Missing Venue ID'}
+                </span>
               </button>
 
               <div className="grid grid-cols-2 gap-2">

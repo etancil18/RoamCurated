@@ -25,6 +25,26 @@ function normalizeSearchableList(value: string | string[] | undefined): string[]
   return []
 }
 
+function coerceGeneratedVenue(venue: any): Venue | null {
+  if (!venue) return null
+
+  const lat = typeof venue.lat === 'string' ? parseFloat(venue.lat) : venue.lat
+  const lon = typeof venue.lon === 'string' ? parseFloat(venue.lon) : venue.lon
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null
+
+  return {
+    ...venue,
+    id: venue.id ?? venue.slug ?? venue.name,
+    lat,
+    lon,
+  } as Venue
+}
+
+function getVenueLookupKeys(venue: Venue): string[] {
+  return [venue.id, venue.slug, venue.name].filter(Boolean) as string[]
+}
+
 export default function MapWrapper() {
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [route, setRoute] = useState<Venue[] | undefined>(undefined)
@@ -98,7 +118,7 @@ export default function MapWrapper() {
     if (ids.length === 0) return
 
     const matched = ids
-      .map((id) => venues.find((v) => v.id === id || v.name === id))
+      .map((id) => venues.find((v) => v.id === id || v.slug === id || v.name === id))
       .filter((v): v is Venue => !!v)
 
     if (matched.length > 0) setRoute(matched)
@@ -173,30 +193,54 @@ export default function MapWrapper() {
 
   const handleGeneratedRouteFromVenue = useCallback(
     (nextRoute: Venue[], generatedRoute?: any) => {
-      if (!Array.isArray(nextRoute) || nextRoute.length < 2) return
+      const fallbackRoute = generatedRoute?.stops
+        ?.map((stop: any) => stop?.venue)
+        .filter(Boolean)
 
-      const cleanedRoute = nextRoute.filter(
-        (venue) =>
-          venue &&
-          venue.id &&
-          Number.isFinite(venue.lat) &&
-          Number.isFinite(venue.lon)
-      )
+      const sourceRoute =
+        Array.isArray(nextRoute) && nextRoute.length > 0
+          ? nextRoute
+          : fallbackRoute
+
+      console.log('[MapWrapper received generated route]', {
+        nextRouteLength: Array.isArray(nextRoute) ? nextRoute.length : 0,
+        fallbackRouteLength: Array.isArray(fallbackRoute) ? fallbackRoute.length : 0,
+        generatedRoute,
+      })
+
+      if (!Array.isArray(sourceRoute) || sourceRoute.length < 2) return
+
+      const cleanedRoute = sourceRoute
+        .map(coerceGeneratedVenue)
+        .filter((venue): venue is Venue => Boolean(venue))
 
       if (cleanedRoute.length < 2) {
         setRouteErrorMessage('Generated route was missing usable venue coordinates.')
         return
       }
 
-      const venueById = new Map(venues.map((venue) => [venue.id, venue]))
+      const generatedCity = generatedRoute?.context?.city
+      if (typeof generatedCity === 'string' && generatedCity.trim()) {
+        setSelectedCity(generatedCity)
+      }
+
+      const venueByKey = new Map<string, Venue>()
+
+      venues.forEach((venue) => {
+        getVenueLookupKeys(venue).forEach((key) => {
+          venueByKey.set(key, venue)
+        })
+      })
 
       const hydratedRoute = cleanedRoute.map((venue) => {
-        const canonicalVenue = venueById.get(venue.id)
+        const canonicalVenue = getVenueLookupKeys(venue)
+          .map((key) => venueByKey.get(key))
+          .find(Boolean)
 
         return canonicalVenue
           ? {
-              ...venue,
               ...canonicalVenue,
+              ...venue,
             }
           : venue
       })
@@ -208,14 +252,12 @@ export default function MapWrapper() {
       setCustomStart(null)
       setIsPanelOpen(false)
 
-      const generatedCity = generatedRoute?.context?.city
-      if (typeof generatedCity === 'string' && generatedCity.trim()) {
-        setSelectedCity(generatedCity)
-      }
-
       if (inBrowser()) {
         const url = new URL(window.location.href)
-        url.searchParams.set('route', hydratedRoute.map((venue) => venue.id ?? venue.name).join(','))
+        url.searchParams.set(
+          'route',
+          hydratedRoute.map((venue) => venue.id ?? venue.slug ?? venue.name).join(',')
+        )
 
         if (typeof generatedCity === 'string' && generatedCity.trim()) {
           url.searchParams.set('city', generatedCity)
