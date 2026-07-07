@@ -9,6 +9,7 @@ import LiveStatusPill from '@/components/venue-profile/LiveStatusPill'
 import EventCarousel from '@/components/venue-profile/EventCarousel'
 import VenueVisitButton from '@/components/venue-profile/VenueVisitButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
+import VenuePartnerBadge from '@/components/venue-profile/VenuePartnerBadge'
 
 import {
   VenueProfileData,
@@ -25,12 +26,10 @@ function normalizeCityKey(input?: string | null) {
     atl: 'atl',
     atlanta: 'atl',
     'atlanta ga': 'atl',
-
     nyc: 'nyc',
     'new york': 'nyc',
     'new york city': 'nyc',
     manhattan: 'nyc',
-
     la: 'la',
     'los angeles': 'la',
     'los-angeles': 'la',
@@ -40,7 +39,6 @@ function normalizeCityKey(input?: string | null) {
     venice: 'la',
     'santa monica': 'la',
     dtla: 'la',
-
     london: 'london',
     ldn: 'london',
     'greater london': 'london',
@@ -49,10 +47,8 @@ function normalizeCityKey(input?: string | null) {
     hackney: 'london',
     soho: 'london',
     chelsea: 'london',
-
     porto: 'porto',
     oporto: 'porto',
-
     lisbon: 'lisbon',
     lisboa: 'lisbon',
   }
@@ -61,15 +57,11 @@ function normalizeCityKey(input?: string | null) {
 }
 
 function toNumberOrNull(value: unknown) {
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null
-  }
-
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
   if (typeof value === 'string') {
     const parsed = parseFloat(value)
     return Number.isFinite(parsed) ? parsed : null
   }
-
   return null
 }
 
@@ -140,6 +132,17 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       : normalizedCity
         ? `/?city=${encodeURIComponent(normalizedCity)}`
         : '/'
+
+  const nowIso = new Date().toISOString()
+
+  const { data: partnership } = await supabase
+    .from('venue_partnerships')
+    .select('badge_label, offer_title, offer_description, terms, partner_since')
+    .eq('venue_id', venueId)
+    .eq('status', 'active')
+    .or(`starts_at.is.null,starts_at.lte.${nowIso}`)
+    .or(`ends_at.is.null,ends_at.gte.${nowIso}`)
+    .maybeSingle()
 
   const { data: liveStatusRaw } = await supabase
     .from('venue_live_status')
@@ -248,10 +251,9 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
 
       <HeroBanner venue={normalizedVenue} />
 
-      <VenueVisitButton
-        venueId={venueId}
-        venueName={normalizedVenue.name}
-      />
+      {partnership && <VenuePartnerBadge partnership={partnership} />}
+
+      <VenueVisitButton venueId={venueId} venueName={normalizedVenue.name} />
 
       {normalizedVenue.description && (
         <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -270,7 +272,7 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       {bookingOptions.length > 0 && (
         <VenueBookingButtons bookingOptions={bookingOptions} />
       )}
-      
+
       <SocialLinks contact={normalizedVenue.contact} />
 
       <VenueHours

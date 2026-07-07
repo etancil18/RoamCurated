@@ -20,19 +20,8 @@ type Tier = 'commit' | 'constrain' | 'clarify'
 const MIN_QUALITY_STOPS = 3
 
 function normalizeSearchableList(value: string | string[] | undefined): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => item.trim())
-      .filter(Boolean)
-  }
-
-  if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean)
-  }
-
+  if (Array.isArray(value)) return value.map((item) => item.trim()).filter(Boolean)
+  if (typeof value === 'string') return value.split(',').map((item) => item.trim()).filter(Boolean)
   return []
 }
 
@@ -54,25 +43,25 @@ export default function MapWrapper() {
   const [isPanelOpen, setIsPanelOpen] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
   const [confidenceTier, setConfidenceTier] = useState<Tier | null>(null)
+  const [generatedRouteContext, setGeneratedRouteContext] = useState<any>(null)
 
   const { user } = useUser()
   const userId = user?.id
   const supabase = supabaseBrowser()
 
-  const {
-    venues = [],
-    eventsByVenueId = {},
-  } = useCityData(selectedCity ?? '', { showLiveEventsOnly })
+  const { venues = [], eventsByVenueId = {} } = useCityData(selectedCity ?? '', {
+    showLiveEventsOnly,
+  })
 
   useEffect(() => {
     setHasMounted(true)
   }, [])
 
   useEffect(() => {
-  if (route && route.length > 1) {
-    setIsPanelOpen(false)
-  }
-}, [route])
+    if (route && route.length > 1) {
+      setIsPanelOpen(false)
+    }
+  }, [route])
 
   useEffect(() => {
     if (!inBrowser()) return
@@ -103,24 +92,16 @@ export default function MapWrapper() {
     const params = new URLSearchParams(window.location.search)
     const routeParam = params.get('route')
 
-    if (typeof routeParam !== 'string' || routeParam.trim().length === 0) {
-      return
-    }
+    if (typeof routeParam !== 'string' || routeParam.trim().length === 0) return
 
-    const ids = routeParam
-      .split(',')
-      .map((id) => id.trim())
-      .filter(Boolean)
-
+    const ids = routeParam.split(',').map((id) => id.trim()).filter(Boolean)
     if (ids.length === 0) return
 
     const matched = ids
       .map((id) => venues.find((v) => v.id === id || v.name === id))
       .filter((v): v is Venue => !!v)
 
-    if (matched.length > 0) {
-      setRoute(matched)
-    }
+    if (matched.length > 0) setRoute(matched)
   }, [venues])
 
   const filteredVenues = useMemo(() => {
@@ -161,6 +142,7 @@ export default function MapWrapper() {
       const timestamp = new Date(`${crawlDate}T${crawlTime}`)
       return isNaN(timestamp.getTime()) ? new Date().toISOString() : timestamp.toISOString()
     }
+
     return new Date().toISOString()
   }
 
@@ -169,6 +151,7 @@ export default function MapWrapper() {
     setCustomStart(null)
     setRouteErrorMessage(null)
     setConfidenceTier(null)
+    setGeneratedRouteContext(null)
 
     if (inBrowser()) {
       const href = getHref()
@@ -183,11 +166,66 @@ export default function MapWrapper() {
     setRoute(undefined)
     setCustomStart(null)
     setConfidenceTier(null)
+    setGeneratedRouteContext(null)
 
-    if (slug) {
-      setIsPanelOpen(true)
-    }
+    if (slug) setIsPanelOpen(true)
   }, [])
+
+  const handleGeneratedRouteFromVenue = useCallback(
+    (nextRoute: Venue[], generatedRoute?: any) => {
+      if (!Array.isArray(nextRoute) || nextRoute.length < 2) return
+
+      const cleanedRoute = nextRoute.filter(
+        (venue) =>
+          venue &&
+          venue.id &&
+          Number.isFinite(venue.lat) &&
+          Number.isFinite(venue.lon)
+      )
+
+      if (cleanedRoute.length < 2) {
+        setRouteErrorMessage('Generated route was missing usable venue coordinates.')
+        return
+      }
+
+      const venueById = new Map(venues.map((venue) => [venue.id, venue]))
+
+      const hydratedRoute = cleanedRoute.map((venue) => {
+        const canonicalVenue = venueById.get(venue.id)
+
+        return canonicalVenue
+          ? {
+              ...venue,
+              ...canonicalVenue,
+            }
+          : venue
+      })
+
+      setRoute(hydratedRoute)
+      setGeneratedRouteContext(generatedRoute ?? null)
+      setRouteErrorMessage(null)
+      setConfidenceTier(null)
+      setCustomStart(null)
+      setIsPanelOpen(false)
+
+      const generatedCity = generatedRoute?.context?.city
+      if (typeof generatedCity === 'string' && generatedCity.trim()) {
+        setSelectedCity(generatedCity)
+      }
+
+      if (inBrowser()) {
+        const url = new URL(window.location.href)
+        url.searchParams.set('route', hydratedRoute.map((venue) => venue.id ?? venue.name).join(','))
+
+        if (typeof generatedCity === 'string' && generatedCity.trim()) {
+          url.searchParams.set('city', generatedCity)
+        }
+
+        window.history.replaceState(null, '', url.toString())
+      }
+    },
+    [venues]
+  )
 
   const handleStartGeneratedFlow = async () => {
     if (!route || route.length < 2) return
@@ -230,10 +268,7 @@ export default function MapWrapper() {
   const handleHostGeneratedFlow = () => {
     if (!route || route.length < 2) return
 
-    const slugs = route
-      .map((venue) => venue.slug ?? venue.id)
-      .filter(Boolean)
-      .join(',')
+    const slugs = route.map((venue) => venue.slug ?? venue.id).filter(Boolean).join(',')
 
     if (inBrowser()) {
       window.location.href = `/sponsor-crawl?slugs=${slugs}`
@@ -244,6 +279,7 @@ export default function MapWrapper() {
     if (!selectedCity) return
 
     setRouteErrorMessage(null)
+    setGeneratedRouteContext(null)
 
     const fallbackCoords: Record<string, { lat: number; lon: number }> = {
       atl: { lat: 33.749, lon: -84.388 },
@@ -499,8 +535,10 @@ export default function MapWrapper() {
         onGenerateRoute={handleGenerateRoute}
         hasGeneratedRoute={hasGeneratedRoute}
         generatedRouteStopCount={route?.length ?? 0}
+        generatedRouteContext={generatedRouteContext}
         onStartGeneratedFlow={handleStartGeneratedFlow}
         onHostGeneratedFlow={handleHostGeneratedFlow}
+        onClearRoute={handleClearRoute}
       />
 
       {hasMounted && (
@@ -514,6 +552,8 @@ export default function MapWrapper() {
             markerDisplayMode={markerDisplayMode}
             showLiveEventsOnly={showLiveEventsOnly}
             onCityChange={handleCityChange}
+            onGeneratedRouteCityChange={setSelectedCity}
+            onGeneratedRouteFromVenue={handleGeneratedRouteFromVenue}
             searchTerm={searchTerm}
             isPanelOpen={isPanelOpen}
           />

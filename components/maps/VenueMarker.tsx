@@ -1,7 +1,7 @@
 'use client'
 
 import { Marker, Popup, Tooltip } from 'react-leaflet'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Venue } from '@/types/venue'
 import { isVenueOpenNow } from '@/utils/timeUtils'
 import { coverCandidates } from '@/utils/imageUtils'
@@ -33,6 +33,22 @@ const daypartColorMap: Record<string, string> = {
   L: 'red',
 }
 
+function formatListValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean).join(', ')
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .join(', ')
+  }
+
+  return ''
+}
+
 export default function VenueMarker({
   venue: v,
   index,
@@ -43,6 +59,9 @@ export default function VenueMarker({
   markerRefs,
   eventsByVenueId,
 }: Props) {
+  const [generatingRoute, setGeneratingRoute] = useState(false)
+  const [generateRouteError, setGenerateRouteError] = useState<string | null>(null)
+
   const isOpen = useMemo(() => isVenueOpenNow(v, nowForCity), [v, nowForCity])
 
   const markerEmoji = useMemo(
@@ -50,7 +69,8 @@ export default function VenueMarker({
     [v]
   )
 
-  // ✅ Today’s hours (city-aware)
+  const vibeLabel = useMemo(() => formatListValue(v.vibe), [v.vibe])
+
   const todayHours = useMemo(() => {
     if (!Array.isArray(v.hours)) return null
 
@@ -175,9 +195,87 @@ export default function VenueMarker({
 
   const firstCandidate = coverCandidates(v)[0]
   const timezone = CITY_CONFIGS[city]?.timezone ?? 'UTC'
-
-  // Deterministic primary image from slug
   const primaryImage = v.slug ? `/img/venues/${v.slug}.jpg` : firstCandidate
+
+  const generateRouteFromVenue = async () => {
+    if (!v.id || generatingRoute) return
+
+    setGeneratingRoute(true)
+    setGenerateRouteError(null)
+
+    try {
+      logVenueImpression('generate_from_venue_clicked', {
+        venue_id: v.id,
+        metadata: {
+          city,
+          name: v.name,
+          source: 'map_marker_popup',
+        },
+      })
+
+      const res = await fetch('/api/generate-from-venue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          venueId: v.id,
+          city,
+          plannedStartAt: nowForCity.toISO(),
+          travelMode: 'walking',
+          tightness: 'medium',
+          maxStops: 5,
+          source: 'map_marker',
+        }),
+      })
+
+      const payload = await res.json().catch(() => null)
+
+      if (!res.ok || !payload?.route?.stops?.length) {
+        throw new Error(payload?.error || 'Could not generate a route from this venue.')
+      }
+
+      const generatedVenues = payload.route.stops
+        .map((stop: any) => stop.venue)
+        .filter(Boolean)
+
+      window.dispatchEvent(
+        new CustomEvent('roam:generated-route-from-venue', {
+          detail: {
+            route: generatedVenues,
+            generatedRoute: payload.route,
+            anchorVenueId: v.id,
+            city,
+          },
+        })
+      )
+
+      logVenueImpression('generate_from_venue_succeeded', {
+        venue_id: v.id,
+        metadata: {
+          city,
+          name: v.name,
+          stop_count: generatedVenues.length,
+        },
+      })
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Could not generate a route from this venue.'
+
+      setGenerateRouteError(message)
+
+      logVenueImpression('generate_from_venue_failed', {
+        venue_id: v.id,
+        metadata: {
+          city,
+          name: v.name,
+          message,
+        },
+      })
+    } finally {
+      setGeneratingRoute(false)
+    }
+  }
 
   if (!icon) return null
 
@@ -207,79 +305,117 @@ export default function VenueMarker({
       <Tooltip>{v.name}</Tooltip>
 
       <Popup>
-        <div style={{ fontSize: 14 }}>
-          <strong>{v.name}</strong>
-
-          {primaryImage && (
-            <img
-              src={primaryImage}
-              alt={v.name}
-              style={{
-                width: '100%',
-                maxHeight: 140,
-                objectFit: 'cover',
-                margin: '6px 0',
-              }}
-              onError={(e) => {
-                const img = e.currentTarget
-                if (firstCandidate && img.src !== firstCandidate) {
-                  img.src = firstCandidate
-                }
-              }}
-            />
-          )}
-
-          <div>
-            <em>Vibe:</em> {v.vibe}
-          </div>
-          {v.price && (
+        <div className="w-[230px] overflow-hidden rounded-xl bg-white text-[13px] text-zinc-900">
+          <div className="space-y-2">
             <div>
-              <em>Price:</em> {v.price}
-            </div>
-          )}
+              <strong className="block text-base leading-tight text-zinc-950">
+                {v.name}
+              </strong>
 
-          <div>
-            <em>Status:</em>{' '}
-            <span style={{ color: isOpen ? 'green' : 'red' }}>
-              {isOpen ? 'Open' : 'Closed'}
-            </span>
+              {primaryImage && (
+                <img
+                  src={primaryImage}
+                  alt={v.name}
+                  className="mt-2 h-[132px] w-full rounded-xl object-cover"
+                  onError={(e) => {
+                    const img = e.currentTarget
+                    if (firstCandidate && img.src !== firstCandidate) {
+                      img.src = firstCandidate
+                    }
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="space-y-1 rounded-xl border border-zinc-200 bg-zinc-50 p-2.5">
+              {vibeLabel && (
+                <div className="leading-5">
+                  <span className="font-semibold text-zinc-700">Vibe:</span>{' '}
+                  <span className="text-zinc-600">{vibeLabel}</span>
+                </div>
+              )}
+
+              {v.price && (
+                <div>
+                  <span className="font-semibold text-zinc-700">Price:</span>{' '}
+                  <span className="text-zinc-600">{v.price}</span>
+                </div>
+              )}
+
+              <div>
+                <span className="font-semibold text-zinc-700">Status:</span>{' '}
+                <span
+                  className={
+                    isOpen
+                      ? 'font-semibold text-emerald-600'
+                      : 'font-semibold text-red-600'
+                  }
+                >
+                  {isOpen ? 'Open' : 'Closed'}
+                </span>
+              </div>
+
+              {todayHours && (
+                <div className="leading-5">
+                  <span className="font-semibold text-zinc-700">Hours:</span>{' '}
+                  <span className="text-zinc-600">{todayHours}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm">
+              <button
+                type="button"
+                onClick={() => void generateRouteFromVenue()}
+                disabled={generatingRoute || !v.id}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 px-3 py-2.5 text-xs font-black text-white shadow-sm transition hover:from-indigo-500 hover:to-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span>{generatingRoute ? 'Building…' : '✨ Generate Route'}</span>
+              </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                {v.id && (
+                  <a
+                    href={`/venue-profile/${v.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-bold text-zinc-800 transition hover:bg-zinc-100"
+                  >
+                    More Info
+                  </a>
+                )}
+
+                <div className="flex min-h-[34px] items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-2 text-xs font-bold text-zinc-800 transition hover:bg-zinc-100">
+                  <FavoritesButton venue={v as Venue & { id: string }} />
+                </div>
+              </div>
+
+              {generateRouteError ? (
+                <p className="rounded-lg bg-red-50 px-2 py-1.5 text-xs leading-4 text-red-600">
+                  {generateRouteError}
+                </p>
+              ) : null}
+            </div>
+
+            {upcomingEvents.length > 0 && (
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2.5">
+                <strong className="text-xs uppercase tracking-wide text-zinc-500">
+                  Upcoming Events
+                </strong>
+
+                <ul className="mt-2 space-y-1.5 pl-4 text-xs text-zinc-700">
+                  {upcomingEvents.map((ev) => (
+                    <li key={ev.id}>
+                      {LuxonDateTime.fromISO(ev.starts_at)
+                        .setZone(timezone)
+                        .toFormat('M/d h:mm a')}{' '}
+                      — {ev.title}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-
-          {/* 🔥 Today’s Hours */}
-          {todayHours && (
-            <div>
-              <em>Hours:</em> {todayHours}
-            </div>
-          )}
-
-          {v.id && (
-            <a
-              href={`/venue-profile/${v.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
-            >
-              More Info
-            </a>
-          )}
-
-          <FavoritesButton venue={v as Venue & { id: string }} />
-
-          {upcomingEvents.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <strong>Upcoming Events:</strong>
-              <ul style={{ marginTop: 6, paddingLeft: 16 }}>
-                {upcomingEvents.map((ev) => (
-                  <li key={ev.id}>
-                    {LuxonDateTime.fromISO(ev.starts_at)
-                      .setZone(timezone)
-                      .toFormat('M/d h:mm a')}{' '}
-                    — {ev.title}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </Popup>
     </Marker>

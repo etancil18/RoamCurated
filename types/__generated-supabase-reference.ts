@@ -2502,6 +2502,72 @@ export type Database = {
           },
         ]
       }
+      venue_partnerships: {
+        Row: {
+          badge_label: string
+          created_at: string
+          ends_at: string | null
+          featured_rank: number | null
+          id: string
+          is_featured: boolean
+          offer_description: string | null
+          offer_title: string | null
+          partner_since: string | null
+          starts_at: string | null
+          status: string
+          terms: string | null
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          badge_label?: string
+          created_at?: string
+          ends_at?: string | null
+          featured_rank?: number | null
+          id?: string
+          is_featured?: boolean
+          offer_description?: string | null
+          offer_title?: string | null
+          partner_since?: string | null
+          starts_at?: string | null
+          status?: string
+          terms?: string | null
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          badge_label?: string
+          created_at?: string
+          ends_at?: string | null
+          featured_rank?: number | null
+          id?: string
+          is_featured?: boolean
+          offer_description?: string | null
+          offer_title?: string | null
+          partner_since?: string | null
+          starts_at?: string | null
+          status?: string
+          terms?: string | null
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_partnerships_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_partnerships_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_users: {
         Row: {
           created_at: string | null

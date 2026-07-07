@@ -38,7 +38,6 @@ import 'leaflet/dist/leaflet.css'
 
 const USA_CENTER: [number, number] = [37.8, -96.9]
 const USA_ZOOM = 4
-const DEFAULT_FOCUS_ZOOM = 16
 
 function normalizeSearchableList(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) {
@@ -138,7 +137,9 @@ type Props = {
   showLiveEventsOnly?: boolean
   markerDisplayMode?: 'color' | 'emoji'
   onCityChange?: (city: string | null) => void
+  onGeneratedRouteCityChange?: (city: string | null) => void
   onMapClick?: (lat: number, lon: number) => void
+  onGeneratedRouteFromVenue?: (route: Venue[], generatedRoute?: any) => void
   customStart?: { lat: number; lon: number } | null
   isPanelOpen?: boolean
 }
@@ -151,7 +152,9 @@ export default function MapCanvas({
   showLiveEventsOnly = false,
   markerDisplayMode = 'color',
   onCityChange,
+  onGeneratedRouteCityChange,
   onMapClick,
+  onGeneratedRouteFromVenue,
   customStart,
   isPanelOpen = false,
 }: Props) {
@@ -195,6 +198,64 @@ export default function MapCanvas({
       iconAnchor: [14, 28],
     })
   }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleGeneratedRouteFromVenue = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        route?: Venue[]
+        generatedRoute?: any
+        anchorVenueId?: string
+        city?: string
+      }>
+
+      const nextRoute = customEvent.detail?.route
+
+      if (!Array.isArray(nextRoute) || nextRoute.length < 2) return
+
+      onGeneratedRouteFromVenue?.(
+        nextRoute,
+        customEvent.detail?.generatedRoute
+      )
+
+      if (customEvent.detail?.city) {
+        setSelectedCity(customEvent.detail.city)
+        setShowCitySelector(false)
+        onGeneratedRouteCityChange?.(customEvent.detail.city)
+      }
+
+      const validRoute = nextRoute.filter(
+        (venue) =>
+          Number.isFinite(venue.lat) &&
+          Number.isFinite(venue.lon)
+      )
+
+      if (mapRef.current && validRoute.length > 1) {
+        const L = require('leaflet')
+        const bounds = L.latLngBounds(
+          validRoute.map((venue) => [venue.lat, venue.lon])
+        )
+
+        mapRef.current.fitBounds(bounds, {
+          padding: [48, 48],
+          animate: true,
+        })
+      }
+    }
+
+    window.addEventListener(
+      'roam:generated-route-from-venue',
+      handleGeneratedRouteFromVenue
+    )
+
+    return () => {
+      window.removeEventListener(
+        'roam:generated-route-from-venue',
+        handleGeneratedRouteFromVenue
+      )
+    }
+  }, [onGeneratedRouteFromVenue, onGeneratedRouteCityChange])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

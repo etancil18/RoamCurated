@@ -72,7 +72,6 @@ export function ControlPanel({
   markerDisplayMode,
   setMarkerDisplayMode,
   onGenerateRoute,
-  onClearRoute,
 }: ControlPanelProps) {
   const [isScheduled, setIsScheduled] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -301,22 +300,6 @@ export function ControlPanel({
                 </div>
               </>
             )}
-
-            <div className="space-y-1">
-              <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                Route
-              </Label>
-              <Button
-                variant="outline"
-                className="h-9 w-full text-xs border border-zinc-500 dark:border-zinc-600 dark:text-zinc-100"
-                onClick={() => {
-                  onClearRoute()
-                  logEvent('route_cleared', { metadata: { city } })
-                }}
-              >
-                Clear
-              </Button>
-            </div>
           </div>
         )}
       </div>
