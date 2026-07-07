@@ -1,3 +1,5 @@
+// app/map-wrapper.tsx
+
 'use client'
 
 import dynamic from 'next/dynamic'
@@ -64,6 +66,7 @@ export default function MapWrapper() {
   const [hasMounted, setHasMounted] = useState(false)
   const [confidenceTier, setConfidenceTier] = useState<Tier | null>(null)
   const [generatedRouteContext, setGeneratedRouteContext] = useState<any>(null)
+  const [generatedRouteRetryAttempt, setGeneratedRouteRetryAttempt] = useState(0)
 
   const { user } = useUser()
   const userId = user?.id
@@ -172,6 +175,7 @@ export default function MapWrapper() {
     setRouteErrorMessage(null)
     setConfidenceTier(null)
     setGeneratedRouteContext(null)
+    setGeneratedRouteRetryAttempt(0)
 
     if (inBrowser()) {
       const href = getHref()
@@ -187,12 +191,17 @@ export default function MapWrapper() {
     setCustomStart(null)
     setConfidenceTier(null)
     setGeneratedRouteContext(null)
+    setGeneratedRouteRetryAttempt(0)
 
     if (slug) setIsPanelOpen(true)
   }, [])
 
   const handleGeneratedRouteFromVenue = useCallback(
-    (nextRoute: Venue[], generatedRoute?: any) => {
+    (
+      nextRoute: Venue[],
+      generatedRoute?: any,
+      options: { preserveRetryAttempt?: boolean } = {}
+    ) => {
       const fallbackRoute = generatedRoute?.stops
         ?.map((stop: any) => stop?.venue)
         .filter(Boolean)
@@ -252,6 +261,10 @@ export default function MapWrapper() {
       setCustomStart(null)
       setIsPanelOpen(false)
 
+      if (!options.preserveRetryAttempt) {
+        setGeneratedRouteRetryAttempt(0)
+      }
+
       if (inBrowser()) {
         const url = new URL(window.location.href)
         url.searchParams.set(
@@ -268,6 +281,84 @@ export default function MapWrapper() {
     },
     [venues]
   )
+
+  const retryGeneratedRouteFromVenue = useCallback(async () => {
+    const anchorVenue = generatedRouteContext?.anchorVenue ?? route?.[0]
+
+    if (!anchorVenue) return false
+
+    const source = generatedRouteContext?.source
+    const hasVenueAnchor =
+      source === 'map_marker' ||
+      generatedRouteContext?.context?.anchorVenueId ||
+      generatedRouteContext?.anchorVenue?.id
+
+    if (!hasVenueAnchor) return false
+
+    const nextAttempt = generatedRouteRetryAttempt + 1
+    const generatedCity =
+      generatedRouteContext?.context?.city ?? anchorVenue.city ?? selectedCity
+
+    try {
+      setRouteErrorMessage(null)
+
+      const res = await fetch('/api/generate-from-venue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          venueId: anchorVenue.id ?? generatedRouteContext?.context?.anchorVenueId ?? null,
+          venueSlug: anchorVenue.slug ?? null,
+          venueName: anchorVenue.name ?? generatedRouteContext?.context?.anchorVenueName ?? null,
+          city: generatedCity,
+          plannedStartAt:
+            generatedRouteContext?.context?.plannedStartAt ?? computePlannedStartAt(),
+          travelMode: generatedRouteContext?.context?.travelMode ?? travelMode,
+          tightness: generatedRouteContext?.context?.tightness ?? tightness,
+          maxStops: generatedRouteContext?.context?.maxStops ?? route?.length ?? 5,
+          source: generatedRouteContext?.source ?? 'map_marker',
+          retrySeed:
+            generatedRouteContext?.context?.anchorVenueId ??
+            anchorVenue.id ??
+            anchorVenue.slug ??
+            anchorVenue.name,
+          retryAttempt: nextAttempt,
+          debug: true,
+        }),
+      })
+
+      const payload = await res.json().catch(() => null)
+
+      if (!res.ok || !payload?.route?.stops?.length) {
+        throw new Error(payload?.error || 'Could not retry this route.')
+      }
+
+      const generatedVenues = payload.route.stops
+        .map((stop: any) => stop?.venue)
+        .filter(Boolean)
+
+      handleGeneratedRouteFromVenue(generatedVenues, payload.route, {
+        preserveRetryAttempt: true,
+      })
+
+      setGeneratedRouteRetryAttempt(nextAttempt)
+      return true
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Could not retry this route.'
+
+      console.error('Retry Generated Route From Venue Error:', error)
+      setRouteErrorMessage(message)
+      return true
+    }
+  }, [
+    generatedRouteContext,
+    generatedRouteRetryAttempt,
+    route,
+    selectedCity,
+    travelMode,
+    tightness,
+    handleGeneratedRouteFromVenue,
+  ])
 
   const handleStartGeneratedFlow = async () => {
     if (!route || route.length < 2) return
@@ -322,6 +413,7 @@ export default function MapWrapper() {
 
     setRouteErrorMessage(null)
     setGeneratedRouteContext(null)
+    setGeneratedRouteRetryAttempt(0)
 
     const fallbackCoords: Record<string, { lat: number; lon: number }> = {
       atl: { lat: 33.749, lon: -84.388 },
@@ -499,6 +591,14 @@ export default function MapWrapper() {
     }
   }
 
+  const handleRetryAwareGenerateRoute = useCallback(async () => {
+    const handledVenueRetry = await retryGeneratedRouteFromVenue()
+
+    if (handledVenueRetry) return
+
+    await handleGenerateRoute()
+  }, [retryGeneratedRouteFromVenue])
+
   const hasGeneratedRoute = !!route && route.length > 1
 
   return (
@@ -574,7 +674,7 @@ export default function MapWrapper() {
             | 'la'
             | null
         }
-        onGenerateRoute={handleGenerateRoute}
+        onGenerateRoute={handleRetryAwareGenerateRoute}
         hasGeneratedRoute={hasGeneratedRoute}
         generatedRouteStopCount={route?.length ?? 0}
         generatedRouteContext={generatedRouteContext}

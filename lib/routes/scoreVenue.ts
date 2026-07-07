@@ -53,6 +53,7 @@ export type VenueScoreReason = {
     | 'category_progression'
     | 'duplicate_type_penalty'
     | 'route_backtrack_penalty'
+    | 'retry_variation'
     | 'missing_coordinates'
     | 'same_venue'
     | 'contextual_mismatch'
@@ -86,6 +87,8 @@ export type ScoreVenueParams = {
   maxDistanceMeters?: number
   idealDistanceMeters?: number
   timezone?: string | null
+  retrySeed?: string | number | null
+  retryAttempt?: number
 }
 
 const DEFAULT_MAX_DISTANCE_METERS_BY_MODE: Record<ScoreVenueTravelMode, number> = {
@@ -119,6 +122,8 @@ export function scoreVenue({
   maxDistanceMeters = DEFAULT_MAX_DISTANCE_METERS_BY_MODE[travelMode],
   idealDistanceMeters = DEFAULT_IDEAL_DISTANCE_METERS_BY_MODE[travelMode],
   timezone = null,
+  retrySeed = null,
+  retryAttempt = 0,
 }: ScoreVenueParams): VenueScoreResult {
   const reasons: VenueScoreReason[] = []
   const candidateId = candidate.id ?? null
@@ -270,6 +275,24 @@ export function scoreVenue({
     distanceMeters === null
       ? null
       : estimateTravelMinutes(distanceMeters, travelMode)
+
+  const retryVariationScore = scoreRetryVariation({
+    candidate,
+    stage,
+    retrySeed,
+    retryAttempt,
+  })
+
+  if (retryVariationScore !== 0) {
+    reasons.push({
+      key: 'retry_variation',
+      label:
+        retryVariationScore > 0
+          ? 'Retry variation boosted this alternate quality stop.'
+          : 'Retry variation deprioritized this stop for a different route mix.',
+      delta: retryVariationScore,
+    })
+  }
 
   const vibeScore = scoreListOverlap({
     candidateValue: candidate.vibe,
@@ -520,6 +543,31 @@ function scoreDistance({
   const penalty = Math.min(36, Math.round(overMax / 150))
 
   return -18 - penalty
+}
+
+function scoreRetryVariation({
+  candidate,
+  stage,
+  retrySeed,
+  retryAttempt,
+}: {
+  candidate: ScoreVenueInputVenue
+  stage: RouteStage
+  retrySeed?: string | number | null
+  retryAttempt?: number
+}) {
+  const safeAttempt =
+    typeof retryAttempt === 'number' && Number.isFinite(retryAttempt)
+      ? Math.max(0, Math.round(retryAttempt))
+      : 0
+
+  if (!retrySeed && safeAttempt <= 0) return 0
+
+  const candidateKey = candidate.id ?? candidate.name ?? ''
+  const seed = `${retrySeed ?? 'retry'}:${safeAttempt}:${stage.id}:${candidateKey}`
+  const normalized = deterministicUnitValue(seed)
+
+  return Math.round((normalized - 0.5) * 24)
 }
 
 function scoreCategoryProgression({
@@ -813,6 +861,17 @@ function estimateTravelMinutes(
     travelMode === 'walking' ? 80 : travelMode === 'cycling' ? 240 : 500
 
   return Math.max(1, Math.round(distanceMeters / metersPerMinute))
+}
+
+function deterministicUnitValue(input: string): number {
+  let hash = 2166136261
+
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+
+  return (hash >>> 0) / 4294967295
 }
 
 function degreesToRadians(value: number) {

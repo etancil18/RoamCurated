@@ -77,7 +77,7 @@ export function ControlPanel({
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const selectedThemeLabel =
-    themes.find((theme) => theme.id === selectedThemeId)?.label ?? 'Pick vibe'
+    themes.find((theme) => theme.id === selectedThemeId)?.label ?? 'Free explore'
 
   const travelModeLabel =
     travelMode === 'walking' ? 'Walk' : travelMode === 'cycling' ? 'Bike' : 'Drive'
@@ -117,48 +117,22 @@ export function ControlPanel({
     'focus:outline-none focus:ring-1 focus:ring-blue-500'
 
   return (
-    <div className="fixed left-1/2 bottom-5 z-[4000] w-[min(92vw,420px)] -translate-x-1/2 md:w-[720px]">
+    <div className="fixed left-1/2 bottom-5 z-[4000] w-[min(92vw,420px)] -translate-x-1/2 md:w-[560px]">
       <div className="rounded-2xl border border-zinc-300 bg-white/95 p-3 text-xs shadow-2xl backdrop-blur-md dark:border-zinc-700 dark:bg-zinc-950/95">
-        <div className="grid grid-cols-[1fr_88px] gap-2 md:grid-cols-[1.2fr_120px_120px]">
-          <select
-            value={selectedThemeId}
+        <div className="grid grid-cols-[1fr_88px] gap-2">
+          <input
+            type="text"
+            placeholder="Search places, vibes, food, music..."
+            value={searchTerm}
             onChange={(e) => {
-              setSelectedThemeId(e.target.value)
-              logEvent('theme_selected', {
-                metadata: { themeId: e.target.value, city },
-              })
+              const val = e.target.value
+              setSearchTerm(val)
+              logEvent('search_updated', { metadata: { value: val, city } })
             }}
             className={inputBase}
-            aria-label="Theme"
-          >
-            <option value="">Pick vibe</option>
-            {themes.map((theme) => (
-              <option key={theme.id} value={theme.id}>
-                {theme.label}
-              </option>
-            ))}
-          </select>
+            aria-label="Search venues"
+          />
 
-          <select
-            value={travelMode}
-            onChange={(e) => handleTravelModeChange(e.target.value)}
-            className={inputBase}
-            aria-label="Travel mode"
-          >
-            <option value="walking">🚶 Walk</option>
-            <option value="cycling">🚲 Bike</option>
-            <option value="driving">🚗 Drive</option>
-          </select>
-
-          <Button
-            className="col-span-2 h-9 text-xs bg-blue-600 text-white hover:bg-blue-700 md:col-span-1"
-            onClick={handleGenerateClick}
-          >
-            Generate
-          </Button>
-        </div>
-
-        <div className="mt-2 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => {
@@ -167,140 +141,177 @@ export function ControlPanel({
                 metadata: { city, open: !advancedOpen },
               })
             }}
-            className="rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
-            {advancedOpen ? 'Hide filters' : 'Filters'}
+            {advancedOpen ? 'Hide' : 'Filters'}
           </button>
-
-          <div className="truncate text-[11px] text-zinc-500 dark:text-zinc-400">
-            {selectedThemeId ? selectedThemeLabel : 'Free explore'} · {travelModeLabel} · {tightness}
-          </div>
         </div>
 
         {advancedOpen && (
-          <div className="mt-3 grid max-h-[36vh] grid-cols-2 gap-2 overflow-y-auto border-t border-zinc-200 pt-3 dark:border-zinc-800 md:max-h-[44vh] md:grid-cols-4">
-            <div className="space-y-1">
-              <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                Search
-              </Label>
-              <input
-                type="text"
-                placeholder="search..."
-                value={searchTerm}
-                onChange={(e) => {
-                  const val = e.target.value
-                  setSearchTerm(val)
-                  logEvent('search_updated', { metadata: { value: val } })
-                }}
-                className={inputBase}
-              />
+          <>
+            <div className="mt-2 truncate text-[11px] text-zinc-500 dark:text-zinc-400">
+              {selectedThemeLabel} · {travelModeLabel} · {tightness}
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                Price
-              </Label>
-              <select
-                value={selectedPrice}
-                onChange={(e) => {
-                  setSelectedPrice(e.target.value)
-                  logEvent('price_selected', {
-                    metadata: { price: e.target.value, city },
-                  })
-                }}
-                className={inputBase}
-              >
-                <option value="">Any</option>
-                {prices.slice(1).map((price) => (
-                  <option key={price} value={price}>
-                    {price}
-                  </option>
-                ))}
-              </select>
+            <div className="mt-3 grid max-h-[42vh] grid-cols-2 gap-2 overflow-y-auto border-t border-zinc-200 pt-3 dark:border-zinc-800 md:grid-cols-4">
+              <div className="col-span-2 space-y-1 md:col-span-2">
+                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  Theme
+                </Label>
+                <select
+                  value={selectedThemeId}
+                  onChange={(e) => {
+                    setSelectedThemeId(e.target.value)
+                    logEvent('theme_selected', {
+                      metadata: { themeId: e.target.value, city },
+                    })
+                  }}
+                  className={inputBase}
+                  aria-label="Theme"
+                >
+                  <option value="">Pick vibe</option>
+                  {themes.map((theme) => (
+                    <option key={theme.id} value={theme.id}>
+                      {theme.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  Mode
+                </Label>
+                <select
+                  value={travelMode}
+                  onChange={(e) => handleTravelModeChange(e.target.value)}
+                  className={inputBase}
+                  aria-label="Travel mode"
+                >
+                  <option value="walking">🚶 Walk</option>
+                  <option value="cycling">🚲 Bike</option>
+                  <option value="driving">🚗 Drive</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  Route
+                </Label>
+                <Button
+                  className="h-9 w-full text-xs bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={handleGenerateClick}
+                >
+                  Generate
+                </Button>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  Price
+                </Label>
+                <select
+                  value={selectedPrice}
+                  onChange={(e) => {
+                    setSelectedPrice(e.target.value)
+                    logEvent('price_selected', {
+                      metadata: { price: e.target.value, city },
+                    })
+                  }}
+                  className={inputBase}
+                >
+                  <option value="">Any</option>
+                  {prices.slice(1).map((price) => (
+                    <option key={price} value={price}>
+                      {price}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  Distance
+                </Label>
+                <select
+                  value={tightness}
+                  onChange={(e) => {
+                    setTightness(e.target.value as any)
+                    logEvent('tightness_changed', {
+                      metadata: { tightness: e.target.value, city },
+                    })
+                  }}
+                  className={inputBase}
+                >
+                  <option value="tight">Compact</option>
+                  <option value="medium">Balanced</option>
+                  <option value="loose">Spread Out</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  Marker
+                </Label>
+                <ToggleGroup
+                  type="single"
+                  value={markerDisplayMode}
+                  onValueChange={handleMarkerDisplayModeChange}
+                  className="w-full gap-1"
+                >
+                  <ToggleGroupItem value="color" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
+                    Color
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="emoji" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
+                    Emoji
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  Crawl
+                </Label>
+                <ToggleGroup
+                  type="single"
+                  value={isScheduled ? 'scheduled' : 'now'}
+                  onValueChange={(val) => {
+                    if (!val) return
+                    setIsScheduled(val === 'scheduled')
+                    logEvent('crawl_mode_toggled', {
+                      metadata: { mode: val, city },
+                    })
+                  }}
+                  className="w-full gap-1"
+                >
+                  <ToggleGroupItem value="now" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
+                    Now
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="scheduled" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
+                    Later
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              {isScheduled && (
+                <>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                      Date
+                    </Label>
+                    <input type="date" value={crawlDate} onChange={(e) => setCrawlDate(e.target.value)} className={inputBase} />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                      Time
+                    </Label>
+                    <input type="time" value={crawlTime} onChange={(e) => setCrawlTime(e.target.value)} className={inputBase} />
+                  </div>
+                </>
+              )}
             </div>
-
-            <div className="space-y-1">
-              <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                Distance
-              </Label>
-              <select
-                value={tightness}
-                onChange={(e) => {
-                  setTightness(e.target.value as any)
-                  logEvent('tightness_changed', {
-                    metadata: { tightness: e.target.value, city },
-                  })
-                }}
-                className={inputBase}
-              >
-                <option value="tight">Compact</option>
-                <option value="medium">Balanced</option>
-                <option value="loose">Spread Out</option>
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                Marker
-              </Label>
-              <ToggleGroup
-                type="single"
-                value={markerDisplayMode}
-                onValueChange={handleMarkerDisplayModeChange}
-                className="w-full gap-1"
-              >
-                <ToggleGroupItem value="color" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
-                  Color
-                </ToggleGroupItem>
-                <ToggleGroupItem value="emoji" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
-                  Emoji
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                Crawl
-              </Label>
-              <ToggleGroup
-                type="single"
-                value={isScheduled ? 'scheduled' : 'now'}
-                onValueChange={(val) => {
-                  if (!val) return
-                  setIsScheduled(val === 'scheduled')
-                  logEvent('crawl_mode_toggled', {
-                    metadata: { mode: val, city },
-                  })
-                }}
-                className="w-full gap-1"
-              >
-                <ToggleGroupItem value="now" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
-                  Now
-                </ToggleGroupItem>
-                <ToggleGroupItem value="scheduled" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
-                  Later
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            {isScheduled && (
-              <>
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                    Date
-                  </Label>
-                  <input type="date" value={crawlDate} onChange={(e) => setCrawlDate(e.target.value)} className={inputBase} />
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                    Time
-                  </Label>
-                  <input type="time" value={crawlTime} onChange={(e) => setCrawlTime(e.target.value)} className={inputBase} />
-                </div>
-              </>
-            )}
-          </div>
+          </>
         )}
       </div>
     </div>

@@ -66,6 +66,12 @@ export default function CrawlControl({
     loading: loadingEvents,
   } = useInterestedEvents()
 
+  const isVenueAnchoredRoute = Boolean(
+    generatedRouteContext?.context?.anchorVenueId ||
+      generatedRouteContext?.anchorVenue?.id ||
+      generatedRouteContext?.source === 'map_marker'
+  )
+
   async function handleGenerate() {
     setLoading(true)
     try {
@@ -387,14 +393,28 @@ export default function CrawlControl({
                     type="button"
                     onClick={() => {
                       logEvent('generated_route_retry_clicked', {
-                        metadata: { city, stops: stopCount },
+                        metadata: {
+                          city,
+                          stops: stopCount,
+                          source: isVenueAnchoredRoute
+                            ? 'generate_from_venue'
+                            : 'general_route',
+                          anchorVenueId:
+                            generatedRouteContext?.context?.anchorVenueId ??
+                            generatedRouteContext?.anchorVenue?.id ??
+                            null,
+                        },
                       })
                       void handleGenerate()
                     }}
                     disabled={loading}
                     className="rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-[12px] font-bold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {loading ? 'Retrying…' : 'Retry'}
+                    {loading
+                      ? 'Retrying…'
+                      : isVenueAnchoredRoute
+                        ? 'Try Again'
+                        : 'Retry'}
                   </button>
 
                   <button

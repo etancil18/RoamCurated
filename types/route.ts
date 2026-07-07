@@ -31,6 +31,12 @@ export type RouteRejectionReason =
   | 'too_far'
   | 'weak_stage_match'
   | 'likely_closed'
+  | 'explicitly_excluded'
+
+export type RouteRetryExploration =
+  | 'low'
+  | 'medium'
+  | 'high'
 
 export type RouteVenue = {
   id: string
@@ -71,6 +77,11 @@ export type RouteContext = {
   startingStageId: RouteStageId
   candidateStageIds: RouteStageId[]
   source: RouteGenerationSource
+  retryOfRouteId?: string | null
+  retryCount?: number
+  variationSeed?: string | null
+  exploration?: RouteRetryExploration | null
+  excludedVenueIds?: string[]
 }
 
 export type RouteCandidate = {
@@ -187,6 +198,11 @@ export type GenerateRouteFromVenueRequest = {
   preferredVibes?: string[]
   preferredTags?: string[]
   debug?: boolean
+  retryOfRouteId?: string | null
+  retryCount?: number
+  excludeVenueIds?: string[]
+  variationSeed?: string | null
+  exploration?: RouteRetryExploration
 }
 
 export type GenerateRouteFromVenueResponse = {

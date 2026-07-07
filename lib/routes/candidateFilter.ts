@@ -40,6 +40,7 @@ export type CandidateFilterVenue = {
 export type CandidateFilterReason =
   | 'same_as_anchor'
   | 'already_selected'
+  | 'explicitly_excluded'
   | 'missing_coordinates'
   | 'invalid_coordinates'
   | 'inactive'
@@ -66,6 +67,7 @@ export type CandidateFilterParams = {
   stage?: RouteStage | null
   arrivalAt?: Date | null
   selectedVenueIds?: Set<string>
+  excludedVenueIds?: Set<string> | string[]
   travelMode?: CandidateFilterTravelMode
   maxDistanceMeters?: number
   requireStageMatch?: boolean
@@ -89,6 +91,7 @@ export function filterRouteCandidates({
   stage = null,
   arrivalAt = null,
   selectedVenueIds = new Set<string>(),
+  excludedVenueIds = new Set<string>(),
   travelMode = 'walking',
   maxDistanceMeters = DEFAULT_MAX_DISTANCE_METERS_BY_MODE[travelMode],
   requireStageMatch = false,
@@ -99,6 +102,7 @@ export function filterRouteCandidates({
   const rejected: CandidateFilterRejectedVenue[] = []
 
   const comparisonVenue = previousStop ?? anchorVenue
+  const excludedVenueIdSet = normalizeIdSet(excludedVenueIds)
 
   for (const venue of venues) {
     const distanceMeters = getDistanceFromComparisonVenue(
@@ -112,6 +116,7 @@ export function filterRouteCandidates({
       stage,
       arrivalAt,
       selectedVenueIds,
+      excludedVenueIds: excludedVenueIdSet,
       maxDistanceMeters,
       distanceMeters,
       requireStageMatch,
@@ -156,6 +161,7 @@ export function getCandidateRejectionReason({
   stage = null,
   arrivalAt = null,
   selectedVenueIds = new Set<string>(),
+  excludedVenueIds = new Set<string>(),
   maxDistanceMeters,
   distanceMeters,
   requireStageMatch = false,
@@ -167,6 +173,7 @@ export function getCandidateRejectionReason({
   stage?: RouteStage | null
   arrivalAt?: Date | null
   selectedVenueIds?: Set<string>
+  excludedVenueIds?: Set<string>
   maxDistanceMeters: number
   distanceMeters: number | null
   requireStageMatch?: boolean
@@ -179,6 +186,10 @@ export function getCandidateRejectionReason({
 
   if (venue.id && selectedVenueIds.has(venue.id)) {
     return 'already_selected'
+  }
+
+  if (venue.id && excludedVenueIds.has(venue.id)) {
+    return 'explicitly_excluded'
   }
 
   if (!hasCoordinateFields(venue)) {
@@ -289,6 +300,18 @@ export function hasValidCoordinates(
     Number.isFinite(venue.lon) &&
     Math.abs(venue.lon) <= 180
   )
+}
+
+function normalizeIdSet(value: Set<string> | string[]): Set<string> {
+  if (value instanceof Set) {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    return new Set(value.map((item) => String(item).trim()).filter(Boolean))
+  }
+
+  return new Set<string>()
 }
 
 function hasCoordinateFields(

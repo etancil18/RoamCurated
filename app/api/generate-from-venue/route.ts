@@ -52,12 +52,17 @@ type VenueRow = {
   closed?: boolean | null
 }
 
+type GenerateRouteFromVenueRequestWithRetry = GenerateRouteFromVenueRequest & {
+  retrySeed?: string | number | null
+  retryAttempt?: number | null
+}
+
 const DEFAULT_MAX_STOPS = 5
 
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json().catch(() => null)) as
-      | GenerateRouteFromVenueRequest
+      | GenerateRouteFromVenueRequestWithRetry
       | null
 
     if (!body?.venueId && !body?.venueSlug && !body?.venueName) {
@@ -73,6 +78,10 @@ export async function POST(req: NextRequest) {
     const travelMode = sanitizeTravelMode(body.travelMode)
     const tightness = sanitizeTightness(body.tightness)
     const maxStops = sanitizeMaxStops(body.maxStops)
+    const retryAttempt = sanitizeRetryAttempt(body.retryAttempt)
+    const retrySeed =
+      body.retrySeed ??
+      `${body.venueId ?? body.venueSlug ?? body.venueName ?? 'venue'}:${body.plannedStartAt ?? 'now'}`
 
     let anchorQuery = supabase.from('venues').select('*')
 
@@ -81,7 +90,7 @@ export async function POST(req: NextRequest) {
     } else if (body.venueSlug) {
       anchorQuery = anchorQuery.eq('slug', body.venueSlug)
     } else if (body.venueName) {
-    anchorQuery = anchorQuery.eq('name', body.venueName)
+      anchorQuery = anchorQuery.eq('name', body.venueName)
     }
 
     const { data: anchorVenue, error: anchorError } =
@@ -225,6 +234,8 @@ export async function POST(req: NextRequest) {
               maxDistanceMeters: pass.maxDistanceMeters,
               idealDistanceMeters: context.idealDistanceMeters,
               timezone,
+              retrySeed,
+              retryAttempt,
             })
 
             const personalizationScore = scorePersonalization({
@@ -520,6 +531,14 @@ function sanitizeMaxStops(value: unknown) {
   }
 
   return Math.max(3, Math.min(8, Math.round(value)))
+}
+
+function sanitizeRetryAttempt(value: unknown) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return 0
+  }
+
+  return Math.max(0, Math.min(50, Math.round(value)))
 }
 
 function errorResponse(message: string, status: number) {
