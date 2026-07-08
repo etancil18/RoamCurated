@@ -45,6 +45,7 @@ const NIGHT_DRINK_TYPES = [
   "rooftop",
   "club",
 ];
+const FITNESS_TYPES = ["fitness", "yoga", "pilates", "wellness"];
 const SOFT_EXPLORATION_TYPES = [
   "gallery",
   "museum",
@@ -93,6 +94,8 @@ export function transitionScore({
 
   const prevIsDrink = hasAny(prevTypes, NIGHT_DRINK_TYPES);
   const nextIsDrink = hasAny(nextTypes, NIGHT_DRINK_TYPES);
+
+  const nextIsFitness = hasAny(nextTypes, FITNESS_TYPES);
 
   const nextIsExploration = hasAny(nextTypes, SOFT_EXPLORATION_TYPES);
   const nextIsWindDown = hasAny(nextTypes, WIND_DOWN_TYPES);
@@ -211,6 +214,26 @@ export function transitionScore({
 
   if (prevTypes.includes("fitness") && hasAny(nextTypes, ["club", "speakeasy", "cocktail"])) {
     score -= 4;
+  }
+
+  if (
+    nextIsFitness &&
+    (
+      prevIsDrink ||
+      prevIsDinner ||
+      prevTypes.includes("dessert") ||
+      prevTypes.includes("club") ||
+      prevTypes.includes("rooftop")
+    )
+  ) {
+    score -= 25;
+  }
+
+  if (
+    nextIsFitness &&
+    !["fitness", "yoga", "pilates", "wellness", "morning"].includes(desiredStage)
+  ) {
+    score -= 20;
   }
 
   /* ------------------------------------------------ */
