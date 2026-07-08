@@ -122,10 +122,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .maybeSingle()
       : Promise.resolve({ data: null }),
 
-    supabase
-      .from('crawl_events')
-      .select('id')
-      .eq('creator_id', profile.id),
+    supabase.from('crawl_events').select('id').eq('creator_id', profile.id),
 
     supabase
       .from('crawl_rsvps')
@@ -153,15 +150,9 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .eq('user_id', profile.id)
           .eq('status', 'completed'),
 
-    supabase
-      .from('venue_visits')
-      .select('id')
-      .eq('user_id', profile.id),
+    supabase.from('venue_visits').select('id').eq('user_id', profile.id),
 
-    supabase
-      .from('crawl_progress')
-      .select('crawl_id')
-      .eq('user_id', profile.id),
+    supabase.from('crawl_progress').select('crawl_id').eq('user_id', profile.id),
 
     profile.show_xp === false
       ? Promise.resolve({ data: [] })
@@ -290,11 +281,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 text-4xl">
               {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
               ) : (
                 <span>🧭</span>
               )}
@@ -332,7 +319,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
           </div>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-4">
+        <section className="flex flex-wrap gap-2">
           <Stat label="Followers" value={followersCount ?? 0} />
           <Stat label="Following" value={followingCount ?? 0} />
           {profile.show_xp !== false && (
@@ -341,17 +328,12 @@ export default async function PublicUserProfilePage({ params }: Props) {
           {profile.show_completed_flows !== false && (
             <Stat label="Flows" value={completedFlows?.length ?? 0} />
           )}
-        </section>
-
-        <section className="grid gap-4 sm:grid-cols-3">
           {profile.show_checkins !== false && (
             <Stat label="Event Check-ins" value={checkinsCount ?? 0} />
           )}
-
           {profile.show_saved_guides !== false && (
             <Stat label="Saved Guides" value={savedProperties?.length ?? 0} />
           )}
-
           {profile.show_social_groups !== false && (
             <Stat label="Social Groups" value={socialGroupsCount ?? 0} />
           )}
@@ -364,9 +346,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
                 Flow Snapshots
               </h2>
 
-              <p className="text-xs text-neutral-500">
-                Latest 9
-              </p>
+              <p className="text-xs text-neutral-500">Latest 9</p>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
@@ -452,17 +432,11 @@ async function logPublicProfileViewed({
   }
 }
 
-function Stat({
-  label,
-  value,
-}: {
-  label: string
-  value: number
-}) {
+function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
-      <p className="text-2xl font-semibold">{value.toLocaleString()}</p>
-      <p className="mt-1 text-xs text-neutral-500">{label}</p>
+    <div className="inline-flex min-w-[104px] flex-col rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+      <p className="text-lg font-semibold leading-none">{value.toLocaleString()}</p>
+      <p className="mt-1.5 text-[11px] leading-tight text-neutral-500">{label}</p>
     </div>
   )
 }
