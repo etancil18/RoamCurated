@@ -17,6 +17,33 @@ export type TravelMode = "walk" | "drive" | "transit" | "rideshare"
 export type SlotPhase = "before" | "after"
 export type SelectionPass = "strict" | "balanced" | "relaxed" | "emergency"
 
+// ---------- Vibe-Aware Planning ----------
+
+export type VibeDaypart =
+  | "early_morning"
+  | "morning"
+  | "midday"
+  | "afternoon"
+  | "evening"
+  | "late_night"
+
+export type VibeSequenceTemplate = {
+  mode: PlanMode | "full"
+  roles: StopRole[]
+  preferredTypesByRole?: Partial<Record<StopRole, string[]>>
+}
+
+export type VibePlanningProfile = {
+  preferredTypes: string[]
+  requiredAnyTypes: string[]
+  discouragedTypes: string[]
+  stronglyDiscouragedTypes: string[]
+  preferredDayparts: VibeDaypart[]
+  discouragedDayparts: VibeDaypart[]
+  fallbackTypePriority: string[]
+  sequenceTemplates: VibeSequenceTemplate[]
+}
+
 // ---------- City-Aware Planning ----------
 
 export type CityPlanningConfig = {
@@ -92,6 +119,9 @@ export type PlanningSlot = {
   strictProgression: boolean
   flexibleRole?: StopRole | null
   semanticRole?: string | null
+  vibePreferredTypes?: string[]
+  vibeRequiredAnyTypes?: string[]
+  vibeDiscouragedTypes?: string[]
 }
 
 export type PlanningContext = {
@@ -118,6 +148,7 @@ export type PlanningContext = {
   budget: Budget | null
   mobility: Mobility
   vibeTags: string[]
+  vibePlanning?: VibePlanningProfile | null
 
   anchorVenue: VenueRecord | null
 }
@@ -142,6 +173,9 @@ export type PreparedCandidateVenue = VenueRecord & {
     vibe: number
     archetype: number
     group: number
+    vibeRequired?: number
+    vibeDaypart?: number
+    vibePenalty?: number
   }
   score: number
 }
@@ -165,6 +199,8 @@ export type SlotSelectionDebug = {
     type_time: number
     hours: number
     missing_data: number
+    vibe_required?: number
+    vibe_discouraged?: number
   }
 }
 
@@ -174,6 +210,18 @@ export type SelectionDebug = {
   selectedStopCount: number
   completionRate: number
   slotDiagnostics: SlotSelectionDebug[]
+  vibeDiagnostics?: {
+    requestedVibes: string[]
+    preferredTypes: string[]
+    requiredAnyTypes: string[]
+    discouragedTypes: string[]
+    stronglyDiscouragedTypes: string[]
+    preferredDayparts: VibeDaypart[]
+    discouragedDayparts: VibeDaypart[]
+    matchedCandidateCount?: number
+    rejectedCandidateCount?: number
+    routeVibeConfidence?: number | null
+  } | null
 }
 
 // ---------- Generated Stops / Planner Output ----------
@@ -217,6 +265,9 @@ export type GeneratedOutingStop = {
     semanticRole?: string | null
     slotPhase?: SlotPhase | null
     slotIndex?: number | null
+    vibeMatchedTypes?: string[]
+    vibeScore?: number | null
+    vibeConfidence?: number | null
   } | null
 
   bookingOptions?: VenueBookingOption[] | null
@@ -279,6 +330,10 @@ export type GenerateEventOutingPlanResult = {
     leaveEarlyByHours: LeaveEarlyByHours | null
     plannedExitAt: string | null
     effectiveExitAt: string | null
+    vibeTags?: string[]
+    vibePreferredTypes?: string[]
+    vibeDiscouragedTypes?: string[]
+    routeVibeConfidence?: number | null
   }
 }
 
@@ -315,6 +370,9 @@ export type PlannedOutingStopRecord = {
     semanticRole?: string | null
     slotPhase?: SlotPhase | null
     slotIndex?: number | null
+    vibeMatchedTypes?: string[]
+    vibeScore?: number | null
+    vibeConfidence?: number | null
   } | null
 }
 

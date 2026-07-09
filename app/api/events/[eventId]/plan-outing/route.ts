@@ -21,6 +21,7 @@ import {
 } from "@/lib/outings/sequenceScoring/helpers"
 import { supabaseServerApi } from "@/lib/supabase/server-api"
 import { normalizeVenueTypes } from "@/lib/outings/sequenceScoring/helpers"
+import { expandVibeTags } from "@/lib/outings/vibePresets"
 import type {
   Budget,
   CityPlanningConfig,
@@ -78,7 +79,7 @@ export async function POST(
     const groupSize = normalizeGroupSize(body.groupSize)
     const budget = normalizeBudget(body.budget)
     const mobility = normalizeMobility(body.mobility)
-    const vibeTags = normalizeVibeTags(body.vibeTags)
+    const vibeTags = expandVibeTags(body.vibeTags)
     const leaveEarlyByHours = normalizeLeaveEarlyByHours(body.leaveEarlyByHours)
 
     const { data: event, error: eventError } = await supabase
@@ -779,7 +780,9 @@ function qualifiesForReducedFullCoverage(
   const beforeStops = stops.filter((stop) => stop.phase === "before").length
   const afterStops = stops.filter((stop) => stop.phase === "after").length
 
-  return beforeStops >= 1 && afterStops >= 1
+  if (beforeStops >= 1 && afterStops >= 1) return true
+
+  return beforeStops >= 1
 }
 
 function qualifiesForSocialSportsSingleStopFallback(

@@ -131,6 +131,184 @@ export function computeSequentialCandidateScore<TCandidate extends CandidateVenu
   score += computeModeSpecificVenueBias(candidate, slot, context)
   score += scoreArchetypeFit(candidate, context, slot)
   score += computePhaseAwarePreferenceBias(candidate, slot, context)
+  score += computeVibePlanningSequentialBias(candidate, slot, context)
+
+  return score
+}
+
+function computeVibePlanningSequentialBias(
+  candidate: Pick<VenueRecord, "type" | "tags" | "vibe">,
+  slot: PlanningSlot,
+  context: PlanningContext
+): number {
+  const vibePlanning = context.vibePlanning
+  if (!vibePlanning && context.vibeTags.length === 0) return 0
+
+  const types = normalizeVenueTypes(candidate.type)
+  const tokens = uniqueStrings([
+    ...normalizeStringArray(candidate.type),
+    ...normalizeStringArray(candidate.tags),
+    ...normalizeStringArray(candidate.vibe),
+  ])
+
+  const preferredTypes =
+    vibePlanning?.preferredTypes?.length
+      ? vibePlanning.preferredTypes
+      : getPreferredTypesForVibe(context.vibeTags)
+
+  const discouragedTypes =
+    vibePlanning?.discouragedTypes?.length
+      ? vibePlanning.discouragedTypes
+      : getDiscouragedTypesForVibe(context.vibeTags)
+
+  const requiredAnyTypes = vibePlanning?.requiredAnyTypes ?? []
+  const expandedTokens = expandVibeTags(context.vibeTags)
+
+  let score = 0
+
+  score += computeContextualChillVibeBias(types, slot, context)
+
+  if (preferredTypes.length > 0 && hasAnyType(types, preferredTypes)) {
+    score += 18
+  }
+
+  if (requiredAnyTypes.length > 0) {
+    score += hasAnyType(types, requiredAnyTypes) ? 18 : -22
+  }
+
+  if (discouragedTypes.length > 0 && hasAnyType(types, discouragedTypes)) {
+    score -= 24
+  }
+
+  const tokenMatches = tokens.filter((token) => expandedTokens.includes(token)).length
+  score += Math.min(tokenMatches, 4) * 6
+
+  if (
+    vibePlanning?.preferredTypes?.length &&
+    hasAnyType(types, vibePlanning.preferredTypes)
+  ) {
+    score += 14
+  }
+
+  return score
+}
+
+function computeContextualChillVibeBias(
+  types: string[],
+  slot: PlanningSlot,
+  context: PlanningContext
+): number {
+  const isChillVibe = context.vibeTags.some((tag) =>
+    [
+      "chill",
+      "relaxed",
+      "calm",
+      "quiet",
+      "peaceful",
+      "easygoing",
+      "low-key",
+      "lowkey",
+    ].includes(tag)
+  )
+
+  if (!isChillVibe) return 0
+
+  const referenceHour = getHourFractionInTimeZone(
+    slot.targetArrivalAt,
+    resolvePlannerTimeZone(context)
+  )
+
+  const isDaytime = referenceHour < 17
+  const isEveningOrNight = referenceHour >= 17
+  const archetype = normalizeScoringArchetype(context.eventArchetype)
+
+  let score = 0
+
+  if (isDaytime) {
+    if (
+      hasAnyType(types, [
+        "coffee",
+        "cafe",
+        "café",
+        "tea",
+        "bakery",
+        "breakfast",
+        "brunch",
+        "bookstore",
+        "library",
+        "park",
+        "garden",
+        "gallery",
+      ])
+    ) {
+      score += 22
+    }
+
+    if (
+      hasAnyType(types, [
+        "club",
+        "speakeasy",
+        "late night",
+        "dive bar",
+        "sports bar",
+      ])
+    ) {
+      score -= 26
+    }
+  }
+
+  if (isEveningOrNight) {
+    if (
+      hasAnyType(types, [
+        "wine bar",
+        "cocktail",
+        "lounge",
+        "bar",
+        "dessert",
+        "restaurant",
+        "dinner",
+        "tea",
+        "cafe",
+        "café",
+      ])
+    ) {
+      score += 30
+    }
+
+    if (
+      hasAnyType(types, [
+        "park",
+        "garden",
+        "yoga",
+        "pilates",
+        "fitness",
+        "library",
+        "bookstore",
+        "gallery",
+        "market",
+        "museum",
+        "activity",
+      ])
+    ) {
+      score -= 54
+    }
+
+    if (
+      archetype === "nightlife" &&
+      slot.phase === "before" &&
+      hasAnyType(types, [
+        "wine bar",
+        "cocktail",
+        "lounge",
+        "bar",
+        "dessert",
+        "restaurant",
+        "dinner",
+      ])
+    ) {
+      score += 18
+    }
+  }
 
   return score
 }
@@ -646,80 +824,44 @@ function computeSocialSportsModeSpecificVenueBias(
 
   if (slot.phase === "before") {
     if (morning) {
-      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch", "tea", "juice", "matcha"])) {
-        return 24
-      }
-      if (hasAnyType(types, ["restaurant", "lunch", "sports bar", "brewery", "pub"])) {
-        return 8
-      }
-      if (hasAnyType(types, SOCIAL_SPORTS_BAD_MORNING_TYPES)) {
-        return -24
-      }
+      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch", "tea", "juice", "matcha"])) return 24
+      if (hasAnyType(types, ["restaurant", "lunch", "sports bar", "brewery", "pub"])) return 8
+      if (hasAnyType(types, SOCIAL_SPORTS_BAD_MORNING_TYPES)) return -24
     }
 
     if (midday) {
-      if (hasAnyType(types, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub", "patio"])) {
-        return 22
-      }
-      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery"])) {
-        return 8
-      }
-      if (hasAnyType(types, ["club", "speakeasy", "late night"])) {
-        return -18
-      }
+      if (hasAnyType(types, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub", "patio"])) return 22
+      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery"])) return 8
+      if (hasAnyType(types, ["club", "speakeasy", "late night"])) return -18
     }
 
     if (afternoon) {
-      if (hasAnyType(types, ["lunch", "restaurant", "sports bar", "brewery", "bar", "pub", "patio"])) {
-        return 18
-      }
-      if (hasAnyType(types, ["breakfast", "spa", "library"])) {
-        return -14
-      }
+      if (hasAnyType(types, ["lunch", "restaurant", "sports bar", "brewery", "bar", "pub", "patio"])) return 18
+      if (hasAnyType(types, ["breakfast", "spa", "library"])) return -14
     }
 
     if (evening) {
-      if (hasAnyType(types, ["sports bar", "brewery", "bar", "restaurant", "dinner", "pub"])) {
-        return 18
-      }
-      if (hasAnyType(types, ["spa", "library", "showroom"])) {
-        return -14
-      }
+      if (hasAnyType(types, ["sports bar", "brewery", "bar", "restaurant", "dinner", "pub"])) return 18
+      if (hasAnyType(types, ["spa", "library", "showroom"])) return -14
     }
   }
 
   if (slot.phase === "after") {
     if (morning || midday) {
-      if (hasAnyType(types, ["brunch", "lunch", "restaurant", "cafe", "café", "coffee", "bakery", "patio"])) {
-        return 22
-      }
-      if (hasAnyType(types, ["sports bar", "brewery", "pub", "bar", "beer garden"])) {
-        return 14
-      }
-      if (hasAnyType(types, ["club", "speakeasy", "late night", "dinner"])) {
-        return -18
-      }
+      if (hasAnyType(types, ["brunch", "lunch", "restaurant", "cafe", "café", "coffee", "bakery", "patio"])) return 22
+      if (hasAnyType(types, ["sports bar", "brewery", "pub", "bar", "beer garden"])) return 14
+      if (hasAnyType(types, ["club", "speakeasy", "late night", "dinner"])) return -18
     }
 
     if (afternoon) {
-      if (hasAnyType(types, ["sports bar", "brewery", "bar", "pub", "restaurant", "lunch", "patio"])) {
-        return 18
-      }
-      if (hasAnyType(types, ["coffee", "cafe", "café", "dessert"])) {
-        return 8
-      }
-      if (hasAnyType(types, ["spa", "library", "showroom"])) {
-        return -12
-      }
+      if (hasAnyType(types, ["sports bar", "brewery", "bar", "pub", "restaurant", "lunch", "patio"])) return 18
+      if (hasAnyType(types, ["coffee", "cafe", "café", "dessert"])) return 8
+      if (hasAnyType(types, ["spa", "library", "showroom"])) return -12
     }
 
     if (evening) {
-      if (hasAnyType(types, ["sports bar", "bar", "brewery", "pub", "restaurant", "dinner", "late night"])) {
-        return 18
-      }
-      if (hasAnyType(types, ["breakfast", "library", "spa"])) {
-        return -18
-      }
+      if (hasAnyType(types, ["sports bar", "bar", "brewery", "pub", "restaurant", "dinner", "late night"])) return 18
+      if (hasAnyType(types, ["breakfast", "library", "spa"])) return -18
     }
   }
 
@@ -831,13 +973,21 @@ export function scoreBudgetFit(
 
 export function scoreVibeFit(
   venue: Pick<VenueRecord, "tags" | "vibe" | "type">,
-  vibeTags: string[]
+  vibeTags: string[],
+  context?: PlanningContext
 ): number {
-  if (vibeTags.length === 0) return 0
+  if (vibeTags.length === 0 && !context?.vibePlanning) return 0
 
   const expandedVibeTags = expandVibeTags(vibeTags)
-  const preferredTypes = getPreferredTypesForVibe(vibeTags)
-  const discouragedTypes = getDiscouragedTypesForVibe(vibeTags)
+  const preferredTypes =
+    context?.vibePlanning?.preferredTypes?.length
+      ? context.vibePlanning.preferredTypes
+      : getPreferredTypesForVibe(vibeTags)
+  const discouragedTypes =
+    context?.vibePlanning?.discouragedTypes?.length
+      ? context.vibePlanning.discouragedTypes
+      : getDiscouragedTypesForVibe(vibeTags)
+  const requiredAnyTypes = context?.vibePlanning?.requiredAnyTypes ?? []
 
   const normalizedVenueTags = uniqueStrings([
     ...normalizeStringArray(venue.tags),
@@ -848,14 +998,18 @@ export function scoreVibeFit(
 
   let score = 0
 
-  score += expandedVibeTags.filter((tag) => normalizedVenueTags.includes(tag)).length * 12
+  score += expandedVibeTags.filter((tag) => normalizedVenueTags.includes(tag)).length * 14
 
   if (preferredTypes.length > 0) {
-    score += preferredTypes.filter((type) => venueTypes.includes(type)).length * 10
+    score += preferredTypes.filter((type) => venueTypes.includes(type)).length * 14
+  }
+
+  if (requiredAnyTypes.length > 0) {
+    score += hasAnyType(venueTypes, requiredAnyTypes) ? 20 : -24
   }
 
   if (discouragedTypes.length > 0) {
-    score -= discouragedTypes.filter((type) => venueTypes.includes(type)).length * 12
+    score -= discouragedTypes.filter((type) => venueTypes.includes(type)).length * 18
   }
 
   return score
@@ -926,14 +1080,10 @@ export function scoreArchetypeFit(
 
   if (archetype === "music") {
     if (phase === "before") {
-      if (hasAnyType(types, ["restaurant", "dinner", "cocktail", "bar", "wine bar", "lounge"])) {
-        score += 12
-      }
+      if (hasAnyType(types, ["restaurant", "dinner", "cocktail", "bar", "wine bar", "lounge"])) score += 12
       if (hasAnyType(types, ["coffee", "breakfast", "library", "spa"])) score -= 10
     } else {
-      if (hasAnyType(types, ["bar", "cocktail", "lounge", "rooftop", "late night", "club", "speakeasy"])) {
-        score += 14
-      }
+      if (hasAnyType(types, ["bar", "cocktail", "lounge", "rooftop", "late night", "club", "speakeasy"])) score += 14
       if (hasAnyType(types, ["coffee", "breakfast", "museum", "library", "spa"])) score -= 16
     }
 
@@ -943,13 +1093,9 @@ export function scoreArchetypeFit(
 
   if (archetype === "arts_culture") {
     if (phase === "before") {
-      if (hasAnyType(types, ["gallery", "museum", "bookstore", "wine bar", "cocktail", "cafe", "café"])) {
-        score += 12
-      }
+      if (hasAnyType(types, ["gallery", "museum", "bookstore", "wine bar", "cocktail", "cafe", "café"])) score += 12
     } else {
-      if (hasAnyType(types, ["restaurant", "dinner", "wine bar", "cocktail", "lounge", "dessert"])) {
-        score += 12
-      }
+      if (hasAnyType(types, ["restaurant", "dinner", "wine bar", "cocktail", "lounge", "dessert"])) score += 12
     }
 
     if (hasAnyType(types, ["sports bar", "club", "fitness"])) score -= 12
@@ -1028,51 +1174,33 @@ export function scoreArchetypeFit(
 
   if (archetype === "market") {
     if (phase === "before") {
-      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch"])) {
-        score += 14
-      }
+      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch"])) score += 14
     } else {
-      if (hasAnyType(types, ["brunch", "lunch", "cafe", "café", "bookstore", "park", "garden", "gallery", "dessert"])) {
-        score += 12
-      }
-
+      if (hasAnyType(types, ["brunch", "lunch", "cafe", "café", "bookstore", "park", "garden", "gallery", "dessert"])) score += 12
       if (hasAnyType(types, ["club", "speakeasy", "sports bar"])) score -= 14
     }
   }
 
   if (archetype === "food_drink") {
     if (phase === "before") {
-      if (hasAnyType(types, ["wine bar", "cocktail", "bar", "cafe", "café", "bakery", "restaurant"])) {
-        score += 10
-      }
+      if (hasAnyType(types, ["wine bar", "cocktail", "bar", "cafe", "café", "bakery", "restaurant"])) score += 10
     } else {
-      if (hasAnyType(types, ["dessert", "wine bar", "cocktail", "lounge", "bar"])) {
-        score += 12
-      }
+      if (hasAnyType(types, ["dessert", "wine bar", "cocktail", "lounge", "bar"])) score += 12
     }
 
     if (hasAnyType(types, ["fitness", "library", "showroom"])) score -= 10
   }
 
   if (archetype === "wellness") {
-    if (hasAnyType(types, ["coffee", "tea", "cafe", "café", "juice", "smoothie", "salad", "healthy", "park", "garden"])) {
-      score += 14
-    }
-
-    if (hasAnyType(types, ["club", "sports bar", "dive bar", "cocktail", "speakeasy"])) {
-      score -= 20
-    }
+    if (hasAnyType(types, ["coffee", "tea", "cafe", "café", "juice", "smoothie", "salad", "healthy", "park", "garden"])) score += 14
+    if (hasAnyType(types, ["club", "sports bar", "dive bar", "cocktail", "speakeasy"])) score -= 20
   }
 
   if (archetype === "nightlife") {
     if (phase === "before") {
-      if (hasAnyType(types, ["cocktail", "bar", "restaurant", "dinner", "rooftop", "lounge"])) {
-        score += 12
-      }
+      if (hasAnyType(types, ["cocktail", "bar", "restaurant", "dinner", "rooftop", "lounge"])) score += 12
     } else {
-      if (hasAnyType(types, ["club", "bar", "cocktail", "lounge", "speakeasy", "late night", "rooftop"])) {
-        score += 16
-      }
+      if (hasAnyType(types, ["club", "bar", "cocktail", "lounge", "speakeasy", "late night", "rooftop"])) score += 16
     }
 
     if (hasAnyType(types, ["breakfast", "library", "spa"])) score -= 12
@@ -1080,13 +1208,9 @@ export function scoreArchetypeFit(
 
   if (archetype === "community") {
     if (phase === "before") {
-      if (hasAnyType(types, ["coffee", "cafe", "café", "restaurant", "park", "bookstore"])) {
-        score += 8
-      }
+      if (hasAnyType(types, ["coffee", "cafe", "café", "restaurant", "park", "bookstore"])) score += 8
     } else {
-      if (hasAnyType(types, ["restaurant", "bar", "brewery", "coffee", "dessert"])) {
-        score += 8
-      }
+      if (hasAnyType(types, ["restaurant", "bar", "brewery", "coffee", "dessert"])) score += 8
     }
 
     if (hasAnyType(types, ["club", "speakeasy"])) score -= 8
@@ -1094,13 +1218,9 @@ export function scoreArchetypeFit(
 
   if (archetype === "comedy") {
     if (phase === "before") {
-      if (hasAnyType(types, ["restaurant", "dinner", "bar", "cocktail", "brewery"])) {
-        score += 12
-      }
+      if (hasAnyType(types, ["restaurant", "dinner", "bar", "cocktail", "brewery"])) score += 12
     } else {
-      if (hasAnyType(types, ["bar", "cocktail", "lounge", "dessert", "late night"])) {
-        score += 12
-      }
+      if (hasAnyType(types, ["bar", "cocktail", "lounge", "dessert", "late night"])) score += 12
     }
 
     if (hasAnyType(types, ["breakfast", "library", "spa"])) score -= 10

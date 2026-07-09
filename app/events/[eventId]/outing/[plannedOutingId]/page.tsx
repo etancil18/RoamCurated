@@ -288,73 +288,112 @@ export default async function EventOutingPage({ params }: Props) {
   )
 
   return (
-    <main className="mx-auto max-w-5xl space-y-4 px-4 pb-4 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
-      <div className="space-y-1">
-        <p className="text-sm text-muted-foreground">
-          {humanizeMode(outing.mode)} Flow Draft
-        </p>
-        <h1 className="text-2xl font-bold">
-          {outing.plan_summary ?? anchor.title ?? "Event Flow"}
-        </h1>
-        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-          {city ? <span>{city}</span> : null}
-          {outing.confidence_score != null ? (
-            <span>Confidence {Math.round(outing.confidence_score * 100)}%</span>
-          ) : null}
-          {anchor.startsAt ? <span>{formatDateTime(anchor.startsAt)}</span> : null}
-        </div>
+    <main className="min-h-screen overflow-hidden bg-black px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white sm:px-6">
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-[-12%] top-[-12%] h-72 w-72 rounded-full bg-indigo-600/25 blur-3xl" />
+        <div className="absolute right-[-12%] top-[8%] h-80 w-80 rounded-full bg-cyan-500/15 blur-3xl" />
+        <div className="absolute bottom-[-20%] left-[25%] h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
-      <div className="rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-indigo-300">
-              {existingActiveFlow ? "Flow already in progress" : "Ready to execute this Flow?"}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {existingActiveFlow
-                ? "Resume your active flow to keep checking in, tracking progress, and completing your route."
-                : "Start this event flow to check in, track progress, complete it, and save it to your Passport."}
-            </p>
+      <div className="relative z-10 mx-auto max-w-6xl space-y-7">
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200">
+                {humanizeMode(outing.mode)} Flow Draft
+              </div>
+
+              <h1 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-5xl">
+                {outing.plan_summary ?? anchor.title ?? "Event Flow"}
+              </h1>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                {city ? (
+                  <span className="rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-slate-300">
+                    {city}
+                  </span>
+                ) : null}
+
+                {outing.confidence_score != null ? (
+                  <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-300">
+                    Confidence {Math.round(outing.confidence_score * 100)}%
+                  </span>
+                ) : null}
+
+                {anchor.startsAt ? (
+                  <span className="rounded-full border border-indigo-400/25 bg-indigo-400/10 px-3 py-1.5 text-xs font-bold text-indigo-200">
+                    {formatDateTime(anchor.startsAt)}
+                  </span>
+                ) : null}
+
+                <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-bold text-slate-300">
+                  {stops.length} {stops.length === 1 ? "stop" : "stops"}
+                </span>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <StartFlowFromOutingButton
-              eventId={eventId}
-              plannedOutingId={outing.id}
-              existingSessionId={existingActiveFlow?.id ?? null}
-              label={existingActiveFlow ? "Resume Flow" : "Start Flow"}
-              loadingLabel={existingActiveFlow ? "Opening Flow…" : "Starting Flow…"}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-            />
+        <section className="rounded-[1.75rem] border border-indigo-400/25 bg-gradient-to-br from-indigo-500/15 via-white/[0.045] to-cyan-500/10 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-indigo-300">
+                Flow Control
+              </p>
 
-            <a
-              href={draftPath}
-              className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-neutral-800"
-            >
-              Copy Link
-            </a>
+              <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
+                {existingActiveFlow
+                  ? "Flow already in progress"
+                  : "Ready to execute this Flow?"}
+              </h2>
 
-            <a
-              href={`mailto:?subject=Roam Flow&body=${shareText}%0A%0A${draftPath}`}
-              className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-neutral-800"
-            >
-              Share Flow
-            </a>
+              <p className="mt-2 text-sm leading-6 text-slate-300">
+                {existingActiveFlow
+                  ? "Resume your active flow to keep checking in, tracking progress, and completing your route."
+                  : "Start this event flow to check in, track progress, complete it, and save it to your Passport."}
+              </p>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[420px]">
+              <StartFlowFromOutingButton
+                eventId={eventId}
+                plannedOutingId={outing.id}
+                existingSessionId={existingActiveFlow?.id ?? null}
+                label={existingActiveFlow ? "Resume Flow" : "Start Flow"}
+                loadingLabel={existingActiveFlow ? "Opening Flow…" : "Starting Flow…"}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-indigo-950/30 transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+
+              <a
+                href={draftPath}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-white/10 bg-white/[0.08] px-4 py-2.5 text-center text-sm font-black text-white transition hover:bg-white/[0.13]"
+              >
+                Copy Link
+              </a>
+
+              <a
+                href={`mailto:?subject=Roam Flow&body=${shareText}%0A%0A${draftPath}`}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-2.5 text-center text-sm font-black text-cyan-100 transition hover:bg-cyan-400/15"
+              >
+                Share Flow
+              </a>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-3 shadow-2xl backdrop-blur-xl sm:p-4">
+          <OutingMap
+            plannedOutingId={outing.id}
+            eventId={eventId}
+            city={city}
+            mode={outing.mode}
+            status={outing.status}
+            summary={outing.plan_summary}
+            anchor={anchor}
+            stops={stops}
+          />
+        </section>
       </div>
-
-      <OutingMap
-        plannedOutingId={outing.id}
-        eventId={eventId}
-        city={city}
-        mode={outing.mode}
-        status={outing.status}
-        summary={outing.plan_summary}
-        anchor={anchor}
-        stops={stops}
-      />
     </main>
   )
 }

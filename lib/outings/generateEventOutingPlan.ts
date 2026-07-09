@@ -77,6 +77,27 @@ function annotateArchetypeMetadata({
   }))
 }
 
+function annotateVibeMetadata({
+  stops,
+  context,
+}: {
+  stops: GeneratedOutingStop[]
+  context: PlanningContext
+}): GeneratedOutingStop[] {
+  if (!context.vibeTags.length && !context.vibePlanning) return stops
+
+  return stops.map((stop) => ({
+    ...stop,
+    metadata: {
+      ...(stop.metadata ?? {}),
+      vibeTags: context.vibeTags,
+      vibePreferredTypes: context.vibePlanning?.preferredTypes ?? [],
+      vibeDiscouragedTypes: context.vibePlanning?.discouragedTypes ?? [],
+      vibeRequiredAnyTypes: context.vibePlanning?.requiredAnyTypes ?? [],
+    },
+  }))
+}
+
 function normalizeFullModeAfterTransitions({
   stops,
   context,
@@ -213,22 +234,30 @@ export function generateEventOutingPlan(
   const rankedCandidates = rankVenueCandidates(input.candidateVenues, context)
 
   const rawStops = generatePlanStops(rankedCandidates, context)
+
   const routeNormalizedStops = normalizeFullModeAfterTransitions({
     stops: rawStops,
     context,
   })
+
   const coherentStops = enforceSpatialCoherence({
     stops: routeNormalizedStops,
     context,
   })
+
   const archetypeAnnotatedStops = annotateArchetypeMetadata({
     stops: coherentStops,
     eventArchetype: context.eventArchetype,
   })
 
+  const vibeAnnotatedStops = annotateVibeMetadata({
+    stops: archetypeAnnotatedStops,
+    context,
+  })
+
   const stops = annotateBookingRecommendations({
     mode: input.mode,
-    stops: archetypeAnnotatedStops,
+    stops: vibeAnnotatedStops,
   })
 
   const debug = buildSelectionDebug(rankedCandidates, context)
@@ -253,42 +282,45 @@ export function generateEventOutingPlan(
       : 0
 
   return {
-    source: input.event.tags?.length ? "event" : "venue_fallback",
+  source: input.event.tags?.length ? "event" : "venue_fallback",
+  mode: input.mode,
+  eventArchetype: context.eventArchetype,
+  eventTags: context.eventTags,
+  confidenceScore,
+  plannedStartAt: context.plannedStartAt.toISOString(),
+  plannedEndAt: context.plannedEndAt.toISOString(),
+  estimatedEndAt: context.estimatedEndAt.toISOString(),
+  leaveEarlyByHours: context.leaveEarlyByHours ?? null,
+  plannedExitAt: context.plannedExitAt?.toISOString() ?? null,
+  effectiveExitAt: context.effectiveExitAt?.toISOString() ?? null,
+  summary: buildPlanSummary({
     mode: input.mode,
-    eventArchetype: context.eventArchetype,
+    eventTitle: input.event.title,
+    venueName: input.anchorVenue?.name ?? null,
+    stops,
+    planningContext: context,
+  }),
+  stops,
+  debug,
+  scoreBreakdown: {
+    mode: input.mode,
+    city: input.anchorVenue?.city ?? null,
     eventTags: context.eventTags,
-    confidenceScore,
-    plannedStartAt: context.plannedStartAt.toISOString(),
-    plannedEndAt: context.plannedEndAt.toISOString(),
-    estimatedEndAt: context.estimatedEndAt.toISOString(),
+    eventArchetype: context.eventArchetype,
+    candidatePoolSize: rankedCandidates.length,
+    selectedStops: stops.length,
+    preparedCandidateCount: rankedCandidates.length,
+    intendedStopCount,
+    effectiveIntendedStopCount,
+    completionRate,
+    failedToGenerateStops,
+    reducedBeforeSingleStopFallbackApplied,
     leaveEarlyByHours: context.leaveEarlyByHours ?? null,
     plannedExitAt: context.plannedExitAt?.toISOString() ?? null,
     effectiveExitAt: context.effectiveExitAt?.toISOString() ?? null,
-    summary: buildPlanSummary({
-      mode: input.mode,
-      eventTitle: input.event.title,
-      venueName: input.anchorVenue?.name ?? null,
-      stops,
-      planningContext: context,
-    }),
-    stops,
-    debug,
-    scoreBreakdown: {
-      mode: input.mode,
-      city: input.anchorVenue?.city ?? null,
-      eventTags: context.eventTags,
-      eventArchetype: context.eventArchetype,
-      candidatePoolSize: rankedCandidates.length,
-      selectedStops: stops.length,
-      preparedCandidateCount: rankedCandidates.length,
-      intendedStopCount,
-      effectiveIntendedStopCount,
-      completionRate,
-      failedToGenerateStops,
-      reducedBeforeSingleStopFallbackApplied,
-      leaveEarlyByHours: context.leaveEarlyByHours ?? null,
-      plannedExitAt: context.plannedExitAt?.toISOString() ?? null,
-      effectiveExitAt: context.effectiveExitAt?.toISOString() ?? null,
-    },
-  }
+    vibeTags: context.vibeTags,
+    vibePreferredTypes: context.vibePlanning?.preferredTypes ?? [],
+    vibeDiscouragedTypes: context.vibePlanning?.discouragedTypes ?? [],
+  },
+}
 }

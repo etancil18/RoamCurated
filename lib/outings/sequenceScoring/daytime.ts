@@ -67,6 +67,7 @@ export function qualifiesForReducedBeforeSingleStopFallback(
   const stop = stops[0]
   if (stop.phase !== "before") return false
   if (stop.metadata?.selectedPass === "emergency") return false
+  if (!stopSatisfiesVibeFallback(stop, context)) return false
 
   if (isSocialSportsBeforeEventContext(context)) {
     return isSocialSportsCompatibleStop(stop, context)
@@ -114,6 +115,12 @@ export function qualifiesForDaytimeCultureReducedFullFallback(
   )
 
   if (hasEmergencyStop) return false
+
+  const hasVibeCompatibleStop = stops.some((stop) =>
+    stopSatisfiesVibeFallback(stop, context)
+  )
+
+  if (!hasVibeCompatibleStop) return false
 
   const timeZone = resolvePlannerTimeZone(context)
   const eventStartHour = getHourFractionInTimeZone(context.startsAt, timeZone)
@@ -163,11 +170,15 @@ function qualifiesForSocialSportsReducedFullFallback(
   const beforeStops = stops.filter((stop) => stop.phase === "before")
   const afterStops = stops.filter((stop) => stop.phase === "after")
 
-  const hasCompatibleBeforeStop = beforeStops.some((stop) =>
-    isSocialSportsCompatibleStop(stop, context)
+  const hasCompatibleBeforeStop = beforeStops.some(
+    (stop) =>
+      stopSatisfiesVibeFallback(stop, context) &&
+      isSocialSportsCompatibleStop(stop, context)
   )
-  const hasCompatibleAfterStop = afterStops.some((stop) =>
-    isSocialSportsCompatibleStop(stop, context)
+  const hasCompatibleAfterStop = afterStops.some(
+    (stop) =>
+      stopSatisfiesVibeFallback(stop, context) &&
+      isSocialSportsCompatibleStop(stop, context)
   )
 
   if (eventStartHour < 12.5) {
@@ -263,6 +274,35 @@ export function isMorningCompatibleStop(stop: MorningTypedStop): boolean {
   }
 
   return stopHasAnyVenueType(stop, MORNING_COMPATIBLE_VENUE_TYPES)
+}
+
+function stopSatisfiesVibeFallback(
+  stop: MorningTypedStop,
+  context: PlanningContext
+): boolean {
+  const vibePlanning = context.vibePlanning
+  if (!vibePlanning) return true
+
+  const discouragedTypes = vibePlanning.discouragedTypes ?? []
+  const requiredAnyTypes = vibePlanning.requiredAnyTypes ?? []
+  const preferredTypes = vibePlanning.preferredTypes ?? []
+
+  if (
+    discouragedTypes.length > 0 &&
+    stopHasAnyVenueType(stop, discouragedTypes)
+  ) {
+    return false
+  }
+
+  if (requiredAnyTypes.length > 0) {
+    return stopHasAnyVenueType(stop, requiredAnyTypes)
+  }
+
+  if (preferredTypes.length > 0) {
+    return stopHasAnyVenueType(stop, preferredTypes)
+  }
+
+  return true
 }
 
 function stopHasAnyVenueType(

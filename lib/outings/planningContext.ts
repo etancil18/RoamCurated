@@ -20,12 +20,19 @@ import type {
   SlotPhase,
   StopRole,
   VenueRecord,
+  VibePlanningProfile,
 } from "./types"
 
 import {
   getSemanticRoleForSlot,
   normalizeEventArchetypeForPlanner,
 } from "./eventArchetypes"
+
+import {
+  expandVibeTags,
+  getDiscouragedTypesForVibe,
+  getPreferredTypesForVibe,
+} from "./vibePresets"
 
 export type BuildPlanningContextInput = {
   mode: PlanMode
@@ -55,6 +62,7 @@ export function buildPlanningContext(
   const budget = normalizeBudget(input.budget)
   const mobility = normalizeMobility(input.mobility)
   const vibeTags = normalizeVibeTags(input.vibeTags)
+  const vibePlanning = buildVibePlanningProfile(vibeTags)
   const timeZone = normalizeTimeZone(input.timeZone)
   const leaveEarlyByHours = normalizeLeaveEarlyByHours(input.leaveEarlyByHours)
 
@@ -103,7 +111,8 @@ export function buildPlanningContext(
       startsAt,
       effectiveExitAt,
       timeZone,
-      leaveEarlyByHours
+      leaveEarlyByHours,
+      vibeTags
     ),
     {
       mode: input.mode,
@@ -121,6 +130,7 @@ export function buildPlanningContext(
     estimatedEndAt: effectiveExitAt,
     timeZone,
     archetype: eventArchetype,
+    vibePlanning,
   })
 
   return {
@@ -141,6 +151,7 @@ export function buildPlanningContext(
     budget,
     mobility,
     vibeTags,
+    vibePlanning,
     anchorVenue: input.anchorVenue,
     cityPlanning: input.cityPlanning ?? null,
   }
@@ -451,6 +462,7 @@ function buildPlanningSlots({
   estimatedEndAt,
   timeZone,
   archetype,
+  vibePlanning,
 }: {
   mode: PlanMode
   desiredRoles: StopRole[]
@@ -458,17 +470,18 @@ function buildPlanningSlots({
   estimatedEndAt: Date
   timeZone?: string | null
   archetype: string
+  vibePlanning?: VibePlanningProfile | null
 }): PlanningSlot[] {
   if (desiredRoles.length === 0) return []
 
   const resolvedTimeZone = normalizeTimeZone(timeZone)
 
   if (mode === "before") {
-    return buildBeforeSlots(desiredRoles, startsAt, resolvedTimeZone, archetype)
+    return buildBeforeSlots(desiredRoles, startsAt, resolvedTimeZone, archetype, vibePlanning)
   }
 
   if (mode === "after") {
-    return buildAfterSlots(desiredRoles, estimatedEndAt, resolvedTimeZone, archetype)
+    return buildAfterSlots(desiredRoles, estimatedEndAt, resolvedTimeZone, archetype, vibePlanning)
   }
 
   const lateNightFullFallback = endsAfterMidnight(
@@ -483,7 +496,8 @@ function buildPlanningSlots({
     estimatedEndAt,
     lateNightFullFallback,
     resolvedTimeZone,
-    archetype
+    archetype,
+    vibePlanning
   )
 }
 
@@ -491,7 +505,8 @@ function buildBeforeSlots(
   desiredRoles: StopRole[],
   startsAt: Date,
   timeZone?: string | null,
-  archetype = "other"
+  archetype = "other",
+  vibePlanning?: VibePlanningProfile | null
 ): PlanningSlot[] {
   const finalDeparture = addMinutes(startsAt, -BEFORE_EVENT_BUFFER_MINUTES)
   const slots: PlanningSlot[] = new Array(desiredRoles.length)
@@ -504,6 +519,7 @@ function buildBeforeSlots(
     const dwellMinutes = dwellMinutesForRole(role, "before", startsAt, resolvedTimeZone, archetype)
     const departure = nextBoundary
     const arrival = addMinutes(departure, -dwellMinutes)
+    const vibeSlotHints = getVibeSlotHints(role, vibePlanning)
 
     slots[index] = {
       index,
@@ -525,6 +541,7 @@ function buildBeforeSlots(
         phase: "before",
         index,
       }),
+      ...vibeSlotHints,
     }
 
     nextBoundary = addMinutes(arrival, -INTERSTOP_TRAVEL_BUFFER_MINUTES)
@@ -537,7 +554,8 @@ function buildAfterSlots(
   desiredRoles: StopRole[],
   estimatedEndAt: Date,
   timeZone?: string | null,
-  archetype = "other"
+  archetype = "other",
+  vibePlanning?: VibePlanningProfile | null
 ): PlanningSlot[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
   const socialSportsDaytime = isSocialSportsDaytimeContext(
@@ -557,6 +575,7 @@ function buildAfterSlots(
       archetype
     )
     const departure = addMinutes(arrival, dwellMinutes)
+    const vibeSlotHints = getVibeSlotHints(role, vibePlanning)
 
     return {
       index,
@@ -578,6 +597,7 @@ function buildAfterSlots(
         phase: "after",
         index,
       }),
+      ...vibeSlotHints,
     }
   })
 }
@@ -588,7 +608,8 @@ function buildFullSlots(
   estimatedEndAt: Date,
   lateNightFullFallback = false,
   timeZone?: string | null,
-  archetype = "other"
+  archetype = "other",
+  vibePlanning?: VibePlanningProfile | null
 ): PlanningSlot[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
 
@@ -607,7 +628,8 @@ function buildFullSlots(
     beforeRoles,
     startsAt,
     resolvedTimeZone,
-    archetype
+    archetype,
+    vibePlanning
   ).map((slot, index) => ({
     ...slot,
     index,
@@ -618,7 +640,8 @@ function buildFullSlots(
     afterRoles,
     estimatedEndAt,
     resolvedTimeZone,
-    archetype
+    archetype,
+    vibePlanning
   ).map((slot, index) => ({
     ...slot,
     index: index + beforeRoles.length,
@@ -654,8 +677,7 @@ function normalizeDesiredRolesForContext(
   }
 
   if (context.mode === "after" && isDaytimeExit) {
-    return roles.map((role, index) => {
-      if (index === 0 && role === "drink") return "food"
+    return roles.map((role) => {
       if (role === "drink") return "food"
       return role
     })
@@ -670,6 +692,101 @@ function normalizeDesiredRolesForContext(
   }
 
   return roles
+}
+
+function buildVibePlanningProfile(vibeTags: string[]): VibePlanningProfile | null {
+  if (vibeTags.length === 0) return null
+
+  const preferredTypes = getPreferredTypesForVibe(vibeTags)
+  const discouragedTypes = getDiscouragedTypesForVibe(vibeTags)
+  const expanded = expandVibeTags(vibeTags)
+
+  return {
+    preferredTypes,
+    requiredAnyTypes: preferredTypes.slice(0, 8),
+    discouragedTypes,
+    stronglyDiscouragedTypes: discouragedTypes,
+    preferredDayparts: inferPreferredDaypartsForVibes(expanded),
+    discouragedDayparts: inferDiscouragedDaypartsForVibes(expanded),
+    fallbackTypePriority: preferredTypes,
+    sequenceTemplates: [],
+  }
+}
+
+function getVibeSlotHints(
+  role: StopRole,
+  vibePlanning?: VibePlanningProfile | null
+): Pick<
+  PlanningSlot,
+  "vibePreferredTypes" | "vibeRequiredAnyTypes" | "vibeDiscouragedTypes"
+> {
+  if (!vibePlanning) return {}
+
+  return {
+    vibePreferredTypes: vibePlanning.preferredTypes,
+    vibeRequiredAnyTypes: vibePlanning.requiredAnyTypes,
+    vibeDiscouragedTypes: vibePlanning.discouragedTypes,
+  }
+}
+
+function inferPreferredDaypartsForVibes(tokens: string[]): VibePlanningProfile["preferredDayparts"] {
+  const tokenSet = new Set(tokens)
+
+  if (
+    ["high_energy", "nightlife", "party", "club", "late", "late-night", "cocktail"].some(
+      (token) => tokenSet.has(token)
+    )
+  ) {
+    return ["evening", "late_night"]
+  }
+
+  if (
+    ["cozy", "chill", "casual", "coffee", "cafe", "brunch", "daytime"].some((token) =>
+      tokenSet.has(token)
+    )
+  ) {
+    return ["morning", "midday", "afternoon"]
+  }
+
+  if (
+    ["romantic", "upscale", "wine", "dinner", "cocktail", "lounge"].some((token) =>
+      tokenSet.has(token)
+    )
+  ) {
+    return ["evening"]
+  }
+
+  if (
+    ["creative", "gallery", "museum", "bookstore", "market"].some((token) =>
+      tokenSet.has(token)
+    )
+  ) {
+    return ["midday", "afternoon", "evening"]
+  }
+
+  return []
+}
+
+function inferDiscouragedDaypartsForVibes(tokens: string[]): VibePlanningProfile["discouragedDayparts"] {
+  const tokenSet = new Set(tokens)
+
+  if (
+    ["high_energy", "nightlife", "party", "club"].some((token) =>
+      tokenSet.has(token)
+    )
+  ) {
+    return ["early_morning", "morning"]
+  }
+
+  if (
+    ["chill", "cozy", "coffee", "brunch", "daytime"].some((token) =>
+      tokenSet.has(token)
+    )
+  ) {
+    return ["late_night"]
+  }
+
+  return []
 }
 
 function dwellMinutesForRole(

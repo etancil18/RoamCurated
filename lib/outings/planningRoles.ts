@@ -5,6 +5,7 @@ import type {
   PlanMode,
   StopRole,
 } from "./types"
+import { applyVibeRoleBias } from "./vibePresets"
 
 const DINNER_MINIMUM_LOCAL_HOUR = 17.5
 const DEFAULT_TIME_ZONE = "America/New_York"
@@ -22,7 +23,8 @@ export function desiredRolesFor(
   startsAt: Date,
   estimatedEndAt: Date,
   timeZone?: string | null,
-  leaveEarlyByHours?: LeaveEarlyByHours | null
+  leaveEarlyByHours?: LeaveEarlyByHours | null,
+  vibePresetId?: string | string[] | null
 ): StopRole[] {
   const resolvedTimeZone = normalizeTimeZone(timeZone)
   const canonicalArchetype = normalizePlanningArchetype(archetype)
@@ -34,26 +36,28 @@ export function desiredRolesFor(
     resolvedTimeZone
   )
 
-  if (mode === "before") {
-    return desiredBeforeRoles(canonicalArchetype, beforeDaypart)
-  }
+  const baseRoles =
+    mode === "before"
+      ? desiredBeforeRoles(canonicalArchetype, beforeDaypart)
+      : mode === "after"
+        ? desiredAfterRoles(
+            canonicalArchetype,
+            afterDaypart,
+            lateNightAfterEvent,
+            leaveEarlyByHours
+          )
+        : desiredFullRoles(
+            canonicalArchetype,
+            beforeDaypart,
+            afterDaypart,
+            lateNightAfterEvent,
+            leaveEarlyByHours
+          )
 
-  if (mode === "after") {
-    return desiredAfterRoles(
-      canonicalArchetype,
-      afterDaypart,
-      lateNightAfterEvent,
-      leaveEarlyByHours
-    )
-  }
-
-  return desiredFullRoles(
-    canonicalArchetype,
-    beforeDaypart,
-    afterDaypart,
-    lateNightAfterEvent,
-    leaveEarlyByHours
-  )
+  return applyVibeRoleBias(baseRoles, {
+    vibePresetId,
+    mode,
+  })
 }
 
 export function desiredBeforeRoles(
@@ -65,10 +69,6 @@ export function desiredBeforeRoles(
   if (canonicalArchetype === "networking") {
     if (daypart === "breakfast" || daypart === "brunch" || daypart === "lunch") {
       return ["food"]
-    }
-
-    if (daypart === "dinner") {
-      return ["drink"]
     }
 
     return ["drink"]
@@ -102,6 +102,7 @@ export function desiredBeforeRoles(
     if (canonicalArchetype === "arts_culture") return ["coffee", "activity"]
     if (canonicalArchetype === "market") return ["coffee", "food"]
     if (canonicalArchetype === "music") return ["coffee", "food"]
+    if (canonicalArchetype === "social_sports") return ["coffee", "food"]
     return ["coffee", "food"]
   }
 
@@ -109,6 +110,7 @@ export function desiredBeforeRoles(
     if (canonicalArchetype === "arts_culture") return ["coffee", "food"]
     if (canonicalArchetype === "market") return ["food", "activity"]
     if (canonicalArchetype === "music") return ["coffee", "food"]
+    if (canonicalArchetype === "social_sports") return ["coffee", "food"]
     return ["coffee", "food"]
   }
 
@@ -132,6 +134,7 @@ export function desiredBeforeRoles(
     if (canonicalArchetype === "music") return ["food", "drink"]
     if (canonicalArchetype === "comedy") return ["food", "drink"]
     if (canonicalArchetype === "nightlife") return ["drink", "food"]
+    if (canonicalArchetype === "social_sports") return ["drink", "food"]
     return ["drink", "food"]
   }
 
@@ -147,14 +150,8 @@ export function desiredAfterRoles(
   const canonicalArchetype = normalizePlanningArchetype(archetype)
 
   if (canonicalArchetype === "networking") {
-    if (lateNightAfterEvent || daypart === "late_night") {
-      return ["drink"]
-    }
-
-    if (daypart === "dinner") {
-      return ["food", "drink"]
-    }
-
+    if (lateNightAfterEvent || daypart === "late_night") return ["drink"]
+    if (daypart === "dinner") return ["food", "drink"]
     return ["drink", "food"]
   }
 
@@ -173,6 +170,13 @@ export function desiredAfterRoles(
     if (daypart === "breakfast" || daypart === "brunch") return ["coffee", "food"]
     if (daypart === "lunch") return ["food", "activity"]
     return ["food", "drink"]
+  }
+
+  if (canonicalArchetype === "social_sports") {
+    if (lateNightAfterEvent || daypart === "late_night") return ["drink", "food"]
+    if (daypart === "breakfast" || daypart === "brunch") return ["coffee", "food"]
+    if (daypart === "lunch") return ["food", "drink"]
+    return ["drink", "food"]
   }
 
   if (lateNightAfterEvent && !leaveEarlyByHours) {
@@ -243,6 +247,22 @@ export function desiredFullRoles(
   const firstBefore = beforeRoles[0] ?? "food"
   const secondBefore =
     beforeRoles[1] ?? (firstBefore === "food" ? "activity" : "food")
+
+  if (canonicalArchetype === "social_sports") {
+    if (beforeDaypart === "breakfast" || beforeDaypart === "brunch") {
+      if (lateNightAfterEvent || afterDaypart === "late_night") {
+        return ["coffee", "food", "drink"]
+      }
+
+      return ["coffee", "food", afterDaypart === "dinner" ? "drink" : "food"]
+    }
+
+    if (leaveEarlyByHours || lateNightAfterEvent || afterDaypart === "late_night") {
+      return [firstBefore, secondBefore, "drink"]
+    }
+
+    return [firstBefore, "drink", "food"]
+  }
 
   if (canonicalArchetype === "networking") {
     const beforeRole: StopRole =
