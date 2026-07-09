@@ -463,7 +463,7 @@ export default function EventsPage() {
                   <div className="mt-5 space-y-3 border-t border-white/10 pt-4">
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        className={`rounded-xl px-3 py-2.5 text-xs font-black text-white transition ${
+                        className={`rounded-xl px-3 py-2.5 text-xs font-black transition ${
                           interestedIds.includes(ev.id)
                             ? 'cursor-default bg-slate-700 text-slate-300'
                             : 'bg-emerald-500 text-black hover:bg-emerald-400'
@@ -487,20 +487,22 @@ export default function EventsPage() {
 
                     <div className="flex flex-wrap gap-2">
                       {ev.checkin_enabled === true && (
-                        <EventCheckInButton
-                          eventId={ev.id}
-                          xpReward={ev.xp_reward ?? 25}
-                          socialGroupId={ev.social_group_id ?? null}
-                          onCheckedIn={({ xpAwarded, alreadyCheckedIn, socialGroupId }) => {
-                            safeLogEvent('event_checked_in_from_events_page', {
-                              event_id: ev.id,
-                              city,
-                              xp_awarded: xpAwarded,
-                              already_checked_in: alreadyCheckedIn,
-                              social_group_id: socialGroupId,
-                            })
-                          }}
-                        />
+                        <div className="[&_button]:inline-flex [&_button]:min-h-[36px] [&_button]:items-center [&_button]:justify-center [&_button]:rounded-xl [&_button]:border [&_button]:border-amber-300/30 [&_button]:bg-amber-400 [&_button]:px-3 [&_button]:py-2 [&_button]:text-xs [&_button]:font-black [&_button]:text-black [&_button]:transition [&_button:hover]:bg-amber-300">
+                          <EventCheckInButton
+                            eventId={ev.id}
+                            xpReward={ev.xp_reward ?? 25}
+                            socialGroupId={ev.social_group_id ?? null}
+                            onCheckedIn={({ xpAwarded, alreadyCheckedIn, socialGroupId }) => {
+                              safeLogEvent('event_checked_in_from_events_page', {
+                                event_id: ev.id,
+                                city,
+                                xp_awarded: xpAwarded,
+                                already_checked_in: alreadyCheckedIn,
+                                social_group_id: socialGroupId,
+                              })
+                            }}
+                          />
+                        </div>
                       )}
 
                       {ev.ticket_link && (
@@ -509,7 +511,7 @@ export default function EventsPage() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => handleTicketClick(ev)}
-                          className="inline-flex rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/15"
+                          className="inline-flex min-h-[36px] items-center justify-center rounded-xl border border-violet-300/30 bg-violet-500 px-3 py-2 text-xs font-black text-white transition hover:bg-violet-400"
                         >
                           Tickets / RSVP
                         </a>

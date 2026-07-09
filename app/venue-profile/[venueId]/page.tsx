@@ -229,15 +229,15 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
   ]
 
   return (
-    <main className="min-h-screen overflow-hidden bg-black px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6">
+    <main className="min-h-screen overflow-hidden bg-black pb-12 pt-16 text-white">
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute left-[-12%] top-[-12%] h-72 w-72 rounded-full bg-indigo-600/25 blur-3xl" />
         <div className="absolute right-[-12%] top-[8%] h-80 w-80 rounded-full bg-cyan-500/15 blur-3xl" />
         <div className="absolute bottom-[-20%] left-[25%] h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-4xl space-y-7">
-        <div className="sticky top-16 z-30 -mx-4 border-b border-white/10 bg-black/80 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6">
+      <div className="relative z-10 mx-auto max-w-4xl space-y-6 px-4 pt-2 sm:px-6">
+        <div className="sticky top-16 z-50 -mx-4 border-b border-white/10 bg-black/95 px-4 py-2 backdrop-blur-xl sm:-mx-6 sm:px-6">
           <Link
             href={backToMapHref}
             className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-bold text-cyan-200 shadow-lg transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
@@ -246,8 +246,10 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
           </Link>
         </div>
 
-        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-          <HeroBanner venue={normalizedVenue} />
+        <section className="rounded-[2.25rem] border border-white/10 bg-gradient-to-b from-white/[0.12] to-white/[0.035] p-2 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-3">
+          <div className="overflow-hidden rounded-[1.75rem]">
+            <HeroBanner venue={normalizedVenue} />
+          </div>
         </section>
 
         {partnership && (
@@ -270,51 +272,47 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
                   {normalizedVenue.description}
                 </p>
               )}
+
+              {(normalizedVenue.tags ?? []).length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {(normalizedVenue.tags ?? []).slice(0, 8).map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs font-bold text-slate-400"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {normalizedVenue.address && (
+                <p className="whitespace-pre-line rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-slate-300">
+                  📍 {normalizedVenue.address}
+                </p>
+              )}
             </div>
 
-            <div className="shrink-0 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-3 shadow-lg shadow-emerald-950/20">
-              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
-                Passport Action
-              </p>
+            <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto">
+              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-3 shadow-lg shadow-emerald-950/20">
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
+                  Passport Action
+                </p>
 
-              <VenueVisitButton venueId={venueId} venueName={normalizedVenue.name} />
+                <VenueVisitButton venueId={venueId} venueName={normalizedVenue.name} />
+              </div>
+
+              {bookingOptions.length > 0 && (
+                <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-3 shadow-lg shadow-amber-950/20">
+                  <VenueBookingButtons bookingOptions={bookingOptions} />
+                </div>
+              )}
             </div>
           </div>
-
-          {(normalizedVenue.tags ?? []).length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-2">
-              {(normalizedVenue.tags ?? []).slice(0, 8).map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs font-bold text-slate-400"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {normalizedVenue.address && (
-            <p className="mt-5 whitespace-pre-line rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-slate-300">
-              📍 {normalizedVenue.address}
-            </p>
-          )}
         </section>
 
-        <section className="grid gap-5 md:grid-cols-2">
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl backdrop-blur-xl">
-            {bookingOptions.length > 0 ? (
-              <VenueBookingButtons bookingOptions={bookingOptions} />
-            ) : (
-              <p className="text-sm text-slate-400">
-                No booking links available.
-              </p>
-            )}
-          </div>
-
-          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 text-slate-100 shadow-2xl backdrop-blur-xl [&_*]:text-slate-100 [&_a]:text-cyan-300 [&_a:hover]:text-cyan-200 [&_h2]:text-white [&_h3]:text-white [&_p]:text-slate-300">
-            <SocialLinks contact={normalizedVenue.contact} />
-          </div>
+        <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 text-slate-100 shadow-2xl backdrop-blur-xl [&_*]:text-slate-100 [&_a]:text-cyan-300 [&_a:hover]:text-cyan-200 [&_h2]:text-white [&_h3]:text-white [&_p]:text-slate-300">
+          <SocialLinks contact={normalizedVenue.contact} />
         </section>
 
         <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 text-slate-100 shadow-2xl backdrop-blur-xl [&_*]:text-slate-100 [&_h2]:text-white [&_h3]:text-white [&_p]:text-slate-300">
@@ -326,10 +324,6 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
 
         {upcomingEvents.length > 0 && (
           <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl backdrop-blur-xl">
-            <h2 className="mb-4 text-xl font-black tracking-tight text-white">
-              Upcoming Events
-            </h2>
-
             <EventCarousel
               events={upcomingEvents}
               interestedEventIds={interestedEventIds}
