@@ -327,32 +327,58 @@ export default function CrawlControl({
 
             {hasRoute ? (
               <ol className="mt-3 max-h-36 space-y-1.5 overflow-y-auto">
-                {route?.map((stop, i) => (
-                  <li
-                    key={i}
-                    className="group flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-black/20 px-2.5 py-2"
-                  >
-                    <a
-                      href={stop.link || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex min-w-0 items-center gap-2 text-blue-300"
-                    >
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-black text-white">
-                        {i + 1}
-                      </span>
-                      <span className="truncate">{stop.name}</span>
-                    </a>
+                {route?.map((stop, i) => {
+                  const stopUrl = getVenueContactUrl(stop)
 
-                    <button
-                      onClick={() => handleModifyStop(stop, i)}
-                      className="shrink-0 rounded-full px-1.5 text-sm text-red-400 hover:bg-red-500/10"
-                      aria-label={`Modify ${stop.name}`}
+                  return (
+                    <li
+                      key={i}
+                      className="group flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-black/20 px-2.5 py-2"
                     >
-                      ×
-                    </button>
-                  </li>
-                ))}
+                      {stopUrl ? (
+                        <a
+                          href={stopUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            e.stopPropagation()
+
+                            logEvent('crawl_stop_external_link_clicked', {
+                              venue_id: stop.id,
+                              metadata: {
+                                city,
+                                index: i,
+                                venue_name: stop.name,
+                                url: stopUrl,
+                              },
+                            })
+                          }}
+                          className="flex min-w-0 items-center gap-2 text-blue-300 hover:text-blue-200"
+                        >
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-black text-white">
+                            {i + 1}
+                          </span>
+                          <span className="truncate">{stop.name}</span>
+                        </a>
+                      ) : (
+                        <div className="flex min-w-0 items-center gap-2 text-white/70">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-black text-white">
+                            {i + 1}
+                          </span>
+                          <span className="truncate">{stop.name}</span>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => handleModifyStop(stop, i)}
+                        className="shrink-0 rounded-full px-1.5 text-sm text-red-400 hover:bg-red-500/10"
+                        aria-label={`Modify ${stop.name}`}
+                      >
+                        ×
+                      </button>
+                    </li>
+                  )
+                })}
               </ol>
             ) : (
               <p className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/60">
@@ -491,4 +517,46 @@ export default function CrawlControl({
       )}
     </>
   )
+}
+
+function getVenueContactUrl(venue: Venue): string | null {
+  const rawVenue = venue as Venue & {
+    contact?: string[] | string | null
+    link?: string | null
+  }
+
+  const firstContact = Array.isArray(rawVenue.contact)
+    ? rawVenue.contact[0]
+    : rawVenue.contact
+
+  return normalizeExternalUrl(rawVenue.link ?? firstContact)
+}
+
+function normalizeExternalUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+
+  const raw = value.trim()
+  if (!raw || raw === '#') return null
+
+  if (raw.startsWith('@')) {
+    return `https://instagram.com/${raw.slice(1)}`
+  }
+
+  if (/^https?:\/\//i.test(raw)) {
+    return raw
+  }
+
+  if (/^www\./i.test(raw)) {
+    return `https://${raw}`
+  }
+
+  if (raw.startsWith('instagram.com/')) {
+    return `https://${raw}`
+  }
+
+  if (raw.includes('.')) {
+    return `https://${raw}`
+  }
+
+  return null
 }
