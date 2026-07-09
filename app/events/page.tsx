@@ -242,143 +242,158 @@ export default function EventsPage() {
 
   return (
     <>
-      <div className="p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">🗓️ Upcoming Events</h1>
+      <main className="min-h-screen overflow-hidden bg-black px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white sm:px-6">
+        <div className="pointer-events-none fixed inset-0 z-0">
+          <div className="absolute left-[-12%] top-[-12%] h-72 w-72 rounded-full bg-indigo-600/25 blur-3xl" />
+          <div className="absolute right-[-12%] top-[8%] h-80 w-80 rounded-full bg-cyan-500/15 blur-3xl" />
+          <div className="absolute bottom-[-20%] left-[25%] h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        </div>
 
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <div>
-            <label className="text-sm font-medium mr-2">City:</label>
-            <select
-              value={city}
-              onChange={(e) => handleCityChange(e.target.value)}
-              className="border rounded p-2 bg-neutral-900 text-white"
-            >
-              {AVAILABLE_CITIES.map((c) => (
-                <option key={c} value={c}>
-                  {c.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="relative z-10 mx-auto max-w-6xl space-y-7">
+          <section className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200">
+                  Live city calendar
+                </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <label className="text-sm font-medium mr-1">Tags:</label>
-            {AVAILABLE_TAGS.map((tag) => (
+                <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">
+                  Upcoming Events
+                </h1>
+
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+                  Discover events, earn XP through check-ins, join social groups, and build outings around what is happening nearby.
+                </p>
+              </div>
+
               <button
-                key={tag}
-                onClick={() => toggleTag(tag)}
-                className={`px-2 py-1 rounded border text-sm ${
-                  selectedTags.includes(tag)
-                    ? 'bg-cyan-500 text-white'
-                    : 'bg-neutral-800 text-neutral-300'
-                }`}
+                onClick={handleRefresh}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-white/10 bg-white/10 px-5 text-sm font-black text-white shadow-lg transition hover:border-cyan-400/40 hover:bg-white/15"
               >
-                {tag}
+                Refresh Events
               </button>
-            ))}
+            </div>
+
+            <div className="mt-7 grid gap-3 lg:grid-cols-[160px_1fr]">
+              <div>
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                  City
+                </label>
+                <select
+                  value={city}
+                  onChange={(e) => handleCityChange(e.target.value)}
+                  className="h-11 w-full rounded-xl border border-white/10 bg-black/50 px-3 text-sm font-semibold text-white outline-none transition focus:border-cyan-400/60"
+                >
+                  {AVAILABLE_CITIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">
+                  Tags
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_TAGS.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => toggleTag(tag)}
+                      className={`rounded-full border px-4 py-2 text-xs font-black capitalize transition ${
+                        selectedTags.includes(tag)
+                          ? 'border-cyan-300 bg-cyan-400 text-black shadow-lg shadow-cyan-950/30'
+                          : 'border-white/10 bg-white/[0.06] text-slate-300 hover:border-white/20 hover:bg-white/10'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <input
+                type="text"
+                placeholder="Search by title, venue, description, or tag..."
+                className="h-12 w-full rounded-2xl border border-white/10 bg-black/50 px-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400/60 focus:bg-black/65"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+              />
+            </div>
+          </section>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-medium text-slate-400">
+              {loading
+                ? 'Loading events...'
+                : error
+                ? 'Failed to load events.'
+                : `${filteredEvents.length} events found in ${city.toUpperCase()}`}
+            </p>
+
+            {selectedTags.length > 0 && (
+              <p className="text-xs text-slate-500">
+                Filtering by {selectedTags.join(', ')}
+              </p>
+            )}
           </div>
 
-          <button
-            onClick={handleRefresh}
-            className="ml-auto text-sm px-3 py-1 bg-blue-600 text-white rounded"
-          >
-            🔄 Refresh
-          </button>
-        </div>
+          {!loading && !error && filteredEvents.length === 0 && (
+            <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-10 text-center shadow-2xl backdrop-blur-xl">
+              <p className="text-4xl">🧭</p>
+              <h2 className="mt-4 text-2xl font-black text-white">
+                No events found.
+              </h2>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-400">
+                Try another city, remove a tag, or refresh the calendar.
+              </p>
+            </section>
+          )}
 
-        <div className="w-full mt-4 mb-6">
-          <input
-            type="text"
-            placeholder="Search by title, venue, description, or tag..."
-            className="w-full border bg-neutral-900 text-white p-2 rounded"
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-          />
-        </div>
+          <section className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {filteredEvents.map((ev: EventWithTicket) => {
+              const isExpanded = expandedEventId === ev.id
 
-        <div className="mb-4 text-sm text-neutral-400">
-          {loading
-            ? 'Loading events...'
-            : error
-            ? 'Failed to load events.'
-            : `${filteredEvents.length} events found in ${city.toUpperCase()}`}
-        </div>
+              return (
+                <article
+                  key={ev.id}
+                  className="group flex min-h-[360px] flex-col justify-between overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-cyan-400/25 hover:bg-white/[0.065]"
+                >
+                  <div>
+                    <div className="mb-4 flex flex-wrap items-center gap-2">
+                      <EventXPBadge xpReward={ev.xp_reward ?? 25} />
 
-        {!loading && !error && filteredEvents.length === 0 && (
-          <div className="text-center text-neutral-500 mt-10">
-            😕 No upcoming events found for your filters.
-          </div>
-        )}
+                      <EventSocialGroupBadge
+                        socialGroupId={ev.social_group_id ?? ev.social_group?.id ?? null}
+                        socialGroupName={ev.social_group?.name ?? null}
+                        socialGroupSlug={ev.social_group?.slug ?? null}
+                        logoUrl={ev.social_group?.logo_url ?? null}
+                      />
+                    </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {filteredEvents.map((ev: EventWithTicket) => {
-            const isExpanded = expandedEventId === ev.id
+                    <h2 className="text-2xl font-black leading-tight tracking-tight text-white">
+                      {ev.title}
+                    </h2>
 
-            return (
-              <div
-                key={ev.id}
-                className="border rounded-lg p-5 bg-neutral-900 text-neutral-100 shadow-sm flex flex-col justify-between"
-              >
-                <div>
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <EventXPBadge xpReward={ev.xp_reward ?? 25} />
-
-                    <EventSocialGroupBadge
-                      socialGroupId={ev.social_group_id ?? ev.social_group?.id ?? null}
-                      socialGroupName={ev.social_group?.name ?? null}
-                      socialGroupSlug={ev.social_group?.slug ?? null}
-                      logoUrl={ev.social_group?.logo_url ?? null}
-                    />
-                  </div>
-
-                  <h2 className="text-2xl font-semibold mb-1">{ev.title}</h2>
-
-                  {ev.starts_at && (
-                    <p className="text-sm text-neutral-400 mb-2">
-                      {new Date(ev.starts_at).toLocaleString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  )}
-
-                  {ev.description && (
-                    <>
-                      <p
-                        className={`text-sm text-neutral-200 mb-3 whitespace-pre-wrap transition-all duration-300 ease-in-out ${
-                          isExpanded ? '' : 'line-clamp-3'
-                        }`}
-                      >
-                        {ev.description}
-                      </p>
-                      {ev.description.length > 140 && (
-                        <button
-                          className="text-cyan-400 text-sm hover:underline"
-                          onClick={() => toggleExpandedEvent(ev, isExpanded)}
-                        >
-                          {isExpanded ? 'Show Less' : 'More Info'}
-                        </button>
-                      )}
-                    </>
-                  )}
-
-                  <div className="text-sm text-neutral-300 mb-2">
-                    {ev.price_info && <p><strong>Price:</strong> {ev.price_info}</p>}
-                    {Array.isArray(ev.tags) && ev.tags.length > 0 && (
-                      <p className="text-sm mt-2 text-neutral-400">
-                        <strong>Tags:</strong> {ev.tags.join(', ')}
+                    {ev.starts_at && (
+                      <p className="mt-2 text-sm font-semibold text-cyan-200">
+                        {new Date(ev.starts_at).toLocaleString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                        })}
                       </p>
                     )}
-                  </div>
 
-                  {ev.venue && (
-                    <div className="flex items-center justify-between text-sm mt-4">
+                    {ev.venue && (
                       <Link
                         href={`/venue-profile/${ev.venue.id}`}
-                        className="text-cyan-400 hover:underline font-medium"
+                        className="mt-3 inline-flex items-center rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs font-bold text-slate-300 transition hover:border-cyan-400/40 hover:text-cyan-200"
                         onClick={() =>
                           safeLogEvent('event_venue_click', {
                             event_id: ev.id,
@@ -391,73 +406,128 @@ export default function EventsPage() {
                       >
                         📍 {ev.venue.name}
                       </Link>
+                    )}
+
+                    {ev.description && (
+                      <div className="mt-4">
+                        <div
+                          className={`space-y-3 text-sm leading-6 text-slate-300 transition-all duration-300 ease-in-out ${
+                            isExpanded ? '' : 'line-clamp-4'
+                          }`}
+                        >
+                          {ev.description
+                            .split(/\n{2,}|\r?\n/)
+                            .map((paragraph) => paragraph.trim())
+                            .filter(Boolean)
+                            .map((paragraph, index) => (
+                              <p key={index}>
+                                {paragraph}
+                              </p>
+                            ))}
+                        </div>
+
+                        {ev.description.length > 140 && (
+                          <button
+                            className="mt-2 text-xs font-black text-cyan-300 transition hover:text-cyan-200"
+                            onClick={() => toggleExpandedEvent(ev, isExpanded)}
+                          >
+                            {isExpanded ? 'Show Less' : 'More Info'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-4 space-y-2">
+                      {ev.price_info && (
+                        <p className="text-sm text-slate-300">
+                          <span className="font-bold text-slate-100">Price:</span>{' '}
+                          {ev.price_info}
+                        </p>
+                      )}
+
+                      {Array.isArray(ev.tags) && ev.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {ev.tags.slice(0, 5).map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full border border-white/10 bg-black/35 px-2.5 py-1 text-[10px] font-bold capitalize text-slate-400"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
-                  <button
-                    className={`text-sm px-4 py-2 rounded font-medium text-white ${
-                      interestedIds.includes(ev.id)
-                        ? 'bg-gray-500 cursor-default'
-                        : 'bg-emerald-600 hover:bg-emerald-700'
-                    }`}
-                    onClick={() => markInterested(ev.id)}
-                    disabled={interestedIds.includes(ev.id)}
-                  >
-                    {interestedIds.includes(ev.id)
-                      ? '⭐ Interested'
-                      : '⭐ I\'m Interested'}
-                  </button>
+                  <div className="mt-5 space-y-3 border-t border-white/10 pt-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        className={`rounded-xl px-3 py-2.5 text-xs font-black text-white transition ${
+                          interestedIds.includes(ev.id)
+                            ? 'cursor-default bg-slate-700 text-slate-300'
+                            : 'bg-emerald-500 text-black hover:bg-emerald-400'
+                        }`}
+                        onClick={() => markInterested(ev.id)}
+                        disabled={interestedIds.includes(ev.id)}
+                      >
+                        {interestedIds.includes(ev.id)
+                          ? 'Interested'
+                          : 'I’m Interested'}
+                      </button>
 
-                  {ev.checkin_enabled === true && (
-                    <EventCheckInButton
-                      eventId={ev.id}
-                      xpReward={ev.xp_reward ?? 25}
-                      socialGroupId={ev.social_group_id ?? null}
-                      onCheckedIn={({ xpAwarded, alreadyCheckedIn, socialGroupId }) => {
-                        safeLogEvent('event_checked_in_from_events_page', {
-                          event_id: ev.id,
-                          city,
-                          xp_awarded: xpAwarded,
-                          already_checked_in: alreadyCheckedIn,
-                          social_group_id: socialGroupId,
-                        })
-                      }}
-                    />
-                  )}
+                      <button
+                        type="button"
+                        onClick={() => openPlanner(ev)}
+                        className="rounded-xl bg-cyan-500 px-3 py-2.5 text-xs font-black text-black transition hover:bg-cyan-400"
+                      >
+                        Plan Outing
+                      </button>
+                    </div>
 
-                  <button
-                    type="button"
-                    onClick={() => openPlanner(ev)}
-                    className="text-sm px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded font-medium"
-                  >
-                    🗺️ Plan Outing
-                  </button>
+                    <div className="flex flex-wrap gap-2">
+                      {ev.checkin_enabled === true && (
+                        <EventCheckInButton
+                          eventId={ev.id}
+                          xpReward={ev.xp_reward ?? 25}
+                          socialGroupId={ev.social_group_id ?? null}
+                          onCheckedIn={({ xpAwarded, alreadyCheckedIn, socialGroupId }) => {
+                            safeLogEvent('event_checked_in_from_events_page', {
+                              event_id: ev.id,
+                              city,
+                              xp_awarded: xpAwarded,
+                              already_checked_in: alreadyCheckedIn,
+                              social_group_id: socialGroupId,
+                            })
+                          }}
+                        />
+                      )}
 
-                  {ev.ticket_link && (
-                    <a
-                      href={ev.ticket_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => handleTicketClick(ev)}
-                      className="text-sm px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
-                    >
-                      🎟️ Tickets/RSVP
-                    </a>
-                  )}
+                      {ev.ticket_link && (
+                        <a
+                          href={ev.ticket_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => handleTicketClick(ev)}
+                          className="inline-flex rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-black text-white transition hover:bg-white/15"
+                        >
+                          Tickets / RSVP
+                        </a>
+                      )}
+                    </div>
 
-                  {typeof ev.interest_count === 'number' && ev.interest_count > 0 && (
-                    <p className="text-sm text-neutral-400">
-                      {ev.interest_count} {ev.interest_count === 1 ? 'person is' : 'people are'} interested
-                    </p>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+                    {typeof ev.interest_count === 'number' && ev.interest_count > 0 && (
+                      <p className="text-xs text-slate-500">
+                        {ev.interest_count} {ev.interest_count === 1 ? 'person is' : 'people are'} interested
+                      </p>
+                    )}
+                  </div>
+                </article>
+              )
+            })}
+          </section>
         </div>
-      </div>
+      </main>
 
       <OutingPlannerModal
         open={plannerOpen}

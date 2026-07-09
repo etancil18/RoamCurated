@@ -1,5 +1,7 @@
 'use client';
 
+// app/sponsor-crawl/page.tsx
+
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createSponsorCrawl } from '@/lib/supabase/sponsor';
@@ -86,7 +88,7 @@ export default function SponsorCrawlPage() {
 
       if (error || !data?.slug) {
         console.error('Creation error:', error);
-        alert('Failed to create crawl.');
+        alert('Failed to create flow.');
         return;
       }
 
@@ -102,266 +104,278 @@ export default function SponsorCrawlPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-10 px-4 pb-4 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
-      {/* 🔎 SEARCH SECTION */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            🔎 Discover Flows
-          </h2>
+    <main className="min-h-screen overflow-hidden bg-black px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white sm:px-6">
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-[-12%] top-[-12%] h-72 w-72 rounded-full bg-indigo-600/25 blur-3xl" />
+        <div className="absolute right-[-12%] top-[8%] h-80 w-80 rounded-full bg-cyan-500/15 blur-3xl" />
+        <div className="absolute bottom-[-20%] left-[25%] h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
 
-          <p className="text-sm text-muted-foreground dark:text-neutral-400">
-            Search for playable city flows created by Roam users.
-          </p>
-        </div>
-
-        <CrawlSearch />
-      </section>
-
-      <div className="border-t border-gray-200 dark:border-neutral-700" />
-
-      {/* 🧱 CREATE SECTION */}
-      <section className="space-y-6 rounded-lg bg-white p-4 text-gray-900 shadow-md dark:bg-gray-900 dark:text-gray-100 sm:p-6">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
+      <div className="relative z-10 mx-auto max-w-5xl space-y-8">
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          <div className="inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200">
             Creator Mode
+          </div>
+
+          <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl">
+            Host a Flow
+          </h1>
+
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+            Build a multi-stop city experience people can join, share, complete, and remember.
           </p>
+        </section>
 
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Host a Crawl / Create a Flow
-          </h2>
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl backdrop-blur-xl sm:p-6">
+          <div className="mb-5">
+            <h2 className="text-2xl font-black tracking-tight text-white">
+              Discover Flows
+            </h2>
 
-          <p className="text-sm text-muted-foreground dark:text-neutral-400">
-            Build a multi-stop experience people can join, share, complete, and
-            remember. Every published flow contributes to your Roam Passport.
-          </p>
-        </div>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Search playable city flows created by Roam users.
+            </p>
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="title" className="text-gray-700 dark:text-gray-300">
-            Title
-          </Label>
+          <CrawlSearch />
+        </section>
 
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. SoHo Patio Crawl"
-            className="border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-          />
-        </div>
+        <section className="rounded-[2rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl backdrop-blur-xl sm:p-7">
+          <div className="mb-7 space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-indigo-300">
+              Flow Builder
+            </p>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="description"
-            className="text-gray-700 dark:text-gray-300"
-          >
-            Description
-          </Label>
+            <h2 className="text-2xl font-black tracking-tight text-white">
+              Create a Playable City Flow
+            </h2>
 
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What's the vibe?"
-            className="border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-          />
-        </div>
+            <p className="max-w-2xl text-sm leading-6 text-slate-400">
+              Published flows contribute to your Roam Passport and can earn creator reputation through saves, shares, RSVPs, completions, and repeat usage.
+            </p>
+          </div>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="datetime"
-            className="text-gray-700 dark:text-gray-300"
-          >
-            Date & Time (optional)
-          </Label>
+          <div className="grid gap-5">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-bold text-slate-300">
+                Flow Title
+              </Label>
 
-          <Input
-            id="datetime"
-            type="datetime-local"
-            value={datetime}
-            onChange={(e) => setDatetime(e.target.value)}
-            className="border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-          />
-        </div>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. SoHo Patio Flow"
+                className="h-12 rounded-2xl border-white/10 bg-black/45 text-white placeholder:text-slate-600 focus:border-cyan-400/60"
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label className="text-gray-700 dark:text-gray-300">Venues</Label>
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-bold text-slate-300">
+                Description
+              </Label>
 
-          <VenueSelector selected={venues} setSelected={setVenues} />
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What is the vibe? Who is this flow for?"
+                className="min-h-28 rounded-2xl border-white/10 bg-black/45 text-white placeholder:text-slate-600 focus:border-cyan-400/60"
+              />
+            </div>
 
-          <SponsorMapPreview
-            venues={venues}
-            mapboxAccessToken={MAPBOX_TOKEN}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="datetime" className="text-sm font-bold text-slate-300">
+                Date & Time Optional
+              </Label>
 
-        <div className="flex items-center justify-between pt-2">
-          <Label htmlFor="rsvp" className="text-gray-700 dark:text-gray-300">
-            Allow RSVPs?
-          </Label>
+              <Input
+                id="datetime"
+                type="datetime-local"
+                value={datetime}
+                onChange={(e) => setDatetime(e.target.value)}
+                className="h-12 rounded-2xl border-white/10 bg-black/45 text-white focus:border-cyan-400/60"
+              />
+            </div>
 
-          <Switch
-            id="rsvp"
-            checked={rsvpEnabled}
-            onCheckedChange={setRsvpEnabled}
-            className={clsx(
-              'relative h-6 w-10 rounded-full bg-gray-300 transition-colors dark:bg-gray-700 data-[state=checked]:bg-green-600',
-              'after:absolute after:left-0.5 after:top-0.5 after:block after:h-4 after:w-4 after:rounded-full after:bg-white after:content-[""]',
-              'after:transition-transform after:duration-200 data-[state=checked]:after:translate-x-5'
+            <div className="space-y-3">
+              <Label className="text-sm font-bold text-slate-300">
+                Flow Stops
+              </Label>
+
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                <VenueSelector selected={venues} setSelected={setVenues} />
+              </div>
+
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                <SponsorMapPreview
+                  venues={venues}
+                  mapboxAccessToken={MAPBOX_TOKEN}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <ToggleCard
+                label="Allow RSVPs"
+                description="Let people join this flow."
+                checked={rsvpEnabled}
+                onCheckedChange={setRsvpEnabled}
+                id="rsvp"
+                color="green"
+              />
+
+              <ToggleCard
+                label="Public Flow"
+                description={isPublic ? 'Visible in discovery.' : 'Direct link only.'}
+                checked={isPublic}
+                onCheckedChange={setIsPublic}
+                id="isPublic"
+                color="indigo"
+              />
+
+              <ToggleCard
+                label="Sponsored"
+                description="Attach a sponsor name."
+                checked={isSponsored}
+                onCheckedChange={setIsSponsored}
+                id="isSponsored"
+                color="purple"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxCapacity" className="text-sm font-bold text-slate-300">
+                Max Attendees Optional
+              </Label>
+
+              <Input
+                id="maxCapacity"
+                type="number"
+                value={maxCapacity}
+                onChange={(e) =>
+                  setMaxCapacity(e.target.value === '' ? '' : Number(e.target.value))
+                }
+                placeholder="e.g. 50"
+                min={1}
+                className="h-12 rounded-2xl border-white/10 bg-black/45 text-white placeholder:text-slate-600 focus:border-cyan-400/60"
+              />
+            </div>
+
+            {isSponsored && (
+              <div className="space-y-2">
+                <Label htmlFor="sponsorName" className="text-sm font-bold text-slate-300">
+                  Sponsor Name
+                </Label>
+
+                <Input
+                  id="sponsorName"
+                  value={sponsorName}
+                  onChange={(e) => setSponsorName(e.target.value)}
+                  placeholder="e.g. Liquid Death"
+                  className="h-12 rounded-2xl border-white/10 bg-black/45 text-white placeholder:text-slate-600 focus:border-cyan-400/60"
+                />
+              </div>
             )}
-          />
-        </div>
 
-        <div className="space-y-2">
-          <Label
-            htmlFor="maxCapacity"
-            className="text-gray-700 dark:text-gray-300"
-          >
-            Max Attendees (optional)
-          </Label>
+            <div className="rounded-[1.5rem] border border-indigo-400/25 bg-indigo-500/10 p-5 shadow-inner">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-indigo-300">
+                Flow Rewards
+              </p>
 
-          <Input
-            id="maxCapacity"
-            type="number"
-            value={maxCapacity}
-            onChange={(e) =>
-              setMaxCapacity(e.target.value === '' ? '' : Number(e.target.value))
-            }
-            placeholder="e.g. 50"
-            min={1}
-            className="border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-          />
-        </div>
+              <h3 className="mt-2 text-xl font-black text-white">
+                Publish this as a playable city flow
+              </h3>
 
-        <div className="flex items-center justify-between pt-2">
-          <Label
-            htmlFor="isPublic"
-            className="text-gray-700 dark:text-gray-300"
-          >
-            Make this flow public?
-          </Label>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Flows you host become part of your Roam Passport. Friends can join, complete the flow, and help increase your creator reputation.
+              </p>
 
-          <Switch
-            id="isPublic"
-            checked={isPublic}
-            onCheckedChange={setIsPublic}
-            className={clsx(
-              'relative h-6 w-10 rounded-full bg-gray-300 transition-colors dark:bg-gray-700 data-[state=checked]:bg-indigo-600',
-              'after:absolute after:left-0.5 after:top-0.5 after:block after:h-4 after:w-4 after:rounded-full after:bg-white after:content-[""]',
-              'after:transition-transform after:duration-200 data-[state=checked]:after:translate-x-5'
-            )}
-          />
-        </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <RewardCard label="Host reward" value="+75 XP" />
+                <RewardCard label="Stops in flow" value={String(venues.length)} />
+                <RewardCard label="Discovery status" value={isPublic ? 'Ranked' : 'Private'} />
+              </div>
 
-        <p className="text-xs text-muted-foreground dark:text-neutral-400">
-          {isPublic
-            ? 'Visible to everyone in search, discovery, and future rankings.'
-            : 'Hidden from discovery. Still accessible via direct link.'}
-        </p>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-3 text-xs leading-5 text-slate-400">
+                Flow Score starts building from saves, shares, RSVPs, completions, and repeat usage.
+              </div>
+            </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <Label
-            htmlFor="isSponsored"
-            className="text-gray-700 dark:text-gray-300"
-          >
-            Is this flow sponsored?
-          </Label>
-
-          <Switch
-            id="isSponsored"
-            checked={isSponsored}
-            onCheckedChange={setIsSponsored}
-            className={clsx(
-              'relative h-6 w-10 rounded-full bg-gray-300 transition-colors dark:bg-gray-700 data-[state=checked]:bg-purple-600',
-              'after:absolute after:left-0.5 after:top-0.5 after:block after:h-4 after:w-4 after:rounded-full after:bg-white after:content-[""]',
-              'after:transition-transform after:duration-200 data-[state=checked]:after:translate-x-5'
-            )}
-          />
-        </div>
-
-        {isSponsored && (
-          <div className="space-y-2">
-            <Label
-              htmlFor="sponsorName"
-              className="text-gray-700 dark:text-gray-300"
+            <Button
+              onClick={handleCreate}
+              disabled={submitting}
+              className="h-12 w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-sm font-black text-white shadow-lg shadow-cyan-950/30 transition hover:from-indigo-400 hover:to-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Sponsor Name
-            </Label>
-
-            <Input
-              id="sponsorName"
-              value={sponsorName}
-              onChange={(e) => setSponsorName(e.target.value)}
-              placeholder="e.g. Liquid Death"
-              className="border-gray-300 bg-gray-50 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-            />
+              {submitting ? 'Publishing Flow...' : 'Publish Flow'}
+            </Button>
           </div>
-        )}
+        </section>
+      </div>
+    </main>
+  );
+}
 
-        {/* 🕹️ FLOW REWARDS PREVIEW */}
-        <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/30">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
-              Flow Rewards
-            </p>
+function ToggleCard({
+  id,
+  label,
+  description,
+  checked,
+  onCheckedChange,
+  color,
+}: {
+  id: string;
+  label: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  color: 'green' | 'indigo' | 'purple';
+}) {
+  const checkedColor =
+    color === 'green'
+      ? 'data-[state=checked]:bg-emerald-500'
+      : color === 'purple'
+        ? 'data-[state=checked]:bg-purple-500'
+        : 'data-[state=checked]:bg-indigo-500';
 
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Publish this as a playable city flow
-            </h3>
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <Label htmlFor={id} className="text-sm font-black text-white">
+          {label}
+        </Label>
 
-            <p className="text-sm text-muted-foreground dark:text-neutral-400">
-              Crawls you host become part of your Roam Passport. Friends can
-              join, complete the flow, and help increase your creator reputation.
-            </p>
-          </div>
+        <Switch
+          id={id}
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          className={clsx(
+            'relative h-6 w-10 rounded-full bg-slate-700 transition-colors',
+            checkedColor,
+            'after:absolute after:left-0.5 after:top-0.5 after:block after:h-5 after:w-5 after:rounded-full after:bg-white after:content-[""]',
+            'after:transition-transform after:duration-200 data-[state=checked]:after:translate-x-4'
+          )}
+        />
+      </div>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-indigo-100 bg-white p-3 dark:border-indigo-900/50 dark:bg-black/30">
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                +75 XP
-              </p>
+      <p className="mt-2 text-xs leading-5 text-slate-500">
+        {description}
+      </p>
+    </div>
+  );
+}
 
-              <p className="text-xs text-muted-foreground dark:text-neutral-400">
-                Host reward
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-indigo-100 bg-white p-3 dark:border-indigo-900/50 dark:bg-black/30">
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {venues.length}
-              </p>
-
-              <p className="text-xs text-muted-foreground dark:text-neutral-400">
-                Stops in flow
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-indigo-100 bg-white p-3 dark:border-indigo-900/50 dark:bg-black/30">
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {isPublic ? 'Ranked' : 'Private'}
-              </p>
-
-              <p className="text-xs text-muted-foreground dark:text-neutral-400">
-                Discovery status
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-lg bg-white p-3 text-xs text-muted-foreground dark:bg-black/30 dark:text-neutral-400">
-            Flow Score starts building from saves, shares, RSVPs, completions,
-            and repeat usage.
-          </div>
-        </div>
-
-        <Button
-          onClick={handleCreate}
-          disabled={submitting}
-          className="mt-4 w-full bg-blue-600 font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-        >
-          {submitting ? 'Publishing Flow...' : 'Publish Flow'}
-        </Button>
-      </section>
+function RewardCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+      <p className="text-xl font-black text-white">{value}</p>
+      <p className="mt-1 text-xs text-slate-500">{label}</p>
     </div>
   );
 }
