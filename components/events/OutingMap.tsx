@@ -77,11 +77,7 @@ type RouteVenue = {
 
 function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
   try {
-    void Promise.resolve(
-      logEvent(eventName, {
-        metadata,
-      })
-    )
+    void Promise.resolve(logEvent(eventName, { metadata }))
   } catch (error) {
     console.warn("logEvent failed:", eventName, error)
   }
@@ -134,7 +130,6 @@ export default function OutingMap({
     if (typeof window === "undefined") return
 
     const L = require("leaflet")
-
     delete (L.Icon.Default.prototype as any)._getIconUrl
 
     L.Icon.Default.mergeOptions({
@@ -238,8 +233,8 @@ export default function OutingMap({
   const center: [number, number] = anchorVenue
     ? [anchorVenue.lat, anchorVenue.lon]
     : routeStops[0]
-    ? [routeStops[0].lat, routeStops[0].lon]
-    : [0, 0]
+      ? [routeStops[0].lat, routeStops[0].lon]
+      : [0, 0]
 
   function baseLogMetadata(): Record<string, unknown> {
     return {
@@ -309,31 +304,23 @@ export default function OutingMap({
   }
 
   function formatStopMeta(stop: Stop): string {
-    const parts: string[] = []
+      const parts: string[] = []
 
-    if (stop.displayType || stop.venueType || stop.role) {
-      parts.push(humanizeStopType(stop.displayType ?? stop.venueType ?? stop.role))
+      if (stop.plannedArrivalAt) {
+        parts.push(
+          `Arrive around ${new Date(stop.plannedArrivalAt).toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+          })}`
+        )
+      }
+
+      if (typeof stop.travelMinutesFromPrev === "number") {
+        parts.push(`${stop.travelMinutesFromPrev} min from previous stop`)
+      }
+
+      return parts.join(" • ")
     }
-
-    if (stop.semanticRole) {
-      parts.push(humanizeStopType(stop.semanticRole))
-    }
-
-    if (stop.plannedArrivalAt) {
-      parts.push(
-        `Arrive ${new Date(stop.plannedArrivalAt).toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
-        })}`
-      )
-    }
-
-    if (typeof stop.travelMinutesFromPrev === "number") {
-      parts.push(`${stop.travelMinutesFromPrev} min from previous`)
-    }
-
-    return parts.join(" • ")
-  }
 
   return (
     <div className="space-y-4">
@@ -361,13 +348,10 @@ export default function OutingMap({
           {orderedStops.map((stop, i) => {
             if (!hasValidCoordinates(stop.venue)) return null
 
-            const lat = stop.venue.lat
-            const lon = stop.venue.lon
-
             return (
               <Marker
                 key={stop.id}
-                position={[lat, lon]}
+                position={[stop.venue.lat, stop.venue.lon]}
                 icon={numberedIcon(i + 1)}
               >
                 <Tooltip>
@@ -420,13 +404,13 @@ export default function OutingMap({
         <div className="space-y-1">
           <p className="font-medium text-foreground">Route Stops</p>
           <p className="text-sm text-muted-foreground">
-            Adjust the order of your preset stops before you head out.
+            Review your route, adjust the stop order, and start when you're ready.
           </p>
         </div>
 
         {anchorVenue && (
           <div className="rounded-lg border border-cyan-500/30 bg-background px-3 py-3">
-            <p className="text-sm font-medium text-foreground">Event Anchor</p>
+            <p className="text-sm font-medium text-foreground">Your Event</p>
             <p className="mt-1 text-sm text-foreground">
               {anchor.title ?? anchorVenue.name}
             </p>
@@ -447,9 +431,12 @@ export default function OutingMap({
                 <p className="truncate text-sm font-medium text-foreground">
                   {i + 1}. {stop.title ?? stop.venue?.name ?? "Stop"}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatStopMeta(stop)}
-                </p>
+
+                {formatStopMeta(stop) ? (
+                  <p className="text-xs text-muted-foreground">
+                    {formatStopMeta(stop)}
+                  </p>
+                ) : null}
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
@@ -524,12 +511,4 @@ function hasValidCoordinates(
     typeof venue.lon === "number" &&
     Number.isFinite(venue.lon)
   )
-}
-
-function humanizeStopType(value: string): string {
-  return value
-    .split(/[\s_-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ")
 }

@@ -283,8 +283,17 @@ export default async function EventOutingPage({ params }: Props) {
   })
 
   const draftPath = `/events/${eventId}/outing/${outing.id}`
+  const pageTitle = buildUserFriendlyOutingTitle({
+    mode: outing.mode,
+    anchorTitle: anchor.title,
+  })
+  const pageSubtitle = buildUserFriendlyOutingSubtitle({
+    mode: outing.mode,
+    anchorVenueName: anchor.venue?.name ?? null,
+    stops,
+  })
   const shareText = encodeURIComponent(
-    outing.plan_summary ?? anchor.title ?? "View this Roam event flow"
+    `${pageTitle}${pageSubtitle ? `\n\n${pageSubtitle}` : ""}`
   )
 
   return (
@@ -304,8 +313,14 @@ export default async function EventOutingPage({ params }: Props) {
               </div>
 
               <h1 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-5xl">
-                {outing.plan_summary ?? anchor.title ?? "Event Flow"}
+                {pageTitle}
               </h1>
+
+              {pageSubtitle ? (
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+                  {pageSubtitle}
+                </p>
+              ) : null}
 
               <div className="mt-5 flex flex-wrap gap-2">
                 {city ? (
@@ -445,6 +460,53 @@ async function logPlannedOutingViewed({
   } catch (error) {
     console.warn("Failed to log outing_plan_viewed:", error)
   }
+}
+
+function buildUserFriendlyOutingTitle({
+  mode,
+  anchorTitle,
+}: {
+  mode: "before" | "after" | "full"
+  anchorTitle: string | null
+}): string {
+  const eventName = anchorTitle?.trim() || "your event"
+
+  if (mode === "before") return `Your pre-event Flow for ${eventName}`
+  if (mode === "after") return `Your post-event Flow for ${eventName}`
+
+  return `Your event Flow for ${eventName}`
+}
+
+function buildUserFriendlyOutingSubtitle({
+  mode,
+  anchorVenueName,
+  stops,
+}: {
+  mode: "before" | "after" | "full"
+  anchorVenueName: string | null
+  stops: Array<{ title: string | null; venue?: { name: string | null } | null }>
+}): string {
+  const stopNames = stops
+    .map((stop) => stop.title ?? stop.venue?.name)
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+
+  const venueText = anchorVenueName ? ` at ${anchorVenueName}` : ""
+
+  if (stopNames.length === 0) {
+    return `A simple route built around your event${venueText}.`
+  }
+
+  const sequence = stopNames.join(" → ")
+
+  if (mode === "before") {
+    return `Start with ${sequence}, then head to your event${venueText}.`
+  }
+
+  if (mode === "after") {
+    return `After the event${venueText}, continue with ${sequence}.`
+  }
+
+  return `Your route: ${sequence}, with your event${venueText} built in.`
 }
 
 function normalizeVenueRelation(
