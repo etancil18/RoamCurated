@@ -102,10 +102,6 @@ export default function EventCarousel({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-        Upcoming Events
-      </h2>
-
       <div
         ref={scrollRef}
         className="flex space-x-4 overflow-x-auto md:hidden pb-2 -mx-1 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-700"
