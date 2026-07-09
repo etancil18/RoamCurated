@@ -111,16 +111,11 @@ export async function POST(_request: Request, { params }: Props) {
     )
   }
 
-  const orderedVenueIds =
-    stops
-      ?.filter(
-        (stop) =>
-          typeof stop.venue_id === 'string' && stop.venue_id.trim().length > 0
-      )
-      .sort((a, b) => (a.stop_order ?? 0) - (b.stop_order ?? 0))
-      .map((stop) => stop.venue_id as string) ?? []
-
-  const venueIds = Array.from(new Set(orderedVenueIds))
+  const venueIds = buildActiveFlowVenueIds({
+    mode: outing.mode,
+    anchorVenueId: outing.venue_id,
+    stops: stops ?? [],
+  })
 
   if (venueIds.length === 0) {
     return NextResponse.json(
@@ -189,7 +184,9 @@ export async function POST(_request: Request, { params }: Props) {
     stopCount: venueIds.length,
     confidenceScore: outing.confidence_score,
     anchorVenueId: outing.venue_id,
-    eventArchetype: readPlannerEventArchetype(outing.metadata) ?? readFirstStopEventArchetype(stops ?? []),
+    eventArchetype:
+      readPlannerEventArchetype(outing.metadata) ??
+      readFirstStopEventArchetype(stops ?? []),
     semanticRoles: readStopSemanticRoles(stops ?? []),
   })
 
@@ -197,6 +194,58 @@ export async function POST(_request: Request, { params }: Props) {
     success: true,
     session,
   })
+}
+
+function buildActiveFlowVenueIds({
+  mode,
+  anchorVenueId,
+  stops,
+}: {
+  mode: PlannedOutingRow['mode']
+  anchorVenueId: string | null
+  stops: PlannedOutingStopRow[]
+}): string[] {
+  const orderedStops = [...stops].sort(
+    (a, b) => (a.stop_order ?? 0) - (b.stop_order ?? 0)
+  )
+
+  const cleanAnchorVenueId = normalizeVenueId(anchorVenueId)
+
+  const beforeVenueIds = orderedStops
+    .filter((stop) => readStopPhase(stop) === 'before')
+    .map((stop) => normalizeVenueId(stop.venue_id))
+    .filter((venueId): venueId is string => Boolean(venueId))
+
+  const afterVenueIds = orderedStops
+    .filter((stop) => readStopPhase(stop) === 'after')
+    .map((stop) => normalizeVenueId(stop.venue_id))
+    .filter((venueId): venueId is string => Boolean(venueId))
+
+  const fallbackStopVenueIds = orderedStops
+    .map((stop) => normalizeVenueId(stop.venue_id))
+    .filter((venueId): venueId is string => Boolean(venueId))
+
+  if (!cleanAnchorVenueId) {
+    return uniqueVenueIds(fallbackStopVenueIds)
+  }
+
+  if (mode === 'before') {
+    return uniqueVenueIds([...fallbackStopVenueIds, cleanAnchorVenueId])
+  }
+
+  if (mode === 'after') {
+    return uniqueVenueIds([cleanAnchorVenueId, ...fallbackStopVenueIds])
+  }
+
+  if (beforeVenueIds.length > 0 || afterVenueIds.length > 0) {
+    return uniqueVenueIds([
+      ...beforeVenueIds,
+      cleanAnchorVenueId,
+      ...afterVenueIds,
+    ])
+  }
+
+  return uniqueVenueIds([...fallbackStopVenueIds, cleanAnchorVenueId])
 }
 
 function inferTravelMode(
@@ -326,6 +375,27 @@ function readStopSemanticRoles(stops: PlannedOutingStopRow[]): Array<string | nu
     const value = jsonObject(stop.metadata).semanticRole
     return typeof value === 'string' && value.trim().length > 0 ? value : null
   })
+}
+
+function readStopPhase(stop: PlannedOutingStopRow): 'before' | 'after' | null {
+  const value = jsonObject(stop.metadata).slotPhase
+
+  if (value === 'before' || value === 'after') {
+    return value
+  }
+
+  return null
+}
+
+function normalizeVenueId(value: string | null): string | null {
+  if (typeof value !== 'string') return null
+
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function uniqueVenueIds(values: string[]): string[] {
+  return Array.from(new Set(values))
 }
 
 function jsonObject(value: Json | null | undefined): Record<string, unknown> {
