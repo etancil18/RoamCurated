@@ -1,3 +1,5 @@
+// app/venue-profile/[venueId]/page.tsx
+
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
@@ -5,7 +7,6 @@ import { supabaseServerApi } from '@/lib/supabase/server-api'
 import HeroBanner from '@/components/venue-profile/HeroBanner'
 import SocialLinks from '@/components/venue-profile/SocialLinks'
 import VenueHours from '@/components/venue-profile/VenueHours'
-import LiveStatusPill from '@/components/venue-profile/LiveStatusPill'
 import EventCarousel from '@/components/venue-profile/EventCarousel'
 import VenueVisitButton from '@/components/venue-profile/VenueVisitButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
@@ -111,10 +112,7 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
       venue.hours &&
       typeof venue.hours === 'object' &&
       !Array.isArray(venue.hours)
-        ? (venue.hours as Record<
-            string,
-            { open: string; close: string } | null
-          >)
+        ? (venue.hours as Record<string, { open: string; close: string } | null>)
         : undefined,
   }
 
@@ -176,9 +174,7 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
 
   const { data: recurringEvents } = await supabase
     .from('recurring_events')
-    .select(
-      'id, title, start_time, end_time, recurrence_rule, starts_on, ends_on'
-    )
+    .select('id, title, start_time, end_time, recurrence_rule, starts_on, ends_on')
     .eq('venue_id', venueId)
 
   const standardEventIds = (events ?? []).map((e) => e.id)
@@ -233,59 +229,114 @@ export default async function VenueProfilePage({ params }: { params: Params }) {
   ]
 
   return (
-    <div
-      className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-24 pb-6 space-y-10
-           bg-white text-gray-900
-           dark:bg-neutral-950 dark:text-gray-100"
-    >
-      <div className="sticky top-16 z-30 -mx-4 bg-white/95 px-4 py-3 backdrop-blur dark:bg-neutral-950/95 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
-        <Link
-          href={backToMapHref}
-          className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium
-               text-blue-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-800
-               dark:border-zinc-700 dark:bg-zinc-900 dark:text-blue-400 dark:hover:bg-zinc-800 dark:hover:text-blue-300"
-        >
-          ← Back to {normalizedVenue.city ?? 'Map'}
-        </Link>
+    <main className="min-h-screen overflow-hidden bg-black px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6">
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-[-12%] top-[-12%] h-72 w-72 rounded-full bg-indigo-600/25 blur-3xl" />
+        <div className="absolute right-[-12%] top-[8%] h-80 w-80 rounded-full bg-cyan-500/15 blur-3xl" />
+        <div className="absolute bottom-[-20%] left-[25%] h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
-      <HeroBanner venue={normalizedVenue} />
+      <div className="relative z-10 mx-auto max-w-4xl space-y-7">
+        <div className="sticky top-16 z-30 -mx-4 border-b border-white/10 bg-black/80 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6">
+          <Link
+            href={backToMapHref}
+            className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-bold text-cyan-200 shadow-lg transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
+          >
+            ← Back to {normalizedVenue.city ?? 'Map'}
+          </Link>
+        </div>
 
-      {partnership && <VenuePartnerBadge partnership={partnership} />}
+        <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
+          <HeroBanner venue={normalizedVenue} />
+        </section>
 
-      <VenueVisitButton venueId={venueId} venueName={normalizedVenue.name} />
+        {partnership && (
+          <section className="rounded-[1.75rem] border border-indigo-400/25 bg-indigo-500/10 p-5 shadow-2xl backdrop-blur-xl">
+            <VenuePartnerBadge partnership={partnership} />
+          </section>
+        )}
 
-      {normalizedVenue.description && (
-        <p className="text-base text-gray-700 dark:text-gray-300 leading-relaxed">
-          {normalizedVenue.description}
-        </p>
-      )}
+        <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl backdrop-blur-xl">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-4">
+              {normalizedVenue.city && (
+                <p className="text-sm font-bold uppercase tracking-[0.22em] text-cyan-300">
+                  {normalizedVenue.city}
+                </p>
+              )}
 
-      {normalizedVenue.address && (
-        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
-          {normalizedVenue.address}
-        </p>
-      )}
+              {normalizedVenue.description && (
+                <p className="whitespace-pre-line text-base leading-8 text-slate-300">
+                  {normalizedVenue.description}
+                </p>
+              )}
+            </div>
 
-      {liveStatus && <LiveStatusPill status={liveStatus} />}
+            <div className="shrink-0 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-3 shadow-lg shadow-emerald-950/20">
+              <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
+                Passport Action
+              </p>
 
-      {bookingOptions.length > 0 && (
-        <VenueBookingButtons bookingOptions={bookingOptions} />
-      )}
+              <VenueVisitButton venueId={venueId} venueName={normalizedVenue.name} />
+            </div>
+          </div>
 
-      <SocialLinks contact={normalizedVenue.contact} />
+          {(normalizedVenue.tags ?? []).length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {(normalizedVenue.tags ?? []).slice(0, 8).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs font-bold text-slate-400"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
-      <VenueHours
-        hours={normalizedVenue.hours}
-        isOpen={liveStatus?.is_open_for_dropins}
-      />
+          {normalizedVenue.address && (
+            <p className="mt-5 whitespace-pre-line rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-slate-300">
+              📍 {normalizedVenue.address}
+            </p>
+          )}
+        </section>
 
-      {upcomingEvents.length > 0 && (
-        <EventCarousel
-          events={upcomingEvents}
-          interestedEventIds={interestedEventIds}
-        />
-      )}
-    </div>
+        <section className="grid gap-5 md:grid-cols-2">
+          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl backdrop-blur-xl">
+            {bookingOptions.length > 0 ? (
+              <VenueBookingButtons bookingOptions={bookingOptions} />
+            ) : (
+              <p className="text-sm text-slate-400">
+                No booking links available.
+              </p>
+            )}
+          </div>
+
+          <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 text-slate-100 shadow-2xl backdrop-blur-xl [&_*]:text-slate-100 [&_a]:text-cyan-300 [&_a:hover]:text-cyan-200 [&_h2]:text-white [&_h3]:text-white [&_p]:text-slate-300">
+            <SocialLinks contact={normalizedVenue.contact} />
+          </div>
+        </section>
+
+        <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 text-slate-100 shadow-2xl backdrop-blur-xl [&_*]:text-slate-100 [&_h2]:text-white [&_h3]:text-white [&_p]:text-slate-300">
+          <VenueHours
+            hours={normalizedVenue.hours}
+            isOpen={liveStatus?.is_open_for_dropins}
+          />
+        </section>
+
+        {upcomingEvents.length > 0 && (
+          <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 shadow-2xl backdrop-blur-xl">
+            <h2 className="mb-4 text-xl font-black tracking-tight text-white">
+              Upcoming Events
+            </h2>
+
+            <EventCarousel
+              events={upcomingEvents}
+              interestedEventIds={interestedEventIds}
+            />
+          </section>
+        )}
+      </div>
+    </main>
   )
 }
