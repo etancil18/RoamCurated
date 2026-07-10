@@ -1,36 +1,42 @@
 // lib/outings/sequenceScoring/bias.ts
 
-import type { Budget, Mobility, PlanningContext, PlanningSlot, StopRole, VenueRecord } from "../types"
+import type {
+  Budget,
+  Mobility,
+  PlanningContext,
+  PlanningSlot,
+  SelectionPass,
+  StopRole,
+  VenueRecord,
+} from "../types"
+
 import {
   getDiscouragedTypesForGroupSize,
   getPreferredTypesForGroupSize,
 } from "../groupSizePresets"
+
 import {
-  expandVibeTags,
-  getDiscouragedTypesForVibe,
-  getPreferredTypesForVibe,
-} from "../vibePresets"
-import {
-  hasAnyType,
-  isCoffeeLikeVenue,
-  isMealLikeVenue,
   normalizePrice,
-  normalizeStringArray,
   normalizeVenueTypes,
   priceToInt,
-  uniqueStrings,
 } from "./helpers"
+
 import {
-  getHourFractionInTimeZone,
-  resolvePlannerTimeZone,
-} from "./time"
+  computeCandidateScore,
+  type CandidateScoreResult,
+  type CandidateScoreVenue,
+} from "./candidateScore"
+
 import {
   getDistanceBetweenVenues,
   getMaxAfterInterstopMeters,
   getMaxAfterLocalFallbackMeters,
   isAfterSequenceDirectionallyConsistent,
 } from "./geometry"
-import { isLateNightAfterFallbackContext } from "./lateNight"
+
+// -----------------------------------------------------------------------------
+// Compatibility types
+// -----------------------------------------------------------------------------
 
 type CandidateVenueLike = VenueRecord & {
   inferredRoles: StopRole[]
@@ -38,281 +44,88 @@ type CandidateVenueLike = VenueRecord & {
   score: number
 }
 
-const SOCIAL_SPORTS_DAYTIME_TYPES = [
-  "coffee",
-  "cafe",
-  "café",
-  "bakery",
-  "breakfast",
-  "brunch",
-  "tea",
-  "juice",
-  "matcha",
-  "lunch",
-  "restaurant",
-  "patio",
-  "market",
-]
+export type SequentialCandidateScoreResult = {
+  score: number
+  result: CandidateScoreResult
+}
 
-const SOCIAL_SPORTS_GROUP_TYPES = [
-  "sports bar",
-  "bar",
-  "brewery",
-  "pub",
-  "beer garden",
-  "restaurant",
-  "lunch",
-  "brunch",
-  "casual food",
-  "patio",
-]
+// -----------------------------------------------------------------------------
+// Canonical sequential scoring entry point
+// -----------------------------------------------------------------------------
 
-const SOCIAL_SPORTS_BAD_MORNING_TYPES = [
-  "club",
-  "speakeasy",
-  "dive bar",
-  "late night",
-  "fine dining",
-  "spa",
-  "library",
-  "showroom",
-]
-
-export function computeSequentialCandidateScore<TCandidate extends CandidateVenueLike>(
+/**
+ * Canonical sequential candidate score.
+ *
+ * All semantic, archetype, vibe, time, geometry, and sequence scoring is
+ * composed inside candidateScore.ts.
+ *
+ * Do not append legacy archetype, vibe, temporal, geometry, or sequence
+ * bonuses after calling this function.
+ */
+export function computeSequentialCandidateScore<
+  TCandidate extends CandidateVenueLike
+>(
   candidate: TCandidate,
   selectedSoFar: TCandidate[],
   slot: PlanningSlot,
-  context: PlanningContext
+  context: PlanningContext,
+  selectedPass: SelectionPass | null = null
 ): number {
-  let score = candidate.score
-  const anchorDistance = candidate.distanceMeters
-  const previous = selectedSoFar[selectedSoFar.length - 1] ?? null
-  const previousAnchorDistance = previous?.distanceMeters ?? null
-  const previousToCandidateDistance =
-    previous != null ? getDistanceBetweenVenues(previous, candidate) : null
-
-  if (slot.phase === "before") {
-    if (slot.index === 0) {
-      score += computeBeforeFirstStopDistanceBonus(anchorDistance, context.mobility)
-    } else {
-      score += computeBeforeProgressionBonus(
-        anchorDistance,
-        previousAnchorDistance,
-        previousToCandidateDistance
-      )
-      score += computeBeforeConsumptionProgressionScore(previous, candidate)
-    }
-  }
-
-  if (slot.phase === "after") {
-    const isImmediatePostEvent =
-      slot.index === 0 || (context.mode === "full" && slot.index === 1)
-
-    if (isImmediatePostEvent) {
-      score += computeAfterFirstStopDistanceBonus(anchorDistance, context.mobility)
-    } else {
-      score += computeAfterExpansionBonus(
-        previousToCandidateDistance,
-        anchorDistance,
-        context.mobility,
-        context
-      )
-      score += computeAfterDirectionalConsistencyBonus(
-        selectedSoFar,
-        candidate,
-        context,
-        slot,
-        previousToCandidateDistance
-      )
-    }
-  }
-
-  score += computeVenueSequenceCoherenceScore(previous, candidate, slot, context)
-  score += computeModeSpecificVenueBias(candidate, slot, context)
-  score += scoreArchetypeFit(candidate, context, slot)
-  score += computePhaseAwarePreferenceBias(candidate, slot, context)
-  score += computeVibePlanningSequentialBias(candidate, slot, context)
-
-  return score
+  return computeSequentialCandidateScoreResult(
+    candidate,
+    selectedSoFar,
+    slot,
+    context,
+    selectedPass
+  ).score
 }
 
-function computeVibePlanningSequentialBias(
-  candidate: Pick<VenueRecord, "type" | "tags" | "vibe">,
+/**
+ * Diagnostic variant of computeSequentialCandidateScore.
+ *
+ * Use this when selection diagnostics or persisted metadata need the complete
+ * scoring breakdown.
+ */
+export function computeSequentialCandidateScoreResult<
+  TCandidate extends CandidateVenueLike
+>(
+  candidate: TCandidate,
+  selectedSoFar: TCandidate[],
   slot: PlanningSlot,
-  context: PlanningContext
-): number {
-  const vibePlanning = context.vibePlanning
-  if (!vibePlanning && context.vibeTags.length === 0) return 0
+  context: PlanningContext,
+  selectedPass: SelectionPass | null = null
+): SequentialCandidateScoreResult {
+  const previousVenue =
+    selectedSoFar[selectedSoFar.length - 1] ?? null
 
-  const types = normalizeVenueTypes(candidate.type)
-  const tokens = uniqueStrings([
-    ...normalizeStringArray(candidate.type),
-    ...normalizeStringArray(candidate.tags),
-    ...normalizeStringArray(candidate.vibe),
-  ])
+  const result = computeCandidateScore({
+    venue: toCandidateScoreVenue(candidate),
+    context,
+    slot,
+    selectedSoFar: selectedSoFar.map(toCandidateScoreVenue),
+    previousVenue: previousVenue
+      ? toCandidateScoreVenue(previousVenue)
+      : null,
+    sourceScore: candidate.score,
+    selectedPass,
+  })
 
-  const preferredTypes =
-    vibePlanning?.preferredTypes?.length
-      ? vibePlanning.preferredTypes
-      : getPreferredTypesForVibe(context.vibeTags)
-
-  const discouragedTypes =
-    vibePlanning?.discouragedTypes?.length
-      ? vibePlanning.discouragedTypes
-      : getDiscouragedTypesForVibe(context.vibeTags)
-
-  const requiredAnyTypes = vibePlanning?.requiredAnyTypes ?? []
-  const expandedTokens = expandVibeTags(context.vibeTags)
-
-  let score = 0
-
-  score += computeContextualChillVibeBias(types, slot, context)
-
-  if (preferredTypes.length > 0 && hasAnyType(types, preferredTypes)) {
-    score += 18
+  return {
+    score: result.score,
+    result,
   }
-
-  if (requiredAnyTypes.length > 0) {
-    score += hasAnyType(types, requiredAnyTypes) ? 18 : -22
-  }
-
-  if (discouragedTypes.length > 0 && hasAnyType(types, discouragedTypes)) {
-    score -= 24
-  }
-
-  const tokenMatches = tokens.filter((token) => expandedTokens.includes(token)).length
-  score += Math.min(tokenMatches, 4) * 6
-
-  if (
-    vibePlanning?.preferredTypes?.length &&
-    hasAnyType(types, vibePlanning.preferredTypes)
-  ) {
-    score += 14
-  }
-
-  return score
 }
 
-function computeContextualChillVibeBias(
-  types: string[],
-  slot: PlanningSlot,
-  context: PlanningContext
-): number {
-  const isChillVibe = context.vibeTags.some((tag) =>
-    [
-      "chill",
-      "relaxed",
-      "calm",
-      "quiet",
-      "peaceful",
-      "easygoing",
-      "low-key",
-      "lowkey",
-    ].includes(tag)
-  )
+// -----------------------------------------------------------------------------
+// Distance compatibility helpers
+// -----------------------------------------------------------------------------
 
-  if (!isChillVibe) return 0
-
-  const referenceHour = getHourFractionInTimeZone(
-    slot.targetArrivalAt,
-    resolvePlannerTimeZone(context)
-  )
-
-  const isDaytime = referenceHour < 17
-  const isEveningOrNight = referenceHour >= 17
-  const archetype = normalizeScoringArchetype(context.eventArchetype)
-
-  let score = 0
-
-  if (isDaytime) {
-    if (
-      hasAnyType(types, [
-        "coffee",
-        "cafe",
-        "café",
-        "tea",
-        "bakery",
-        "breakfast",
-        "brunch",
-        "bookstore",
-        "library",
-        "park",
-        "garden",
-        "gallery",
-      ])
-    ) {
-      score += 22
-    }
-
-    if (
-      hasAnyType(types, [
-        "club",
-        "speakeasy",
-        "late night",
-        "dive bar",
-        "sports bar",
-      ])
-    ) {
-      score -= 26
-    }
-  }
-
-  if (isEveningOrNight) {
-    if (
-      hasAnyType(types, [
-        "wine bar",
-        "cocktail",
-        "lounge",
-        "bar",
-        "dessert",
-        "restaurant",
-        "dinner",
-        "tea",
-        "cafe",
-        "café",
-      ])
-    ) {
-      score += 30
-    }
-
-    if (
-      hasAnyType(types, [
-        "park",
-        "garden",
-        "yoga",
-        "pilates",
-        "fitness",
-        "library",
-        "bookstore",
-        "gallery",
-        "market",
-        "museum",
-        "activity",
-      ])
-    ) {
-      score -= 54
-    }
-
-    if (
-      archetype === "nightlife" &&
-      slot.phase === "before" &&
-      hasAnyType(types, [
-        "wine bar",
-        "cocktail",
-        "lounge",
-        "bar",
-        "dessert",
-        "restaurant",
-        "dinner",
-      ])
-    ) {
-      score += 18
-    }
-  }
-
-  return score
-}
-
+/**
+ * Legacy helper retained for compatibility.
+ *
+ * This must not be added after computeSequentialCandidateScore because geometry
+ * is already represented by geometryFit.ts.
+ */
 export function computeBeforeFirstStopDistanceBonus(
   anchorDistance: number | null,
   mobility: Mobility
@@ -333,30 +146,56 @@ export function computeBeforeFirstStopDistanceBonus(
 
   if (anchorDistance <= 2800) return 12
   if (anchorDistance <= 4000) return 4
+
   return -16
 }
 
+/**
+ * Legacy helper retained for compatibility.
+ *
+ * Sequence direction and movement coherence are now composed by
+ * sequenceFit.ts and geometryFit.ts.
+ */
 export function computeBeforeProgressionBonus(
   anchorDistance: number | null,
   previousAnchorDistance: number | null,
   previousToCandidateDistance: number | null
 ): number {
-  let score = 0
-  if (anchorDistance == null || previousAnchorDistance == null) return score
+  if (
+    anchorDistance == null ||
+    previousAnchorDistance == null
+  ) {
+    return 0
+  }
 
-  if (anchorDistance < previousAnchorDistance - 200) score += 24
-  else if (anchorDistance <= previousAnchorDistance + 100) score += 6
-  else score -= 26
+  let score = 0
+
+  if (anchorDistance < previousAnchorDistance - 200) {
+    score += 24
+  } else if (anchorDistance <= previousAnchorDistance + 100) {
+    score += 6
+  } else {
+    score -= 26
+  }
 
   if (previousToCandidateDistance != null) {
-    if (previousToCandidateDistance < 1000) score += 8
-    else if (previousToCandidateDistance < 2000) score += 3
-    else if (previousToCandidateDistance > 3200) score -= 14
+    if (previousToCandidateDistance < 1000) {
+      score += 8
+    } else if (previousToCandidateDistance < 2000) {
+      score += 3
+    } else if (previousToCandidateDistance > 3200) {
+      score -= 14
+    }
   }
 
   return score
 }
 
+/**
+ * Legacy consumption progression helper retained for compatibility.
+ *
+ * The canonical candidate path evaluates this inside sequenceFit.ts.
+ */
 export function computeBeforeConsumptionProgressionScore<
   TCandidate extends Pick<VenueRecord, "type">
 >(
@@ -368,20 +207,77 @@ export function computeBeforeConsumptionProgressionScore<
   const previousTypes = normalizeVenueTypes(previous.type)
   const candidateTypes = normalizeVenueTypes(candidate.type)
 
-  const previousIsCoffeeLike = isCoffeeLikeVenue(previousTypes)
-  const previousIsMealLike = isMealLikeVenue(previousTypes)
-  const candidateIsCoffeeLike = isCoffeeLikeVenue(candidateTypes)
-  const candidateIsMealLike = isMealLikeVenue(candidateTypes)
+  const previousIsCoffeeLike = hasAnyNormalizedType(
+    previousTypes,
+    [
+      "coffee",
+      "cafe",
+      "café",
+      "tea",
+      "bakery",
+      "breakfast",
+    ]
+  )
+
+  const previousIsMealLike = hasAnyNormalizedType(
+    previousTypes,
+    [
+      "restaurant",
+      "food",
+      "lunch",
+      "brunch",
+      "dinner",
+      "breakfast",
+    ]
+  )
+
+  const candidateIsCoffeeLike = hasAnyNormalizedType(
+    candidateTypes,
+    [
+      "coffee",
+      "cafe",
+      "café",
+      "tea",
+      "bakery",
+      "breakfast",
+    ]
+  )
+
+  const candidateIsMealLike = hasAnyNormalizedType(
+    candidateTypes,
+    [
+      "restaurant",
+      "food",
+      "lunch",
+      "brunch",
+      "dinner",
+      "breakfast",
+    ]
+  )
 
   let score = 0
 
-  if (previousIsCoffeeLike && candidateIsMealLike) score += 10
-  if (previousIsCoffeeLike && candidateIsCoffeeLike) score -= 18
-  if (previousIsMealLike && candidateIsCoffeeLike) score -= 22
+  if (previousIsCoffeeLike && candidateIsMealLike) {
+    score += 10
+  }
+
+  if (previousIsCoffeeLike && candidateIsCoffeeLike) {
+    score -= 18
+  }
+
+  if (previousIsMealLike && candidateIsCoffeeLike) {
+    score -= 22
+  }
 
   return score
 }
 
+/**
+ * Legacy helper retained for compatibility.
+ *
+ * Immediate post-event geometry is already evaluated by geometryFit.ts in the
+ * canonical scoring path.
+ */
 export function computeAfterFirstStopDistanceBonus(
   anchorDistance: number | null,
   mobility: Mobility
@@ -405,9 +301,13 @@ export function computeAfterFirstStopDistanceBonus(
   if (anchorDistance < 1800) return 18
   if (anchorDistance < 3000) return 8
   if (anchorDistance < 4500) return 2
+
   return -14
 }
 
+/**
+ * Legacy helper retained for compatibility.
+ */
 export function computeAfterExpansionBonus(
   previousToCandidateDistance: number | null,
   anchorDistance: number | null,
@@ -417,19 +317,40 @@ export function computeAfterExpansionBonus(
   let score = 0
 
   if (previousToCandidateDistance != null) {
-    const strictMax = getMaxAfterInterstopMeters(mobility, false, context)
+    const strictMax = getMaxAfterInterstopMeters(
+      mobility,
+      false,
+      context
+    )
 
-    if (previousToCandidateDistance <= strictMax * 0.5) score += 12
-    else if (previousToCandidateDistance <= strictMax * 0.8) score += 6
-    else if (previousToCandidateDistance > strictMax) score -= 30
+    if (previousToCandidateDistance <= strictMax * 0.5) {
+      score += 12
+    } else if (
+      previousToCandidateDistance <= strictMax * 0.8
+    ) {
+      score += 6
+    } else if (previousToCandidateDistance > strictMax) {
+      score -= 30
+    }
   }
 
-  if (anchorDistance != null && anchorDistance > 6000) score -= 10
+  if (
+    anchorDistance != null &&
+    anchorDistance > 6000
+  ) {
+    score -= 10
+  }
+
   return score
 }
 
+/**
+ * Legacy helper retained for compatibility.
+ */
 export function computeAfterDirectionalConsistencyBonus<
-  TCandidate extends VenueRecord & { distanceMeters?: number | null }
+  TCandidate extends VenueRecord & {
+    distanceMeters?: number | null
+  }
 >(
   selectedSoFar: TCandidate[],
   candidate: TCandidate,
@@ -437,11 +358,14 @@ export function computeAfterDirectionalConsistencyBonus<
   slot: PlanningSlot,
   previousToCandidateDistance: number | null
 ): number {
-  const maxLocalFallbackMeters = getMaxAfterLocalFallbackMeters(
-    context.mobility,
-    context
-  )
-  const previous = selectedSoFar[selectedSoFar.length - 1] ?? null
+  const maxLocalFallbackMeters =
+    getMaxAfterLocalFallbackMeters(
+      context.mobility,
+      context
+    )
+
+  const previous =
+    selectedSoFar[selectedSoFar.length - 1] ?? null
 
   if (
     previousToCandidateDistance != null &&
@@ -450,7 +374,8 @@ export function computeAfterDirectionalConsistencyBonus<
     if (
       previous?.distanceMeters != null &&
       candidate.distanceMeters != null &&
-      candidate.distanceMeters + 250 < previous.distanceMeters
+      candidate.distanceMeters + 250 <
+        previous.distanceMeters
     ) {
       return -8
     }
@@ -458,459 +383,114 @@ export function computeAfterDirectionalConsistencyBonus<
     return 8
   }
 
-  if (isAfterSequenceDirectionallyConsistent(selectedSoFar, candidate, context, slot)) {
+  if (
+    isAfterSequenceDirectionallyConsistent(
+      selectedSoFar,
+      candidate,
+      context,
+      slot
+    )
+  ) {
     return 12
   }
 
   return -24
 }
 
+// -----------------------------------------------------------------------------
+// Legacy aggregate-scoring compatibility exports
+// -----------------------------------------------------------------------------
+
+/**
+ * Canonical sequence coherence now lives in sequenceFit.ts.
+ *
+ * Returning zero prevents old callers from double-counting sequence fit after
+ * computeSequentialCandidateScore.
+ */
 export function computeVenueSequenceCoherenceScore(
-  previous: Pick<VenueRecord, "type" | "tags" | "vibe"> | null,
-  candidate: Pick<VenueRecord, "type" | "tags" | "vibe">,
-  slot: PlanningSlot,
-  context: PlanningContext
+  _previous: Pick<
+    VenueRecord,
+    "type" | "tags" | "vibe"
+  > | null,
+  _candidate: Pick<
+    VenueRecord,
+    "type" | "tags" | "vibe"
+  >,
+  _slot: PlanningSlot,
+  _context: PlanningContext
 ): number {
-  if (!previous) return 0
-
-  const previousTypes = normalizeVenueTypes(previous.type)
-  const candidateTypes = normalizeVenueTypes(candidate.type)
-
-  const previousVibes = normalizeStringArray(previous.vibe)
-  const candidateVibes = normalizeStringArray(candidate.vibe)
-
-  const previousTags = normalizeStringArray(previous.tags)
-  const candidateTags = normalizeStringArray(candidate.tags)
-
-  const sharedVibes = countSharedValues(previousVibes, candidateVibes)
-  const sharedTags = countSharedValues(previousTags, candidateTags)
-  const sharedTypes = countSharedValues(previousTypes, candidateTypes)
-
-  let score = 0
-
-  score += Math.min(sharedVibes, 3) * 5
-  score += Math.min(sharedTags, 3) * 3
-  score += Math.min(sharedTypes, 2) * 2
-
-  score += computeCompatibleTypeFamilyBonus(previousTypes, candidateTypes, slot, context)
-  score += computeSocialSportsSequenceBonus(previousTypes, candidateTypes, slot, context)
-  score -= computeSequenceClashPenalty(previousTypes, candidateTypes, previousVibes, candidateVibes)
-
-  if (context.vibeTags.length > 0) {
-    const expandedVibeTags = expandVibeTags(context.vibeTags)
-    const candidateAffinity = countSharedValues(
-      uniqueStrings([...candidateTypes, ...candidateTags, ...candidateVibes]),
-      expandedVibeTags
-    )
-    const previousAffinity = countSharedValues(
-      uniqueStrings([...previousTypes, ...previousTags, ...previousVibes]),
-      expandedVibeTags
-    )
-
-    if (candidateAffinity > 0 && previousAffinity > 0) {
-      score += Math.min(candidateAffinity + previousAffinity, 4)
-    }
-  }
-
-  return Math.max(-18, Math.min(22, score))
+  return 0
 }
 
-function countSharedValues(a: string[], b: string[]): number {
-  if (a.length === 0 || b.length === 0) return 0
-
-  const bSet = new Set(b)
-  return uniqueStrings(a).filter((value) => bSet.has(value)).length
-}
-
-function computeCompatibleTypeFamilyBonus(
-  previousTypes: string[],
-  candidateTypes: string[],
-  slot: PlanningSlot,
-  context: PlanningContext
-): number {
-  let score = 0
-  const archetype = normalizeScoringArchetype(context.eventArchetype)
-
-  const bothNightlife =
-    hasAnyType(previousTypes, [
-      "bar",
-      "cocktail",
-      "lounge",
-      "speakeasy",
-      "rooftop",
-      "club",
-      "wine bar",
-      "brewery",
-    ]) &&
-    hasAnyType(candidateTypes, [
-      "bar",
-      "cocktail",
-      "lounge",
-      "speakeasy",
-      "rooftop",
-      "club",
-      "wine bar",
-      "brewery",
-    ])
-
-  const bothConversationFriendly =
-    hasAnyType(previousTypes, [
-      "coffee",
-      "cafe",
-      "café",
-      "wine bar",
-      "cocktail",
-      "lounge",
-      "hotel lobby",
-      "social club",
-      "bookstore",
-    ]) &&
-    hasAnyType(candidateTypes, [
-      "coffee",
-      "cafe",
-      "café",
-      "wine bar",
-      "cocktail",
-      "lounge",
-      "hotel lobby",
-      "social club",
-      "bookstore",
-    ])
-
-  const bothCulture =
-    hasAnyType(previousTypes, ["gallery", "museum", "bookstore", "library", "lifestyle"]) &&
-    hasAnyType(candidateTypes, ["gallery", "museum", "bookstore", "library", "lifestyle"])
-
-  const mealToDrink =
-    hasAnyType(previousTypes, ["restaurant", "dinner", "lunch", "brunch"]) &&
-    hasAnyType(candidateTypes, ["bar", "cocktail", "wine bar", "lounge", "dessert"])
-
-  const drinkToMeal =
-    hasAnyType(previousTypes, ["bar", "cocktail", "wine bar", "lounge", "rooftop"]) &&
-    hasAnyType(candidateTypes, ["restaurant", "dinner", "late night", "dessert"])
-
-  if (slot.phase === "after" && bothNightlife) score += 8
-  if (slot.phase === "before" && (mealToDrink || drinkToMeal)) score += 7
-  if (archetype === "networking" && bothConversationFriendly) score += 8
-  if (archetype === "arts_culture" && bothCulture) score += 6
-  if (archetype === "nightlife" && bothNightlife) score += 6
-  if (archetype === "food_drink" && (mealToDrink || drinkToMeal)) score += 6
-
-  return score
-}
-
-function computeSocialSportsSequenceBonus(
-  previousTypes: string[],
-  candidateTypes: string[],
-  slot: PlanningSlot,
-  context: PlanningContext
-): number {
-  if (normalizeScoringArchetype(context.eventArchetype) !== "social_sports") {
-    return 0
-  }
-
-  const referenceHour = getHourFractionInTimeZone(
-    slot.targetArrivalAt,
-    resolvePlannerTimeZone(context)
-  )
-
-  const daytime = referenceHour < 17
-  let score = 0
-
-  const breakfastToMatchMeal =
-    hasAnyType(previousTypes, ["coffee", "cafe", "café", "bakery", "breakfast", "tea"]) &&
-    hasAnyType(candidateTypes, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub"])
-
-  const matchMealToSocial =
-    hasAnyType(previousTypes, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub"]) &&
-    hasAnyType(candidateTypes, ["sports bar", "brewery", "bar", "pub", "patio", "beer garden", "restaurant"])
-
-  const bothGroupCasual =
-    hasAnyType(previousTypes, SOCIAL_SPORTS_GROUP_TYPES) &&
-    hasAnyType(candidateTypes, SOCIAL_SPORTS_GROUP_TYPES)
-
-  const bothDaytimeCompatible =
-    hasAnyType(previousTypes, SOCIAL_SPORTS_DAYTIME_TYPES) &&
-    hasAnyType(candidateTypes, SOCIAL_SPORTS_DAYTIME_TYPES)
-
-  if (daytime && breakfastToMatchMeal) score += 10
-  if (daytime && matchMealToSocial) score += 8
-  if (daytime && bothDaytimeCompatible) score += 6
-  if (bothGroupCasual) score += 7
-
-  if (
-    daytime &&
-    hasAnyType(previousTypes, ["coffee", "breakfast", "bakery", "cafe", "café"]) &&
-    hasAnyType(candidateTypes, ["club", "speakeasy", "late night"])
-  ) {
-    score -= 14
-  }
-
-  return score
-}
-
-function computeSequenceClashPenalty(
-  previousTypes: string[],
-  candidateTypes: string[],
-  previousVibes: string[],
-  candidateVibes: string[]
-): number {
-  let penalty = 0
-
-  const previousQuiet =
-    hasAnyType(previousTypes, ["library", "bookstore", "museum", "gallery", "spa"]) ||
-    hasAnyType(previousVibes, ["quiet", "calm", "intimate", "relaxed"])
-
-  const candidateHighEnergy =
-    hasAnyType(candidateTypes, ["club", "sports bar", "dive bar"]) ||
-    hasAnyType(candidateVibes, ["high-energy", "loud", "party", "rowdy"])
-
-  const previousHighEnergy =
-    hasAnyType(previousTypes, ["club", "sports bar", "dive bar"]) ||
-    hasAnyType(previousVibes, ["high-energy", "loud", "party", "rowdy"])
-
-  const candidateQuiet =
-    hasAnyType(candidateTypes, ["library", "bookstore", "museum", "gallery", "spa"]) ||
-    hasAnyType(candidateVibes, ["quiet", "calm", "intimate", "relaxed"])
-
-  if (previousQuiet && candidateHighEnergy) penalty += 8
-  if (previousHighEnergy && candidateQuiet) penalty += 8
-
-  if (
-    hasAnyType(previousTypes, ["wellness", "yoga", "pilates", "spa"]) &&
-    hasAnyType(candidateTypes, ["club", "dive bar", "sports bar"])
-  ) {
-    penalty += 12
-  }
-
-  if (
-    hasAnyType(previousTypes, ["coffee", "breakfast", "bakery"]) &&
-    hasAnyType(candidateTypes, ["club", "speakeasy"])
-  ) {
-    penalty += 8
-  }
-
-  return penalty
-}
-
+/**
+ * Canonical time and phase compatibility now lives in timeFit.ts.
+ */
 export function computeModeSpecificVenueBias(
-  candidate: Pick<VenueRecord, "type">,
-  slot: PlanningSlot,
-  context: PlanningContext
+  _candidate: Pick<VenueRecord, "type">,
+  _slot: PlanningSlot,
+  _context: PlanningContext
 ): number {
-  const types = normalizeVenueTypes(candidate.type)
-  const referenceHour = getHourFractionInTimeZone(
-    slot.targetArrivalAt,
-    resolvePlannerTimeZone(context)
-  )
-
-  if (isLateNightAfterFallbackContext(context, slot)) {
-    if (hasAnyType(types, ["bar", "lounge", "club"])) return 26
-    if (hasAnyType(types, ["cocktail", "speakeasy", "rooftop"])) return 18
-    if (
-      hasAnyType(types, [
-        "coffee",
-        "tea",
-        "breakfast",
-        "lunch",
-        "gallery",
-        "museum",
-        "library",
-      ])
-    ) {
-      return -30
-    }
-  }
-
-  if (normalizeScoringArchetype(context.eventArchetype) === "social_sports") {
-    return computeSocialSportsModeSpecificVenueBias(types, slot, referenceHour)
-  }
-
-  if (slot.phase === "before") {
-    if (referenceHour < 11) {
-      if (
-        hasAnyType(types, [
-          "coffee",
-          "cafe",
-          "café",
-          "tea",
-          "bakery",
-          "breakfast",
-          "brunch",
-        ])
-      ) {
-        return 16
-      }
-      if (hasAnyType(types, ["dinner"])) return -26
-    } else if (referenceHour < 15) {
-      if (
-        hasAnyType(types, [
-          "lunch",
-          "brunch",
-          "breakfast",
-          "cafe",
-          "café",
-          "bookstore",
-          "gallery",
-        ])
-      ) {
-        return 14
-      }
-      if (hasAnyType(types, ["dinner"])) return -18
-    } else if (referenceHour < 18) {
-      if (hasAnyType(types, ["lunch", "gallery", "museum", "park", "garden"])) {
-        return 10
-      }
-    } else {
-      if (hasAnyType(types, ["dinner", "cocktail", "wine bar", "rooftop", "bar"])) {
-        return 12
-      }
-      if (hasAnyType(types, ["coffee", "tea", "breakfast"])) return -12
-    }
-  }
-
-  if (slot.phase === "after") {
-    if (referenceHour >= 21) {
-      if (
-        hasAnyType(types, [
-          "bar",
-          "cocktail",
-          "lounge",
-          "club",
-          "speakeasy",
-          "brewery",
-          "dessert",
-        ])
-      ) {
-        return 16
-      }
-      if (hasAnyType(types, ["breakfast", "lunch", "coffee", "tea", "library"])) {
-        return -24
-      }
-    } else if (referenceHour >= 17) {
-      if (
-        hasAnyType(types, [
-          "dinner",
-          "bar",
-          "cocktail",
-          "wine bar",
-          "rooftop",
-          "brewery",
-          "dessert",
-        ])
-      ) {
-        return 12
-      }
-      if (hasAnyType(types, ["breakfast", "coffee", "tea"])) return -14
-    } else {
-      if (hasAnyType(types, ["gallery", "museum", "bookstore", "park", "garden", "market"])) {
-        return 8
-      }
-    }
-  }
-
   return 0
 }
 
-function computeSocialSportsModeSpecificVenueBias(
-  types: string[],
-  slot: PlanningSlot,
-  referenceHour: number
+/**
+ * Canonical phase-aware semantic preference now lives in semanticFit.ts.
+ */
+export function computePhaseAwarePreferenceBias(
+  _candidate: Pick<
+    VenueRecord,
+    "type" | "tags" | "vibe"
+  >,
+  _slot: PlanningSlot,
+  _context: PlanningContext
 ): number {
-  const morning = referenceHour < 11
-  const midday = referenceHour >= 11 && referenceHour < 15
-  const afternoon = referenceHour >= 15 && referenceHour < 18
-  const evening = referenceHour >= 18
-
-  if (slot.phase === "before") {
-    if (morning) {
-      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch", "tea", "juice", "matcha"])) return 24
-      if (hasAnyType(types, ["restaurant", "lunch", "sports bar", "brewery", "pub"])) return 8
-      if (hasAnyType(types, SOCIAL_SPORTS_BAD_MORNING_TYPES)) return -24
-    }
-
-    if (midday) {
-      if (hasAnyType(types, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub", "patio"])) return 22
-      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery"])) return 8
-      if (hasAnyType(types, ["club", "speakeasy", "late night"])) return -18
-    }
-
-    if (afternoon) {
-      if (hasAnyType(types, ["lunch", "restaurant", "sports bar", "brewery", "bar", "pub", "patio"])) return 18
-      if (hasAnyType(types, ["breakfast", "spa", "library"])) return -14
-    }
-
-    if (evening) {
-      if (hasAnyType(types, ["sports bar", "brewery", "bar", "restaurant", "dinner", "pub"])) return 18
-      if (hasAnyType(types, ["spa", "library", "showroom"])) return -14
-    }
-  }
-
-  if (slot.phase === "after") {
-    if (morning || midday) {
-      if (hasAnyType(types, ["brunch", "lunch", "restaurant", "cafe", "café", "coffee", "bakery", "patio"])) return 22
-      if (hasAnyType(types, ["sports bar", "brewery", "pub", "bar", "beer garden"])) return 14
-      if (hasAnyType(types, ["club", "speakeasy", "late night", "dinner"])) return -18
-    }
-
-    if (afternoon) {
-      if (hasAnyType(types, ["sports bar", "brewery", "bar", "pub", "restaurant", "lunch", "patio"])) return 18
-      if (hasAnyType(types, ["coffee", "cafe", "café", "dessert"])) return 8
-      if (hasAnyType(types, ["spa", "library", "showroom"])) return -12
-    }
-
-    if (evening) {
-      if (hasAnyType(types, ["sports bar", "bar", "brewery", "pub", "restaurant", "dinner", "late night"])) return 18
-      if (hasAnyType(types, ["breakfast", "library", "spa"])) return -18
-    }
-  }
-
   return 0
 }
 
-function computePhaseAwarePreferenceBias(
-  candidate: Pick<VenueRecord, "type" | "tags" | "vibe">,
-  slot: PlanningSlot,
-  context: PlanningContext
+/**
+ * Canonical archetype scoring now lives in archetypeFit.ts.
+ *
+ * This compatibility export intentionally returns zero so legacy ranking code
+ * cannot append archetype scoring twice.
+ */
+export function scoreArchetypeFit(
+  _venue: Pick<
+    VenueRecord,
+    "type" | "vibe" | "tags"
+  >,
+  _context: PlanningContext,
+  _slot?: PlanningSlot
 ): number {
-  if (context.vibeTags.length === 0) return 0
-
-  const types = normalizeVenueTypes(candidate.type)
-  let score = 0
-
-  if (
-    slot.phase === "before" &&
-    hasAnyType(types, ["coffee", "cafe", "café", "bookstore", "gallery", "lunch"])
-  ) {
-    score += 4
-  }
-
-  if (
-    slot.phase === "after" &&
-    hasAnyType(types, ["cocktail", "wine bar", "bar", "lounge", "rooftop"])
-  ) {
-    score += 6
-  }
-
-  if (normalizeScoringArchetype(context.eventArchetype) === "social_sports") {
-    if (
-      slot.phase === "before" &&
-      hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch", "lunch", "restaurant"])
-    ) {
-      score += 6
-    }
-
-    if (
-      slot.phase === "after" &&
-      hasAnyType(types, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "bar", "pub", "patio"])
-    ) {
-      score += 6
-    }
-  }
-
-  return score
+  return 0
 }
 
+/**
+ * Canonical vibe scoring now lives in vibeFit.ts.
+ *
+ * This compatibility export intentionally returns zero so legacy ranking code
+ * cannot append vibe scoring twice.
+ */
+export function scoreVibeFit(
+  _venue: Pick<
+    VenueRecord,
+    "tags" | "vibe" | "type"
+  >,
+  _vibeTags: string[],
+  _context?: PlanningContext
+): number {
+  return 0
+}
+
+// -----------------------------------------------------------------------------
+// Base-score compatibility helpers
+// -----------------------------------------------------------------------------
+
+/**
+ * Lightweight base distance score retained for candidate preparation.
+ *
+ * candidateScore.ts caps the contribution of an upstream source score, so this
+ * cannot overpower semantic, vibe, archetype, or temporal fit.
+ */
 export function scoreDistanceFromAnchor(
   distanceMeters: number | null,
   mobility: Mobility
@@ -931,9 +511,14 @@ export function scoreDistanceFromAnchor(
 
   if (distanceMeters < 5000) return 10
   if (distanceMeters < 8000) return 2
+
   return -10
 }
 
+/**
+ * Budget remains a constraint-level base signal rather than a contextual
+ * semantic signal.
+ */
 export function scoreBudgetFit(
   value: string | number | null | undefined,
   budget: Budget | null
@@ -949,7 +534,10 @@ export function scoreBudgetFit(
   if (!venuePrice || !selectedBudget) return 0
 
   if (budget === "$$$$") {
-    if (venuePrice >= 2 && venuePrice <= 4) {
+    if (
+      venuePrice >= 2 &&
+      venuePrice <= 4
+    ) {
       if (venuePrice === 4) return 16
       if (venuePrice === 3) return 12
       return 8
@@ -959,11 +547,12 @@ export function scoreBudgetFit(
   }
 
   if (venuePrice <= selectedBudget) {
-    const diff = selectedBudget - venuePrice
+    const difference =
+      selectedBudget - venuePrice
 
-    if (diff === 0) return 16
-    if (diff === 1) return 10
-    if (diff === 2) return 4
+    if (difference === 0) return 16
+    if (difference === 1) return 10
+    if (difference === 2) return 4
 
     return 0
   }
@@ -971,86 +560,93 @@ export function scoreBudgetFit(
   return -40
 }
 
-export function scoreVibeFit(
-  venue: Pick<VenueRecord, "tags" | "vibe" | "type">,
-  vibeTags: string[],
-  context?: PlanningContext
-): number {
-  if (vibeTags.length === 0 && !context?.vibePlanning) return 0
-
-  const expandedVibeTags = expandVibeTags(vibeTags)
-  const preferredTypes =
-    context?.vibePlanning?.preferredTypes?.length
-      ? context.vibePlanning.preferredTypes
-      : getPreferredTypesForVibe(vibeTags)
-  const discouragedTypes =
-    context?.vibePlanning?.discouragedTypes?.length
-      ? context.vibePlanning.discouragedTypes
-      : getDiscouragedTypesForVibe(vibeTags)
-  const requiredAnyTypes = context?.vibePlanning?.requiredAnyTypes ?? []
-
-  const normalizedVenueTags = uniqueStrings([
-    ...normalizeStringArray(venue.tags),
-    ...normalizeStringArray(venue.vibe),
-    ...normalizeStringArray(venue.type),
-  ])
-  const venueTypes = normalizeVenueTypes(venue.type)
-
-  let score = 0
-
-  score += expandedVibeTags.filter((tag) => normalizedVenueTags.includes(tag)).length * 14
-
-  if (preferredTypes.length > 0) {
-    score += preferredTypes.filter((type) => venueTypes.includes(type)).length * 14
-  }
-
-  if (requiredAnyTypes.length > 0) {
-    score += hasAnyType(venueTypes, requiredAnyTypes) ? 20 : -24
-  }
-
-  if (discouragedTypes.length > 0) {
-    score -= discouragedTypes.filter((type) => venueTypes.includes(type)).length * 18
-  }
-
-  return score
-}
-
+/**
+ * Group-size suitability remains a lightweight base signal.
+ */
 export function scoreGroupFit(
   venue: Pick<VenueRecord, "type">,
   groupSize: number | null
 ): number {
   if (!groupSize) return 0
 
-  const preferredTypes = getPreferredTypesForGroupSize(groupSize)
-  const discouragedTypes = getDiscouragedTypesForGroupSize(groupSize)
-  const venueTypes = normalizeVenueTypes(venue.type)
+  const preferredTypes =
+    getPreferredTypesForGroupSize(groupSize)
+
+  const discouragedTypes =
+    getDiscouragedTypesForGroupSize(groupSize)
+
+  const venueTypes =
+    normalizeVenueTypes(venue.type)
 
   let score = 0
 
   if (preferredTypes.length > 0) {
-    score += preferredTypes.filter((type) => venueTypes.includes(type)).length * 10
+    score += preferredTypes.filter((type) =>
+      venueTypes.includes(type)
+    ).length * 10
   }
 
   if (discouragedTypes.length > 0) {
-    score -= discouragedTypes.filter((type) => venueTypes.includes(type)).length * 12
+    score -= discouragedTypes.filter((type) =>
+      venueTypes.includes(type)
+    ).length * 12
   }
 
   if (groupSize >= 6) {
-    if (hasAnyType(venueTypes, ["speakeasy", "cocktail", "coffee", "bakery"])) {
+    if (
+      hasAnyNormalizedType(
+        venueTypes,
+        [
+          "speakeasy",
+          "cocktail",
+          "coffee",
+          "bakery",
+        ]
+      )
+    ) {
       score -= 8
     }
 
-    if (hasAnyType(venueTypes, ["brewery", "restaurant", "bar", "sports bar", "rooftop"])) {
+    if (
+      hasAnyNormalizedType(
+        venueTypes,
+        [
+          "brewery",
+          "restaurant",
+          "bar",
+          "sports bar",
+          "rooftop",
+        ]
+      )
+    ) {
       score += 8
     }
   }
 
   if (groupSize <= 2) {
-    if (hasAnyType(venueTypes, ["speakeasy", "cocktail", "wine bar", "gallery"])) {
+    if (
+      hasAnyNormalizedType(
+        venueTypes,
+        [
+          "speakeasy",
+          "cocktail",
+          "wine bar",
+          "gallery",
+        ]
+      )
+    ) {
       score += 6
     }
 
-    if (hasAnyType(venueTypes, ["sports bar", "brewery"])) {
+    if (
+      hasAnyNormalizedType(
+        venueTypes,
+        [
+          "sports bar",
+          "brewery",
+        ]
+      )
+    ) {
       score -= 4
     }
   }
@@ -1058,247 +654,104 @@ export function scoreGroupFit(
   return score
 }
 
-export function scoreArchetypeFit(
-  venue: Pick<VenueRecord, "type" | "vibe" | "tags">,
+// -----------------------------------------------------------------------------
+// Diagnostics and adapters
+// -----------------------------------------------------------------------------
+
+/**
+ * Returns the complete canonical score breakdown without changing the
+ * candidate.
+ */
+export function getSequentialCandidateDiagnostics<
+  TCandidate extends CandidateVenueLike
+>(
+  candidate: TCandidate,
+  selectedSoFar: TCandidate[],
+  slot: PlanningSlot,
   context: PlanningContext,
-  slot?: PlanningSlot
-): number {
-  const types = normalizeVenueTypes(venue.type)
-  const tags = uniqueStrings([
-    ...normalizeStringArray(venue.type),
-    ...normalizeStringArray(venue.vibe),
-    ...normalizeStringArray(venue.tags),
-  ])
-
-  const archetype = normalizeScoringArchetype(context.eventArchetype)
-  const phase = slot?.phase ?? (context.mode === "before" ? "before" : "after")
-  const referenceHour = slot
-    ? getHourFractionInTimeZone(slot.targetArrivalAt, resolvePlannerTimeZone(context))
-    : null
-
-  let score = 0
-
-  if (archetype === "music") {
-    if (phase === "before") {
-      if (hasAnyType(types, ["restaurant", "dinner", "cocktail", "bar", "wine bar", "lounge"])) score += 12
-      if (hasAnyType(types, ["coffee", "breakfast", "library", "spa"])) score -= 10
-    } else {
-      if (hasAnyType(types, ["bar", "cocktail", "lounge", "rooftop", "late night", "club", "speakeasy"])) score += 14
-      if (hasAnyType(types, ["coffee", "breakfast", "museum", "library", "spa"])) score -= 16
-    }
-
-    if (hasAnyType(types, ["music"])) score += 4
-    if (tags.some((t) => ["live", "music", "show"].includes(t))) score += 4
-  }
-
-  if (archetype === "arts_culture") {
-    if (phase === "before") {
-      if (hasAnyType(types, ["gallery", "museum", "bookstore", "wine bar", "cocktail", "cafe", "café"])) score += 12
-    } else {
-      if (hasAnyType(types, ["restaurant", "dinner", "wine bar", "cocktail", "lounge", "dessert"])) score += 12
-    }
-
-    if (hasAnyType(types, ["sports bar", "club", "fitness"])) score -= 12
-  }
-
-  if (archetype === "social_sports") {
-    const morningOrMidday = referenceHour == null || referenceHour < 15
-    const daytime = referenceHour == null || referenceHour < 17
-
-    if (phase === "before") {
-      if (
-        morningOrMidday &&
-        hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch", "tea", "juice", "matcha"])
-      ) {
-        score += 18
-      }
-
-      if (
-        daytime &&
-        hasAnyType(types, ["brunch", "lunch", "restaurant", "sports bar", "brewery", "pub", "patio"])
-      ) {
-        score += 14
-      }
-
-      if (
-        !daytime &&
-        hasAnyType(types, ["sports bar", "bar", "brewery", "restaurant", "dinner", "pub"])
-      ) {
-        score += 14
-      }
-    } else {
-      if (
-        daytime &&
-        hasAnyType(types, ["brunch", "lunch", "restaurant", "cafe", "café", "coffee", "bakery", "patio"])
-      ) {
-        score += 16
-      }
-
-      if (
-        hasAnyType(types, ["sports bar", "bar", "brewery", "pub", "restaurant", "casual food", "beer garden", "patio"])
-      ) {
-        score += 14
-      }
-    }
-
-    if (
-      tags.some((tag) =>
-        [
-          "sports",
-          "soccer",
-          "match",
-          "matchday",
-          "watch party",
-          "watch-party",
-          "game day",
-          "gameday",
-          "pub",
-          "patio",
-          "group-friendly",
-          "casual",
-          "lively",
-        ].includes(tag)
-      )
-    ) {
-      score += 8
-    }
-
-    if (hasAnyType(types, SOCIAL_SPORTS_BAD_MORNING_TYPES)) {
-      score -= daytime ? 18 : 8
-    }
-
-    if (hasAnyType(types, ["spa", "library", "showroom", "fine dining"])) {
-      score -= 14
-    }
-  }
-
-  if (archetype === "market") {
-    if (phase === "before") {
-      if (hasAnyType(types, ["coffee", "cafe", "café", "bakery", "breakfast", "brunch"])) score += 14
-    } else {
-      if (hasAnyType(types, ["brunch", "lunch", "cafe", "café", "bookstore", "park", "garden", "gallery", "dessert"])) score += 12
-      if (hasAnyType(types, ["club", "speakeasy", "sports bar"])) score -= 14
-    }
-  }
-
-  if (archetype === "food_drink") {
-    if (phase === "before") {
-      if (hasAnyType(types, ["wine bar", "cocktail", "bar", "cafe", "café", "bakery", "restaurant"])) score += 10
-    } else {
-      if (hasAnyType(types, ["dessert", "wine bar", "cocktail", "lounge", "bar"])) score += 12
-    }
-
-    if (hasAnyType(types, ["fitness", "library", "showroom"])) score -= 10
-  }
-
-  if (archetype === "wellness") {
-    if (hasAnyType(types, ["coffee", "tea", "cafe", "café", "juice", "smoothie", "salad", "healthy", "park", "garden"])) score += 14
-    if (hasAnyType(types, ["club", "sports bar", "dive bar", "cocktail", "speakeasy"])) score -= 20
-  }
-
-  if (archetype === "nightlife") {
-    if (phase === "before") {
-      if (hasAnyType(types, ["cocktail", "bar", "restaurant", "dinner", "rooftop", "lounge"])) score += 12
-    } else {
-      if (hasAnyType(types, ["club", "bar", "cocktail", "lounge", "speakeasy", "late night", "rooftop"])) score += 16
-    }
-
-    if (hasAnyType(types, ["breakfast", "library", "spa"])) score -= 12
-  }
-
-  if (archetype === "community") {
-    if (phase === "before") {
-      if (hasAnyType(types, ["coffee", "cafe", "café", "restaurant", "park", "bookstore"])) score += 8
-    } else {
-      if (hasAnyType(types, ["restaurant", "bar", "brewery", "coffee", "dessert"])) score += 8
-    }
-
-    if (hasAnyType(types, ["club", "speakeasy"])) score -= 8
-  }
-
-  if (archetype === "comedy") {
-    if (phase === "before") {
-      if (hasAnyType(types, ["restaurant", "dinner", "bar", "cocktail", "brewery"])) score += 12
-    } else {
-      if (hasAnyType(types, ["bar", "cocktail", "lounge", "dessert", "late night"])) score += 12
-    }
-
-    if (hasAnyType(types, ["breakfast", "library", "spa"])) score -= 10
-  }
-
-  if (archetype === "networking") {
-    if (
-      hasAnyType(types, [
-        "cocktail",
-        "wine bar",
-        "bar",
-        "lounge",
-        "rooftop",
-        "hotel bar",
-        "hotel lobby",
-        "social club",
-        "coworking",
-        "speakeasy",
-        "restaurant",
-        "dinner",
-        "lunch",
-        "cafe",
-        "café",
-        "coffee",
-      ])
-    ) {
-      score += 12
-    }
-
-    if (
-      hasAnyType(types, [
-        "activity",
-        "lifestyle",
-        "gallery",
-        "museum",
-        "bookstore",
-        "library",
-        "showroom",
-      ])
-    ) {
-      score -= 30
-    }
-
-    if (
-      tags.some((tag) =>
-        [
-          "networking",
-          "mixer",
-          "founders",
-          "startup",
-          "professional",
-          "community",
-          "meetup",
-          "industry",
-          "social",
-          "conversation",
-          "lounge",
-        ].includes(tag)
-      )
-    ) {
-      score += 6
-    }
-
-    if (hasAnyType(types, ["club", "sports bar", "fitness", "spa"])) {
-      score -= 8
-    }
-  }
-
-  if (tags.some((tag) => tag === archetype)) score += 4
-
-  return score
+  selectedPass: SelectionPass | null = null
+): CandidateScoreResult {
+  return computeSequentialCandidateScoreResult(
+    candidate,
+    selectedSoFar,
+    slot,
+    context,
+    selectedPass
+  ).result
 }
 
-function normalizeScoringArchetype(archetype: string | null | undefined): string {
-  if (archetype === "art") return "arts_culture"
-  if (archetype === "sports") return "social_sports"
-  if (archetype === "festival") return "market"
-  if (archetype === "general") return "other"
+/**
+ * Convenience helper for callers that need previous-to-candidate distance but
+ * do not want to depend directly on geometry.ts.
+ */
+export function getSequentialCandidateDistance(
+  previous: Pick<
+    VenueRecord,
+    "lat" | "lon"
+  > | null,
+  candidate: Pick<
+    VenueRecord,
+    "lat" | "lon"
+  >
+): number | null {
+  if (!previous) return null
 
-  return archetype ?? "other"
+  return getDistanceBetweenVenues(
+    previous,
+    candidate
+  )
+}
+
+function toCandidateScoreVenue<
+  TCandidate extends CandidateVenueLike
+>(
+  candidate: TCandidate
+): CandidateScoreVenue {
+  const candidateWithOptionalFields =
+    candidate as TCandidate & {
+      assignedRole?: StopRole | null
+      slotRole?: StopRole | null
+      phase?: "before" | "after" | null
+      slotPhase?: "before" | "after" | null
+      slotIndex?: number | null
+      energy_ramp?: string | number | null
+    }
+
+  return {
+    ...candidate,
+    inferredRoles: candidate.inferredRoles,
+    distanceMeters: candidate.distanceMeters,
+    score: candidate.score,
+    assignedRole:
+      candidateWithOptionalFields.assignedRole ?? null,
+    slotRole:
+      candidateWithOptionalFields.slotRole ?? null,
+    phase:
+      candidateWithOptionalFields.phase ?? null,
+    slotPhase:
+      candidateWithOptionalFields.slotPhase ?? null,
+    slotIndex:
+      candidateWithOptionalFields.slotIndex ?? null,
+    energy_ramp:
+      candidateWithOptionalFields.energy_ramp ?? null,
+  }
+}
+
+function hasAnyNormalizedType(
+  venueTypes: string[],
+  expectedTypes: string[]
+): boolean {
+  if (
+    venueTypes.length === 0 ||
+    expectedTypes.length === 0
+  ) {
+    return false
+  }
+
+  const expectedSet =
+    new Set(expectedTypes)
+
+  return venueTypes.some((type) =>
+    expectedSet.has(type)
+  )
 }

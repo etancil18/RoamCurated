@@ -1,9 +1,19 @@
+// app/events/[eventId]/outing/[plannedOutingId]/page.tsx
+
 import { notFound, redirect } from "next/navigation"
-import { createServerClient } from "@/lib/supabase/server"
+
 import OutingMap from "@/components/events/OutingMap"
 import StartFlowFromOutingButton from "@/components/flows/StartFlowFromOutingButton"
+import { createServerClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
+
+// -----------------------------------------------------------------------------
+// Page types
+// -----------------------------------------------------------------------------
+
+type OutingMode = "before" | "after" | "full"
+type OutingPhase = "before" | "after"
 
 type Props = {
   params: Promise<{
@@ -17,11 +27,14 @@ type PlannedOutingRow = {
   user_id: string | null
   event_id: string | null
   venue_id: string | null
+
   city: string | null
-  mode: "before" | "after" | "full"
+  mode: OutingMode
   status: string | null
+
   confidence_score: number | null
   plan_summary: string | null
+
   anchor_title: string | null
   anchor_starts_at: string | null
   anchor_ends_at: string | null
@@ -31,10 +44,12 @@ type VenueRow = {
   id: string
   name: string | null
   city: string | null
+
   lat: number | null
   lon: number | null
+
   address: string | null
-  type?: string | null
+  type?: string | string[] | null
 }
 
 type PlannedOutingStopRow = {
@@ -42,24 +57,32 @@ type PlannedOutingStopRow = {
   venue_id: string
   stop_order: number
   role: string
+
   title: string | null
   rationale: string | null
+
   planned_arrival_at: string | null
   planned_departure_at: string | null
+
   dwell_minutes: number | null
+
   travel_mode: string | null
   travel_minutes_from_prev: number | null
   distance_meters_from_prev: number | null
+
   metadata: unknown
+
   venue: VenueRow | VenueRow[] | null
 }
 
 type ActiveFlowSessionRow = {
   id: string
   user_id: string
+
   title: string | null
   city: string | null
   source: string | null
+
   status: string
   venue_ids: string[] | null
 }
@@ -67,14 +90,18 @@ type ActiveFlowSessionRow = {
 type OutingMapAnchor = {
   id: string | null
   title: string | null
+
   startsAt: string | null
   endsAt: string | null
+
   venue: {
     id: string | null
     name: string | null
     city: string | null
+
     lat: number | null
     lon: number | null
+
     address: string | null
     type?: string | null
   } | null
@@ -84,36 +111,58 @@ type OutingMapStop = {
   id: string
   venueId: string
   stopOrder: number
+
   role: string
+  phase?: OutingPhase | null
+
   venueType: string | null
   displayType: string | null
+
   title: string | null
   rationale: string | null
+
   plannedArrivalAt: string | null
   plannedDepartureAt: string | null
+
   dwellMinutes: number | null
+
   travelMode: string | null
   travelMinutesFromPrev: number | null
   distanceMetersFromPrev: number | null
+
   eventArchetype?: string | null
   semanticRole?: string | null
-  slotPhase?: string | null
+
+  slotPhase?: OutingPhase | null
   slotIndex?: number | null
+
   venue: {
     id: string
     name: string | null
     city: string | null
+
     lat: number | null
     lon: number | null
+
     address: string | null
     type?: string | null
   } | null
 }
 
-export default async function EventOutingPage({ params }: Props) {
-  const { eventId, plannedOutingId } = await params
+// -----------------------------------------------------------------------------
+// Page
+// -----------------------------------------------------------------------------
 
-  const supabase = await createServerClient()
+export default async function EventOutingPage({
+  params,
+}: Props) {
+  const {
+    eventId,
+    plannedOutingId,
+  } = await params
+
+  const supabase =
+    await createServerClient()
 
   const {
     data: { user },
@@ -123,7 +172,10 @@ export default async function EventOutingPage({ params }: Props) {
     redirect("/login")
   }
 
-  const { data: outing, error: outingError } = await supabase
+  const {
+    data: outing,
+    error: outingError,
+  } = await supabase
     .from("planned_outings")
     .select(
       `
@@ -146,19 +198,42 @@ export default async function EventOutingPage({ params }: Props) {
     .eq("user_id", user.id)
     .single<PlannedOutingRow>()
 
-  if (outingError || !outing) {
+  if (
+    outingError ||
+    !outing
+  ) {
     notFound()
   }
 
-  const { data: anchorVenue } = outing.venue_id
+  const {
+    data: anchorVenue,
+  } = outing.venue_id
     ? await supabase
         .from("venues")
-        .select("id, name, city, lat, lon, address, type")
-        .eq("id", outing.venue_id)
+        .select(
+          `
+            id,
+            name,
+            city,
+            lat,
+            lon,
+            address,
+            type
+          `
+        )
+        .eq(
+          "id",
+          outing.venue_id
+        )
         .single<VenueRow>()
-    : { data: null }
+    : {
+        data: null,
+      }
 
-  const { data: stopsRaw, error: stopsError } = await supabase
+  const {
+    data: stopsRaw,
+    error: stopsError,
+  } = await supabase
     .from("planned_outing_stops")
     .select(
       `
@@ -186,121 +261,365 @@ export default async function EventOutingPage({ params }: Props) {
         )
       `
     )
-    .eq("planned_outing_id", plannedOutingId)
-    .order("stop_order", { ascending: true })
-    .returns<PlannedOutingStopRow[]>()
+    .eq(
+      "planned_outing_id",
+      plannedOutingId
+    )
+    .order(
+      "stop_order",
+      {
+        ascending: true,
+      }
+    )
+    .returns<
+      PlannedOutingStopRow[]
+    >()
 
   if (stopsError) {
     notFound()
   }
 
+  const normalizedAnchorVenueType =
+    normalizeVenueType(
+      anchorVenue?.type
+    )
+
   const anchor: OutingMapAnchor = {
     id: outing.event_id,
-    title: outing.anchor_title,
-    startsAt: outing.anchor_starts_at,
-    endsAt: outing.anchor_ends_at,
+
+    title:
+      outing.anchor_title,
+
+    startsAt:
+      outing.anchor_starts_at,
+
+    endsAt:
+      outing.anchor_ends_at,
+
     venue: anchorVenue
       ? {
-          id: anchorVenue.id,
-          name: anchorVenue.name,
-          city: anchorVenue.city,
-          lat: anchorVenue.lat,
-          lon: anchorVenue.lon,
-          address: anchorVenue.address,
-          type: anchorVenue.type ?? null,
+          id:
+            anchorVenue.id,
+
+          name:
+            anchorVenue.name,
+
+          city:
+            anchorVenue.city,
+
+          lat:
+            anchorVenue.lat,
+
+          lon:
+            anchorVenue.lon,
+
+          address:
+            anchorVenue.address,
+
+          type:
+            normalizedAnchorVenueType,
         }
       : null,
   }
 
-  const stops: OutingMapStop[] = (stopsRaw ?? []).map((stop) => {
-    const venue = normalizeVenueRelation(stop.venue)
-    const displayType =
-      readMetadataString(stop.metadata, "displayType") ??
-      venue?.type ??
-      stop.role ??
-      null
+  const stops: OutingMapStop[] =
+    (stopsRaw ?? []).map(
+      (stop) => {
+        const venue =
+          normalizeVenueRelation(
+            stop.venue
+          )
 
-    const venueType =
-      readMetadataString(stop.metadata, "venueType") ??
-      venue?.type ??
-      null
+        const normalizedVenueType =
+          normalizeVenueType(
+            venue?.type
+          )
 
-    return {
-      id: stop.id,
-      venueId: stop.venue_id,
-      stopOrder: stop.stop_order,
-      role: stop.role,
-      venueType,
-      displayType,
-      title: stop.title,
-      rationale: stop.rationale,
-      plannedArrivalAt: stop.planned_arrival_at,
-      plannedDepartureAt: stop.planned_departure_at,
-      dwellMinutes: stop.dwell_minutes,
-      travelMode: stop.travel_mode,
-      travelMinutesFromPrev: stop.travel_minutes_from_prev,
-      distanceMetersFromPrev: stop.distance_meters_from_prev,
-      eventArchetype: readMetadataString(stop.metadata, "eventArchetype"),
-      semanticRole: readMetadataString(stop.metadata, "semanticRole"),
-      slotPhase: readMetadataString(stop.metadata, "slotPhase"),
-      slotIndex: readMetadataNumber(stop.metadata, "slotIndex"),
-      venue: venue
-        ? {
-            id: venue.id,
-            name: venue.name,
-            city: venue.city,
-            lat: venue.lat,
-            lon: venue.lon,
-            address: venue.address,
-            type: venue.type ?? null,
-          }
-        : null,
-    }
-  })
+        const phase =
+          normalizeOutingPhase(
+            readMetadataString(
+              stop.metadata,
+              "phase"
+            )
+          ) ??
+          normalizeOutingPhase(
+            readMetadataString(
+              stop.metadata,
+              "slotPhase"
+            )
+          ) ??
+          inferLegacyStopPhase({
+            mode: outing.mode,
+            stopOrder:
+              stop.stop_order,
+          })
 
-  const city = outing.city ?? anchor.venue?.city ?? stops[0]?.venue?.city ?? ""
+        const slotPhase =
+          normalizeOutingPhase(
+            readMetadataString(
+              stop.metadata,
+              "slotPhase"
+            )
+          ) ??
+          phase
 
-  const { data: existingActiveFlow } = await supabase
+        const displayType =
+          readMetadataString(
+            stop.metadata,
+            "displayType"
+          ) ??
+          readMetadataString(
+            stop.metadata,
+            "appliedDisplayType"
+          ) ??
+          normalizedVenueType ??
+          humanizeRole(
+            stop.role
+          )
+
+        const venueType =
+          readMetadataString(
+            stop.metadata,
+            "venueType"
+          ) ??
+          normalizedVenueType
+
+        return {
+          id:
+            stop.id,
+
+          venueId:
+            stop.venue_id,
+
+          stopOrder:
+            stop.stop_order,
+
+          role:
+            stop.role,
+
+          phase,
+
+          venueType,
+          displayType,
+
+          title:
+            stop.title,
+
+          rationale:
+            stop.rationale,
+
+          plannedArrivalAt:
+            stop.planned_arrival_at,
+
+          plannedDepartureAt:
+            stop.planned_departure_at,
+
+          dwellMinutes:
+            stop.dwell_minutes,
+
+          travelMode:
+            stop.travel_mode,
+
+          travelMinutesFromPrev:
+            stop.travel_minutes_from_prev,
+
+          distanceMetersFromPrev:
+            stop.distance_meters_from_prev,
+
+          eventArchetype:
+            readMetadataString(
+              stop.metadata,
+              "eventArchetype"
+            ),
+
+          semanticRole:
+            readMetadataString(
+              stop.metadata,
+              "semanticRole"
+            ),
+
+          slotPhase,
+
+          slotIndex:
+            readMetadataNumber(
+              stop.metadata,
+              "slotIndex"
+            ),
+
+          venue: venue
+            ? {
+                id:
+                  venue.id,
+
+                name:
+                  venue.name,
+
+                city:
+                  venue.city,
+
+                lat:
+                  venue.lat,
+
+                lon:
+                  venue.lon,
+
+                address:
+                  venue.address,
+
+                type:
+                  normalizedVenueType,
+              }
+            : null,
+        }
+      }
+    )
+
+  const city =
+    outing.city ??
+    anchor.venue?.city ??
+    stops[0]?.venue?.city ??
+    ""
+
+  const {
+    data: existingActiveFlow,
+  } = await supabase
     .from("active_flow_sessions")
-    .select("id, user_id, title, city, source, status, venue_ids")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .maybeSingle<ActiveFlowSessionRow>()
+    .select(
+      `
+        id,
+        user_id,
+        title,
+        city,
+        source,
+        status,
+        venue_ids
+      `
+    )
+    .eq(
+      "user_id",
+      user.id
+    )
+    .eq(
+      "status",
+      "active"
+    )
+    .maybeSingle<
+      ActiveFlowSessionRow
+    >()
+
+  const beforeStopCount =
+    stops.filter(
+      (stop) =>
+        resolveStopPhase(
+          stop,
+          outing.mode
+        ) === "before"
+    ).length
+
+  const afterStopCount =
+    stops.filter(
+      (stop) =>
+        resolveStopPhase(
+          stop,
+          outing.mode
+        ) === "after"
+    ).length
 
   await logPlannedOutingViewed({
     supabase,
-    userId: user.id,
-    plannedOutingId: outing.id,
+
+    userId:
+      user.id,
+
+    plannedOutingId:
+      outing.id,
+
     eventId,
     city,
-    mode: outing.mode,
-    status: outing.status,
-    confidenceScore: outing.confidence_score,
-    stopCount: stops.length,
-    anchorVenueId: anchor.venue?.id ?? null,
-    eventArchetype: stops[0]?.eventArchetype ?? null,
-    semanticRoles: stops.map((stop) => stop.semanticRole ?? null),
+
+    mode:
+      outing.mode,
+
+    status:
+      outing.status,
+
+    confidenceScore:
+      outing.confidence_score,
+
+    stopCount:
+      stops.length,
+
+    beforeStopCount,
+    afterStopCount,
+
+    anchorVenueId:
+      anchor.venue?.id ??
+      null,
+
+    eventArchetype:
+      stops.find(
+        (stop) =>
+          stop.eventArchetype
+      )?.eventArchetype ??
+      null,
+
+    semanticRoles:
+      stops.map(
+        (stop) =>
+          stop.semanticRole ??
+          null
+      ),
+
+    stopPhases:
+      stops.map(
+        (stop) =>
+          resolveStopPhase(
+            stop,
+            outing.mode
+          )
+      ),
   })
 
-  const draftPath = `/events/${eventId}/outing/${outing.id}`
-  const pageTitle = buildUserFriendlyOutingTitle({
-    mode: outing.mode,
-    anchorTitle: anchor.title,
-  })
-  const pageSubtitle = buildUserFriendlyOutingSubtitle({
-    mode: outing.mode,
-    anchorVenueName: anchor.venue?.name ?? null,
-    stops,
-  })
-  const shareText = encodeURIComponent(
-    `${pageTitle}${pageSubtitle ? `\n\n${pageSubtitle}` : ""}`
-  )
+  const draftPath =
+    `/events/${eventId}/outing/${outing.id}`
+
+  const pageTitle =
+    buildUserFriendlyOutingTitle({
+      mode:
+        outing.mode,
+
+      anchorTitle:
+        anchor.title,
+    })
+
+  const pageSubtitle =
+    buildUserFriendlyOutingSubtitle({
+      mode:
+        outing.mode,
+
+      anchorVenueName:
+        anchor.venue?.name ??
+        null,
+
+      stops,
+    })
+
+  const shareText =
+    encodeURIComponent(
+      `${pageTitle}${
+        pageSubtitle
+          ? `\n\n${pageSubtitle}`
+          : ""
+      }`
+    )
 
   return (
     <main className="min-h-screen overflow-hidden bg-black px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white sm:px-6">
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute left-[-12%] top-[-12%] h-72 w-72 rounded-full bg-indigo-600/25 blur-3xl" />
+
         <div className="absolute right-[-12%] top-[8%] h-80 w-80 rounded-full bg-cyan-500/15 blur-3xl" />
+
         <div className="absolute bottom-[-20%] left-[25%] h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
@@ -309,7 +628,10 @@ export default async function EventOutingPage({ params }: Props) {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <div className="inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200">
-                {humanizeMode(outing.mode)} Flow Draft
+                {humanizeMode(
+                  outing.mode
+                )}{" "}
+                Flow Draft
               </div>
 
               <h1 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-5xl">
@@ -329,21 +651,47 @@ export default async function EventOutingPage({ params }: Props) {
                   </span>
                 ) : null}
 
-                {outing.confidence_score != null ? (
+                {outing.confidence_score !=
+                null ? (
                   <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 text-xs font-bold text-emerald-300">
-                    Confidence {Math.round(outing.confidence_score * 100)}%
+                    Confidence{" "}
+                    {formatConfidencePercentage(
+                      outing.confidence_score
+                    )}
+                    %
                   </span>
                 ) : null}
 
                 {anchor.startsAt ? (
                   <span className="rounded-full border border-indigo-400/25 bg-indigo-400/10 px-3 py-1.5 text-xs font-bold text-indigo-200">
-                    {formatDateTime(anchor.startsAt)}
+                    {formatDateTime(
+                      anchor.startsAt
+                    )}
                   </span>
                 ) : null}
 
                 <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-bold text-slate-300">
-                  {stops.length} {stops.length === 1 ? "stop" : "stops"}
+                  {stops.length}{" "}
+                  {stops.length === 1
+                    ? "stop"
+                    : "stops"}
                 </span>
+
+                {outing.mode ===
+                  "full" &&
+                beforeStopCount > 0 ? (
+                  <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-200">
+                    {beforeStopCount} before
+                  </span>
+                ) : null}
+
+                {outing.mode ===
+                  "full" &&
+                afterStopCount > 0 ? (
+                  <span className="rounded-full border border-green-400/25 bg-green-400/10 px-3 py-1.5 text-xs font-bold text-green-200">
+                    {afterStopCount} after
+                  </span>
+                ) : null}
               </div>
             </div>
           </div>
@@ -371,11 +719,26 @@ export default async function EventOutingPage({ params }: Props) {
 
             <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[420px]">
               <StartFlowFromOutingButton
-                eventId={eventId}
-                plannedOutingId={outing.id}
-                existingSessionId={existingActiveFlow?.id ?? null}
-                label={existingActiveFlow ? "Resume Flow" : "Start Flow"}
-                loadingLabel={existingActiveFlow ? "Opening Flow…" : "Starting Flow…"}
+                eventId={
+                  eventId
+                }
+                plannedOutingId={
+                  outing.id
+                }
+                existingSessionId={
+                  existingActiveFlow?.id ??
+                  null
+                }
+                label={
+                  existingActiveFlow
+                    ? "Resume Flow"
+                    : "Start Flow"
+                }
+                loadingLabel={
+                  existingActiveFlow
+                    ? "Opening Flow…"
+                    : "Starting Flow…"
+                }
                 className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-indigo-950/30 transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
               />
 
@@ -387,7 +750,9 @@ export default async function EventOutingPage({ params }: Props) {
               </a>
 
               <a
-                href={`mailto:?subject=Roam Flow&body=${shareText}%0A%0A${draftPath}`}
+                href={`mailto:?subject=Roam Flow&body=${shareText}%0A%0A${encodeURIComponent(
+                  draftPath
+                )}`}
                 className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-2.5 text-center text-sm font-black text-cyan-100 transition hover:bg-cyan-400/15"
               >
                 Share Flow
@@ -398,20 +763,40 @@ export default async function EventOutingPage({ params }: Props) {
 
         <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-3 shadow-2xl backdrop-blur-xl sm:p-4">
           <OutingMap
-            plannedOutingId={outing.id}
-            eventId={eventId}
-            city={city}
-            mode={outing.mode}
-            status={outing.status}
-            summary={outing.plan_summary}
-            anchor={anchor}
-            stops={stops}
+            plannedOutingId={
+              outing.id
+            }
+            eventId={
+              eventId
+            }
+            city={
+              city
+            }
+            mode={
+              outing.mode
+            }
+            status={
+              outing.status
+            }
+            summary={
+              outing.plan_summary
+            }
+            anchor={
+              anchor
+            }
+            stops={
+              stops
+            }
           />
         </section>
       </div>
     </main>
   )
 }
+
+// -----------------------------------------------------------------------------
+// Analytics
+// -----------------------------------------------------------------------------
 
 async function logPlannedOutingViewed({
   supabase,
@@ -423,56 +808,114 @@ async function logPlannedOutingViewed({
   status,
   confidenceScore,
   stopCount,
+  beforeStopCount,
+  afterStopCount,
   anchorVenueId,
   eventArchetype,
   semanticRoles,
+  stopPhases,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
+
   userId: string
   plannedOutingId: string
   eventId: string
+
   city: string
-  mode: "before" | "after" | "full"
+  mode: OutingMode
   status: string | null
+
   confidenceScore: number | null
+
   stopCount: number
+  beforeStopCount: number
+  afterStopCount: number
+
   anchorVenueId: string | null
   eventArchetype: string | null
-  semanticRoles: Array<string | null>
+
+  semanticRoles: Array<
+    string | null
+  >
+
+  stopPhases: OutingPhase[]
 }): Promise<void> {
   try {
-    await supabase.from("planned_outing_events").insert({
-      planned_outing_id: plannedOutingId,
-      user_id: userId,
-      event_type: "outing_plan_viewed",
-      metadata: {
-        eventId,
-        city,
-        mode,
-        status,
-        confidenceScore,
-        stopCount,
-        anchorVenueId,
-        eventArchetype,
-        semanticRoles,
-      },
-    })
+    const {
+      error,
+    } = await supabase
+      .from(
+        "planned_outing_events"
+      )
+      .insert({
+        planned_outing_id:
+          plannedOutingId,
+
+        user_id:
+          userId,
+
+        event_type:
+          "outing_plan_viewed",
+
+        metadata: {
+          eventId,
+          city,
+          mode,
+          status,
+          confidenceScore,
+
+          stopCount,
+          beforeStopCount,
+          afterStopCount,
+
+          anchorVenueId,
+          eventArchetype,
+
+          semanticRoles,
+          stopPhases,
+        },
+      })
+
+    if (error) {
+      console.warn(
+        "Failed to log outing_plan_viewed:",
+        error
+      )
+    }
   } catch (error) {
-    console.warn("Failed to log outing_plan_viewed:", error)
+    console.warn(
+      "Failed to log outing_plan_viewed:",
+      error
+    )
   }
 }
+
+// -----------------------------------------------------------------------------
+// User-facing copy
+// -----------------------------------------------------------------------------
 
 function buildUserFriendlyOutingTitle({
   mode,
   anchorTitle,
 }: {
-  mode: "before" | "after" | "full"
+  mode: OutingMode
   anchorTitle: string | null
 }): string {
-  const eventName = anchorTitle?.trim() || "your event"
+  const eventName =
+    anchorTitle?.trim() ||
+    "your event"
 
-  if (mode === "before") return `Your pre-event Flow for ${eventName}`
-  if (mode === "after") return `Your post-event Flow for ${eventName}`
+  if (mode === "before") {
+    return `Your pre-event Flow for ${eventName}`
+  }
+
+  if (mode === "after") {
+    return `Your post-event Flow for ${eventName}`
+  }
 
   return `Your event Flow for ${eventName}`
 }
@@ -482,76 +925,433 @@ function buildUserFriendlyOutingSubtitle({
   anchorVenueName,
   stops,
 }: {
-  mode: "before" | "after" | "full"
+  mode: OutingMode
   anchorVenueName: string | null
-  stops: Array<{ title: string | null; venue?: { name: string | null } | null }>
+  stops: OutingMapStop[]
 }): string {
-  const stopNames = stops
-    .map((stop) => stop.title ?? stop.venue?.name)
-    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+  const venueText =
+    anchorVenueName
+      ? ` at ${anchorVenueName}`
+      : ""
 
-  const venueText = anchorVenueName ? ` at ${anchorVenueName}` : ""
+  const namedStops =
+    stops
+      .map(
+        (stop) => ({
+          name:
+            getStopDisplayName(
+              stop
+            ),
 
-  if (stopNames.length === 0) {
+          phase:
+            resolveStopPhase(
+              stop,
+              mode
+            ),
+
+          order:
+            stop.stopOrder,
+        })
+      )
+      .filter(
+        (
+          stop
+        ): stop is {
+          name: string
+          phase: OutingPhase
+          order: number
+        } =>
+          stop.name != null
+      )
+      .sort(
+        (
+          first,
+          second
+        ) =>
+          first.order -
+          second.order
+      )
+
+  if (
+    namedStops.length === 0
+  ) {
     return `A simple route built around your event${venueText}.`
   }
 
-  const sequence = stopNames.join(" → ")
-
   if (mode === "before") {
-    return `Start with ${sequence}, then head to your event${venueText}.`
+    return `Start with ${joinRouteNames(
+      namedStops.map(
+        (stop) => stop.name
+      )
+    )}, then head to your event${venueText}.`
   }
 
   if (mode === "after") {
-    return `After the event${venueText}, continue with ${sequence}.`
+    return `After the event${venueText}, continue with ${joinRouteNames(
+      namedStops.map(
+        (stop) => stop.name
+      )
+    )}.`
   }
 
-  return `Your route: ${sequence}, with your event${venueText} built in.`
+  const beforeStops =
+    namedStops
+      .filter(
+        (stop) =>
+          stop.phase ===
+          "before"
+      )
+      .map(
+        (stop) =>
+          stop.name
+      )
+
+  const afterStops =
+    namedStops
+      .filter(
+        (stop) =>
+          stop.phase ===
+          "after"
+      )
+      .map(
+        (stop) =>
+          stop.name
+      )
+
+  if (
+    beforeStops.length > 0 &&
+    afterStops.length > 0
+  ) {
+    return `Start with ${joinRouteNames(
+      beforeStops
+    )}, head to your event${venueText}, then continue with ${joinRouteNames(
+      afterStops
+    )}.`
+  }
+
+  if (
+    beforeStops.length > 0
+  ) {
+    return `Start with ${joinRouteNames(
+      beforeStops
+    )}, then head to your event${venueText}.`
+  }
+
+  if (
+    afterStops.length > 0
+  ) {
+    return `After the event${venueText}, continue with ${joinRouteNames(
+      afterStops
+    )}.`
+  }
+
+  return `Your event${venueText} is built into a ${namedStops.length}-stop Flow.`
 }
 
-function normalizeVenueRelation(
-  venue: PlannedOutingStopRow["venue"]
-): VenueRow | null {
-  if (!venue) return null
-  return Array.isArray(venue) ? venue[0] ?? null : venue
-}
+function getStopDisplayName(
+  stop: OutingMapStop
+): string | null {
+  const value =
+    stop.title ??
+    stop.venue?.name ??
+    null
 
-function readMetadataString(metadata: unknown, key: string): string | null {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+  if (
+    typeof value !== "string"
+  ) {
     return null
   }
 
-  const value = (metadata as Record<string, unknown>)[key]
-  return typeof value === "string" && value.trim().length > 0 ? value : null
+  const normalized =
+    value.trim()
+
+  return normalized ||
+    null
 }
 
-function readMetadataNumber(metadata: unknown, key: string): number | null {
-  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
-    return null
+function joinRouteNames(
+  names: string[]
+): string {
+  return names.join(" → ")
+}
+
+// -----------------------------------------------------------------------------
+// Phase normalization
+// -----------------------------------------------------------------------------
+
+function resolveStopPhase(
+  stop: Pick<
+    OutingMapStop,
+    | "phase"
+    | "slotPhase"
+    | "stopOrder"
+  >,
+  mode: OutingMode
+): OutingPhase {
+  const explicitPhase =
+    normalizeOutingPhase(
+      stop.phase
+    ) ??
+    normalizeOutingPhase(
+      stop.slotPhase
+    )
+
+  if (explicitPhase) {
+    return explicitPhase
   }
 
-  const value = (metadata as Record<string, unknown>)[key]
-  return typeof value === "number" && Number.isFinite(value) ? value : null
+  return inferLegacyStopPhase({
+    mode,
+    stopOrder:
+      stop.stopOrder,
+  })
 }
 
-function humanizeMode(mode: "before" | "after" | "full"): string {
-  if (mode === "before") return "Before Event"
-  if (mode === "after") return "After Event"
-  return "Full Night"
+function inferLegacyStopPhase({
+  mode,
+  stopOrder,
+}: {
+  mode: OutingMode
+  stopOrder: number
+}): OutingPhase {
+  if (mode === "before") {
+    return "before"
+  }
+
+  if (mode === "after") {
+    return "after"
+  }
+
+  /*
+   * Legacy full-mode records were historically treated as first-stop-before,
+   * remaining-stops-after. New records should always carry persisted phase
+   * metadata, so this is only a compatibility fallback.
+   */
+  return stopOrder === 1
+    ? "before"
+    : "after"
 }
 
-function formatDateTime(value: string): string {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
+function normalizeOutingPhase(
+  value:
+    | string
+    | null
+    | undefined
+): OutingPhase | null {
+  if (
+    value === "before" ||
+    value === "after"
+  ) {
     return value
   }
 
-  return date.toLocaleString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  })
+  return null
+}
+
+// -----------------------------------------------------------------------------
+// Supabase relation and metadata helpers
+// -----------------------------------------------------------------------------
+
+function normalizeVenueRelation(
+  venue:
+    PlannedOutingStopRow["venue"]
+): VenueRow | null {
+  if (!venue) {
+    return null
+  }
+
+  return Array.isArray(venue)
+    ? venue[0] ?? null
+    : venue
+}
+
+function readMetadataString(
+  metadata: unknown,
+  key: string
+): string | null {
+  if (
+    !metadata ||
+    typeof metadata !==
+      "object" ||
+    Array.isArray(metadata)
+  ) {
+    return null
+  }
+
+  const value =
+    (
+      metadata as Record<
+        string,
+        unknown
+      >
+    )[key]
+
+  return (
+    typeof value ===
+      "string" &&
+    value.trim().length > 0
+  )
+    ? value.trim()
+    : null
+}
+
+function readMetadataNumber(
+  metadata: unknown,
+  key: string
+): number | null {
+  if (
+    !metadata ||
+    typeof metadata !==
+      "object" ||
+    Array.isArray(metadata)
+  ) {
+    return null
+  }
+
+  const value =
+    (
+      metadata as Record<
+        string,
+        unknown
+      >
+    )[key]
+
+  return (
+    typeof value ===
+      "number" &&
+    Number.isFinite(value)
+  )
+    ? value
+    : null
+}
+
+// -----------------------------------------------------------------------------
+// Venue presentation helpers
+// -----------------------------------------------------------------------------
+
+function normalizeVenueType(
+  value:
+    | string
+    | string[]
+    | null
+    | undefined
+): string | null {
+  if (
+    Array.isArray(value)
+  ) {
+    const normalizedValues =
+      value
+        .map(
+          (entry) =>
+            String(entry).trim()
+        )
+        .filter(Boolean)
+
+    return normalizedValues[0] ??
+      null
+  }
+
+  if (
+    typeof value !==
+    "string"
+  ) {
+    return null
+  }
+
+  const normalized =
+    value.trim()
+
+  return normalized ||
+    null
+}
+
+function humanizeRole(
+  role: string
+): string {
+  const normalized =
+    role
+      .trim()
+      .replace(
+        /[_-]+/g,
+        " "
+      )
+
+  if (!normalized) {
+    return "Stop"
+  }
+
+  return normalized.replace(
+    /\b\w/g,
+    (character) =>
+      character.toUpperCase()
+  )
+}
+
+// -----------------------------------------------------------------------------
+// Formatting
+// -----------------------------------------------------------------------------
+
+function humanizeMode(
+  mode: OutingMode
+): string {
+  if (mode === "before") {
+    return "Before Event"
+  }
+
+  if (mode === "after") {
+    return "After Event"
+  }
+
+  return "Full Flow"
+}
+
+function formatDateTime(
+  value: string
+): string {
+  const date =
+    new Date(value)
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return value
+  }
+
+  return date.toLocaleString(
+    "en-US",
+    {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }
+  )
+}
+
+function formatConfidencePercentage(
+  value: number
+): number {
+  if (
+    !Number.isFinite(value)
+  ) {
+    return 0
+  }
+
+  const normalized =
+    value <= 1
+      ? value * 100
+      : value
+
+  return Math.round(
+    Math.min(
+      Math.max(
+        normalized,
+        0
+      ),
+      100
+    )
+  )
 }
