@@ -1,4 +1,4 @@
-// app/flow/[session_Id]/page.tsx
+// app/flow/[session_id]/page.tsx
 
 import { notFound, redirect } from 'next/navigation'
 
@@ -28,7 +28,7 @@ type FlowStatus =
 
 type PageProps = {
   params: Promise<{
-    session_Id: string
+    session_id: string
   }>
 }
 
@@ -365,10 +365,10 @@ export default async function ActiveFlowPage({
   /*
    * The parameter key must match the folder name exactly:
    *
-   * app/flow/[session_Id]/page.tsx
+   * app/flow/[session_id]/page.tsx
    */
   const {
-    session_Id: sessionId,
+    session_id: sessionId,
   } = await params
 
   if (
@@ -430,7 +430,7 @@ export default async function ActiveFlowPage({
     )
 
   /*
-   * Supabase/PostgREST may reject or behave inconsistently with `.in(..., [])`.
+   * Supabase/PostgREST may reject or behave inconsististently with `.in(..., [])`.
    * Skip dependent queries entirely when a flow contains no venue IDs.
    */
   const venueQueryResult =
