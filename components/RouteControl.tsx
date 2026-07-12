@@ -7,8 +7,11 @@ if (typeof window === 'undefined') {
   )
 }
 
-import { useEffect, useState } from 'react'
-import type { LatLngExpression, Map as LeafletMap } from 'leaflet'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import type {
+  LatLngExpression,
+  Map as LeafletMap,
+} from 'leaflet'
 import { Polyline } from 'react-leaflet'
 
 import type { Venue } from '@/types/venue'
@@ -22,9 +25,59 @@ type RouteControlProps = {
   travelMode: 'walking' | 'cycling' | 'driving'
 }
 
-function normalizeCoords(lat: number, lon: number): [number, number] {
-  const needsFlip = lat < -90 || lat > 90
-  return needsFlip ? [lon, lat] : [lat, lon]
+type MapboxDirectionsResponse = {
+  routes?: Array<{
+    geometry?: {
+      coordinates?: Array<
+        [longitude: number, latitude: number]
+      >
+    }
+  }>
+}
+
+const ROUTE_PANE_NAME = 'roam-route-pane'
+const ROUTE_PANE_Z_INDEX = 420
+
+function normalizeCoords(
+  lat: number,
+  lon: number
+): [number, number] {
+  const needsFlip =
+    lat < -90 || lat > 90
+
+  return needsFlip
+    ? [lon, lat]
+    : [lat, lon]
+}
+
+function isValidCoordinate(
+  lat: number,
+  lon: number
+): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
+  )
+}
+
+function getRouteSignature(
+  route: Venue[]
+): string {
+  return route
+    .map((venue) => {
+      const [lat, lon] =
+        normalizeCoords(
+          venue.lat,
+          venue.lon
+        )
+
+      return `${lat.toFixed(6)},${lon.toFixed(6)}`
+    })
+    .join(';')
 }
 
 export default function RouteControl({
@@ -33,112 +86,269 @@ export default function RouteControl({
   color = 'cyan',
   travelMode,
 }: RouteControlProps) {
-  const [polylineCoords, setPolylineCoords] = useState<LatLngExpression[]>([])
+  const [
+    polylineCoords,
+    setPolylineCoords,
+  ] = useState<LatLngExpression[]>([])
+
+  const routeSignature = useMemo(
+    () => getRouteSignature(route),
+    [route]
+  )
+
+  /*
+   * Keep the route beneath Leaflet's marker pane.
+   *
+   * Leaflet's default marker pane uses z-index 600, so 420 keeps the route
+   * clearly below venue, route-stop, user-location, and custom-start markers.
+   */
+  useEffect(() => {
+    const existingPane =
+      map.getPane(ROUTE_PANE_NAME)
+
+    const routePane =
+      existingPane ??
+      map.createPane(
+        ROUTE_PANE_NAME
+      )
+
+    routePane.style.zIndex =
+      String(ROUTE_PANE_Z_INDEX)
+
+    routePane.style.pointerEvents =
+      'none'
+  }, [map])
 
   useEffect(() => {
-    if (!map || route.length < 2) return
-
-    const MAPBOX_TOKEN: string = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? ''
-    if (!MAPBOX_TOKEN) {
-      console.error('❌ Missing Mapbox token')
+    if (
+      !map ||
+      route.length < 2
+    ) {
       setPolylineCoords([])
       return
     }
 
-    const controller = new AbortController()
+    const MAPBOX_TOKEN: string =
+      process.env
+        .NEXT_PUBLIC_MAPBOX_TOKEN ?? ''
+
+    if (!MAPBOX_TOKEN) {
+      console.error(
+        '❌ Missing Mapbox token'
+      )
+
+      setPolylineCoords([])
+      return
+    }
+
+    const controller =
+      new AbortController()
+
     let cancelled = false
 
     async function loadRoute() {
       try {
-        const validWaypoints = route
-          .map((v) => normalizeCoords(v.lat, v.lon))
-          .filter(
-            ([lat, lon]) => Number.isFinite(lat) && Number.isFinite(lon)
-          )
+        const validWaypoints =
+          route
+            .map((venue) =>
+              normalizeCoords(
+                venue.lat,
+                venue.lon
+              )
+            )
+            .filter(
+              ([lat, lon]) =>
+                isValidCoordinate(
+                  lat,
+                  lon
+                )
+            )
 
-        if (validWaypoints.length < 2) {
+        if (
+          validWaypoints.length < 2
+        ) {
           setPolylineCoords([])
           return
         }
 
-        const coordinates = validWaypoints
-          .map(([lat, lon]) => `${lon},${lat}`)
-          .join(';')
+        const coordinates =
+          validWaypoints
+            .map(
+              ([lat, lon]) =>
+                `${lon},${lat}`
+            )
+            .join(';')
 
         const url =
           `https://api.mapbox.com/directions/v5/mapbox/${travelMode}/${coordinates}` +
           `?geometries=geojson&overview=full&steps=false&access_token=${MAPBOX_TOKEN}`
 
-        const res = await fetch(url, {
-          signal: controller.signal,
-        })
+        const response =
+          await fetch(url, {
+            signal:
+              controller.signal,
+          })
 
-        if (!res.ok) {
-          throw new Error(`Mapbox directions failed: ${res.status}`)
+        if (!response.ok) {
+          throw new Error(
+            `Mapbox directions failed: ${response.status}`
+          )
         }
 
-        const data = await res.json()
+        const data =
+          (await response.json()) as MapboxDirectionsResponse
 
-        const coords =
-          data?.routes?.[0]?.geometry?.coordinates?.map(
-            ([lng, lat]: [number, number]) => [lat, lng] as [number, number]
-          ) ?? []
+        const coords: Array<
+          [number, number]
+        > =
+          data.routes?.[0]
+            ?.geometry
+            ?.coordinates
+            ?.filter(
+              (
+                coordinate
+              ): coordinate is [
+                number,
+                number,
+              ] =>
+                Array.isArray(
+                  coordinate
+                ) &&
+                coordinate.length >=
+                  2 &&
+                Number.isFinite(
+                  coordinate[0]
+                ) &&
+                Number.isFinite(
+                  coordinate[1]
+                )
+            )
+            .map(
+              ([lng, lat]) => [
+                lat,
+                lng,
+              ]
+            ) ?? []
 
-        if (cancelled) return
+        if (cancelled) {
+          return
+        }
 
-        if (coords.length === 0) {
+        if (
+          coords.length === 0
+        ) {
           setPolylineCoords([])
           return
         }
 
-        setPolylineCoords(coords)
+        setPolylineCoords(
+          coords
+        )
 
-        const leaflet = await import('leaflet')
-        const L = leaflet.default ?? leaflet
+        logEvent(
+          'route_rendered',
+          {
+            metadata: {
+              num_stops:
+                route.length,
+              travel_mode:
+                travelMode,
+              polyline_length:
+                coords.length,
+            },
+          }
+        )
+      } catch (
+        error: unknown
+      ) {
+        if (
+          error instanceof DOMException &&
+          error.name ===
+            'AbortError'
+        ) {
+          return
+        }
 
-        if (cancelled) return
+        if (
+          error instanceof Error &&
+          error.name ===
+            'AbortError'
+        ) {
+          return
+        }
 
-        const bounds = L.latLngBounds(coords)
-        const center = bounds.getCenter()
-        map.panTo(center, { animate: true })
+        console.error(
+          'Routing error:',
+          error
+        )
 
-        logEvent('route_rendered', {
-          metadata: {
-            num_stops: route.length,
-            travel_mode: travelMode,
-            polyline_length: coords.length,
-          },
-        })
-      } catch (error: any) {
-        if (error?.name === 'AbortError') return
-
-        console.error('Routing error:', error)
         if (!cancelled) {
           setPolylineCoords([])
         }
       }
     }
 
-    loadRoute()
+    void loadRoute()
 
     return () => {
       cancelled = true
       controller.abort()
-      setPolylineCoords([])
     }
-  }, [map, route, travelMode, color])
+  }, [
+    map,
+    route,
+    routeSignature,
+    travelMode,
+  ])
 
-  if (polylineCoords.length === 0) return null
+  if (
+    polylineCoords.length === 0
+  ) {
+    return null
+  }
 
   return (
     <RoutePolyline
       coords={polylineCoords}
       color={color}
-      render={({ positions, color }) => (
-        <Polyline
-          positions={positions}
-          pathOptions={{ color, weight: 5, opacity: 0.9 }}
-        />
+      render={({
+        positions,
+        color:
+          resolvedColor,
+      }) => (
+        <Fragment>
+          <Polyline
+            pane={ROUTE_PANE_NAME}
+            positions={
+              positions
+            }
+            interactive={false}
+            pathOptions={{
+              color:
+                'rgba(0, 0, 0, 0.72)',
+              weight: 10,
+              opacity: 0.9,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
+
+          <Polyline
+            pane={ROUTE_PANE_NAME}
+            positions={
+              positions
+            }
+            interactive={false}
+            pathOptions={{
+              color:
+                resolvedColor,
+              weight: 5,
+              opacity: 0.96,
+              lineCap: 'round',
+              lineJoin: 'round',
+            }}
+          />
+        </Fragment>
       )}
     />
   )

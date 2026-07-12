@@ -3,7 +3,10 @@
 import React, { useState } from 'react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from '@/components/ui/toggle-group'
 import { logEvent } from '@/lib/logEvent'
 
 interface ControlPanelProps {
@@ -27,8 +30,6 @@ interface ControlPanelProps {
   setCrawlDate: (date: string) => void
   crawlTime: string
   setCrawlTime: (time: string) => void
-  markerDisplayMode: 'color' | 'emoji'
-  setMarkerDisplayMode: (mode: 'color' | 'emoji') => void
   onGenerateRoute: (plannedStartAt?: string | Date) => void
   onClearRoute: () => void
   hasGeneratedRoute?: boolean
@@ -69,30 +70,39 @@ export function ControlPanel({
   setCrawlDate,
   crawlTime,
   setCrawlTime,
-  markerDisplayMode,
-  setMarkerDisplayMode,
   onGenerateRoute,
 }: ControlPanelProps) {
   const [isScheduled, setIsScheduled] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
 
   const selectedThemeLabel =
-    themes.find((theme) => theme.id === selectedThemeId)?.label ?? 'Free explore'
+    themes.find((theme) => theme.id === selectedThemeId)?.label ??
+    'Free explore'
 
   const travelModeLabel =
-    travelMode === 'walking' ? 'Walk' : travelMode === 'cycling' ? 'Bike' : 'Drive'
+    travelMode === 'walking'
+      ? 'Walk'
+      : travelMode === 'cycling'
+        ? 'Bike'
+        : 'Drive'
+
+  const tightnessLabel =
+    tightness === 'tight'
+      ? 'Compact'
+      : tightness === 'loose'
+        ? 'Spread out'
+        : 'Balanced'
 
   const handleTravelModeChange = (val: string) => {
     if (!val) return
-    setTravelMode(val as 'walking' | 'cycling' | 'driving')
-    logEvent('travel_mode_changed', { metadata: { travel_mode: val, city } })
-  }
 
-  const handleMarkerDisplayModeChange = (val: string) => {
-    if (!val) return
-    setMarkerDisplayMode(val as 'color' | 'emoji')
-    logEvent('marker_display_mode_changed', {
-      metadata: { marker_display_mode: val, city },
+    setTravelMode(val as 'walking' | 'cycling' | 'driving')
+
+    logEvent('travel_mode_changed', {
+      metadata: {
+        travel_mode: val,
+        city,
+      },
     })
   }
 
@@ -102,192 +112,437 @@ export function ControlPanel({
         ? (() => {
             const [year, month, day] = crawlDate.split('-').map(Number)
             const [hour, minute] = crawlTime.split(':').map(Number)
-            return new Date(year, month - 1, day, hour, minute).toISOString()
+
+            return new Date(
+              year,
+              month - 1,
+              day,
+              hour,
+              minute
+            ).toISOString()
           })()
         : undefined
 
     setAdvancedOpen(false)
-    logEvent('generate_clicked', { metadata: { city, plannedStartAt } })
+
+    logEvent('generate_clicked', {
+      metadata: {
+        city,
+        plannedStartAt,
+      },
+    })
+
     onGenerateRoute(plannedStartAt)
   }
 
   const inputBase =
-    'w-full h-9 px-2 border rounded-lg text-sm bg-white text-zinc-900 ' +
-    'dark:bg-zinc-900 dark:text-zinc-100 dark:border-zinc-600 ' +
-    'focus:outline-none focus:ring-1 focus:ring-blue-500'
+    'h-11 w-full rounded-xl border border-white/10 bg-white/[0.07] px-3 text-sm ' +
+    'font-medium text-white shadow-sm outline-none transition ' +
+    'placeholder:text-zinc-500 hover:border-white/20 hover:bg-white/[0.09] ' +
+    'focus:border-cyan-300/60 focus:bg-white/[0.1] focus:ring-2 focus:ring-cyan-300/20 ' +
+    '[color-scheme:dark]'
+
+  const labelBase =
+    'text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500'
+
+  const summaryPill =
+    'inline-flex items-center rounded-full border border-white/8 bg-white/[0.055] ' +
+    'px-2.5 py-1 text-[10px] font-semibold text-zinc-300'
 
   return (
-    <div className="fixed left-1/2 bottom-5 z-[4000] w-[min(92vw,420px)] -translate-x-1/2 md:w-[560px]">
-      <div className="rounded-2xl border border-zinc-300 bg-white/95 p-3 text-xs shadow-2xl backdrop-blur-md dark:border-zinc-700 dark:bg-zinc-950/95">
-        <div className="grid grid-cols-[1fr_88px] gap-2">
-          <input
-            type="text"
-            placeholder="Search places, vibes, food, music..."
-            value={searchTerm}
-            onChange={(e) => {
-              const val = e.target.value
-              setSearchTerm(val)
-              logEvent('search_updated', { metadata: { value: val, city } })
-            }}
-            className={inputBase}
-            aria-label="Search venues"
-          />
+    <div
+      className="
+        fixed
+        bottom-[max(1rem,env(safe-area-inset-bottom))]
+        left-1/2
+        z-[4000]
+        w-[min(calc(100vw-1.5rem),420px)]
+        -translate-x-1/2
+        md:w-[540px]
+      "
+    >
+      <div
+        className="
+          overflow-hidden
+          rounded-[26px]
+          border
+          border-white/10
+          bg-zinc-950/88
+          p-3
+          text-xs
+          text-white
+          shadow-[0_24px_80px_rgba(0,0,0,0.55)]
+          backdrop-blur-2xl
+          md:p-4
+        "
+      >
+        <div className="grid grid-cols-[minmax(0,1fr)_96px] gap-2">
+          <div className="relative">
+            <span
+              aria-hidden="true"
+              className="
+                pointer-events-none
+                absolute
+                left-3.5
+                top-1/2
+                -translate-y-1/2
+                text-zinc-500
+              "
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.4-3.4" />
+              </svg>
+            </span>
+
+            <input
+              type="text"
+              placeholder="Search places, vibes, food, music..."
+              value={searchTerm}
+              onChange={(event) => {
+                const value = event.target.value
+
+                setSearchTerm(value)
+
+                logEvent('search_updated', {
+                  metadata: {
+                    value,
+                    city,
+                  },
+                })
+              }}
+              className={`${inputBase} pl-10`}
+              aria-label="Search venues"
+            />
+          </div>
 
           <button
             type="button"
+            aria-expanded={advancedOpen}
+            aria-controls="roam-map-advanced-controls"
             onClick={() => {
-              setAdvancedOpen((prev) => !prev)
+              setAdvancedOpen((previous) => !previous)
+
               logEvent('control_panel_advanced_toggled', {
-                metadata: { city, open: !advancedOpen },
+                metadata: {
+                  city,
+                  open: !advancedOpen,
+                },
               })
             }}
-            className="h-9 rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-700 shadow-sm hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="
+              flex
+              h-11
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              border
+              border-white/10
+              bg-white/[0.06]
+              px-3
+              text-xs
+              font-bold
+              text-zinc-200
+              shadow-sm
+              transition
+              hover:border-white/20
+              hover:bg-white/10
+              hover:text-white
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-cyan-300
+            "
           >
+            <svg
+              aria-hidden="true"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 6h16" />
+              <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" />
+              <path d="M4 12h16" />
+              <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" />
+              <path d="M4 18h16" />
+              <circle cx="11" cy="18" r="2" fill="currentColor" stroke="none" />
+            </svg>
+
             {advancedOpen ? 'Hide' : 'Filters'}
           </button>
         </div>
 
         {advancedOpen && (
-          <>
-            <div className="mt-2 truncate text-[11px] text-zinc-500 dark:text-zinc-400">
-              {selectedThemeLabel} · {travelModeLabel} · {tightness}
+          <div
+            id="roam-map-advanced-controls"
+            className="animate-in fade-in slide-in-from-bottom-1 duration-200"
+          >
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className={summaryPill}>
+                {selectedThemeLabel}
+              </span>
+
+              <span className={summaryPill}>
+                {travelModeLabel}
+              </span>
+
+              <span className={summaryPill}>
+                {tightnessLabel}
+              </span>
+
+              <span className={summaryPill}>
+                {isScheduled ? 'Later' : 'Now'}
+              </span>
             </div>
 
-            <div className="mt-3 grid max-h-[42vh] grid-cols-2 gap-2 overflow-y-auto border-t border-zinc-200 pt-3 dark:border-zinc-800 md:grid-cols-4">
-              <div className="col-span-2 space-y-1 md:col-span-2">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+            <div
+              className="
+                mt-3
+                grid
+                max-h-[min(52dvh,430px)]
+                grid-cols-2
+                gap-3
+                overflow-y-auto
+                overscroll-contain
+                border-t
+                border-white/8
+                pt-4
+                [scrollbar-width:thin]
+                [scrollbar-color:rgba(255,255,255,0.15)_transparent]
+                md:grid-cols-4
+              "
+            >
+              <div className="col-span-2 space-y-1.5 md:col-span-2">
+                <Label className={labelBase}>
                   Theme
                 </Label>
+
                 <select
                   value={selectedThemeId}
-                  onChange={(e) => {
-                    setSelectedThemeId(e.target.value)
+                  onChange={(event) => {
+                    setSelectedThemeId(event.target.value)
+
                     logEvent('theme_selected', {
-                      metadata: { themeId: e.target.value, city },
+                      metadata: {
+                        themeId: event.target.value,
+                        city,
+                      },
                     })
                   }}
                   className={inputBase}
                   aria-label="Theme"
                 >
                   <option value="">Pick vibe</option>
+
                   {themes.map((theme) => (
-                    <option key={theme.id} value={theme.id}>
+                    <option
+                      key={theme.id}
+                      value={theme.id}
+                    >
                       {theme.label}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+              <div className="space-y-1.5">
+                <Label className={labelBase}>
                   Mode
                 </Label>
+
                 <select
                   value={travelMode}
-                  onChange={(e) => handleTravelModeChange(e.target.value)}
+                  onChange={(event) =>
+                    handleTravelModeChange(event.target.value)
+                  }
                   className={inputBase}
                   aria-label="Travel mode"
                 >
-                  <option value="walking">🚶 Walk</option>
-                  <option value="cycling">🚲 Bike</option>
-                  <option value="driving">🚗 Drive</option>
+                  <option value="walking">Walk</option>
+                  <option value="cycling">Bike</option>
+                  <option value="driving">Drive</option>
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+              <div className="space-y-1.5">
+                <Label className={labelBase}>
                   Route
                 </Label>
+
                 <Button
-                  className="h-9 w-full text-xs bg-blue-600 text-white hover:bg-blue-700"
+                  type="button"
                   onClick={handleGenerateClick}
+                  className="
+                    h-11
+                    w-full
+                    rounded-xl
+                    border-0
+                    bg-gradient-to-r
+                    from-indigo-500
+                    via-violet-500
+                    to-cyan-500
+                    px-3
+                    text-xs
+                    font-black
+                    text-white
+                    shadow-[0_10px_28px_rgba(34,211,238,0.18)]
+                    transition
+                    hover:brightness-110
+                    focus-visible:ring-2
+                    focus-visible:ring-cyan-300
+                    focus-visible:ring-offset-2
+                    focus-visible:ring-offset-zinc-950
+                  "
                 >
                   Generate
                 </Button>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+              <div className="space-y-1.5">
+                <Label className={labelBase}>
                   Price
                 </Label>
+
                 <select
                   value={selectedPrice}
-                  onChange={(e) => {
-                    setSelectedPrice(e.target.value)
+                  onChange={(event) => {
+                    setSelectedPrice(event.target.value)
+
                     logEvent('price_selected', {
-                      metadata: { price: e.target.value, city },
+                      metadata: {
+                        price: event.target.value,
+                        city,
+                      },
                     })
                   }}
                   className={inputBase}
+                  aria-label="Maximum price"
                 >
                   <option value="">Any</option>
+
                   {prices.slice(1).map((price) => (
-                    <option key={price} value={price}>
+                    <option
+                      key={price}
+                      value={price}
+                    >
                       {price}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+              <div className="space-y-1.5">
+                <Label className={labelBase}>
                   Distance
                 </Label>
+
                 <select
                   value={tightness}
-                  onChange={(e) => {
-                    setTightness(e.target.value as any)
+                  onChange={(event) => {
+                    setTightness(
+                      event.target.value as 'tight' | 'medium' | 'loose'
+                    )
+
                     logEvent('tightness_changed', {
-                      metadata: { tightness: e.target.value, city },
+                      metadata: {
+                        tightness: event.target.value,
+                        city,
+                      },
                     })
                   }}
                   className={inputBase}
+                  aria-label="Route distance"
                 >
                   <option value="tight">Compact</option>
                   <option value="medium">Balanced</option>
-                  <option value="loose">Spread Out</option>
+                  <option value="loose">Spread out</option>
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                  Marker
+              <div className="col-span-2 space-y-1.5 md:col-span-2">
+                <Label className={labelBase}>
+                  When
                 </Label>
-                <ToggleGroup
-                  type="single"
-                  value={markerDisplayMode}
-                  onValueChange={handleMarkerDisplayModeChange}
-                  className="w-full gap-1"
-                >
-                  <ToggleGroupItem value="color" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
-                    Color
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="emoji" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
-                    Emoji
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
 
-              <div className="space-y-1">
-                <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
-                  Crawl
-                </Label>
                 <ToggleGroup
                   type="single"
                   value={isScheduled ? 'scheduled' : 'now'}
-                  onValueChange={(val) => {
-                    if (!val) return
-                    setIsScheduled(val === 'scheduled')
+                  onValueChange={(value) => {
+                    if (!value) return
+
+                    setIsScheduled(value === 'scheduled')
+
                     logEvent('crawl_mode_toggled', {
-                      metadata: { mode: val, city },
+                      metadata: {
+                        mode: value,
+                        city,
+                      },
                     })
                   }}
-                  className="w-full gap-1"
+                  className="
+                    grid
+                    h-11
+                    w-full
+                    grid-cols-2
+                    gap-1
+                    rounded-xl
+                    border
+                    border-white/10
+                    bg-white/[0.045]
+                    p-1
+                  "
                 >
-                  <ToggleGroupItem value="now" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
+                  <ToggleGroupItem
+                    value="now"
+                    className="
+                      h-full
+                      rounded-lg
+                      border-0
+                      text-xs
+                      font-bold
+                      text-zinc-400
+                      transition
+                      hover:bg-white/[0.07]
+                      hover:text-white
+                      data-[state=on]:bg-white
+                      data-[state=on]:text-zinc-950
+                      data-[state=on]:shadow-sm
+                    "
+                  >
                     Now
                   </ToggleGroupItem>
-                  <ToggleGroupItem value="scheduled" className="h-9 flex-1 text-xs dark:bg-zinc-800 dark:text-white border dark:border-zinc-600">
+
+                  <ToggleGroupItem
+                    value="scheduled"
+                    className="
+                      h-full
+                      rounded-lg
+                      border-0
+                      text-xs
+                      font-bold
+                      text-zinc-400
+                      transition
+                      hover:bg-white/[0.07]
+                      hover:text-white
+                      data-[state=on]:bg-white
+                      data-[state=on]:text-zinc-950
+                      data-[state=on]:shadow-sm
+                    "
+                  >
                     Later
                   </ToggleGroupItem>
                 </ToggleGroup>
@@ -295,23 +550,39 @@ export function ControlPanel({
 
               {isScheduled && (
                 <>
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  <div className="space-y-1.5">
+                    <Label className={labelBase}>
                       Date
                     </Label>
-                    <input type="date" value={crawlDate} onChange={(e) => setCrawlDate(e.target.value)} className={inputBase} />
+
+                    <input
+                      type="date"
+                      value={crawlDate}
+                      onChange={(event) =>
+                        setCrawlDate(event.target.value)
+                      }
+                      className={inputBase}
+                    />
                   </div>
 
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  <div className="space-y-1.5">
+                    <Label className={labelBase}>
                       Time
                     </Label>
-                    <input type="time" value={crawlTime} onChange={(e) => setCrawlTime(e.target.value)} className={inputBase} />
+
+                    <input
+                      type="time"
+                      value={crawlTime}
+                      onChange={(event) =>
+                        setCrawlTime(event.target.value)
+                      }
+                      className={inputBase}
+                    />
                   </div>
                 </>
               )}
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

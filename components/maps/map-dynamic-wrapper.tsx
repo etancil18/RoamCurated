@@ -51,6 +51,12 @@ export const VenueMarker = dynamic(
   { ssr: false }
 )
 
+// ✅ Branded venue cluster marker, SSR disabled
+export const VenueClusterMarker = dynamic(
+  () => import('@/components/maps/VenueClusterMarker'),
+  { ssr: false }
+)
+
 export const SponsorMapPreview = dynamic(
   () => import('app/sponsor-crawl/components/SponsorMapPreview'),
   { ssr: false }
@@ -66,7 +72,10 @@ export const RoutePolyline = dynamic(
   { ssr: false }
 )
 
-
+export const SimpleMap = dynamic(
+  () => import('@/components/Map'), // keep your filename
+  { ssr: false }
+)
 
 // Add additional maps below as needed in future:
 // export const SomeOtherMap = dynamic(() => import('...'), { ssr: false })

@@ -1,0 +1,1126 @@
+
+/* -------------------------------------------------------------------------- */
+/* Leaflet normalization                                                      */
+/* -------------------------------------------------------------------------- */
+
+.leaflet-container {
+  background: #070a0f;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.leaflet-div-icon,
+.roam-leaflet-div-icon {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.roam-leaflet-div-icon {
+  overflow: visible !important;
+}
+
+.leaflet-marker-icon {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.leaflet-tooltip {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 10px;
+  background: rgb(8 11 17 / 94%);
+  color: #f8fafc;
+  box-shadow:
+    0 10px 30px rgb(0 0 0 / 35%),
+    inset 0 1px 0 rgb(255 255 255 / 6%);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+  padding: 7px 9px;
+  backdrop-filter: blur(14px);
+}
+
+.leaflet-tooltip::before {
+  border-top-color: rgb(8 11 17 / 94%) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow:
+    0 24px 70px rgb(0 0 0 / 42%),
+    0 2px 10px rgb(0 0 0 / 16%);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+}
+
+.leaflet-popup-tip {
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 3px 3px 7px rgb(0 0 0 / 10%);
+}
+
+.leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  display: grid !important;
+  width: 28px !important;
+  height: 28px !important;
+  place-items: center;
+  border-radius: 9999px;
+  background: rgb(15 23 42 / 8%);
+  color: #334155 !important;
+  font-size: 19px !important;
+  line-height: 1 !important;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.leaflet-popup-close-button:hover {
+  background: rgb(15 23 42 / 14%);
+  color: #0f172a !important;
+  transform: scale(1.04);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shared marker primitives                                                   */
+/* -------------------------------------------------------------------------- */
+
+.roam-map-icon {
+  --roam-marker-scale: 1;
+  --roam-marker-opacity: 1;
+  --roam-marker-accent: #22d3ee;
+
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: var(--roam-marker-opacity);
+  transform: scale(var(--roam-marker-scale));
+  transform-origin: center center;
+  transition:
+    opacity 160ms ease,
+    filter 160ms ease,
+    transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+.roam-map-icon--interactive {
+  cursor: pointer;
+}
+
+.roam-map-icon--interactive:hover {
+  transform: scale(calc(var(--roam-marker-scale) * 1.06));
+}
+
+.roam-map-icon--selected {
+  filter:
+    saturate(1.08)
+    brightness(1.06);
+}
+
+.roam-map-icon--dimmed {
+  pointer-events: auto;
+  filter:
+    grayscale(0.2)
+    saturate(0.72);
+}
+
+.roam-map-icon--active {
+  filter:
+    saturate(1.12)
+    brightness(1.06);
+}
+
+.roam-map-icon--completed {
+  filter:
+    saturate(0.8)
+    brightness(0.95);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Venue markers                                                              */
+/* -------------------------------------------------------------------------- */
+
+.roam-leaflet-div-icon--venue {
+  z-index: auto;
+}
+
+.roam-venue-marker {
+  position: relative;
+  width: 38px;
+  height: 44px;
+  overflow: visible;
+}
+
+.roam-venue-marker__halo {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background: color-mix(
+    in srgb,
+    var(--roam-marker-accent) 22%,
+    transparent
+  );
+  filter: blur(7px);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.7);
+  transition:
+    opacity 160ms ease,
+    transform 180ms ease;
+}
+
+.roam-venue-marker__shell {
+  position: absolute;
+  left: 50%;
+  top: 1px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 9999px;
+  background:
+    radial-gradient(
+      circle at 34% 28%,
+      rgb(255 255 255 / 15%),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      rgb(24 30 42 / 98%),
+      rgb(8 11 17 / 98%)
+    );
+  box-shadow:
+    0 8px 22px rgb(0 0 0 / 40%),
+    inset 0 1px 0 rgb(255 255 255 / 9%),
+    0 0 0 1px rgb(0 0 0 / 18%);
+  transform: translateX(-50%);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.roam-venue-marker__core {
+  position: relative;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 9999px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 84%,
+        white 16%
+      ),
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 76%,
+        black 24%
+      )
+    );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 35%),
+    0 2px 8px
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 35%,
+        transparent
+      );
+}
+
+.roam-venue-marker__brand-dot {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid rgb(255 255 255 / 92%);
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 0 9px rgb(255 255 255 / 45%);
+}
+
+.roam-venue-marker__glyph {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+}
+
+.roam-venue-marker__tip {
+  position: absolute;
+  left: 50%;
+  top: 29px;
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid rgb(255 255 255 / 10%);
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 0 0 3px 0;
+  background: #0b0f16;
+  box-shadow: 3px 4px 8px rgb(0 0 0 / 22%);
+  transform:
+    translateX(-50%)
+    rotate(45deg);
+}
+
+.roam-venue-marker__status {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid #090c12;
+  border-radius: 9999px;
+}
+
+.roam-venue-marker__status--open {
+  background: #22c55e;
+  box-shadow: 0 0 7px rgb(34 197 94 / 60%);
+}
+
+.roam-venue-marker__status--closed {
+  background: #64748b;
+}
+
+.roam-venue-marker__event {
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid #090c12;
+  border-radius: 9999px;
+}
+
+.roam-venue-marker__event--live {
+  background: #a855f7;
+  box-shadow:
+    0 0 0 3px rgb(168 85 247 / 16%),
+    0 0 11px rgb(168 85 247 / 75%);
+}
+
+.roam-venue-marker__event--upcoming {
+  background: #6366f1;
+  box-shadow: 0 0 8px rgb(99 102 241 / 50%);
+}
+
+.roam-venue-marker__search {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid #090c12;
+  border-radius: 9999px;
+  background: #f59e0b;
+  box-shadow: 0 0 9px rgb(245 158 11 / 58%);
+}
+
+.roam-venue-marker--closed .roam-venue-marker__shell {
+  filter:
+    grayscale(0.46)
+    saturate(0.68);
+}
+
+.roam-venue-marker--closed .roam-venue-marker__core {
+  opacity: 0.76;
+}
+
+.roam-venue-marker--selected .roam-venue-marker__halo {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+.roam-venue-marker--selected .roam-venue-marker__shell {
+  border-color:
+    color-mix(
+      in srgb,
+      var(--roam-marker-accent) 80%,
+      white 20%
+    );
+  box-shadow:
+    0 0 0 3px
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 18%,
+        transparent
+      ),
+    0 12px 28px rgb(0 0 0 / 48%),
+    0 0 22px
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 32%,
+        transparent
+      ),
+    inset 0 1px 0 rgb(255 255 255 / 16%);
+  transform:
+    translateX(-50%)
+    scale(1.08);
+}
+
+.roam-venue-marker--search .roam-venue-marker__shell {
+  border-color: rgb(245 158 11 / 72%);
+}
+
+.roam-venue-marker--live .roam-venue-marker__halo {
+  opacity: 0.82;
+  animation:
+    roam-marker-live-pulse
+    2.2s ease-out infinite;
+}
+
+.roam-venue-marker--upcoming .roam-venue-marker__halo {
+  opacity: 0.35;
+}
+
+.roam-venue-marker--brand .roam-venue-marker__glyph {
+  display: none;
+}
+
+.roam-venue-marker--category .roam-venue-marker__brand-dot,
+.roam-venue-marker--emoji .roam-venue-marker__brand-dot {
+  display: none;
+}
+
+.roam-venue-marker:hover .roam-venue-marker__halo {
+  opacity: 0.72;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.roam-venue-marker:hover .roam-venue-marker__shell {
+  transform:
+    translateX(-50%)
+    translateY(-1px)
+    scale(1.04);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Route stops                                                                */
+/* -------------------------------------------------------------------------- */
+
+.roam-route-stop {
+  position: relative;
+  width: 38px;
+  height: 38px;
+}
+
+.roam-route-stop__halo {
+  position: absolute;
+  inset: 2px;
+  border-radius: 9999px;
+  background: color-mix(
+    in srgb,
+    var(--roam-marker-accent) 24%,
+    transparent
+  );
+  filter: blur(7px);
+  opacity: 0.58;
+  transform: scale(0.9);
+}
+
+.roam-route-stop__shell {
+  position: absolute;
+  inset: 4px;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgb(255 255 255 / 92%);
+  border-radius: 9999px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 90%,
+        white 10%
+      ),
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 74%,
+        black 26%
+      )
+    );
+  box-shadow:
+    0 0 0 3px rgb(5 7 10 / 72%),
+    0 7px 20px rgb(0 0 0 / 42%),
+    0 0 17px
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 35%,
+        transparent
+      ),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.roam-route-stop__number {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 28%);
+}
+
+.roam-route-stop__role {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #05070a;
+  border-radius: 9999px;
+  background: #ffffff;
+}
+
+.roam-route-stop__role--start {
+  background: #22c55e;
+}
+
+.roam-route-stop__role--end {
+  background: #f43f5e;
+}
+
+.roam-route-stop__completed {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  display: grid;
+  width: 13px;
+  height: 13px;
+  place-items: center;
+  border: 1.5px solid #05070a;
+  border-radius: 9999px;
+  background: #22c55e;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.roam-route-stop--start .roam-route-stop__shell {
+  box-shadow:
+    0 0 0 3px rgb(5 7 10 / 72%),
+    0 7px 20px rgb(0 0 0 / 42%),
+    0 0 20px rgb(34 197 94 / 25%),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+}
+
+.roam-route-stop--end .roam-route-stop__shell {
+  box-shadow:
+    0 0 0 3px rgb(5 7 10 / 72%),
+    0 7px 20px rgb(0 0 0 / 42%),
+    0 0 20px rgb(244 63 94 / 25%),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
+}
+
+.roam-route-stop.roam-map-icon--selected .roam-route-stop__halo,
+.roam-route-stop.roam-map-icon--active .roam-route-stop__halo {
+  opacity: 1;
+  animation:
+    roam-route-stop-pulse
+    1.9s ease-out infinite;
+}
+
+.roam-route-stop:hover .roam-route-stop__shell {
+  transform: scale(1.06);
+}
+
+/* -------------------------------------------------------------------------- */
+/* City overview markers                                                      */
+/* -------------------------------------------------------------------------- */
+
+.roam-city-marker {
+  position: relative;
+  width: 54px;
+  height: 42px;
+}
+
+.roam-city-marker__halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 52px;
+  height: 32px;
+  border-radius: 9999px;
+  background: rgb(34 211 238 / 14%);
+  filter: blur(9px);
+  opacity: 0.34;
+  transform: translate(-50%, -50%);
+}
+
+.roam-city-marker__shell {
+  position: absolute;
+  inset: 4px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 9999px;
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      rgb(255 255 255 / 12%),
+      transparent 36%
+    ),
+    linear-gradient(
+      180deg,
+      rgb(22 27 38 / 96%),
+      rgb(7 10 15 / 96%)
+    );
+  box-shadow:
+    0 10px 28px rgb(0 0 0 / 40%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+  backdrop-filter: blur(12px);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.roam-city-marker__label {
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.roam-city-marker__count {
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 8%);
+  color: #cbd5e1;
+  font-size: 9px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.roam-city-marker__activity {
+  position: absolute;
+  right: 4px;
+  top: 3px;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid #090c12;
+  border-radius: 9999px;
+  background: #22d3ee;
+  box-shadow:
+    0 0 0 3px rgb(34 211 238 / 12%),
+    0 0 11px rgb(34 211 238 / 72%);
+}
+
+.roam-city-marker--live .roam-city-marker__halo {
+  opacity: 0.88;
+  animation:
+    roam-city-live-pulse
+    2.6s ease-out infinite;
+}
+
+.roam-city-marker.roam-map-icon--selected .roam-city-marker__shell {
+  border-color: rgb(103 232 249 / 76%);
+  box-shadow:
+    0 0 0 3px rgb(34 211 238 / 16%),
+    0 14px 34px rgb(0 0 0 / 46%),
+    0 0 22px rgb(34 211 238 / 20%),
+    inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+
+.roam-city-marker:hover .roam-city-marker__shell {
+  border-color: rgb(103 232 249 / 56%);
+  transform: translateY(-1px) scale(1.03);
+}
+
+/* -------------------------------------------------------------------------- */
+/* User location                                                              */
+/* -------------------------------------------------------------------------- */
+
+.roam-user-location {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.roam-user-location__pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: rgb(14 165 233 / 22%);
+  animation:
+    roam-user-location-pulse
+    2.3s ease-out infinite;
+}
+
+.roam-user-location__ring {
+  position: absolute;
+  inset: 4px;
+  border: 2px solid rgb(255 255 255 / 96%);
+  border-radius: 9999px;
+  background: rgb(14 165 233 / 24%);
+  box-shadow:
+    0 3px 11px rgb(0 0 0 / 32%),
+    0 0 0 1px rgb(14 165 233 / 22%);
+}
+
+.roam-user-location__core {
+  position: absolute;
+  inset: 8px;
+  border-radius: 9999px;
+  background: #0ea5e9;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 35%),
+    0 0 10px rgb(14 165 233 / 62%);
+}
+
+.roam-user-location--following
+  .roam-user-location__pulse {
+  background: rgb(34 211 238 / 28%);
+  animation-duration: 1.65s;
+}
+
+.roam-user-location--following
+  .roam-user-location__core {
+  background: #22d3ee;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Custom-start marker                                                        */
+/* -------------------------------------------------------------------------- */
+
+.roam-custom-start {
+  position: relative;
+  width: 34px;
+  height: 42px;
+}
+
+.roam-custom-start__pulse {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: rgb(34 211 238 / 20%);
+  filter: blur(5px);
+  opacity: 0.72;
+  transform: translateX(-50%);
+  animation:
+    roam-custom-start-pulse
+    2.15s ease-out infinite;
+}
+
+.roam-custom-start__pin {
+  position: absolute;
+  left: 50%;
+  top: 1px;
+  width: 28px;
+  height: 32px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 9999px 9999px 9999px 5px;
+  background:
+    linear-gradient(
+      180deg,
+      rgb(25 31 42 / 98%),
+      rgb(8 11 17 / 98%)
+    );
+  box-shadow:
+    0 10px 25px rgb(0 0 0 / 42%),
+    0 0 17px rgb(34 211 238 / 20%),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
+  transform:
+    translateX(-50%)
+    rotate(-45deg);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.roam-custom-start__ring {
+  position: absolute;
+  inset: 5px;
+  border: 2px solid rgb(255 255 255 / 94%);
+  border-radius: 9999px;
+  transform: rotate(45deg);
+}
+
+.roam-custom-start__core {
+  position: absolute;
+  inset: 9px;
+  border-radius: 9999px;
+  background: var(--roam-marker-accent);
+  box-shadow: 0 0 11px rgb(34 211 238 / 70%);
+  transform: rotate(45deg);
+}
+
+.roam-custom-start__shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  width: 15px;
+  height: 5px;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 38%);
+  filter: blur(2px);
+  transform: translateX(-50%);
+}
+
+.roam-custom-start--dragging
+  .roam-custom-start__pin {
+  transform:
+    translateX(-50%)
+    translateY(-4px)
+    rotate(-45deg)
+    scale(1.06);
+  box-shadow:
+    0 16px 30px rgb(0 0 0 / 46%),
+    0 0 23px rgb(34 211 238 / 32%),
+    inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+
+.roam-custom-start--dragging
+  .roam-custom-start__shadow {
+  width: 11px;
+  opacity: 0.65;
+}
+
+.roam-custom-start:hover .roam-custom-start__pin {
+  transform:
+    translateX(-50%)
+    translateY(-1px)
+    rotate(-45deg)
+    scale(1.03);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cluster markers                                                            */
+/* -------------------------------------------------------------------------- */
+
+.roam-cluster {
+  --roam-cluster-intensity: 0;
+
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.roam-cluster__halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background:
+    radial-gradient(
+      circle,
+      rgb(34 211 238 / 22%),
+      transparent 68%
+    );
+  filter: blur(4px);
+  opacity: 0.72;
+}
+
+.roam-cluster__shell {
+  position: absolute;
+  inset: 5px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 9999px;
+  background:
+    radial-gradient(
+      circle at 32% 26%,
+      rgb(255 255 255 / 13%),
+      transparent 33%
+    ),
+    linear-gradient(
+      180deg,
+      rgb(24 30 42 / 97%),
+      rgb(8 11 17 / 97%)
+    );
+  box-shadow:
+    0 10px 28px rgb(0 0 0 / 42%),
+    inset 0 1px 0 rgb(255 255 255 / 9%);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.roam-cluster__count {
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.roam-cluster__live {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  display: grid;
+  min-width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 1.5px solid #090c12;
+  border-radius: 9999px;
+  background: #8b5cf6;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1;
+  padding: 0 3px;
+  box-shadow: 0 0 10px rgb(139 92 246 / 62%);
+}
+
+.roam-cluster--large .roam-cluster__count {
+  font-size: 11px;
+}
+
+.roam-cluster--live .roam-cluster__halo {
+  opacity: 1;
+  animation:
+    roam-cluster-live-pulse
+    2.45s ease-out infinite;
+}
+
+.roam-cluster.roam-map-icon--selected
+  .roam-cluster__shell {
+  border-color: rgb(103 232 249 / 70%);
+  box-shadow:
+    0 0 0 3px rgb(34 211 238 / 15%),
+    0 13px 32px rgb(0 0 0 / 46%),
+    0 0 22px rgb(34 211 238 / 19%),
+    inset 0 1px 0 rgb(255 255 255 / 11%);
+}
+
+.roam-cluster:hover .roam-cluster__shell {
+  border-color: rgb(103 232 249 / 48%);
+  transform: scale(1.04);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Focus visibility                                                           */
+/* -------------------------------------------------------------------------- */
+
+.leaflet-marker-icon:focus-visible
+  .roam-map-icon,
+.leaflet-interactive:focus-visible {
+  outline: none;
+}
+
+.leaflet-marker-icon:focus-visible
+  .roam-venue-marker__shell,
+.leaflet-marker-icon:focus-visible
+  .roam-route-stop__shell,
+.leaflet-marker-icon:focus-visible
+  .roam-city-marker__shell,
+.leaflet-marker-icon:focus-visible
+  .roam-cluster__shell {
+  box-shadow:
+    0 0 0 3px rgb(255 255 255 / 88%),
+    0 0 0 6px rgb(34 211 238 / 30%),
+    0 12px 28px rgb(0 0 0 / 44%);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Animations                                                                 */
+/* -------------------------------------------------------------------------- */
+
+@keyframes roam-marker-live-pulse {
+  0% {
+    opacity: 0.72;
+    transform:
+      translate(-50%, -50%)
+      scale(0.72);
+  }
+
+  65% {
+    opacity: 0.12;
+    transform:
+      translate(-50%, -50%)
+      scale(1.34);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      scale(1.42);
+  }
+}
+
+@keyframes roam-route-stop-pulse {
+  0% {
+    opacity: 0.72;
+    transform: scale(0.84);
+  }
+
+  70% {
+    opacity: 0.08;
+    transform: scale(1.25);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.32);
+  }
+}
+
+@keyframes roam-city-live-pulse {
+  0% {
+    opacity: 0.72;
+    transform:
+      translate(-50%, -50%)
+      scale(0.88);
+  }
+
+  70% {
+    opacity: 0.08;
+    transform:
+      translate(-50%, -50%)
+      scale(1.18);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translate(-50%, -50%)
+      scale(1.24);
+  }
+}
+
+@keyframes roam-user-location-pulse {
+  0% {
+    opacity: 0.68;
+    transform: scale(0.72);
+  }
+
+  72% {
+    opacity: 0;
+    transform: scale(1.48);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.56);
+  }
+}
+
+@keyframes roam-custom-start-pulse {
+  0% {
+    opacity: 0.55;
+    transform:
+      translateX(-50%)
+      scale(0.72);
+  }
+
+  72% {
+    opacity: 0;
+    transform:
+      translateX(-50%)
+      scale(1.36);
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translateX(-50%)
+      scale(1.44);
+  }
+}
+
+@keyframes roam-cluster-live-pulse {
+  0% {
+    opacity: 0.58;
+    transform: scale(0.82);
+  }
+
+  72% {
+    opacity: 0.06;
+    transform: scale(1.22);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reduced motion                                                             */
+/* -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .roam-map-icon,
+  .roam-venue-marker__halo,
+  .roam-venue-marker__shell,
+  .roam-route-stop__halo,
+  .roam-route-stop__shell,
+  .roam-city-marker__halo,
+  .roam-city-marker__shell,
+  .roam-user-location__pulse,
+  .roam-custom-start__pulse,
+  .roam-custom-start__pin,
+  .roam-cluster__halo,
+  .roam-cluster__shell {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .roam-map-icon--interactive:hover {
+    transform: scale(var(--roam-marker-scale));
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* High-contrast support                                                      */
+/* -------------------------------------------------------------------------- */
+
+@media (forced-colors: active) {
+  .roam-venue-marker__shell,
+  .roam-route-stop__shell,
+  .roam-city-marker__shell,
+  .roam-custom-start__pin,
+  .roam-cluster__shell,
+  .roam-user-location__ring {
+    border: 2px solid CanvasText;
+    background: Canvas;
+    box-shadow: none;
+    forced-color-adjust: auto;
+  }
+
+  .roam-venue-marker__core,
+  .roam-user-location__core,
+  .roam-custom-start__core {
+    background: Highlight;
+  }
+
+  .roam-venue-marker__brand-dot,
+  .roam-route-stop__number,
+  .roam-city-marker__label,
+  .roam-cluster__count {
+    color: CanvasText;
+  }
+}

@@ -1,7 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useMap } from 'react-leaflet'
+import type {
+  LatLngBoundsExpression,
+  LeafletMouseEvent,
+  Map as LeafletMap,
+} from 'leaflet'
+
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
 
@@ -11,13 +17,26 @@ type Props = {
   onMapClick?: (lat: number, lon: number) => void
   defaultCenter: [number, number]
   setUserPosition: (pos: [number, number]) => void
-  mapRef: React.MutableRefObject<any>
+  mapRef: React.MutableRefObject<LeafletMap | null>
 }
 
 const USA_CENTER: [number, number] = [37.8, -96.9]
 const USA_ZOOM = 4
 const CITY_ZOOM = 12
-const PIN_FOCUS_ZOOM = 16
+
+function isValidCoordinate(
+  lat: number,
+  lon: number
+): boolean {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
+  )
+}
 
 export default function MapEffectController({
   city,
@@ -28,95 +47,236 @@ export default function MapEffectController({
   mapRef,
 }: Props) {
   const map = useMap()
-  const leafletRef = useRef<any>(null)
-  const hasAppliedPinFocusRef = useRef(false)
+
+  const hasAppliedPinFocusRef =
+    useRef(false)
+
+  const lastCityViewSignatureRef =
+    useRef<string | null>(null)
+
+  const lastRouteSignatureRef =
+    useRef<string | null>(null)
+
+  const defaultCenterSignature =
+    `${defaultCenter[0].toFixed(6)}:${defaultCenter[1].toFixed(6)}`
 
   const isPinnedCenter =
-    defaultCenter[0] !== USA_CENTER[0] || defaultCenter[1] !== USA_CENTER[1]
+    defaultCenter[0] !== USA_CENTER[0] ||
+    defaultCenter[1] !== USA_CENTER[1]
 
-  // Dynamically load Leaflet
-  useEffect(() => {
-    import('leaflet').then((L) => {
-      leafletRef.current = L
-    })
-  }, [])
-
-  useEffect(() => {
-    if (map) {
-      mapRef.current = map
+  const validRoutePoints = useMemo<
+    Array<[number, number]>
+  >(() => {
+    if (!route) {
+      return []
     }
+
+    return route
+      .filter((venue) =>
+        isValidCoordinate(
+          venue.lat,
+          venue.lon
+        )
+      )
+      .map((venue) => [
+        venue.lat,
+        venue.lon,
+      ])
+  }, [route])
+
+  const routeSignature = useMemo(
+    () =>
+      validRoutePoints
+        .map(
+          ([lat, lon]) =>
+            `${lat.toFixed(6)},${lon.toFixed(6)}`
+        )
+        .join(';'),
+    [validRoutePoints]
+  )
+
+  useEffect(() => {
+    mapRef.current = map
+
     return () => {
-      mapRef.current = null
+      if (mapRef.current === map) {
+        mapRef.current = null
+      }
     }
   }, [map, mapRef])
 
   useEffect(() => {
-    if (!map || !leafletRef.current) return
+    const cityViewSignature = [
+      city || 'usa',
+      defaultCenterSignature,
+      isPinnedCenter
+        ? 'pinned'
+        : 'standard',
+    ].join(':')
 
-    if (!city || city === '') {
-      hasAppliedPinFocusRef.current = false
-      map.flyTo(USA_CENTER, USA_ZOOM, {
-        animate: true,
-        duration: 1.5,
-      })
+    if (
+      lastCityViewSignatureRef.current ===
+      cityViewSignature
+    ) {
+      return
+    }
+
+    lastCityViewSignatureRef.current =
+      cityViewSignature
+
+    if (!city) {
+      hasAppliedPinFocusRef.current =
+        false
+
+      lastRouteSignatureRef.current =
+        null
+
+      map.flyTo(
+        USA_CENTER,
+        USA_ZOOM,
+        {
+          animate: true,
+          duration: 1.5,
+        }
+      )
+
       return
     }
 
     if (isPinnedCenter) {
-      hasAppliedPinFocusRef.current = true
+      hasAppliedPinFocusRef.current =
+        true
+
       return
     }
 
-    hasAppliedPinFocusRef.current = false
+    hasAppliedPinFocusRef.current =
+      false
 
-    const timeout = setTimeout(() => {
-      map.flyTo(defaultCenter, CITY_ZOOM, {
-        animate: true,
-        duration: 1.75,
-      })
-    }, 300)
+    const timeout =
+      window.setTimeout(() => {
+        map.flyTo(
+          defaultCenter,
+          CITY_ZOOM,
+          {
+            animate: true,
+            duration: 1.75,
+          }
+        )
+      }, 300)
 
-    return () => clearTimeout(timeout)
-  }, [city, map, defaultCenter, isPinnedCenter])
+    return () => {
+      window.clearTimeout(timeout)
+    }
+  }, [
+    city,
+    map,
+    defaultCenter,
+    defaultCenterSignature,
+    isPinnedCenter,
+  ])
 
   useEffect(() => {
-    if (!map || !route || route.length < 2 || !leafletRef.current) return
+    if (
+      validRoutePoints.length < 2
+    ) {
+      lastRouteSignatureRef.current =
+        null
 
-    if (hasAppliedPinFocusRef.current || isPinnedCenter) return
-
-    const L = leafletRef.current
-    const bounds = L.latLngBounds(route.map((v: Venue) => [v.lat, v.lon]))
-    map.fitBounds(bounds, { padding: [50, 50] })
-  }, [map, route, isPinnedCenter])
-
-  useEffect(() => {
-    if (!map || !onMapClick || !leafletRef.current) return
-
-    const L = leafletRef.current
-    const handler = (e: (typeof L)['LeafletMouseEvent']) => {
-      onMapClick(e.latlng.lat, e.latlng.lng)
+      return
     }
 
-    map.on('click', handler)
+    if (
+      hasAppliedPinFocusRef.current ||
+      isPinnedCenter
+    ) {
+      return
+    }
+
+    if (
+      lastRouteSignatureRef.current ===
+      routeSignature
+    ) {
+      return
+    }
+
+    lastRouteSignatureRef.current =
+      routeSignature
+
+    const bounds: LatLngBoundsExpression =
+      validRoutePoints
+
+    map.flyToBounds(bounds, {
+      paddingTopLeft: [50, 88],
+      paddingBottomRight: [50, 96],
+      animate: true,
+      duration: 0.9,
+    })
+  }, [
+    map,
+    validRoutePoints,
+    routeSignature,
+    isPinnedCenter,
+  ])
+
+  useEffect(() => {
+    if (!onMapClick) {
+      return
+    }
+
+    const handleMapClick = (
+      event: LeafletMouseEvent
+    ) => {
+      onMapClick(
+        event.latlng.lat,
+        event.latlng.lng
+      )
+    }
+
+    map.on(
+      'click',
+      handleMapClick
+    )
+
     return () => {
-      map.off('click', handler)
+      map.off(
+        'click',
+        handleMapClick
+      )
     }
   }, [map, onMapClick])
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.navigator?.geolocation) {
-      setUserPosition(defaultCenter)
+    if (
+      typeof window === 'undefined' ||
+      !window.navigator?.geolocation
+    ) {
+      setUserPosition(
+        defaultCenter
+      )
+
       return
     }
 
-    const geo = window.navigator.geolocation
-    geo.getCurrentPosition(
+    const geolocation =
+      window.navigator.geolocation
+
+    geolocation.getCurrentPosition(
       (position) => {
-        setUserPosition([position.coords.latitude, position.coords.longitude])
+        setUserPosition([
+          position.coords.latitude,
+          position.coords.longitude,
+        ])
       },
-      (err) => {
-        console.warn('Geolocation error:', err)
-        setUserPosition(defaultCenter)
+      (error) => {
+        console.warn(
+          'Geolocation error:',
+          error
+        )
+
+        setUserPosition(
+          defaultCenter
+        )
       },
       {
         enableHighAccuracy: true,
@@ -124,7 +284,11 @@ export default function MapEffectController({
         maximumAge: 0,
       }
     )
-  }, [city, defaultCenter, setUserPosition])
+  }, [
+    city,
+    defaultCenter,
+    setUserPosition,
+  ])
 
   useEffect(() => {
     logEvent('map_opened', {

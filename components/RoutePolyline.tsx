@@ -7,16 +7,26 @@ if (typeof window === 'undefined') {
   )
 }
 
-import type React from 'react'
+import type { ReactNode } from 'react'
 import type { LatLngExpression } from 'leaflet'
+
+type RoutePolylineRenderProps = {
+  positions: LatLngExpression[]
+  color: string
+}
 
 type RoutePolylineProps = {
   coords: LatLngExpression[]
   color: string
-  render: (props: {
-    positions: LatLngExpression[]
-    color: string
-  }) => React.ReactNode
+  render: (
+    props: RoutePolylineRenderProps
+  ) => ReactNode
+}
+
+function hasRenderableCoordinates(
+  coords: LatLngExpression[]
+): boolean {
+  return coords.length > 0
 }
 
 export default function RoutePolyline({
@@ -24,7 +34,9 @@ export default function RoutePolyline({
   color,
   render,
 }: RoutePolylineProps) {
-  if (coords.length === 0) return null
+  if (!hasRenderableCoordinates(coords)) {
+    return null
+  }
 
   return render({
     positions: coords,
