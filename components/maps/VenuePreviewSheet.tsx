@@ -568,12 +568,7 @@ export default function VenuePreviewSheet({
                 id={descriptionId}
                 className="mt-1 text-sm leading-5 text-zinc-400"
               >
-                {[
-                  typeLabel,
-                  vibeLabel,
-                ]
-                  .filter(Boolean)
-                  .join(' · ') ||
+                {typeLabel ||
                   'Curated Roam venue'}
               </p>
             </header>
@@ -767,11 +762,15 @@ export default function VenuePreviewSheet({
                 )}
 
                 <div className="min-h-11">
-                {favoritableVenue ? (
-                    <FavoritesButton venue={favoritableVenue} />
-                ) : (
+                  {favoritableVenue ? (
+                    <FavoritesButton
+                      venue={
+                        favoritableVenue
+                      }
+                    />
+                  ) : (
                     <div
-                    className="
+                      className="
                         flex
                         min-h-11
                         w-full
@@ -786,11 +785,11 @@ export default function VenuePreviewSheet({
                         text-xs
                         font-semibold
                         text-zinc-500
-                    "
+                      "
                     >
-                    Save unavailable
+                      Save unavailable
                     </div>
-                )}
+                  )}
                 </div>
               </div>
 
