@@ -30,12 +30,14 @@ type Props = {
 
 type CityIconMap = Partial<Record<CitySlug, DivIcon>>
 
+const EMPTY_CITY_ACTIVITY: CityActivityBySlug = {}
+
 export default function CityOverviewMarkers({
   onSelectCity,
   excludedCity = null,
   selectedCity = null,
   markerScale = 1,
-  cityActivity = {},
+  cityActivity = EMPTY_CITY_ACTIVITY,
 }: Props) {
   const [cityIcons, setCityIcons] = useState<CityIconMap>({})
 

@@ -1,6 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react'
 import { useMap } from 'react-leaflet'
 import type {
   LatLngBoundsExpression,
@@ -14,13 +18,28 @@ import { logEvent } from '@/lib/logEvent'
 type Props = {
   city: string
   route?: Venue[]
-  onMapClick?: (lat: number, lon: number) => void
-  defaultCenter: [number, number]
-  setUserPosition: (pos: [number, number]) => void
+  onMapClick?: (
+    lat: number,
+    lon: number
+  ) => void
+  defaultCenter: [
+    number,
+    number,
+  ]
+  setUserPosition: (
+    pos: [
+      number,
+      number,
+    ]
+  ) => void
   mapRef: React.MutableRefObject<LeafletMap | null>
 }
 
-const USA_CENTER: [number, number] = [37.8, -96.9]
+const USA_CENTER: [
+  number,
+  number,
+] = [37.8, -96.9]
+
 const USA_ZOOM = 4
 const CITY_ZOOM = 12
 
@@ -57,62 +76,114 @@ export default function MapEffectController({
   const lastRouteSignatureRef =
     useRef<string | null>(null)
 
+  const lastGeolocationSignatureRef =
+    useRef<string | null>(null)
+
+  const setUserPositionRef =
+    useRef(setUserPosition)
+
+  const defaultLatitude =
+    defaultCenter[0]
+
+  const defaultLongitude =
+    defaultCenter[1]
+
+  const stableDefaultCenter =
+    useMemo<
+      [number, number]
+    >(
+      () => [
+        defaultLatitude,
+        defaultLongitude,
+      ],
+      [
+        defaultLatitude,
+        defaultLongitude,
+      ]
+    )
+
   const defaultCenterSignature =
-    `${defaultCenter[0].toFixed(6)}:${defaultCenter[1].toFixed(6)}`
+    useMemo(
+      () =>
+        `${defaultLatitude.toFixed(6)}:${defaultLongitude.toFixed(6)}`,
+      [
+        defaultLatitude,
+        defaultLongitude,
+      ]
+    )
 
   const isPinnedCenter =
-    defaultCenter[0] !== USA_CENTER[0] ||
-    defaultCenter[1] !== USA_CENTER[1]
+    defaultLatitude !==
+      USA_CENTER[0] ||
+    defaultLongitude !==
+      USA_CENTER[1]
 
-  const validRoutePoints = useMemo<
-    Array<[number, number]>
-  >(() => {
-    if (!route) {
-      return []
-    }
+  const validRoutePoints =
+    useMemo<
+      Array<
+        [number, number]
+      >
+    >(() => {
+      if (!route) {
+        return []
+      }
 
-    return route
-      .filter((venue) =>
-        isValidCoordinate(
+      return route
+        .filter((venue) =>
+          isValidCoordinate(
+            venue.lat,
+            venue.lon
+          )
+        )
+        .map((venue) => [
           venue.lat,
-          venue.lon
-        )
-      )
-      .map((venue) => [
-        venue.lat,
-        venue.lon,
-      ])
-  }, [route])
+          venue.lon,
+        ])
+    }, [route])
 
-  const routeSignature = useMemo(
-    () =>
-      validRoutePoints
-        .map(
-          ([lat, lon]) =>
-            `${lat.toFixed(6)},${lon.toFixed(6)}`
-        )
-        .join(';'),
-    [validRoutePoints]
-  )
+  const routeSignature =
+    useMemo(
+      () =>
+        validRoutePoints
+          .map(
+            ([lat, lon]) =>
+              `${lat.toFixed(6)},${lon.toFixed(6)}`
+          )
+          .join(';'),
+      [validRoutePoints]
+    )
+
+  /*
+   * Keep the latest parent callback available without making geolocation
+   * restart whenever the callback identity changes.
+   */
+  useEffect(() => {
+    setUserPositionRef.current =
+      setUserPosition
+  }, [setUserPosition])
 
   useEffect(() => {
     mapRef.current = map
 
     return () => {
-      if (mapRef.current === map) {
-        mapRef.current = null
+      if (
+        mapRef.current === map
+      ) {
+        mapRef.current =
+          null
       }
     }
   }, [map, mapRef])
 
   useEffect(() => {
-    const cityViewSignature = [
-      city || 'usa',
-      defaultCenterSignature,
-      isPinnedCenter
-        ? 'pinned'
-        : 'standard',
-    ].join(':')
+    const cityViewSignature =
+      [
+        city || 'usa',
+        defaultCenterSignature,
+        isPinnedCenter
+          ? 'pinned'
+          : 'standard',
+      ].join(':')
 
     if (
       lastCityViewSignatureRef.current ===
@@ -156,7 +227,7 @@ export default function MapEffectController({
     const timeout =
       window.setTimeout(() => {
         map.flyTo(
-          defaultCenter,
+          stableDefaultCenter,
           CITY_ZOOM,
           {
             animate: true,
@@ -166,19 +237,22 @@ export default function MapEffectController({
       }, 300)
 
     return () => {
-      window.clearTimeout(timeout)
+      window.clearTimeout(
+        timeout
+      )
     }
   }, [
     city,
     map,
-    defaultCenter,
+    stableDefaultCenter,
     defaultCenterSignature,
     isPinnedCenter,
   ])
 
   useEffect(() => {
     if (
-      validRoutePoints.length < 2
+      validRoutePoints.length <
+      2
     ) {
       lastRouteSignatureRef.current =
         null
@@ -203,12 +277,19 @@ export default function MapEffectController({
     lastRouteSignatureRef.current =
       routeSignature
 
-    const bounds: LatLngBoundsExpression =
-      validRoutePoints
+    const bounds:
+      LatLngBoundsExpression =
+        validRoutePoints
 
     map.flyToBounds(bounds, {
-      paddingTopLeft: [50, 88],
-      paddingBottomRight: [50, 96],
+      paddingTopLeft: [
+        50,
+        88,
+      ],
+      paddingBottomRight: [
+        50,
+        96,
+      ],
       animate: true,
       duration: 0.9,
     })
@@ -244,38 +325,74 @@ export default function MapEffectController({
         handleMapClick
       )
     }
-  }, [map, onMapClick])
+  }, [
+    map,
+    onMapClick,
+  ])
 
   useEffect(() => {
+    const geolocationSignature =
+      [
+        city || 'usa',
+        defaultCenterSignature,
+      ].join(':')
+
     if (
-      typeof window === 'undefined' ||
-      !window.navigator?.geolocation
+      lastGeolocationSignatureRef.current ===
+      geolocationSignature
     ) {
-      setUserPosition(
-        defaultCenter
+      return
+    }
+
+    lastGeolocationSignatureRef.current =
+      geolocationSignature
+
+    if (
+      typeof window ===
+        'undefined' ||
+      !window.navigator
+        ?.geolocation
+    ) {
+      setUserPositionRef.current(
+        stableDefaultCenter
       )
 
       return
     }
 
+    let active = true
+
     const geolocation =
-      window.navigator.geolocation
+      window.navigator
+        .geolocation
 
     geolocation.getCurrentPosition(
       (position) => {
-        setUserPosition([
-          position.coords.latitude,
-          position.coords.longitude,
-        ])
+        if (!active) {
+          return
+        }
+
+        setUserPositionRef.current(
+          [
+            position.coords
+              .latitude,
+            position.coords
+              .longitude,
+          ]
+        )
       },
       (error) => {
+        if (!active) {
+          return
+        }
+
         console.warn(
           'Geolocation error:',
           error
         )
 
-        setUserPosition(
-          defaultCenter
+        setUserPositionRef.current(
+          stableDefaultCenter
         )
       },
       {
@@ -284,19 +401,26 @@ export default function MapEffectController({
         maximumAge: 0,
       }
     )
+
+    return () => {
+      active = false
+    }
   }, [
     city,
-    defaultCenter,
-    setUserPosition,
+    defaultCenterSignature,
+    stableDefaultCenter,
   ])
 
   useEffect(() => {
-    logEvent('map_opened', {
-      metadata: {
-        screen: 'map',
-        city,
-      },
-    })
+    logEvent(
+      'map_opened',
+      {
+        metadata: {
+          screen: 'map',
+          city,
+        },
+      }
+    )
   }, [city])
 
   return null
