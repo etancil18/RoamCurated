@@ -32,6 +32,26 @@ type CityIconMap = Partial<Record<CitySlug, DivIcon>>
 
 const EMPTY_CITY_ACTIVITY: CityActivityBySlug = {}
 
+/**
+ * Explicit, recognizable city abbreviations for overview markers.
+ *
+ * Any city not listed here still falls back to its configured abbreviation
+ * or the first three letters of its display name.
+ */
+const CITY_OVERVIEW_ABBREVIATIONS: Partial<
+  Record<CitySlug, string>
+> = {
+  atl: 'ATL',
+  nyc: 'NYC',
+  la: 'LA',
+  mia: 'MIA',
+  london: 'LDN',
+  lisbon: 'LIS',
+  porto: 'OPO',
+  rome: 'ROM',
+  paris: 'PAR',
+}
+
 export default function CityOverviewMarkers({
   onSelectCity,
   excludedCity = null,
@@ -74,14 +94,23 @@ export default function CityOverviewMarkers({
               const liveEventCount =
                 activity?.liveEventCount ?? 0
 
-              const abbreviation =
+              const configuredAbbreviation =
                 'abbreviation' in config &&
                 typeof config.abbreviation ===
                   'string'
                   ? config.abbreviation
-                  : config.name
-                      .slice(0, 3)
+                      .trim()
                       .toUpperCase()
+                  : null
+
+              const abbreviation =
+                CITY_OVERVIEW_ABBREVIATIONS[
+                  slug
+                ] ??
+                configuredAbbreviation ??
+                config.name
+                  .slice(0, 3)
+                  .toUpperCase()
 
               const icon =
                 await getCityOverviewIcon({
