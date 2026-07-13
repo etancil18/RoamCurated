@@ -248,15 +248,6 @@ export default function VenuePreviewSheet({
     [venue]
   )
 
-  const typeLabel = useMemo(
-    () =>
-      venue
-        ? formatListValue(
-            venue.type
-          )
-        : '',
-    [venue]
-  )
 
   const todayHours = useMemo(
     () =>
@@ -564,13 +555,6 @@ export default function VenuePreviewSheet({
                 {venue.name}
               </h2>
 
-              <p
-                id={descriptionId}
-                className="mt-1 text-sm leading-5 text-zinc-400"
-              >
-                {typeLabel ||
-                  'Curated Roam venue'}
-              </p>
             </header>
 
             {(todayHours ||
