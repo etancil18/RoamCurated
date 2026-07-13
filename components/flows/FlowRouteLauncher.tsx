@@ -238,9 +238,7 @@ export default function FlowRouteLauncher({
             Route Actions
           </p>
 
-          <p className="mt-1 text-sm text-neutral-400">
-            Open this flow in your preferred maps app.
-          </p>
+          
         </div>
 
         <Button
