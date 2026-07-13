@@ -23,11 +23,22 @@ type Props = {
   className?: string
 }
 
-function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+function safeLogEvent(
+  eventName: string,
+  metadata: Record<string, unknown> = {}
+) {
   try {
-    void Promise.resolve(logEvent(eventName, { metadata }))
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
   } catch (error) {
-    console.warn('logEvent failed:', eventName, error)
+    console.warn(
+      'logEvent failed:',
+      eventName,
+      error
+    )
   }
 }
 
@@ -38,7 +49,10 @@ export default function FlowRouteLauncher({
   source = 'active_flow',
   className = '',
 }: Props) {
-  const [routeChooserOpen, setRouteChooserOpen] = useState(false)
+  const [
+    routeChooserOpen,
+    setRouteChooserOpen,
+  ] = useState(false)
 
   const routeVenues = useMemo(() => {
     return venues.filter(
@@ -50,9 +64,13 @@ export default function FlowRouteLauncher({
     )
   }, [venues])
 
-  const canLaunchRoute = routeVenues.length >= 2
+  const canLaunchRoute =
+    routeVenues.length >= 2
 
-  function baseLogMetadata(): Record<string, unknown> {
+  function baseLogMetadata(): Record<
+    string,
+    unknown
+  > {
     return {
       flow_id: flowId,
       source,
@@ -61,79 +79,148 @@ export default function FlowRouteLauncher({
     }
   }
 
-  function openExternalUrl(primaryUrl: string, fallbackUrl?: string) {
-    window.location.href = primaryUrl
+  /**
+   * Opens the destination outside the current Roam browsing context.
+   *
+   * Standard HTTPS universal links allow iOS and Android to hand the request
+   * to an installed maps app while preserving the current Roam screen.
+   */
+  function openExternalUrl(url: string) {
+    const anchor =
+      document.createElement('a')
 
-    if (fallbackUrl) {
-      window.setTimeout(() => {
-        window.open(fallbackUrl, '_blank', 'noopener,noreferrer')
-      }, 900)
-    }
+    anchor.href = url
+    anchor.target = '_blank'
+    anchor.rel = 'noopener noreferrer'
+    anchor.style.display = 'none'
+
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
   }
 
   function buildGoogleMapsWebUrl() {
-    const origin = routeVenues[0]
-    const destination = routeVenues[routeVenues.length - 1]
-    const waypoints = routeVenues
-      .slice(1, -1)
-      .map((venue) => `${venue.lat},${venue.lon}`)
-      .join('|')
+    const origin =
+      routeVenues[0]
 
-    const url = new URL('https://www.google.com/maps/dir/')
-    url.searchParams.set('api', '1')
-    url.searchParams.set('origin', `${origin.lat},${origin.lon}`)
-    url.searchParams.set('destination', `${destination.lat},${destination.lon}`)
+    const destination =
+      routeVenues[
+        routeVenues.length - 1
+      ]
+
+    const waypoints =
+      routeVenues
+        .slice(1, -1)
+        .map(
+          (venue) =>
+            `${venue.lat},${venue.lon}`
+        )
+        .join('|')
+
+    const url =
+      new URL(
+        'https://www.google.com/maps/dir/'
+      )
+
+    url.searchParams.set(
+      'api',
+      '1'
+    )
+
+    url.searchParams.set(
+      'origin',
+      `${origin.lat},${origin.lon}`
+    )
+
+    url.searchParams.set(
+      'destination',
+      `${destination.lat},${destination.lon}`
+    )
+
     url.searchParams.set(
       'travelmode',
-      travelMode === 'cycling' ? 'bicycling' : travelMode
+      travelMode === 'cycling'
+        ? 'bicycling'
+        : travelMode
     )
 
     if (waypoints) {
-      url.searchParams.set('waypoints', waypoints)
+      url.searchParams.set(
+        'waypoints',
+        waypoints
+      )
     }
 
     return url.toString()
   }
 
+  function buildAppleMapsUrl() {
+    const origin =
+      routeVenues[0]
+
+    const destination =
+      routeVenues[
+        routeVenues.length - 1
+      ]
+
+    const dirFlag =
+      travelMode === 'driving'
+        ? 'd'
+        : travelMode === 'walking'
+          ? 'w'
+          : 'r'
+
+    const url =
+      new URL(
+        'https://maps.apple.com/'
+      )
+
+    url.searchParams.set(
+      'saddr',
+      `${origin.lat},${origin.lon}`
+    )
+
+    url.searchParams.set(
+      'daddr',
+      `${destination.lat},${destination.lon}`
+    )
+
+    url.searchParams.set(
+      'dirflg',
+      dirFlag
+    )
+
+    return url.toString()
+  }
+
   function openGoogleMaps() {
-    if (!canLaunchRoute) return
+    if (!canLaunchRoute) {
+      return
+    }
 
-    safeLogEvent('flow_route_google_maps_clicked', baseLogMetadata())
+    safeLogEvent(
+      'flow_route_google_maps_clicked',
+      baseLogMetadata()
+    )
 
-    const origin = routeVenues[0]
-    const destination = routeVenues[routeVenues.length - 1]
-    const directionsMode =
-      travelMode === 'cycling' ? 'bicycling' : travelMode
-
-    const appUrl =
-      `comgooglemaps://?saddr=${origin.lat},${origin.lon}` +
-      `&daddr=${destination.lat},${destination.lon}` +
-      `&directionsmode=${directionsMode}`
-
-    openExternalUrl(appUrl, buildGoogleMapsWebUrl())
+    openExternalUrl(
+      buildGoogleMapsWebUrl()
+    )
   }
 
   function openAppleMaps() {
-    if (!canLaunchRoute) return
+    if (!canLaunchRoute) {
+      return
+    }
 
-    safeLogEvent('flow_route_apple_maps_clicked', baseLogMetadata())
+    safeLogEvent(
+      'flow_route_apple_maps_clicked',
+      baseLogMetadata()
+    )
 
-    const origin = routeVenues[0]
-    const destination = routeVenues[routeVenues.length - 1]
-    const dirFlag =
-      travelMode === 'driving' ? 'd' : travelMode === 'walking' ? 'w' : 'r'
-
-    const appUrl =
-      `maps://?saddr=${origin.lat},${origin.lon}` +
-      `&daddr=${destination.lat},${destination.lon}` +
-      `&dirflg=${dirFlag}`
-
-    const fallbackUrl =
-      `https://maps.apple.com/?saddr=${origin.lat},${origin.lon}` +
-      `&daddr=${destination.lat},${destination.lon}` +
-      `&dirflg=${dirFlag}`
-
-    openExternalUrl(appUrl, fallbackUrl)
+    openExternalUrl(
+      buildAppleMapsUrl()
+    )
   }
 
   return (
@@ -150,6 +237,7 @@ export default function FlowRouteLauncher({
           <p className="text-xs font-semibold uppercase tracking-wide text-indigo-400">
             Route Actions
           </p>
+
           <p className="mt-1 text-sm text-neutral-400">
             Open this flow in your preferred maps app.
           </p>
@@ -159,7 +247,11 @@ export default function FlowRouteLauncher({
           type="button"
           disabled={!canLaunchRoute}
           onClick={() => {
-            safeLogEvent('flow_start_route_clicked', baseLogMetadata())
+            safeLogEvent(
+              'flow_start_route_clicked',
+              baseLogMetadata()
+            )
+
             setRouteChooserOpen(true)
           }}
           className="bg-indigo-600 text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -180,19 +272,29 @@ export default function FlowRouteLauncher({
           role="dialog"
           aria-modal="true"
           onClick={() => {
-            safeLogEvent('flow_route_chooser_cancelled', {
-              ...baseLogMetadata(),
-              cancel_source: 'backdrop',
-            })
+            safeLogEvent(
+              'flow_route_chooser_cancelled',
+              {
+                ...baseLogMetadata(),
+                cancel_source:
+                  'backdrop',
+              }
+            )
+
             setRouteChooserOpen(false)
           }}
         >
           <div
             className="w-full max-w-sm rounded-2xl border border-neutral-700 bg-neutral-950 p-5 text-white shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <div className="mb-5">
-              <p className="text-lg font-semibold text-white">Start route</p>
+              <p className="text-lg font-semibold text-white">
+                Start route
+              </p>
+
               <p className="mt-1 text-sm leading-5 text-neutral-300">
                 Choose your preferred maps app.
               </p>
@@ -200,6 +302,7 @@ export default function FlowRouteLauncher({
 
             <div className="space-y-3">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setRouteChooserOpen(false)
@@ -211,6 +314,7 @@ export default function FlowRouteLauncher({
               </Button>
 
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setRouteChooserOpen(false)
@@ -222,12 +326,18 @@ export default function FlowRouteLauncher({
               </Button>
 
               <Button
+                type="button"
                 variant="ghost"
                 onClick={() => {
-                  safeLogEvent('flow_route_chooser_cancelled', {
-                    ...baseLogMetadata(),
-                    cancel_source: 'button',
-                  })
+                  safeLogEvent(
+                    'flow_route_chooser_cancelled',
+                    {
+                      ...baseLogMetadata(),
+                      cancel_source:
+                        'button',
+                    }
+                  )
+
                   setRouteChooserOpen(false)
                 }}
                 className="h-11 w-full text-neutral-300 hover:bg-neutral-900 hover:text-white"
