@@ -47,7 +47,7 @@ export const CITY_CONFIGS: Record<string, CityConfig> = {
 
   nyc: {
     name: 'New York City',
-    center: [40.73061, -73.935242],
+    center: [40.720894, -74.002213],
     zoom: 13.9,
     timezone: 'America/New_York',
     planning: {

@@ -2561,7 +2561,7 @@ const atlantaData = [
     "lat": 33.7759439,
     "lon": -84.2735812,
     "link": "https://www.instagram.com/commune_atl/",
-    "cover": "img/venues/Commune.jpg",
+    "cover": "img/venues/commune-atl1.jpeg",
     "openNow": true,
     "hours": [
       "Sunday: Closed",
@@ -13792,7 +13792,7 @@ const atlantaData = [
     "lat": 33.7718481,
     "lon": -84.35261541,
     "link": "https://www.instagram.com/thesupermarket.atl/?hl=en",
-    "cover": "img/venues/The Supermarket.jpg",
+    "cover": "img/venues/supermarket-atl1.jpeg",
     "openNow": true,
     "hours": [
       "Sunday: 12:00 PM–11:00 PM",
@@ -32398,7 +32398,7 @@ const atlantaData = [
     "lat": 33.7988444,
     "lon": -84.3683545,
     "link": "https://www.instagram.com/mistoraatlanta/",
-    "cover": "img/venues/Mistora.jpg",
+    "cover": "img/venues/mistora-atl1.jpeg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 4:00 PM–12:00 AM",
