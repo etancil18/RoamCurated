@@ -10,6 +10,48 @@ import {
 
 type SupportedCity = "nyc" | "atl" | "lisbon" | "porto" | "london" | "la";
 
+const DATE_NIGHT_BLOCKED_TYPES = [
+  "fitness",
+  "gym",
+  "yoga",
+  "pilates",
+  "spin",
+  "workout",
+  "wellness",
+];
+
+function normalizeStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .flatMap((item) => item.split(","))
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function isBlockedForTheme(venue: Venue, theme: CrawlTheme): boolean {
+  if (theme.themeId !== "date-night") return false;
+
+  const venueTypes = normalizeStringList(venue.type);
+
+  return venueTypes.some((type) =>
+    DATE_NIGHT_BLOCKED_TYPES.some(
+      (blockedType) =>
+        type === blockedType || type.includes(blockedType)
+    )
+  );
+}
+
 /**
  * City-specific curved distance scoring
  */
@@ -81,6 +123,10 @@ export function computeScore(
     dist?: number;
   }
 ): number {
+  if (isBlockedForTheme(venue, theme)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
   const {
     vibe = 3,
     tag = 2,
@@ -163,6 +209,7 @@ export function sortVenuesByScore(
   }
 ): Venue[] {
   return venues
+    .filter((venue) => !isBlockedForTheme(venue, theme))
     .map((v) => ({
       ...v,
       _score: computeScore(v, theme, origin, lastVenue, city, weight),

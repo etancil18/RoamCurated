@@ -4,6 +4,7 @@ type TransitionContext = {
   previous: Venue | null;
   candidate: Venue;
   stageType?: string | null;
+  themeId?: string | null;
 };
 
 function normalizeStringList(value: unknown): string[] {
@@ -45,7 +46,15 @@ const NIGHT_DRINK_TYPES = [
   "rooftop",
   "club",
 ];
-const FITNESS_TYPES = ["fitness", "yoga", "pilates", "wellness"];
+const FITNESS_TYPES = [
+  "fitness",
+  "gym",
+  "yoga",
+  "pilates",
+  "spin",
+  "workout",
+  "wellness",
+];
 const SOFT_EXPLORATION_TYPES = [
   "gallery",
   "museum",
@@ -65,17 +74,28 @@ const WIND_DOWN_TYPES = ["dessert", "wine bar", "lounge", "tea"];
  * Positive score = better sequence.
  * Negative score = awkward/repetitive sequence.
  *
- * This should influence ranking, not hard-block candidates.
+ * This should influence ranking, not hard-block candidates,
+ * except for explicit theme-level exclusions.
  */
 export function transitionScore({
   previous,
   candidate,
   stageType,
+  themeId,
 }: TransitionContext): number {
+  const nextTypes = getVenueTypes(candidate);
+  const normalizedThemeId = themeId?.trim().toLowerCase() ?? "";
+
+  if (
+    normalizedThemeId === "date-night" &&
+    hasAny(nextTypes, FITNESS_TYPES)
+  ) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
   if (!previous) return 0;
 
   const prevTypes = getVenueTypes(previous);
-  const nextTypes = getVenueTypes(candidate);
   const desiredStage = stageType?.trim().toLowerCase() ?? "";
 
   let score = 0;
@@ -277,16 +297,21 @@ export function transitionScore({
 export function applyTransitionScore<T extends Venue>(
   candidate: T,
   previous: Venue | null,
-  stageType?: string | null
+  stageType?: string | null,
+  themeId?: string | null
 ): T {
   const bonus = transitionScore({
     previous,
     candidate,
     stageType,
+    themeId,
   });
 
   return {
     ...candidate,
-    _score: (candidate._score ?? 0) + bonus,
+    _score:
+      bonus === Number.NEGATIVE_INFINITY
+        ? Number.NEGATIVE_INFINITY
+        : (candidate._score ?? 0) + bonus,
   };
 }

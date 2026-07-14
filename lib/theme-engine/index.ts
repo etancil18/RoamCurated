@@ -229,7 +229,8 @@ export async function generateThemeRoute({
         applyTransitionScore(
           v,
           route[route.length - 1] || null,
-          desiredType
+          desiredType,
+          theme.themeId
         )
       );
 

@@ -80,6 +80,16 @@ const TYPE_MATCH_MAP: Record<string, string[]> = {
   juice: ["juice", "smoothie", "acai", "cleanse", "organic"],
 };
 
+const DATE_NIGHT_BLOCKED_TYPES = [
+  "fitness",
+  "gym",
+  "yoga",
+  "pilates",
+  "spin",
+  "workout",
+  "wellness",
+];
+
 type RelaxationLevel =
   | "strict"
   | "relax-theme"
@@ -159,6 +169,19 @@ export function selectCandidates({
     if (selected.has(venueId)) return false;
 
     const venueTypes = normalizeStringList(v.type);
+
+    if (
+      theme.themeId === "date-night" &&
+      venueTypes.some((type) =>
+        DATE_NIGHT_BLOCKED_TYPES.some(
+          (blockedType) =>
+            type === blockedType || type.includes(blockedType)
+        )
+      )
+    ) {
+      return false;
+    }
+
     const isEventVenue =
       venueTypes.includes("event") || (v as any).liveEvent === true;
 
