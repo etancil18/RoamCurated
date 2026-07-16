@@ -40718,7 +40718,7 @@ const atlantaData = [
     "lat": "33.7821356",
     "lon": "-84.3538968",
     "link": "https://www.instagram.com/so.fox.atl/",
-    "cover": "img/venues/.jpg",
+    "cover": "img/venues/so-fox-atl.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
