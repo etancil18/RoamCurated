@@ -67,8 +67,6 @@ type StickerSelection = {
   stops: StickerStop[]
 }
 
-type StickerExportIntent = 'save' | 'share'
-
 type Props = {
   initialCities?: VisitCityGroup[]
   initialTotalVisits?: number
@@ -103,8 +101,6 @@ export default function VisitHistorySection({
   const [stickerOpen, setStickerOpen] = useState(false)
   const [stickerLoading, setStickerLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
-  const [exportIntent, setExportIntent] =
-    useState<StickerExportIntent>('save')
 
   const loadVisitHistory = useCallback(async () => {
     setLoading(true)
@@ -205,11 +201,9 @@ export default function VisitHistorySection({
   const openDaySticker = async ({
     city,
     day,
-    intent,
   }: {
     city: string
     day: VisitDayGroup
-    intent: StickerExportIntent
   }) => {
     if (stickerLoading || exporting) return
 
@@ -243,7 +237,6 @@ export default function VisitHistorySection({
 
     setStickerLoading(true)
     setError(null)
-    setExportIntent(intent)
 
     try {
       const routeLine = await fetchRouteLine(stops)
@@ -295,27 +288,8 @@ export default function VisitHistorySection({
       const safeCity = slugify(selectedSticker.city)
       const fileName = `roam-${safeCity}-${selectedSticker.date}-route.png`
 
-      const file = new File([blob], fileName, {
-        type: 'image/png',
-      })
-
-      if (
-        exportIntent === 'share' &&
-        navigator.canShare?.({ files: [file] })
-      ) {
-        await navigator.share({
-          title: `${selectedSticker.city} Roam Route`,
-          text: `Places I visited in ${selectedSticker.city} on ${selectedSticker.label}.`,
-          files: [file],
-        })
-
-        return
-      }
-
       downloadBlob(blob, fileName)
     } catch (err) {
-      if (isShareCancellation(err)) return
-
       console.error(
         '[VisitHistorySection] Sticker export failed:',
         err
@@ -420,7 +394,7 @@ export default function VisitHistorySection({
                         expanded ? 'rotate-180' : '',
                       ].join(' ')}
                     >
-                     ⌄
+                      ⌄
                     </span>
                   </button>
 
@@ -434,11 +408,10 @@ export default function VisitHistorySection({
                             day={day}
                             stickerLoading={stickerLoading}
                             exporting={exporting}
-                            onCreateSticker={(intent) =>
+                            onCreateSticker={() =>
                               void openDaySticker({
                                 city: cityGroup.city,
                                 day,
-                                intent,
                               })
                             }
                           />
@@ -496,7 +469,7 @@ function VisitDayCard({
   day: VisitDayGroup
   stickerLoading: boolean
   exporting: boolean
-  onCreateSticker: (intent: StickerExportIntent) => void
+  onCreateSticker: () => void
 }) {
   const disabled = stickerLoading || exporting
 
@@ -515,25 +488,14 @@ function VisitDayCard({
         </div>
 
         {day.canCreateSticker ? (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => onCreateSticker('save')}
-              disabled={disabled}
-              className="rounded-lg border border-cyan-700 bg-cyan-950/40 px-3 py-2 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-900/50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {stickerLoading ? 'Building Route…' : 'Create Sticker'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onCreateSticker('share')}
-              disabled={disabled}
-              className="rounded-lg bg-cyan-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Share
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={onCreateSticker}
+            disabled={disabled}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-cyan-700 bg-cyan-950/40 px-4 py-2.5 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-900/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          >
+            {stickerLoading ? 'Building Route…' : 'Create Sticker'}
+          </button>
         ) : (
           <p className="text-xs text-neutral-600">
             Visit two mapped places in one day to create a sticker.
@@ -790,16 +752,16 @@ function parseRouteGeometry(value: unknown): RouteLinePoint[] {
       })
       .filter(
         (point): point is RouteLinePoint => {
-            if (!point) return false
+          if (!point) return false
 
-            return (
+          return (
             Number.isFinite(point.lat) &&
             Number.isFinite(point.lon) &&
             Math.abs(point.lat) <= 90 &&
             Math.abs(point.lon) <= 180
-            )
+          )
         }
-        )
+      )
   }
 
   if (typeof value === 'object' && value !== null) {
@@ -940,11 +902,4 @@ function downloadBlob(blob: Blob, fileName: string) {
   window.setTimeout(() => {
     URL.revokeObjectURL(url)
   }, 1000)
-}
-
-function isShareCancellation(error: unknown): boolean {
-  return (
-    error instanceof DOMException &&
-    error.name === 'AbortError'
-  )
 }

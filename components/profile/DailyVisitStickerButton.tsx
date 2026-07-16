@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import FlowRouteSticker from '@/app/flow/[session_id]/components/FlowRouteSticker'
 import StickerComposer from '@/components/flows/StickerComposer'
 
@@ -30,8 +30,6 @@ type StickerStop = {
   lon?: number | null
 }
 
-type ExportIntent = 'save' | 'share'
-
 type Props = {
   city: string
   date: string
@@ -39,10 +37,7 @@ type Props = {
   visits: DailyVisitStickerVisit[]
   className?: string
   disabled?: boolean
-  defaultIntent?: ExportIntent
   buttonLabel?: string
-  shareButtonLabel?: string
-  showShareButton?: boolean
   onError?: (message: string) => void
 }
 
@@ -53,32 +48,30 @@ export default function DailyVisitStickerButton({
   visits,
   className = '',
   disabled = false,
-  defaultIntent = 'save',
   buttonLabel = 'Create Day Sticker',
-  shareButtonLabel = 'Share Sticker',
-  showShareButton = true,
   onError,
 }: Props) {
   const [composerOpen, setComposerOpen] = useState(false)
   const [routeLine, setRouteLine] = useState<RouteLinePoint[]>([])
   const [stickerStops, setStickerStops] = useState<StickerStop[]>([])
-  const [intent, setIntent] = useState<ExportIntent>(defaultIntent)
   const [buildingRoute, setBuildingRoute] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const eligibleVisits = visits
-    .filter(hasValidVisitCoordinate)
-    .sort(
-      (a, b) =>
-        new Date(a.visitedAt).getTime() -
-        new Date(b.visitedAt).getTime()
-    )
+  const eligibleVisits = useMemo(() => {
+    return visits
+      .filter(hasValidVisitCoordinate)
+      .sort(
+        (a, b) =>
+          new Date(a.visitedAt).getTime() -
+          new Date(b.visitedAt).getTime()
+      )
+  }, [visits])
 
   const canCreateSticker = eligibleVisits.length >= 2
   const busy = buildingRoute || exporting
 
-  const openSticker = async (nextIntent: ExportIntent) => {
+  const openSticker = async () => {
     if (disabled || busy) return
 
     if (!canCreateSticker) {
@@ -90,10 +83,9 @@ export default function DailyVisitStickerButton({
 
     setBuildingRoute(true)
     setError(null)
-    setIntent(nextIntent)
 
-    const nextStops: StickerStop[] = eligibleVisits.map(
-      (visit, index) => ({
+    const nextStops: StickerStop[] =
+      eligibleVisits.map((visit, index) => ({
         id: visit.id,
         venueId: visit.venueId,
         stopOrder: index + 1,
@@ -102,11 +94,11 @@ export default function DailyVisitStickerButton({
         checkedInAt: visit.visitedAt,
         lat: visit.lat,
         lon: visit.lon,
-      })
-    )
+      }))
 
     try {
-      const nextRouteLine = await fetchRouteLine(nextStops)
+      const nextRouteLine =
+        await fetchRouteLine(nextStops)
 
       setStickerStops(nextStops)
       setRouteLine(nextRouteLine)
@@ -127,7 +119,9 @@ export default function DailyVisitStickerButton({
     }
   }
 
-  const exportSticker = async (target: HTMLElement) => {
+  const exportSticker = async (
+    target: HTMLElement
+  ) => {
     if (exporting || !composerOpen) return
 
     setExporting(true)
@@ -136,7 +130,9 @@ export default function DailyVisitStickerButton({
     try {
       await waitForFonts()
 
-      const { toBlob } = await import('html-to-image')
+      const { toBlob } = await import(
+        'html-to-image'
+      )
 
       const blob = await toBlob(target, {
         pixelRatio: 3,
@@ -145,7 +141,9 @@ export default function DailyVisitStickerButton({
       })
 
       if (!blob) {
-        throw new Error('Failed to create route sticker image.')
+        throw new Error(
+          'Failed to create route sticker image.'
+        )
       }
 
       const fileName = buildFileName({
@@ -153,33 +151,8 @@ export default function DailyVisitStickerButton({
         date,
       })
 
-      const file = new File([blob], fileName, {
-        type: 'image/png',
-      })
-
-      if (
-        intent === 'share' &&
-        navigator.canShare?.({
-          files: [file],
-        })
-      ) {
-        await navigator.share({
-          title: `${city} Roam Route`,
-          text: buildShareText({
-            city,
-            dateLabel,
-            visitCount: stickerStops.length,
-          }),
-          files: [file],
-        })
-
-        return
-      }
-
       downloadBlob(blob, fileName)
     } catch (err) {
-      if (isShareCancellation(err)) return
-
       console.error(
         '[DailyVisitStickerButton] Sticker export failed:',
         err
@@ -217,51 +190,63 @@ export default function DailyVisitStickerButton({
         ]
           .filter(Boolean)
           .join(' ')}
+        aria-busy={busy}
       >
-        <div className="flex flex-wrap gap-2">
+        <div className="grid w-full grid-cols-1 gap-2">
           <button
             type="button"
-            onClick={() => void openSticker('save')}
+            onClick={() => void openSticker()}
             disabled={
               disabled ||
               busy ||
               !canCreateSticker
             }
-            className="inline-flex items-center justify-center rounded-xl border border-cyan-700 bg-cyan-950/40 px-3.5 py-2 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-900/50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-cyan-700 bg-cyan-950/40 px-4 py-2.5 text-center text-sm font-semibold text-cyan-200 transition hover:bg-cyan-900/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {buildingRoute
               ? 'Building Route…'
               : buttonLabel}
           </button>
-
-          {showShareButton ? (
-            <button
-              type="button"
-              onClick={() => void openSticker('share')}
-              disabled={
-                disabled ||
-                busy ||
-                !canCreateSticker
-              }
-              className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {buildingRoute
-                ? 'Building Route…'
-                : shareButtonLabel}
-            </button>
-          ) : null}
         </div>
+
+        {buildingRoute ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center gap-2 rounded-xl border border-cyan-900/40 bg-cyan-950/20 px-3 py-2 text-xs leading-5 text-cyan-200"
+          >
+            <span
+              className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-cyan-300/30 border-t-cyan-300"
+              aria-hidden="true"
+            />
+
+            <span>
+              Connecting your visits in check-in
+              order…
+            </span>
+          </div>
+        ) : null}
 
         {!canCreateSticker ? (
           <p className="text-xs leading-5 text-neutral-500">
-            Two mapped visits from the same day are required.
+            Two mapped visits from the same day are
+            required.
           </p>
-        ) : null}
+        ) : (
+          <p className="text-xs leading-5 text-neutral-500">
+            {eligibleVisits.length}{' '}
+            {eligibleVisits.length === 1
+              ? 'mapped visit'
+              : 'mapped visits'}{' '}
+            will be included in chronological order.
+          </p>
+        )}
 
         {error ? (
           <p
             role="alert"
-            className="max-w-sm text-xs leading-5 text-red-400"
+            aria-live="assertive"
+            className="max-w-sm rounded-xl border border-red-900/50 bg-red-950/20 px-3 py-2 text-xs leading-5 text-red-300"
           >
             {error}
           </p>
@@ -293,7 +278,8 @@ export default function DailyVisitStickerButton({
 async function fetchRouteLine(
   stops: StickerStop[]
 ): Promise<RouteLinePoint[]> {
-  const validStops = stops.filter(hasValidStopCoordinate)
+  const validStops =
+    stops.filter(hasValidStopCoordinate)
 
   if (validStops.length < 2) {
     throw new Error(
@@ -306,33 +292,37 @@ async function fetchRouteLine(
     validStops[validStops.length - 1]
   const waypoints = validStops.slice(1, -1)
 
-  const fullRouteResponse = await fetch('/api/mapbox', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      origin: {
-        lat: origin.lat,
-        lng: origin.lon,
+  const fullRouteResponse = await fetch(
+    '/api/mapbox',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      destination: {
-        lat: destination.lat,
-        lng: destination.lon,
-      },
-      waypoints: waypoints.map((stop) => ({
-        lat: stop.lat,
-        lng: stop.lon,
-      })),
-      travelMode: 'walking',
-      geometries: 'geojson',
-      overview: 'full',
-    }),
-  })
+      body: JSON.stringify({
+        origin: {
+          lat: origin.lat,
+          lng: origin.lon,
+        },
+        destination: {
+          lat: destination.lat,
+          lng: destination.lon,
+        },
+        waypoints: waypoints.map((stop) => ({
+          lat: stop.lat,
+          lng: stop.lon,
+        })),
+        travelMode: 'walking',
+        geometries: 'geojson',
+        overview: 'full',
+      }),
+    }
+  )
 
-  const fullRoutePayload = await fullRouteResponse
-    .json()
-    .catch(() => null)
+  const fullRoutePayload =
+    await fullRouteResponse
+      .json()
+      .catch(() => null)
 
   const fullRouteLine =
     extractRouteLineFromMapboxResponse(
@@ -356,26 +346,29 @@ async function fetchRouteLine(
     const from = validStops[index - 1]
     const to = validStops[index]
 
-    const response = await fetch('/api/mapbox', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        origin: {
-          lat: from.lat,
-          lng: from.lon,
+    const response = await fetch(
+      '/api/mapbox',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        destination: {
-          lat: to.lat,
-          lng: to.lon,
-        },
-        waypoints: [],
-        travelMode: 'walking',
-        geometries: 'geojson',
-        overview: 'full',
-      }),
-    })
+        body: JSON.stringify({
+          origin: {
+            lat: from.lat,
+            lng: from.lon,
+          },
+          destination: {
+            lat: to.lat,
+            lng: to.lon,
+          },
+          waypoints: [],
+          travelMode: 'walking',
+          geometries: 'geojson',
+          overview: 'full',
+        }),
+      }
+    )
 
     const payload = await response
       .json()
@@ -389,7 +382,9 @@ async function fetchRouteLine(
     }
 
     const segment =
-      extractRouteLineFromMapboxResponse(payload)
+      extractRouteLineFromMapboxResponse(
+        payload
+      )
 
     if (segment.length < 2) {
       throw new Error(
@@ -431,12 +426,15 @@ function extractRouteLineFromMapboxResponse(
     getCoordinates(payload?.geometry),
     getCoordinates(payload?.routeGeometry),
     getCoordinates(payload?.route?.geometry),
-    getCoordinates(payload?.routes?.[0]?.geometry),
+    getCoordinates(
+      payload?.routes?.[0]?.geometry
+    ),
     payload?.geometry,
   ]
 
   for (const candidate of candidates) {
-    const parsed = parseRouteGeometry(candidate)
+    const parsed =
+      parseRouteGeometry(candidate)
 
     if (parsed.length >= 2) {
       return parsed
@@ -446,7 +444,9 @@ function extractRouteLineFromMapboxResponse(
   return []
 }
 
-function getCoordinates(value: unknown): unknown {
+function getCoordinates(
+  value: unknown
+): unknown {
   if (
     typeof value === 'object' &&
     value !== null &&
@@ -484,17 +484,19 @@ function parseRouteGeometry(
         return null
       })
       .filter(
-        (point): point is RouteLinePoint => {
-            if (!point) return false
+        (
+          point
+        ): point is RouteLinePoint => {
+          if (!point) return false
 
-            return (
+          return (
             Number.isFinite(point.lat) &&
             Number.isFinite(point.lon) &&
             Math.abs(point.lat) <= 90 &&
             Math.abs(point.lon) <= 180
-            )
+          )
         }
-        )
+      )
   }
 
   if (
@@ -667,22 +669,6 @@ function buildStickerTitle({
     : `${city} Day Route`
 }
 
-function buildShareText({
-  city,
-  dateLabel,
-  visitCount,
-}: {
-  city: string
-  dateLabel: string | null
-  visitCount: number
-}) {
-  const dateText = dateLabel?.trim()
-    ? ` on ${dateLabel.trim()}`
-    : ''
-
-  return `I visited ${visitCount} places across ${city}${dateText}.`
-}
-
 function buildFileName({
   city,
   date,
@@ -690,8 +676,7 @@ function buildFileName({
   city: string
   date: string
 }) {
-  const safeCity =
-    slugify(city) || 'city'
+  const safeCity = slugify(city) || 'city'
 
   const safeDate =
     /^\d{4}-\d{2}-\d{2}$/.test(date)
@@ -738,14 +723,5 @@ async function waitForFonts() {
 
   await new Promise((resolve) =>
     window.setTimeout(resolve, 100)
-  )
-}
-
-function isShareCancellation(
-  error: unknown
-) {
-  return (
-    error instanceof DOMException &&
-    error.name === 'AbortError'
   )
 }
