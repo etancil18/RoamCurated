@@ -40721,31 +40721,31 @@ const atlantaData = [
     "cover": "img/venues/so-fox-atl.jpg",
     "openNow": "TRUE",
     "hours": [
-      "Sunday: Closed",
-      "Monday: Closed",
+      "Sunday: 5:00 PM–10:00 PM",
+      "Monday: 5:00 PM–10:00 PM",
       "Tuesday: Closed",
       "Wednesday: Closed",
-      "Thursday: Closed",
-      "Friday: Closed",
-      "Saturday: Closed"
+      "Thursday: 5:00 PM–10:00 PM",
+      "Friday: 5:00 PM–10:00 PM",
+      "Saturday: 5:00 PM–10:00 PM"
     ],
     "hoursNumeric": {
-      "sun": null,
-      "mon": null,
+      "sun": { "open": 17, "close": 22 },
+      "mon": { "open": 17, "close": 22 },
       "tue": null,
       "wed": null,
-      "thu": null,
-      "fri": null,
-      "sat": null
+      "thu": { "open": 17, "close": 22 },
+      "fri": { "open": 17, "close": 22 },
+      "sat": { "open": 17, "close": 22 }
     },
     "dayParts": {
-      "sun": "-",
-      "mon": "-",
+      "sun": "E",
+      "mon": "E",
       "tue": "-",
       "wed": "-",
-      "thu": "-",
-      "fri": "-",
-      "sat": "-"
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
     },
     "timeCategory": "",
     "energyRamp": 3,
