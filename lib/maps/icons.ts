@@ -605,16 +605,28 @@ export function scaleIconDimensions(
 /**
  * Clamp marker scaling to a controlled visual range.
  */
-export function normalizeMarkerScale(scale: number | undefined): number {
+export function normalizeMarkerScale(
+  scale: number | undefined
+): number {
   if (!Number.isFinite(scale)) {
     return 1
   }
 
-  return clamp(
+  const clampedScale = clamp(
     Number(scale),
     ICON_SCALE_MIN,
     ICON_SCALE_MAX
   )
+
+  if (clampedScale < 0.9) {
+    return 0.85
+  }
+
+  if (clampedScale > 1.1) {
+    return 1.15
+  }
+
+  return 1
 }
 
 /**

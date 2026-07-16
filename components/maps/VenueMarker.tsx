@@ -139,6 +139,7 @@ export default function VenueMarker({
   showPopup = true,
 }: Props) {
   const [generatingRoute, setGeneratingRoute] = useState(false)
+
   const [generateRouteError, setGenerateRouteError] =
     useState<string | null>(null)
 
@@ -157,9 +158,14 @@ export default function VenueMarker({
       getVenueMarkerEmoji(
         (v as any).type ??
           (v as any).types ??
-          null
+          null,
+        nowForCity
       ),
-    [v]
+    [
+      v.type,
+      (v as any).types,
+      nowForCity.hour,
+    ]
   )
 
   const vibeLabel = useMemo(

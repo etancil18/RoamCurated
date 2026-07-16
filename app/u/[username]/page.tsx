@@ -30,9 +30,26 @@ type ProfileRow = {
   show_social_groups: boolean | null
 }
 
+type PublicFlowSnapshotRow = {
+  id: string
+  title: string | null
+  city: string | null
+  status: string | null
+  cover_image_url: string | null
+  route_summary: string | null
+  checked_in_count: number | null
+  total_stops: number | null
+  source_type: string | null
+  source_id: string | null
+  visibility: 'public'
+  created_at: string
+}
+
 export default async function PublicUserProfilePage({ params }: Props) {
   const { username } = await params
-  const normalizedUsername = decodeURIComponent(username).trim().toLowerCase()
+  const normalizedUsername = decodeURIComponent(username)
+    .trim()
+    .toLowerCase()
 
   if (!normalizedUsername) {
     notFound()
@@ -101,7 +118,7 @@ export default async function PublicUserProfilePage({ params }: Props) {
     { data: xpRows },
     { count: checkinsCount },
     { count: socialGroupsCount },
-    { data: snapshots },
+    snapshotResult,
   ] = await Promise.all([
     supabase
       .from('user_follows')
@@ -122,7 +139,10 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .maybeSingle()
       : Promise.resolve({ data: null }),
 
-    supabase.from('crawl_events').select('id').eq('creator_id', profile.id),
+    supabase
+      .from('crawl_events')
+      .select('id')
+      .eq('creator_id', profile.id),
 
     supabase
       .from('crawl_rsvps')
@@ -150,9 +170,15 @@ export default async function PublicUserProfilePage({ params }: Props) {
           .eq('user_id', profile.id)
           .eq('status', 'completed'),
 
-    supabase.from('venue_visits').select('id').eq('user_id', profile.id),
+    supabase
+      .from('venue_visits')
+      .select('id')
+      .eq('user_id', profile.id),
 
-    supabase.from('crawl_progress').select('crawl_id').eq('user_id', profile.id),
+    supabase
+      .from('crawl_progress')
+      .select('crawl_id')
+      .eq('user_id', profile.id),
 
     profile.show_xp === false
       ? Promise.resolve({ data: [] })
@@ -177,33 +203,65 @@ export default async function PublicUserProfilePage({ params }: Props) {
 
     supabase
       .from('flow_snapshots' as any)
-      .select(
-        'id, title, city, cover_image_url, route_summary, checked_in_count, total_stops, created_at'
-      )
+      .select(`
+        id,
+        title,
+        city,
+        status,
+        cover_image_url,
+        route_summary,
+        checked_in_count,
+        total_stops,
+        source_type,
+        source_id,
+        visibility,
+        created_at
+      `)
       .eq('user_id', profile.id)
       .eq('visibility', 'public')
       .order('created_at', { ascending: false })
       .limit(9),
   ])
 
+  if (snapshotResult.error) {
+    console.error(
+      '[public profile] Failed to load public flow snapshots:',
+      snapshotResult.error
+    )
+  }
+
+  const snapshots = normalizePublicSnapshots(snapshotResult.data)
+
   const joined = rsvps ?? []
 
   const pastCrawls = joined.filter((r: any) => {
     const crawl = r.crawl_events
+
     if (!crawl?.datetime) return false
+
     return new Date(crawl.datetime) < today
   })
 
   const completedFlowStops =
     completedFlows?.reduce((sum: number, flow: any) => {
-      return sum + (Array.isArray(flow.venue_ids) ? flow.venue_ids.length : 0)
+      return (
+        sum +
+        (Array.isArray(flow.venue_ids)
+          ? flow.venue_ids.length
+          : 0)
+      )
     }, 0) ?? 0
 
   const hostedFlowStops = crawlProgress?.length ?? 0
 
   const eventXp =
     xpRows?.reduce((sum: number, row: any) => {
-      return sum + (typeof row.xp_amount === 'number' ? row.xp_amount : 0)
+      return (
+        sum +
+        (typeof row.xp_amount === 'number'
+          ? row.xp_amount
+          : 0)
+      )
     }, 0) ?? 0
 
   const crawlIds = [
@@ -230,10 +288,14 @@ export default async function PublicUserProfilePage({ params }: Props) {
 
         const completedStops =
           crawlProgress?.filter(
-            (progressRow: any) => progressRow.crawl_id === crawl.id
+            (progressRow: any) =>
+              progressRow.crawl_id === crawl.id
           ).length ?? 0
 
-        return requiredStops > 0 && completedStops >= requiredStops
+        return (
+          requiredStops > 0 &&
+          completedStops >= requiredStops
+        )
       }).length ?? 0
   }
 
@@ -281,7 +343,11 @@ export default async function PublicUserProfilePage({ params }: Props) {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
             <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 text-4xl">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={profile.avatar_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span>🧭</span>
               )}
@@ -298,85 +364,141 @@ export default async function PublicUserProfilePage({ params }: Props) {
 
               <p className="mt-1 text-sm text-neutral-400">
                 @{profile.username}
-                {profile.home_neighborhood ? ` · ${profile.home_neighborhood}` : ''}
+                {profile.home_neighborhood
+                  ? ` · ${profile.home_neighborhood}`
+                  : ''}
               </p>
 
-              {profile.bio && (
+              {profile.bio ? (
                 <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-300">
                   {profile.bio}
                 </p>
-              )}
+              ) : null}
             </div>
 
-            {!isOwnProfile && (
+            {!isOwnProfile ? (
               <FollowButton
                 userId={profile.id}
                 initialIsFollowing={Boolean(existingFollow)}
                 initialFollowersCount={followersCount ?? 0}
                 disabled={!user}
               />
-            )}
+            ) : null}
           </div>
         </section>
 
         <section className="flex flex-wrap gap-2">
-          <Stat label="Followers" value={followersCount ?? 0} />
-          <Stat label="Following" value={followingCount ?? 0} />
-          {profile.show_xp !== false && (
-            <Stat label="Passport Level" value={passportLevel} />
-          )}
-          {profile.show_completed_flows !== false && (
-            <Stat label="Flows" value={completedFlows?.length ?? 0} />
-          )}
-          {profile.show_checkins !== false && (
-            <Stat label="Event Check-ins" value={checkinsCount ?? 0} />
-          )}
-          {profile.show_saved_guides !== false && (
-            <Stat label="Saved Guides" value={savedProperties?.length ?? 0} />
-          )}
-          {profile.show_social_groups !== false && (
-            <Stat label="Social Groups" value={socialGroupsCount ?? 0} />
-          )}
+          <Stat
+            label="Followers"
+            value={followersCount ?? 0}
+          />
+
+          <Stat
+            label="Following"
+            value={followingCount ?? 0}
+          />
+
+          {profile.show_xp !== false ? (
+            <Stat
+              label="Passport Level"
+              value={passportLevel}
+            />
+          ) : null}
+
+          {profile.show_completed_flows !== false ? (
+            <Stat
+              label="Flows"
+              value={completedFlows?.length ?? 0}
+            />
+          ) : null}
+
+          {profile.show_checkins !== false ? (
+            <Stat
+              label="Event Check-ins"
+              value={checkinsCount ?? 0}
+            />
+          ) : null}
+
+          {profile.show_saved_guides !== false ? (
+            <Stat
+              label="Saved Guides"
+              value={savedProperties?.length ?? 0}
+            />
+          ) : null}
+
+          {profile.show_social_groups !== false ? (
+            <Stat
+              label="Social Groups"
+              value={socialGroupsCount ?? 0}
+            />
+          ) : null}
         </section>
 
-        {snapshots && snapshots.length > 0 && (
+        {snapshots.length > 0 ? (
           <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
-                Flow Snapshots
-              </h2>
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+                  Flow Snapshots
+                </h2>
 
-              <p className="text-xs text-neutral-500">Latest 9</p>
+                <p className="mt-1 text-xs text-neutral-500">
+                  Public moments from completed Roam flows.
+                </p>
+              </div>
+
+              <p className="shrink-0 text-xs text-neutral-500">
+                Latest {Math.min(snapshots.length, 9)}
+              </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {snapshots.map((snapshot: any) => (
-                <div
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {snapshots.map((snapshot) => (
+                <article
                   key={snapshot.id}
-                  className="group relative aspect-square overflow-hidden rounded-xl border border-neutral-800 bg-black"
+                  className="group overflow-hidden rounded-2xl border border-neutral-800 bg-black"
                 >
-                  <img
-                    src={snapshot.cover_image_url}
-                    alt={snapshot.title ?? 'Roam flow snapshot'}
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                  />
+                  <div className="relative aspect-square overflow-hidden bg-neutral-900">
+                    {snapshot.cover_image_url ? (
+                      <img
+                        src={snapshot.cover_image_url}
+                        alt={
+                          snapshot.title ??
+                          'Roam flow snapshot'
+                        }
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.28),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.22),transparent_42%),#09090b] text-4xl">
+                        🗺️
+                      </div>
+                    )}
 
-                  <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 transition group-hover:opacity-100">
-                    <div className="p-2">
-                      <p className="line-clamp-1 text-xs font-semibold text-white">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-transparent" />
+
+                    <div className="absolute inset-x-0 bottom-0 p-3">
+                      <p className="line-clamp-2 text-sm font-semibold leading-tight text-white">
                         {snapshot.title ?? 'Roam Flow'}
                       </p>
 
-                      <p className="mt-0.5 text-[10px] text-neutral-300">
-                        {snapshot.checked_in_count ?? 0}/{snapshot.total_stops ?? 0} stops
+                      <p className="mt-1 text-[11px] text-neutral-300">
+                        {buildSnapshotMetadata(snapshot)}
                       </p>
                     </div>
                   </div>
-                </div>
+
+                  {snapshot.route_summary ? (
+                    <div className="border-t border-neutral-800 px-3 py-3">
+                      <p className="line-clamp-2 text-xs leading-5 text-neutral-500">
+                        {snapshot.route_summary}
+                      </p>
+                    </div>
+                  ) : null}
+                </article>
               ))}
             </div>
           </section>
-        )}
+        ) : null}
 
         <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
@@ -384,8 +506,15 @@ export default async function PublicUserProfilePage({ params }: Props) {
           </h2>
 
           <div className="mt-4 space-y-4">
-            <ChipGroup title="Preferred Vibes" values={profile.preferred_vibes ?? []} />
-            <ChipGroup title="Interests" values={profile.interest_categories ?? []} />
+            <ChipGroup
+              title="Preferred Vibes"
+              values={profile.preferred_vibes ?? []}
+            />
+
+            <ChipGroup
+              title="Interests"
+              values={profile.interest_categories ?? []}
+            />
           </div>
         </section>
       </div>
@@ -428,15 +557,134 @@ async function logPublicProfileViewed({
       { returning: 'minimal' } as any
     )
   } catch (error) {
-    console.warn('Failed to log public_profile_viewed:', error)
+    console.warn(
+      'Failed to log public_profile_viewed:',
+      error
+    )
   }
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function normalizePublicSnapshots(
+  value: unknown
+): PublicFlowSnapshotRow[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map((snapshot): PublicFlowSnapshotRow | null => {
+      if (
+        !snapshot ||
+        typeof snapshot !== 'object'
+      ) {
+        return null
+      }
+
+      const row = snapshot as Record<string, unknown>
+
+      if (
+        typeof row.id !== 'string' ||
+        typeof row.created_at !== 'string'
+      ) {
+        return null
+      }
+
+      return {
+        id: row.id,
+        title: nullableString(row.title),
+        city: nullableString(row.city),
+        status: nullableString(row.status),
+        cover_image_url: nullableString(
+          row.cover_image_url
+        ),
+        route_summary: nullableString(
+          row.route_summary
+        ),
+        checked_in_count: nullableNumber(
+          row.checked_in_count
+        ),
+        total_stops: nullableNumber(
+          row.total_stops
+        ),
+        source_type: nullableString(row.source_type),
+        source_id: nullableString(row.source_id),
+        visibility: 'public',
+        created_at: row.created_at,
+      }
+    })
+    .filter(
+      (
+        snapshot
+      ): snapshot is PublicFlowSnapshotRow =>
+        snapshot !== null
+    )
+}
+
+function nullableString(
+  value: unknown
+): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const trimmed = value.trim()
+
+  return trimmed.length > 0
+    ? trimmed
+    : null
+}
+
+function nullableNumber(
+  value: unknown
+): number | null {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value)
+  )
+    ? value
+    : null
+}
+
+function buildSnapshotMetadata(
+  snapshot: PublicFlowSnapshotRow
+): string {
+  const parts: string[] = []
+
+  if (snapshot.city) {
+    parts.push(snapshot.city)
+  }
+
+  const checkedInCount =
+    snapshot.checked_in_count ?? 0
+
+  const totalStops =
+    snapshot.total_stops ?? 0
+
+  parts.push(
+    `${checkedInCount}/${totalStops} ${
+      totalStops === 1 ? 'stop' : 'stops'
+    }`
+  )
+
+  return parts.join(' · ')
+}
+
+function Stat({
+  label,
+  value,
+}: {
+  label: string
+  value: number
+}) {
   return (
     <div className="inline-flex min-w-[104px] flex-col rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-3">
-      <p className="text-lg font-semibold leading-none">{value.toLocaleString()}</p>
-      <p className="mt-1.5 text-[11px] leading-tight text-neutral-500">{label}</p>
+      <p className="text-lg font-semibold leading-none">
+        {value.toLocaleString()}
+      </p>
+
+      <p className="mt-1.5 text-[11px] leading-tight text-neutral-500">
+        {label}
+      </p>
     </div>
   )
 }
@@ -464,7 +712,9 @@ function formatChipLabel(value: string) {
       .replace(/_/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .replace(/\b\w/g, (char) => char.toUpperCase())
+      .replace(/\b\w/g, (char) =>
+        char.toUpperCase()
+      )
   )
 }
 
@@ -477,10 +727,14 @@ function ChipGroup({
 }) {
   return (
     <div>
-      <p className="mb-2 text-sm text-neutral-500">{title}</p>
+      <p className="mb-2 text-sm text-neutral-500">
+        {title}
+      </p>
 
       {values.length === 0 ? (
-        <p className="text-sm text-neutral-600">Nothing shared yet.</p>
+        <p className="text-sm text-neutral-600">
+          Nothing shared yet.
+        </p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {values.map((value) => (

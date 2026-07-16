@@ -7,10 +7,32 @@ import UserCrawls from "./UserCrawls"
 import SavedProperties from "./SavedProperties"
 import RoamPassport from "./RoamPassport"
 import FavoritesSection from "./FavoritesSection"
+import VisitHistorySection from "@/components/profile/VisitHistorySection"
+import ProfileSnapshotLibrary, {
+  type ProfileSnapshot,
+} from "@/components/profile/ProfileSnapshotLibrary"
 import { supabaseBrowser } from "@/lib/supabase/client"
 import { logEvent } from "@/lib/logEvent"
 
-function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
+type SnapshotRow = {
+  id: string
+  title: string | null
+  city: string | null
+  cover_image_url: string | null
+  route_summary: string | null
+  checked_in_count: number | null
+  total_stops: number | null
+  visibility: string | null
+  source_type: string | null
+  source_id: string | null
+  created_at: string
+  updated_at: string | null
+}
+
+function safeLogEvent(
+  eventName: string,
+  metadata: Record<string, unknown> = {}
+) {
   try {
     void Promise.resolve(logEvent(eventName, { metadata }))
   } catch (error) {
@@ -20,29 +42,108 @@ function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {})
 
 export default function UserProfilePage() {
   const [username, setUsername] = useState<string | null>(null)
+  const [snapshots, setSnapshots] = useState<ProfileSnapshot[]>([])
+  const [snapshotsLoading, setSnapshotsLoading] = useState(true)
+  const [snapshotsError, setSnapshotsError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+
     safeLogEvent("profile_page_viewed")
 
-    async function loadUsername() {
+    async function loadProfilePageData() {
       const supabase = supabaseBrowser()
 
       const {
         data: { user },
+        error: authError,
       } = await supabase.auth.getUser()
 
-      if (!user) return
+      if (cancelled) return
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", user.id)
-        .maybeSingle()
+      if (authError || !user) {
+        if (authError) {
+          console.error(
+            "[profile/page] Failed to load authenticated user:",
+            authError
+          )
+        }
 
-      setUsername(data?.username ?? null)
+        setSnapshotsLoading(false)
+        return
+      }
+
+      const [profileResult, snapshotsResult] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", user.id)
+          .maybeSingle(),
+
+        supabase
+          .from("flow_snapshots")
+          .select(`
+            id,
+            title,
+            city,
+            cover_image_url,
+            route_summary,
+            checked_in_count,
+            total_stops,
+            visibility,
+            source_type,
+            source_id,
+            created_at,
+            updated_at
+          `)
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
+      ])
+
+      if (cancelled) return
+
+      if (profileResult.error) {
+        console.error(
+          "[profile/page] Failed to load username:",
+          profileResult.error
+        )
+      }
+
+      setUsername(profileResult.data?.username ?? null)
+
+      if (snapshotsResult.error) {
+        console.error(
+          "[profile/page] Failed to load snapshot library:",
+          snapshotsResult.error
+        )
+
+        setSnapshots([])
+        setSnapshotsError("Failed to load your snapshot library.")
+        setSnapshotsLoading(false)
+        return
+      }
+
+      const normalizedSnapshots = (
+        (snapshotsResult.data ?? []) as SnapshotRow[]
+      ).map(normalizeSnapshot)
+
+      setSnapshots(normalizedSnapshots)
+      setSnapshotsError(null)
+      setSnapshotsLoading(false)
+
+      safeLogEvent("profile_snapshot_library_loaded", {
+        snapshot_count: normalizedSnapshots.length,
+        public_snapshot_count: normalizedSnapshots.filter(
+          (snapshot) => snapshot.visibility === "public"
+        ).length,
+      })
     }
 
-    loadUsername()
+    void loadProfilePageData()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return (
@@ -64,7 +165,8 @@ export default function UserProfilePage() {
             </h1>
 
             <p className="max-w-2xl text-sm leading-6 text-neutral-400">
-              Track your movement, hosted flows, saved guides, badges, and city progress.
+              Track your movement, hosted flows, saved guides, badges, and city
+              progress.
             </p>
           </div>
 
@@ -91,6 +193,16 @@ export default function UserProfilePage() {
 
         <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
           <div className="space-y-5">
+            <VisitHistorySection />
+
+            {snapshotsLoading ? (
+              <SnapshotLibrarySkeleton />
+            ) : snapshotsError ? (
+              <SnapshotLibraryError message={snapshotsError} />
+            ) : (
+              <ProfileSnapshotLibrary initialSnapshots={snapshots} />
+            )}
+
             <ProfilePanel
               eyebrow="Saved"
               title="Property Guides"
@@ -179,6 +291,60 @@ function SavedLibraryShell() {
   )
 }
 
+function SnapshotLibrarySkeleton() {
+  return (
+    <section
+      className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5 text-white"
+      aria-label="Loading snapshot library"
+    >
+      <div className="animate-pulse">
+        <div className="h-3 w-28 rounded bg-neutral-800" />
+        <div className="mt-3 h-6 w-48 rounded bg-neutral-800" />
+        <div className="mt-2 h-4 w-72 max-w-full rounded bg-neutral-900" />
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((item) => (
+            <div
+              key={item}
+              className="overflow-hidden rounded-2xl border border-neutral-800 bg-black/30"
+            >
+              <div className="aspect-square bg-neutral-900" />
+
+              <div className="space-y-3 p-4">
+                <div className="h-4 w-2/3 rounded bg-neutral-800" />
+                <div className="h-3 w-1/2 rounded bg-neutral-900" />
+                <div className="h-10 rounded-xl bg-neutral-900" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function SnapshotLibraryError({
+  message,
+}: {
+  message: string
+}) {
+  return (
+    <section className="rounded-2xl border border-red-900/50 bg-red-950/20 p-5 text-white">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-red-400">
+        Flow snapshots
+      </p>
+
+      <h2 className="mt-2 text-xl font-semibold text-white">
+        Snapshot library unavailable
+      </h2>
+
+      <p className="mt-2 text-sm leading-6 text-red-300">
+        {message}
+      </p>
+    </section>
+  )
+}
+
 function ProfilePanel({
   eyebrow,
   title,
@@ -207,7 +373,9 @@ function ProfilePanel({
             {eyebrow}
           </p>
 
-          <h2 className="mt-1 text-lg font-semibold text-white">{title}</h2>
+          <h2 className="mt-1 text-lg font-semibold text-white">
+            {title}
+          </h2>
 
           {description ? (
             <p className="mt-1 text-xs leading-5 text-neutral-500">
@@ -220,4 +388,32 @@ function ProfilePanel({
       {children}
     </section>
   )
+}
+
+function normalizeSnapshot(
+  snapshot: SnapshotRow
+): ProfileSnapshot {
+  return {
+    id: snapshot.id,
+    title: snapshot.title,
+    city: snapshot.city,
+    cover_image_url: snapshot.cover_image_url,
+    route_summary: snapshot.route_summary,
+    checked_in_count:
+      typeof snapshot.checked_in_count === "number"
+        ? snapshot.checked_in_count
+        : 0,
+    total_stops:
+      typeof snapshot.total_stops === "number"
+        ? snapshot.total_stops
+        : 0,
+    visibility:
+      snapshot.visibility === "private"
+        ? "private"
+        : "public",
+    source_type: snapshot.source_type,
+    source_id: snapshot.source_id,
+    created_at: snapshot.created_at,
+    updated_at: snapshot.updated_at,
+  }
 }

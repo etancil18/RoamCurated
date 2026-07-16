@@ -39597,7 +39597,7 @@ const atlantaData = [
     "lat": "33.7824245",
     "lon": "-84.4091388",
     "link": "https://www.instagram.com/fumatl/",
-    "cover": "img/venues/Füm.jpg",
+    "cover": "img/venues/Fum.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 5:30 PM–10:00 PM",
