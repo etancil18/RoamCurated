@@ -1095,6 +1095,152 @@ export type Database = {
         }
         Relationships: []
       }
+      guide_brands: {
+        Row: {
+          accent_color: string | null
+          background_color: string | null
+          branding_mode: string
+          button_text_color: string | null
+          created_at: string
+          custom_css: string | null
+          favicon_url: string | null
+          font_family: string | null
+          id: string
+          logo_url: string | null
+          muted_text_color: string | null
+          name: string
+          powered_by_roam: boolean
+          primary_color: string | null
+          secondary_color: string | null
+          slug: string
+          surface_color: string | null
+          text_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          background_color?: string | null
+          branding_mode?: string
+          button_text_color?: string | null
+          created_at?: string
+          custom_css?: string | null
+          favicon_url?: string | null
+          font_family?: string | null
+          id?: string
+          logo_url?: string | null
+          muted_text_color?: string | null
+          name: string
+          powered_by_roam?: boolean
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug: string
+          surface_color?: string | null
+          text_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          background_color?: string | null
+          branding_mode?: string
+          button_text_color?: string | null
+          created_at?: string
+          custom_css?: string | null
+          favicon_url?: string | null
+          font_family?: string | null
+          id?: string
+          logo_url?: string | null
+          muted_text_color?: string | null
+          name?: string
+          powered_by_roam?: boolean
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug?: string
+          surface_color?: string | null
+          text_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      guide_featured_venues: {
+        Row: {
+          concierge_note: string | null
+          created_at: string
+          description: string | null
+          guide_id: string
+          id: string
+          is_featured: boolean
+          is_visible: boolean
+          label: string | null
+          position: number
+          section_key: string
+          updated_at: string
+          venue_id: string
+          visible_from: string | null
+          visible_until: string | null
+        }
+        Insert: {
+          concierge_note?: string | null
+          created_at?: string
+          description?: string | null
+          guide_id: string
+          id?: string
+          is_featured?: boolean
+          is_visible?: boolean
+          label?: string | null
+          position?: number
+          section_key: string
+          updated_at?: string
+          venue_id: string
+          visible_from?: string | null
+          visible_until?: string | null
+        }
+        Update: {
+          concierge_note?: string | null
+          created_at?: string
+          description?: string | null
+          guide_id?: string
+          id?: string
+          is_featured?: boolean
+          is_visible?: boolean
+          label?: string | null
+          position?: number
+          section_key?: string
+          updated_at?: string
+          venue_id?: string
+          visible_from?: string | null
+          visible_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guide_featured_venues_guide_id_fkey"
+            columns: ["guide_id"]
+            isOneToOne: false
+            referencedRelation: "property_guides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guide_featured_venues_guide_section_fkey"
+            columns: ["guide_id", "section_key"]
+            isOneToOne: false
+            referencedRelation: "property_guide_sections"
+            referencedColumns: ["guide_id", "section_key"]
+          },
+          {
+            foreignKeyName: "guide_featured_venues_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "guide_featured_venues_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       planned_outing_events: {
         Row: {
           created_at: string
@@ -1627,6 +1773,137 @@ export type Database = {
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_guide_sections: {
+        Row: {
+          config: Json
+          created_at: string
+          guide_id: string
+          id: string
+          is_visible: boolean
+          position: number
+          section_key: string
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          guide_id: string
+          id?: string
+          is_visible?: boolean
+          position?: number
+          section_key: string
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          guide_id?: string
+          id?: string
+          is_visible?: boolean
+          position?: number
+          section_key?: string
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_guide_sections_guide_id_fkey"
+            columns: ["guide_id"]
+            isOneToOne: false
+            referencedRelation: "property_guides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_guides: {
+        Row: {
+          brand_id: string | null
+          created_at: string
+          default_travel_mode: string
+          guide_mode: string
+          hero_image_url: string | null
+          id: string
+          powered_by_roam: boolean
+          property_id: string
+          published_at: string | null
+          show_nearby_events: boolean
+          show_partner_offers: boolean
+          show_property_favorites: boolean
+          show_suggested_routes: boolean
+          slug: string
+          status: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+          welcome_description: string | null
+          welcome_heading: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string
+          default_travel_mode?: string
+          guide_mode?: string
+          hero_image_url?: string | null
+          id?: string
+          powered_by_roam?: boolean
+          property_id: string
+          published_at?: string | null
+          show_nearby_events?: boolean
+          show_partner_offers?: boolean
+          show_property_favorites?: boolean
+          show_suggested_routes?: boolean
+          slug: string
+          status?: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+          welcome_description?: string | null
+          welcome_heading?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string
+          default_travel_mode?: string
+          guide_mode?: string
+          hero_image_url?: string | null
+          id?: string
+          powered_by_roam?: boolean
+          property_id?: string
+          published_at?: string | null
+          show_nearby_events?: boolean
+          show_partner_offers?: boolean
+          show_property_favorites?: boolean
+          show_suggested_routes?: boolean
+          slug?: string
+          status?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+          welcome_description?: string | null
+          welcome_heading?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_guides_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "guide_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_guides_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]

@@ -31,6 +31,11 @@ type Tier =
   | 'constrain'
   | 'clarify'
 
+type RouteIngestionOptions = {
+  city?: string | null
+  syncUrl?: boolean
+}
+
 const MIN_QUALITY_STOPS = 3
 
 function normalizeSearchableList(
@@ -61,49 +66,73 @@ function normalizeSearchableList(
   return []
 }
 
-function coerceGeneratedVenue(
-  venue: any
-): Venue | null {
-  if (!venue) {
-    return null
-  }
-
-  const lat =
-    typeof venue.lat === 'string'
-      ? parseFloat(venue.lat)
-      : venue.lat
-
-  const lon =
-    typeof venue.lon === 'string'
-      ? parseFloat(venue.lon)
-      : venue.lon
-
-  if (
-    !Number.isFinite(lat) ||
-    !Number.isFinite(lon)
-  ) {
-    return null
-  }
-
-  return {
-    ...venue,
-    id:
-      venue.id ??
-      venue.slug ??
-      venue.name,
-    lat,
-    lon,
-  } as Venue
-}
-
-function getVenueLookupKeys(
-  venue: Venue
+function extractRouteVenueIds(
+  input: unknown
 ): string[] {
-  return [
-    venue.id,
-    venue.slug,
-    venue.name,
-  ].filter(Boolean) as string[]
+  if (!Array.isArray(input)) {
+    return []
+  }
+
+  const ids =
+    input
+      .map((item) => {
+        if (
+          typeof item ===
+          'string'
+        ) {
+          return item.trim()
+        }
+
+        if (
+          !item ||
+          typeof item !==
+            'object'
+        ) {
+          return ''
+        }
+
+        const record =
+          item as Record<
+            string,
+            unknown
+          >
+
+        if (
+          typeof record.id ===
+            'string'
+        ) {
+          return record.id.trim()
+        }
+
+        const nestedVenue =
+          record.venue
+
+        if (
+          nestedVenue &&
+          typeof nestedVenue ===
+            'object'
+        ) {
+          const venueRecord =
+            nestedVenue as Record<
+              string,
+              unknown
+            >
+
+          if (
+            typeof venueRecord.id ===
+              'string'
+          ) {
+            return venueRecord.id.trim()
+          }
+        }
+
+        return ''
+      })
+      .filter(Boolean)
+
+  return Array.from(
+    new Set(ids)
+  )
 }
 
 export default function MapWrapper() {
@@ -115,11 +144,21 @@ export default function MapWrapper() {
   )
 
   const [
-    route,
-    setRoute,
+    routeVenueIds,
+    setRouteVenueIds,
+  ] = useState<string[]>([])
+
+  const [
+    pendingRouteVenueIds,
+    setPendingRouteVenueIds,
   ] = useState<
-    Venue[] | undefined
-  >(undefined)
+    string[] | null
+  >(null)
+
+  const [
+    hasHydratedRouteFromUrl,
+    setHasHydratedRouteFromUrl,
+  ] = useState(false)
 
   const [
     searchTerm,
@@ -144,13 +183,6 @@ export default function MapWrapper() {
     | 'cycling'
     | 'driving'
   >('walking')
-
-  const [
-    markerDisplayMode,
-    setMarkerDisplayMode,
-  ] = useState<
-    'color' | 'emoji'
-  >('emoji')
 
   const [
     customStart,
@@ -240,13 +272,160 @@ export default function MapWrapper() {
     }
   )
 
+  const venueById =
+    useMemo(() => {
+      return new Map<
+        string,
+        Venue
+      >(
+        venues.map(
+          (venue) => [
+            venue.id,
+            venue,
+          ]
+        )
+      )
+    }, [venues])
+
+  const route =
+    useMemo(() => {
+      return routeVenueIds
+        .map((id) =>
+          venueById.get(id)
+        )
+        .filter(
+          (
+            venue
+          ): venue is Venue =>
+            Boolean(venue)
+        )
+    }, [
+      routeVenueIds,
+      venueById,
+    ])
+
+  const routeForProps =
+    route.length > 0
+      ? route
+      : undefined
+
+  const ingestRoute =
+    useCallback(
+      (
+        input: unknown,
+        options:
+          RouteIngestionOptions = {}
+      ): string[] => {
+        const ids =
+          extractRouteVenueIds(
+            input
+          )
+
+        if (ids.length === 0) {
+          setPendingRouteVenueIds(
+            null
+          )
+          setRouteVenueIds([])
+
+          if (
+            options.syncUrl &&
+            inBrowser()
+          ) {
+            const url =
+              new URL(
+                window.location.href
+              )
+
+            url.searchParams.delete(
+              'route'
+            )
+
+            window.history.replaceState(
+              null,
+              '',
+              url.toString()
+            )
+          }
+
+          return []
+        }
+
+        setPendingRouteVenueIds(
+          ids
+        )
+
+        const nextCity =
+          typeof options.city ===
+            'string' &&
+          options.city.trim()
+            ? options.city.trim()
+            : null
+
+        if (
+          nextCity &&
+          nextCity !== selectedCity
+        ) {
+          setSelectedCity(
+            nextCity
+          )
+        }
+
+        if (
+          options.syncUrl &&
+          inBrowser()
+        ) {
+          const url =
+            new URL(
+              window.location.href
+            )
+
+          url.searchParams.set(
+            'route',
+            ids.join(',')
+          )
+
+          if (nextCity) {
+            url.searchParams.set(
+              'city',
+              nextCity
+            )
+          }
+
+          window.history.replaceState(
+            null,
+            '',
+            url.toString()
+          )
+        }
+
+        return ids
+      },
+      [selectedCity]
+    )
+
+  const handleRouteFromControl =
+    useCallback(
+      (
+        nextRoute:
+          | Venue[]
+          | undefined
+      ) => {
+        ingestRoute(
+          nextRoute ?? [],
+          {
+            syncUrl: true,
+          }
+        )
+      },
+      [ingestRoute]
+    )
+
   useEffect(() => {
     setHasMounted(true)
   }, [])
 
   useEffect(() => {
     if (
-      route &&
       route.length > 1
     ) {
       setIsPanelOpen(false)
@@ -304,7 +483,7 @@ export default function MapWrapper() {
 
   useEffect(() => {
     if (
-      !venues.length ||
+      hasHydratedRouteFromUrl ||
       !inBrowser()
     ) {
       return
@@ -318,6 +497,13 @@ export default function MapWrapper() {
     const routeParam =
       params.get('route')
 
+    const cityParam =
+      params.get('city')
+
+    setHasHydratedRouteFromUrl(
+      true
+    )
+
     if (
       typeof routeParam !==
         'string' ||
@@ -327,41 +513,51 @@ export default function MapWrapper() {
       return
     }
 
-    const ids =
-      routeParam
-        .split(',')
-        .map((id) =>
-          id.trim()
-        )
-        .filter(Boolean)
+    ingestRoute(
+      routeParam.split(','),
+      {
+        city: cityParam,
+      }
+    )
+  }, [
+    hasHydratedRouteFromUrl,
+    ingestRoute,
+  ])
 
-    if (ids.length === 0) {
+  useEffect(() => {
+    if (
+      !pendingRouteVenueIds ||
+      pendingRouteVenueIds.length ===
+        0 ||
+      venues.length === 0
+    ) {
       return
     }
 
-    const matched =
-      ids
-        .map((id) =>
-          venues.find(
-            (venue) =>
-              venue.id === id ||
-              venue.slug === id ||
-              venue.name === id
-          )
-        )
-        .filter(
-          (
-            venue
-          ): venue is Venue =>
-            Boolean(venue)
-        )
+    const canonicalIds =
+      pendingRouteVenueIds.filter(
+        (id) =>
+          venueById.has(id)
+      )
 
     if (
-      matched.length > 0
+      canonicalIds.length === 0
     ) {
-      setRoute(matched)
+      return
     }
-  }, [venues])
+
+    setRouteVenueIds(
+      canonicalIds
+    )
+
+    setPendingRouteVenueIds(
+      null
+    )
+  }, [
+    pendingRouteVenueIds,
+    venueById,
+    venues.length,
+  ])
 
   const filteredVenues =
     useMemo(() => {
@@ -516,7 +712,10 @@ export default function MapWrapper() {
 
   const handleClearRoute =
     useCallback(() => {
-      setRoute(undefined)
+      setRouteVenueIds([])
+      setPendingRouteVenueIds(
+        null
+      )
       setCustomStart(null)
       setRouteErrorMessage(null)
       setConfidenceTier(null)
@@ -552,7 +751,10 @@ export default function MapWrapper() {
         slug: string | null
       ) => {
         setSelectedCity(slug)
-        setRoute(undefined)
+        setRouteVenueIds([])
+        setPendingRouteVenueIds(
+          null
+        )
         setCustomStart(null)
         setRouteErrorMessage(null)
         setConfidenceTier(null)
@@ -614,33 +816,14 @@ export default function MapWrapper() {
           }
         )
 
-        if (
-          !Array.isArray(
+        const ids =
+          extractRouteVenueIds(
             sourceRoute
-          ) ||
-          sourceRoute.length < 2
-        ) {
-          return
-        }
+          )
 
-        const cleanedRoute =
-          sourceRoute
-            .map(
-              coerceGeneratedVenue
-            )
-            .filter(
-              (
-                venue
-              ): venue is Venue =>
-                Boolean(venue)
-            )
-
-        if (
-          cleanedRoute.length <
-          2
-        ) {
+        if (ids.length < 2) {
           setRouteErrorMessage(
-            'Generated route was missing usable venue coordinates.'
+            'Generated route was missing canonical venue IDs.'
           )
 
           return
@@ -650,61 +833,14 @@ export default function MapWrapper() {
           generatedRoute
             ?.context?.city
 
-        if (
-          typeof generatedCity ===
-            'string' &&
-          generatedCity.trim()
-        ) {
-          setSelectedCity(
-            generatedCity
-          )
-        }
-
-        const venueByKey =
-          new Map<
-            string,
-            Venue
-          >()
-
-        venues.forEach(
-          (venue) => {
-            getVenueLookupKeys(
-              venue
-            ).forEach((key) => {
-              venueByKey.set(
-                key,
-                venue
-              )
-            })
-          }
-        )
-
-        const hydratedRoute =
-          cleanedRoute.map(
-            (venue) => {
-              const canonicalVenue =
-                getVenueLookupKeys(
-                  venue
-                )
-                  .map((key) =>
-                    venueByKey.get(
-                      key
-                    )
-                  )
-                  .find(Boolean)
-
-              return canonicalVenue
-                ? {
-                    ...canonicalVenue,
-                    ...venue,
-                  }
-                : venue
-            }
-          )
-
-        setRoute(
-          hydratedRoute
-        )
+        ingestRoute(ids, {
+          city:
+            typeof generatedCity ===
+              'string'
+              ? generatedCity
+              : null,
+          syncUrl: true,
+        })
 
         setGeneratedRouteContext(
           generatedRoute ?? null
@@ -725,44 +861,8 @@ export default function MapWrapper() {
             0
           )
         }
-
-        if (inBrowser()) {
-          const url =
-            new URL(
-              window.location.href
-            )
-
-          url.searchParams.set(
-            'route',
-            hydratedRoute
-              .map(
-                (venue) =>
-                  venue.id ??
-                  venue.slug ??
-                  venue.name
-              )
-              .join(',')
-          )
-
-          if (
-            typeof generatedCity ===
-              'string' &&
-            generatedCity.trim()
-          ) {
-            url.searchParams.set(
-              'city',
-              generatedCity
-            )
-          }
-
-          window.history.replaceState(
-            null,
-            '',
-            url.toString()
-          )
-        }
       },
-      [venues]
+      [ingestRoute]
     )
 
   const retryGeneratedRouteFromVenue =
@@ -771,7 +871,7 @@ export default function MapWrapper() {
         const anchorVenue =
           generatedRouteContext
             ?.anchorVenue ??
-          route?.[0]
+          route[0]
 
         if (!anchorVenue) {
           return false
@@ -857,7 +957,7 @@ export default function MapWrapper() {
                         generatedRouteContext
                           ?.context
                           ?.maxStops ??
-                        route?.length ??
+                        route.length ??
                         5,
                       source:
                         generatedRouteContext
@@ -867,9 +967,7 @@ export default function MapWrapper() {
                         generatedRouteContext
                           ?.context
                           ?.anchorVenueId ??
-                        anchorVenue.id ??
-                        anchorVenue.slug ??
-                        anchorVenue.name,
+                        anchorVenue.id,
                       retryAttempt:
                         nextAttempt,
                       debug: true,
@@ -896,16 +994,8 @@ export default function MapWrapper() {
             )
           }
 
-          const generatedVenues =
-            payload.route.stops
-              .map(
-                (stop: any) =>
-                  stop?.venue
-              )
-              .filter(Boolean)
-
           handleGeneratedRouteFromVenue(
-            generatedVenues,
+            [],
             payload.route,
             {
               preserveRetryAttempt:
@@ -950,7 +1040,6 @@ export default function MapWrapper() {
   const handleStartGeneratedFlow =
     async () => {
       if (
-        !route ||
         route.length < 2
       ) {
         return
@@ -976,10 +1065,7 @@ export default function MapWrapper() {
                       : 'Roam Flow',
                   source: 'map',
                   venue_ids:
-                    route.map(
-                      (venue) =>
-                        venue.id
-                    ),
+                    routeVenueIds,
                   theme_id:
                     selectedThemeId ||
                     null,
@@ -1036,7 +1122,6 @@ export default function MapWrapper() {
   const handleHostGeneratedFlow =
     () => {
       if (
-        !route ||
         route.length < 2
       ) {
         return
@@ -1348,7 +1433,10 @@ export default function MapWrapper() {
           finalRoute.length <
             MIN_QUALITY_STOPS
         ) {
-          setRoute(undefined)
+          setRouteVenueIds([])
+          setPendingRouteVenueIds(
+            null
+          )
 
           setRouteErrorMessage(
             'We couldn’t build a strong enough crawl nearby. Try a looser distance setting, a different start point, or another theme.'
@@ -1357,7 +1445,47 @@ export default function MapWrapper() {
           return
         }
 
-        setRoute(finalRoute)
+        const finalRouteIds =
+          extractRouteVenueIds(
+            finalRoute
+          )
+
+        const canonicalFinalRoute =
+          finalRouteIds
+            .map((id) =>
+              venueById.get(id)
+            )
+            .filter(
+              (
+                venue
+              ): venue is Venue =>
+                Boolean(venue)
+            )
+
+        if (
+          canonicalFinalRoute.length <
+          MIN_QUALITY_STOPS
+        ) {
+          setRouteVenueIds([])
+          setPendingRouteVenueIds(
+            null
+          )
+
+          setRouteErrorMessage(
+            'Generated route did not resolve to enough canonical venues.'
+          )
+
+          return
+        }
+
+        ingestRoute(
+          finalRouteIds,
+          {
+            syncUrl:
+              hasMounted,
+          }
+        )
+
         setRouteErrorMessage(
           null
         )
@@ -1366,51 +1494,28 @@ export default function MapWrapper() {
           tierUsed
         )
 
-        const ids =
-          finalRoute
-            .map(
-              (venue) =>
-                venue.id ??
-                venue.name
-            )
-            .join(',')
-
-        if (hasMounted) {
-          const url =
-            new URL(
-              window.location.href
-            )
-
-          url.searchParams.set(
-            'route',
-            ids
-          )
-
-          window.history.replaceState(
-            null,
-            '',
-            url.toString()
-          )
-        }
-
         const origin = {
           lat:
-            finalRoute[0].lat,
+            canonicalFinalRoute[0]
+              .lat,
           lng:
-            finalRoute[0].lon,
+            canonicalFinalRoute[0]
+              .lon,
         }
 
         const destination = {
           lat:
-            finalRoute.at(-1)!
-              .lat,
+            canonicalFinalRoute.at(
+              -1
+            )!.lat,
           lng:
-            finalRoute.at(-1)!
-              .lon,
+            canonicalFinalRoute.at(
+              -1
+            )!.lon,
         }
 
         const waypoints =
-          finalRoute
+          canonicalFinalRoute
             .slice(1, -1)
             .map((venue) => ({
               lat: venue.lat,
@@ -1468,7 +1573,7 @@ export default function MapWrapper() {
                     city:
                       selectedCity,
                     stops:
-                      finalRoute.length,
+                      canonicalFinalRoute.length,
                     confidenceTier:
                       tierUsed ??
                       undefined,
@@ -1514,8 +1619,7 @@ export default function MapWrapper() {
     )
 
   const hasGeneratedRoute =
-    Boolean(route) &&
-    (route?.length ?? 0) > 1
+    route.length > 1
 
   return (
     <main className="relative h-dvh w-full overflow-hidden">
@@ -1629,11 +1733,14 @@ export default function MapWrapper() {
             setCrawlTime={
               setCrawlTime
             }
+            hasCustomStart={
+              Boolean(customStart)
+            }
             hasGeneratedRoute={
               hasGeneratedRoute
             }
             generatedRouteStopCount={
-              route?.length ?? 0
+              route.length
             }
             onStartGeneratedFlow={
               handleStartGeneratedFlow
@@ -1674,9 +1781,11 @@ export default function MapWrapper() {
         venues={
           visibleVenues
         }
-        route={route}
+        route={
+          routeForProps
+        }
         onRoute={
-          setRoute
+          handleRouteFromControl
         }
         selectedThemeId={
           selectedThemeId
@@ -1701,7 +1810,7 @@ export default function MapWrapper() {
           hasGeneratedRoute
         }
         generatedRouteStopCount={
-          route?.length ?? 0
+          route.length
         }
         generatedRouteContext={
           generatedRouteContext
@@ -1740,7 +1849,9 @@ export default function MapWrapper() {
           }
         >
           <MapCanvas
-            route={route}
+            route={
+              routeForProps
+            }
             onMapClick={
               handleMapClick
             }
@@ -1752,9 +1863,6 @@ export default function MapWrapper() {
             }
             travelMode={
               travelMode
-            }
-            markerDisplayMode={
-              markerDisplayMode
             }
             showLiveEventsOnly={
               showLiveEventsOnly

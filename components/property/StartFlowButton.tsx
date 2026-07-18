@@ -8,10 +8,11 @@ import { logEvent } from '@/lib/logEvent'
 
 type TravelMode = 'walking' | 'cycling' | 'driving'
 
-type PropertyFlowSource =
+export type PropertyFlowSource =
   | 'property_guide'
   | 'property_crawl'
   | 'property_event_journey'
+  | 'white_label_guide_suggested_flow'
 
 type Props = {
   title: string

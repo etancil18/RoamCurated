@@ -1,4 +1,3 @@
-
 /* -------------------------------------------------------------------------- */
 /* Leaflet normalization                                                      */
 /* -------------------------------------------------------------------------- */
@@ -476,6 +475,48 @@
   font-variant-numeric: tabular-nums;
   line-height: 1;
   text-shadow: 0 1px 2px rgb(0 0 0 / 28%);
+}
+
+/**
+ * Complementary category glyph for route-stop venue markers.
+ *
+ * The route number remains the primary route decoration. The glyph sits as a
+ * compact secondary badge and is rendered only when `categoryGlyph` exists.
+ */
+.roam-route-stop__category {
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  display: grid;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  border: 1.5px solid #05070a;
+  border-radius: 9999px;
+  background: rgb(9 12 18 / 96%);
+  color: #ffffff;
+  box-shadow:
+    0 3px 8px rgb(0 0 0 / 34%),
+    0 0 0 1px rgb(255 255 255 / 10%);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 32%);
+}
+
+.roam-route-stop--with-category
+  .roam-route-stop__shell {
+  box-shadow:
+    0 0 0 3px rgb(5 7 10 / 72%),
+    0 7px 20px rgb(0 0 0 / 42%),
+    0 0 17px
+      color-mix(
+        in srgb,
+        var(--roam-marker-accent) 35%,
+        transparent
+      ),
+    inset 0 1px 0 rgb(255 255 255 / 28%);
 }
 
 .roam-route-stop__role {
@@ -1122,5 +1163,13 @@
   .roam-city-marker__label,
   .roam-cluster__count {
     color: CanvasText;
+  }
+
+  .roam-route-stop__category {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+    forced-color-adjust: auto;
   }
 }

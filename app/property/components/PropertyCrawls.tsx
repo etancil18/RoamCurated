@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import StartFlowButton from '@/components/property/StartFlowButton'
 
-import type { PropertyCrawlCard } from '@/lib/property/getPropertyGuideData'
+import type { PropertyCrawlCard } from '@/lib/property/buildPropertyCrawlCards'
 import { logEvent } from '@/lib/logEvent'
 
 type NearbyVenueOption = {
@@ -98,9 +98,11 @@ function PropertyCrawlCardView({
   totalCrawls: number
 }) {
   const impressionLoggedRef = useRef(false)
+
   const [replacementsByStopIndex, setReplacementsByStopIndex] = useState<
     Record<number, NearbyVenueOption>
   >({})
+
   const [openSwapStopIndex, setOpenSwapStopIndex] = useState<number | null>(null)
 
   const effectiveVenues = useMemo<EffectiveVenue[]>(
@@ -152,6 +154,7 @@ function PropertyCrawlCardView({
 
   useEffect(() => {
     if (impressionLoggedRef.current) return
+
     impressionLoggedRef.current = true
 
     void logEvent('property_crawl_impression', {
@@ -237,7 +240,9 @@ function PropertyCrawlCardView({
   const handleResetStop = (stopIndex: number) => {
     setReplacementsByStopIndex((prev) => {
       const next = { ...prev }
+
       delete next[stopIndex]
+
       return next
     })
 
@@ -252,6 +257,7 @@ function PropertyCrawlCardView({
             <div className="flex flex-wrap gap-2">
               <Chip tone="strong">{routeContext.label}</Chip>
               <Chip>{routeContext.confidence}</Chip>
+
               {vm.chips.map((chip) => (
                 <Chip key={chip}>{chip}</Chip>
               ))}
@@ -261,6 +267,7 @@ function PropertyCrawlCardView({
               <h3 className="text-xl font-semibold tracking-tight text-white sm:text-lg">
                 {vm.title}
               </h3>
+
               <p className="max-w-2xl text-sm leading-6 text-neutral-300">
                 {vm.subtitle}
               </p>
@@ -306,8 +313,10 @@ function PropertyCrawlCardView({
         <div className="space-y-3 border-t border-neutral-800 pt-4">
           {vm.stops.map((stop, stopIndex) => {
             const currentVenue = effectiveVenues[stopIndex]
+
             const currentVenueDescription =
               currentVenue?.description ?? stop.description
+
             const hasReplacement = Boolean(replacementsByStopIndex[stopIndex])
 
             const swapCandidates = getSwapCandidates({
@@ -383,7 +392,9 @@ function PropertyCrawlCardView({
                         >
                           {openSwapStopIndex === stopIndex
                             ? 'Hide nearby swaps'
-                            : `Swap with nearby ${getStageSwapLabel(stop.stageLabel)}`}
+                            : `Swap with nearby ${getStageSwapLabel(
+                                stop.stageLabel
+                              )}`}
                         </button>
 
                         {hasReplacement && (
@@ -408,7 +419,9 @@ function PropertyCrawlCardView({
                               <button
                                 key={candidate.id}
                                 type="button"
-                                onClick={() => handleSwapStop(stopIndex, candidate)}
+                                onClick={() =>
+                                  handleSwapStop(stopIndex, candidate)
+                                }
                                 className="block w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-left transition hover:border-cyan-400/50 hover:bg-neutral-800"
                               >
                                 <div className="space-y-1">
@@ -474,7 +487,9 @@ function buildRouteContext({
   bestTimeLabel: string | null
   position: number
 }) {
-  const lowWalk = typeof totalWalkMinutes === 'number' && totalWalkMinutes <= 18
+  const lowWalk =
+    typeof totalWalkMinutes === 'number' && totalWalkMinutes <= 18
+
   const compact = stopCount > 0 && stopCount <= 4
 
   const confidence =
@@ -535,6 +550,7 @@ function getSwapCandidates({
   )
 
   const currentVenueId = effectiveVenues[currentStopIndex]?.id
+
   if (currentVenueId) {
     usedVenueIds.delete(currentVenueId)
   }
@@ -543,7 +559,12 @@ function getSwapCandidates({
     .filter((venue) => {
       if (!venue?.id) return false
       if (usedVenueIds.has(venue.id)) return false
-      return venueMatchesDesiredTypes(venue, desiredStageTypes, matchedType)
+
+      return venueMatchesDesiredTypes(
+        venue,
+        desiredStageTypes,
+        matchedType
+      )
     })
     .slice(0, 6)
 }
@@ -556,7 +577,9 @@ function venueMatchesDesiredTypes(
   const venueTypes = normalizeVenueTypes(venue.type)
 
   if (desiredStageTypes.length > 0) {
-    return desiredStageTypes.some((stageType) => venueTypes.includes(stageType))
+    return desiredStageTypes.some((stageType) =>
+      venueTypes.includes(stageType)
+    )
   }
 
   if (matchedType) {
@@ -587,6 +610,7 @@ function getVenueLink(
   venue: PropertyCrawlCard['crawl']['venues'][number]
 ): string {
   const maybeLink = (venue as { link?: string | null }).link
+
   return typeof maybeLink === 'string' && maybeLink.trim().length > 0
     ? maybeLink
     : `/venue-profile/${venue.id}`
@@ -595,8 +619,14 @@ function getVenueLink(
 function getVenueDescription(
   venue: PropertyCrawlCard['crawl']['venues'][number]
 ): string | null {
-  const maybeDescription = (venue as { description?: string | null }).description
-  return typeof maybeDescription === 'string' && maybeDescription.trim().length > 0
+  const maybeDescription = (
+    venue as {
+      description?: string | null
+    }
+  ).description
+
+  return typeof maybeDescription === 'string' &&
+    maybeDescription.trim().length > 0
     ? maybeDescription
     : null
 }
@@ -604,19 +634,28 @@ function getVenueDescription(
 function getVenueType(
   venue: PropertyCrawlCard['crawl']['venues'][number]
 ): string | string[] | undefined {
-  const maybeType = (venue as { type?: string | string[] | null }).type
+  const maybeType = (
+    venue as {
+      type?: string | string[] | null
+    }
+  ).type
+
   if (Array.isArray(maybeType)) return maybeType
   if (typeof maybeType === 'string') return maybeType
+
   return undefined
 }
 
 function getStageSwapLabel(stageLabel: string) {
-  const normalized = String(stageLabel ?? '').trim().toLowerCase()
+  const normalized = String(stageLabel ?? '')
+    .trim()
+    .toLowerCase()
 
   if (normalized.includes('dinner')) return 'dinner spots'
   if (normalized.includes('drink')) return 'drinks spots'
   if (normalized.includes('coffee')) return 'coffee spots'
   if (normalized.includes('browse')) return 'browse stops'
+
   return 'stops'
 }
 

@@ -896,8 +896,9 @@ export const crawlThemes: CrawlTheme[] = [
   name: "Post‑Work Wind Down",
   description: "Unplug and ease into the evening after a long day.",
   stageFlow: [
-  ["happy hour", "wine bar", "patio", "cocktail"],
-  "dinner"
+  ["happy hour", "happyhour", "wine bar", "patio", "cocktail"],
+  "dinner",
+  "cocktail"
 ],
   filters: {
     timeOfDay: ["afternoon", "evening", "late"],

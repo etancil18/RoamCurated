@@ -6,6 +6,16 @@ export type DateEvent = {
   time: string;
 };
 
+/**
+ * Explicitly enables time-sensitive marker glyph behavior.
+ *
+ * Without this profile, a venue's resolved marker glyph should
+ * remain stable regardless of the current time.
+ */
+export type VenueMarkerTemporalProfile =
+  | 'coffee-dining'
+  | 'coffee-wine';
+
 export type Venue = {
   id: string; // 🔒 REQUIRED — used in favorites, crawls, and routing
   name: string;
@@ -24,6 +34,9 @@ export type Venue = {
   city?: string;
   neighborhood?: string;
 
+  // Marker identity
+  markerTemporalProfile?: VenueMarkerTemporalProfile;
+
   // Time logic
   openNow?: boolean | string;
   hours?: string[];
@@ -41,16 +54,16 @@ export type Venue = {
   _has_upcoming_events?: boolean;
 
   // Dynamic event crawl enhancements
-  liveEvent?: boolean;       
-  event_id?: string;         
-  eventCategory?: string;    
-  starts_at?: string;        
-  ends_at?: string;          
+  liveEvent?: boolean;
+  event_id?: string;
+  eventCategory?: string;
+  starts_at?: string;
+  ends_at?: string;
 
   // Scoring / logic helpers
-  _score?: number;           
-  _eventBoost?: number;      
-  scoreBoost?: number;       
+  _score?: number;
+  _eventBoost?: number;
+  scoreBoost?: number;
 };
 
 /* ------------------------------------------------ */

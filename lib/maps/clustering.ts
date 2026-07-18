@@ -134,7 +134,8 @@ const ZOOM_CELL_SIZE: ReadonlyArray<{
     cellSize: 0.006,
   },
   {
-    maxZoomExclusive: Number.POSITIVE_INFINITY,
+    maxZoomExclusive:
+      Number.POSITIVE_INFINITY,
     cellSize: 0.003,
   },
 ]
@@ -143,27 +144,15 @@ function getVenueId(
   venue: Venue
 ): string | null {
   if (
-    typeof venue.id === 'string' &&
-    venue.id.trim().length > 0
+    typeof venue.id !== 'string'
   ) {
-    return venue.id
+    return null
   }
 
-  if (
-    typeof venue.slug === 'string' &&
-    venue.slug.trim().length > 0
-  ) {
-    return venue.slug
-  }
+  const venueId =
+    venue.id.trim()
 
-  if (
-    typeof venue.name === 'string' &&
-    venue.name.trim().length > 0
-  ) {
-    return venue.name
-  }
-
-  return null
+  return venueId || null
 }
 
 function isValidCoordinate(
@@ -185,7 +174,10 @@ function roundCoordinate(
 ): number {
   const factor = 10 ** precision
 
-  return Math.round(value * factor) / factor
+  return (
+    Math.round(value * factor) /
+    factor
+  )
 }
 
 function createGridKey(
@@ -193,10 +185,14 @@ function createGridKey(
   cellSize: number
 ): string {
   const latCell =
-    Math.floor(venue.lat / cellSize)
+    Math.floor(
+      venue.lat / cellSize
+    )
 
   const lonCell =
-    Math.floor(venue.lon / cellSize)
+    Math.floor(
+      venue.lon / cellSize
+    )
 
   return `${latCell}:${lonCell}`
 }
@@ -206,16 +202,19 @@ function createClusterId(
   zoom: number,
   venues: Venue[]
 ): string {
-  const venueKeys = venues
-    .map((venue) => getVenueId(venue))
-    .filter(
-      (
-        venueId
-      ): venueId is string =>
-        venueId !== null
-    )
-    .sort()
-    .join('|')
+  const venueKeys =
+    venues
+      .map((venue) =>
+        getVenueId(venue)
+      )
+      .filter(
+        (
+          venueId
+        ): venueId is string =>
+          venueId !== null
+      )
+      .sort()
+      .join('|')
 
   return `cluster:${zoom}:${key}:${venueKeys}`
 }
@@ -224,10 +223,12 @@ function getClusterSpan(
   cluster: WorkingCluster
 ): number {
   const latitudeSpan =
-    cluster.north - cluster.south
+    cluster.north -
+    cluster.south
 
   const longitudeSpan =
-    cluster.east - cluster.west
+    cluster.east -
+    cluster.west
 
   return Math.max(
     latitudeSpan,
@@ -257,8 +258,11 @@ function appendVenueToCluster(
 ): void {
   cluster.venues.push(venue)
 
-  cluster.latTotal += venue.lat
-  cluster.lonTotal += venue.lon
+  cluster.latTotal +=
+    venue.lat
+
+  cluster.lonTotal +=
+    venue.lon
 
   cluster.north =
     Math.max(
@@ -299,12 +303,17 @@ function getLiveEventCount(
     )
 
   if (
-    typeof explicitCount === 'number' &&
-    Number.isFinite(explicitCount)
+    typeof explicitCount ===
+      'number' &&
+    Number.isFinite(
+      explicitCount
+    )
   ) {
     return Math.max(
       0,
-      Math.floor(explicitCount)
+      Math.floor(
+        explicitCount
+      )
     )
   }
 
@@ -347,7 +356,8 @@ function calculateClusterPriority(
         options.selectedVenueId ===
           venueId
       ) {
-        hasSelectedVenue = true
+        hasSelectedVenue =
+          true
       }
 
       if (
@@ -356,7 +366,8 @@ function calculateClusterPriority(
           venueId
         )
       ) {
-        hasRouteVenue = true
+        hasRouteVenue =
+          true
       }
 
       if (
@@ -365,7 +376,8 @@ function calculateClusterPriority(
           venueId
         )
       ) {
-        hasSearchMatch = true
+        hasSearchMatch =
+          true
       }
     }
   )
@@ -374,11 +386,18 @@ function calculateClusterPriority(
     liveEventCount > 0
 
   const priorityScore =
-    (hasSelectedVenue ? 1000 : 0) +
-    (hasRouteVenue ? 700 : 0) +
-    (hasSearchMatch ? 500 : 0) +
+    (hasSelectedVenue
+      ? 1000
+      : 0) +
+    (hasRouteVenue
+      ? 700
+      : 0) +
+    (hasSearchMatch
+      ? 500
+      : 0) +
     liveEventCount * 150 +
-    cluster.venues.length * 10
+    cluster.venues.length *
+      10
 
   return {
     hasLiveEvent,
@@ -400,10 +419,12 @@ function toVenueCluster(
 
   const center = {
     lat: roundCoordinate(
-      cluster.latTotal / count
+      cluster.latTotal /
+        count
     ),
     lon: roundCoordinate(
-      cluster.lonTotal / count
+      cluster.lonTotal /
+        count
     ),
   }
 
@@ -419,14 +440,19 @@ function toVenueCluster(
       zoom,
       cluster.venues
     ),
-    venues: cluster.venues,
+    venues:
+      cluster.venues,
     count,
     center,
     bounds: {
-      north: cluster.north,
-      south: cluster.south,
-      east: cluster.east,
-      west: cluster.west,
+      north:
+        cluster.north,
+      south:
+        cluster.south,
+      east:
+        cluster.east,
+      west:
+        cluster.west,
     },
     ...priority,
   }
@@ -442,7 +468,9 @@ export function getClusterCellSize(
 
   const match =
     ZOOM_CELL_SIZE.find(
-      ({ maxZoomExclusive }) =>
+      ({
+        maxZoomExclusive,
+      }) =>
         normalizedZoom <
         maxZoomExclusive
     )
@@ -450,7 +478,8 @@ export function getClusterCellSize(
   return (
     match?.cellSize ??
     ZOOM_CELL_SIZE[
-      ZOOM_CELL_SIZE.length - 1
+      ZOOM_CELL_SIZE.length -
+        1
     ].cellSize
   )
 }
@@ -466,7 +495,9 @@ export function clusterVenuesByGrid(
   options: ClusterVenuesOptions
 ): ClusterVenuesResult {
   const zoom =
-    Number.isFinite(options.zoom)
+    Number.isFinite(
+      options.zoom
+    )
       ? options.zoom
       : 0
 
@@ -477,14 +508,17 @@ export function clusterVenuesByGrid(
     ) &&
     options.cellSize > 0
       ? options.cellSize
-      : getClusterCellSize(zoom)
+      : getClusterCellSize(
+          zoom
+        )
 
   const maxClusterSpan =
     options.maxClusterSpan &&
     Number.isFinite(
       options.maxClusterSpan
     ) &&
-    options.maxClusterSpan > 0
+    options.maxClusterSpan >
+      0
       ? options.maxClusterSpan
       : cellSize
 
@@ -503,15 +537,21 @@ export function clusterVenuesByGrid(
     )
 
   if (
-    validVenues.length === 0
+    validVenues.length ===
+    0
   ) {
     return {
       clusters: [],
-      unclusteredVenues: [],
+      unclusteredVenues:
+        [],
     }
   }
 
-  if (!shouldClusterAtZoom(zoom)) {
+  if (
+    !shouldClusterAtZoom(
+      zoom
+    )
+  ) {
     return {
       clusters: [],
       unclusteredVenues: [
@@ -564,28 +604,33 @@ export function clusterVenuesByGrid(
           lonTotal:
             existingCluster.lonTotal +
             venue.lon,
-          north: Math.max(
-            existingCluster.north,
-            venue.lat
-          ),
-          south: Math.min(
-            existingCluster.south,
-            venue.lat
-          ),
-          east: Math.max(
-            existingCluster.east,
-            venue.lon
-          ),
-          west: Math.min(
-            existingCluster.west,
-            venue.lon
-          ),
+          north:
+            Math.max(
+              existingCluster.north,
+              venue.lat
+            ),
+          south:
+            Math.min(
+              existingCluster.south,
+              venue.lat
+            ),
+          east:
+            Math.max(
+              existingCluster.east,
+              venue.lon
+            ),
+          west:
+            Math.min(
+              existingCluster.west,
+              venue.lon
+            ),
         }
 
       if (
         getClusterSpan(
           prospectiveCluster
-        ) <= maxClusterSpan
+        ) <=
+        maxClusterSpan
       ) {
         appendVenueToCluster(
           existingCluster,
@@ -617,7 +662,8 @@ export function clusterVenuesByGrid(
   workingClusters.forEach(
     (cluster) => {
       if (
-        cluster.venues.length >=
+        cluster.venues
+          .length >=
         minimumClusterSize
       ) {
         clusters.push(
@@ -638,7 +684,10 @@ export function clusterVenuesByGrid(
   )
 
   clusters.sort(
-    (first, second) => {
+    (
+      first,
+      second
+    ) => {
       if (
         second.priorityScore !==
         first.priorityScore
@@ -667,18 +716,24 @@ export function getClusterExpansionZoom(
   clusterCount: number
 ): number {
   const normalizedZoom =
-    Number.isFinite(currentZoom)
+    Number.isFinite(
+      currentZoom
+    )
       ? currentZoom
       : 0
 
-  if (clusterCount >= 50) {
+  if (
+    clusterCount >= 50
+  ) {
     return Math.min(
       normalizedZoom + 3,
       18
     )
   }
 
-  if (clusterCount >= 15) {
+  if (
+    clusterCount >= 15
+  ) {
     return Math.min(
       normalizedZoom + 2,
       18
@@ -712,12 +767,15 @@ export function getClusterBoundsCoordinates(
 export function getClusterLabel(
   cluster: VenueCluster
 ): string {
-  if (cluster.hasSelectedVenue) {
+  if (
+    cluster.hasSelectedVenue
+  ) {
     return `${cluster.count} places, including the selected venue`
   }
 
   if (
-    cluster.liveEventCount > 0
+    cluster.liveEventCount >
+    0
   ) {
     return `${cluster.count} places, ${cluster.liveEventCount} with events`
   }

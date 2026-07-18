@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { Venue } from '@/types/venue'
+import { normalizeRawVenue } from '@/lib/venues/normalizeVenue'
 
 // Import raw city data (not typed yet)
 import atlantaData from '@/data/atlanta'
@@ -11,8 +12,8 @@ import lisbonData from '@/data/lisbon'
 import londonData from '@/data/london'
 import losAngelesData from '@/data/losangeles'
 
-// Raw data type — unknown or loosely typed
-const RAW_CITY_DATA: Record<string, any[]> = {
+// Raw data remains untrusted until normalized
+const RAW_CITY_DATA: Record<string, readonly unknown[]> = {
   atl: atlantaData,
   nyc: nycData,
   porto: portoData,
@@ -46,21 +47,13 @@ export function useCityData(
   const venues: Venue[] = useMemo(() => {
     const raw = RAW_CITY_DATA[safeCity] ?? []
 
-    return raw.map((v: any) => ({
-      ...v,
-      lat: typeof v.lat === 'string' ? parseFloat(v.lat) : v.lat,
-      lon: typeof v.lon === 'string' ? parseFloat(v.lon) : v.lon,
-      openNow: typeof v.openNow === 'string' ? v.openNow === 'true' : v.openNow,
-      // Normalize hoursNumeric to expected shape if needed
-      hoursNumeric: Object.fromEntries(
-        Object.entries(v.hoursNumeric ?? {}).map(([day, val]) => {
-          if (Array.isArray(val)) {
-            return [day, val[0]] // Just use the first open/close pair
-          }
-          return [day, val]
+    return raw
+      .map((venue) =>
+        normalizeRawVenue(venue, {
+          city: safeCity || undefined,
         })
-      ),
-    }))
+      )
+      .filter((venue): venue is Venue => venue !== null)
   }, [safeCity])
 
   useEffect(() => {
@@ -96,12 +89,16 @@ export function useCityData(
 
   const eventsByVenueId = useMemo(() => {
     const grouped: Record<string, Event[]> = {}
+
     for (const ev of events) {
       const vId = ev.venue?.id
+
       if (!vId) continue
       if (!grouped[vId]) grouped[vId] = []
+
       grouped[vId].push(ev)
     }
+
     return grouped
   }, [events])
 
@@ -110,6 +107,7 @@ export function useCityData(
 
     return venues.filter((v) => {
       const evs = eventsByVenueId[v.id] ?? []
+
       return evs.some((ev) => !!ev.starts_at)
     })
   }, [venues, eventsByVenueId, showLiveEventsOnly])

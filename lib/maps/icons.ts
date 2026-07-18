@@ -106,6 +106,12 @@ export type RouteStopIconOptions = BaseMapIconOptions & {
   color?: MapIconColor | string
   completed?: boolean
   active?: boolean
+
+  /**
+   * Canonical venue-category glyph retained while the route-stop number
+   * remains the dominant route decoration.
+   */
+  categoryGlyph?: string | null
 }
 
 /**
@@ -913,12 +919,16 @@ function normalizeCachePart(
       : 'invalid'
   }
 
-  return value
+  const normalized = value
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9_.#()-]/g, '')
-    .slice(0, 120) || 'empty'
+
+  if (!normalized) {
+    return 'empty'
+  }
+
+  return encodeURIComponent(normalized)
+    .slice(0, 240)
 }
 
 function toLeafletPoint(
@@ -1107,15 +1117,17 @@ export async function getVenueIcon(
     options.isSearchMatch === true ||
     visualState === 'search-match'
 
-  const displayMode =
-    normalizeMarkerDisplayMode(
-      options.displayMode
-    )
-
   const categoryGlyph =
     normalizeMarkerGlyph(
       options.categoryGlyph
     )
+
+  const displayMode =
+    categoryGlyph
+      ? 'category'
+      : normalizeMarkerDisplayMode(
+          options.displayMode
+        )
 
   const accentColor =
     resolveMapIconColor(
@@ -1176,6 +1188,7 @@ export async function getVenueIcon(
       scale,
       active: selected,
       completed: false,
+      categoryGlyph,
     })
   }
 
@@ -1353,6 +1366,11 @@ export async function getRouteStopIcon(
   const completed =
     options.completed === true
 
+  const categoryGlyph =
+    normalizeMarkerGlyph(
+      options.categoryGlyph
+    )
+
   const color =
     resolveMapIconColor(
       options.color,
@@ -1375,6 +1393,7 @@ export async function getRouteStopIcon(
       interactive,
       active,
       completed,
+      categoryGlyph,
       scale,
     ]
   )
@@ -1395,7 +1414,9 @@ export async function getRouteStopIcon(
       active,
       completed,
     }),
-    `roam-route-stop--${role}`
+    `roam-route-stop--${role}`,
+    categoryGlyph &&
+      'roam-route-stop--with-category'
   )
 
   const roleIndicator =
@@ -1423,6 +1444,18 @@ export async function getRouteStopIcon(
           aria-hidden="true"
         >
           ✓
+        </span>
+      `
+      : ''
+
+  const categoryGlyphMarkup =
+    categoryGlyph
+      ? `
+        <span
+          class="roam-route-stop__category"
+          aria-hidden="true"
+        >
+          ${escapeMapIconHtml(categoryGlyph)}
         </span>
       `
       : ''
@@ -1464,6 +1497,7 @@ export async function getRouteStopIcon(
         ${completedIndicator}
       </span>
 
+      ${categoryGlyphMarkup}
       ${roleIndicator}
     </div>
   `

@@ -254,9 +254,6 @@ type Props = {
   themeId?: string
   searchTerm?: string
   showLiveEventsOnly?: boolean
-  markerDisplayMode?:
-    | 'color'
-    | 'emoji'
   onCityChange?: (
     city: string | null
   ) => void
@@ -285,7 +282,6 @@ export default function MapCanvas({
   themeId,
   searchTerm = '',
   showLiveEventsOnly = false,
-  markerDisplayMode = 'color',
   onCityChange,
   onGeneratedRouteCityChange,
   onMapClick,
@@ -2293,9 +2289,6 @@ export default function MapCanvas({
                   isRouteMode={
                     visibleRoute.length >
                     0
-                  }
-                  markerDisplayMode={
-                    markerDisplayMode
                   }
                   markerRefs={
                     markerRefs

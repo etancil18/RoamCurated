@@ -31,7 +31,6 @@ type Props = {
   city: string
   nowForCity: DateTime
   isRouteMode: boolean
-  markerDisplayMode?: 'color' | 'emoji'
   markerRefs: MutableRefObject<Record<string, LeafletMarker>>
   eventsByVenueId: Record<string, any[]>
 
@@ -123,7 +122,6 @@ export default function VenueMarker({
   city,
   nowForCity,
   isRouteMode,
-  markerDisplayMode = 'color',
   markerRefs,
   eventsByVenueId,
   selected = false,
@@ -315,7 +313,6 @@ export default function VenueMarker({
 
     void getVenueIcon({
       visualState,
-      displayMode: markerDisplayMode,
       categoryGlyph: markerEmoji,
       accentColor,
       openNow: isOpen,
@@ -358,7 +355,6 @@ export default function VenueMarker({
     }
   }, [
     visualState,
-    markerDisplayMode,
     markerEmoji,
     accentColor,
     isOpen,
@@ -632,8 +628,6 @@ export default function VenueMarker({
                   name: v.name,
                   slug:
                     v.slug ?? null,
-                  marker_display_mode:
-                    markerDisplayMode,
                 },
               }
             )

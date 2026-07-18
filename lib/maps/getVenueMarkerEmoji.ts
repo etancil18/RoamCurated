@@ -1,4 +1,5 @@
 import type { DateTime } from 'luxon'
+import type { VenueMarkerTemporalProfile } from '@/types/venue'
 
 const TYPE_EMOJI_RULES: Array<{
   emoji: string
@@ -269,6 +270,40 @@ function hasMatchingType(
   )
 }
 
+function resolveExplicitTemporalEmoji(
+  markerTemporalProfile:
+    | VenueMarkerTemporalProfile
+    | null
+    | undefined,
+  nowForCity?: DateTime | null
+): string | null {
+  if (
+    !markerTemporalProfile ||
+    !nowForCity ||
+    !nowForCity.isValid
+  ) {
+    return null
+  }
+
+  const isEvening =
+    nowForCity.hour >= 17
+
+  switch (markerTemporalProfile) {
+    case 'coffee-dining':
+      return isEvening
+        ? '🍽️'
+        : '☕️'
+
+    case 'coffee-wine':
+      return isEvening
+        ? '🍷'
+        : '☕️'
+
+    default:
+      return null
+  }
+}
+
 function resolveTemporalEmoji(
   normalizedTypes: readonly string[],
   nowForCity?: DateTime | null
@@ -418,10 +453,23 @@ export function getVenueMarkerEmoji(
     | string
     | string[]
     | null,
-  nowForCity?: DateTime | null
+  nowForCity?: DateTime | null,
+  markerTemporalProfile?:
+    | VenueMarkerTemporalProfile
+    | null
 ): string {
   const normalizedTypes =
     toTypeArray(input)
+
+  const explicitTemporalEmoji =
+    resolveExplicitTemporalEmoji(
+      markerTemporalProfile,
+      nowForCity
+    )
+
+  if (explicitTemporalEmoji) {
+    return explicitTemporalEmoji
+  }
 
   const temporalEmoji =
     resolveTemporalEmoji(

@@ -32,6 +32,7 @@ interface ControlPanelProps {
   setCrawlTime: (time: string) => void
   onGenerateRoute: (plannedStartAt?: string | Date) => void
   onClearRoute: () => void
+  hasCustomStart: boolean
   hasGeneratedRoute?: boolean
   generatedRouteStopCount?: number
   onStartGeneratedFlow?: () => void
@@ -71,6 +72,7 @@ export function ControlPanel({
   crawlTime,
   setCrawlTime,
   onGenerateRoute,
+  hasCustomStart,
 }: ControlPanelProps) {
   const [isScheduled, setIsScheduled] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
@@ -107,6 +109,17 @@ export function ControlPanel({
   }
 
   const handleGenerateClick = async () => {
+    if (!hasCustomStart) {
+      logEvent('generate_blocked_missing_start', {
+        metadata: {
+          city,
+          selectedThemeId,
+        },
+      })
+
+      return
+    }
+
     const plannedStartAt =
       isScheduled && crawlDate && crawlTime
         ? (() => {
@@ -357,6 +370,58 @@ export function ControlPanel({
                     </option>
                   ))}
                 </select>
+
+                <div
+                  id="theme-start-point-status"
+                  role="status"
+                  aria-live="polite"
+                  className={`
+                    rounded-xl
+                    border
+                    px-3
+                    py-2.5
+                    transition
+                    ${
+                      hasCustomStart
+                        ? 'border-emerald-400/20 bg-emerald-400/10'
+                        : 'border-amber-300/25 bg-amber-300/10'
+                    }
+                  `}
+                >
+                  <div className="flex items-start gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="mt-0.5 text-sm"
+                    >
+                      {hasCustomStart ? '✓' : '📍'}
+                    </span>
+
+                    <div>
+                      <p
+                        className={`
+                          text-xs
+                          font-bold
+                          ${
+                            hasCustomStart
+                              ? 'text-emerald-200'
+                              : 'text-amber-100'
+                          }
+                        `}
+                      >
+                        {hasCustomStart
+                          ? 'Starting point selected'
+                          : 'Drop a pin to continue'}
+                      </p>
+
+                      {!hasCustomStart && (
+                        <p className="mt-0.5 text-[11px] leading-4 text-zinc-400">
+                          Tap anywhere on the map to choose where your themed
+                          route begins.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -386,6 +451,13 @@ export function ControlPanel({
                 <Button
                   type="button"
                   onClick={handleGenerateClick}
+                  disabled={!hasCustomStart}
+                  aria-describedby="theme-start-point-status"
+                  title={
+                    hasCustomStart
+                      ? 'Generate route'
+                      : 'Drop a pin on the map first'
+                  }
                   className="
                     h-11
                     w-full
@@ -402,13 +474,20 @@ export function ControlPanel({
                     shadow-[0_10px_28px_rgba(34,211,238,0.18)]
                     transition
                     hover:brightness-110
+                    disabled:cursor-not-allowed
+                    disabled:from-zinc-700
+                    disabled:via-zinc-700
+                    disabled:to-zinc-700
+                    disabled:text-zinc-400
+                    disabled:shadow-none
+                    disabled:hover:brightness-100
                     focus-visible:ring-2
                     focus-visible:ring-cyan-300
                     focus-visible:ring-offset-2
                     focus-visible:ring-offset-zinc-950
                   "
                 >
-                  Generate
+                  {hasCustomStart ? 'Generate' : 'Drop Pin First'}
                 </Button>
               </div>
 
