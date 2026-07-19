@@ -7,6 +7,7 @@ type StickerComposerProps = {
   title?: string
   sticker: React.ReactNode
   exporting?: boolean
+  exportLabel?: string
   onClose: () => void
   onExport: (target: HTMLElement) => Promise<void> | void
 }
@@ -16,6 +17,7 @@ export default function StickerComposer({
   title = 'Sticker Preview',
   sticker,
   exporting = false,
+  exportLabel = 'Export Story',
   onClose,
   onExport,
 }: StickerComposerProps) {
@@ -177,7 +179,7 @@ export default function StickerComposer({
               disabled={exporting}
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {exporting ? 'Exporting…' : 'Export Story'}
+              {exporting ? 'Exporting…' : exportLabel}
             </button>
 
             <button

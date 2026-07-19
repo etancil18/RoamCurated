@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import FlowRouteSticker from '@/app/flow/[session_id]/components/FlowRouteSticker'
 import StickerComposer from '@/components/flows/StickerComposer'
 
@@ -51,6 +51,8 @@ export default function DailyVisitStickerButton({
   buttonLabel = 'Create Day Sticker',
   onError,
 }: Props) {
+  const transparentStickerRef = useRef<HTMLDivElement>(null)
+
   const [composerOpen, setComposerOpen] = useState(false)
   const [routeLine, setRouteLine] = useState<RouteLinePoint[]>([])
   const [stickerStops, setStickerStops] = useState<StickerStop[]>([])
@@ -84,8 +86,8 @@ export default function DailyVisitStickerButton({
     setBuildingRoute(true)
     setError(null)
 
-    const nextStops: StickerStop[] =
-      eligibleVisits.map((visit, index) => ({
+    const nextStops: StickerStop[] = eligibleVisits.map(
+      (visit, index) => ({
         id: visit.id,
         venueId: visit.venueId,
         stopOrder: index + 1,
@@ -94,11 +96,11 @@ export default function DailyVisitStickerButton({
         checkedInAt: visit.visitedAt,
         lat: visit.lat,
         lon: visit.lon,
-      }))
+      })
+    )
 
     try {
-      const nextRouteLine =
-        await fetchRouteLine(nextStops)
+      const nextRouteLine = await fetchRouteLine(nextStops)
 
       setStickerStops(nextStops)
       setRouteLine(nextRouteLine)
@@ -120,7 +122,7 @@ export default function DailyVisitStickerButton({
   }
 
   const exportSticker = async (
-    target: HTMLElement
+    _composerTarget: HTMLElement
   ) => {
     if (exporting || !composerOpen) return
 
@@ -130,12 +132,28 @@ export default function DailyVisitStickerButton({
     try {
       await waitForFonts()
 
+      await new Promise((resolve) =>
+        window.setTimeout(resolve, 150)
+      )
+
+      const target = transparentStickerRef.current
+
+      if (!target) {
+        throw new Error(
+          'Transparent sticker export target was not found.'
+        )
+      }
+
       const { toBlob } = await import(
         'html-to-image'
       )
 
       const blob = await toBlob(target, {
-        pixelRatio: 3,
+        width: 1080,
+        height: 1080,
+        canvasWidth: 1080,
+        canvasHeight: 1080,
+        pixelRatio: 2,
         backgroundColor: 'transparent',
         cacheBust: true,
       })
@@ -150,6 +168,43 @@ export default function DailyVisitStickerButton({
         city,
         date,
       })
+
+      const file = new File([blob], fileName, {
+        type: 'image/png',
+      })
+
+      const canShareFile =
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({
+          files: [file],
+        })
+
+      if (canShareFile) {
+        try {
+          await navigator.share({
+            title: `${city} Roam Route`,
+            text: buildShareText({
+              city,
+              dateLabel,
+              visitCount: stickerStops.length,
+            }),
+            files: [file],
+          })
+
+          return
+        } catch (shareError) {
+          if (isShareCancellation(shareError)) {
+            return
+          }
+
+          console.warn(
+            '[DailyVisitStickerButton] Native sharing failed; falling back to download:',
+            shareError
+          )
+        }
+      }
 
       downloadBlob(blob, fileName)
     } catch (err) {
@@ -253,10 +308,39 @@ export default function DailyVisitStickerButton({
         ) : null}
       </div>
 
+      <div
+        className="pointer-events-none fixed -left-[9999px] top-0 opacity-0"
+        aria-hidden="true"
+      >
+        <div
+          ref={transparentStickerRef}
+          style={{
+            width: 1080,
+            height: 1080,
+            background: 'transparent',
+          }}
+        >
+          <FlowRouteSticker
+            title={buildStickerTitle({
+              city,
+              dateLabel,
+            })}
+            city={city}
+            stops={stickerStops}
+            routeLine={routeLine}
+            width={1080}
+            height={1080}
+            variant="transparent-export"
+            routeKind="personal"
+          />
+        </div>
+      </div>
+
       <StickerComposer
         open={composerOpen}
         title={`${city} Day Route`}
         exporting={exporting}
+        exportLabel="Export Sticker"
         onClose={closeComposer}
         onExport={exportSticker}
         sticker={
@@ -268,6 +352,7 @@ export default function DailyVisitStickerButton({
             city={city}
             stops={stickerStops}
             routeLine={routeLine}
+            routeKind="personal"
           />
         }
       />
@@ -669,6 +754,22 @@ function buildStickerTitle({
     : `${city} Day Route`
 }
 
+function buildShareText({
+  city,
+  dateLabel,
+  visitCount,
+}: {
+  city: string
+  dateLabel: string | null
+  visitCount: number
+}) {
+  const dateText = dateLabel?.trim()
+    ? ` on ${dateLabel.trim()}`
+    : ''
+
+  return `I visited ${visitCount} places across ${city}${dateText}.`
+}
+
 function buildFileName({
   city,
   date,
@@ -723,5 +824,14 @@ async function waitForFonts() {
 
   await new Promise((resolve) =>
     window.setTimeout(resolve, 100)
+  )
+}
+
+function isShareCancellation(
+  error: unknown
+): boolean {
+  return (
+    error instanceof DOMException &&
+    error.name === 'AbortError'
   )
 }

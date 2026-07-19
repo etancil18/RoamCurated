@@ -1,9 +1,14 @@
 import {
+  getGuideNearbyEventsData,
+  type GuideNearbyEventsData,
+} from '@/lib/guides/getGuideNearbyEvents'
+import {
   getGuideSuggestedFlowsData,
   type GuideSuggestedFlowsProperty,
 } from '@/lib/guides/getGuideSuggestedFlows'
 import type { PropertyCrawlCard } from '@/lib/property/buildPropertyCrawlCards'
 import { createServerClient } from '@/lib/supabase/server'
+import type { NearbyEventVM } from '@/lib/view-models/buildNearbyEventVM'
 
 /* ------------------------------------------------ */
 /* Public input                                     */
@@ -47,6 +52,7 @@ export type GuidePageData = {
   featuredVenues: GuideFeaturedVenue[]
   propertyFavorites: GuidePropertyFavorite[]
   suggestedFlows: PropertyCrawlCard[]
+  nearbyEvents: NearbyEventVM[]
   nearbyVenueCount: number
 }
 
@@ -339,6 +345,7 @@ type VenueRow = {
  * 4. Load visible featured venues.
  * 5. Load property favorites when enabled.
  * 6. Load shared suggested flows when enabled.
+ * 7. Load nearby events when enabled.
  *
  * This loader intentionally does not perform UI rendering, map construction,
  * event-journey generation, route navigation, or client-side analytics.
@@ -389,39 +396,52 @@ export async function getGuidePageData(
     return null
   }
 
-  const [brand, sections, featuredVenues, propertyFavorites, flowsData] =
-    await Promise.all([
-      guide.brandId
-        ? loadBrand({
-            supabase,
-            brandId: guide.brandId,
-          })
-        : Promise.resolve(null),
+  const [
+    brand,
+    sections,
+    featuredVenues,
+    propertyFavorites,
+    flowsData,
+    nearbyEventsData,
+  ] = await Promise.all([
+    guide.brandId
+      ? loadBrand({
+          supabase,
+          brandId: guide.brandId,
+        })
+      : Promise.resolve(null),
 
-      loadGuideSections({
-        supabase,
-        guideId: guide.id,
-      }),
+    loadGuideSections({
+      supabase,
+      guideId: guide.id,
+    }),
 
-      loadGuideFeaturedVenues({
-        supabase,
-        guideId: guide.id,
-        now,
-      }),
+    loadGuideFeaturedVenues({
+      supabase,
+      guideId: guide.id,
+      now,
+    }),
 
-      guide.showPropertyFavorites
-        ? loadPropertyFavorites({
-            supabase,
-            propertyId: property.id,
-          })
-        : Promise.resolve([]),
+    guide.showPropertyFavorites
+      ? loadPropertyFavorites({
+          supabase,
+          propertyId: property.id,
+        })
+      : Promise.resolve([]),
 
-      guide.showSuggestedRoutes
-        ? getGuideSuggestedFlowsData({
-            propertyId: property.id,
-          })
-        : Promise.resolve(null),
-    ])
+    guide.showSuggestedRoutes
+      ? getGuideSuggestedFlowsData({
+          propertyId: property.id,
+        })
+      : Promise.resolve(null),
+
+    guide.showNearbyEvents
+      ? getGuideNearbyEventsData({
+          propertyId: property.id,
+          now,
+        })
+      : Promise.resolve<GuideNearbyEventsData | null>(null),
+  ])
 
   return {
     guide,
@@ -431,6 +451,7 @@ export async function getGuidePageData(
     featuredVenues,
     propertyFavorites,
     suggestedFlows: flowsData?.flows ?? [],
+    nearbyEvents: nearbyEventsData?.events ?? [],
     nearbyVenueCount: flowsData?.nearbyVenueCount ?? 0,
   }
 }
@@ -1098,7 +1119,7 @@ function normalizeVenue(
 }
 
 /* ------------------------------------------------ */
-/* Visibility                                      */
+/* Visibility                                       */
 /* ------------------------------------------------ */
 
 function isCurrentlyVisible({

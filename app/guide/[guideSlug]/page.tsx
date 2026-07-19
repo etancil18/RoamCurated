@@ -196,6 +196,7 @@ export default async function GuidePage({
     <GuideRenderer
       guide={guideConfig}
       suggestedFlows={guidePageData.suggestedFlows}
+      nearbyEvents={guidePageData.nearbyEvents}
     />
   )
 }

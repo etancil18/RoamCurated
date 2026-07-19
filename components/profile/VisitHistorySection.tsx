@@ -1,6 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import FlowRouteSticker from '@/app/flow/[session_id]/components/FlowRouteSticker'
 import StickerComposer from '@/components/flows/StickerComposer'
 
@@ -78,6 +84,8 @@ export default function VisitHistorySection({
   initialTotalVisits,
   className = '',
 }: Props) {
+  const transparentStickerRef = useRef<HTMLDivElement>(null)
+
   const [cities, setCities] = useState<VisitCityGroup[]>(
     initialCities ?? []
   )
@@ -266,27 +274,86 @@ export default function VisitHistorySection({
     }
   }
 
-  const exportSticker = async (target: HTMLElement) => {
+  const exportSticker = async (
+    _composerTarget: HTMLElement
+  ) => {
     if (!selectedSticker || exporting) return
 
     setExporting(true)
     setError(null)
 
     try {
+      await waitForFonts()
+
+      await new Promise((resolve) =>
+        window.setTimeout(resolve, 200)
+      )
+
+      const target = transparentStickerRef.current
+
+      if (!target) {
+        throw new Error(
+          'Transparent sticker export target was not found.'
+        )
+      }
+
       const { toBlob } = await import('html-to-image')
 
       const blob = await toBlob(target, {
-        pixelRatio: 3,
-        backgroundColor: 'transparent',
+        width: 1080,
+        height: 1080,
+        canvasWidth: 1080,
+        canvasHeight: 1080,
+        pixelRatio: 2,
         cacheBust: true,
       })
 
       if (!blob) {
-        throw new Error('Failed to create route sticker image.')
+        throw new Error(
+          'Failed to create transparent route sticker.'
+        )
       }
 
       const safeCity = slugify(selectedSticker.city)
-      const fileName = `roam-${safeCity}-${selectedSticker.date}-route.png`
+      const fileName =
+        `roam-${safeCity}-${selectedSticker.date}-route-sticker.png`
+
+      const file = new File([blob], fileName, {
+        type: 'image/png',
+      })
+
+      const canShareFile =
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({
+          files: [file],
+        })
+
+      if (canShareFile) {
+        try {
+          await navigator.share({
+            title: `${selectedSticker.city} Roam Route`,
+            text: buildShareText({
+              city: selectedSticker.city,
+              dateLabel: selectedSticker.label,
+              visitCount: selectedSticker.stops.length,
+            }),
+            files: [file],
+          })
+
+          return
+        } catch (shareError) {
+          if (isShareCancellation(shareError)) {
+            return
+          }
+
+          console.warn(
+            '[VisitHistorySection] Native sharing failed; downloading instead:',
+            shareError
+          )
+        }
+      }
 
       downloadBlob(blob, fileName)
     } catch (err) {
@@ -298,7 +365,7 @@ export default function VisitHistorySection({
       setError(
         err instanceof Error
           ? err.message
-          : 'Failed to export route sticker.'
+          : 'Failed to export transparent route sticker.'
       )
     } finally {
       setExporting(false)
@@ -430,10 +497,45 @@ export default function VisitHistorySection({
         ) : null}
       </section>
 
+      <div
+        className="pointer-events-none fixed top-0"
+        aria-hidden="true"
+        style={{
+          left: '-10000px',
+          width: 1080,
+          height: 1080,
+          background: 'transparent',
+          zIndex: -1,
+        }}
+      >
+        <div
+          ref={transparentStickerRef}
+          style={{
+            width: 1080,
+            height: 1080,
+            background: 'transparent',
+          }}
+        >
+          {selectedSticker ? (
+            <FlowRouteSticker
+              title={`${selectedSticker.city} · ${selectedSticker.label}`}
+              city={selectedSticker.city}
+              stops={selectedSticker.stops}
+              routeLine={stickerRouteLine}
+              width={1080}
+              height={1080}
+              variant="transparent-export"
+              routeKind="personal"
+            />
+          ) : null}
+        </div>
+      </div>
+
       <StickerComposer
         open={stickerOpen && Boolean(selectedSticker)}
         title="Day Route Sticker"
         exporting={exporting}
+        exportLabel="Export Sticker"
         onClose={() => {
           if (exporting) return
 
@@ -445,7 +547,7 @@ export default function VisitHistorySection({
         sticker={
           selectedSticker ? (
             <FlowRouteSticker
-              title={`${selectedSticker.city} · ${selectedSticker.date}`}
+              title={`${selectedSticker.city} · ${selectedSticker.label}`}
               city={selectedSticker.city}
               stops={selectedSticker.stops}
               routeLine={stickerRouteLine}
@@ -483,7 +585,9 @@ function VisitDayCard({
 
           <p className="mt-1 text-xs text-neutral-500">
             {day.visitCount}{' '}
-            {day.visitCount === 1 ? 'place visited' : 'places visited'}
+            {day.visitCount === 1
+              ? 'place visited'
+              : 'places visited'}
           </p>
         </div>
 
@@ -494,7 +598,9 @@ function VisitDayCard({
             disabled={disabled}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-cyan-700 bg-cyan-950/40 px-4 py-2.5 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-900/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
-            {stickerLoading ? 'Building Route…' : 'Create Sticker'}
+            {stickerLoading
+              ? 'Building Route…'
+              : 'Create Sticker'}
           </button>
         ) : (
           <p className="text-xs text-neutral-600">
@@ -559,7 +665,10 @@ function VisitDayCard({
 
 function VisitHistorySkeleton() {
   return (
-    <div className="mt-5 space-y-3" aria-label="Loading visit history">
+    <div
+      className="mt-5 space-y-3"
+      aria-label="Loading visit history"
+    >
       {[0, 1].map((item) => (
         <div
           key={item}
@@ -590,8 +699,9 @@ function EmptyVisitHistory() {
       </p>
 
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-neutral-500">
-        Check in at venues while roaming. Visits will be organized by
-        city and date, and eligible days can become route stickers.
+        Check in at venues while roaming. Visits will be organized
+        by city and date, and eligible days can become route
+        stickers.
       </p>
     </div>
   )
@@ -601,11 +711,18 @@ async function fetchRouteLine(
   stops: StickerStop[]
 ): Promise<RouteLinePoint[]> {
   const validStops = stops.filter(
-    (stop) =>
+    (
+      stop
+    ): stop is StickerStop & {
+      lat: number
+      lon: number
+    } =>
       typeof stop.lat === 'number' &&
       Number.isFinite(stop.lat) &&
+      Math.abs(stop.lat) <= 90 &&
       typeof stop.lon === 'number' &&
-      Number.isFinite(stop.lon)
+      Number.isFinite(stop.lon) &&
+      Math.abs(stop.lon) <= 180
   )
 
   if (validStops.length < 2) {
@@ -649,13 +766,20 @@ async function fetchRouteLine(
   const fullRouteLine =
     extractRouteLineFromMapboxResponse(fullRoutePayload)
 
-  if (fullRouteResponse.ok && fullRouteLine.length >= 2) {
+  if (
+    fullRouteResponse.ok &&
+    fullRouteLine.length >= 2
+  ) {
     return fullRouteLine
   }
 
   const routedLine: RouteLinePoint[] = []
 
-  for (let index = 1; index < validStops.length; index += 1) {
+  for (
+    let index = 1;
+    index < validStops.length;
+    index += 1
+  ) {
     const from = validStops[index - 1]
     const to = validStops[index]
 
@@ -684,23 +808,31 @@ async function fetchRouteLine(
 
     if (!response.ok) {
       throw new Error(
-        payload?.error || 'Failed to build route between visits.'
+        payload?.error ||
+          'Failed to build route between visits.'
       )
     }
 
-    const segment = extractRouteLineFromMapboxResponse(payload)
+    const segment =
+      extractRouteLineFromMapboxResponse(payload)
 
     if (segment.length < 2) {
-      throw new Error('Mapbox route geometry was unavailable.')
+      throw new Error(
+        'Mapbox route geometry was unavailable.'
+      )
     }
 
     routedLine.push(
-      ...(routedLine.length > 0 ? segment.slice(1) : segment)
+      ...(routedLine.length > 0
+        ? segment.slice(1)
+        : segment)
     )
   }
 
   if (routedLine.length < 2) {
-    throw new Error('The visit route could not be generated.')
+    throw new Error(
+      'The visit route could not be generated.'
+    )
   }
 
   return routedLine
@@ -709,13 +841,24 @@ async function fetchRouteLine(
 function extractRouteLineFromMapboxResponse(
   data: unknown
 ): RouteLinePoint[] {
-  const payload = data as any
+  const payload = data as {
+    geometry?: unknown
+    routeGeometry?: unknown
+    route?: {
+      geometry?: unknown
+    }
+    routes?: Array<{
+      geometry?: unknown
+    }>
+  } | null
 
   const candidates = [
-    payload?.geometry?.coordinates,
-    payload?.routeGeometry?.coordinates,
-    payload?.route?.geometry?.coordinates,
-    payload?.routes?.[0]?.geometry?.coordinates,
+    getGeometryCoordinates(payload?.geometry),
+    getGeometryCoordinates(payload?.routeGeometry),
+    getGeometryCoordinates(payload?.route?.geometry),
+    getGeometryCoordinates(
+      payload?.routes?.[0]?.geometry
+    ),
     payload?.routes?.[0]?.geometry,
     payload?.geometry,
   ]
@@ -731,7 +874,27 @@ function extractRouteLineFromMapboxResponse(
   return []
 }
 
-function parseRouteGeometry(value: unknown): RouteLinePoint[] {
+function getGeometryCoordinates(
+  value: unknown
+): unknown {
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    'coordinates' in value
+  ) {
+    return (
+      value as {
+        coordinates?: unknown
+      }
+    ).coordinates
+  }
+
+  return value
+}
+
+function parseRouteGeometry(
+  value: unknown
+): RouteLinePoint[] {
   if (!value) return []
 
   if (Array.isArray(value)) {
@@ -751,7 +914,9 @@ function parseRouteGeometry(value: unknown): RouteLinePoint[] {
         return null
       })
       .filter(
-        (point): point is RouteLinePoint => {
+        (
+          point
+        ): point is RouteLinePoint => {
           if (!point) return false
 
           return (
@@ -764,7 +929,10 @@ function parseRouteGeometry(value: unknown): RouteLinePoint[] {
       )
   }
 
-  if (typeof value === 'object' && value !== null) {
+  if (
+    typeof value === 'object' &&
+    value !== null
+  ) {
     const objectValue = value as {
       type?: string
       coordinates?: unknown
@@ -772,19 +940,28 @@ function parseRouteGeometry(value: unknown): RouteLinePoint[] {
     }
 
     if (objectValue.type === 'LineString') {
-      return parseRouteGeometry(objectValue.coordinates)
+      return parseRouteGeometry(
+        objectValue.coordinates
+      )
     }
 
     if (objectValue.geometry) {
-      return parseRouteGeometry(objectValue.geometry)
+      return parseRouteGeometry(
+        objectValue.geometry
+      )
     }
 
     if (objectValue.coordinates) {
-      return parseRouteGeometry(objectValue.coordinates)
+      return parseRouteGeometry(
+        objectValue.coordinates
+      )
     }
   }
 
-  if (typeof value === 'string' && value.trim().length > 0) {
+  if (
+    typeof value === 'string' &&
+    value.trim().length > 0
+  ) {
     const polyline6 = decodePolyline(value, 6)
 
     if (polyline6.length >= 2) {
@@ -821,10 +998,15 @@ function decodePolyline(
       byte = encoded.charCodeAt(index++) - 63
       result |= (byte & 0x1f) << shift
       shift += 5
-    } while (byte >= 0x20 && index < encoded.length)
+    } while (
+      byte >= 0x20 &&
+      index < encoded.length
+    )
 
     const latitudeDelta =
-      result & 1 ? ~(result >> 1) : result >> 1
+      result & 1
+        ? ~(result >> 1)
+        : result >> 1
 
     latitude += latitudeDelta
     result = 0
@@ -834,10 +1016,15 @@ function decodePolyline(
       byte = encoded.charCodeAt(index++) - 63
       result |= (byte & 0x1f) << shift
       shift += 5
-    } while (byte >= 0x20 && index < encoded.length)
+    } while (
+      byte >= 0x20 &&
+      index < encoded.length
+    )
 
     const longitudeDelta =
-      result & 1 ? ~(result >> 1) : result >> 1
+      result & 1
+        ? ~(result >> 1)
+        : result >> 1
 
     longitude += longitudeDelta
 
@@ -875,7 +1062,9 @@ function hasValidVisitCoordinate(
 function humanizeSource(value: string): string {
   return value
     .replace(/[_-]+/g, ' ')
-    .replace(/\b\w/g, (character) => character.toUpperCase())
+    .replace(/\b\w/g, (character) =>
+      character.toUpperCase()
+    )
 }
 
 function slugify(value: string): string {
@@ -888,7 +1077,22 @@ function slugify(value: string): string {
   )
 }
 
-function downloadBlob(blob: Blob, fileName: string) {
+function buildShareText({
+  city,
+  dateLabel,
+  visitCount,
+}: {
+  city: string
+  dateLabel: string
+  visitCount: number
+}): string {
+  return `I visited ${visitCount} places across ${city} on ${dateLabel}.`
+}
+
+function downloadBlob(
+  blob: Blob,
+  fileName: string
+) {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
 
@@ -902,4 +1106,26 @@ function downloadBlob(blob: Blob, fileName: string) {
   window.setTimeout(() => {
     URL.revokeObjectURL(url)
   }, 1000)
+}
+
+async function waitForFonts() {
+  if (
+    typeof document !== 'undefined' &&
+    'fonts' in document
+  ) {
+    await document.fonts.ready
+  }
+
+  await new Promise((resolve) =>
+    window.setTimeout(resolve, 100)
+  )
+}
+
+function isShareCancellation(
+  error: unknown
+): boolean {
+  return (
+    error instanceof DOMException &&
+    error.name === 'AbortError'
+  )
 }

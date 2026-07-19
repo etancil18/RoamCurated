@@ -263,7 +263,10 @@ export async function getGuideConfigResult(
         : []
 
     const venueById = new Map(
-      venueRows.map((venue) => [venue.id, normalizeGuideVenue(venue)])
+      venueRows.map((venue) => [
+        venue.id,
+        normalizeGuideVenue(venue),
+      ])
     )
 
     const brand = normalizeGuideBrand(
@@ -275,7 +278,8 @@ export async function getGuideConfigResult(
     const sections = normalizeGuideSections({
       guideId: guide.id,
       rows: sectionRows,
-      includeDefaults: options.includeDefaultSections !== false,
+      includeDefaults:
+        options.includeDefaultSections !== false,
     })
 
     const featuredVenues = normalizeFeaturedVenues({
@@ -349,7 +353,11 @@ export async function getGuideConfigById(
       .maybeSingle()
 
     if (error) {
-      console.error('[getGuideConfigById] Guide lookup failed:', error)
+      console.error(
+        '[getGuideConfigById] Guide lookup failed:',
+        error
+      )
+
       return null
     }
 
@@ -588,7 +596,11 @@ async function loadVenuesByIds(
     .in('id', venueIds)
 
   if (error) {
-    console.error('[getGuideConfig] Featured venue hydration failed:', error)
+    console.error(
+      '[getGuideConfig] Featured venue hydration failed:',
+      error
+    )
+
     return []
   }
 
@@ -637,11 +649,15 @@ function buildNormalizedGuideConfig({
     status: normalizeGuideStatus(guide.status),
     guideMode: normalizeGuideMode(guide.guide_mode),
 
-    welcomeHeading: cleanNullableText(guide.welcome_heading),
+    welcomeHeading: cleanNullableText(
+      guide.welcome_heading
+    ),
     welcomeDescription: cleanNullableText(
       guide.welcome_description
     ),
-    heroImageUrl: cleanNullableText(guide.hero_image_url),
+    heroImageUrl: cleanNullableText(
+      guide.hero_image_url
+    ),
 
     showPropertyFavorites: toBoolean(
       guide.show_property_favorites,
@@ -669,7 +685,9 @@ function buildNormalizedGuideConfig({
       brand.poweredByRoam
     ),
 
-    publishedAt: normalizeIsoDateOrNull(guide.published_at),
+    publishedAt: normalizeIsoDateOrNull(
+      guide.published_at
+    ),
     createdAt:
       normalizeIsoDateOrNull(guide.created_at) ??
       new Date(0).toISOString(),
@@ -694,19 +712,35 @@ function normalizeGuideBrandRow(
   return {
     id: cleanText(row.id) || DEFAULT_GUIDE_BRAND.id,
     name: cleanText(row.name) || DEFAULT_GUIDE_BRAND.name,
-    slug: normalizeSlug(row.slug) || DEFAULT_GUIDE_BRAND.slug,
+    slug:
+      normalizeSlug(row.slug) ||
+      DEFAULT_GUIDE_BRAND.slug,
 
     logo_url: cleanNullableText(row.logo_url),
     favicon_url: cleanNullableText(row.favicon_url),
 
-    primary_color: cleanNullableText(row.primary_color),
-    secondary_color: cleanNullableText(row.secondary_color),
-    accent_color: cleanNullableText(row.accent_color),
-    background_color: cleanNullableText(row.background_color),
-    surface_color: cleanNullableText(row.surface_color),
+    primary_color: cleanNullableText(
+      row.primary_color
+    ),
+    secondary_color: cleanNullableText(
+      row.secondary_color
+    ),
+    accent_color: cleanNullableText(
+      row.accent_color
+    ),
+    background_color: cleanNullableText(
+      row.background_color
+    ),
+    surface_color: cleanNullableText(
+      row.surface_color
+    ),
     text_color: cleanNullableText(row.text_color),
-    muted_text_color: cleanNullableText(row.muted_text_color),
-    button_text_color: cleanNullableText(row.button_text_color),
+    muted_text_color: cleanNullableText(
+      row.muted_text_color
+    ),
+    button_text_color: cleanNullableText(
+      row.button_text_color
+    ),
 
     font_family: cleanNullableText(row.font_family),
 
@@ -716,7 +750,10 @@ function normalizeGuideBrandRow(
         ? row.branding_mode
         : 'roam',
 
-    powered_by_roam: toBoolean(row.powered_by_roam, true),
+    powered_by_roam: toBoolean(
+      row.powered_by_roam,
+      true
+    ),
     custom_css: cleanNullableText(row.custom_css),
 
     created_at:
@@ -799,9 +836,25 @@ function normalizeGuideSections({
     normalizedRows.map((section) => section.key)
   )
 
+  const defaultSections = DEFAULT_GUIDE_SECTIONS.some(
+    (definition) => definition.key === 'events'
+  )
+    ? DEFAULT_GUIDE_SECTIONS
+    : [
+        ...DEFAULT_GUIDE_SECTIONS,
+        {
+          key: 'events' as const,
+          position: 70,
+          isVisible: true,
+        },
+      ]
+
   const fallbackSections: GuideSectionConfig[] =
-    DEFAULT_GUIDE_SECTIONS
-      .filter((definition) => !existingKeys.has(definition.key))
+    defaultSections
+      .filter(
+        (definition) =>
+          !existingKeys.has(definition.key)
+      )
       .map((definition) => ({
         id: `${guideId}:${definition.key}`,
         guideId,
@@ -862,7 +915,10 @@ function normalizeSectionOptions(
     typeof result.limit === 'number' &&
     Number.isFinite(result.limit)
   ) {
-    result.limit = Math.max(1, Math.round(result.limit))
+    result.limit = Math.max(
+      1,
+      Math.round(result.limit)
+    )
   } else {
     delete result.limit
   }
@@ -882,7 +938,9 @@ function normalizeSectionOptions(
   } else {
     result.venueTypes = result.venueTypes
       .map((value) =>
-        typeof value === 'string' ? value.trim().toLowerCase() : ''
+        typeof value === 'string'
+          ? value.trim().toLowerCase()
+          : ''
       )
       .filter(Boolean)
   }
@@ -920,7 +978,8 @@ function normalizeFeaturedVenues({
     .map((row) =>
       normalizeFeaturedVenue({
         row,
-        venue: venueById.get(row.venue_id) ?? null,
+        venue:
+          venueById.get(row.venue_id) ?? null,
       })
     )
     .filter(
@@ -931,12 +990,18 @@ function normalizeFeaturedVenues({
       if (!item.isVisible) return false
       if (includeScheduled) return true
 
-      return isFeaturedVenueCurrentlyVisible(item, now)
+      return isFeaturedVenueCurrentlyVisible(
+        item,
+        now
+      )
     })
     .sort((a, b) => {
-      const positionDelta = a.position - b.position
+      const positionDelta =
+        a.position - b.position
 
-      if (positionDelta !== 0) return positionDelta
+      if (positionDelta !== 0) {
+        return positionDelta
+      }
 
       return a.id.localeCompare(b.id)
     })
@@ -952,7 +1017,9 @@ function normalizeFeaturedVenue({
   const id = cleanText(row.id)
   const guideId = cleanText(row.guide_id)
   const venueId = cleanText(row.venue_id)
-  const sectionKey = normalizeSectionKey(row.section_key)
+  const sectionKey = normalizeSectionKey(
+    row.section_key
+  )
 
   if (!id || !guideId || !venueId || !sectionKey) {
     return null
@@ -965,15 +1032,29 @@ function normalizeFeaturedVenue({
 
     sectionKey,
     label: cleanNullableText(row.label),
-    description: cleanNullableText(row.description),
-    conciergeNote: cleanNullableText(row.concierge_note),
+    description: cleanNullableText(
+      row.description
+    ),
+    conciergeNote: cleanNullableText(
+      row.concierge_note
+    ),
 
-    position: toNonNegativeInteger(row.position, 0),
-    isFeatured: toBoolean(row.is_featured, false),
+    position: toNonNegativeInteger(
+      row.position,
+      0
+    ),
+    isFeatured: toBoolean(
+      row.is_featured,
+      false
+    ),
     isVisible: toBoolean(row.is_visible, true),
 
-    visibleFrom: normalizeIsoDateOrNull(row.visible_from),
-    visibleUntil: normalizeIsoDateOrNull(row.visible_until),
+    visibleFrom: normalizeIsoDateOrNull(
+      row.visible_from
+    ),
+    visibleUntil: normalizeIsoDateOrNull(
+      row.visible_until
+    ),
 
     venue,
   }
@@ -1027,14 +1108,22 @@ function normalizeGuideVenue(
     name,
 
     city: cleanNullableText(venue.city),
-    description: cleanNullableText(venue.description),
+    description: cleanNullableText(
+      venue.description
+    ),
     address: cleanNullableText(venue.address),
     cover: cleanNullableText(venue.cover),
     link: `/venue-profile/${id}`,
 
-    type: normalizeStringOrStringArray(venue.type),
-    tags: normalizeStringOrStringArray(venue.tags),
-    vibe: normalizeStringOrStringArray(venue.vibe),
+    type: normalizeStringOrStringArray(
+      venue.type
+    ),
+    tags: normalizeStringOrStringArray(
+      venue.tags
+    ),
+    vibe: normalizeStringOrStringArray(
+      venue.vibe
+    ),
 
     lat: toFiniteNumberOrNull(venue.lat),
     lon: toFiniteNumberOrNull(venue.lon),
@@ -1076,7 +1165,9 @@ function normalizeGuideTravelMode(
 ): GuideTravelMode {
   if (
     typeof value === 'string' &&
-    GUIDE_TRAVEL_MODES.has(value as GuideTravelMode)
+    GUIDE_TRAVEL_MODES.has(
+      value as GuideTravelMode
+    )
   ) {
     return value as GuideTravelMode
   }
@@ -1089,7 +1180,9 @@ function normalizeSectionKey(
 ): GuideSectionKey | null {
   if (
     typeof value === 'string' &&
-    GUIDE_SECTION_KEYS.has(value as GuideSectionKey)
+    GUIDE_SECTION_KEYS.has(
+      value as GuideSectionKey
+    )
   ) {
     return value as GuideSectionKey
   }
@@ -1108,11 +1201,15 @@ function normalizeStringOrStringArray(
   if (Array.isArray(value)) {
     const normalized = value
       .map((item) =>
-        typeof item === 'string' ? item.trim() : ''
+        typeof item === 'string'
+          ? item.trim()
+          : ''
       )
       .filter(Boolean)
 
-    return normalized.length > 0 ? normalized : null
+    return normalized.length > 0
+      ? normalized
+      : null
   }
 
   return null
@@ -1158,13 +1255,17 @@ function toFiniteNumberOrNull(
   value: unknown
 ): number | null {
   if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null
+    return Number.isFinite(value)
+      ? value
+      : null
   }
 
   if (typeof value === 'string') {
     const parsed = Number.parseFloat(value)
 
-    return Number.isFinite(parsed) ? parsed : null
+    return Number.isFinite(parsed)
+      ? parsed
+      : null
   }
 
   return null
@@ -1195,7 +1296,9 @@ function toBoolean(
   if (typeof value === 'boolean') return value
 
   if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase()
+    const normalized = value
+      .trim()
+      .toLowerCase()
 
     if (normalized === 'true') return true
     if (normalized === 'false') return false
@@ -1259,7 +1362,9 @@ function isGuideJson(
 
   if (isPlainObject(value)) {
     return Object.values(value).every(
-      (entry) => entry === undefined || isGuideJson(entry)
+      (entry) =>
+        entry === undefined ||
+        isGuideJson(entry)
     )
   }
 

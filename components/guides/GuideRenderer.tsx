@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+import GuideEventCard from '@/components/guides/GuideEventCard'
 import GuideFlowCard from '@/components/guides/GuideFlowCard'
 import GuideSection from '@/components/guides/GuideSection'
 import type { PropertyFlowSource } from '@/components/property/StartFlowButton'
@@ -15,6 +16,7 @@ import {
 } from '@/lib/guides/guideCopy'
 
 import type { PropertyCrawlCard } from '@/lib/property/buildPropertyCrawlCards'
+import type { NearbyEventVM } from '@/lib/view-models/buildNearbyEventVM'
 
 import type {
   GuideConfig,
@@ -36,6 +38,7 @@ export type GuideSectionRenderContext = {
   copy: GuideCopy
   featuredVenues: GuideFeaturedVenueConfig[]
   suggestedFlows: PropertyCrawlCard[]
+  nearbyEvents: NearbyEventVM[]
 }
 
 export type GuideSectionRenderer = (
@@ -55,6 +58,13 @@ export type GuideRendererProps = {
    * The renderer does not generate or fetch flows.
    */
   suggestedFlows?: PropertyCrawlCard[]
+
+  /**
+   * Nearby events already loaded by getGuidePageData().
+   *
+   * The renderer does not load, filter, rank, or build event VMs.
+   */
+  nearbyEvents?: NearbyEventVM[]
 
   copy?: GuideCopy
   copyTone?: GuideCopyTone | null
@@ -94,6 +104,11 @@ export type GuideRendererProps = {
   renderSuggestedFlows?: boolean
 
   /**
+   * Whether the renderer should use its built-in nearby-event cards.
+   */
+  renderNearbyEvents?: boolean
+
+  /**
    * Whether hidden guide sections should be included.
    * Intended for authenticated admin preview only.
    */
@@ -113,6 +128,16 @@ export type GuideRendererProps = {
    * Source forwarded to StartFlowButton for suggested flows.
    */
   suggestedFlowSource?: PropertyFlowSource
+
+  /**
+   * Whether descriptions should render inside nearby-event cards.
+   */
+  showNearbyEventDescriptions?: boolean
+
+  /**
+   * Optional primary CTA-label override for all nearby events.
+   */
+  nearbyEventCtaLabel?: string
 
   /**
    * Optional section-level class names.
@@ -164,6 +189,7 @@ const DEFAULT_SUGGESTED_FLOW_SOURCE: PropertyFlowSource =
 export default function GuideRenderer({
   guide,
   suggestedFlows = [],
+  nearbyEvents = [],
 
   copy: suppliedCopy,
   copyTone,
@@ -178,11 +204,15 @@ export default function GuideRenderer({
   showEmptySections = true,
   renderFeaturedVenues = true,
   renderSuggestedFlows = true,
+  renderNearbyEvents = true,
   includeHiddenSections = false,
 
   showSuggestedFlowStopDescriptions = true,
   suggestedFlowCtaLabel,
   suggestedFlowSource = DEFAULT_SUGGESTED_FLOW_SOURCE,
+
+  showNearbyEventDescriptions = true,
+  nearbyEventCtaLabel,
 
   sectionClassNames = {},
   sectionContentClassNames = {},
@@ -236,6 +266,7 @@ export default function GuideRenderer({
           copy,
           featuredVenues,
           suggestedFlows,
+          nearbyEvents,
         }
 
         const customContent = suppliedRenderer
@@ -250,12 +281,16 @@ export default function GuideRenderer({
             sectionKey,
             featuredVenues,
             suggestedFlows,
+            nearbyEvents,
             welcomeContent,
             renderFeaturedVenues,
             renderSuggestedFlows,
+            renderNearbyEvents,
             showSuggestedFlowStopDescriptions,
             suggestedFlowCtaLabel,
             suggestedFlowSource,
+            showNearbyEventDescriptions,
+            nearbyEventCtaLabel,
           })
 
         const hasContent = hasRenderableContent(builtInContent)
@@ -289,6 +324,7 @@ export default function GuideRenderer({
               sectionKey,
               featuredVenues,
               suggestedFlows,
+              nearbyEvents,
               hasCustomContent: customContent !== null,
             })}
             isEmpty={!hasContent}
@@ -320,24 +356,32 @@ function getBuiltInSectionContent({
   sectionKey,
   featuredVenues,
   suggestedFlows,
+  nearbyEvents,
   welcomeContent,
   renderFeaturedVenues,
   renderSuggestedFlows,
+  renderNearbyEvents,
   showSuggestedFlowStopDescriptions,
   suggestedFlowCtaLabel,
   suggestedFlowSource,
+  showNearbyEventDescriptions,
+  nearbyEventCtaLabel,
 }: {
   guide: GuideConfig
   section: GuideSectionConfig
   sectionKey: GuideSectionKey
   featuredVenues: GuideFeaturedVenueConfig[]
   suggestedFlows: PropertyCrawlCard[]
+  nearbyEvents: NearbyEventVM[]
   welcomeContent?: ReactNode
   renderFeaturedVenues: boolean
   renderSuggestedFlows: boolean
+  renderNearbyEvents: boolean
   showSuggestedFlowStopDescriptions: boolean
   suggestedFlowCtaLabel?: string
   suggestedFlowSource: PropertyFlowSource
+  showNearbyEventDescriptions: boolean
+  nearbyEventCtaLabel?: string
 }): ReactNode {
   if (sectionKey === 'welcome') {
     return (
@@ -374,6 +418,27 @@ function getBuiltInSectionContent({
             showStopDescriptions={
               showSuggestedFlowStopDescriptions
             }
+          />
+        ))}
+      </div>
+    )
+  }
+
+  if (
+    sectionKey === 'events' &&
+    renderNearbyEvents &&
+    nearbyEvents.length > 0
+  ) {
+    return (
+      <div className="grid gap-4">
+        {nearbyEvents.map((event) => (
+          <GuideEventCard
+            key={event.id}
+            event={event}
+            showDescription={
+              showNearbyEventDescriptions
+            }
+            primaryCtaLabel={nearbyEventCtaLabel}
           />
         ))}
       </div>
@@ -949,15 +1014,21 @@ function getSectionItemCount({
   sectionKey,
   featuredVenues,
   suggestedFlows,
+  nearbyEvents,
   hasCustomContent,
 }: {
   sectionKey: GuideSectionKey
   featuredVenues: GuideFeaturedVenueConfig[]
   suggestedFlows: PropertyCrawlCard[]
+  nearbyEvents: NearbyEventVM[]
   hasCustomContent: boolean
 }) {
   if (sectionKey === 'suggested_routes') {
     return suggestedFlows.length
+  }
+
+  if (sectionKey === 'events') {
+    return nearbyEvents.length
   }
 
   if (VENUE_SECTION_KEYS.has(sectionKey)) {

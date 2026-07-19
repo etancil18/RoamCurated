@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 
 import GuidePreviewToolbar from '@/components/guides/GuidePreviewToolbar'
 import GuideRenderer from '@/components/guides/GuideRenderer'
+import { getGuideNearbyEventsData } from '@/lib/guides/getGuideNearbyEvents'
 import { getGuidePreviewConfig } from '@/lib/guides/getGuidePreviewConfig'
 import { getGuideSuggestedFlowsData } from '@/lib/guides/getGuideSuggestedFlows'
 
@@ -78,6 +79,12 @@ export default async function GuidePreviewPage({
 
   const suggestedFlowsData = guide.showSuggestedRoutes
     ? await getGuideSuggestedFlowsData({
+        propertyId: guide.property.id,
+      })
+    : null
+
+  const nearbyEventsData = guide.showNearbyEvents
+    ? await getGuideNearbyEventsData({
         propertyId: guide.property.id,
       })
     : null
@@ -162,6 +169,7 @@ export default async function GuidePreviewPage({
           <GuideRenderer
             guide={guide}
             suggestedFlows={suggestedFlowsData?.flows ?? []}
+            nearbyEvents={nearbyEventsData?.events ?? []}
           />
         </div>
       </GuidePreviewToolbar>
