@@ -13298,8 +13298,8 @@ const atlantaData = [
       "activity",
       "gallery"
     ],
-    "lat": 33.7866125,
-    "lon": -84.41441842,
+    "lat": 33.7860053,
+    "lon": -84.416516,
     "link": "https://www.instagram.com/thegoatfarm/?hl=en",
     "cover": "img/venues/The Goat Farm Arts Center.jpg",
     "openNow": true,

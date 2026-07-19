@@ -7,6 +7,7 @@ type VenueRatingModalProps = {
   venueName?: string | null
   rating: number | null
   saving?: boolean
+  mode?: 'first-visit' | 'edit'
   onRatingChange: (rating: number) => void
   onSave: () => void
   onClose: () => void
@@ -26,6 +27,7 @@ export default function VenueRatingModal({
   venueName = null,
   rating,
   saving = false,
+  mode,
   onRatingChange,
   onSave,
   onClose,
@@ -49,7 +51,24 @@ export default function VenueRatingModal({
 
   if (!open) return null
 
+  /*
+   * Existing VenueVisitButton usage supplies onRemove only after the user
+   * has previously visited. This preserves backward compatibility while
+   * allowing an explicit mode prop to be supplied in the future.
+   */
+  const isEditing = mode === 'edit' || (mode === undefined && Boolean(onRemove))
+
   const selectedLabel = rating ? ratingLabels[rating] : 'Choose a rating'
+
+  const modalTitle = isEditing ? 'Update your rating' : 'Been here?'
+
+  const modalDescription = isEditing
+    ? venueName
+      ? `Update your rating for ${venueName}. This will not create another check-in.`
+      : 'Update your rating for this spot. This will not create another check-in.'
+    : venueName
+      ? `Rate ${venueName} so Roam can remember what kind of places you love.`
+      : 'Rate this spot so Roam can remember what kind of places you love.'
 
   return (
     <div
@@ -86,13 +105,11 @@ export default function VenueRatingModal({
               id="venue-rating-title"
               className="mt-3 text-2xl font-bold tracking-tight"
             >
-              Been here?
+              {modalTitle}
             </h2>
 
             <p className="mt-2 text-sm leading-6 text-white/75">
-              {venueName
-                ? `Rate ${venueName} so Roam can remember what kind of places you love.`
-                : 'Rate this spot so Roam can remember what kind of places you love.'}
+              {modalDescription}
             </p>
           </div>
         </div>
@@ -148,7 +165,11 @@ export default function VenueRatingModal({
               disabled={!rating || saving}
               className="w-full rounded-xl bg-zinc-950 px-4 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
             >
-              {saving ? 'Saving…' : 'Save Visit'}
+              {saving
+                ? 'Saving…'
+                : isEditing
+                  ? 'Save Rating'
+                  : 'Save Visit'}
             </button>
 
             <button
@@ -157,7 +178,7 @@ export default function VenueRatingModal({
               disabled={saving}
               className="w-full rounded-xl border border-zinc-200 px-4 py-3 text-sm font-medium text-zinc-600 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-900"
             >
-              Not now
+              {isEditing ? 'Cancel' : 'Not now'}
             </button>
 
             {onRemove ? (
@@ -167,7 +188,7 @@ export default function VenueRatingModal({
                 disabled={saving}
                 className="w-full rounded-xl px-4 py-2 text-xs font-medium text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/30"
               >
-                Remove visit
+                Remove venue history
               </button>
             ) : null}
           </div>

@@ -2899,6 +2899,7 @@ export type Database = {
           user_lat: number | null
           user_lon: number | null
           venue_id: string
+          visit_date: string | null
           visited_at: string
         }
         Insert: {
@@ -2915,6 +2916,7 @@ export type Database = {
           user_lat?: number | null
           user_lon?: number | null
           venue_id: string
+          visit_date?: string | null
           visited_at?: string
         }
         Update: {
@@ -2931,6 +2933,7 @@ export type Database = {
           user_lat?: number | null
           user_lon?: number | null
           venue_id?: string
+          visit_date?: string | null
           visited_at?: string
         }
         Relationships: [

@@ -11,6 +11,11 @@ type VenueVisitButtonProps = {
 
 type VisitStatusResponse = {
   visited?: boolean
+  visitedToday?: boolean
+  hasEverVisited?: boolean
+  hasVisitedToday?: boolean
+  firstVisit?: boolean
+  visitCount?: number
   rating?: number | null
   error?: string
 }
@@ -42,6 +47,7 @@ export default function VenueVisitButton({
   className = '',
 }: VenueVisitButtonProps) {
   const [visited, setVisited] = useState<boolean | null>(null)
+  const [visitedToday, setVisitedToday] = useState(false)
   const [rating, setRating] = useState<number | null>(null)
   const [draftRating, setDraftRating] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,7 +55,8 @@ export default function VenueVisitButton({
   const [checkingLocation, setCheckingLocation] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [verifiedLocation, setVerifiedLocation] = useState<VerifiedLocation | null>(null)
+  const [verifiedLocation, setVerifiedLocation] =
+    useState<VerifiedLocation | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -73,17 +80,27 @@ export default function VenueVisitButton({
 
         if (cancelled) return
 
-        const nextVisited = Boolean(json?.visited)
+        const nextVisited = Boolean(
+          json?.hasEverVisited ?? json?.visited ?? false
+        )
+
+        const nextVisitedToday = Boolean(
+          json?.hasVisitedToday ?? json?.visitedToday ?? false
+        )
+
         const nextRating = isValidRating(json?.rating) ? json.rating : null
 
         setVisited(nextVisited)
+        setVisitedToday(nextVisitedToday)
         setRating(nextRating)
         setDraftRating(nextRating)
       } catch (err) {
         if (cancelled) return
 
         console.error('[VenueVisitButton] Failed to load visit status:', err)
+
         setVisited(false)
+        setVisitedToday(false)
         setRating(null)
         setDraftRating(null)
         setError(
@@ -96,7 +113,7 @@ export default function VenueVisitButton({
       }
     }
 
-    loadVisitStatus()
+    void loadVisitStatus()
 
     return () => {
       cancelled = true
@@ -149,9 +166,89 @@ export default function VenueVisitButton({
       )
     })
 
+  const createVerifiedLocation = (
+    position: GeolocationPosition
+  ): VerifiedLocation => ({
+    user_lat: position.coords.latitude,
+    user_lon: position.coords.longitude,
+    location_accuracy_meters:
+      typeof position.coords.accuracy === 'number'
+        ? position.coords.accuracy
+        : null,
+    device_timestamp: new Date().toISOString(),
+  })
+
+  const verifyVenueProximity = async (): Promise<VerifiedLocation> => {
+    const position = await getCurrentPosition()
+    const nextLocation = createVerifiedLocation(position)
+
+    const params = new URLSearchParams({
+      check_proximity: '1',
+      user_lat: String(nextLocation.user_lat),
+      user_lon: String(nextLocation.user_lon),
+      location_accuracy_meters: String(
+        nextLocation.location_accuracy_meters ?? ''
+      ),
+      device_timestamp: nextLocation.device_timestamp,
+    })
+
+    const res = await fetch(
+      `/api/venue-profile/${venueId}/visit?${params.toString()}`,
+      {
+        method: 'GET',
+      }
+    )
+
+    const json = (await res.json().catch(() => null)) as
+      | VisitStatusResponse
+      | null
+
+    if (!res.ok) {
+      throw new Error(json?.error || 'You need to be closer to this venue.')
+    }
+
+    return nextLocation
+  }
+
+  const setLocationError = (err: unknown) => {
+    console.error('[VenueVisitButton] Proximity check failed:', err)
+
+    const locationError = err as {
+      code?: number
+      message?: string
+    }
+
+    const message = locationError?.message?.toLowerCase() ?? ''
+
+    if (locationError?.code === 1 || message.includes('permission')) {
+      setError('Location access is required to mark this venue as visited.')
+      return
+    }
+
+    if (locationError?.code === 2 || message.includes('unavailable')) {
+      setError('Unable to determine your location. Please try again.')
+      return
+    }
+
+    if (locationError?.code === 3 || message.includes('timeout')) {
+      setError('Location request timed out. Please try again.')
+      return
+    }
+
+    setError(
+      err instanceof Error
+        ? err.message
+        : 'You need to be closer to this venue.'
+    )
+  }
+
   const openRatingModal = async () => {
     if (saving || checkingLocation) return
 
+    /*
+     * Existing visitors may edit their rating without performing
+     * another proximity check.
+     */
     if (visited) {
       setError(null)
       setDraftRating(rating)
@@ -159,76 +256,91 @@ export default function VenueVisitButton({
       return
     }
 
+    /*
+     * A user's first visit still requires proximity verification
+     * before opening the initial rating prompt.
+     */
     setCheckingLocation(true)
     setError(null)
 
     try {
-      const position = await getCurrentPosition()
+      const nextLocation = await verifyVenueProximity()
 
-      const nextLocation: VerifiedLocation = {
-        user_lat: position.coords.latitude,
-        user_lon: position.coords.longitude,
-        location_accuracy_meters:
-          typeof position.coords.accuracy === 'number'
-            ? position.coords.accuracy
-            : null,
-        device_timestamp: new Date().toISOString(),
-      }
+      setVerifiedLocation(nextLocation)
+      setDraftRating(rating)
+      setModalOpen(true)
+    } catch (err) {
+      setLocationError(err)
+    } finally {
+      setCheckingLocation(false)
+    }
+  }
 
-      const params = new URLSearchParams({
-        check_proximity: '1',
-        user_lat: String(nextLocation.user_lat),
-        user_lon: String(nextLocation.user_lon),
-        location_accuracy_meters: String(
-          nextLocation.location_accuracy_meters ?? ''
-        ),
-        device_timestamp: nextLocation.device_timestamp,
+  const checkInAgain = async () => {
+    if (
+      saving ||
+      checkingLocation ||
+      !visited ||
+      visitedToday
+    ) {
+      return
+    }
+
+    setCheckingLocation(true)
+    setError(null)
+
+    try {
+      const nextLocation = await verifyVenueProximity()
+
+      setSaving(true)
+
+      const res = await fetch(`/api/venue-profile/${venueId}/visit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(nextLocation),
       })
-
-      const res = await fetch(
-        `/api/venue-profile/${venueId}/visit?${params.toString()}`,
-        {
-          method: 'GET',
-        }
-      )
 
       const json = (await res.json().catch(() => null)) as
         | VisitStatusResponse
         | null
 
-      if (!res.ok) {
-        throw new Error(json?.error || 'You need to be closer to this venue.')
+      if (res.status === 409) {
+        setVisitedToday(true)
+
+        throw new Error(
+          json?.error || 'You have already checked in at this venue today.'
+        )
       }
 
-      setVerifiedLocation(nextLocation)
-      setDraftRating(rating)
-      setModalOpen(true)
-    } catch (err: any) {
-      console.error('[VenueVisitButton] Proximity check failed:', err)
+      if (!res.ok) {
+        throw new Error(json?.error || 'Failed to save venue visit')
+      }
 
+      /*
+       * Repeat visits do not modify or re-prompt for the user's rating.
+       */
+      setVisited(true)
+      setVisitedToday(true)
+      setVerifiedLocation(null)
+    } catch (err) {
       if (
-        err?.code === 1 ||
-        err?.message?.toLowerCase().includes('permission')
+        err instanceof Error &&
+        err.message.toLowerCase().includes('already checked in')
       ) {
-        setError('Location access is required to mark this venue as visited.')
-      } else if (
-        err?.code === 2 ||
-        err?.message?.toLowerCase().includes('unavailable')
-      ) {
-        setError('Unable to determine your location. Please try again.')
-      } else if (
-        err?.code === 3 ||
-        err?.message?.toLowerCase().includes('timeout')
-      ) {
-        setError('Location request timed out. Please try again.')
+        setError(err.message)
+      } else if (!saving) {
+        setLocationError(err)
       } else {
+        console.error('[VenueVisitButton] Failed to save repeat visit:', err)
+
         setError(
-          err instanceof Error
-            ? err.message
-            : 'You need to be closer to this venue.'
+          err instanceof Error ? err.message : 'Failed to save venue visit'
         )
       }
     } finally {
+      setSaving(false)
       setCheckingLocation(false)
     }
   }
@@ -262,6 +374,15 @@ export default function VenueVisitButton({
         | VisitStatusResponse
         | null
 
+      if (res.status === 409) {
+        setVisited(true)
+        setVisitedToday(true)
+
+        throw new Error(
+          json?.error || 'You have already checked in at this venue today.'
+        )
+      }
+
       if (!res.ok) {
         throw new Error(json?.error || 'Failed to save venue visit')
       }
@@ -270,13 +391,21 @@ export default function VenueVisitButton({
         ? json.rating
         : draftRating
 
+      const wasFirstVisit = !visited
+
       setVisited(true)
+
+      if (wasFirstVisit) {
+        setVisitedToday(true)
+      }
+
       setRating(nextRating)
       setDraftRating(nextRating)
       setModalOpen(false)
       setVerifiedLocation(null)
     } catch (err) {
       console.error('[VenueVisitButton] Failed to save visit:', err)
+
       setError(err instanceof Error ? err.message : 'Failed to save visit')
     } finally {
       setSaving(false)
@@ -301,12 +430,14 @@ export default function VenueVisitButton({
       }
 
       setVisited(false)
+      setVisitedToday(false)
       setRating(null)
       setDraftRating(null)
       setVerifiedLocation(null)
       setModalOpen(false)
     } catch (err) {
       console.error('[VenueVisitButton] Failed to remove visit:', err)
+
       setError(err instanceof Error ? err.message : 'Failed to remove visit')
     } finally {
       setSaving(false)
@@ -329,35 +460,79 @@ export default function VenueVisitButton({
     )
   }
 
+  const primaryButtonDisabled =
+    saving || checkingLocation || (visited && visitedToday)
+
   return (
     <>
       <div className="space-y-2">
-        <button
-          type="button"
-          onClick={() => void openRatingModal()}
-          disabled={saving || checkingLocation}
-          className={[
-            'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
-            visited
-              ? 'border border-amber-300/60 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-950/50'
-              : 'bg-zinc-950 text-white hover:-translate-y-0.5 hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200',
-            className,
-          ]
-            .filter(Boolean)
-            .join(' ')}
-        >
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (visited) {
+                void checkInAgain()
+                return
+              }
+
+              void openRatingModal()
+            }}
+            disabled={primaryButtonDisabled}
+            className={[
+              'inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
+              visitedToday
+                ? 'border border-emerald-300/60 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/30 dark:text-emerald-200'
+                : visited
+                  ? 'border border-amber-300/60 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-950/50'
+                  : 'bg-zinc-950 text-white hover:-translate-y-0.5 hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200',
+              className,
+            ]
+              .filter(Boolean)
+              .join(' ')}
+          >
+            {visitedToday ? (
+              <span className="inline-flex items-center gap-2">
+                <span>✓</span>
+                <span>Checked In Today</span>
+              </span>
+            ) : visited ? (
+              <span className="inline-flex items-center gap-2">
+                <span>📍</span>
+                <span>
+                  {checkingLocation || saving
+                    ? 'Checking in…'
+                    : 'Check In Again'}
+                </span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-2">
+                <span>📍</span>
+                <span>
+                  {checkingLocation ? 'Checking location…' : 'Check In'}
+                </span>
+              </span>
+            )}
+          </button>
+
           {visited ? (
-            <span className="inline-flex items-center gap-2">
-              <span className="text-amber-500">{renderStars(rating)}</span>
-              <span>Visited</span>
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-2">
-              <span>📍</span>
-              <span>{checkingLocation ? 'Checking location…' : 'Check In'}</span>
-            </span>
-          )}
-        </button>
+            <button
+              type="button"
+              onClick={() => void openRatingModal()}
+              disabled={saving || checkingLocation}
+              className="inline-flex items-center justify-center rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-950/50"
+            >
+              <span className="inline-flex items-center gap-2">
+                {rating ? (
+                  <span className="text-amber-500">
+                    {renderStars(rating)}
+                  </span>
+                ) : null}
+
+                <span>{rating ? 'Edit Rating' : 'Rate Venue'}</span>
+              </span>
+            </button>
+          ) : null}
+        </div>
 
         {error ? (
           <p className="max-w-xs text-xs text-red-500">{error}</p>
