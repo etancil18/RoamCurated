@@ -37,7 +37,9 @@ export default function FavoritesSection() {
 
             supabase
               .from('saved_routes')
-              .select('id, name, stops, city, slug, created_at, source_url, user_id')
+              .select(
+                'id, name, stops, city, slug, created_at, source_url, user_id'
+              )
               .eq('user_id', user.id),
           ])
 
@@ -65,6 +67,7 @@ export default function FavoritesSection() {
           [...mappedRoutes, ...mappedVenues].sort((a, b) => {
             const dateA = new Date(a.record.created_at || '').getTime()
             const dateB = new Date(b.record.created_at || '').getTime()
+
             return dateB - dateA
           })
         )
@@ -81,13 +84,21 @@ export default function FavoritesSection() {
 
   async function handleDeleteCrawl(routeId: string) {
     await removeSavedRouteAction(routeId)
+
     setFavorites((prev) =>
-      prev.filter((item) => item.type !== 'route' || item.record.id !== routeId)
+      prev.filter(
+        (item) =>
+          item.type !== 'route' || item.record.id !== routeId
+      )
     )
   }
 
   if (loading) {
-    return <p className="text-sm text-neutral-500">Loading saved items…</p>
+    return (
+      <p className="text-sm text-neutral-500">
+        Loading saved items…
+      </p>
+    )
   }
 
   if (error) {
@@ -95,9 +106,11 @@ export default function FavoritesSection() {
   }
 
   return (
-    <FavoritesList
-      favorites={favorites}
-      onDeleteCrawl={handleDeleteCrawl}
-    />
+    <div className="w-full min-w-0 overflow-x-hidden">
+      <FavoritesList
+        favorites={favorites}
+        onDeleteCrawl={handleDeleteCrawl}
+      />
+    </div>
   )
 }
