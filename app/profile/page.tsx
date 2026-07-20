@@ -147,15 +147,15 @@ export default function UserProfilePage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="pointer-events-none fixed inset-0 z-0">
+    <div className="min-h-screen w-full overflow-x-clip bg-black text-white">
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute left-[-12%] top-[-10%] h-80 w-80 rounded-full bg-cyan-500/10 blur-3xl" />
         <div className="absolute right-[-15%] top-[20%] h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl space-y-8 px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] sm:px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
+      <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl space-y-8 px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] sm:px-6">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-400">
               Roam Profile
             </p>
@@ -187,12 +187,12 @@ export default function UserProfilePage() {
           )}
         </div>
 
-        <section>
+        <section className="w-full min-w-0">
           <RoamPassport />
         </section>
 
-        <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
-          <div className="space-y-5">
+        <section className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+          <div className="w-full min-w-0 space-y-5">
             <VisitHistorySection />
 
             {snapshotsLoading ? (
@@ -228,14 +228,16 @@ export default function UserProfilePage() {
             </ProfilePanel>
           </div>
 
-          <ProfilePanel
-            eyebrow="Account"
-            title="Settings"
-            description="Tune your identity, taste profile, and social preferences."
-            sticky
-          >
-            <ProfileForm />
-          </ProfilePanel>
+          <div className="w-full min-w-0">
+            <ProfilePanel
+              eyebrow="Account"
+              title="Settings"
+              description="Tune your identity, taste profile, and social preferences."
+              sticky
+            >
+              <ProfileForm />
+            </ProfilePanel>
+          </div>
         </section>
       </div>
     </div>
@@ -246,20 +248,20 @@ function SavedLibraryShell() {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="space-y-3">
+    <div className="w-full min-w-0 space-y-3">
       <div
         className={[
-          "relative overflow-hidden rounded-2xl border border-neutral-800 bg-black/20",
+          "relative w-full min-w-0 overflow-hidden rounded-2xl border border-neutral-800 bg-black/20",
           expanded ? "max-h-none" : "max-h-[460px]",
         ].join(" ")}
       >
         <div
           className={[
-            "space-y-4 p-3 sm:p-4",
-            "[&_section]:space-y-3",
+            "w-full min-w-0 space-y-4 p-3 sm:p-4",
+            "[&_section]:min-w-0 [&_section]:space-y-3",
             "[&_h2]:mb-2 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-white",
-            "[&_ul]:gap-3 [&_ul]:space-y-3",
-            "[&_li]:!rounded-2xl [&_li]:!border-neutral-800 [&_li]:!bg-neutral-900/70 [&_li]:!p-3 [&_li]:!shadow-none",
+            "[&_ul]:min-w-0 [&_ul]:gap-3 [&_ul]:space-y-3",
+            "[&_li]:!min-w-0 [&_li]:!rounded-2xl [&_li]:!border-neutral-800 [&_li]:!bg-neutral-900/70 [&_li]:!p-3 [&_li]:!shadow-none",
             "[&_h3]:!text-sm [&_h3]:!font-semibold [&_h3]:!text-white",
             "[&_p]:!text-xs [&_p]:!text-neutral-400",
             "[&_span]:!text-neutral-300",
@@ -294,19 +296,19 @@ function SavedLibraryShell() {
 function SnapshotLibrarySkeleton() {
   return (
     <section
-      className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5 text-white"
+      className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-neutral-950 p-5 text-white"
       aria-label="Loading snapshot library"
     >
-      <div className="animate-pulse">
-        <div className="h-3 w-28 rounded bg-neutral-800" />
-        <div className="mt-3 h-6 w-48 rounded bg-neutral-800" />
+      <div className="min-w-0 animate-pulse">
+        <div className="h-3 w-28 max-w-full rounded bg-neutral-800" />
+        <div className="mt-3 h-6 w-48 max-w-full rounded bg-neutral-800" />
         <div className="mt-2 h-4 w-72 max-w-full rounded bg-neutral-900" />
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((item) => (
             <div
               key={item}
-              className="overflow-hidden rounded-2xl border border-neutral-800 bg-black/30"
+              className="min-w-0 overflow-hidden rounded-2xl border border-neutral-800 bg-black/30"
             >
               <div className="aspect-square bg-neutral-900" />
 
@@ -329,7 +331,7 @@ function SnapshotLibraryError({
   message: string
 }) {
   return (
-    <section className="rounded-2xl border border-red-900/50 bg-red-950/20 p-5 text-white">
+    <section className="w-full min-w-0 rounded-2xl border border-red-900/50 bg-red-950/20 p-5 text-white">
       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-red-400">
         Flow snapshots
       </p>
@@ -338,7 +340,7 @@ function SnapshotLibraryError({
         Snapshot library unavailable
       </h2>
 
-      <p className="mt-2 text-sm leading-6 text-red-300">
+      <p className="mt-2 break-words text-sm leading-6 text-red-300">
         {message}
       </p>
     </section>
@@ -361,31 +363,31 @@ function ProfilePanel({
   return (
     <section
       className={[
-        "rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/70 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-5",
+        "w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/70 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-5",
         sticky ? "lg:sticky lg:top-24" : "",
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
+      <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-neutral-500">
             {eyebrow}
           </p>
 
-          <h2 className="mt-1 text-lg font-semibold text-white">
+          <h2 className="mt-1 break-words text-lg font-semibold text-white">
             {title}
           </h2>
 
           {description ? (
-            <p className="mt-1 text-xs leading-5 text-neutral-500">
+            <p className="mt-1 break-words text-xs leading-5 text-neutral-500">
               {description}
             </p>
           ) : null}
         </div>
       </div>
 
-      {children}
+      <div className="w-full min-w-0">{children}</div>
     </section>
   )
 }
