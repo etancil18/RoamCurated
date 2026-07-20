@@ -489,7 +489,7 @@ async function resolveGuideRow({
       .limit(1)
 
     if (!includeDraft) {
-      query = query.eq('status', 'published')
+      query = query.eq('status', 'active')
     }
 
     const { data, error } = await query
@@ -510,7 +510,7 @@ async function resolveGuideRow({
     .limit(2)
 
   if (!includeDraft) {
-    query = query.eq('status', 'published')
+    query = query.eq('status', 'active')
   }
 
   const { data, error } = await query

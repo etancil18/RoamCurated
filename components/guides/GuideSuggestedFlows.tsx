@@ -105,21 +105,49 @@ export default function GuideSuggestedFlows({
 
   if (visibleFlows.length === 0) {
     return (
-      <section className={joinClassNames('space-y-3', className)}>
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight text-white">
+      <section className={joinClassNames('space-y-6', className)}>
+        <div>
+          <h2
+            className={[
+              'text-2xl font-semibold',
+              'tracking-[-0.035em]',
+              'text-[color:var(--guide-text)]',
+              'sm:text-3xl',
+            ].join(' ')}
+          >
             {title}
           </h2>
 
           {description && (
-            <p className="max-w-3xl text-sm leading-6 text-neutral-400">
+            <p
+              className={[
+                'mt-2 max-w-2xl',
+                'text-sm leading-6',
+                'text-[color:var(--guide-muted-text)]',
+                'sm:text-base',
+              ].join(' ')}
+            >
               {description}
             </p>
           )}
         </div>
 
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4">
-          <p className="text-sm leading-6 text-neutral-400">
+        <div
+          className={[
+            'rounded-2xl',
+            'border border-dashed',
+            'border-[color:var(--guide-border)]',
+            'bg-[color:var(--guide-surface)]',
+            'px-6 py-10',
+            'text-center',
+          ].join(' ')}
+        >
+          <p
+            className={[
+              'text-sm leading-6',
+              'text-[color:var(--guide-muted-text)]',
+            ].join(' ')}
+          >
             {emptyMessage}
           </p>
         </div>
@@ -128,20 +156,34 @@ export default function GuideSuggestedFlows({
   }
 
   return (
-    <section className={joinClassNames('space-y-4', className)}>
-      <div className="space-y-1">
-        <h2 className="text-lg font-semibold tracking-tight text-white">
+    <section className={joinClassNames('space-y-6', className)}>
+      <div>
+        <h2
+          className={[
+            'text-2xl font-semibold',
+            'tracking-[-0.035em]',
+            'text-[color:var(--guide-text)]',
+            'sm:text-3xl',
+          ].join(' ')}
+        >
           {title}
         </h2>
 
         {description && (
-          <p className="max-w-3xl text-sm leading-6 text-neutral-400">
+          <p
+            className={[
+              'mt-2 max-w-2xl',
+              'text-sm leading-6',
+              'text-[color:var(--guide-muted-text)]',
+              'sm:text-base',
+            ].join(' ')}
+          >
             {description}
           </p>
         )}
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-5">
         {visibleFlows.map((flow, index) => (
           <GuideSuggestedFlowCard
             key={flow.vm.id}
@@ -201,10 +243,21 @@ function GuideSuggestedFlowCard({
   })
 
   return (
-    <Card className="overflow-hidden border border-neutral-800 bg-neutral-950 text-white shadow-xl shadow-black/20">
-      <CardContent className="space-y-5 p-4 sm:p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="min-w-0 flex-1 space-y-3">
+    <Card
+      className={[
+        'overflow-hidden rounded-3xl',
+        'border border-[color:var(--guide-border)]',
+        'bg-[color:var(--guide-surface)]',
+        'text-[color:var(--guide-text)]',
+        'shadow-sm',
+        'transition duration-300',
+        'hover:-translate-y-0.5',
+        'hover:shadow-xl',
+      ].join(' ')}
+    >
+      <CardContent className="space-y-6 p-5 sm:p-6">
+        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 flex-1 space-y-4">
             <div className="flex flex-wrap gap-2">
               <GuideFlowChip tone="strong">
                 {context.primaryLabel}
@@ -223,22 +276,47 @@ function GuideSuggestedFlowCard({
               ))}
             </div>
 
-            <div className="space-y-1">
-              <h3 className="text-xl font-semibold tracking-tight text-white">
+            <div>
+              <h3
+                className={[
+                  'text-xl font-semibold',
+                  'tracking-[-0.025em]',
+                  'text-[color:var(--guide-text)]',
+                  'sm:text-2xl',
+                ].join(' ')}
+              >
                 {vm.title}
               </h3>
 
               {vm.subtitle && (
-                <p className="max-w-3xl text-sm leading-6 text-neutral-300">
+                <p
+                  className={[
+                    'mt-2 max-w-3xl',
+                    'text-sm leading-6',
+                    'text-[color:var(--guide-muted-text)]',
+                  ].join(' ')}
+                >
                   {vm.subtitle}
                 </p>
               )}
             </div>
 
             {context.reason && (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2.5">
-                <p className="text-sm leading-6 text-neutral-300">
-                  <span className="font-semibold text-white">
+              <div
+                className={[
+                  'rounded-2xl',
+                  'border border-[color:var(--guide-border)]',
+                  'bg-[color:var(--guide-background)]',
+                  'px-4 py-3',
+                ].join(' ')}
+              >
+                <p
+                  className={[
+                    'text-sm leading-6',
+                    'text-[color:var(--guide-muted-text)]',
+                  ].join(' ')}
+                >
+                  <span className="font-semibold text-[color:var(--guide-text)]">
                     Why this flow:
                   </span>{' '}
                   {context.reason}
@@ -280,7 +358,14 @@ function GuideSuggestedFlowCard({
           </div>
         </div>
 
-        <div className="space-y-3 border-t border-neutral-800 pt-4">
+        <div
+          className={[
+            'grid gap-3',
+            'border-t border-[color:var(--guide-border)]',
+            'pt-5',
+            'md:grid-cols-2',
+          ].join(' ')}
+        >
           {vm.stops.map((stop, stopIndex) => {
             const crawlVenue = crawl.venues[stopIndex]
             const venueHref =
@@ -304,16 +389,38 @@ function GuideSuggestedFlowCard({
             return (
               <article
                 key={`${vm.id}-${stop.id}-${stopIndex}`}
-                className="flex items-start gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3"
+                className={[
+                  'flex items-start gap-4',
+                  'rounded-2xl',
+                  'border border-[color:var(--guide-border)]',
+                  'bg-[color:var(--guide-background)]',
+                  'p-4',
+                ].join(' ')}
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-300 text-xs font-black text-neutral-950">
+                <div
+                  className={[
+                    'flex h-9 w-9 shrink-0',
+                    'items-center justify-center',
+                    'rounded-full',
+                    'bg-[color:var(--guide-primary)]',
+                    'text-xs font-bold',
+                    'text-[color:var(--guide-button-text)]',
+                    'shadow-sm',
+                  ].join(' ')}
+                >
                   {stop.order}
                 </div>
 
-                <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     {stop.stageLabel && (
-                      <span className="text-xs font-semibold uppercase tracking-wide text-cyan-300">
+                      <span
+                        className={[
+                          'text-xs font-semibold',
+                          'uppercase tracking-[0.12em]',
+                          'text-[color:var(--guide-primary)]',
+                        ].join(' ')}
+                      >
                         {stop.stageLabel}
                       </span>
                     )}
@@ -327,13 +434,27 @@ function GuideSuggestedFlowCard({
 
                   <Link
                     href={venueHref}
-                    className="block text-base font-semibold leading-snug text-white transition hover:text-cyan-200 hover:underline"
+                    className={[
+                      'block',
+                      'text-base font-semibold',
+                      'leading-snug',
+                      'text-[color:var(--guide-text)]',
+                      'transition',
+                      'hover:text-[color:var(--guide-primary)]',
+                      'hover:underline',
+                    ].join(' ')}
                   >
                     {venueName}
                   </Link>
 
                   {showStopDescriptions && venueDescription && (
-                    <p className="max-w-3xl text-sm leading-6 text-neutral-400">
+                    <p
+                      className={[
+                        'max-w-3xl',
+                        'text-sm leading-6',
+                        'text-[color:var(--guide-muted-text)]',
+                      ].join(' ')}
+                    >
                       {venueDescription}
                     </p>
                   )}
@@ -464,13 +585,24 @@ function GuideFlowChip({
 }) {
   const toneClassName =
     tone === 'strong'
-      ? 'border-cyan-300/40 bg-cyan-300 text-neutral-950'
-      : 'border-neutral-700 bg-neutral-900 text-neutral-300'
+      ? [
+          'border-[color:var(--guide-primary)]',
+          'bg-[color:var(--guide-primary)]',
+          'text-[color:var(--guide-button-text)]',
+        ].join(' ')
+      : [
+          'border-[color:var(--guide-border)]',
+          'bg-[color:var(--guide-background)]',
+          'text-[color:var(--guide-muted-text)]',
+        ].join(' ')
 
   return (
     <span
       className={[
-        'inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold',
+        'inline-flex items-center',
+        'rounded-full border',
+        'px-2.5 py-1',
+        'text-xs font-semibold',
         toneClassName,
       ].join(' ')}
     >

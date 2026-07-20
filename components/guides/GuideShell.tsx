@@ -1,11 +1,23 @@
 // components/guides/GuideShell.tsx
 
-import type { CSSProperties, ReactNode } from 'react'
+import type {
+  CSSProperties,
+  ReactNode,
+} from 'react'
+
+import GuideFloatingNav, {
+  type GuideFloatingNavItem,
+} from '@/components/guides/GuideFloatingNav'
 
 import GuideFooter, {
   type GuideFooterLink,
+  type GuideFooterLinkGroup,
+  type GuideFooterSocialLink,
 } from '@/components/guides/GuideFooter'
-import GuideHeader from '@/components/guides/GuideHeader'
+
+import GuideStickyHeader, {
+  type GuideStickyHeaderAction,
+} from '@/components/guides/GuideStickyHeader'
 
 import {
   getGuideCopy,
@@ -19,7 +31,6 @@ import {
   buildGuideThemeTokens,
   getGuideThemeClassNames,
   normalizeGuideBrand,
-  shouldShowPoweredByRoam,
   type GuideThemeCssVariables,
   type GuideThemeTokens,
 } from '@/lib/guides/guideTheme'
@@ -34,35 +45,147 @@ import type {
 /* ------------------------------------------------ */
 
 export type GuideShellHeaderOptions = {
+  /**
+   * Completely suppresses the sticky header.
+   */
   hidden?: boolean
 
-  showBackLink?: boolean
-  backHref?: string
-  backLabel?: string
+  /**
+   * Optional explicit primary action.
+   *
+   * When undefined, GuideStickyHeader derives an action
+   * from the guide configuration.
+   *
+   * Pass null to suppress the action.
+   */
+  primaryAction?: GuideStickyHeaderAction | null
+
+  /**
+   * Accessible navigation label.
+   */
+  ariaLabel?: string
+
+  /**
+   * Scroll distance before the header gains elevation.
+   */
+  elevationThreshold?: number
+
+  /**
+   * Scroll distance before compact header mode activates.
+   */
+  compactThreshold?: number
+
+  /**
+   * Shows the configured guide or brand logo.
+   */
+  showLogo?: boolean
+
+  /**
+   * Shows secondary property, location, or brand context.
+   */
+  showContext?: boolean
+
+  /**
+   * Shows the desktop back-to-top control after scrolling.
+   */
+  showBackToTop?: boolean
+
+  /**
+   * Uses fixed positioning rather than sticky positioning.
+   */
+  fixed?: boolean
 
   className?: string
 }
 
 export type GuideShellFooterOptions = {
+  /**
+   * Completely suppresses the footer.
+   */
   hidden?: boolean
 
-  primaryLinks?: GuideFooterLink[]
-  secondaryLinks?: GuideFooterLink[]
+  /**
+   * Explicit footer navigation groups.
+   *
+   * When undefined, GuideFooter derives groups from the guide.
+   */
+  linkGroups?: GuideFooterLinkGroup[]
 
-  showPropertyWebsite?: boolean
+  /**
+   * Explicit social links.
+   *
+   * When undefined, GuideFooter attempts to derive them from
+   * the guide brand and property records.
+   *
+   * Pass an empty array to suppress social links.
+   */
+  socialLinks?: GuideFooterSocialLink[]
+
+  /**
+   * Explicit footer CTA.
+   *
+   * When undefined, GuideFooter derives one.
+   *
+   * Pass null to suppress it.
+   */
+  primaryAction?: GuideFooterLink | null
+
+  /**
+   * Explicit footer description.
+   *
+   * When undefined, GuideFooter derives one.
+   *
+   * Pass null to suppress it.
+   */
+  description?: string | null
+
+  /**
+   * Name used in the generated copyright notice.
+   *
+   * Pass null to suppress the copyright holder.
+   */
+  copyrightName?: string | null
+
+  /**
+   * Privacy, terms, accessibility, or other legal links.
+   */
+  legalLinks?: GuideFooterLink[]
+
+  showLogo?: boolean
   showBackToTop?: boolean
-  showPoweredByRoam?: boolean
-  showGuideIdentity?: boolean
+  showCopyright?: boolean
 
-  backToTopHref?: string
-  roamHref?: string
-
-  copyrightLabel?: string | null
+  maxLinksPerGroup?: number
 
   className?: string
-  contentClassName?: string
+}
 
-  children?: ReactNode
+export type GuideShellFloatingNavOptions = {
+  /**
+   * Completely suppresses the floating navigation.
+   */
+  hidden?: boolean
+
+  /**
+   * Explicit floating navigation items.
+   *
+   * When undefined, GuideFloatingNav derives items from
+   * the guide section configuration.
+   */
+  items?: GuideFloatingNavItem[]
+
+  ariaLabel?: string
+
+  maxItems?: number
+  observerOffset?: number
+  minimumItems?: number
+
+  showDesktopLabels?: boolean
+  showContextLabel?: boolean
+
+  position?: 'top' | 'bottom'
+
+  className?: string
 }
 
 export type GuideShellProps = {
@@ -77,6 +200,7 @@ export type GuideShellProps = {
 
   header?: GuideShellHeaderOptions
   footer?: GuideShellFooterOptions
+  floatingNav?: GuideShellFloatingNavOptions
 
   beforeHeader?: ReactNode
   afterHeader?: ReactNode
@@ -116,6 +240,7 @@ export default function GuideShell({
 
   header,
   footer,
+  floatingNav,
 
   beforeHeader,
   afterHeader,
@@ -138,57 +263,90 @@ export default function GuideShell({
 
   style,
 }: GuideShellProps) {
-  const normalizedBrand = normalizeGuideBrand(guide.brand)
+  const normalizedBrand =
+    normalizeGuideBrand(guide.brand)
 
   const themedGuide: GuideConfig = {
     ...guide,
     brand: normalizedBrand,
   }
 
-  const themeStyle = buildGuideThemeStyle(normalizedBrand)
-  const themeTokens = buildGuideThemeTokens(normalizedBrand)
-  const themeClasses = getGuideThemeClassNames()
+  const themeStyle =
+    buildGuideThemeStyle(normalizedBrand)
 
-  const resolvedPageContext = normalizePageContext(pageContext)
+  const themeTokens =
+    buildGuideThemeTokens(normalizedBrand)
 
+  const themeClasses =
+    getGuideThemeClassNames()
+
+  const resolvedPageContext =
+    normalizePageContext(pageContext)
+
+  /*
+   * Retained for shell-level copy normalization and backward
+   * compatibility with callers already supplying copy configuration.
+   *
+   * The new visual shell components derive their own concise labels,
+   * but resolving copy here preserves the existing GuideShell behavior
+   * and validates the same guide-copy inputs.
+   */
   const copy =
     suppliedCopy ??
     getGuideCopy({
       mode: themedGuide.guideMode,
       tone: copyTone,
-      propertyName: themedGuide.property.name,
-      brandName: normalizedBrand.name,
-      city: themedGuide.property.city,
-      guideTitle: themedGuide.title,
-      guideSubtitle: themedGuide.subtitle,
-      welcomeHeading: themedGuide.welcomeHeading,
-      welcomeDescription: themedGuide.welcomeDescription,
-      poweredByRoam: themedGuide.poweredByRoam,
+      propertyName:
+        themedGuide.property.name,
+      brandName:
+        normalizedBrand.name,
+      city:
+        themedGuide.property.city,
+      guideTitle:
+        themedGuide.title,
+      guideSubtitle:
+        themedGuide.subtitle,
+      welcomeHeading:
+        themedGuide.welcomeHeading,
+      welcomeDescription:
+        themedGuide.welcomeDescription,
+      poweredByRoam:
+        themedGuide.poweredByRoam,
       ...copyContext,
     })
 
-  const showHeader = header?.hidden !== true
-  const showFooter = footer?.hidden !== true
+  /*
+   * GuideStickyHeader and GuideFooter no longer consume the legacy
+   * GuideCopy object directly. Keep the resolution above active without
+   * leaving an unused local when noUnusedLocals is enabled.
+   */
+  void copy
 
-  const footerShouldShowPoweredByRoam =
-    typeof footer?.showPoweredByRoam === 'boolean'
-      ? footer.showPoweredByRoam
-      : shouldShowPoweredByRoam(
-          normalizedBrand,
-          themedGuide.poweredByRoam
-        )
+  const showHeader =
+    header?.hidden !== true
+
+  const showFooter =
+    footer?.hidden !== true
+
+  const showFloatingNav =
+    floatingNav?.hidden !== true
 
   const resolvedContentId =
-    normalizeHtmlId(contentId) || 'guide-content'
+    normalizeHtmlId(contentId) ||
+    'guide-content'
 
-  const resolvedStyle: GuideThemeCssVariables & CSSProperties = {
+  const resolvedStyle:
+    GuideThemeCssVariables &
+    CSSProperties = {
     ...themeStyle,
     ...style,
   }
 
   const safeCustomCss =
     includeCustomCss
-      ? sanitizeGuideCustomCss(normalizedBrand.customCss)
+      ? sanitizeGuideCustomCss(
+          normalizedBrand.customCss
+        )
       : null
 
   return (
@@ -197,13 +355,23 @@ export default function GuideShell({
       data-guide-shell
       data-guide-id={themedGuide.id}
       data-guide-slug={themedGuide.slug}
-      data-guide-mode={themedGuide.guideMode}
-      data-guide-status={themedGuide.status}
-      data-guide-branding-mode={normalizedBrand.brandingMode}
-      data-guide-preview={
-        resolvedPageContext.isPreview ? 'true' : 'false'
+      data-guide-mode={
+        themedGuide.guideMode
       }
-      data-guide-access-mode={resolvedPageContext.accessMode}
+      data-guide-status={
+        themedGuide.status
+      }
+      data-guide-branding-mode={
+        normalizedBrand.brandingMode
+      }
+      data-guide-preview={
+        resolvedPageContext.isPreview
+          ? 'true'
+          : 'false'
+      }
+      data-guide-access-mode={
+        resolvedPageContext.accessMode
+      }
       className={[
         themeClasses.page,
         'relative isolate min-h-screen overflow-x-hidden',
@@ -213,13 +381,18 @@ export default function GuideShell({
         .join(' ')}
       style={resolvedStyle}
     >
-      <GuideShellBackground tokens={themeTokens} />
+      <GuideShellBackground
+        tokens={themeTokens}
+      />
 
       {safeCustomCss ? (
         <style
           nonce={customCssNonce}
           dangerouslySetInnerHTML={{
-            __html: scopeCustomCssToGuideShell(safeCustomCss),
+            __html:
+              scopeCustomCssToGuideShell(
+                safeCustomCss
+              ),
           }}
         />
       ) : null}
@@ -231,21 +404,42 @@ export default function GuideShell({
       {resolvedPageContext.isPreview ? (
         <GuidePreviewBanner
           guide={themedGuide}
-          canEdit={resolvedPageContext.canEdit}
+          canEdit={
+            resolvedPageContext.canEdit
+          }
         />
       ) : null}
 
       {beforeHeader}
 
       {showHeader ? (
-        <GuideHeader
+        <GuideStickyHeader
           guide={themedGuide}
-          copy={copy}
-          isPreview={resolvedPageContext.isPreview}
-          showBackLink={header?.showBackLink}
-          backHref={header?.backHref}
-          backLabel={header?.backLabel}
-          className={header?.className}
+          primaryAction={
+            header?.primaryAction
+          }
+          ariaLabel={
+            header?.ariaLabel
+          }
+          elevationThreshold={
+            header?.elevationThreshold
+          }
+          compactThreshold={
+            header?.compactThreshold
+          }
+          showLogo={
+            header?.showLogo
+          }
+          showContext={
+            header?.showContext
+          }
+          showBackToTop={
+            header?.showBackToTop
+          }
+          fixed={header?.fixed}
+          className={
+            header?.className
+          }
         />
       ) : null}
 
@@ -258,7 +452,9 @@ export default function GuideShell({
         aria-label={`${themedGuide.title} guide content`}
         className={[
           'relative z-10 outline-none',
-          showHeader ? '' : 'pt-6 sm:pt-8',
+          showHeader
+            ? ''
+            : 'pt-6 sm:pt-8',
           contentClassName,
         ]
           .filter(Boolean)
@@ -290,24 +486,78 @@ export default function GuideShell({
       {showFooter ? (
         <GuideFooter
           guide={themedGuide}
-          copy={copy}
-          primaryLinks={footer?.primaryLinks}
-          secondaryLinks={footer?.secondaryLinks}
-          showPropertyWebsite={footer?.showPropertyWebsite}
-          showBackToTop={footer?.showBackToTop}
-          showPoweredByRoam={footerShouldShowPoweredByRoam}
-          showGuideIdentity={footer?.showGuideIdentity}
-          backToTopHref={footer?.backToTopHref}
-          roamHref={footer?.roamHref}
-          copyrightLabel={footer?.copyrightLabel}
-          className={footer?.className}
-          contentClassName={footer?.contentClassName}
-        >
-          {footer?.children}
-        </GuideFooter>
+          linkGroups={
+            footer?.linkGroups
+          }
+          socialLinks={
+            footer?.socialLinks
+          }
+          primaryAction={
+            footer?.primaryAction
+          }
+          description={
+            footer?.description
+          }
+          copyrightName={
+            footer?.copyrightName
+          }
+          legalLinks={
+            footer?.legalLinks
+          }
+          showLogo={
+            footer?.showLogo
+          }
+          showBackToTop={
+            footer?.showBackToTop
+          }
+          showCopyright={
+            footer?.showCopyright
+          }
+          maxLinksPerGroup={
+            footer?.maxLinksPerGroup
+          }
+          className={
+            footer?.className
+          }
+        />
       ) : null}
 
       {afterFooter}
+
+      {showFloatingNav ? (
+        <GuideFloatingNav
+          guide={themedGuide}
+          items={
+            floatingNav?.items
+          }
+          ariaLabel={
+            floatingNav?.ariaLabel
+          }
+          maxItems={
+            floatingNav?.maxItems
+          }
+          observerOffset={
+            floatingNav?.observerOffset
+          }
+          minimumItems={
+            floatingNav?.minimumItems
+          }
+          showDesktopLabels={
+            floatingNav
+              ?.showDesktopLabels
+          }
+          showContextLabel={
+            floatingNav
+              ?.showContextLabel
+          }
+          position={
+            floatingNav?.position
+          }
+          className={
+            floatingNav?.className
+          }
+        />
+      ) : null}
     </div>
   )
 }
@@ -329,28 +579,41 @@ function GuideShellBackground({
       <div
         className="absolute inset-0"
         style={{
-          backgroundColor: tokens.background,
+          backgroundColor:
+            tokens.background,
         }}
       />
 
       <div
         className="absolute left-[-12rem] top-[-10rem] h-[28rem] w-[28rem] rounded-full blur-3xl"
         style={{
-          backgroundColor: withAlpha(tokens.primary, 0.12),
+          backgroundColor:
+            withAlpha(
+              tokens.primary,
+              0.12
+            ),
         }}
       />
 
       <div
         className="absolute right-[-14rem] top-[18%] h-[32rem] w-[32rem] rounded-full blur-3xl"
         style={{
-          backgroundColor: withAlpha(tokens.accent, 0.08),
+          backgroundColor:
+            withAlpha(
+              tokens.accent,
+              0.08
+            ),
         }}
       />
 
       <div
         className="absolute bottom-[-16rem] left-[24%] h-[30rem] w-[30rem] rounded-full blur-3xl"
         style={{
-          backgroundColor: withAlpha(tokens.secondary, 0.1),
+          backgroundColor:
+            withAlpha(
+              tokens.secondary,
+              0.1
+            ),
         }}
       />
     </div>
@@ -459,21 +722,26 @@ function GuidePreviewBanner({
 /* ------------------------------------------------ */
 
 function normalizePageContext(
-  context: Partial<GuidePageContext> | undefined
+  context:
+    | Partial<GuidePageContext>
+    | undefined
 ): GuidePageContext {
   const accessMode =
-    context?.accessMode === 'preview' ||
+    context?.accessMode ===
+      'preview' ||
     context?.accessMode === 'admin'
       ? context.accessMode
       : 'public'
 
   const isPreview =
-    typeof context?.isPreview === 'boolean'
+    typeof context?.isPreview ===
+    'boolean'
       ? context.isPreview
       : accessMode !== 'public'
 
   const canEdit =
-    typeof context?.canEdit === 'boolean'
+    typeof context?.canEdit ===
+    'boolean'
       ? context.canEdit
       : accessMode === 'admin'
 
@@ -496,7 +764,10 @@ function normalizePageContext(
  * the remaining rules are scoped beneath the guide shell.
  */
 function sanitizeGuideCustomCss(
-  value: string | null | undefined
+  value:
+    | string
+    | null
+    | undefined
 ): string | null {
   if (typeof value !== 'string') {
     return null
@@ -508,23 +779,50 @@ function sanitizeGuideCustomCss(
     return null
   }
 
-  const limited = trimmed.slice(0, 20_000)
+  const limited =
+    trimmed.slice(0, 20_000)
 
   const sanitized = limited
-    .replace(/<\/?style\b[^>]*>/gi, '')
-    .replace(/@charset\b[^;]*;?/gi, '')
-    .replace(/@import\b[^;]*;?/gi, '')
-    .replace(/expression\s*\([^)]*\)/gi, '')
+    .replace(
+      /<\/?style\b[^>]*>/gi,
+      ''
+    )
+    .replace(
+      /@charset\b[^;]*;?/gi,
+      ''
+    )
+    .replace(
+      /@import\b[^;]*;?/gi,
+      ''
+    )
+    .replace(
+      /expression\s*\([^)]*\)/gi,
+      ''
+    )
     .replace(
       /url\s*\(\s*(['"]?)\s*(?:javascript|vbscript|data):[^)]*\1\s*\)/gi,
       ''
     )
-    .replace(/behavior\s*:[^;]+;?/gi, '')
-    .replace(/-moz-binding\s*:[^;]+;?/gi, '')
-    .replace(/javascript\s*:/gi, '')
-    .replace(/vbscript\s*:/gi, '')
+    .replace(
+      /behavior\s*:[^;]+;?/gi,
+      ''
+    )
+    .replace(
+      /-moz-binding\s*:[^;]+;?/gi,
+      ''
+    )
+    .replace(
+      /javascript\s*:/gi,
+      ''
+    )
+    .replace(
+      /vbscript\s*:/gi,
+      ''
+    )
 
-  return sanitized.trim() || null
+  return (
+    sanitized.trim() || null
+  )
 }
 
 /**
@@ -544,28 +842,35 @@ function scopeCustomCssToGuideShell(
       boundary: string,
       selectorGroup: string
     ) => {
-      const scopedSelectors = selectorGroup
-        .split(',')
-        .map((selector) => selector.trim())
-        .filter(Boolean)
-        .map((selector) => {
-          if (
-            selector.startsWith('[data-guide-shell]')
-          ) {
-            return selector
-          }
+      const scopedSelectors =
+        selectorGroup
+          .split(',')
+          .map((selector) =>
+            selector.trim()
+          )
+          .filter(Boolean)
+          .map((selector) => {
+            if (
+              selector.startsWith(
+                '[data-guide-shell]'
+              )
+            ) {
+              return selector
+            }
 
-          if (
-            selector === ':root' ||
-            selector === 'html' ||
-            selector === 'body'
-          ) {
-            return '[data-guide-shell]'
-          }
+            if (
+              selector === ':root' ||
+              selector === 'html' ||
+              selector === 'body'
+            ) {
+              return (
+                '[data-guide-shell]'
+              )
+            }
 
-          return `[data-guide-shell] ${selector}`
-        })
-        .join(', ')
+            return `[data-guide-shell] ${selector}`
+          })
+          .join(', ')
 
       if (!scopedSelectors) {
         return fullMatch
@@ -584,8 +889,11 @@ function withAlpha(
   color: string,
   alpha: number
 ): string {
-  const normalizedAlpha = clamp(alpha, 0, 1)
-  const rgb = parseHexColor(color)
+  const normalizedAlpha =
+    clamp(alpha, 0, 1)
+
+  const rgb =
+    parseHexColor(color)
 
   if (!rgb) {
     return `rgba(34, 211, 238, ${normalizedAlpha})`
@@ -601,16 +909,26 @@ function parseHexColor(
   green: number
   blue: number
 } | null {
-  const normalized = normalizeHexColor(value)
+  const normalized =
+    normalizeHexColor(value)
 
   if (!normalized) {
     return null
   }
 
   return {
-    red: Number.parseInt(normalized.slice(1, 3), 16),
-    green: Number.parseInt(normalized.slice(3, 5), 16),
-    blue: Number.parseInt(normalized.slice(5, 7), 16),
+    red: Number.parseInt(
+      normalized.slice(1, 3),
+      16
+    ),
+    green: Number.parseInt(
+      normalized.slice(3, 5),
+      16
+    ),
+    blue: Number.parseInt(
+      normalized.slice(5, 7),
+      16
+    ),
   }
 }
 
@@ -619,20 +937,25 @@ function normalizeHexColor(
 ): string | null {
   const trimmed = value.trim()
 
-  const shortMatch = trimmed.match(
-    /^#([0-9a-f]{3})$/i
-  )
+  const shortMatch =
+    trimmed.match(
+      /^#([0-9a-f]{3})$/i
+    )
 
   if (shortMatch) {
-    const [red, green, blue] =
-      shortMatch[1].split('')
+    const [
+      red,
+      green,
+      blue,
+    ] = shortMatch[1].split('')
 
     return `#${red}${red}${green}${green}${blue}${blue}`
   }
 
-  const longMatch = trimmed.match(
-    /^#([0-9a-f]{6})(?:[0-9a-f]{2})?$/i
-  )
+  const longMatch =
+    trimmed.match(
+      /^#([0-9a-f]{6})(?:[0-9a-f]{2})?$/i
+    )
 
   if (longMatch) {
     return `#${longMatch[1]}`
@@ -657,7 +980,10 @@ function clamp(
 /* ------------------------------------------------ */
 
 function normalizeHtmlId(
-  value: string | null | undefined
+  value:
+    | string
+    | null
+    | undefined
 ): string | null {
   if (typeof value !== 'string') {
     return null
@@ -666,8 +992,14 @@ function normalizeHtmlId(
   const normalized = value
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .replace(
+      /[^a-z0-9_-]+/g,
+      '-'
+    )
+    .replace(
+      /^-+|-+$/g,
+      ''
+    )
 
   return normalized || null
 }

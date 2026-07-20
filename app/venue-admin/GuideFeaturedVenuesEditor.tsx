@@ -24,6 +24,8 @@ import {
   X,
 } from 'lucide-react'
 
+import { normalizeGuideAssetUrl } from '@/lib/guides/normalizeGuideAssetUrl'
+
 import { supabaseBrowser } from '@/lib/supabase/client'
 
 import {
@@ -1891,12 +1893,20 @@ function VenueThumbnail({
     ? 'h-10 w-10 rounded-lg'
     : 'h-14 w-14 rounded-xl'
 
-  if (venue?.cover) {
+  const coverUrl =
+    normalizeGuideAssetUrl(
+      venue?.cover
+    )
+
+  if (coverUrl) {
     return (
       <img
-        src={normalizeCoverUrl(venue.cover)}
+        src={coverUrl}
         alt=""
-        className={`${sizeClass} shrink-0 object-cover`}
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+        className={`${sizeClass} shrink-0 bg-neutral-900 object-cover`}
       />
     )
   }
@@ -1911,7 +1921,9 @@ function VenueThumbnail({
         'text-xs font-black text-cyan-300',
       ].join(' ')}
     >
-      {getInitials(venue?.name ?? 'Venue')}
+      {getInitials(
+        venue?.name ?? 'Venue'
+      )}
     </div>
   )
 }
@@ -2143,18 +2155,6 @@ function formatDateTime(value: string) {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date)
-}
-
-function normalizeCoverUrl(value: string) {
-  if (
-    value.startsWith('/') ||
-    value.startsWith('https://') ||
-    value.startsWith('http://')
-  ) {
-    return value
-  }
-
-  return `/${value}`
 }
 
 function getInitials(value: string) {

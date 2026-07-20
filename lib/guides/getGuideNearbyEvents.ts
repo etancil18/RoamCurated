@@ -2,6 +2,8 @@
 
 import 'server-only'
 
+import { normalizeGuideAssetUrl } from '@/lib/guides/normalizeGuideAssetUrl'
+
 import {
   getNearbyVenuesData,
   type NearbyVenue,
@@ -677,7 +679,10 @@ function buildEventVenueInput(
       venue.raw.address
     ),
 
-    cover: venue.cover,
+    cover: normalizeGuideAssetUrl(
+      venue.cover
+    ),
+
     description: venue.description,
     type: venue.type,
 
