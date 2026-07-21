@@ -1,13 +1,26 @@
 'use client'
 
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+} from 'react-leaflet'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import type {
+  Map as LeafletMap,
+  Marker as LeafletMarker,
+} from 'leaflet'
 import { DateTime } from 'luxon'
 
 import { UserLocationMarker } from '@/components/maps/map-dynamic-wrapper'
 
-import PropertyVenueMarker from '@/components/maps/PropertyVenueMarker'
+import VenueMarker from '@/components/maps/VenueMarker'
 import PropertyRouteControl from '@/components/maps/PropertyRouteControl'
 
 import { getCityNow } from '@/lib/getCityNow'
@@ -29,17 +42,38 @@ type Props = {
   property: Property
   venues: Venue[]
   travelMode?: 'walking' | 'cycling' | 'driving'
+
+  /**
+   * Retained for compatibility with existing callers.
+   *
+   * Property venue markers now always use the shared
+   * type-derived emoji marker initiative.
+   */
+  markerDisplayMode?: 'color' | 'emoji'
+
+  /**
+   * Retained for compatibility with existing callers.
+   *
+   * VenueMarker currently owns the shared popup
+   * presentation, so this value is not forwarded.
+   */
+  venueMarkerVariant?: 'default' | 'guide'
 }
 
 const DEFAULT_ZOOM = 15
 const MAX_ROUTE_STOPS = 10
+
+const EMPTY_EVENTS_BY_VENUE_ID: Record<
+  string,
+  any[]
+> = {}
 
 /* ------------------------------------------------ */
 /* MapRefSetter — React-Leaflet safe map reference  */
 /* ------------------------------------------------ */
 
 function MapRefSetter({
-  mapRef
+  mapRef,
 }: {
   mapRef: React.MutableRefObject<LeafletMap | null>
 }) {
@@ -52,46 +86,88 @@ function MapRefSetter({
   return null
 }
 
+function getVenueKey(
+  venue: Venue
+): string | null {
+  const key =
+    venue.id ??
+    venue.slug ??
+    venue.name ??
+    null
+
+  return key === null
+    ? null
+    : String(key)
+}
+
 export default function PropertyMap({
   property,
   venues,
-  travelMode = 'walking'
+  travelMode = 'walking',
+  markerDisplayMode = 'emoji',
+  venueMarkerVariant = 'default',
 }: Props) {
+  void markerDisplayMode
+  void venueMarkerVariant
 
-  const mapRef = useRef<LeafletMap | null>(null)
-  const markerRefs = useRef<Record<string, LeafletMarker>>({})
+  const mapRef =
+    useRef<LeafletMap | null>(null)
 
-  const [activeRoute, setActiveRoute] = useState<Venue[]>([])
-  const [scrollZoom, setScrollZoom] = useState(false)
+  const markerRefs =
+    useRef<
+      Record<string, LeafletMarker>
+    >({})
 
-  const propertyCenter: [number, number] = [
+  const [
+    activeRoute,
+    setActiveRoute,
+  ] = useState<Venue[]>([])
+
+  const [
+    scrollZoom,
+    setScrollZoom,
+  ] = useState(false)
+
+  const propertyCenter: [
+    number,
+    number,
+  ] = [
     property.lat,
-    property.lon
+    property.lon,
   ]
 
   /* ------------------------------------------------ */
   /* City-aware time                                  */
   /* ------------------------------------------------ */
 
-  const nowForCity: DateTime = useMemo(() => {
-    return getCityNow(property.city)
-  }, [property.city])
+  const nowForCity: DateTime =
+    useMemo(() => {
+      return getCityNow(
+        property.city
+      )
+    }, [property.city])
 
   /* ------------------------------------------------ */
   /* User location                                    */
   /* ------------------------------------------------ */
 
-  const userLocation = useUserLocation({
-    fallback: propertyCenter
-  })
+  const userLocation =
+    useUserLocation({
+      fallback: propertyCenter,
+    })
 
   /* ------------------------------------------------ */
   /* Scroll zoom guard                                */
   /* ------------------------------------------------ */
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setScrollZoom(window.innerWidth >= 768)
+    if (
+      typeof window !==
+      'undefined'
+    ) {
+      setScrollZoom(
+        window.innerWidth >= 768
+      )
     }
   }, [])
 
@@ -100,11 +176,19 @@ export default function PropertyMap({
   /* ------------------------------------------------ */
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (
+      typeof window ===
+      'undefined'
+    ) {
+      return
+    }
 
     const L = require('leaflet')
 
-    delete (L.Icon.Default.prototype as any)._getIconUrl
+    delete (
+      L.Icon.Default
+        .prototype as any
+    )._getIconUrl
 
     L.Icon.Default.mergeOptions({
       iconRetinaUrl:
@@ -112,7 +196,7 @@ export default function PropertyMap({
       iconUrl:
         'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
       shadowUrl:
-        'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png'
+        'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
     })
   }, [])
 
@@ -120,47 +204,86 @@ export default function PropertyMap({
   /* Property icon                                    */
   /* ------------------------------------------------ */
 
-  const propertyIcon = useMemo(() => {
+  const propertyIcon =
+    useMemo(() => {
+      if (
+        typeof window ===
+        'undefined'
+      ) {
+        return undefined
+      }
 
-    if (typeof window === 'undefined') return undefined
+      const L =
+        require('leaflet')
 
-    const L = require('leaflet')
-
-    return L.divIcon({
-      className: '',
-      html: `<div style="font-size:28px;">📍</div>`,
-      iconSize: [28, 28],
-      iconAnchor: [14, 28]
-    })
-
-  }, [])
+      return L.divIcon({
+        className: '',
+        html:
+          '<div style="font-size:28px;">📍</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 28],
+      })
+    }, [])
 
   /* ------------------------------------------------ */
   /* Active route                                     */
   /* ------------------------------------------------ */
 
-  const visibleRoute = useMemo(() => {
+  const visibleRoute =
+    useMemo(() => {
+      if (
+        !activeRoute ||
+        activeRoute.length < 2
+      ) {
+        return []
+      }
 
-    if (!activeRoute || activeRoute.length < 2) return []
+      return activeRoute.slice(
+        0,
+        MAX_ROUTE_STOPS
+      )
+    }, [activeRoute])
 
-    return activeRoute.slice(0, MAX_ROUTE_STOPS)
+  const routeIndexByVenueKey =
+    useMemo(() => {
+      const lookup =
+        new Map<string, number>()
 
-  }, [activeRoute])
+      visibleRoute.forEach(
+        (venue, routeIndex) => {
+          const venueKey =
+            getVenueKey(venue)
+
+          if (venueKey) {
+            lookup.set(
+              venueKey,
+              routeIndex
+            )
+          }
+        }
+      )
+
+      return lookup
+    }, [visibleRoute])
 
   /* ------------------------------------------------ */
   /* Crawl preview event                              */
   /* ------------------------------------------------ */
 
   useEffect(() => {
+    function handlePreviewRoute(
+      e: any
+    ) {
+      const venues =
+        e?.detail?.venues
 
-    function handlePreviewRoute(e: any) {
-
-      const venues = e?.detail?.venues
-
-      if (!Array.isArray(venues)) return
+      if (
+        !Array.isArray(venues)
+      ) {
+        return
+      }
 
       setActiveRoute(venues)
-
     }
 
     window.addEventListener(
@@ -174,24 +297,27 @@ export default function PropertyMap({
         handlePreviewRoute
       )
     }
-
   }, [])
 
   /* ------------------------------------------------ */
 
   return (
-
-    <div className="h-[400px] w-full rounded-xl overflow-hidden border">
-
+    <div className="h-[400px] w-full overflow-hidden rounded-xl border">
       <MapContainer
         center={propertyCenter}
         zoom={DEFAULT_ZOOM}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={scrollZoom}
-        zoomControl={false}
+        style={{
+          height: '100%',
+          width: '100%',
+        }}
+        scrollWheelZoom={
+          scrollZoom
+        }
+        zoomControl
       >
-
-        <MapRefSetter mapRef={mapRef} />
+        <MapRefSetter
+          mapRef={mapRef}
+        />
 
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -202,44 +328,118 @@ export default function PropertyMap({
 
         {propertyIcon && (
           <Marker
-            position={propertyCenter}
+            position={
+              propertyCenter
+            }
             icon={propertyIcon}
           />
         )}
 
         {/* Venue markers */}
 
-        {venues.map((v, i) => (
-          <PropertyVenueMarker
-            key={v.id}
-            venue={v}
-            index={i}
-            city={property.city}
-            nowForCity={nowForCity}
-            isRouteMode={visibleRoute.length > 0}
-            markerRefs={markerRefs}
-          />
-        ))}
+        {venues.map(
+          (v, i) => {
+            const venueKey =
+              getVenueKey(v)
+
+            const routeIndex =
+              venueKey
+                ? routeIndexByVenueKey.get(
+                    venueKey
+                  )
+                : undefined
+
+            const isVenueInRoute =
+              typeof routeIndex ===
+              'number'
+
+            const normalizedVenue = {
+              ...v,
+              lat:
+                typeof v.lat ===
+                'string'
+                  ? parseFloat(
+                      v.lat
+                    )
+                  : v.lat,
+              lon:
+                typeof v.lon ===
+                'string'
+                  ? parseFloat(
+                      v.lon
+                    )
+                  : v.lon,
+            } as Venue
+
+            return (
+              <VenueMarker
+                key={
+                  venueKey ??
+                  `${v.name}-${i}`
+                }
+                venue={
+                  normalizedVenue
+                }
+                index={i}
+                city={
+                  property.city
+                }
+                nowForCity={
+                  nowForCity
+                }
+                isRouteMode={
+                  isVenueInRoute
+                }
+                routeIndex={
+                  routeIndex
+                }
+                routeLength={
+                  visibleRoute.length
+                }
+                markerRefs={
+                  markerRefs
+                }
+                eventsByVenueId={
+                  EMPTY_EVENTS_BY_VENUE_ID
+                }
+                popupVariant="property"
+                showPopup
+              />
+            )
+          }
+        )}
 
         {/* User location */}
 
         {userLocation && (
-          <UserLocationMarker position={userLocation} />
+          <UserLocationMarker
+            position={
+              userLocation
+            }
+          />
         )}
 
         {/* Route preview */}
 
-        {visibleRoute.length > 1 && mapRef.current && (
-          <PropertyRouteControl
-            map={mapRef.current}
-            property={property}
-            venues={visibleRoute}
-            travelMode={travelMode}
-          />
-        )}
-
+        {visibleRoute.length >
+          1 &&
+          mapRef.current && (
+            <PropertyRouteControl
+              map={
+                mapRef.current
+              }
+              property={
+                property
+              }
+              venues={
+                visibleRoute
+              }
+              travelMode={
+                travelMode
+              }
+            />
+          )}
       </MapContainer>
-
     </div>
   )
 }

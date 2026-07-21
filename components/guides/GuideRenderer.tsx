@@ -4,7 +4,9 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import GuideEventCard from '@/components/guides/GuideEventCard'
-import GuideFlowCard from '@/components/guides/GuideFlowCard'
+import GuideFlowCard, {
+  type GuideFlowCardNearbyVenue,
+} from '@/components/guides/GuideFlowCard'
 import GuideSection from '@/components/guides/GuideSection'
 import type { PropertyFlowSource } from '@/components/property/StartFlowButton'
 
@@ -39,6 +41,7 @@ export type GuideSectionRenderContext = {
   featuredVenues: GuideFeaturedVenueConfig[]
   suggestedFlows: PropertyCrawlCard[]
   nearbyEvents: NearbyEventVM[]
+  nearbyVenues: GuideFlowCardNearbyVenue[]
 }
 
 export type GuideSectionRenderer = (
@@ -65,6 +68,13 @@ export type GuideRendererProps = {
    * The renderer does not load, filter, rank, or build event VMs.
    */
   nearbyEvents?: NearbyEventVM[]
+
+  /**
+   * Nearby venues already loaded by getGuidePageData().
+   *
+   * These are passed to GuideFlowCard as replacement candidates.
+   */
+  nearbyVenues?: GuideFlowCardNearbyVenue[]
 
   copy?: GuideCopy
   copyTone?: GuideCopyTone | null
@@ -190,6 +200,7 @@ export default function GuideRenderer({
   guide,
   suggestedFlows = [],
   nearbyEvents = [],
+  nearbyVenues = [],
 
   copy: suppliedCopy,
   copyTone,
@@ -267,6 +278,7 @@ export default function GuideRenderer({
           featuredVenues,
           suggestedFlows,
           nearbyEvents,
+          nearbyVenues,
         }
 
         const customContent = suppliedRenderer
@@ -282,6 +294,7 @@ export default function GuideRenderer({
             featuredVenues,
             suggestedFlows,
             nearbyEvents,
+            nearbyVenues,
             welcomeContent,
             renderFeaturedVenues,
             renderSuggestedFlows,
@@ -357,6 +370,7 @@ function getBuiltInSectionContent({
   featuredVenues,
   suggestedFlows,
   nearbyEvents,
+  nearbyVenues,
   welcomeContent,
   renderFeaturedVenues,
   renderSuggestedFlows,
@@ -373,6 +387,7 @@ function getBuiltInSectionContent({
   featuredVenues: GuideFeaturedVenueConfig[]
   suggestedFlows: PropertyCrawlCard[]
   nearbyEvents: NearbyEventVM[]
+  nearbyVenues: GuideFlowCardNearbyVenue[]
   welcomeContent?: ReactNode
   renderFeaturedVenues: boolean
   renderSuggestedFlows: boolean
@@ -411,6 +426,7 @@ function getBuiltInSectionContent({
             flow={flow}
             position={index}
             totalFlows={suggestedFlows.length}
+            nearbyVenues={nearbyVenues}
             guideId={guide.id}
             guideSlug={guide.slug}
             source={suggestedFlowSource}

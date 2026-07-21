@@ -58,6 +58,12 @@ type Props = {
    * Defaults to true to preserve existing behavior everywhere else.
    */
   showPopup?: boolean
+
+  /**
+   * Allows property maps to use a reduced informational popup while all
+   * existing map surfaces retain the full default popup.
+   */
+  popupVariant?: 'default' | 'property'
 }
 
 const daypartAccentColorMap: Record<string, string> = {
@@ -135,6 +141,7 @@ export default function VenueMarker({
   isDimmed = false,
   onSelect,
   showPopup = true,
+  popupVariant = 'default',
 }: Props) {
   const [generatingRoute, setGeneratingRoute] = useState(false)
 
@@ -639,171 +646,251 @@ export default function VenueMarker({
 
       {showPopup && (
         <Popup>
-          <div className="w-[230px] overflow-hidden rounded-xl bg-white text-[13px] text-zinc-900">
-            <div className="space-y-2">
-              <div>
+          {popupVariant ===
+          'property' ? (
+            <div className="w-[230px] overflow-hidden rounded-xl bg-white text-[13px] text-zinc-900">
+              <div className="space-y-2">
                 <strong className="block text-base leading-tight text-zinc-950">
                   {v.name}
                 </strong>
 
-                {primaryImage && (
-                  <img
-                    src={primaryImage}
-                    alt={v.name}
-                    className="mt-2 h-[132px] w-full rounded-xl object-cover"
-                    onError={(e) => {
-                      const img =
-                        e.currentTarget
+                <div className="space-y-1 rounded-xl border border-zinc-200 bg-zinc-50 p-2.5">
+                  <div className="leading-5">
+                    <span className="font-semibold text-zinc-700">
+                      More Info:
+                    </span>{' '}
+                    {v.id ? (
+                      <a
+                        href={`/venue-profile/${v.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-cyan-600 hover:text-cyan-500 hover:underline"
+                      >
+                        View Venue Profile
+                      </a>
+                    ) : (
+                      <span className="text-zinc-500">
+                        Not available
+                      </span>
+                    )}
+                  </div>
 
-                      if (
-                        firstCandidate &&
-                        img.src !==
-                          firstCandidate
-                      ) {
-                        img.src =
-                          firstCandidate
-                      }
-                    }}
-                  />
-                )}
-              </div>
-
-              <div className="space-y-1 rounded-xl border border-zinc-200 bg-zinc-50 p-2.5">
-                {vibeLabel && (
                   <div className="leading-5">
                     <span className="font-semibold text-zinc-700">
                       Vibe:
                     </span>{' '}
                     <span className="text-zinc-600">
-                      {vibeLabel}
+                      {vibeLabel ||
+                        'Not available'}
                     </span>
                   </div>
-                )}
 
-                {v.price && (
                   <div>
                     <span className="font-semibold text-zinc-700">
                       Price:
                     </span>{' '}
                     <span className="text-zinc-600">
-                      {v.price}
+                      {v.price ||
+                        'Not available'}
                     </span>
                   </div>
-                )}
 
-                <div>
-                  <span className="font-semibold text-zinc-700">
-                    Status:
-                  </span>{' '}
-                  <span
-                    className={
-                      isOpen
-                        ? 'font-semibold text-emerald-600'
-                        : 'font-semibold text-red-600'
-                    }
-                  >
-                    {isOpen
-                      ? 'Open'
-                      : 'Closed'}
-                  </span>
-                </div>
+                  <div>
+                    <span className="font-semibold text-zinc-700">
+                      Status:
+                    </span>{' '}
+                    <span
+                      className={
+                        isOpen
+                          ? 'font-semibold text-emerald-600'
+                          : 'font-semibold text-red-600'
+                      }
+                    >
+                      {isOpen
+                        ? 'Open'
+                        : 'Closed'}
+                    </span>
+                  </div>
 
-                {todayHours && (
                   <div className="leading-5">
                     <span className="font-semibold text-zinc-700">
                       Hours:
                     </span>{' '}
                     <span className="text-zinc-600">
-                      {todayHours}
+                      {todayHours ||
+                        'Not available'}
                     </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-[230px] overflow-hidden rounded-xl bg-white text-[13px] text-zinc-900">
+              <div className="space-y-2">
+                <div>
+                  <strong className="block text-base leading-tight text-zinc-950">
+                    {v.name}
+                  </strong>
+
+                  {primaryImage && (
+                    <img
+                      src={primaryImage}
+                      alt={v.name}
+                      className="mt-2 h-[132px] w-full rounded-xl object-cover"
+                      onError={(e) => {
+                        const img =
+                          e.currentTarget
+
+                        if (
+                          firstCandidate &&
+                          img.src !==
+                            firstCandidate
+                        ) {
+                          img.src =
+                            firstCandidate
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-1 rounded-xl border border-zinc-200 bg-zinc-50 p-2.5">
+                  {vibeLabel && (
+                    <div className="leading-5">
+                      <span className="font-semibold text-zinc-700">
+                        Vibe:
+                      </span>{' '}
+                      <span className="text-zinc-600">
+                        {vibeLabel}
+                      </span>
+                    </div>
+                  )}
+
+                  {v.price && (
+                    <div>
+                      <span className="font-semibold text-zinc-700">
+                        Price:
+                      </span>{' '}
+                      <span className="text-zinc-600">
+                        {v.price}
+                      </span>
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="font-semibold text-zinc-700">
+                      Status:
+                    </span>{' '}
+                    <span
+                      className={
+                        isOpen
+                          ? 'font-semibold text-emerald-600'
+                          : 'font-semibold text-red-600'
+                      }
+                    >
+                      {isOpen
+                        ? 'Open'
+                        : 'Closed'}
+                    </span>
+                  </div>
+
+                  {todayHours && (
+                    <div className="leading-5">
+                      <span className="font-semibold text-zinc-700">
+                        Hours:
+                      </span>{' '}
+                      <span className="text-zinc-600">
+                        {todayHours}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+
+                      void generateRouteFromVenue()
+                    }}
+                    disabled={
+                      generatingRoute ||
+                      !canGenerateRoute
+                    }
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 px-3 py-2.5 text-xs font-black text-white shadow-sm transition hover:from-indigo-500 hover:to-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <span>
+                      {generatingRoute
+                        ? 'Building…'
+                        : canGenerateRoute
+                          ? '✨ Generate Route'
+                          : 'Missing Venue ID'}
+                    </span>
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {v.id && (
+                      <a
+                        href={`/venue-profile/${v.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-bold text-zinc-800 transition hover:bg-zinc-100"
+                      >
+                        More Info
+                      </a>
+                    )}
+
+                    <div className="flex min-h-[34px] items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-2 text-xs font-bold text-zinc-800 transition hover:bg-zinc-100">
+                      <FavoritesButton
+                        venue={
+                          v as Venue & {
+                            id: string
+                          }
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {generateRouteError ? (
+                    <p className="rounded-lg bg-red-50 px-2 py-1.5 text-xs leading-4 text-red-600">
+                      {generateRouteError}
+                    </p>
+                  ) : null}
+                </div>
+
+                {upcomingEvents.length >
+                  0 && (
+                  <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2.5">
+                    <strong className="text-xs uppercase tracking-wide text-zinc-500">
+                      Upcoming Events
+                    </strong>
+
+                    <ul className="mt-2 space-y-1.5 pl-4 text-xs text-zinc-700">
+                      {upcomingEvents.map(
+                        (ev) => (
+                          <li key={ev.id}>
+                            {LuxonDateTime
+                              .fromISO(
+                                ev.starts_at
+                              )
+                              .setZone(
+                                timezone
+                              )
+                              .toFormat(
+                                'M/d h:mm a'
+                              )}{' '}
+                            — {ev.title}
+                          </li>
+                        )
+                      )}
+                    </ul>
                   </div>
                 )}
               </div>
-
-              <div className="space-y-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-
-                    void generateRouteFromVenue()
-                  }}
-                  disabled={
-                    generatingRoute ||
-                    !canGenerateRoute
-                  }
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 px-3 py-2.5 text-xs font-black text-white shadow-sm transition hover:from-indigo-500 hover:to-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <span>
-                    {generatingRoute
-                      ? 'Building…'
-                      : canGenerateRoute
-                        ? '✨ Generate Route'
-                        : 'Missing Venue ID'}
-                  </span>
-                </button>
-
-                <div className="grid grid-cols-2 gap-2">
-                  {v.id && (
-                    <a
-                      href={`/venue-profile/${v.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-bold text-zinc-800 transition hover:bg-zinc-100"
-                    >
-                      More Info
-                    </a>
-                  )}
-
-                  <div className="flex min-h-[34px] items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-2 text-xs font-bold text-zinc-800 transition hover:bg-zinc-100">
-                    <FavoritesButton
-                      venue={
-                        v as Venue & {
-                          id: string
-                        }
-                      }
-                    />
-                  </div>
-                </div>
-
-                {generateRouteError ? (
-                  <p className="rounded-lg bg-red-50 px-2 py-1.5 text-xs leading-4 text-red-600">
-                    {generateRouteError}
-                  </p>
-                ) : null}
-              </div>
-
-              {upcomingEvents.length >
-                0 && (
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2.5">
-                  <strong className="text-xs uppercase tracking-wide text-zinc-500">
-                    Upcoming Events
-                  </strong>
-
-                  <ul className="mt-2 space-y-1.5 pl-4 text-xs text-zinc-700">
-                    {upcomingEvents.map(
-                      (ev) => (
-                        <li key={ev.id}>
-                          {LuxonDateTime
-                            .fromISO(
-                              ev.starts_at
-                            )
-                            .setZone(
-                              timezone
-                            )
-                            .toFormat(
-                              'M/d h:mm a'
-                            )}{' '}
-                          — {ev.title}
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              )}
             </div>
-          </div>
+          )}
         </Popup>
       )}
     </Marker>

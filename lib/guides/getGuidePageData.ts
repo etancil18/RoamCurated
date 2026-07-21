@@ -9,7 +9,9 @@ import {
 import type { PropertyCrawlCard } from '@/lib/property/buildPropertyCrawlCards'
 import { createServerClient } from '@/lib/supabase/server'
 import type { NearbyEventVM } from '@/lib/view-models/buildNearbyEventVM'
+import type { Venue } from '@/types/venue'
 
+const GUIDE_NEARBY_VENUE_RADIUS_KM = 5
 /* ------------------------------------------------ */
 /* Public input                                     */
 /* ------------------------------------------------ */
@@ -53,6 +55,12 @@ export type GuidePageData = {
   propertyFavorites: GuidePropertyFavorite[]
   suggestedFlows: PropertyCrawlCard[]
   nearbyEvents: NearbyEventVM[]
+
+  /**
+   * Full venue records available to guide-map consumers.
+   */
+  nearbyVenues: Venue[]
+
   nearbyVenueCount: number
 }
 
@@ -85,17 +93,18 @@ export type GuidePageGuide = {
   updatedAt: string | null
 }
 
-export type GuidePageProperty = GuideSuggestedFlowsProperty & {
-  hostName: string | null
-  hostType: string | null
-  website: string | null
-  address: string | null
+export type GuidePageProperty =
+  GuideSuggestedFlowsProperty & {
+    hostName: string | null
+    hostType: string | null
+    website: string | null
+    address: string | null
 
-  approved: boolean
-  featured: boolean
+    approved: boolean
+    featured: boolean
 
-  welcomeDescription: string | null
-}
+    welcomeDescription: string | null
+  }
 
 export type GuidePageBrand = {
   id: string
@@ -326,6 +335,9 @@ type VenueRow = {
 
   lat?: unknown
   lon?: unknown
+  latitude?: unknown
+  longitude?: unknown
+  lng?: unknown
 
   [key: string]: unknown
 }
@@ -353,61 +365,76 @@ type VenueRow = {
 export async function getGuidePageData(
   params: GetGuidePageDataParams
 ): Promise<GuidePageData | null> {
-  const guideSlug = cleanText(params.guideSlug)
-  const brandSlug = cleanText(params.brandSlug)
-  const includeDraft = params.includeDraft === true
-  const now = normalizeDate(params.now)
+  const guideSlug =
+    cleanText(params.guideSlug)
+
+  const brandSlug =
+    cleanText(params.brandSlug)
+
+  const includeDraft =
+    params.includeDraft === true
+
+  const now =
+    normalizeDate(params.now)
 
   if (!guideSlug) {
     return null
   }
 
-  const supabase = await createServerClient()
+  const supabase =
+    await createServerClient()
 
-  const guideRow = await resolveGuideRow({
-    supabase,
-    guideSlug,
-    brandSlug,
-    includeDraft,
-  })
+  const guideRow =
+    await resolveGuideRow({
+      supabase,
+      guideSlug,
+      brandSlug,
+      includeDraft,
+    })
 
   if (!guideRow) {
     return null
   }
 
-  const guide = normalizeGuide(guideRow)
+  const guide =
+    normalizeGuide(guideRow)
 
   if (!guide) {
     return null
   }
 
-  const propertyRow = await resolvePropertyRow({
-    supabase,
-    propertyId: guide.propertyId,
-  })
+  const propertyRow =
+    await resolvePropertyRow({
+      supabase,
+      propertyId:
+        guide.propertyId,
+    })
 
   if (!propertyRow) {
     return null
   }
 
-  const property = normalizeProperty(propertyRow)
+  const property =
+    normalizeProperty(propertyRow)
 
   if (!property) {
     return null
   }
 
-  const [
+      const [
     brand,
     sections,
     featuredVenues,
     propertyFavorites,
     flowsData,
     nearbyEventsData,
+    databaseNearbyVenues,
   ] = await Promise.all([
     guide.brandId
       ? loadBrand({
           supabase,
-          brandId: guide.brandId,
+          brandId:
+            guide.brandId,
         })
       : Promise.resolve(null),
 
@@ -425,23 +452,49 @@ export async function getGuidePageData(
     guide.showPropertyFavorites
       ? loadPropertyFavorites({
           supabase,
-          propertyId: property.id,
+          propertyId:
+            property.id,
         })
       : Promise.resolve([]),
 
     guide.showSuggestedRoutes
       ? getGuideSuggestedFlowsData({
-          propertyId: property.id,
+          propertyId:
+            property.id,
         })
       : Promise.resolve(null),
 
     guide.showNearbyEvents
       ? getGuideNearbyEventsData({
-          propertyId: property.id,
+          propertyId:
+            property.id,
           now,
         })
-      : Promise.resolve<GuideNearbyEventsData | null>(null),
+      : Promise.resolve<
+          GuideNearbyEventsData | null
+        >(null),
+
+    loadNearbyGuideVenues({
+      supabase,
+      propertyLat:
+        property.lat,
+      propertyLon:
+        property.lon,
+      radiusKm:
+        GUIDE_NEARBY_VENUE_RADIUS_KM,
+    }),
   ])
+
+  const suggestedFlows =
+    flowsData?.flows ?? []
+
+    const nearbyVenues =
+    buildGuideNearbyVenues({
+      databaseNearbyVenues,
+      featuredVenues,
+      propertyFavorites,
+      suggestedFlows,
+    })
 
   return {
     guide,
@@ -450,9 +503,13 @@ export async function getGuidePageData(
     sections,
     featuredVenues,
     propertyFavorites,
-    suggestedFlows: flowsData?.flows ?? [],
-    nearbyEvents: nearbyEventsData?.events ?? [],
-    nearbyVenueCount: flowsData?.nearbyVenueCount ?? 0,
+    suggestedFlows,
+    nearbyEvents:
+      nearbyEventsData?.events ??
+      [],
+    nearbyVenues,
+        nearbyVenueCount:
+      nearbyVenues.length,
   }
 }
 
@@ -466,16 +523,21 @@ async function resolveGuideRow({
   brandSlug,
   includeDraft,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
   guideSlug: string
   brandSlug: string | null
   includeDraft: boolean
 }): Promise<PropertyGuideRow | null> {
   if (brandSlug) {
-    const brandId = await resolveBrandIdBySlug({
-      supabase,
-      brandSlug,
-    })
+    const brandId =
+      await resolveBrandIdBySlug({
+        supabase,
+        brandSlug,
+      })
 
     if (!brandId) {
       return null
@@ -489,10 +551,16 @@ async function resolveGuideRow({
       .limit(1)
 
     if (!includeDraft) {
-      query = query.eq('status', 'active')
+      query = query.eq(
+        'status',
+        'active'
+      )
     }
 
-    const { data, error } = await query
+    const {
+      data,
+      error,
+    } = await query
 
     if (error) {
       throw new Error(
@@ -500,7 +568,9 @@ async function resolveGuideRow({
       )
     }
 
-    return firstRow<PropertyGuideRow>(data)
+    return firstRow<PropertyGuideRow>(
+      data
+    )
   }
 
   let query = supabase
@@ -510,10 +580,16 @@ async function resolveGuideRow({
     .limit(2)
 
   if (!includeDraft) {
-    query = query.eq('status', 'active')
+    query = query.eq(
+      'status',
+      'active'
+    )
   }
 
-  const { data, error } = await query
+  const {
+    data,
+    error,
+  } = await query
 
   if (error) {
     throw new Error(
@@ -521,7 +597,10 @@ async function resolveGuideRow({
     )
   }
 
-  const rows = rowsFrom<PropertyGuideRow>(data)
+  const rows =
+    rowsFrom<PropertyGuideRow>(
+      data
+    )
 
   if (rows.length === 0) {
     return null
@@ -540,10 +619,17 @@ async function resolveBrandIdBySlug({
   supabase,
   brandSlug,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
   brandSlug: string
 }): Promise<string | null> {
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
     .from('guide_brands')
     .select('id')
     .eq('slug', brandSlug)
@@ -555,7 +641,10 @@ async function resolveBrandIdBySlug({
     )
   }
 
-  const row = firstRow<{ id: unknown }>(data)
+  const row =
+    firstRow<{
+      id: unknown
+    }>(data)
 
   return cleanText(row?.id)
 }
@@ -568,10 +657,17 @@ async function resolvePropertyRow({
   supabase,
   propertyId,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
   propertyId: string
 }): Promise<PropertyRow | null> {
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
     .from('properties')
     .select(
       [
@@ -599,7 +695,9 @@ async function resolvePropertyRow({
     )
   }
 
-  return firstRow<PropertyRow>(data)
+  return firstRow<PropertyRow>(
+    data
+  )
 }
 
 /* ------------------------------------------------ */
@@ -610,10 +708,17 @@ async function loadBrand({
   supabase,
   brandId,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
   brandId: string
 }): Promise<GuidePageBrand | null> {
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
     .from('guide_brands')
     .select('*')
     .eq('id', brandId)
@@ -625,9 +730,14 @@ async function loadBrand({
     )
   }
 
-  const row = firstRow<GuideBrandRow>(data)
+  const row =
+    firstRow<GuideBrandRow>(
+      data
+    )
 
-  return row ? normalizeBrand(row) : null
+  return row
+    ? normalizeBrand(row)
+    : null
 }
 
 /* ------------------------------------------------ */
@@ -638,11 +748,20 @@ async function loadGuideSections({
   supabase,
   guideId,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
   guideId: string
 }): Promise<GuidePageSection[]> {
-  const { data, error } = await supabase
-    .from('property_guide_sections')
+  const {
+    data,
+    error,
+  } = await supabase
+    .from(
+      'property_guide_sections'
+    )
     .select('*')
     .eq('guide_id', guideId)
     .eq('is_visible', true)
@@ -656,9 +775,16 @@ async function loadGuideSections({
     )
   }
 
-  return rowsFrom<GuideSectionRow>(data)
+  return rowsFrom<GuideSectionRow>(
+    data
+  )
     .map(normalizeSection)
-    .filter((section): section is GuidePageSection => section !== null)
+    .filter(
+      (
+        section
+      ): section is GuidePageSection =>
+        section !== null
+    )
 }
 
 /* ------------------------------------------------ */
@@ -670,12 +796,23 @@ async function loadGuideFeaturedVenues({
   guideId,
   now,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
   guideId: string
   now: Date
-}): Promise<GuideFeaturedVenue[]> {
-  const { data, error } = await supabase
-    .from('guide_featured_venues')
+}): Promise<
+  GuideFeaturedVenue[]
+> {
+  const {
+    data,
+    error,
+  } = await supabase
+    .from(
+      'guide_featured_venues'
+    )
     .select('*')
     .eq('guide_id', guideId)
     .eq('is_visible', true)
@@ -689,41 +826,63 @@ async function loadGuideFeaturedVenues({
     )
   }
 
-  const rows = rowsFrom<GuideFeaturedVenueRow>(data).filter((row) =>
-    isCurrentlyVisible({
-      visibleFrom: row.visible_from,
-      visibleUntil: row.visible_until,
-      now,
+  const rows =
+    rowsFrom<GuideFeaturedVenueRow>(
+      data
+    ).filter((row) =>
+      isCurrentlyVisible({
+        visibleFrom:
+          row.visible_from,
+        visibleUntil:
+          row.visible_until,
+        now,
+      })
+    )
+
+  const venueIds =
+    uniqueStrings(
+      rows.map((row) =>
+        cleanText(
+          row.venue_id
+        )
+      )
+    )
+
+  const venueById =
+    await loadVenuesById({
+      supabase,
+      venueIds,
     })
-  )
-
-  const venueIds = uniqueStrings(
-    rows.map((row) => cleanText(row.venue_id))
-  )
-
-  const venueById = await loadVenuesById({
-    supabase,
-    venueIds,
-  })
 
   return rows
     .map((row) => {
-      const venueId = cleanText(row.venue_id)
+      const venueId =
+        cleanText(
+          row.venue_id
+        )
 
       if (!venueId) {
         return null
       }
 
-      const venue = venueById.get(venueId)
+      const venue =
+        venueById.get(
+          venueId
+        )
 
       if (!venue) {
         return null
       }
 
-      return normalizeFeaturedVenue(row, venue)
+      return normalizeFeaturedVenue(
+        row,
+        venue
+      )
     })
     .filter(
-      (item): item is GuideFeaturedVenue =>
+      (
+        item
+      ): item is GuideFeaturedVenue =>
         item !== null
     )
 }
@@ -736,13 +895,27 @@ async function loadPropertyFavorites({
   supabase,
   propertyId,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
   propertyId: string
-}): Promise<GuidePropertyFavorite[]> {
-  const { data, error } = await supabase
-    .from('property_favorites')
+}): Promise<
+  GuidePropertyFavorite[]
+> {
+  const {
+    data,
+    error,
+  } = await supabase
+    .from(
+      'property_favorites'
+    )
     .select('*')
-    .eq('property_id', propertyId)
+    .eq(
+      'property_id',
+      propertyId
+    )
     .order('priority', {
       ascending: true,
     })
@@ -753,35 +926,55 @@ async function loadPropertyFavorites({
     )
   }
 
-  const rows = rowsFrom<PropertyFavoriteRow>(data)
+  const rows =
+    rowsFrom<PropertyFavoriteRow>(
+      data
+    )
 
-  const venueIds = uniqueStrings(
-    rows.map((row) => cleanText(row.venue_id))
-  )
+  const venueIds =
+    uniqueStrings(
+      rows.map((row) =>
+        cleanText(
+          row.venue_id
+        )
+      )
+    )
 
-  const venueById = await loadVenuesById({
-    supabase,
-    venueIds,
-  })
+  const venueById =
+    await loadVenuesById({
+      supabase,
+      venueIds,
+    })
 
   return rows
     .map((row) => {
-      const venueId = cleanText(row.venue_id)
+      const venueId =
+        cleanText(
+          row.venue_id
+        )
 
       if (!venueId) {
         return null
       }
 
-      const venue = venueById.get(venueId)
+      const venue =
+        venueById.get(
+          venueId
+        )
 
       if (!venue) {
         return null
       }
 
-      return normalizePropertyFavorite(row, venue)
+      return normalizePropertyFavorite(
+        row,
+        venue
+      )
     })
     .filter(
-      (item): item is GuidePropertyFavorite =>
+      (
+        item
+      ): item is GuidePropertyFavorite =>
         item !== null
     )
 }
@@ -794,14 +987,25 @@ async function loadVenuesById({
   supabase,
   venueIds,
 }: {
-  supabase: Awaited<ReturnType<typeof createServerClient>>
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
   venueIds: string[]
-}): Promise<Map<string, GuideVenue>> {
-  if (venueIds.length === 0) {
+}): Promise<
+  Map<string, GuideVenue>
+> {
+  if (
+    venueIds.length === 0
+  ) {
     return new Map()
   }
 
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
     .from('venues')
     .select('*')
     .in('id', venueIds)
@@ -812,17 +1016,646 @@ async function loadVenuesById({
     )
   }
 
-  const venueById = new Map<string, GuideVenue>()
+  const venueById =
+    new Map<
+      string,
+      GuideVenue
+    >()
 
-  for (const row of rowsFrom<VenueRow>(data)) {
-    const venue = normalizeVenue(row)
+  for (
+    const row of rowsFrom<VenueRow>(
+      data
+    )
+  ) {
+    const venue =
+      normalizeVenue(row)
 
     if (venue) {
-      venueById.set(venue.id, venue)
+      venueById.set(
+        venue.id,
+        venue
+      )
     }
   }
 
   return venueById
+}
+
+/* ------------------------------------------------ */
+/* Guide-map venues                                 */
+/* ------------------------------------------------ */
+
+async function loadNearbyGuideVenues({
+  supabase,
+  propertyLat,
+  propertyLon,
+  radiusKm,
+}: {
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
+  propertyLat: number
+  propertyLon: number
+  radiusKm: number
+}): Promise<Venue[]> {
+  if (
+    !isValidLatitude(
+      propertyLat
+    ) ||
+    !isValidLongitude(
+      propertyLon
+    ) ||
+    !Number.isFinite(
+      radiusKm
+    ) ||
+    radiusKm <= 0
+  ) {
+    return []
+  }
+
+  const latitudeDelta =
+    radiusKm / 111.32
+
+  const longitudeScale =
+    Math.cos(
+      degreesToRadians(
+        propertyLat
+      )
+    )
+
+  const longitudeDelta =
+    Math.abs(
+      longitudeScale
+    ) > 0.000001
+      ? radiusKm /
+        (
+          111.32 *
+          Math.abs(
+            longitudeScale
+          )
+        )
+      : 180
+
+  const minimumLatitude =
+    Math.max(
+      -90,
+      propertyLat -
+        latitudeDelta
+    )
+
+  const maximumLatitude =
+    Math.min(
+      90,
+      propertyLat +
+        latitudeDelta
+    )
+
+  const minimumLongitude =
+    Math.max(
+      -180,
+      propertyLon -
+        longitudeDelta
+    )
+
+  const maximumLongitude =
+    Math.min(
+      180,
+      propertyLon +
+        longitudeDelta
+    )
+
+  const {
+    data,
+    error,
+  } = await supabase
+    .from('venues')
+    .select('*')
+    .not('lat', 'is', null)
+    .not('lon', 'is', null)
+    .gte(
+      'lat',
+      minimumLatitude
+    )
+    .lte(
+      'lat',
+      maximumLatitude
+    )
+    .gte(
+      'lon',
+      minimumLongitude
+    )
+    .lte(
+      'lon',
+      maximumLongitude
+    )
+
+  if (error) {
+    throw new Error(
+      `Failed to load nearby guide venues: ${error.message}`
+    )
+  }
+
+  const nearbyVenues:
+    Array<{
+      venue: Venue
+      distanceKm: number
+    }> = []
+
+  for (
+    const row of rowsFrom<VenueRow>(
+      data
+    )
+  ) {
+    const normalizedVenue =
+      normalizeVenue(row)
+
+    if (
+      !normalizedVenue ||
+      normalizedVenue.lat ===
+        null ||
+      normalizedVenue.lon ===
+        null
+    ) {
+      continue
+    }
+
+    if (
+      !isValidLatitude(
+        normalizedVenue.lat
+      ) ||
+      !isValidLongitude(
+        normalizedVenue.lon
+      )
+    ) {
+      continue
+    }
+
+    const distanceKm =
+      calculateDistanceKm(
+        propertyLat,
+        propertyLon,
+        normalizedVenue.lat,
+        normalizedVenue.lon
+      )
+
+    if (
+      distanceKm >
+      radiusKm
+    ) {
+      continue
+    }
+
+    nearbyVenues.push({
+      venue:
+        toMapVenue(
+          normalizedVenue
+        ),
+      distanceKm,
+    })
+  }
+
+  nearbyVenues.sort(
+    (left, right) =>
+      left.distanceKm -
+      right.distanceKm
+  )
+
+  return nearbyVenues.map(
+    ({ venue }) =>
+      venue
+  )
+}
+
+function buildGuideNearbyVenues({
+  databaseNearbyVenues,
+  featuredVenues,
+  propertyFavorites,
+  suggestedFlows,
+}: {
+  databaseNearbyVenues:
+    Venue[]
+  featuredVenues:
+    GuideFeaturedVenue[]
+  propertyFavorites:
+    GuidePropertyFavorite[]
+  suggestedFlows:
+    PropertyCrawlCard[]
+}): Venue[] {
+  const venueById =
+    new Map<string, Venue>()
+
+  for (
+    const venue of
+      databaseNearbyVenues
+  ) {
+    addNearbyDatabaseVenue(
+      venueById,
+      venue
+    )
+  }
+
+  for (
+    const item of
+      featuredVenues
+  ) {
+    addGuideMapVenue(
+      venueById,
+      item.venue
+    )
+  }
+
+  for (
+    const item of
+      propertyFavorites
+  ) {
+    addGuideMapVenue(
+      venueById,
+      item.venue
+    )
+  }
+
+  const flowVenues =
+    collectVenueRecords(
+      suggestedFlows
+    )
+
+  for (
+    const venue of
+      flowVenues
+  ) {
+    addGuideMapVenue(
+      venueById,
+      venue
+    )
+  }
+
+  return Array.from(
+    venueById.values()
+  )
+}
+
+function addNearbyDatabaseVenue(
+  venueById: Map<
+    string,
+    Venue
+  >,
+  venue: Venue
+): void {
+  const venueRecord =
+    venue as unknown as Record<
+      string,
+      unknown
+    >
+
+  const id =
+    cleanText(
+      venueRecord.id
+    )
+
+  const name =
+    cleanText(
+      venueRecord.name
+    )
+
+  const lat =
+    firstFiniteNumber(
+      venueRecord.lat,
+      venueRecord.latitude
+    )
+
+  const lon =
+    firstFiniteNumber(
+      venueRecord.lon,
+      venueRecord.lng,
+      venueRecord.longitude
+    )
+
+  if (
+    !id ||
+    !name ||
+    lat === null ||
+    lon === null ||
+    !isValidLatitude(lat) ||
+    !isValidLongitude(lon)
+  ) {
+    return
+  }
+
+  const existing =
+    venueById.get(id)
+
+  const normalizedVenue = {
+    ...venue,
+    id,
+    name,
+    link:
+      cleanText(
+        venueRecord.link
+      ) ??
+      `/venue-profile/${encodeURIComponent(
+        id
+      )}`,
+    lat,
+    lon,
+  } as Venue
+
+  if (!existing) {
+    venueById.set(
+      id,
+      normalizedVenue
+    )
+    return
+  }
+
+  venueById.set(
+    id,
+    {
+      ...normalizedVenue,
+      ...existing,
+      id,
+      name:
+        cleanText(
+          (
+            existing as unknown as Record<
+              string,
+              unknown
+            >
+          ).name
+        ) ?? name,
+      lat,
+      lon,
+    } as Venue
+  )
+}
+
+function addGuideMapVenue(
+  venueById: Map<
+    string,
+    Venue
+  >,
+  venue: GuideVenue
+): void {
+  if (
+    venue.lat === null ||
+    venue.lon === null ||
+    !isValidLatitude(
+      venue.lat
+    ) ||
+    !isValidLongitude(
+      venue.lon
+    )
+  ) {
+    return
+  }
+
+  const existing =
+    venueById.get(
+      venue.id
+    )
+
+  const mapVenue =
+    toMapVenue(venue)
+
+  if (!existing) {
+    venueById.set(
+      venue.id,
+      mapVenue
+    )
+    return
+  }
+
+  venueById.set(
+    venue.id,
+    {
+      ...mapVenue,
+      ...existing,
+      id: mapVenue.id,
+      name:
+        existing.name ||
+        mapVenue.name,
+      lat: mapVenue.lat,
+      lon: mapVenue.lon,
+    }
+  )
+}
+
+function toMapVenue(
+  venue: GuideVenue
+): Venue {
+  return {
+    ...venue.raw,
+
+    id: venue.id,
+    name: venue.name,
+
+    city:
+      venue.city ??
+      venue.raw.city,
+
+    slug:
+      venue.slug ??
+      venue.raw.slug,
+
+    link:
+      venue.link,
+
+    description:
+      venue.description ??
+      venue.raw.description,
+
+    cover:
+      venue.cover ??
+      venue.raw.cover,
+
+    type:
+      venue.type ??
+      venue.raw.type,
+
+    lat: venue.lat,
+    lon: venue.lon,
+  } as Venue
+}
+
+function collectVenueRecords(
+  value: unknown
+): GuideVenue[] {
+  const venues =
+    new Map<
+      string,
+      GuideVenue
+    >()
+
+  const visited =
+    new WeakSet<object>()
+
+  function visit(
+    candidate: unknown
+  ): void {
+    if (
+      !candidate ||
+      typeof candidate !==
+        'object'
+    ) {
+      return
+    }
+
+    if (
+      visited.has(
+        candidate
+      )
+    ) {
+      return
+    }
+
+    visited.add(
+      candidate
+    )
+
+    if (
+      Array.isArray(candidate)
+    ) {
+      for (
+        const item of
+          candidate
+      ) {
+        visit(item)
+      }
+
+      return
+    }
+
+    const record =
+      candidate as Record<
+        string,
+        unknown
+      >
+
+    const venue =
+      normalizeVenue(
+        record as VenueRow
+      )
+
+    if (
+      venue &&
+      venue.lat !== null &&
+      venue.lon !== null &&
+      isValidLatitude(
+        venue.lat
+      ) &&
+      isValidLongitude(
+        venue.lon
+      )
+    ) {
+      venues.set(
+        venue.id,
+        venue
+      )
+    }
+
+    for (
+      const nestedValue of
+        Object.values(record)
+    ) {
+      visit(nestedValue)
+    }
+  }
+
+  visit(value)
+
+  return Array.from(
+    venues.values()
+  )
+}
+
+function calculateDistanceKm(
+  originLat: number,
+  originLon: number,
+  destinationLat: number,
+  destinationLon: number
+): number {
+  const earthRadiusKm =
+    6371.0088
+
+  const latitudeDelta =
+    degreesToRadians(
+      destinationLat -
+        originLat
+    )
+
+  const longitudeDelta =
+    degreesToRadians(
+      destinationLon -
+        originLon
+    )
+
+  const originLatitude =
+    degreesToRadians(
+      originLat
+    )
+
+  const destinationLatitude =
+    degreesToRadians(
+      destinationLat
+    )
+
+  const haversine =
+    Math.sin(
+      latitudeDelta / 2
+    ) ** 2 +
+    Math.cos(
+      originLatitude
+    ) *
+      Math.cos(
+        destinationLatitude
+      ) *
+      Math.sin(
+        longitudeDelta / 2
+      ) ** 2
+
+  return (
+    earthRadiusKm *
+    2 *
+    Math.atan2(
+      Math.sqrt(
+        haversine
+      ),
+      Math.sqrt(
+        1 - haversine
+      )
+    )
+  )
+}
+
+function degreesToRadians(
+  value: number
+): number {
+  return (
+    value *
+    Math.PI /
+    180
+  )
+}
+
+function isValidLatitude(
+  value: number
+): boolean {
+  return (
+    Number.isFinite(value) &&
+    value >= -90 &&
+    value <= 90
+  )
+}
+
+function isValidLongitude(
+  value: number
+): boolean {
+  return (
+    Number.isFinite(value) &&
+    value >= -180 &&
+    value <= 180
+  )
 }
 
 /* ------------------------------------------------ */
@@ -832,60 +1665,118 @@ async function loadVenuesById({
 function normalizeGuide(
   row: PropertyGuideRow
 ): GuidePageGuide | null {
-  const id = cleanText(row.id)
-  const propertyId = cleanText(row.property_id)
-  const title = cleanText(row.title)
-  const slug = cleanText(row.slug)
+  const id =
+    cleanText(row.id)
 
-  if (!id || !propertyId || !title || !slug) {
+  const propertyId =
+    cleanText(
+      row.property_id
+    )
+
+  const title =
+    cleanText(row.title)
+
+  const slug =
+    cleanText(row.slug)
+
+  if (
+    !id ||
+    !propertyId ||
+    !title ||
+    !slug
+  ) {
     return null
   }
 
   return {
     id,
     propertyId,
-    brandId: cleanText(row.brand_id),
+    brandId:
+      cleanText(
+        row.brand_id
+      ),
 
     title,
-    subtitle: cleanText(row.subtitle),
+    subtitle:
+      cleanText(
+        row.subtitle
+      ),
     slug,
 
-    status: cleanText(row.status) ?? 'draft',
-    guideMode: cleanText(row.guide_mode),
+    status:
+      cleanText(
+        row.status
+      ) ?? 'draft',
 
-    welcomeHeading: cleanText(row.welcome_heading),
-    welcomeDescription: cleanText(row.welcome_description),
-    heroImageUrl: normalizeAssetPath(row.hero_image_url),
+    guideMode:
+      cleanText(
+        row.guide_mode
+      ),
 
-    showPropertyFavorites: toBoolean(
-      row.show_property_favorites,
-      true
-    ),
-    showSuggestedRoutes: toBoolean(
-      row.show_suggested_routes,
-      true
-    ),
-    showNearbyEvents: toBoolean(
-      row.show_nearby_events,
-      false
-    ),
-    showPartnerOffers: toBoolean(
-      row.show_partner_offers,
-      false
-    ),
+    welcomeHeading:
+      cleanText(
+        row.welcome_heading
+      ),
+
+    welcomeDescription:
+      cleanText(
+        row.welcome_description
+      ),
+
+    heroImageUrl:
+      normalizeAssetPath(
+        row.hero_image_url
+      ),
+
+    showPropertyFavorites:
+      toBoolean(
+        row.show_property_favorites,
+        true
+      ),
+
+    showSuggestedRoutes:
+      toBoolean(
+        row.show_suggested_routes,
+        true
+      ),
+
+    showNearbyEvents:
+      toBoolean(
+        row.show_nearby_events,
+        false
+      ),
+
+    showPartnerOffers:
+      toBoolean(
+        row.show_partner_offers,
+        false
+      ),
 
     defaultTravelMode:
-      cleanText(row.default_travel_mode) ??
-      'walking',
+      cleanText(
+        row.default_travel_mode
+      ) ?? 'walking',
 
-    poweredByRoam: toBoolean(
-      row.powered_by_roam,
-      true
-    ),
+    poweredByRoam:
+      toBoolean(
+        row.powered_by_roam,
+        true
+      ),
 
-    publishedAt: toIsoString(row.published_at),
-    createdAt: toIsoString(row.created_at),
-    updatedAt: toIsoString(row.updated_at),
+    publishedAt:
+      toIsoString(
+        row.published_at
+      ),
+
+    createdAt:
+      toIsoString(
+        row.created_at
+      ),
+
+    updatedAt:
+      toIsoString(
+        row.updated_at
+      ),
   }
 }
 
@@ -896,12 +1787,27 @@ function normalizeGuide(
 function normalizeProperty(
   row: PropertyRow
 ): GuidePageProperty | null {
-  const id = cleanText(row.id)
-  const name = cleanText(row.name)
-  const slug = cleanText(row.slug)
-  const city = cleanText(row.city)
-  const lat = toFiniteNumber(row.lat)
-  const lon = toFiniteNumber(row.lon)
+  const id =
+    cleanText(row.id)
+
+  const name =
+    cleanText(row.name)
+
+  const slug =
+    cleanText(row.slug)
+
+  const city =
+    cleanText(row.city)
+
+  const lat =
+    toFiniteNumber(
+      row.lat
+    )
+
+  const lon =
+    toFiniteNumber(
+      row.lon
+    )
 
   if (
     !id ||
@@ -922,17 +1828,42 @@ function normalizeProperty(
     lat,
     lon,
 
-    hostName: cleanText(row.host_name),
-    hostType: cleanText(row.host_type),
-    website: cleanText(row.website),
-    address: cleanText(row.address),
+    hostName:
+      cleanText(
+        row.host_name
+      ),
 
-    approved: toBoolean(row.approved, false),
-    featured: toBoolean(row.featured, false),
+    hostType:
+      cleanText(
+        row.host_type
+      ),
 
-    welcomeDescription: cleanText(
-      row.welcome_description
-    ),
+    website:
+      cleanText(
+        row.website
+      ),
+
+    address:
+      cleanText(
+        row.address
+      ),
+
+    approved:
+      toBoolean(
+        row.approved,
+        false
+      ),
+
+    featured:
+      toBoolean(
+        row.featured,
+        false
+      ),
+
+    welcomeDescription:
+      cleanText(
+        row.welcome_description
+      ),
   }
 }
 
@@ -943,11 +1874,20 @@ function normalizeProperty(
 function normalizeBrand(
   row: GuideBrandRow
 ): GuidePageBrand | null {
-  const id = cleanText(row.id)
-  const name = cleanText(row.name)
-  const slug = cleanText(row.slug)
+  const id =
+    cleanText(row.id)
 
-  if (!id || !name || !slug) {
+  const name =
+    cleanText(row.name)
+
+  const slug =
+    cleanText(row.slug)
+
+  if (
+    !id ||
+    !name ||
+    !slug
+  ) {
     return null
   }
 
@@ -956,27 +1896,76 @@ function normalizeBrand(
     name,
     slug,
 
-    logoUrl: normalizeAssetPath(row.logo_url),
-    faviconUrl: normalizeAssetPath(row.favicon_url),
+    logoUrl:
+      normalizeAssetPath(
+        row.logo_url
+      ),
 
-    primaryColor: normalizeCssColor(row.primary_color),
-    secondaryColor: normalizeCssColor(row.secondary_color),
-    accentColor: normalizeCssColor(row.accent_color),
-    backgroundColor: normalizeCssColor(row.background_color),
-    surfaceColor: normalizeCssColor(row.surface_color),
-    textColor: normalizeCssColor(row.text_color),
-    mutedTextColor: normalizeCssColor(row.muted_text_color),
-    buttonTextColor: normalizeCssColor(row.button_text_color),
+    faviconUrl:
+      normalizeAssetPath(
+        row.favicon_url
+      ),
 
-    fontFamily: cleanText(row.font_family),
-    brandingMode: cleanText(row.branding_mode),
+    primaryColor:
+      normalizeCssColor(
+        row.primary_color
+      ),
 
-    poweredByRoam: toBoolean(
-      row.powered_by_roam,
-      true
-    ),
+    secondaryColor:
+      normalizeCssColor(
+        row.secondary_color
+      ),
 
-    customCss: cleanText(row.custom_css),
+    accentColor:
+      normalizeCssColor(
+        row.accent_color
+      ),
+
+    backgroundColor:
+      normalizeCssColor(
+        row.background_color
+      ),
+
+    surfaceColor:
+      normalizeCssColor(
+        row.surface_color
+      ),
+
+    textColor:
+      normalizeCssColor(
+        row.text_color
+      ),
+
+    mutedTextColor:
+      normalizeCssColor(
+        row.muted_text_color
+      ),
+
+    buttonTextColor:
+      normalizeCssColor(
+        row.button_text_color
+      ),
+
+    fontFamily:
+      cleanText(
+        row.font_family
+      ),
+
+    brandingMode:
+      cleanText(
+        row.branding_mode
+      ),
+
+    poweredByRoam:
+      toBoolean(
+        row.powered_by_roam,
+        true
+      ),
+
+    customCss:
+      cleanText(
+        row.custom_css
+      ),
   }
 }
 
@@ -987,11 +1976,24 @@ function normalizeBrand(
 function normalizeSection(
   row: GuideSectionRow
 ): GuidePageSection | null {
-  const id = cleanText(row.id)
-  const guideId = cleanText(row.guide_id)
-  const sectionKey = cleanText(row.section_key)
+  const id =
+    cleanText(row.id)
 
-  if (!id || !guideId || !sectionKey) {
+  const guideId =
+    cleanText(
+      row.guide_id
+    )
+
+  const sectionKey =
+    cleanText(
+      row.section_key
+    )
+
+  if (
+    !id ||
+    !guideId ||
+    !sectionKey
+  ) {
     return null
   }
 
@@ -1000,15 +2002,42 @@ function normalizeSection(
     guideId,
     sectionKey,
 
-    title: cleanText(row.title),
-    subtitle: cleanText(row.subtitle),
+    title:
+      cleanText(
+        row.title
+      ),
 
-    position: toInteger(row.position, 0),
-    isVisible: toBoolean(row.is_visible, true),
-    config: toRecord(row.config),
+    subtitle:
+      cleanText(
+        row.subtitle
+      ),
 
-    createdAt: toIsoString(row.created_at),
-    updatedAt: toIsoString(row.updated_at),
+    position:
+      toInteger(
+        row.position,
+        0
+      ),
+
+    isVisible:
+      toBoolean(
+        row.is_visible,
+        true
+      ),
+
+    config:
+      toRecord(
+        row.config
+      ),
+
+    createdAt:
+      toIsoString(
+        row.created_at
+      ),
+
+    updatedAt:
+      toIsoString(
+        row.updated_at
+      ),
   }
 }
 
@@ -1020,11 +2049,24 @@ function normalizeFeaturedVenue(
   row: GuideFeaturedVenueRow,
   venue: GuideVenue
 ): GuideFeaturedVenue | null {
-  const id = cleanText(row.id)
-  const guideId = cleanText(row.guide_id)
-  const venueId = cleanText(row.venue_id)
+  const id =
+    cleanText(row.id)
 
-  if (!id || !guideId || !venueId) {
+  const guideId =
+    cleanText(
+      row.guide_id
+    )
+
+  const venueId =
+    cleanText(
+      row.venue_id
+    )
+
+  if (
+    !id ||
+    !guideId ||
+    !venueId
+  ) {
     return null
   }
 
@@ -1033,18 +2075,53 @@ function normalizeFeaturedVenue(
     guideId,
     venueId,
 
-    sectionKey: cleanText(row.section_key),
+    sectionKey:
+      cleanText(
+        row.section_key
+      ),
 
-    label: cleanText(row.label),
-    description: cleanText(row.description),
-    conciergeNote: cleanText(row.concierge_note),
+    label:
+      cleanText(
+        row.label
+      ),
 
-    position: toInteger(row.position, 0),
-    isFeatured: toBoolean(row.is_featured, false),
-    isVisible: toBoolean(row.is_visible, true),
+    description:
+      cleanText(
+        row.description
+      ),
 
-    visibleFrom: toIsoString(row.visible_from),
-    visibleUntil: toIsoString(row.visible_until),
+    conciergeNote:
+      cleanText(
+        row.concierge_note
+      ),
+
+    position:
+      toInteger(
+        row.position,
+        0
+      ),
+
+    isFeatured:
+      toBoolean(
+        row.is_featured,
+        false
+      ),
+
+    isVisible:
+      toBoolean(
+        row.is_visible,
+        true
+      ),
+
+    visibleFrom:
+      toIsoString(
+        row.visible_from
+      ),
+
+    visibleUntil:
+      toIsoString(
+        row.visible_until
+      ),
 
     venue,
   }
@@ -1058,11 +2135,24 @@ function normalizePropertyFavorite(
   row: PropertyFavoriteRow,
   venue: GuideVenue
 ): GuidePropertyFavorite | null {
-  const id = cleanText(row.id)
-  const propertyId = cleanText(row.property_id)
-  const venueId = cleanText(row.venue_id)
+  const id =
+    cleanText(row.id)
 
-  if (!id || !propertyId || !venueId) {
+  const propertyId =
+    cleanText(
+      row.property_id
+    )
+
+  const venueId =
+    cleanText(
+      row.venue_id
+    )
+
+  if (
+    !id ||
+    !propertyId ||
+    !venueId
+  ) {
     return null
   }
 
@@ -1071,10 +2161,26 @@ function normalizePropertyFavorite(
     propertyId,
     venueId,
 
-    label: cleanText(row.label),
-    description: cleanText(row.description),
-    priority: toInteger(row.priority, 0),
-    category: cleanText(row.category),
+    label:
+      cleanText(
+        row.label
+      ),
+
+    description:
+      cleanText(
+        row.description
+      ),
+
+    priority:
+      toInteger(
+        row.priority,
+        0
+      ),
+
+    category:
+      cleanText(
+        row.category
+      ),
 
     venue,
   }
@@ -1087,34 +2193,66 @@ function normalizePropertyFavorite(
 function normalizeVenue(
   row: VenueRow
 ): GuideVenue | null {
-  const id = cleanText(row.id)
-  const name = cleanText(row.name)
+  const id =
+    cleanText(row.id)
+
+  const name =
+    cleanText(row.name)
 
   if (!id || !name) {
     return null
   }
 
-  const explicitLink = cleanText(row.link)
+  const explicitLink =
+    cleanText(row.link)
 
   return {
     id,
     name,
 
-    city: cleanText(row.city),
-    slug: cleanText(row.slug),
+    city:
+      cleanText(row.city),
+
+    slug:
+      cleanText(row.slug),
 
     link:
       explicitLink ??
-      `/venue-profile/${encodeURIComponent(id)}`,
+      `/venue-profile/${encodeURIComponent(
+        id
+      )}`,
 
-    description: cleanText(row.description),
-    cover: normalizeAssetPath(row.cover),
-    type: normalizeVenueType(row.type),
+    description:
+      cleanText(
+        row.description
+      ),
 
-    lat: toFiniteNumber(row.lat),
-    lon: toFiniteNumber(row.lon),
+    cover:
+      normalizeAssetPath(
+        row.cover
+      ),
 
-    raw: { ...row },
+    type:
+      normalizeVenueType(
+        row.type
+      ),
+
+    lat:
+      firstFiniteNumber(
+        row.lat,
+        row.latitude
+      ),
+
+    lon:
+      firstFiniteNumber(
+        row.lon,
+        row.lng,
+        row.longitude
+      ),
+
+    raw: {
+      ...row,
+    },
   }
 }
 
@@ -1131,14 +2269,25 @@ function isCurrentlyVisible({
   visibleUntil: unknown
   now: Date
 }) {
-  const from = toDate(visibleFrom)
-  const until = toDate(visibleUntil)
+  const from =
+    toDate(visibleFrom)
 
-  if (from && now.getTime() < from.getTime()) {
+  const until =
+    toDate(visibleUntil)
+
+  if (
+    from &&
+    now.getTime() <
+      from.getTime()
+  ) {
     return false
   }
 
-  if (until && now.getTime() > until.getTime()) {
+  if (
+    until &&
+    now.getTime() >
+      until.getTime()
+  ) {
     return false
   }
 
@@ -1152,7 +2301,9 @@ function isCurrentlyVisible({
 function firstRow<T>(
   value: unknown
 ): T | null {
-  const rows = rowsFrom<T>(value)
+  const rows =
+    rowsFrom<T>(value)
+
   return rows[0] ?? null
 }
 
@@ -1167,11 +2318,15 @@ function rowsFrom<T>(
 function cleanText(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
-  const trimmed = value.trim()
+  const trimmed =
+    value.trim()
 
   return trimmed.length > 0
     ? trimmed
@@ -1182,21 +2337,32 @@ function toBoolean(
   value: unknown,
   fallback: boolean
 ): boolean {
-  if (typeof value === 'boolean') {
+  if (
+    typeof value ===
+    'boolean'
+  ) {
     return value
   }
 
-  if (typeof value === 'number') {
+  if (
+    typeof value ===
+    'number'
+  ) {
     return value !== 0
   }
 
-  if (typeof value === 'string') {
-    const normalized = value
-      .trim()
-      .toLowerCase()
+  if (
+    typeof value ===
+    'string'
+  ) {
+    const normalized =
+      value
+        .trim()
+        .toLowerCase()
 
     if (
-      normalized === 'true' ||
+      normalized ===
+        'true' ||
       normalized === '1' ||
       normalized === 'yes'
     ) {
@@ -1204,7 +2370,8 @@ function toBoolean(
     }
 
     if (
-      normalized === 'false' ||
+      normalized ===
+        'false' ||
       normalized === '0' ||
       normalized === 'no'
     ) {
@@ -1220,14 +2387,23 @@ function toInteger(
   fallback: number
 ): number {
   const numericValue =
-    typeof value === 'number'
+    typeof value ===
+    'number'
       ? value
-      : typeof value === 'string'
-        ? Number.parseInt(value, 10)
+      : typeof value ===
+          'string'
+        ? Number.parseInt(
+            value,
+            10
+          )
         : Number.NaN
 
-  return Number.isFinite(numericValue)
-    ? Math.trunc(numericValue)
+  return Number.isFinite(
+    numericValue
+  )
+    ? Math.trunc(
+        numericValue
+      )
     : fallback
 }
 
@@ -1235,18 +2411,44 @@ function toFiniteNumber(
   value: unknown
 ): number | null {
   if (
-    typeof value === 'number' &&
+    typeof value ===
+      'number' &&
     Number.isFinite(value)
   ) {
     return value
   }
 
-  if (typeof value === 'string') {
-    const parsed = Number.parseFloat(value)
+  if (
+    typeof value ===
+    'string'
+  ) {
+    const parsed =
+      Number.parseFloat(
+        value
+      )
 
-    return Number.isFinite(parsed)
+    return Number.isFinite(
+      parsed
+    )
       ? parsed
       : null
+  }
+
+  return null
+}
+
+function firstFiniteNumber(
+  ...values: unknown[]
+): number | null {
+  for (
+    const value of values
+  ) {
+    const number =
+      toFiniteNumber(value)
+
+    if (number !== null) {
+      return number
+    }
   }
 
   return null
@@ -1257,7 +2459,9 @@ function normalizeDate(
 ): Date {
   if (
     value instanceof Date &&
-    Number.isFinite(value.getTime())
+    Number.isFinite(
+      value.getTime()
+    )
   ) {
     return value
   }
@@ -1268,22 +2472,31 @@ function normalizeDate(
 function toDate(
   value: unknown
 ): Date | null {
-  if (value instanceof Date) {
-    return Number.isFinite(value.getTime())
+  if (
+    value instanceof Date
+  ) {
+    return Number.isFinite(
+      value.getTime()
+    )
       ? value
       : null
   }
 
   if (
-    typeof value !== 'string' &&
-    typeof value !== 'number'
+    typeof value !==
+      'string' &&
+    typeof value !==
+      'number'
   ) {
     return null
   }
 
-  const date = new Date(value)
+  const date =
+    new Date(value)
 
-  return Number.isFinite(date.getTime())
+  return Number.isFinite(
+    date.getTime()
+  )
     ? date
     : null
 }
@@ -1291,7 +2504,8 @@ function toDate(
 function toIsoString(
   value: unknown
 ): string | null {
-  const date = toDate(value)
+  const date =
+    toDate(value)
 
   return date
     ? date.toISOString()
@@ -1303,10 +2517,14 @@ function toRecord(
 ): Record<string, unknown> {
   if (
     value &&
-    typeof value === 'object' &&
+    typeof value ===
+      'object' &&
     !Array.isArray(value)
   ) {
-    return value as Record<string, unknown>
+    return value as Record<
+      string,
+      unknown
+    >
   }
 
   return {}
@@ -1315,15 +2533,20 @@ function toRecord(
 function normalizeAssetPath(
   value: unknown
 ): string | null {
-  const path = cleanText(value)
+  const path =
+    cleanText(value)
 
   if (!path) {
     return null
   }
 
   if (
-    path.startsWith('http://') ||
-    path.startsWith('https://') ||
+    path.startsWith(
+      'http://'
+    ) ||
+    path.startsWith(
+      'https://'
+    ) ||
     path.startsWith('/')
   ) {
     return path
@@ -1335,7 +2558,8 @@ function normalizeAssetPath(
 function normalizeCssColor(
   value: unknown
 ): string | null {
-  const color = cleanText(value)
+  const color =
+    cleanText(value)
 
   if (!color) {
     return null
@@ -1347,15 +2571,21 @@ function normalizeCssColor(
 function normalizeVenueType(
   value: unknown
 ): string | string[] | null {
-  if (Array.isArray(value)) {
-    const normalized = value
-      .map(cleanText)
-      .filter(
-        (entry): entry is string =>
-          entry !== null
-      )
+  if (
+    Array.isArray(value)
+  ) {
+    const normalized =
+      value
+        .map(cleanText)
+        .filter(
+          (
+            entry
+          ): entry is string =>
+            entry !== null
+        )
 
-    return normalized.length > 0
+    return normalized.length >
+      0
       ? normalized
       : null
   }
@@ -1364,12 +2594,16 @@ function normalizeVenueType(
 }
 
 function uniqueStrings(
-  values: Array<string | null>
+  values: Array<
+    string | null
+  >
 ): string[] {
   return Array.from(
     new Set(
       values.filter(
-        (value): value is string =>
+        (
+          value
+        ): value is string =>
           value !== null
       )
     )

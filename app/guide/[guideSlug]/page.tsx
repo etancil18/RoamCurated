@@ -3,12 +3,15 @@ import { notFound } from 'next/navigation'
 
 import GuideHero from '@/components/guides/GuideHero'
 import GuideHighlights from '@/components/guides/GuideHighlights'
+import GuidePropertyMap from '@/components/guides/GuidePropertyMap'
 import GuideQuickActions from '@/components/guides/GuideQuickActions'
 import GuideRenderer from '@/components/guides/GuideRenderer'
 import GuideShell from '@/components/guides/GuideShell'
 
 import { getGuideConfig } from '@/lib/guides/getGuideConfig'
 import { getGuidePageData } from '@/lib/guides/getGuidePageData'
+
+import type { Venue } from '@/types/venue'
 
 /* ------------------------------------------------ */
 /* Route Configuration                              */
@@ -233,6 +236,16 @@ export default async function GuidePage({
       guidePageData
     )
 
+  const guideMapProperty =
+    deriveGuideMapProperty(
+      guideConfig
+    )
+
+  const guideMapVenues =
+    deriveGuideMapVenues(
+      guidePageData
+    )
+
   return (
     <GuideShell
       guide={guideConfig}
@@ -343,19 +356,41 @@ export default async function GuidePage({
             'lg:mt-16 lg:px-8',
           ].join(' ')}
         >
+          <GuidePropertyMap
+            property={
+              guideMapProperty
+            }
+            venues={
+              guideMapVenues
+            }
+          />
+        </div>
+
+        <div
+          className={[
+            'mx-auto mt-10 w-full',
+            'max-w-7xl',
+            'px-4 sm:mt-12 sm:px-6',
+            'lg:mt-16 lg:px-8',
+          ].join(' ')}
+        >
           <GuideRenderer
             guide={guideConfig}
             suggestedFlows={
-              guidePageData.suggestedFlows
+                guidePageData.suggestedFlows
             }
             nearbyEvents={
-              guidePageData.nearbyEvents
+                guidePageData.nearbyEvents
+            }
+            nearbyVenues={
+                guidePageData.nearbyVenues
             }
             sectionRenderers={{
-              welcome: () => false,
+                welcome: () => false,
+                map: () => false,
             }}
             showEmptySections={false}
-          />
+            />
         </div>
       </div>
     </GuideShell>
@@ -396,6 +431,110 @@ function deriveNearbyVenueCount(
   }
 
   return 0
+}
+
+function deriveGuideMapProperty(
+  guideConfig: unknown
+) {
+  const guideRecord =
+    asRecord(guideConfig)
+
+  const guide = asRecord(
+    guideRecord.guide ??
+      guideRecord.propertyGuide ??
+      guideRecord.property_guide ??
+      guideRecord
+  )
+
+  const property = asRecord(
+    guideRecord.property ??
+      guide.property
+  )
+
+  const id =
+    firstNonEmptyString(
+      property.id,
+      property.propertyId,
+      property.property_id,
+      guideRecord.propertyId,
+      guideRecord.property_id
+    ) ?? 'guide-property'
+
+  const name =
+    firstNonEmptyString(
+      property.name,
+      guide.title,
+      guideRecord.title
+    ) ?? 'Guide property'
+
+  const city =
+    firstNonEmptyString(
+      property.city,
+      guide.city,
+      guideRecord.city
+    ) ?? ''
+
+  const lat =
+    firstFiniteNumber(
+      property.lat,
+      property.latitude,
+      guide.lat,
+      guide.latitude,
+      guideRecord.lat,
+      guideRecord.latitude
+    )
+
+  const lon =
+    firstFiniteNumber(
+      property.lon,
+      property.lng,
+      property.longitude,
+      guide.lon,
+      guide.lng,
+      guide.longitude,
+      guideRecord.lon,
+      guideRecord.lng,
+      guideRecord.longitude
+    )
+
+  return {
+    id,
+    name,
+    city,
+    lat: lat ?? Number.NaN,
+    lon: lon ?? Number.NaN,
+  }
+}
+
+function deriveGuideMapVenues(
+  pageData: unknown
+): Venue[] {
+  const record =
+    asRecord(pageData)
+
+  const venues =
+    firstArray(
+      record.nearbyVenues,
+      record.nearby_venues,
+      record.venues
+    )
+
+  if (!venues) {
+    return []
+  }
+
+  return venues.filter(
+    (venue) => {
+      const venueRecord =
+        asRecord(venue)
+
+      return (
+        firstNonEmptyString(
+          venueRecord.id
+        ) !== null
+      )
+    }
+  ) as Venue[]
 }
 
 /* ------------------------------------------------ */
@@ -480,6 +619,35 @@ function firstNonEmptyString(
       value.trim().length > 0
     ) {
       return value.trim()
+    }
+  }
+
+  return null
+}
+
+function firstFiniteNumber(
+  ...values: unknown[]
+): number | null {
+  for (const value of values) {
+    if (
+      typeof value === 'number' &&
+      Number.isFinite(value)
+    ) {
+      return value
+    }
+
+    if (
+      typeof value === 'string' &&
+      value.trim() !== ''
+    ) {
+      const parsed =
+        Number(value)
+
+      if (
+        Number.isFinite(parsed)
+      ) {
+        return parsed
+      }
     }
   }
 
