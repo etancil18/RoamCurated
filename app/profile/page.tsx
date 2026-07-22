@@ -11,6 +11,7 @@ import VisitHistorySection from "@/components/profile/VisitHistorySection"
 import ProfileSnapshotLibrary, {
   type ProfileSnapshot,
 } from "@/components/profile/ProfileSnapshotLibrary"
+import { CREATOR_ROUTES } from "@/lib/creator/constants"
 import { supabaseBrowser } from "@/lib/supabase/client"
 import { logEvent } from "@/lib/logEvent"
 
@@ -29,6 +30,12 @@ type SnapshotRow = {
   updated_at: string | null
 }
 
+type ProfileCreatorRow = {
+  username: string | null
+  creator_mode_enabled: boolean | null
+  creator_headline: string | null
+}
+
 function safeLogEvent(
   eventName: string,
   metadata: Record<string, unknown> = {}
@@ -42,6 +49,8 @@ function safeLogEvent(
 
 export default function UserProfilePage() {
   const [username, setUsername] = useState<string | null>(null)
+  const [creatorModeEnabled, setCreatorModeEnabled] = useState(false)
+  const [creatorHeadline, setCreatorHeadline] = useState<string | null>(null)
   const [snapshots, setSnapshots] = useState<ProfileSnapshot[]>([])
   const [snapshotsLoading, setSnapshotsLoading] = useState(true)
   const [snapshotsError, setSnapshotsError] = useState<string | null>(null)
@@ -76,7 +85,11 @@ export default function UserProfilePage() {
       const [profileResult, snapshotsResult] = await Promise.all([
         supabase
           .from("profiles")
-          .select("username")
+          .select(`
+            username,
+            creator_mode_enabled,
+            creator_headline
+          `)
           .eq("id", user.id)
           .maybeSingle(),
 
@@ -104,12 +117,17 @@ export default function UserProfilePage() {
 
       if (profileResult.error) {
         console.error(
-          "[profile/page] Failed to load username:",
+          "[profile/page] Failed to load username and Creator Mode status:",
           profileResult.error
         )
       }
 
-      setUsername(profileResult.data?.username ?? null)
+      const profile =
+        (profileResult.data as ProfileCreatorRow | null) ?? null
+
+      setUsername(profile?.username ?? null)
+      setCreatorModeEnabled(profile?.creator_mode_enabled === true)
+      setCreatorHeadline(normalizeNullableText(profile?.creator_headline))
 
       if (snapshotsResult.error) {
         console.error(
@@ -228,7 +246,19 @@ export default function UserProfilePage() {
             </ProfilePanel>
           </div>
 
-          <div className="w-full min-w-0">
+          <div className="w-full min-w-0 space-y-5">
+            <ProfilePanel
+              eyebrow="Creator"
+              title="Creator Mode"
+              description="Build a public creator identity, show collaboration availability, and curate collections."
+            >
+              <CreatorModeEntryCard
+                enabled={creatorModeEnabled}
+                headline={creatorHeadline}
+                username={username}
+              />
+            </ProfilePanel>
+
             <ProfilePanel
               eyebrow="Account"
               title="Settings"
@@ -240,6 +270,116 @@ export default function UserProfilePage() {
           </div>
         </section>
       </div>
+    </div>
+  )
+}
+
+function CreatorModeEntryCard({
+  enabled,
+  headline,
+  username,
+}: {
+  enabled: boolean
+  headline: string | null
+  username: string | null
+}) {
+  const publicProfileHref = username
+    ? CREATOR_ROUTES.publicProfile(username)
+    : null
+
+  return (
+    <div className="w-full min-w-0 space-y-4">
+      <div
+        className={[
+          "w-full min-w-0 rounded-2xl border p-4",
+          enabled
+            ? "border-emerald-500/25 bg-emerald-500/[0.07]"
+            : "border-neutral-800 bg-black/25",
+        ].join(" ")}
+      >
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div
+              className={[
+                "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                enabled
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                  : "border-neutral-700 bg-neutral-900 text-neutral-500",
+              ].join(" ")}
+            >
+              <span
+                aria-hidden="true"
+                className={[
+                  "h-2 w-2 rounded-full",
+                  enabled ? "bg-emerald-400" : "bg-neutral-600",
+                ].join(" ")}
+              />
+
+              {enabled ? "Active" : "Inactive"}
+            </div>
+
+            <p className="mt-3 break-words text-sm font-semibold text-white">
+              {headline ??
+                (enabled
+                  ? "Your Creator Mode profile is live"
+                  : "Turn your Roam profile into a creator portfolio")}
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-neutral-500">
+              {enabled
+                ? "Your public creator sections can display social links, collaboration preferences, local authority, and featured collections."
+                : "Your standard profile remains unchanged until you deliberately enable and save Creator Mode."}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        <Link
+          href={CREATOR_ROUTES.settings}
+          onClick={() =>
+            safeLogEvent("profile_creator_settings_clicked", {
+              creator_mode_enabled: enabled,
+            })
+          }
+          className="inline-flex min-w-0 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-center text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:text-cyan-100"
+        >
+          {enabled ? "Manage Creator Mode" : "Set Up Creator Mode"}
+        </Link>
+
+        <Link
+          href={CREATOR_ROUTES.collections}
+          onClick={() =>
+            safeLogEvent("profile_creator_collections_clicked", {
+              creator_mode_enabled: enabled,
+            })
+          }
+          className="inline-flex min-w-0 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-center text-sm font-semibold text-indigo-300 transition hover:border-indigo-400/60 hover:bg-indigo-500/20 hover:text-indigo-100"
+        >
+          Manage Collections
+        </Link>
+      </div>
+
+      {enabled && publicProfileHref ? (
+        <Link
+          href={publicProfileHref}
+          onClick={() =>
+            safeLogEvent("profile_creator_preview_clicked", {
+              username,
+            })
+          }
+          className="inline-flex w-full min-w-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2.5 text-center text-sm font-medium text-neutral-300 transition hover:border-neutral-600 hover:bg-neutral-900 hover:text-white"
+        >
+          Preview Creator Profile →
+        </Link>
+      ) : null}
+
+      {!username ? (
+        <p className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-200/80">
+          Add a username in Account Settings before your creator profile can
+          have a public URL.
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -418,4 +558,20 @@ function normalizeSnapshot(
     created_at: snapshot.created_at,
     updated_at: snapshot.updated_at,
   }
+}
+
+function normalizeNullableText(
+  value: string | null | undefined
+): string | null {
+  if (typeof value !== "string") {
+    return null
+  }
+
+  const normalized = value
+    .trim()
+    .replace(/\s+/g, " ")
+
+  return normalized.length > 0
+    ? normalized
+    : null
 }

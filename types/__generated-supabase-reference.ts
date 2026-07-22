@@ -130,6 +130,36 @@ export type Database = {
         }
         Relationships: []
       }
+      collaboration_tags: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          id: number
+          label: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          category: string
+          created_at?: string
+          id?: number
+          label: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          id?: number
+          label?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       crawl_events: {
         Row: {
           city: string | null
@@ -333,6 +363,224 @@ export type Database = {
             columns: ["crawl_id"]
             isOneToOne: false
             referencedRelation: "crawl_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_collaboration_tags: {
+        Row: {
+          created_at: string
+          tag_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          tag_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          tag_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_collaboration_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "collaboration_tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_collaboration_tags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_collection_items: {
+        Row: {
+          collection_id: string
+          created_at: string
+          creator_note: string | null
+          custom_title: string | null
+          id: string
+          image_url: string | null
+          sort_order: number
+          source_id: string
+          source_type: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          creator_note?: string | null
+          custom_title?: string | null
+          id?: string
+          image_url?: string | null
+          sort_order?: number
+          source_id: string
+          source_type: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          creator_note?: string | null
+          custom_title?: string | null
+          id?: string
+          image_url?: string | null
+          sort_order?: number
+          source_id?: string
+          source_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "creator_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_collections: {
+        Row: {
+          category: string | null
+          city: string | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          featured: boolean
+          id: string
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          category?: string | null
+          city?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          category?: string | null
+          city?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_collections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_profiles: {
+        Row: {
+          accepting_collaborations: boolean
+          available_for_travel: boolean
+          created_at: string
+          creator_bio: string | null
+          primary_city: string | null
+          public_email: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepting_collaborations?: boolean
+          available_for_travel?: boolean
+          created_at?: string
+          creator_bio?: string | null
+          primary_city?: string | null
+          public_email?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepting_collaborations?: boolean
+          available_for_travel?: boolean
+          created_at?: string
+          creator_bio?: string | null
+          primary_city?: string | null
+          public_email?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_social_links: {
+        Row: {
+          created_at: string
+          handle: string | null
+          id: string
+          is_public: boolean
+          platform: string
+          sort_order: number
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          handle?: string | null
+          id?: string
+          is_public?: boolean
+          platform: string
+          sort_order?: number
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          handle?: string | null
+          id?: string
+          is_public?: boolean
+          platform?: string
+          sort_order?: number
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_social_links_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1591,6 +1839,8 @@ export type Database = {
           bio: string | null
           crawl_type: string | null
           created_at: string | null
+          creator_headline: string | null
+          creator_mode_enabled: boolean
           days_out: string[] | null
           deleted_at: string | null
           frequency: string | null
@@ -1619,6 +1869,8 @@ export type Database = {
           bio?: string | null
           crawl_type?: string | null
           created_at?: string | null
+          creator_headline?: string | null
+          creator_mode_enabled?: boolean
           days_out?: string[] | null
           deleted_at?: string | null
           frequency?: string | null
@@ -1647,6 +1899,8 @@ export type Database = {
           bio?: string | null
           crawl_type?: string | null
           created_at?: string | null
+          creator_headline?: string | null
+          creator_mode_enabled?: boolean
           days_out?: string[] | null
           deleted_at?: string | null
           frequency?: string | null
