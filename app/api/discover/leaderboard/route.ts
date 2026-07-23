@@ -26,6 +26,7 @@ type LeaderboardUser = {
   passport_level: number
   followers_count: number
   completed_flows_count: number
+  venue_visits_count: number
   checkins_count: number
   is_following: boolean
   rank: number
@@ -179,9 +180,12 @@ export async function GET() {
 
     const completedFlowsByUserId = new Map<string, number>()
     const completedFlowStopsByUserId = new Map<string, number>()
+
     for (const row of completedFlowRows ?? []) {
       const userId = row.user_id as string
-      const stopCount = Array.isArray(row.venue_ids) ? row.venue_ids.length : 0
+      const stopCount = Array.isArray(row.venue_ids)
+        ? row.venue_ids.length
+        : 0
 
       completedFlowsByUserId.set(
         userId,
@@ -195,6 +199,7 @@ export async function GET() {
     }
 
     const checkinsByUserId = new Map<string, number>()
+
     for (const row of checkinRows ?? []) {
       const userId = row.user_id as string
 
@@ -205,6 +210,7 @@ export async function GET() {
     }
 
     const hostedCrawlsByUserId = new Map<string, number>()
+
     for (const row of hostedRows ?? []) {
       const userId = row.creator_id as string
 
@@ -216,6 +222,7 @@ export async function GET() {
 
     const joinedCrawlsByUserId = new Map<string, number>()
     const pastCrawlsByUserId = new Map<string, number>()
+
     for (const row of rsvpRows ?? []) {
       const userId = row.user_id as string
       const crawl = (row as any).crawl_events
@@ -234,6 +241,7 @@ export async function GET() {
     }
 
     const savedPropertiesByUserId = new Map<string, number>()
+
     for (const row of savedPropertyRows ?? []) {
       const userId = row.user_id as string
 
@@ -244,6 +252,7 @@ export async function GET() {
     }
 
     const venueVisitsByUserId = new Map<string, number>()
+
     for (const row of venueVisitRows ?? []) {
       const userId = row.user_id as string
 
@@ -254,6 +263,7 @@ export async function GET() {
     }
 
     const hostedFlowStopsByUserId = new Map<string, number>()
+
     const crawlIds = [
       ...new Set(
         (crawlProgressRows ?? [])
@@ -281,7 +291,9 @@ export async function GET() {
 
       for (const profileId of profileIds) {
         const userProgressRows =
-          crawlProgressRows?.filter((row: any) => row.user_id === profileId) ?? []
+          crawlProgressRows?.filter(
+            (row: any) => row.user_id === profileId
+          ) ?? []
 
         const userCrawlIds = [
           ...new Set(
@@ -294,42 +306,67 @@ export async function GET() {
         let completedHostedFlows = 0
 
         for (const crawlId of userCrawlIds) {
-          const crawl = crawlEvents?.find((row: any) => row.id === crawlId)
-          const requiredStops = Array.isArray((crawl as any)?.venue_ids)
+          const crawl = crawlEvents?.find(
+            (row: any) => row.id === crawlId
+          )
+
+          const requiredStops = Array.isArray(
+            (crawl as any)?.venue_ids
+          )
             ? (crawl as any).venue_ids.length
             : 0
 
           const completedStops =
-            userProgressRows.filter((row: any) => row.crawl_id === crawlId)
-              .length ?? 0
+            userProgressRows.filter(
+              (row: any) => row.crawl_id === crawlId
+            ).length ?? 0
 
-          if (requiredStops > 0 && completedStops >= requiredStops) {
+          if (
+            requiredStops > 0 &&
+            completedStops >= requiredStops
+          ) {
             completedHostedFlows += 1
           }
         }
 
-        completedHostedFlowsByUserId.set(profileId, completedHostedFlows)
+        completedHostedFlowsByUserId.set(
+          profileId,
+          completedHostedFlows
+        )
       }
     }
 
     const followingIds = new Set(
-      (followingRows ?? []).map((row) => row.following_id as string)
+      (followingRows ?? []).map(
+        (row) => row.following_id as string
+      )
     )
 
     const rankedUsers: LeaderboardUser[] = profiles
       .map((profile) => {
         const { level: passportLevel } = getPassportSnapshot({
-          hostedCrawls: hostedCrawlsByUserId.get(profile.id) ?? 0,
-          joinedCrawls: joinedCrawlsByUserId.get(profile.id) ?? 0,
-          pastCrawls: pastCrawlsByUserId.get(profile.id) ?? 0,
-          savedProperties: savedPropertiesByUserId.get(profile.id) ?? 0,
-          completedFlows: completedFlowsByUserId.get(profile.id) ?? 0,
-          completedFlowStops: completedFlowStopsByUserId.get(profile.id) ?? 0,
-          hostedFlowStops: hostedFlowStopsByUserId.get(profile.id) ?? 0,
-          completedHostedFlows: completedHostedFlowsByUserId.get(profile.id) ?? 0,
-          venueVisits: venueVisitsByUserId.get(profile.id) ?? 0,
-          eventXp: xpByUserId.get(profile.id) ?? 0,
-          eventCheckins: checkinsByUserId.get(profile.id) ?? 0,
+          hostedCrawls:
+            hostedCrawlsByUserId.get(profile.id) ?? 0,
+          joinedCrawls:
+            joinedCrawlsByUserId.get(profile.id) ?? 0,
+          pastCrawls:
+            pastCrawlsByUserId.get(profile.id) ?? 0,
+          savedProperties:
+            savedPropertiesByUserId.get(profile.id) ?? 0,
+          completedFlows:
+            completedFlowsByUserId.get(profile.id) ?? 0,
+          completedFlowStops:
+            completedFlowStopsByUserId.get(profile.id) ?? 0,
+          hostedFlowStops:
+            hostedFlowStopsByUserId.get(profile.id) ?? 0,
+          completedHostedFlows:
+            completedHostedFlowsByUserId.get(profile.id) ?? 0,
+          venueVisits:
+            venueVisitsByUserId.get(profile.id) ?? 0,
+          eventXp:
+            xpByUserId.get(profile.id) ?? 0,
+          eventCheckins:
+            checkinsByUserId.get(profile.id) ?? 0,
         })
 
         return {
@@ -342,28 +379,48 @@ export async function GET() {
           preferred_vibes: profile.preferred_vibes,
           interest_categories: profile.interest_categories,
           passport_level: passportLevel,
-          followers_count: followersByUserId.get(profile.id) ?? 0,
-          completed_flows_count: completedFlowsByUserId.get(profile.id) ?? 0,
-          checkins_count: checkinsByUserId.get(profile.id) ?? 0,
-          is_following: followingIds.has(profile.id),
+          followers_count:
+            followersByUserId.get(profile.id) ?? 0,
+          completed_flows_count:
+            completedFlowsByUserId.get(profile.id) ?? 0,
+          venue_visits_count:
+            venueVisitsByUserId.get(profile.id) ?? 0,
+          checkins_count:
+            checkinsByUserId.get(profile.id) ?? 0,
+          is_following:
+            followingIds.has(profile.id),
           rank: 0,
         }
       })
       .sort((a, b) => {
-        const levelDelta = b.passport_level - a.passport_level
+        const levelDelta =
+          b.passport_level - a.passport_level
+
         if (levelDelta !== 0) return levelDelta
 
-        const followersDelta = b.followers_count - a.followers_count
+        const followersDelta =
+          b.followers_count - a.followers_count
+
         if (followersDelta !== 0) return followersDelta
 
-        const flowsDelta = b.completed_flows_count - a.completed_flows_count
+        const flowsDelta =
+          b.completed_flows_count - a.completed_flows_count
+
         if (flowsDelta !== 0) return flowsDelta
 
-        const checkinsDelta = b.checkins_count - a.checkins_count
+        const checkinsDelta =
+          b.checkins_count - a.checkins_count
+
         if (checkinsDelta !== 0) return checkinsDelta
 
-        return (a.full_name ?? a.username ?? '').localeCompare(
-          b.full_name ?? b.username ?? ''
+        return (
+          a.full_name ??
+          a.username ??
+          ''
+        ).localeCompare(
+          b.full_name ??
+            b.username ??
+            ''
         )
       })
       .slice(0, 25)
@@ -380,12 +437,18 @@ export async function GET() {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Unexpected discover leaderboard error:', error)
+    console.error(
+      'Unexpected discover leaderboard error:',
+      error
+    )
 
     return NextResponse.json(
       {
         error: 'Unexpected server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error',
       },
       { status: 500 }
     )

@@ -16,7 +16,7 @@ type LeaderboardUser = {
   passport_level: number
   followers_count: number
   completed_flows_count: number
-  checkins_count: number
+  venue_visits_count: number
   is_following: boolean
   rank: number
 }
@@ -92,7 +92,7 @@ export default function RoamLeaderboard() {
         </h2>
 
         <p className="mt-2 text-sm text-neutral-400">
-          Ranked by Passport level, followers, completed flows, and check-ins.
+          Ranked by Passport level, followers, completed flows, and venue visits.
         </p>
       </div>
 
@@ -172,11 +172,11 @@ export default function RoamLeaderboard() {
                       </span>
 
                       <span className="rounded-full border border-neutral-800 bg-neutral-950 px-3 py-1 text-neutral-300">
-                        {user.completed_flows_count.toLocaleString()} flows
+                        {user.venue_visits_count.toLocaleString()} venue visits
                       </span>
 
                       <span className="rounded-full border border-neutral-800 bg-neutral-950 px-3 py-1 text-neutral-300">
-                        {user.checkins_count.toLocaleString()} check-ins
+                        {user.completed_flows_count.toLocaleString()} flows
                       </span>
                     </div>
                   </div>

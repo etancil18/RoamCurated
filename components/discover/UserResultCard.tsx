@@ -29,11 +29,6 @@ export default function UserResultCard({
   const username = user.username ?? ''
   const profileHref = username ? `/u/${username}` : '#'
 
-  const chips = [
-    ...(user.preferred_vibes ?? []),
-    ...(user.interest_categories ?? []),
-  ].filter(Boolean).slice(0, 5)
-
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5 transition hover:border-cyan-500/40">
       <div className="flex items-start gap-4">
@@ -70,19 +65,6 @@ export default function UserResultCard({
             <p className="mt-3 line-clamp-2 text-sm leading-6 text-neutral-400">
               {user.bio}
             </p>
-          )}
-
-          {chips.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {chips.map((chip) => (
-                <span
-                  key={chip}
-                  className="rounded-full border border-neutral-800 bg-black px-3 py-1 text-xs text-neutral-300"
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
           )}
         </div>
 
