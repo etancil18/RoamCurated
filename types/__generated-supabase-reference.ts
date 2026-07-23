@@ -1878,6 +1878,77 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_public_stats: {
+        Row: {
+          completed_flow_stops: number
+          completed_flows: number
+          completed_hosted_flows: number
+          created_at: string
+          event_checkins: number
+          event_xp: number
+          hosted_crawls: number
+          hosted_flow_stops: number
+          joined_crawls: number
+          passport_level: number
+          passport_progress: number
+          passport_progress_percent: number
+          passport_xp: number
+          past_crawls: number
+          saved_properties: number
+          updated_at: string
+          user_id: string
+          venue_visits: number
+        }
+        Insert: {
+          completed_flow_stops?: number
+          completed_flows?: number
+          completed_hosted_flows?: number
+          created_at?: string
+          event_checkins?: number
+          event_xp?: number
+          hosted_crawls?: number
+          hosted_flow_stops?: number
+          joined_crawls?: number
+          passport_level?: number
+          passport_progress?: number
+          passport_progress_percent?: number
+          passport_xp?: number
+          past_crawls?: number
+          saved_properties?: number
+          updated_at?: string
+          user_id: string
+          venue_visits?: number
+        }
+        Update: {
+          completed_flow_stops?: number
+          completed_flows?: number
+          completed_hosted_flows?: number
+          created_at?: string
+          event_checkins?: number
+          event_xp?: number
+          hosted_crawls?: number
+          hosted_flow_stops?: number
+          joined_crawls?: number
+          passport_level?: number
+          passport_progress?: number
+          passport_progress_percent?: number
+          passport_xp?: number
+          past_crawls?: number
+          saved_properties?: number
+          updated_at?: string
+          user_id?: string
+          venue_visits?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_public_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age_range: string | null

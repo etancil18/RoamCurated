@@ -14,6 +14,30 @@ type Crawl = {
   city: string | null
 }
 
+async function refreshPublicPassportStats() {
+  try {
+    const response = await fetch('/api/passport/rebuild', {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+    })
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => null)
+
+      console.error(
+        '[UserCrawls] Failed to rebuild public Passport stats:',
+        result?.error ?? `Request failed with status ${response.status}`
+      )
+    }
+  } catch (error) {
+    console.error(
+      '[UserCrawls] Failed to rebuild public Passport stats:',
+      error
+    )
+  }
+}
+
 function formatCountdown(datetime: string | null) {
   if (!datetime) return null
 
@@ -150,6 +174,8 @@ export default function UserCrawls() {
       console.error('Failed to remove RSVP:', error)
       return
     }
+
+    await refreshPublicPassportStats()
 
     setUpcoming((prev) => prev.filter((crawl) => crawl.id !== crawlId))
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { getCityNow } from '@/lib/getCityNow'
+import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 
 type RouteContext = {
   params: Promise<{
@@ -25,6 +26,17 @@ const FLEXIBLE_RADIUS_METERS = 75
 const MAX_REASONABLE_ACCURACY_METERS = 250
 const PROPERTY_GUIDE_SINGLE_VENUE_XP = 15
 const GENERIC_SINGLE_VENUE_XP = 10
+
+async function refreshPublicPassportStats(userId: string) {
+  try {
+    await rebuildPublicPassportStats(userId)
+  } catch (error) {
+    console.error(
+      '[venue-profile/check-in] Failed to rebuild public Passport stats:',
+      error
+    )
+  }
+}
 
 function isValidLatitude(value: unknown): value is number {
   return (
@@ -455,6 +467,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
       )
     }
   }
+
+  await refreshPublicPassportStats(user.id)
 
   return NextResponse.json({
     visited: true,

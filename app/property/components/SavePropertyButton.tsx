@@ -15,6 +15,30 @@ type Props = {
   slug: string
 }
 
+async function refreshPublicPassportStats() {
+  try {
+    const response = await fetch('/api/passport/rebuild', {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => null)
+
+      console.error(
+        '[SavePropertyButton] Failed to rebuild public Passport stats:',
+        result?.error ?? `Request failed with status ${response.status}`
+      )
+    }
+  } catch (error) {
+    console.error(
+      '[SavePropertyButton] Failed to rebuild public Passport stats:',
+      error
+    )
+  }
+}
+
 export default function SavePropertyButton({
   propertyId,
   city,
@@ -104,6 +128,10 @@ export default function SavePropertyButton({
 
     if(error && error.code !== '23505'){
       console.error('Save property error:',error.message)
+    }
+
+    if(!error || error.code === '23505'){
+      await refreshPublicPassportStats()
     }
 
     setSaved(true)

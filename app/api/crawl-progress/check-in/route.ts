@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
+import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 
 type CheckInCrawlProgressBody = {
   crawl_id?: string
@@ -14,6 +15,17 @@ type CheckInCrawlProgressBody = {
 const BASE_CHECK_IN_RADIUS_METERS = 125
 const FLEXIBLE_RADIUS_METERS = 75
 const MAX_REASONABLE_ACCURACY_METERS = 250
+
+async function refreshPublicPassportStats(userId: string) {
+  try {
+    await rebuildPublicPassportStats(userId)
+  } catch (error) {
+    console.error(
+      '[crawl-progress/check-in] Failed to rebuild public Passport stats:',
+      error
+    )
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -288,6 +300,8 @@ export async function POST(req: Request) {
 
     const totalStops = venueIds.length
     const flowCompleted = completedStops === totalStops
+
+    await refreshPublicPassportStats(user.id)
 
     return NextResponse.json(
       {

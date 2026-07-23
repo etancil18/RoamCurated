@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 
 type RouteContext = {
@@ -78,6 +79,20 @@ function calculateDistanceMeters({
 
 function degreesToRadians(value: number) {
   return (value * Math.PI) / 180
+}
+
+async function refreshPublicPassportStats(
+  userId: string,
+  mutation: string
+): Promise<void> {
+  try {
+    await rebuildPublicPassportStats(userId)
+  } catch (error) {
+    console.error(
+      `[venue visit][${mutation}] Failed to rebuild public Passport stats:`,
+      error
+    )
+  }
 }
 
 async function verifyVenueLocation({
@@ -354,7 +369,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
         geo_verified: true,
         check_in_source: 'geo',
         device_timestamp:
-          typeof deviceTimestamp === 'string' && deviceTimestamp.trim().length > 0
+          typeof deviceTimestamp === 'string' &&
+          deviceTimestamp.trim().length > 0
             ? deviceTimestamp
             : null,
       },
@@ -373,6 +389,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
       { status: 500 }
     )
   }
+
+  await refreshPublicPassportStats(user.id, 'POST')
 
   return NextResponse.json({
     visited: true,
@@ -416,7 +434,10 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     .maybeSingle()
 
   if (existingVisitError) {
-    console.error('[venue visit][PATCH] Existing visit check failed:', existingVisitError)
+    console.error(
+      '[venue visit][PATCH] Existing visit check failed:',
+      existingVisitError
+    )
 
     return NextResponse.json(
       { error: 'Failed to verify existing venue visit' },
@@ -443,6 +464,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         { status: 500 }
       )
     }
+
+    await refreshPublicPassportStats(user.id, 'PATCH')
 
     return NextResponse.json({
       visited: true,
@@ -518,6 +541,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       )
     }
 
+    await refreshPublicPassportStats(user.id, 'PATCH_ACTIVE_FLOW')
+
     return NextResponse.json({
       visited: true,
       rating: data.rating,
@@ -562,6 +587,8 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
       { status: 500 }
     )
   }
+
+  await refreshPublicPassportStats(user.id, 'DELETE')
 
   return NextResponse.json({
     visited: false,

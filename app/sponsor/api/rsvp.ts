@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServerApi } from '@/lib/supabase/server-api';
+import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats';
 
 function isValidUUID(value: string) {
   return /^[0-9a-fA-F-]{36}$/.test(value);
+}
+
+async function refreshPublicPassportStats(
+  userId: string,
+  mutation: 'JOIN_CRAWL' | 'LEAVE_CRAWL'
+) {
+  try {
+    await rebuildPublicPassportStats(userId);
+  } catch (error) {
+    console.error(
+      `[RSVP][${mutation}] Failed to rebuild public Passport stats:`,
+      error
+    );
+  }
 }
 
 /**
@@ -72,6 +87,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  await refreshPublicPassportStats(user.id, 'JOIN_CRAWL');
+
   return NextResponse.json(
     {
       message: 'RSVP successful',
@@ -131,6 +148,8 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  await refreshPublicPassportStats(user.id, 'LEAVE_CRAWL');
 
   return NextResponse.json(
     {

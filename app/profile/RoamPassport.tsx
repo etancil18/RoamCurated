@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { supabaseBrowser, getCurrentUserId } from '@/lib/supabase/client'
-import { getPassportSnapshot } from '@/lib/passport/score'
+import {
+  supabaseBrowser,
+  getCurrentUserId,
+} from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -21,6 +23,31 @@ type PassportStats = {
   eventCheckins: number
 }
 
+type PassportSnapshot = {
+  xp: number
+  level: number
+  progressToNextLevel: number
+  progressPercent: number
+}
+
+type ProfilePublicStatsRow = {
+  hosted_crawls: number | null
+  joined_crawls: number | null
+  past_crawls: number | null
+  saved_properties: number | null
+  completed_flows: number | null
+  completed_flow_stops: number | null
+  hosted_flow_stops: number | null
+  completed_hosted_flows: number | null
+  venue_visits: number | null
+  event_xp: number | null
+  event_checkins: number | null
+  passport_xp: number | null
+  passport_level: number | null
+  passport_progress: number | null
+  passport_progress_percent: number | string | null
+}
+
 type ActiveFlow = {
   id: string
   title: string | null
@@ -29,191 +56,231 @@ type ActiveFlow = {
   started_at: string | null
 }
 
+const EMPTY_STATS: PassportStats = {
+  hostedCrawls: 0,
+  joinedCrawls: 0,
+  pastCrawls: 0,
+  savedProperties: 0,
+  completedFlows: 0,
+  completedFlowStops: 0,
+  hostedFlowStops: 0,
+  completedHostedFlows: 0,
+  venueVisits: 0,
+  eventXp: 0,
+  eventCheckins: 0,
+}
+
+const EMPTY_SNAPSHOT: PassportSnapshot = {
+  xp: 0,
+  level: 1,
+  progressToNextLevel: 0,
+  progressPercent: 0,
+}
+
 export default function RoamPassport() {
   const [supabase] = useState(() => supabaseBrowser())
 
-  const [stats, setStats] = useState<PassportStats>({
-    hostedCrawls: 0,
-    joinedCrawls: 0,
-    pastCrawls: 0,
-    savedProperties: 0,
-    completedFlows: 0,
-    completedFlowStops: 0,
-    hostedFlowStops: 0,
-    completedHostedFlows: 0,
-    venueVisits: 0,
-    eventXp: 0,
-    eventCheckins: 0,
-  })
+  const [stats, setStats] =
+    useState<PassportStats>(EMPTY_STATS)
 
-  const [activeFlow, setActiveFlow] = useState<ActiveFlow | null>(null)
-  const [activeFlowCompletedStops, setActiveFlowCompletedStops] = useState(0)
+  const [passportSnapshot, setPassportSnapshot] =
+    useState<PassportSnapshot>(EMPTY_SNAPSHOT)
+
+  const [activeFlow, setActiveFlow] =
+    useState<ActiveFlow | null>(null)
+
+  const [
+    activeFlowCompletedStops,
+    setActiveFlowCompletedStops,
+  ] = useState(0)
 
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     async function loadPassport() {
-      const userId = await getCurrentUserId()
+      try {
+        const userId = await getCurrentUserId()
 
-      if (!userId) {
-        setLoading(false)
-        return
-      }
+        if (!userId) {
+          return
+        }
 
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      const [
-        { data: hosted },
-        { data: rsvps },
-        { data: properties },
-        { data: activeFlowData },
-        { data: completedFlows },
-        { data: venueVisits },
-        { data: crawlProgress },
-        { data: eventXpLedger },
-        { data: eventCheckins },
-      ] =
-        await Promise.all([
+        const [
+          publicStatsResult,
+          activeFlowResult,
+        ] = await Promise.all([
           supabase
-            .from('crawl_events')
-            .select('id')
-            .eq('creator_id', userId),
-
-          supabase
-            .from('crawl_rsvps')
+            .from('profile_public_stats')
             .select(`
-              crawl_id,
-              crawl_events (
-                id,
-                datetime
-              )
+              hosted_crawls,
+              joined_crawls,
+              past_crawls,
+              saved_properties,
+              completed_flows,
+              completed_flow_stops,
+              hosted_flow_stops,
+              completed_hosted_flows,
+              venue_visits,
+              event_xp,
+              event_checkins,
+              passport_xp,
+              passport_level,
+              passport_progress,
+              passport_progress_percent
             `)
-            .eq('user_id', userId),
-
-          supabase
-            .from('saved_properties')
-            .select('property_id')
-            .eq('user_id', userId),
+            .eq('user_id', userId)
+            .maybeSingle<ProfilePublicStatsRow>(),
 
           supabase
             .from('active_flow_sessions')
-            .select('id, title, city, venue_ids, started_at')
+            .select(
+              'id, title, city, venue_ids, started_at'
+            )
             .eq('user_id', userId)
             .eq('status', 'active')
-            .maybeSingle(),
-
-          supabase
-            .from('active_flow_sessions')
-            .select('id, venue_ids')
-            .eq('user_id', userId)
-            .eq('status', 'completed'),
-
-          supabase
-            .from('venue_visits')
-            .select('id')
-            .eq('user_id', userId),
-
-          supabase
-            .from('crawl_progress')
-            .select('crawl_id')
-            .eq('user_id', userId),
-
-          supabase
-            .from('event_xp_ledger')
-            .select('xp_amount')
-            .eq('user_id', userId),
-
-          supabase
-            .from('event_checkins')
-            .select('id')
-            .eq('user_id', userId),
+            .maybeSingle<ActiveFlow>(),
         ])
 
-      const joined = rsvps ?? []
+        if (publicStatsResult.error) {
+          console.error(
+            '[RoamPassport] Failed to load canonical Passport stats:',
+            publicStatsResult.error
+          )
+        }
 
-      const past = joined.filter((r: any) => {
-        const crawl = r.crawl_events
-        if (!crawl?.datetime) return false
-        return new Date(crawl.datetime) < today
-      })
+        if (activeFlowResult.error) {
+          console.error(
+            '[RoamPassport] Failed to load active flow:',
+            activeFlowResult.error
+          )
+        }
 
-      let completedActiveStops = 0
+        const publicStats =
+          publicStatsResult.data
 
-      if (activeFlowData?.id) {
-        const { data: activeProgress } = await supabase
-          .from('active_flow_progress')
-          .select('venue_id')
-          .eq('session_id', activeFlowData.id)
-          .eq('user_id', userId)
+        const activeFlowData =
+          activeFlowResult.data
 
-        completedActiveStops = activeProgress?.length ?? 0
+        let completedActiveStops = 0
+
+        if (activeFlowData?.id) {
+          const activeProgressResult =
+            await supabase
+              .from('active_flow_progress')
+              .select('venue_id', {
+                count: 'exact',
+                head: true,
+              })
+              .eq(
+                'session_id',
+                activeFlowData.id
+              )
+              .eq('user_id', userId)
+
+          if (activeProgressResult.error) {
+            console.error(
+              '[RoamPassport] Failed to load active flow progress:',
+              activeProgressResult.error
+            )
+          }
+
+          completedActiveStops =
+            activeProgressResult.count ?? 0
+        }
+
+        if (!isMounted) {
+          return
+        }
+
+        if (publicStats) {
+          setStats({
+            hostedCrawls: normalizeCount(
+              publicStats.hosted_crawls
+            ),
+            joinedCrawls: normalizeCount(
+              publicStats.joined_crawls
+            ),
+            pastCrawls: normalizeCount(
+              publicStats.past_crawls
+            ),
+            savedProperties: normalizeCount(
+              publicStats.saved_properties
+            ),
+            completedFlows: normalizeCount(
+              publicStats.completed_flows
+            ),
+            completedFlowStops: normalizeCount(
+              publicStats.completed_flow_stops
+            ),
+            hostedFlowStops: normalizeCount(
+              publicStats.hosted_flow_stops
+            ),
+            completedHostedFlows: normalizeCount(
+              publicStats.completed_hosted_flows
+            ),
+            venueVisits: normalizeCount(
+              publicStats.venue_visits
+            ),
+            eventXp: normalizeCount(
+              publicStats.event_xp
+            ),
+            eventCheckins: normalizeCount(
+              publicStats.event_checkins
+            ),
+          })
+
+          setPassportSnapshot({
+            xp: normalizeCount(
+              publicStats.passport_xp
+            ),
+            level: Math.max(
+              1,
+              normalizeCount(
+                publicStats.passport_level
+              )
+            ),
+            progressToNextLevel:
+              normalizeProgress(
+                publicStats.passport_progress
+              ),
+            progressPercent:
+              normalizePercent(
+                publicStats.passport_progress_percent
+              ),
+          })
+        } else {
+          setStats(EMPTY_STATS)
+          setPassportSnapshot(
+            EMPTY_SNAPSHOT
+          )
+        }
+
+        setActiveFlow(
+          activeFlowData ?? null
+        )
+
+        setActiveFlowCompletedStops(
+          completedActiveStops
+        )
+      } catch (error) {
+        console.error(
+          '[RoamPassport] Unexpected Passport load failure:',
+          error
+        )
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
       }
-
-      const completedFlowStops =
-        completedFlows?.reduce((sum, flow: any) => {
-          return sum + (Array.isArray(flow.venue_ids) ? flow.venue_ids.length : 0)
-        }, 0) ?? 0
-
-      const hostedFlowStops = crawlProgress?.length ?? 0
-
-      const eventXp =
-        eventXpLedger?.reduce((sum, row: any) => {
-          return sum + (typeof row.xp_amount === 'number' ? row.xp_amount : 0)
-        }, 0) ?? 0
-
-      const crawlIds = [
-        ...new Set(
-          (crawlProgress ?? [])
-            .map((row: any) => row.crawl_id)
-            .filter(Boolean)
-        ),
-      ]
-
-      let completedHostedFlows = 0
-
-      if (crawlIds.length > 0) {
-        const { data: crawlEvents } = await supabase
-          .from('crawl_events')
-          .select('id, venue_ids')
-          .in('id', crawlIds)
-
-        completedHostedFlows =
-          crawlEvents?.filter((crawl: any) => {
-            const requiredStops = Array.isArray(crawl.venue_ids)
-              ? crawl.venue_ids.length
-              : 0
-
-            const completedStops =
-              crawlProgress?.filter(
-                (progressRow: any) => progressRow.crawl_id === crawl.id
-              ).length ?? 0
-
-            return requiredStops > 0 && completedStops >= requiredStops
-          }).length ?? 0
-      }
-
-      setStats({
-        hostedCrawls: hosted?.length ?? 0,
-        joinedCrawls: joined.length,
-        pastCrawls: past.length,
-        savedProperties: properties?.length ?? 0,
-        completedFlows: completedFlows?.length ?? 0,
-        completedFlowStops,
-        hostedFlowStops,
-        completedHostedFlows,
-        venueVisits: venueVisits?.length ?? 0,
-        eventXp,
-        eventCheckins: eventCheckins?.length ?? 0,
-      })
-
-      setActiveFlow(activeFlowData ?? null)
-      setActiveFlowCompletedStops(completedActiveStops)
-
-      setLoading(false)
     }
 
     loadPassport()
+
+    return () => {
+      isMounted = false
+    }
   }, [supabase])
 
   const {
@@ -221,42 +288,58 @@ export default function RoamPassport() {
     level,
     progressToNextLevel,
     progressPercent,
-  } = useMemo(() => getPassportSnapshot(stats), [stats])
+  } = passportSnapshot
 
-  const activeFlowTotalStops = activeFlow?.venue_ids?.length ?? 0
+  const activeFlowTotalStops =
+    activeFlow?.venue_ids?.length ?? 0
+
   const activeFlowProgressPercent =
     activeFlowTotalStops > 0
-      ? Math.round((activeFlowCompletedStops / activeFlowTotalStops) * 100)
+      ? Math.round(
+          (activeFlowCompletedStops /
+            activeFlowTotalStops) *
+            100
+        )
       : 0
 
   const badges = [
     {
       label: 'Roaming',
-      unlocked: stats.joinedCrawls > 0 || stats.hostedCrawls > 0 || stats.eventCheckins > 0,
+      unlocked:
+        stats.joinedCrawls > 0 ||
+        stats.hostedCrawls > 0 ||
+        stats.eventCheckins > 0,
     },
     {
       label: 'Event Explorer',
-      unlocked: stats.eventCheckins > 0,
+      unlocked:
+        stats.eventCheckins > 0,
     },
     {
       label: 'Flow Creator',
-      unlocked: stats.hostedCrawls > 0,
+      unlocked:
+        stats.hostedCrawls > 0,
     },
     {
       label: 'Crawl Finisher',
-      unlocked: stats.pastCrawls > 0 || stats.completedHostedFlows > 0,
+      unlocked:
+        stats.pastCrawls > 0 ||
+        stats.completedHostedFlows > 0,
     },
     {
       label: 'Flow Finisher',
-      unlocked: stats.completedFlows > 0,
+      unlocked:
+        stats.completedFlows > 0,
     },
     {
       label: 'Guide Saver',
-      unlocked: stats.savedProperties > 0,
+      unlocked:
+        stats.savedProperties > 0,
     },
     {
       label: 'Taste Builder',
-      unlocked: stats.venueVisits > 0,
+      unlocked:
+        stats.venueVisits > 0,
     },
   ]
 
@@ -282,7 +365,8 @@ export default function RoamPassport() {
             </h2>
 
             <p className="mt-1 text-sm text-neutral-400">
-              Your movement, events, hosted crawls, saved guides, venue visits, and city progress.
+              Your movement, events, hosted crawls, saved
+              guides, venue visits, and city progress.
             </p>
           </div>
 
@@ -293,14 +377,19 @@ export default function RoamPassport() {
 
         <div>
           <div className="mb-2 flex justify-between text-xs text-neutral-500">
-            <span>{progressToNextLevel} / 250 XP</span>
+            <span>
+              {progressToNextLevel} / 250 XP
+            </span>
+
             <span>Next level</span>
           </div>
 
           <div className="h-2 overflow-hidden rounded-full bg-neutral-800">
             <div
               className="h-full rounded-full bg-white"
-              style={{ width: `${progressPercent}%` }}
+              style={{
+                width: `${progressPercent}%`,
+              }}
             />
           </div>
         </div>
@@ -314,18 +403,23 @@ export default function RoamPassport() {
             </p>
 
             <h3 className="mt-2 text-lg font-semibold text-white">
-              {activeFlow.title ?? 'Roam Flow'}
+              {activeFlow.title ??
+                'Roam Flow'}
             </h3>
 
             <p className="mt-1 text-sm text-neutral-400">
-              {activeFlow.city ?? 'City'} • {activeFlowCompletedStops} of{' '}
-              {activeFlowTotalStops} stops complete
+              {activeFlow.city ?? 'City'} •{' '}
+              {activeFlowCompletedStops} of{' '}
+              {activeFlowTotalStops} stops
+              complete
             </p>
 
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-800">
               <div
                 className="h-full rounded-full bg-indigo-500"
-                style={{ width: `${activeFlowProgressPercent}%` }}
+                style={{
+                  width: `${activeFlowProgressPercent}%`,
+                }}
               />
             </div>
 
@@ -337,15 +431,39 @@ export default function RoamPassport() {
       )}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="Hosted" value={stats.hostedCrawls} />
-        <StatCard label="Joined" value={stats.joinedCrawls} />
+        <StatCard
+          label="Hosted"
+          value={stats.hostedCrawls}
+        />
+
+        <StatCard
+          label="Joined"
+          value={stats.joinedCrawls}
+        />
+
         <StatCard
           label="Completed"
-          value={stats.pastCrawls + stats.completedFlows + stats.completedHostedFlows}
+          value={
+            stats.pastCrawls +
+            stats.completedFlows +
+            stats.completedHostedFlows
+          }
         />
-        <StatCard label="Event Check-ins" value={stats.eventCheckins} />
-        <StatCard label="Visited" value={stats.venueVisits} />
-        <StatCard label="Saved Guides" value={stats.savedProperties} />
+
+        <StatCard
+          label="Event Check-ins"
+          value={stats.eventCheckins}
+        />
+
+        <StatCard
+          label="Visited"
+          value={stats.venueVisits}
+        />
+
+        <StatCard
+          label="Saved Guides"
+          value={stats.savedProperties}
+        />
       </div>
 
       <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
@@ -357,20 +475,73 @@ export default function RoamPassport() {
           {badges.map((badge) => (
             <Badge
               key={badge.label}
-              variant={badge.unlocked ? 'default' : 'outline'}
+              variant={
+                badge.unlocked
+                  ? 'default'
+                  : 'outline'
+              }
               className={
                 badge.unlocked
                   ? ''
                   : 'border-neutral-700 text-neutral-500'
               }
             >
-              {badge.unlocked ? '✓ ' : '🔒 '}
+              {badge.unlocked
+                ? '✓ '
+                : '🔒 '}
               {badge.label}
             </Badge>
           ))}
         </div>
       </div>
     </div>
+  )
+}
+
+function normalizeCount(
+  value: number | null | undefined
+): number {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    value <= 0
+  ) {
+    return 0
+  }
+
+  return Math.floor(value)
+}
+
+function normalizeProgress(
+  value: number | null | undefined
+): number {
+  return Math.min(
+    249,
+    normalizeCount(value)
+  )
+}
+
+function normalizePercent(
+  value:
+    | number
+    | string
+    | null
+    | undefined
+): number {
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string'
+        ? Number(value)
+        : 0
+
+  if (!Number.isFinite(parsed)) {
+    return 0
+  }
+
+  return Math.min(
+    100,
+    Math.max(0, parsed)
   )
 }
 
@@ -387,6 +558,7 @@ function StatCard({
         <p className="text-2xl font-semibold leading-none text-white sm:text-3xl">
           {value}
         </p>
+
         <p className="mt-2 text-[11px] font-medium leading-tight text-neutral-500 sm:text-xs">
           {label}
         </p>

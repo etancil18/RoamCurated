@@ -29,6 +29,30 @@ type GeoLocationPayload = {
   device_timestamp: string;
 };
 
+async function refreshPublicPassportStats() {
+  try {
+    const response = await fetch('/api/passport/rebuild', {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => null);
+
+      console.error(
+        '[SponsorDetail] Failed to rebuild public Passport stats:',
+        result?.error ?? `Request failed with status ${response.status}`
+      );
+    }
+  } catch (error) {
+    console.error(
+      '[SponsorDetail] Failed to rebuild public Passport stats:',
+      error
+    );
+  }
+}
+
 function getCurrentLocationForCheckIn(): Promise<GeoLocationPayload> {
   return new Promise((resolve, reject) => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
@@ -422,6 +446,8 @@ export default function SponsorDetail({ crawl }: Props) {
         console.error('[SponsorDetail] Failed to remove stop progress:', error);
         return;
       }
+
+      await refreshPublicPassportStats();
 
       updated = checkedStops.filter((i) => i !== index);
     } else {

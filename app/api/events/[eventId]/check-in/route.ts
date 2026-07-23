@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 
 type RouteContext = {
   params: Promise<{
@@ -17,6 +18,17 @@ type EventCheckInBody = {
 const BASE_CHECK_IN_RADIUS_METERS = 125
 const FLEXIBLE_RADIUS_METERS = 75
 const MAX_REASONABLE_ACCURACY_METERS = 250
+
+async function refreshPublicPassportStats(userId: string) {
+  try {
+    await rebuildPublicPassportStats(userId)
+  } catch (error) {
+    console.error(
+      '[events/check-in] Failed to rebuild public Passport stats:',
+      error
+    )
+  }
+}
 
 export async function POST(request: Request, context: RouteContext) {
   try {
@@ -167,7 +179,10 @@ export async function POST(request: Request, context: RouteContext) {
     if (existingCheckinError) {
       console.error('Existing check-in lookup error:', existingCheckinError)
       return NextResponse.json(
-        { error: 'Failed to verify check-in status', details: existingCheckinError.message },
+        {
+          error: 'Failed to verify check-in status',
+          details: existingCheckinError.message,
+        },
         { status: 500 }
       )
     }
@@ -199,7 +214,8 @@ export async function POST(request: Request, context: RouteContext) {
         geo_verified: true,
         check_in_source: 'geo',
         device_timestamp:
-          typeof deviceTimestamp === 'string' && deviceTimestamp.trim().length > 0
+          typeof deviceTimestamp === 'string' &&
+          deviceTimestamp.trim().length > 0
             ? deviceTimestamp
             : null,
       } as any)
@@ -235,6 +251,8 @@ export async function POST(request: Request, context: RouteContext) {
     if (xpError) {
       console.error('Event XP ledger insert error:', xpError)
 
+      await refreshPublicPassportStats(user.id)
+
       if (xpError.code === '23505') {
         return NextResponse.json({
           checkedIn: true,
@@ -254,6 +272,8 @@ export async function POST(request: Request, context: RouteContext) {
         { status: 207 }
       )
     }
+
+    await refreshPublicPassportStats(user.id)
 
     return NextResponse.json({
       checkedIn: true,

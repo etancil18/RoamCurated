@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
+import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 
 type CompleteActiveFlowBody = {
   session_id?: string
@@ -21,6 +22,17 @@ function getBadgeUnlocked(source: string | null | undefined) {
   }
 
   return 'Flow Finisher'
+}
+
+async function refreshPublicPassportStats(userId: string) {
+  try {
+    await rebuildPublicPassportStats(userId)
+  } catch (error) {
+    console.error(
+      '[active-flow/complete] Failed to rebuild public Passport stats:',
+      error
+    )
+  }
 }
 
 export async function POST(req: Request) {
@@ -163,6 +175,8 @@ export async function POST(req: Request) {
         { status: 500 }
       )
     }
+
+    await refreshPublicPassportStats(user.id)
 
     return NextResponse.json(
       {

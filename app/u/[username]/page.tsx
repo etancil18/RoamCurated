@@ -16,7 +16,6 @@ import {
   getPublicCreatorProfile,
   PublicCreatorProfileLoadError,
 } from '@/lib/creator/getPublicCreatorProfile'
-import { getPassportSnapshot } from '@/lib/passport/score'
 import { createServerClient } from '@/lib/supabase/server'
 
 import type {
@@ -49,6 +48,25 @@ type ProfileRow = {
   show_social_groups: boolean | null
   creator_mode_enabled: boolean | null
   creator_headline: string | null
+}
+
+type ProfilePublicStatsRow = {
+  hosted_crawls: number
+  joined_crawls: number
+  past_crawls: number
+  saved_properties: number
+  completed_flows: number
+  completed_flow_stops: number
+  hosted_flow_stops: number
+  completed_hosted_flows: number
+  venue_visits: number
+  event_xp: number
+  event_checkins: number
+  passport_xp: number
+  passport_level: number
+  passport_progress: number
+  passport_progress_percent: number
+  updated_at: string
 }
 
 type PublicFlowSnapshotRow = {
@@ -165,22 +183,12 @@ export default async function PublicUserProfilePage({
           error: null,
         })
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
   const [
-    { count: followersCount },
-    { count: followingCount },
-    { data: existingFollow },
-    { data: hosted },
-    { data: rsvps },
-    { data: savedProperties },
-    { data: completedFlows },
-    { data: venueVisits },
-    { data: crawlProgress },
-    { data: xpRows },
-    { count: checkinsCount },
-    { count: socialGroupsCount },
+    followersResult,
+    followingResult,
+    existingFollowResult,
+    publicStatsResult,
+    socialGroupsResult,
     snapshotResult,
     creatorBundle,
     publicCreatorCollectionCountResult,
@@ -213,79 +221,36 @@ export default async function PublicUserProfilePage({
           .maybeSingle()
       : Promise.resolve({
           data: null,
+          error: null,
         }),
 
     supabase
-      .from('crawl_events')
-      .select('id')
-      .eq('creator_id', profile.id),
-
-    supabase
-      .from('crawl_rsvps')
+      .from('profile_public_stats')
       .select(`
-        crawl_id,
-        crawl_events (
-          id,
-          datetime
-        )
+        hosted_crawls,
+        joined_crawls,
+        past_crawls,
+        saved_properties,
+        completed_flows,
+        completed_flow_stops,
+        hosted_flow_stops,
+        completed_hosted_flows,
+        venue_visits,
+        event_xp,
+        event_checkins,
+        passport_xp,
+        passport_level,
+        passport_progress,
+        passport_progress_percent,
+        updated_at
       `)
-      .eq('user_id', profile.id),
-
-    profile.show_saved_guides === false
-      ? Promise.resolve({
-          data: [],
-        })
-      : supabase
-          .from('saved_properties')
-          .select('property_id')
-          .eq('user_id', profile.id),
-
-    profile.show_completed_flows === false
-      ? Promise.resolve({
-          data: [],
-        })
-      : supabase
-          .from(
-            'active_flow_sessions'
-          )
-          .select('id, venue_ids')
-          .eq('user_id', profile.id)
-          .eq('status', 'completed'),
-
-    supabase
-      .from('venue_visits')
-      .select('id')
-      .eq('user_id', profile.id),
-
-    supabase
-      .from('crawl_progress')
-      .select('crawl_id')
-      .eq('user_id', profile.id),
-
-    profile.show_xp === false
-      ? Promise.resolve({
-          data: [],
-        })
-      : supabase
-          .from('event_xp_ledger')
-          .select('xp_amount')
-          .eq('user_id', profile.id),
-
-    profile.show_checkins === false
-      ? Promise.resolve({
-          count: 0,
-        })
-      : supabase
-          .from('event_checkins')
-          .select('id', {
-            count: 'exact',
-            head: true,
-          })
-          .eq('user_id', profile.id),
+      .eq('user_id', profile.id)
+      .maybeSingle<ProfilePublicStatsRow>(),
 
     profile.show_social_groups === false
       ? Promise.resolve({
           count: 0,
+          error: null,
         })
       : supabase
           .from(
@@ -325,6 +290,41 @@ export default async function PublicUserProfilePage({
     publicCreatorCollectionCountPromise,
   ])
 
+  if (followersResult.error) {
+    console.error(
+      '[public profile] Failed to load follower count:',
+      followersResult.error
+    )
+  }
+
+  if (followingResult.error) {
+    console.error(
+      '[public profile] Failed to load following count:',
+      followingResult.error
+    )
+  }
+
+  if (existingFollowResult.error) {
+    console.error(
+      '[public profile] Failed to load follow status:',
+      existingFollowResult.error
+    )
+  }
+
+  if (publicStatsResult.error) {
+    console.error(
+      '[public profile] Failed to load canonical Passport stats:',
+      publicStatsResult.error
+    )
+  }
+
+  if (socialGroupsResult.error) {
+    console.error(
+      '[public profile] Failed to load social group count:',
+      socialGroupsResult.error
+    )
+  }
+
   if (snapshotResult.error) {
     console.error(
       '[public profile] Failed to load public flow snapshots:',
@@ -341,145 +341,40 @@ export default async function PublicUserProfilePage({
     )
   }
 
+  const followersCount =
+    followersResult.count ?? 0
+
+  const followingCount =
+    followingResult.count ?? 0
+
+  const existingFollow =
+    existingFollowResult.data
+
+  const publicStats =
+    publicStatsResult.data
+
+  const socialGroupsCount =
+    socialGroupsResult.count ?? 0
+
+  const passportLevel =
+    publicStats?.passport_level ?? 1
+
+  const completedFlowsCount =
+    publicStats?.completed_flows ?? 0
+
+  const venueVisitsCount =
+    publicStats?.venue_visits ?? 0
+
+  const eventCheckinsCount =
+    publicStats?.event_checkins ?? 0
+
+  const savedPropertiesCount =
+    publicStats?.saved_properties ?? 0
+
   const snapshots =
     normalizePublicSnapshots(
       snapshotResult.data
     )
-
-  const joined = rsvps ?? []
-
-  const pastCrawls = joined.filter(
-    (r: any) => {
-      const crawl = r.crawl_events
-
-      if (!crawl?.datetime) {
-        return false
-      }
-
-      return (
-        new Date(crawl.datetime) <
-        today
-      )
-    }
-  )
-
-  const completedFlowStops =
-    completedFlows?.reduce(
-      (
-        sum: number,
-        flow: any
-      ) => {
-        return (
-          sum +
-          (Array.isArray(
-            flow.venue_ids
-          )
-            ? flow.venue_ids.length
-            : 0)
-        )
-      },
-      0
-    ) ?? 0
-
-  const hostedFlowStops =
-    crawlProgress?.length ?? 0
-
-  const eventXp =
-    xpRows?.reduce(
-      (
-        sum: number,
-        row: any
-      ) => {
-        return (
-          sum +
-          (typeof row.xp_amount ===
-          'number'
-            ? row.xp_amount
-            : 0)
-        )
-      },
-      0
-    ) ?? 0
-
-  const crawlIds = [
-    ...new Set(
-      (crawlProgress ?? [])
-        .map(
-          (row: any) =>
-            row.crawl_id
-        )
-        .filter(Boolean)
-    ),
-  ]
-
-  let completedHostedFlows = 0
-
-  if (crawlIds.length > 0) {
-    const {
-      data: crawlEvents,
-    } = await supabase
-      .from('crawl_events')
-      .select('id, venue_ids')
-      .in('id', crawlIds)
-
-    completedHostedFlows =
-      crawlEvents?.filter(
-        (crawl: any) => {
-          const requiredStops =
-            Array.isArray(
-              crawl.venue_ids
-            )
-              ? crawl.venue_ids.length
-              : 0
-
-          const completedStops =
-            crawlProgress?.filter(
-              (
-                progressRow: any
-              ) =>
-                progressRow.crawl_id ===
-                crawl.id
-            ).length ?? 0
-
-          return (
-            requiredStops > 0 &&
-            completedStops >=
-              requiredStops
-          )
-        }
-      ).length ?? 0
-  }
-
-  const {
-    level: passportLevel,
-  } = getPassportSnapshot({
-    hostedCrawls:
-      hosted?.length ?? 0,
-
-    joinedCrawls:
-      joined.length,
-
-    pastCrawls:
-      pastCrawls.length,
-
-    savedProperties:
-      savedProperties?.length ?? 0,
-
-    completedFlows:
-      completedFlows?.length ?? 0,
-
-    completedFlowStops,
-    hostedFlowStops,
-    completedHostedFlows,
-
-    venueVisits:
-      venueVisits?.length ?? 0,
-
-    eventXp,
-
-    eventCheckins:
-      checkinsCount ?? 0,
-  })
 
   const creatorUsername =
     creatorModeRequested &&
@@ -501,10 +396,10 @@ export default async function PublicUserProfilePage({
             .primary_city,
 
         verifiedVisitCount:
-          venueVisits?.length ?? 0,
+          venueVisitsCount,
 
         completedFlowCount:
-          completedFlows?.length ?? 0,
+          completedFlowsCount,
 
         publicSnapshotCount:
           snapshots.length,
@@ -574,10 +469,10 @@ export default async function PublicUserProfilePage({
                 creatorBundle.socialLinks
               }
               followersCount={
-                followersCount ?? 0
+                followersCount
               }
               followingCount={
-                followingCount ?? 0
+                followingCount
               }
               passportLevel={
                 profile.show_xp !== false
@@ -597,7 +492,7 @@ export default async function PublicUserProfilePage({
                     existingFollow
                   )}
                   initialFollowersCount={
-                    followersCount ?? 0
+                    followersCount
                   }
                   disabled={!user}
                 />
@@ -652,7 +547,7 @@ export default async function PublicUserProfilePage({
                     existingFollow
                   )}
                   initialFollowersCount={
-                    followersCount ?? 0
+                    followersCount
                   }
                   disabled={!user}
                 />
@@ -666,14 +561,14 @@ export default async function PublicUserProfilePage({
             <Stat
               label="Followers"
               value={
-                followersCount ?? 0
+                followersCount
               }
             />
 
             <Stat
               label="Following"
               value={
-                followingCount ?? 0
+                followingCount
               }
             />
 
@@ -689,8 +584,7 @@ export default async function PublicUserProfilePage({
               <Stat
                 label="Flows"
                 value={
-                  completedFlows?.length ??
-                  0
+                  completedFlowsCount
                 }
               />
             ) : null}
@@ -700,7 +594,7 @@ export default async function PublicUserProfilePage({
               <Stat
                 label="Event Check-ins"
                 value={
-                  checkinsCount ?? 0
+                  eventCheckinsCount
                 }
               />
             ) : null}
@@ -710,8 +604,7 @@ export default async function PublicUserProfilePage({
               <Stat
                 label="Saved Guides"
                 value={
-                  savedProperties?.length ??
-                  0
+                  savedPropertiesCount
                 }
               />
             ) : null}
@@ -721,7 +614,7 @@ export default async function PublicUserProfilePage({
               <Stat
                 label="Social Groups"
                 value={
-                  socialGroupsCount ?? 0
+                  socialGroupsCount
                 }
               />
             ) : null}
