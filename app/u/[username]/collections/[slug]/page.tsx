@@ -10,6 +10,10 @@ import {
   createServerClient,
 } from '@/lib/supabase/server'
 
+import {
+  getCityLabel,
+} from '@/lib/cities/normalizeCity'
+
 export const dynamic =
   'force-dynamic'
 
@@ -57,6 +61,27 @@ type CreatorCollectionRow = {
   sort_order: number
   created_at: string
   updated_at: string
+}
+
+type CreatorCollectionVenueRow = {
+  id: string
+  collection_id: string
+  venue_id: string
+  sort_order: number
+  created_at: string
+}
+
+type VenueRow = {
+  id: string
+  name: string
+  slug: string | null
+  city: string | null
+  category: string | null
+  description: string | null
+  cover_image_url:
+    | string
+    | null
+  created_at: string | null
 }
 
 type PublicCollectionItemType =
@@ -424,7 +449,9 @@ function CollectionHero({
 
             {collection.city ? (
               <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-200 backdrop-blur-md">
-                {collection.city}
+                {getCityLabel(
+                collection.city
+                ) ?? collection.city}
               </span>
             ) : null}
           </div>
@@ -895,7 +922,10 @@ async function loadPublicCollection({
         'user_id',
         profile.id
       )
-      .eq('slug', slug)
+      .eq(
+        'slug',
+        slug
+      )
       .eq(
         'visibility',
         'public'
@@ -917,7 +947,8 @@ async function loadPublicCollection({
         collectionResult.data,
       expectedUserId:
         profile.id,
-      expectedSlug: slug,
+      expectedSlug:
+        slug,
     })
 
   if (!collection) {
@@ -932,27 +963,41 @@ async function loadPublicCollection({
     }
   }
 
-  const itemsResult =
+  const collectionVenuesResult =
     await supabase
       .from(
-        'creator_collection_items'
+        'creator_collection_venues'
       )
-      .select('*')
+      .select(`
+        id,
+        collection_id,
+        venue_id,
+        sort_order,
+        created_at
+      `)
       .eq(
         'collection_id',
         collection.id
       )
-      .order('sort_order', {
-        ascending: true,
-      })
-      .order('created_at', {
-        ascending: true,
-      })
+      .order(
+        'sort_order',
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        'created_at',
+        {
+          ascending: true,
+        }
+      )
 
-  if (itemsResult.error) {
+  if (
+    collectionVenuesResult.error
+  ) {
     console.error(
-      '[public creator collection] Collection-item query failed:',
-      itemsResult.error
+      '[public creator collection] Collection-venue query failed:',
+      collectionVenuesResult.error
     )
 
     return {
@@ -962,16 +1007,91 @@ async function loadPublicCollection({
     }
   }
 
+  const collectionVenues =
+    normalizeCollectionVenueRows({
+      value:
+        collectionVenuesResult.data,
+      collectionId:
+        collection.id,
+    })
+
+  if (
+    collectionVenues.length === 0
+  ) {
+    return {
+      profile,
+      collection,
+      items: [],
+    }
+  }
+
+  const venueIds = [
+    ...new Set(
+      collectionVenues.map(
+        (relationship) =>
+          relationship.venue_id
+      )
+    ),
+  ]
+
+  const venuesResult =
+    await supabase
+      .from('venues')
+      .select(`
+        id,
+        name,
+        slug,
+        city,
+        category:tier,
+        description,
+        cover_image_url:cover
+      `)
+      .in(
+        'id',
+        venueIds
+      )
+
+  if (venuesResult.error) {
+    const {
+      code,
+      message,
+      details,
+      hint,
+    } = venuesResult.error
+
+    console.error(
+      [
+        '[public creator collection] Venue query failed',
+        `collectionId: ${collection.id}`,
+        `code: ${code ?? 'unknown'}`,
+        `message: ${message ?? 'unknown'}`,
+        `details: ${details ?? 'none'}`,
+        `hint: ${hint ?? 'none'}`,
+      ].join('\n')
+    )
+
+    return {
+      profile,
+      collection,
+      items: [],
+    }
+  }
+
+  const venues =
+    normalizeVenueRows(
+      venuesResult.data
+    )
+
   return {
     profile,
     collection,
 
     items:
-      normalizeCollectionItems({
-        value:
-          itemsResult.data,
-        collectionId:
-          collection.id,
+      buildPublicVenueItems({
+        collection,
+        relationships:
+          collectionVenues,
+        venues,
       }),
   }
 }
@@ -1138,190 +1258,301 @@ function normalizeCollectionRow({
   }
 }
 
-function normalizeCollectionItems({
+function normalizeCollectionVenueRows({
   value,
   collectionId,
 }: {
   value: unknown
   collectionId: string
-}): PublicCollectionItem[] {
+}): CreatorCollectionVenueRow[] {
   if (!Array.isArray(value)) {
     return []
   }
 
-  const items =
+  const rows =
     value
-      .map((row) =>
-        normalizeCollectionItem({
-          value: row,
-          collectionId,
-        })
+      .map(
+        (
+          row
+        ): CreatorCollectionVenueRow | null => {
+          if (!isRecord(row)) {
+            return null
+          }
+
+          const id =
+            normalizeIdentifier(
+              row.id
+            )
+
+          const rowCollectionId =
+            normalizeIdentifier(
+              row.collection_id
+            )
+
+          const venueId =
+            normalizeIdentifier(
+              row.venue_id
+            )
+
+          const createdAt =
+            normalizeIsoDate(
+              row.created_at
+            )
+
+          if (
+            !id ||
+            rowCollectionId !==
+              collectionId ||
+            !venueId ||
+            !createdAt
+          ) {
+            return null
+          }
+
+          return {
+            id,
+
+            collection_id:
+              rowCollectionId,
+
+            venue_id:
+              venueId,
+
+            sort_order:
+              normalizeSortOrder(
+                row.sort_order
+              ),
+
+            created_at:
+              createdAt,
+          }
+        }
       )
       .filter(
         (
-          item
-        ): item is PublicCollectionItem =>
-          item !== null
+          row
+        ): row is CreatorCollectionVenueRow =>
+          row !== null
       )
 
   const byId =
     new Map<
       string,
-      PublicCollectionItem
+      CreatorCollectionVenueRow
     >()
 
-  for (const item of items) {
-    if (!byId.has(item.id)) {
-      byId.set(item.id, item)
+  for (const row of rows) {
+    if (!byId.has(row.id)) {
+      byId.set(row.id, row)
     }
   }
 
   return [
     ...byId.values(),
-  ].sort(compareCollectionItems)
+  ].sort(
+    compareCollectionVenueRows
+  )
 }
 
-function normalizeCollectionItem({
-  value,
-  collectionId,
-}: {
+function normalizeVenueRows(
   value: unknown
-  collectionId: string
-}): PublicCollectionItem | null {
-  if (!isRecord(value)) {
-    return null
+): VenueRow[] {
+  if (!Array.isArray(value)) {
+    return []
   }
 
-  const id =
-    normalizeIdentifier(
-      value.id
+  const byId =
+    new Map<
+      string,
+      VenueRow
+    >()
+
+  for (const row of value) {
+    if (!isRecord(row)) {
+      continue
+    }
+
+    const id =
+      normalizeIdentifier(
+        row.id
+      )
+
+    const name =
+      normalizeRequiredText(
+        row.name,
+        240
+      )
+
+    if (!id || !name) {
+      continue
+    }
+
+    byId.set(id, {
+      id,
+      name,
+
+      slug:
+        normalizeOptionalText(
+          row.slug,
+          200
+        ),
+
+      city:
+        normalizeOptionalText(
+          row.city,
+          160
+        ),
+
+      category:
+        normalizeOptionalText(
+          row.category,
+          160
+        ),
+
+      description:
+        normalizeOptionalText(
+          row.description,
+          1_000
+        ),
+
+      cover_image_url:
+        normalizePublicUrl(
+          row.cover_image_url
+        ),
+
+      created_at:
+        normalizeIsoDate(
+          row.created_at
+        ),
+    })
+  }
+
+  return [
+    ...byId.values(),
+  ]
+}
+
+function buildPublicVenueItems({
+  collection,
+  relationships,
+  venues,
+}: {
+  collection:
+    CreatorCollectionRow
+  relationships:
+    CreatorCollectionVenueRow[]
+  venues: VenueRow[]
+}): PublicCollectionItem[] {
+  const venueById =
+    new Map(
+      venues.map(
+        (venue) => [
+          venue.id,
+          venue,
+        ]
+      )
     )
 
-  const rowCollectionId =
-    normalizeIdentifier(
-      value.collection_id
-    )
+  return relationships
+    .map(
+      (
+        relationship
+      ): PublicCollectionItem | null => {
+        const venue =
+          venueById.get(
+            relationship.venue_id
+          )
 
-  const itemType =
-    normalizeItemType(
-      value.item_type
-    )
+        if (!venue) {
+          return null
+        }
 
-  const itemId =
-    normalizeIdentifier(
-      value.item_id
-    )
+        return {
+          id:
+            relationship.id,
 
-  const createdAt =
-    normalizeIsoDate(
-      value.created_at
+          collection_id:
+            collection.id,
+
+          item_type:
+            'venue',
+
+          item_id:
+            venue.id,
+
+          title:
+            venue.name,
+
+          subtitle:
+            venue.category,
+
+          description:
+            venue.description,
+
+          image_url:
+            venue.cover_image_url,
+
+          href:
+            buildVenueProfileHref(
+              venue
+            ),
+
+          city:
+            venue.city,
+
+          sort_order:
+            relationship.sort_order,
+
+          created_at:
+            relationship.created_at,
+
+          updated_at:
+            null,
+        }
+      }
+    )
+    .filter(
+      (
+        item
+      ): item is PublicCollectionItem =>
+        item !== null
+    )
+    .sort(compareCollectionItems)
+}
+
+function compareCollectionVenueRows(
+  first:
+    CreatorCollectionVenueRow,
+  second:
+    CreatorCollectionVenueRow
+): number {
+  if (
+    first.sort_order !==
+    second.sort_order
+  ) {
+    return (
+      first.sort_order -
+      second.sort_order
+    )
+  }
+
+  const createdComparison =
+    Date.parse(
+      first.created_at
+    ) -
+    Date.parse(
+      second.created_at
     )
 
   if (
-    !id ||
-    rowCollectionId !==
-      collectionId ||
-    !itemType ||
-    !createdAt
+    createdComparison !== 0
   ) {
-    return null
+    return createdComparison
   }
 
-  const title =
-    normalizeRequiredText(
-      value.title,
-      240
-    ) ??
-    normalizeRequiredText(
-      value.display_title,
-      240
-    ) ??
-    buildFallbackItemTitle({
-      itemType,
-      itemId,
-    })
-
-  const imageUrl =
-    normalizePublicUrl(
-      value.image_url
-    ) ??
-    normalizePublicUrl(
-      value.cover_image_url
-    ) ??
-    normalizePublicUrl(
-      value.thumbnail_url
-    )
-
-  const href =
-    normalizeSafeHref(
-      value.href
-    ) ??
-    normalizeSafeHref(
-      value.public_url
-    )
-
-  return {
-    id,
-
-    collection_id:
-      rowCollectionId,
-
-    item_type:
-      itemType,
-
-    item_id:
-      itemId,
-
-    title,
-
-    subtitle:
-      normalizeOptionalText(
-        value.subtitle,
-        240
-      ) ??
-      normalizeOptionalText(
-        value.category,
-        160
-      ),
-
-    description:
-      normalizeOptionalText(
-        value.description,
-        1_000
-      ) ??
-      normalizeOptionalText(
-        value.summary,
-        1_000
-      ),
-
-    image_url:
-      imageUrl,
-
-    href,
-
-    city:
-      normalizeOptionalText(
-        value.city,
-        160
-      ) ??
-      normalizeOptionalText(
-        value.location,
-        160
-      ),
-
-    sort_order:
-      normalizeSortOrder(
-        value.sort_order
-      ),
-
-    created_at:
-      createdAt,
-
-    updated_at:
-      normalizeIsoDate(
-        value.updated_at
-      ),
-  }
+  return first.id.localeCompare(
+    second.id
+  )
 }
 
 function compareCollectionItems(
@@ -1360,24 +1591,20 @@ function compareCollectionItems(
 }
 
 /* =========================================================
- * Item presentation
+ * Venue presentation
  * ======================================================= */
 
-function normalizeItemType(
-  value: unknown
-): PublicCollectionItemType | null {
-  if (
-    value === 'venue' ||
-    value === 'property' ||
-    value === 'flow' ||
-    value === 'snapshot' ||
-    value === 'custom'
-  ) {
-    return value
-  }
-
-  return null
+function buildVenueProfileHref(
+  venue: VenueRow
+): string {
+  return `/venue-profile/${encodeURIComponent(
+    venue.id
+  )}`
 }
+
+/* =========================================================
+ * Item presentation
+ * ======================================================= */
 
 function getItemTypeLabel(
   itemType:
@@ -1421,26 +1648,6 @@ function getItemTypeEmoji(
     case 'custom':
       return '✨'
   }
-}
-
-function buildFallbackItemTitle({
-  itemType,
-  itemId,
-}: {
-  itemType:
-    PublicCollectionItemType
-  itemId: string | null
-}): string {
-  const label =
-    getItemTypeLabel(
-      itemType
-    )
-
-  if (!itemId) {
-    return label
-  }
-
-  return `${label} recommendation`
 }
 
 /* =========================================================
@@ -1655,19 +1862,6 @@ function normalizePublicUrl(
   } catch {
     return null
   }
-}
-
-function normalizeSafeHref(
-  value: unknown
-): string | null {
-  return (
-    normalizeInternalHref(
-      value
-    ) ??
-    normalizeExternalHref(
-      value
-    )
-  )
 }
 
 function normalizeInternalHref(

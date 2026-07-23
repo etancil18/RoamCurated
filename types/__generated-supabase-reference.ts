@@ -444,6 +444,52 @@ export type Database = {
           },
         ]
       }
+      creator_collection_venues: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          sort_order: number
+          venue_id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          venue_id: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_collection_venues_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "creator_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_collection_venues_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "creator_collection_venues_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_collections: {
         Row: {
           category: string | null

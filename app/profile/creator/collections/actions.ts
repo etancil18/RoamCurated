@@ -5,6 +5,11 @@ import { z } from 'zod'
 
 import { createServerClient } from '@/lib/supabase/server'
 
+import {
+  isSupportedCityKey,
+  normalizeCityKey,
+} from '@/lib/cities/normalizeCity'
+
 /* =========================================================
  * Limits
  * ======================================================= */
@@ -18,6 +23,13 @@ const COLLECTION_LIMITS = {
   coverImageUrl: 2_048,
   maximumCollectionsPerCreator: 100,
   maximumReorderBatch: 100,
+
+  maximumVenueSearchResults: 20,
+  minimumVenueSearchLength: 2,
+  maximumVenueSelectionBatch: 25,
+  maximumVenuesPerCollection: 200,
+  maximumVenueReorderBatch: 200,
+  maximumVenueSearchLength: 120,
 } as const
 
 const MAXIMUM_SLUG_ATTEMPTS = 25
@@ -37,7 +49,13 @@ export type CollectionActionFieldErrors = Partial<
     | 'visibility'
     | 'featured'
     | 'sort_order'
-    | 'collectionIds',
+    | 'collectionIds'
+    | 'venueId'
+    | 'venueIds'
+    | 'collectionVenueId'
+    | 'collectionVenueIds'
+    | 'query'
+    | 'limit',
     string[]
   >
 >
@@ -108,6 +126,79 @@ export type SetCreatorCollectionFeaturedResult =
   }>
 
 /* =========================================================
+ * Venue-layer public contracts
+ * ======================================================= */
+
+export type CreatorCollectionVenueCandidate = {
+  id: string
+  item_type: 'venue'
+  title: string
+  subtitle: string | null
+  description: string | null
+  image_url: string | null
+  city: string | null
+  href: string
+  search_terms: string[]
+  created_at: string | null
+}
+
+export type SearchCreatorCollectionVenuesResult =
+  CollectionActionResult<{
+    candidates:
+      CreatorCollectionVenueCandidate[]
+  }>
+
+export type AddCreatorCollectionVenuesResult =
+  CollectionActionResult<{
+    collectionId: string
+    addedVenueIds: string[]
+    existingVenueIds: string[]
+    rejectedVenueIds: string[]
+    updatedAt: string
+  }>
+
+export type RemoveCreatorCollectionVenueResult =
+  CollectionActionResult<{
+    collectionId: string
+    collectionVenueId: string
+    venueId: string
+    updatedAt: string
+  }>
+
+export type ReorderCreatorCollectionVenuesResult =
+  CollectionActionResult<{
+    collectionId: string
+    collectionVenueIds: string[]
+    updatedAt: string
+  }>
+
+/**
+ * Compatibility result for CollectionItemPicker.tsx.
+ */
+export type AddCreatorCollectionItemsResult =
+  | {
+      success: true
+      addedItemIds?: string[]
+    }
+  | {
+      success: false
+      error: string
+      rejectedItemIds?: string[]
+    }
+
+/**
+ * Compatibility result for CollectionItemList.tsx.
+ */
+export type CreatorCollectionItemMutationResult =
+  | {
+      success: true
+    }
+  | {
+      success: false
+      error: string
+    }
+
+/* =========================================================
  * Public input contracts
  * ======================================================= */
 
@@ -153,6 +244,65 @@ export type SetCreatorCollectionFeaturedInput = {
 }
 
 /* =========================================================
+ * Venue-layer public inputs
+ * ======================================================= */
+
+export type SearchCreatorCollectionVenuesInput = {
+  collectionId: string
+  query: string
+}
+
+export type AddCreatorCollectionVenuesInput = {
+  collectionId: string
+  venueIds: string[]
+}
+
+export type RemoveCreatorCollectionVenueInput = {
+  collectionId: string
+  collectionVenueId: string
+}
+
+export type ReorderCreatorCollectionVenuesInput = {
+  collectionId: string
+  collectionVenueIds: string[]
+}
+
+/**
+ * Input contract expected by CollectionItemPicker.tsx.
+ *
+ * The focused venue layer rejects every itemType other than
+ * `venue`.
+ */
+export type AddCreatorCollectionItemsInput = {
+  collectionId: string
+  items: Array<{
+    itemType:
+      | 'venue'
+      | 'property'
+      | 'flow'
+      | 'snapshot'
+      | 'custom'
+    itemId: string
+  }>
+}
+
+/**
+ * Input contract expected by CollectionItemList.tsx.
+ */
+export type RemoveCreatorCollectionItemInput = {
+  collectionId: string
+  collectionItemId: string
+}
+
+/**
+ * Input contract expected by CollectionItemList.tsx.
+ */
+export type ReorderCreatorCollectionItemsInput = {
+  collectionId: string
+  collectionItemIds: string[]
+}
+
+/* =========================================================
  * Validation schemas
  * ======================================================= */
 
@@ -160,6 +310,16 @@ const collectionIdSchema = z
   .string()
   .trim()
   .uuid('Collection ID is invalid.')
+
+const venueIdSchema = z
+  .string()
+  .trim()
+  .uuid('Venue ID is invalid.')
+
+const collectionVenueIdSchema = z
+  .string()
+  .trim()
+  .uuid('Collection venue ID is invalid.')
 
 const nullableTextSchema = (
   maximumLength: number,
@@ -203,7 +363,8 @@ const coverImageUrlSchema = z
       return
     }
 
-    const validation = validatePublicImageUrl(value)
+    const validation =
+      validatePublicImageUrl(value)
 
     if (!validation.valid) {
       context.addIssue({
@@ -217,7 +378,8 @@ const coverImageUrlSchema = z
       return null
     }
 
-    const validation = validatePublicImageUrl(value)
+    const validation =
+      validatePublicImageUrl(value)
 
     return validation.valid
       ? validation.normalizedUrl
@@ -366,6 +528,169 @@ const setCreatorCollectionFeaturedSchema = z
   .strict()
 
 /* =========================================================
+ * Venue-layer validation schemas
+ * ======================================================= */
+
+const venueSearchQuerySchema = z.preprocess(
+  normalizeRequiredInput,
+  z
+    .string()
+    .max(
+      COLLECTION_LIMITS.maximumVenueSearchLength,
+      `Venue search must be ${COLLECTION_LIMITS.maximumVenueSearchLength} characters or fewer.`
+    )
+)
+
+
+const searchCreatorCollectionVenuesSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    query:
+      venueSearchQuerySchema,
+  })
+  .strict()
+
+const addCreatorCollectionVenuesSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    venueIds: z
+      .array(venueIdSchema)
+      .min(
+        1,
+        'Select at least one venue.'
+      )
+      .max(
+        COLLECTION_LIMITS.maximumVenueSelectionBatch,
+        `You can add at most ${COLLECTION_LIMITS.maximumVenueSelectionBatch} venues at once.`
+      ),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const uniqueVenueIds =
+      new Set(value.venueIds)
+
+    if (
+      uniqueVenueIds.size !==
+      value.venueIds.length
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['venueIds'],
+        message:
+          'The venue selection contains duplicate IDs.',
+      })
+    }
+  })
+
+const removeCreatorCollectionVenueSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    collectionVenueId:
+      collectionVenueIdSchema,
+  })
+  .strict()
+
+const reorderCreatorCollectionVenuesSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    collectionVenueIds: z
+      .array(
+        collectionVenueIdSchema
+      )
+      .max(
+        COLLECTION_LIMITS.maximumVenueReorderBatch,
+        `You can reorder at most ${COLLECTION_LIMITS.maximumVenueReorderBatch} venues at once.`
+      ),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const uniqueIds = new Set(
+      value.collectionVenueIds
+    )
+
+    if (
+      uniqueIds.size !==
+      value.collectionVenueIds.length
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [
+          'collectionVenueIds',
+        ],
+        message:
+          'Venue order contains duplicate IDs.',
+      })
+    }
+  })
+
+const addCreatorCollectionItemsSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    items: z
+      .array(
+        z
+          .object({
+            itemType: z.enum([
+              'venue',
+              'property',
+              'flow',
+              'snapshot',
+              'custom',
+            ]),
+
+            itemId:
+              venueIdSchema,
+          })
+          .strict()
+      )
+      .min(
+        1,
+        'Select at least one venue.'
+      )
+      .max(
+        COLLECTION_LIMITS.maximumVenueSelectionBatch,
+        `You can add at most ${COLLECTION_LIMITS.maximumVenueSelectionBatch} venues at once.`
+      ),
+  })
+  .strict()
+
+const removeCreatorCollectionItemSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    collectionItemId:
+      collectionVenueIdSchema,
+  })
+  .strict()
+
+const reorderCreatorCollectionItemsSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    collectionItemIds: z
+      .array(
+        collectionVenueIdSchema
+      )
+      .max(
+        COLLECTION_LIMITS.maximumVenueReorderBatch,
+        `You can reorder at most ${COLLECTION_LIMITS.maximumVenueReorderBatch} venues at once.`
+      ),
+  })
+  .strict()
+
+/* =========================================================
  * Create collection
  * ======================================================= */
 
@@ -381,6 +706,27 @@ export async function createCreatorCollectionAction(
     return schemaFailure(parsed.error)
   }
 
+    const city =
+    normalizeCollectionCity(
+      parsed.data.city
+    )
+
+  if (
+    city &&
+    !isSupportedCityKey(city)
+  ) {
+    return {
+      success: false,
+      error:
+        'Select a supported city.',
+      fieldErrors: {
+        city: [
+          'Select a supported city.',
+        ],
+      },
+    }
+  }
+  
   const supabase =
     await createServerClient()
 
@@ -422,7 +768,8 @@ export async function createCreatorCollectionAction(
   }
 
   if (
-    (collectionCountResult.count ?? 0) >=
+    (collectionCountResult.count ??
+      0) >=
     COLLECTION_LIMITS.maximumCollectionsPerCreator
   ) {
     return {
@@ -456,12 +803,14 @@ export async function createCreatorCollectionAction(
     new Date().toISOString()
 
   const baseSlug =
-    createSlug(parsed.data.title) ||
-    'collection'
+    createSlug(
+      parsed.data.title
+    ) || 'collection'
 
   for (
     let attempt = 1;
-    attempt <= MAXIMUM_SLUG_ATTEMPTS;
+    attempt <=
+    MAXIMUM_SLUG_ATTEMPTS;
     attempt += 1
   ) {
     const slug =
@@ -472,16 +821,20 @@ export async function createCreatorCollectionAction(
 
     const insertResult =
       await supabase
-        .from('creator_collections')
+        .from(
+          'creator_collections'
+        )
         .insert({
           user_id: userId,
-          title: parsed.data.title,
+          title:
+            parsed.data.title,
           slug,
           description:
             parsed.data.description,
           cover_image_url:
-            parsed.data.cover_image_url,
-          city: parsed.data.city,
+            parsed.data
+              .cover_image_url,
+          city,
           category:
             parsed.data.category,
           visibility:
@@ -492,7 +845,9 @@ export async function createCreatorCollectionAction(
             nextSortOrder,
           updated_at: now,
         })
-        .select(COLLECTION_SELECT)
+        .select(
+          COLLECTION_SELECT
+        )
         .single()
 
     if (
@@ -509,7 +864,8 @@ export async function createCreatorCollectionAction(
           operation:
             'create_creator_collection',
           userId,
-          value: insertResult.data,
+          value:
+            insertResult.data,
         })
 
         return {
@@ -584,6 +940,27 @@ export async function updateCreatorCollectionAction(
     return schemaFailure(parsed.error)
   }
 
+    const city =
+    normalizeCollectionCity(
+      parsed.data.city
+    )
+
+  if (
+    city &&
+    !isSupportedCityKey(city)
+  ) {
+    return {
+      success: false,
+      error:
+        'Select a supported city.',
+      fieldErrors: {
+        city: [
+          'Select a supported city.',
+        ],
+      },
+    }
+  }
+
   const supabase =
     await createServerClient()
 
@@ -627,12 +1004,14 @@ export async function updateCreatorCollectionAction(
     await supabase
       .from('creator_collections')
       .update({
-        title: parsed.data.title,
+        title:
+          parsed.data.title,
         description:
           parsed.data.description,
         cover_image_url:
-          parsed.data.cover_image_url,
-        city: parsed.data.city,
+          parsed.data
+            .cover_image_url,
+        city,
         category:
           parsed.data.category,
         visibility:
@@ -687,7 +1066,8 @@ export async function updateCreatorCollectionAction(
       operation:
         'update_creator_collection',
       userId,
-      value: updateResult.data,
+      value:
+        updateResult.data,
     })
 
     return {
@@ -811,7 +1191,8 @@ export async function deleteCreatorCollectionAction(
   revalidateCreatorCollectionPaths({
     username,
     slug:
-      existingResult.collection.slug,
+      existingResult.collection
+        .slug,
   })
 
   return {
@@ -855,7 +1236,8 @@ export async function reorderCreatorCollectionsAction(
     authentication.userId
 
   if (
-    parsed.data.collectionIds.length === 0
+    parsed.data.collectionIds
+      .length === 0
   ) {
     return {
       success: true,
@@ -894,21 +1276,31 @@ export async function reorderCreatorCollectionsAction(
   }
 
   const ownedIds = new Set(
-    (ownershipResult.data ?? [])
+    (
+      ownershipResult.data ??
+      []
+    )
       .map((row) => row.id)
       .filter(
-        (value): value is string =>
-          typeof value === 'string'
+        (
+          value
+        ): value is string =>
+          typeof value ===
+          'string'
       )
   )
 
   const containsForeignOrMissingId =
     parsed.data.collectionIds.some(
       (collectionId) =>
-        !ownedIds.has(collectionId)
+        !ownedIds.has(
+          collectionId
+        )
     )
 
-  if (containsForeignOrMissingId) {
+  if (
+    containsForeignOrMissingId
+  ) {
     return {
       success: false,
       error:
@@ -926,52 +1318,58 @@ export async function reorderCreatorCollectionsAction(
 
   const reorderResults =
     await Promise.all(
-        parsed.data.collectionIds.map(
+      parsed.data.collectionIds.map(
         async (
-            collectionId,
-            index
+          collectionId,
+          index
         ) => {
-            return supabase
+          return supabase
             .from(
-                'creator_collections'
+              'creator_collections'
             )
             .update({
-                sort_order: index,
-                updated_at: now,
+              sort_order: index,
+              updated_at: now,
             })
-            .eq('id', collectionId)
-            .eq('user_id', userId)
+            .eq(
+              'id',
+              collectionId
+            )
+            .eq(
+              'user_id',
+              userId
+            )
             .select('id')
             .maybeSingle()
         }
-        )
+      )
     )
 
-    const failedReorderResult =
+  const failedReorderResult =
     reorderResults.find(
-        (result) =>
+      (result) =>
         result.error ||
         !result.data
     )
 
-    if (failedReorderResult) {
+  if (failedReorderResult) {
     logDatabaseError({
-        operation:
+      operation:
         'reorder_creator_collections',
-        userId,
-        error:
+      userId,
+      error:
         failedReorderResult.error ??
         new Error(
-            'A collection was not updated during reordering.'
+          'A collection was not updated during reordering.'
         ),
     })
 
     return {
-        success: false,
-        error:
+      success: false,
+      error:
         'The collection order could not be saved completely. Refresh the page and try again.',
-        }
     }
+  }
 
   const username =
     await loadProfileUsername({
@@ -1090,7 +1488,8 @@ export async function setCreatorCollectionVisibilityAction(
   revalidateCreatorCollectionPaths({
     username,
     slug:
-      existingResult.collection.slug,
+      existingResult.collection
+        .slug,
   })
 
   return {
@@ -1202,7 +1601,8 @@ export async function setCreatorCollectionFeaturedAction(
   revalidateCreatorCollectionPaths({
     username,
     slug:
-      existingResult.collection.slug,
+      existingResult.collection
+        .slug,
   })
 
   return {
@@ -1212,6 +1612,1345 @@ export async function setCreatorCollectionFeaturedAction(
         parsed.data.collectionId,
       featured:
         parsed.data.featured,
+      updatedAt: now,
+    },
+  }
+}
+
+/* =========================================================
+ * Search collection venues
+ * ======================================================= */
+
+export async function searchCreatorCollectionVenuesAction(
+  input: unknown
+): Promise<SearchCreatorCollectionVenuesResult> {
+  const parsed =
+    searchCreatorCollectionVenuesSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    return schemaFailure(
+      parsed.error
+    )
+  }
+
+  const supabase =
+    await createServerClient()
+
+  const authentication =
+    await requireAuthenticatedUser(
+      supabase
+    )
+
+  if (!authentication.success) {
+    return authentication.result
+  }
+
+  const userId =
+    authentication.userId
+
+  const collectionResult =
+    await loadOwnedCollectionWithCity({
+      supabase,
+      userId,
+      collectionId:
+        parsed.data.collectionId,
+    })
+
+  if (!collectionResult.success) {
+    return collectionResult.result
+  }
+
+  const collection =
+    collectionResult.collection
+
+  const collectionCity =
+    normalizeCollectionCity(
+      collection.city
+    )
+
+  if (
+    !collectionCity ||
+    !isSupportedCityKey(
+      collectionCity
+    )
+  ) {
+    return {
+      success: false,
+      error:
+        'Select a supported collection city before searching for venues.',
+      fieldErrors: {
+        city: [
+          'Select a supported city.',
+        ],
+      },
+    }
+  }
+
+  const normalizedQuery =
+    normalizeVenueSearchQuery(
+      parsed.data.query
+    )
+
+  if (
+    normalizedQuery.length <
+    COLLECTION_LIMITS.minimumVenueSearchLength
+  ) {
+    return {
+      success: true,
+      data: {
+        candidates: [],
+      },
+    }
+  }
+
+  const [
+    venueResult,
+    existingResult,
+  ] = await Promise.all([
+    supabase
+      .from('venues')
+      .select(`
+        id,
+        name,
+        slug,
+        city,
+        category:tier,
+        description,
+        cover_image_url:cover
+      `)
+      .eq(
+        'city',
+        collectionCity
+      )
+      .ilike(
+        'name',
+        `%${escapePostgrestLikePattern(
+          normalizedQuery
+        )}%`
+      )
+      .order('name', {
+        ascending: true,
+      })
+      .limit(
+        COLLECTION_LIMITS.maximumVenueSearchResults
+      ),
+
+    supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .select('venue_id')
+      .eq(
+        'collection_id',
+        collection.id
+      ),
+  ])
+
+  if (venueResult.error) {
+    logDatabaseError({
+      operation:
+        'search_creator_collection_venues',
+      userId,
+      collectionId:
+        collection.id,
+      error:
+        venueResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'Venues could not be loaded. Please try again.',
+    }
+  }
+
+  if (existingResult.error) {
+    logDatabaseError({
+      operation:
+        'load_existing_collection_venue_ids',
+      userId,
+      collectionId:
+        collection.id,
+      error:
+        existingResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'Existing collection venues could not be checked. Please try again.',
+    }
+  }
+
+  const existingVenueIds =
+    new Set(
+      (
+        existingResult.data ??
+        []
+      )
+        .map((row) =>
+          normalizeUuid(
+            row.venue_id
+          )
+        )
+        .filter(
+          (
+            venueId
+          ): venueId is string =>
+            venueId !== null
+        )
+    )
+
+  const candidates =
+    normalizeVenueCandidates({
+      value:
+        venueResult.data,
+      expectedCity:
+        collectionCity,
+    }).filter(
+      (candidate) =>
+        !existingVenueIds.has(
+          candidate.id
+        )
+    )
+
+  return {
+    success: true,
+    data: {
+      candidates,
+    },
+  }
+}
+
+/* =========================================================
+ * Add venues to collection
+ * ======================================================= */
+
+export async function addCreatorCollectionVenuesAction(
+  input: unknown
+): Promise<AddCreatorCollectionVenuesResult> {
+  const parsed =
+    addCreatorCollectionVenuesSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    return schemaFailure(
+      parsed.error
+    )
+  }
+
+  return performAddCreatorCollectionVenues({
+    collectionId:
+      parsed.data.collectionId,
+    venueIds:
+      parsed.data.venueIds,
+  })
+}
+
+/**
+ * Compatibility wrapper for CollectionItemPicker.tsx.
+ *
+ * Only venue items are accepted by this focused layer.
+ */
+export async function addCreatorCollectionItemsAction(
+  input: unknown
+): Promise<AddCreatorCollectionItemsResult> {
+  const parsed =
+    addCreatorCollectionItemsSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    const failure =
+      schemaFailure(
+        parsed.error
+      )
+
+    return {
+      success: false,
+      error:
+        failure.error,
+    }
+  }
+
+  const invalidTypeIds =
+    parsed.data.items
+      .filter(
+        (item) =>
+          item.itemType !==
+          'venue'
+      )
+      .map(
+        (item) =>
+          item.itemId
+      )
+
+  if (
+    invalidTypeIds.length > 0
+  ) {
+    return {
+      success: false,
+      error:
+        'This collection currently supports venue items only.',
+      rejectedItemIds:
+        invalidTypeIds,
+    }
+  }
+
+  const venueIds = [
+    ...new Set(
+      parsed.data.items.map(
+        (item) =>
+          item.itemId
+      )
+    ),
+  ]
+
+  const result =
+    await performAddCreatorCollectionVenues({
+      collectionId:
+        parsed.data.collectionId,
+      venueIds,
+    })
+
+  if (!result.success) {
+    return {
+      success: false,
+      error:
+        result.error,
+      rejectedItemIds:
+        venueIds,
+    }
+  }
+
+  return {
+    success: true,
+    addedItemIds:
+      result.data.addedVenueIds,
+  }
+}
+
+async function performAddCreatorCollectionVenues({
+  collectionId,
+  venueIds,
+}: {
+  collectionId: string
+  venueIds: string[]
+}): Promise<AddCreatorCollectionVenuesResult> {
+  const normalizedVenueIds = [
+    ...new Set(
+      venueIds
+        .map(normalizeUuid)
+        .filter(
+          (
+            venueId
+          ): venueId is string =>
+            venueId !== null
+        )
+    ),
+  ]
+
+  if (
+    normalizedVenueIds.length === 0
+  ) {
+    return {
+      success: false,
+      error:
+        'Select at least one valid venue.',
+      fieldErrors: {
+        venueIds: [
+          'Select at least one valid venue.',
+        ],
+      },
+    }
+  }
+
+  const supabase =
+    await createServerClient()
+
+  const authentication =
+    await requireAuthenticatedUser(
+      supabase
+    )
+
+  if (!authentication.success) {
+    return authentication.result
+  }
+
+  const userId =
+    authentication.userId
+
+  const collectionResult =
+    await loadOwnedCollectionWithCity({
+      supabase,
+      userId,
+      collectionId,
+    })
+
+  if (!collectionResult.success) {
+    return collectionResult.result
+  }
+
+  const collection =
+    collectionResult.collection
+
+  const collectionCity =
+    normalizeCollectionCity(
+      collection.city
+    )
+
+  if (
+    !collectionCity ||
+    !isSupportedCityKey(
+      collectionCity
+    )
+  ) {
+    return {
+      success: false,
+      error:
+        'Add a supported city to this collection before adding venues.',
+      fieldErrors: {
+        city: [
+          'A supported collection city is required before venues can be added.',
+        ],
+      },
+    }
+  }
+
+  const [
+    existingCountResult,
+    venueResult,
+    existingVenueResult,
+    maximumSortOrderResult,
+  ] = await Promise.all([
+    supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .select('id', {
+        count: 'exact',
+        head: true,
+      })
+      .eq(
+        'collection_id',
+        collection.id
+      ),
+
+    supabase
+      .from('venues')
+      .select(`
+        id,
+        city
+      `)
+      .in(
+        'id',
+        normalizedVenueIds
+      ),
+
+    supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .select('venue_id')
+      .eq(
+        'collection_id',
+        collection.id
+      )
+      .in(
+        'venue_id',
+        normalizedVenueIds
+      ),
+
+    supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .select('sort_order')
+      .eq(
+        'collection_id',
+        collection.id
+      )
+      .order('sort_order', {
+        ascending: false,
+      })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  if (
+    existingCountResult.error
+  ) {
+    logDatabaseError({
+      operation:
+        'count_creator_collection_venues',
+      userId,
+      collectionId:
+        collection.id,
+      error:
+        existingCountResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The collection venue limit could not be checked. Please try again.',
+    }
+  }
+
+  if (venueResult.error) {
+    logDatabaseError({
+      operation:
+        'verify_creator_collection_venues',
+      userId,
+      collectionId:
+        collection.id,
+      error:
+        venueResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The selected venues could not be verified. Please try again.',
+    }
+  }
+
+  if (
+    existingVenueResult.error
+  ) {
+    logDatabaseError({
+      operation:
+        'check_existing_creator_collection_venues',
+      userId,
+      collectionId:
+        collection.id,
+      error:
+        existingVenueResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'Existing collection venues could not be checked. Please try again.',
+    }
+  }
+
+  if (
+    maximumSortOrderResult.error
+  ) {
+    logDatabaseError({
+      operation:
+        'load_creator_collection_venue_sort_order',
+      userId,
+      collectionId:
+        collection.id,
+      error:
+        maximumSortOrderResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The venue order could not be determined. Please try again.',
+    }
+  }
+
+  const validVenueIds =
+    new Set<string>()
+
+  for (
+    const row of
+      venueResult.data ?? []
+  ) {
+    const venueId =
+      normalizeUuid(
+        row.id
+      )
+
+    const venueCity =
+      normalizeCollectionCity(
+        normalizeNullableText(
+          row.city
+        )
+      )
+
+    if (
+      venueId &&
+      venueCity ===
+        collectionCity
+    ) {
+      validVenueIds.add(
+        venueId
+      )
+    }
+  }
+
+  const existingVenueIds =
+    new Set(
+      (
+        existingVenueResult.data ??
+        []
+      )
+        .map((row) =>
+          normalizeUuid(
+            row.venue_id
+          )
+        )
+        .filter(
+          (
+            venueId
+          ): venueId is string =>
+            venueId !== null
+        )
+    )
+
+  const rejectedVenueIds =
+    normalizedVenueIds.filter(
+      (venueId) =>
+        !validVenueIds.has(
+          venueId
+        )
+    )
+
+  const acceptedVenueIds =
+    normalizedVenueIds.filter(
+      (venueId) =>
+        validVenueIds.has(
+          venueId
+        ) &&
+        !existingVenueIds.has(
+          venueId
+        )
+    )
+
+  if (
+    acceptedVenueIds.length === 0
+  ) {
+    if (
+      existingVenueIds.size > 0 &&
+      rejectedVenueIds.length === 0
+    ) {
+      return {
+        success: true,
+        data: {
+          collectionId:
+            collection.id,
+          addedVenueIds: [],
+          existingVenueIds: [
+            ...existingVenueIds,
+          ],
+          rejectedVenueIds: [],
+          updatedAt:
+            new Date().toISOString(),
+        },
+      }
+    }
+
+    return {
+      success: false,
+      error:
+        'None of the selected venues are eligible for this collection city.',
+      fieldErrors: {
+        venueIds: [
+          `Select venues located in ${collectionCity}.`,
+        ],
+      },
+    }
+  }
+
+  const existingCount =
+    existingCountResult.count ?? 0
+
+  if (
+    existingCount >=
+    COLLECTION_LIMITS.maximumVenuesPerCollection
+  ) {
+    return {
+      success: false,
+      error: `A collection can contain at most ${COLLECTION_LIMITS.maximumVenuesPerCollection} venues.`,
+    }
+  }
+
+  const remainingCapacity =
+    COLLECTION_LIMITS.maximumVenuesPerCollection -
+    existingCount
+
+  if (
+    acceptedVenueIds.length >
+    remainingCapacity
+  ) {
+    return {
+      success: false,
+      error: `This collection can accept only ${remainingCapacity} more ${
+        remainingCapacity === 1
+          ? 'venue'
+          : 'venues'
+      }.`,
+      fieldErrors: {
+        venueIds: [
+          `Reduce the selection to ${remainingCapacity} ${
+            remainingCapacity === 1
+              ? 'venue'
+              : 'venues'
+          }.`,
+        ],
+      },
+    }
+  }
+
+  const currentMaximumSortOrder =
+    typeof maximumSortOrderResult
+      .data?.sort_order ===
+      'number' &&
+    Number.isFinite(
+      maximumSortOrderResult
+        .data.sort_order
+    )
+      ? Math.max(
+          0,
+          Math.trunc(
+            maximumSortOrderResult
+              .data.sort_order
+          )
+        )
+      : -1
+
+  const now =
+    new Date().toISOString()
+
+  const rows =
+    acceptedVenueIds.map(
+      (
+        venueId,
+        index
+      ) => ({
+        collection_id:
+          collection.id,
+        venue_id:
+          venueId,
+        sort_order:
+          currentMaximumSortOrder +
+          index +
+          1,
+        created_at:
+          now,
+      })
+    )
+
+  const insertResult =
+    await supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .insert(rows)
+      .select('venue_id')
+
+  if (insertResult.error) {
+    logDatabaseError({
+      operation:
+        'add_creator_collection_venues',
+      userId,
+      collectionId:
+        collection.id,
+      error:
+        insertResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The selected venues could not be added. Please try again.',
+    }
+  }
+
+  const addedVenueIds = [
+    ...new Set(
+      (
+        insertResult.data ??
+        []
+      )
+        .map((row) =>
+          normalizeUuid(
+            row.venue_id
+          )
+        )
+        .filter(
+          (
+            venueId
+          ): venueId is string =>
+            venueId !== null
+        )
+    ),
+  ]
+
+  const username =
+    await loadProfileUsername({
+      supabase,
+      userId,
+    })
+
+  revalidateCreatorCollectionPaths({
+    username,
+    slug:
+      collection.slug,
+    collectionId:
+      collection.id,
+  })
+
+  return {
+    success: true,
+    data: {
+      collectionId:
+        collection.id,
+      addedVenueIds,
+      existingVenueIds: [
+        ...existingVenueIds,
+      ],
+      rejectedVenueIds,
+      updatedAt:
+        now,
+    },
+  }
+}
+
+/* =========================================================
+ * Remove venue from collection
+ * ======================================================= */
+
+export async function removeCreatorCollectionVenueAction(
+  input: unknown
+): Promise<RemoveCreatorCollectionVenueResult> {
+  const parsed =
+    removeCreatorCollectionVenueSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    return schemaFailure(parsed.error)
+  }
+
+  return performRemoveCreatorCollectionVenue({
+    collectionId:
+      parsed.data.collectionId,
+    collectionVenueId:
+      parsed.data.collectionVenueId,
+  })
+}
+
+/**
+ * Compatibility wrapper for CollectionItemList.tsx.
+ */
+export async function removeCreatorCollectionItemAction(
+  input: unknown
+): Promise<CreatorCollectionItemMutationResult> {
+  const parsed =
+    removeCreatorCollectionItemSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    const failure =
+      schemaFailure(parsed.error)
+
+    return {
+      success: false,
+      error: failure.error,
+    }
+  }
+
+  const result =
+    await performRemoveCreatorCollectionVenue({
+      collectionId:
+        parsed.data.collectionId,
+      collectionVenueId:
+        parsed.data.collectionItemId,
+    })
+
+  return result.success
+    ? {
+        success: true,
+      }
+    : {
+        success: false,
+        error: result.error,
+      }
+}
+
+async function performRemoveCreatorCollectionVenue({
+  collectionId,
+  collectionVenueId,
+}: {
+  collectionId: string
+  collectionVenueId: string
+}): Promise<RemoveCreatorCollectionVenueResult> {
+  const supabase =
+    await createServerClient()
+
+  const authentication =
+    await requireAuthenticatedUser(
+      supabase
+    )
+
+  if (!authentication.success) {
+    return authentication.result
+  }
+
+  const userId =
+    authentication.userId
+
+  const collectionResult =
+    await loadOwnedCollection({
+      supabase,
+      userId,
+      collectionId,
+    })
+
+  if (!collectionResult.success) {
+    return collectionResult.result
+  }
+
+  const existingResult =
+    await supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .select(
+        'id, venue_id'
+      )
+      .eq(
+        'id',
+        collectionVenueId
+      )
+      .eq(
+        'collection_id',
+        collectionId
+      )
+      .maybeSingle()
+
+  if (existingResult.error) {
+    logDatabaseError({
+      operation:
+        'load_creator_collection_venue_for_removal',
+      userId,
+      collectionId,
+      error:
+        existingResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The selected venue could not be loaded. Please try again.',
+    }
+  }
+
+  const venueId =
+    normalizeUuid(
+      existingResult.data
+        ?.venue_id
+    )
+
+  if (
+    !existingResult.data ||
+    !venueId
+  ) {
+    return {
+      success: false,
+      error:
+        'The venue was not found in this collection.',
+    }
+  }
+
+  const deleteResult =
+    await supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .delete()
+      .eq(
+        'id',
+        collectionVenueId
+      )
+      .eq(
+        'collection_id',
+        collectionId
+      )
+      .select('id')
+      .maybeSingle()
+
+  if (deleteResult.error) {
+    logDatabaseError({
+      operation:
+        'remove_creator_collection_venue',
+      userId,
+      collectionId,
+      error:
+        deleteResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The venue could not be removed from the collection. Please try again.',
+    }
+  }
+
+  if (!deleteResult.data) {
+    return {
+      success: false,
+      error:
+        'The venue was not found in this collection.',
+    }
+  }
+
+  const username =
+    await loadProfileUsername({
+      supabase,
+      userId,
+    })
+
+  const now =
+    new Date().toISOString()
+
+  revalidateCreatorCollectionPaths({
+    username,
+    slug:
+      collectionResult.collection
+        .slug,
+    collectionId,
+  })
+
+  return {
+    success: true,
+    data: {
+      collectionId,
+      collectionVenueId,
+      venueId,
+      updatedAt: now,
+    },
+  }
+}
+
+/* =========================================================
+ * Reorder collection venues
+ * ======================================================= */
+
+export async function reorderCreatorCollectionVenuesAction(
+  input: unknown
+): Promise<ReorderCreatorCollectionVenuesResult> {
+  const parsed =
+    reorderCreatorCollectionVenuesSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    return schemaFailure(parsed.error)
+  }
+
+  return performReorderCreatorCollectionVenues({
+    collectionId:
+      parsed.data.collectionId,
+    collectionVenueIds:
+      parsed.data.collectionVenueIds,
+  })
+}
+
+/**
+ * Compatibility wrapper for CollectionItemList.tsx.
+ */
+export async function reorderCreatorCollectionItemsAction(
+  input: unknown
+): Promise<CreatorCollectionItemMutationResult> {
+  const parsed =
+    reorderCreatorCollectionItemsSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    const failure =
+      schemaFailure(parsed.error)
+
+    return {
+      success: false,
+      error: failure.error,
+    }
+  }
+
+  const result =
+    await performReorderCreatorCollectionVenues({
+      collectionId:
+        parsed.data.collectionId,
+      collectionVenueIds:
+        parsed.data.collectionItemIds,
+    })
+
+  return result.success
+    ? {
+        success: true,
+      }
+    : {
+        success: false,
+        error: result.error,
+      }
+}
+
+async function performReorderCreatorCollectionVenues({
+  collectionId,
+  collectionVenueIds,
+}: {
+  collectionId: string
+  collectionVenueIds: string[]
+}): Promise<ReorderCreatorCollectionVenuesResult> {
+  const supabase =
+    await createServerClient()
+
+  const authentication =
+    await requireAuthenticatedUser(
+      supabase
+    )
+
+  if (!authentication.success) {
+    return authentication.result
+  }
+
+  const userId =
+    authentication.userId
+
+  const collectionResult =
+    await loadOwnedCollection({
+      supabase,
+      userId,
+      collectionId,
+    })
+
+  if (!collectionResult.success) {
+    return collectionResult.result
+  }
+
+  if (
+    collectionVenueIds.length ===
+    0
+  ) {
+    const existingCountResult =
+      await supabase
+        .from(
+          'creator_collection_venues'
+        )
+        .select('id', {
+          count: 'exact',
+          head: true,
+        })
+        .eq(
+          'collection_id',
+          collectionId
+        )
+
+    if (existingCountResult.error) {
+      logDatabaseError({
+        operation:
+          'verify_empty_creator_collection_venue_reorder',
+        userId,
+        collectionId,
+        error:
+          existingCountResult.error,
+      })
+
+      return {
+        success: false,
+        error:
+          'The venue order could not be verified. Please try again.',
+      }
+    }
+
+    if (
+      (existingCountResult.count ??
+        0) !== 0
+    ) {
+      return {
+        success: false,
+        error:
+          'The submitted venue order is incomplete. Refresh the page and try again.',
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        collectionId,
+        collectionVenueIds: [],
+        updatedAt:
+          new Date().toISOString(),
+      },
+    }
+  }
+
+  const ownershipResult =
+    await supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .select('id')
+      .eq(
+        'collection_id',
+        collectionId
+      )
+
+  if (ownershipResult.error) {
+    logDatabaseError({
+      operation:
+        'verify_creator_collection_venue_reorder',
+      userId,
+      collectionId,
+      error:
+        ownershipResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The venue order could not be verified. Please try again.',
+    }
+  }
+
+  const ownedCollectionVenueIds =
+    new Set(
+      (
+        ownershipResult.data ??
+        []
+      )
+        .map((row) =>
+          normalizeUuid(
+            row.id
+          )
+        )
+        .filter(
+          (
+            value
+          ): value is string =>
+            value !== null
+        )
+    )
+
+  if (
+    ownedCollectionVenueIds
+      .size !==
+    collectionVenueIds.length
+  ) {
+    return {
+      success: false,
+      error:
+        'The submitted venue order is incomplete. Refresh the page and try again.',
+      fieldErrors: {
+        collectionVenueIds: [
+          'Every venue in the collection must be included exactly once.',
+        ],
+      },
+    }
+  }
+
+  const containsForeignOrMissingId =
+    collectionVenueIds.some(
+      (collectionVenueId) =>
+        !ownedCollectionVenueIds.has(
+          collectionVenueId
+        )
+    )
+
+  if (
+    containsForeignOrMissingId
+  ) {
+    return {
+      success: false,
+      error:
+        'One or more venues could not be reordered because they were not found in this collection.',
+      fieldErrors: {
+        collectionVenueIds: [
+          'Refresh the page before reordering venues again.',
+        ],
+      },
+    }
+  }
+
+  const reorderResults =
+    await Promise.all(
+      collectionVenueIds.map(
+        async (
+          collectionVenueId,
+          index
+        ) => {
+          return supabase
+            .from(
+              'creator_collection_venues'
+            )
+            .update({
+              sort_order: index,
+            })
+            .eq(
+              'id',
+              collectionVenueId
+            )
+            .eq(
+              'collection_id',
+              collectionId
+            )
+            .select('id')
+            .maybeSingle()
+        }
+      )
+    )
+
+  const failedResult =
+    reorderResults.find(
+      (result) =>
+        result.error ||
+        !result.data
+    )
+
+  if (failedResult) {
+    logDatabaseError({
+      operation:
+        'reorder_creator_collection_venues',
+      userId,
+      collectionId,
+      error:
+        failedResult.error ??
+        new Error(
+          'A collection venue was not updated during reordering.'
+        ),
+    })
+
+    return {
+      success: false,
+      error:
+        'The venue order could not be saved completely. Refresh the page and try again.',
+    }
+  }
+
+  const username =
+    await loadProfileUsername({
+      supabase,
+      userId,
+    })
+
+  const now =
+    new Date().toISOString()
+
+  revalidateCreatorCollectionPaths({
+    username,
+    slug:
+      collectionResult.collection
+        .slug,
+    collectionId,
+  })
+
+  return {
+    success: true,
+    data: {
+      collectionId,
+      collectionVenueIds,
       updatedAt: now,
     },
   }
@@ -1242,7 +2981,9 @@ async function requireAuthenticatedUser(
   if (error) {
     console.error(
       '[creator collection actions] Authentication lookup failed:',
-      serializeDatabaseError(error)
+      serializeDatabaseError(
+        error
+      )
     )
 
     return {
@@ -1351,6 +3092,90 @@ async function loadOwnedCollection({
   }
 }
 
+type OwnedCollectionWithCityResult =
+  | {
+      success: true
+      collection: {
+        id: string
+        slug: string
+        city: string | null
+      }
+    }
+  | {
+      success: false
+      result: CollectionActionFailure
+    }
+
+async function loadOwnedCollectionWithCity({
+  supabase,
+  userId,
+  collectionId,
+}: {
+  supabase: SupabaseServerClient
+  userId: string
+  collectionId: string
+}): Promise<OwnedCollectionWithCityResult> {
+  const result =
+    await supabase
+      .from('creator_collections')
+      .select('id, slug, city')
+      .eq('id', collectionId)
+      .eq('user_id', userId)
+      .maybeSingle()
+
+  if (result.error) {
+    logDatabaseError({
+      operation:
+        'load_owned_creator_collection_with_city',
+      userId,
+      collectionId,
+      error: result.error,
+    })
+
+    return {
+      success: false,
+      result: {
+        success: false,
+        error:
+          'The collection could not be loaded. Please try again.',
+      },
+    }
+  }
+
+  const id =
+    normalizeUuid(
+      result.data?.id
+    )
+
+  const slug =
+    normalizeRequiredText(
+      result.data?.slug
+    )
+
+  if (!id || !slug) {
+    return {
+      success: false,
+      result: {
+        success: false,
+        error:
+          'The collection was not found or you no longer have permission to edit it.',
+      },
+    }
+  }
+
+  return {
+    success: true,
+    collection: {
+      id,
+      slug,
+        city:
+        normalizeCollectionCity(
+          result.data?.city
+        ),
+    },
+  }
+}
+
 /* =========================================================
  * Collection ordering
  * ======================================================= */
@@ -1385,7 +3210,8 @@ async function getNextCollectionSortOrder({
   }
 
   const currentMaximum =
-    typeof result.data?.sort_order ===
+    typeof result.data
+      ?.sort_order ===
       'number' &&
     Number.isFinite(
       result.data.sort_order
@@ -1442,15 +3268,25 @@ async function loadProfileUsername({
 function revalidateCreatorCollectionPaths({
   username,
   slug,
+  collectionId,
 }: {
   username: string | null
   slug?: string
+  collectionId?: string
 }): void {
   revalidatePath('/profile')
   revalidatePath('/profile/creator')
   revalidatePath(
     '/profile/creator/collections'
   )
+
+  if (collectionId) {
+    revalidatePath(
+      `/profile/creator/collections/${encodeURIComponent(
+        collectionId
+      )}`
+    )
+  }
 
   if (!username) {
     return
@@ -1518,8 +3354,10 @@ function normalizeCollectionRecord(
     )
 
   const visibility =
-    value.visibility === 'public' ||
-    value.visibility === 'private'
+    value.visibility ===
+      'public' ||
+    value.visibility ===
+      'private'
       ? value.visibility
       : null
 
@@ -1582,6 +3420,167 @@ function normalizeCollectionRecord(
     created_at: createdAt,
     updated_at: updatedAt,
   }
+}
+
+/* =========================================================
+ * Venue response normalization
+ * ======================================================= */
+
+function normalizeVenueCandidates({
+  value,
+  expectedCity,
+}: {
+  value: unknown
+  expectedCity: string
+}): CreatorCollectionVenueCandidate[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const normalizedExpectedCity =
+    normalizeCity(
+      expectedCity
+    )
+
+  const byId =
+    new Map<
+      string,
+      CreatorCollectionVenueCandidate
+    >()
+
+  for (const rawVenue of value) {
+    if (!isRecord(rawVenue)) {
+      continue
+    }
+
+    const id =
+      normalizeUuid(
+        rawVenue.id
+      )
+
+    const name =
+      normalizeRequiredText(
+        rawVenue.name
+      )
+
+    const city =
+      normalizeNullableText(
+        rawVenue.city
+      )
+
+    if (
+      !id ||
+      !name ||
+      !city ||
+      normalizeCity(city) !==
+        normalizedExpectedCity
+    ) {
+      continue
+    }
+
+    const slug =
+      normalizeNullableText(
+        rawVenue.slug
+      )
+
+    const category =
+      normalizeNullableText(
+        rawVenue.category
+      )
+
+    const description =
+      normalizeNullableText(
+        rawVenue.description
+      )
+
+    const coverImageUrl =
+      normalizeNullableText(
+        rawVenue.cover_image_url
+      )
+
+    const candidate:
+      CreatorCollectionVenueCandidate = {
+      id,
+      item_type: 'venue',
+      title: name,
+      subtitle: category,
+      description,
+      image_url:
+        coverImageUrl,
+      city,
+      href:
+        buildVenueProfileHref({
+          venueId: id,
+          venueSlug: slug,
+        }),
+      search_terms: [
+        name,
+        city,
+        category,
+      ].filter(
+        (
+          value
+        ): value is string =>
+          typeof value ===
+            'string' &&
+          value.length > 0
+      ),
+      created_at:
+        normalizeIsoDate(
+          rawVenue.created_at
+        ),
+    }
+
+    byId.set(id, candidate)
+  }
+
+  return [
+    ...byId.values(),
+  ].sort((first, second) =>
+    first.title.localeCompare(
+      second.title,
+      undefined,
+      {
+        sensitivity: 'base',
+      }
+    )
+  )
+}
+
+function buildVenueProfileHref({
+  venueId,
+  venueSlug,
+}: {
+  venueId: string
+  venueSlug: string | null
+}): string {
+  const identifier =
+    venueSlug ?? venueId
+
+  return `/venues/${encodeURIComponent(
+    identifier
+  )}`
+}
+
+function normalizeVenueSearchQuery(
+  value: string
+): string {
+  return value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .slice(
+      0,
+      COLLECTION_LIMITS.maximumVenueSearchLength
+    )
+}
+
+function escapePostgrestLikePattern(
+  value: string
+): string {
+  return value.replace(
+    /[%_\\]/g,
+    '\\$&'
+  )
 }
 
 /* =========================================================
@@ -1659,8 +3658,10 @@ function validatePublicImageUrl(
       new URL(value)
 
     if (
-      parsed.protocol !== 'https:' &&
-      parsed.protocol !== 'http:'
+      parsed.protocol !==
+        'https:' &&
+      parsed.protocol !==
+        'http:'
     ) {
       return {
         valid: false,
@@ -1708,14 +3709,16 @@ function validatePublicImageUrl(
     parsed.hash = ''
 
     if (
-      parsed.protocol === 'https:' &&
+      parsed.protocol ===
+        'https:' &&
       parsed.port === '443'
     ) {
       parsed.port = ''
     }
 
     if (
-      parsed.protocol === 'http:' &&
+      parsed.protocol ===
+        'http:' &&
       parsed.port === '80'
     ) {
       parsed.port = ''
@@ -1739,24 +3742,37 @@ function isPrivateOrLocalHostname(
   hostname: string
 ): boolean {
   const normalized =
-    normalizeHostname(hostname)
+    normalizeHostname(
+      hostname
+    )
 
   if (
     !normalized ||
-    normalized === 'localhost' ||
+    normalized ===
+      'localhost' ||
     normalized.endsWith(
       '.localhost'
     ) ||
-    normalized.endsWith('.local')
+    normalized.endsWith(
+      '.local'
+    )
   ) {
     return true
   }
 
   if (
-    /^10\./.test(normalized) ||
-    /^127\./.test(normalized) ||
-    /^169\.254\./.test(normalized) ||
-    /^192\.168\./.test(normalized) ||
+    /^10\./.test(
+      normalized
+    ) ||
+    /^127\./.test(
+      normalized
+    ) ||
+    /^169\.254\./.test(
+      normalized
+    ) ||
+    /^192\.168\./.test(
+      normalized
+    ) ||
     /^172\.(1[6-9]|2\d|3[01])\./.test(
       normalized
     )
@@ -1766,9 +3782,15 @@ function isPrivateOrLocalHostname(
 
   if (
     normalized === '::1' ||
-    normalized.startsWith('fc') ||
-    normalized.startsWith('fd') ||
-    normalized.startsWith('fe80')
+    normalized.startsWith(
+      'fc'
+    ) ||
+    normalized.startsWith(
+      'fd'
+    ) ||
+    normalized.startsWith(
+      'fe80'
+    )
   ) {
     return true
   }
@@ -1807,7 +3829,9 @@ function schemaFailure(
       !isCollectionActionField(
         field
       ) ||
-      !Array.isArray(rawMessages)
+      !Array.isArray(
+        rawMessages
+      )
     ) {
       continue
     }
@@ -1819,15 +3843,20 @@ function schemaFailure(
         ): message is string =>
           typeof message ===
             'string' &&
-          message.trim().length > 0
+          message.trim().length >
+            0
       )
 
-    if (messages.length === 0) {
+    if (
+      messages.length === 0
+    ) {
       continue
     }
 
     fieldErrors[field] = [
-      ...new Set(messages),
+      ...new Set(
+        messages
+      ),
     ]
   }
 
@@ -1838,7 +3867,9 @@ function schemaFailure(
       (
         messages
       ): messages is string[] =>
-        Array.isArray(messages) &&
+        Array.isArray(
+          messages
+        ) &&
         messages.length > 0
     )?.[0]
 
@@ -1850,8 +3881,9 @@ function schemaFailure(
       firstFieldError ??
       'One or more collection fields are invalid.',
 
-    ...(Object.keys(fieldErrors)
-      .length > 0
+    ...(Object.keys(
+      fieldErrors
+    ).length > 0
       ? {
           fieldErrors,
         }
@@ -1863,16 +3895,30 @@ function isCollectionActionField(
   value: string
 ): value is keyof CollectionActionFieldErrors {
   return (
-    value === 'collectionId' ||
+    value ===
+      'collectionId' ||
     value === 'title' ||
-    value === 'description' ||
-    value === 'cover_image_url' ||
+    value ===
+      'description' ||
+    value ===
+      'cover_image_url' ||
     value === 'city' ||
     value === 'category' ||
-    value === 'visibility' ||
+    value ===
+      'visibility' ||
     value === 'featured' ||
-    value === 'sort_order' ||
-    value === 'collectionIds'
+    value ===
+      'sort_order' ||
+    value ===
+      'collectionIds' ||
+    value === 'venueId' ||
+    value === 'venueIds' ||
+    value ===
+      'collectionVenueId' ||
+    value ===
+      'collectionVenueIds' ||
+    value === 'query' ||
+    value === 'limit'
   )
 }
 
@@ -1932,15 +3978,18 @@ function serializeDatabaseError(
   ) {
     return {
       name: error.name,
-      message: error.message,
+      message:
+        error.message,
     }
   }
 
   if (isRecord(error)) {
     return {
       code: error.code,
-      message: error.message,
-      details: error.details,
+      message:
+        error.message,
+      details:
+        error.details,
       hint: error.hint,
     }
   }
@@ -1973,7 +4022,10 @@ type SupabaseServerClient =
 function normalizeRequiredInput(
   value: unknown
 ): unknown {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return value
   }
 
@@ -1992,13 +4044,17 @@ function normalizeNullableInput(
     return null
   }
 
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return value
   }
 
-  const normalized = value
-    .trim()
-    .replace(/\s+/g, ' ')
+  const normalized =
+    value
+      .trim()
+      .replace(/\s+/g, ' ')
 
   return normalized.length > 0
     ? normalized
@@ -2009,13 +4065,16 @@ function normalizeIntegerInput(
   value: unknown
 ): unknown {
   if (
-    typeof value === 'string' &&
+    typeof value ===
+      'string' &&
     value.trim() !== ''
   ) {
     const parsed =
       Number(value)
 
-    return Number.isFinite(parsed)
+    return Number.isFinite(
+      parsed
+    )
       ? parsed
       : value
   }
@@ -2023,10 +4082,31 @@ function normalizeIntegerInput(
   return value
 }
 
+function normalizeCollectionCity(
+  value: unknown
+): string | null {
+  if (
+    typeof value !==
+    'string'
+  ) {
+    return null
+  }
+
+  const normalized =
+    normalizeCityKey(value)
+
+  return normalized.length > 0
+    ? normalized
+    : null
+}
+
 function normalizeRequiredText(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
@@ -2041,13 +4121,17 @@ function normalizeRequiredText(
 function normalizeNullableText(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
-  const normalized = value
-    .trim()
-    .replace(/\s+/g, ' ')
+  const normalized =
+    value
+      .trim()
+      .replace(/\s+/g, ' ')
 
   return normalized.length > 0
     ? normalized
@@ -2058,8 +4142,11 @@ function normalizeNonNegativeInteger(
   value: unknown
 ): number {
   if (
-    typeof value !== 'number' ||
-    !Number.isFinite(value)
+    typeof value !==
+      'number' ||
+    !Number.isFinite(
+      value
+    )
   ) {
     return 0
   }
@@ -2073,14 +4160,21 @@ function normalizeNonNegativeInteger(
 function normalizeIsoDate(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
   const timestamp =
     Date.parse(value)
 
-  if (Number.isNaN(timestamp)) {
+  if (
+    Number.isNaN(
+      timestamp
+    )
+  ) {
     return null
   }
 
@@ -2089,13 +4183,50 @@ function normalizeIsoDate(
   ).toISOString()
 }
 
+function normalizeUuid(
+  value: unknown
+): string | null {
+  if (
+    typeof value !==
+    'string'
+  ) {
+    return null
+  }
+
+  const normalized =
+    value.trim()
+
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    normalized
+  )
+    ? normalized
+    : null
+}
+
+function normalizeCity(
+  value: string
+): string {
+  return value
+    .normalize('NFKD')
+    .replace(
+      /[\u0300-\u036f]/g,
+      ''
+    )
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+}
+
 function normalizeHostname(
   value: string
 ): string {
   return value
     .trim()
     .toLowerCase()
-    .replace(/^\[|\]$/g, '')
+    .replace(
+      /^\[|\]$/g,
+      ''
+    )
     .replace(/\.$/, '')
 }
 
@@ -2106,7 +4237,8 @@ function isRecord(
   unknown
 > {
   return (
-    typeof value === 'object' &&
+    typeof value ===
+      'object' &&
     value !== null &&
     !Array.isArray(value)
   )

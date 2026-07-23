@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import {
   redirect,
@@ -16,6 +17,11 @@ import {
 import {
   createServerClient,
 } from '@/lib/supabase/server'
+
+import {
+  normalizeCityKey,
+  SUPPORTED_CITIES,
+} from '@/lib/cities/normalizeCity'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,10 +68,15 @@ type CreatorCollectionRow = {
   updated_at: string
 }
 
+type CollectionVenueCountMap =
+  Record<string, number>
+
 type CollectionsPageData = {
   userId: string
   profile: ProfileRow
   collections: CreatorCollectionRow[]
+  venueCountsByCollectionId:
+    CollectionVenueCountMap
 }
 
 /* =========================================================
@@ -94,6 +105,7 @@ export default async function CreatorCollectionsPage({
   const {
     profile,
     collections,
+    venueCountsByCollectionId,
   } = pageData
 
   const publicCollectionCount =
@@ -163,6 +175,9 @@ export default async function CreatorCollectionsPage({
           <CollectionsList
             collections={collections}
             username={profile.username}
+            venueCountsByCollectionId={
+              venueCountsByCollectionId
+            }
           />
         </div>
       </div>
@@ -462,9 +477,12 @@ function CreateCollectionPanel({
 function CollectionsList({
   collections,
   username,
+  venueCountsByCollectionId,
 }: {
   collections: CreatorCollectionRow[]
   username: string | null
+  venueCountsByCollectionId:
+    CollectionVenueCountMap
 }) {
   if (collections.length === 0) {
     return (
@@ -479,9 +497,8 @@ function CollectionsList({
 
         <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-neutral-500">
           Create your first collection to
-          organize venues, properties,
-          flows, or snapshots around a
-          clear local theme.
+          organize venues around a clear
+          local theme.
         </p>
       </section>
     )
@@ -537,6 +554,11 @@ function CollectionsList({
               orderedIds={
                 orderedIds
               }
+              venueCount={
+                venueCountsByCollectionId[
+                  collection.id
+                ] ?? 0
+              }
             />
           )
         )}
@@ -591,12 +613,14 @@ function CollectionEditorCard({
   index,
   totalCount,
   orderedIds,
+  venueCount,
 }: {
   collection: CreatorCollectionRow
   username: string | null
   index: number
   totalCount: number
   orderedIds: string[]
+  venueCount: number
 }) {
   const publicHref =
     username &&
@@ -607,6 +631,11 @@ function CollectionEditorCard({
           collection.slug
         )}`
       : null
+
+  const manageVenuesHref =
+    `/profile/creator/collections/${encodeURIComponent(
+      collection.id
+    )}`
 
   return (
     <article className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/75">
@@ -625,6 +654,13 @@ function CollectionEditorCard({
               </span>
             ) : null}
 
+            <span className="rounded-full border border-cyan-500/20 bg-cyan-500/[0.06] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-300">
+              {venueCount.toLocaleString()}{' '}
+              {venueCount === 1
+                ? 'Venue'
+                : 'Venues'}
+            </span>
+
             <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-neutral-700">
               Position {index + 1}
             </span>
@@ -637,6 +673,20 @@ function CollectionEditorCard({
           <p className="mt-1 break-all text-xs text-neutral-600">
             /{collection.slug}
           </p>
+
+          {collection.city ? (
+            <p className="mt-2 text-xs text-neutral-500">
+              Venue city:{' '}
+              <span className="font-medium text-neutral-300">
+                {collection.city}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-2 text-xs leading-5 text-amber-300/80">
+              Add and save a city before
+              selecting venues.
+            </p>
+          )}
         </div>
 
         <div className="flex shrink-0 flex-wrap gap-2">
@@ -660,6 +710,13 @@ function CollectionEditorCard({
               totalCount - 1
             }
           />
+
+          <Link
+            href={manageVenuesHref}
+            className="inline-flex items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/[0.06] px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/10 hover:text-white"
+          >
+            Manage venues →
+          </Link>
 
           {publicHref ? (
             <Link
@@ -702,6 +759,19 @@ function CollectionEditorCard({
             >
               Save Changes
             </button>
+
+            <Link
+              href={manageVenuesHref}
+              className="inline-flex items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/[0.05] px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/10 hover:text-white"
+            >
+              {venueCount > 0
+                ? `Manage ${venueCount.toLocaleString()} ${
+                    venueCount === 1
+                      ? 'venue'
+                      : 'venues'
+                  }`
+                : 'Add venues'}
+            </Link>
           </div>
         </form>
 
@@ -799,21 +869,35 @@ function CollectionFields({
           label="City"
           name="city"
         >
-          <input
+          <select
             id={
-              collection
+                collection
                 ? `${collection.id}-city`
                 : 'new-collection-city'
             }
             name="city"
-            type="text"
-            maxLength={160}
             defaultValue={
-              collection?.city ?? ''
+                normalizeCityKey(
+                collection?.city
+                )
             }
-            placeholder="Chicago"
             className={inputClassName}
-          />
+            >
+            <option value="">
+                Select a city
+            </option>
+
+            {SUPPORTED_CITIES.map(
+                (city) => (
+                <option
+                    key={city.value}
+                    value={city.value}
+                >
+                    {city.label}
+                </option>
+                )
+            )}
+            </select>
         </FormField>
 
         <FormField
@@ -963,7 +1047,7 @@ function FormField({
   name: string
   required?: boolean
   description?: string
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <div className="min-w-0">
@@ -1626,11 +1710,109 @@ async function loadCreatorCollectionsPage(): Promise<
       user.id
     )
 
+  const venueCountsByCollectionId =
+    await loadCollectionVenueCounts({
+      supabase,
+      collections,
+      userId: user.id,
+    })
+
   return {
     userId: user.id,
     profile,
     collections,
+    venueCountsByCollectionId,
   }
+}
+
+/* =========================================================
+ * Focused venue-layer loader
+ * ======================================================= */
+
+type SupabaseServerClient =
+  Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
+
+async function loadCollectionVenueCounts({
+  supabase,
+  collections,
+  userId,
+}: {
+  supabase: SupabaseServerClient
+  collections: CreatorCollectionRow[]
+  userId: string
+}): Promise<CollectionVenueCountMap> {
+  const counts:
+    CollectionVenueCountMap = {}
+
+  for (const collection of collections) {
+    counts[collection.id] = 0
+  }
+
+  if (collections.length === 0) {
+    return counts
+  }
+
+  const collectionIds =
+    collections.map(
+      (collection) =>
+        collection.id
+    )
+
+  const result =
+    await supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .select('collection_id')
+      .in(
+        'collection_id',
+        collectionIds
+      )
+
+  if (result.error) {
+    console.error(
+      '[creator collections page] Venue-count query failed:',
+      {
+        userId,
+        collectionIds,
+        error: result.error,
+      }
+    )
+
+    return counts
+  }
+
+  const validCollectionIds =
+    new Set(collectionIds)
+
+  for (
+    const row of
+      result.data ?? []
+  ) {
+    const collectionId =
+      normalizeRequiredText(
+        row.collection_id
+      )
+
+    if (
+      !collectionId ||
+      !validCollectionIds.has(
+        collectionId
+      )
+    ) {
+      continue
+    }
+
+    counts[collectionId] =
+      (counts[collectionId] ??
+        0) + 1
+  }
+
+  return counts
 }
 
 /* =========================================================

@@ -1,8 +1,9 @@
 'use client'
 
 import {
-  useDeferredValue,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from 'react'
@@ -120,6 +121,34 @@ export type AddCollectionItemsResult =
   | AddCollectionItemsSuccess
   | AddCollectionItemsFailure
 
+export type SearchCollectionItemsInput = {
+  collectionId: string
+  query: string
+}
+
+export type SearchCollectionItemsSuccess = {
+  success: true
+
+  data: {
+    candidates:
+      readonly CollectionItemPickerCandidate[]
+  }
+}
+
+export type SearchCollectionItemsFailure = {
+  success: false
+  error: string
+
+  fieldErrors?: Record<
+    string,
+    string[] | undefined
+  >
+}
+
+export type SearchCollectionItemsResult =
+  | SearchCollectionItemsSuccess
+  | SearchCollectionItemsFailure
+
 export type CollectionItemPickerProps = {
   /**
    * Parent collection receiving the selected items.
@@ -127,15 +156,10 @@ export type CollectionItemPickerProps = {
   collectionId: string
 
   /**
-   * Server-authorized candidate projection.
-   */
-  candidates:
-    readonly CollectionItemPickerCandidate[]
-
-  /**
    * Source IDs already present in the collection.
    *
-   * These candidates remain visible but cannot be selected.
+   * These candidates remain unavailable for selection if the
+   * server includes them in search results.
    */
   existingItemIds?: readonly string[]
 
@@ -146,6 +170,13 @@ export type CollectionItemPickerProps = {
   addItemsAction: (
     input: AddCollectionItemsInput
   ) => Promise<AddCollectionItemsResult>
+
+  /**
+   * Owner-scoped server action that searches eligible items.
+   */
+  searchItemsAction: (
+    input: SearchCollectionItemsInput
+  ) => Promise<SearchCollectionItemsResult>
 
   /**
    * Optional picker heading.
@@ -209,6 +240,8 @@ type Feedback =
   | null
 
 const DEFAULT_SELECTION_LIMIT = 25
+const MINIMUM_SEARCH_LENGTH = 2
+const SEARCH_DEBOUNCE_MS = 300
 
 const TYPE_OPTIONS: Array<{
   value:
@@ -216,30 +249,12 @@ const TYPE_OPTIONS: Array<{
     | 'all'
   label: string
 }> = [
-  {
-    value: 'all',
-    label: 'All',
-  },
+  
   {
     value: 'venue',
     label: 'Venues',
   },
-  {
-    value: 'property',
-    label: 'Properties',
-  },
-  {
-    value: 'flow',
-    label: 'Flows',
-  },
-  {
-    value: 'snapshot',
-    label: 'Snapshots',
-  },
-  {
-    value: 'custom',
-    label: 'Custom',
-  },
+  
 ]
 
 /* =========================================================
@@ -248,12 +263,12 @@ const TYPE_OPTIONS: Array<{
 
 export default function CollectionItemPicker({
   collectionId,
-  candidates,
   existingItemIds = [],
   addItemsAction,
+  searchItemsAction,
   title = 'Add collection items',
   description =
-    'Search the available places, properties, flows, snapshots, and recommendations, then add the strongest matches to this collection.',
+    'Search the available places, then add the strongest matches to this collection.',
   initialType = 'all',
   selectionLimit =
     DEFAULT_SELECTION_LIMIT,
@@ -269,15 +284,6 @@ export default function CollectionItemPicker({
   const normalizedSelectionLimit =
     normalizeSelectionLimit(
       selectionLimit
-    )
-
-  const normalizedCandidates =
-    useMemo(
-      () =>
-        normalizeCandidates(
-          candidates
-        ),
-      [candidates]
     )
 
   const existingIds =
@@ -301,8 +307,24 @@ export default function CollectionItemPicker({
     setQuery,
   ] = useState('')
 
-  const deferredQuery =
-    useDeferredValue(query)
+  const normalizedQuery =
+    normalizeSearchText(query)
+
+  const [
+    candidates,
+    setCandidates,
+  ] = useState<
+    CollectionItemPickerCandidate[]
+  >([])
+
+  const normalizedCandidates =
+    useMemo(
+      () =>
+        normalizeCandidates(
+          candidates
+        ),
+      [candidates]
+    )
 
   const [
     activeType,
@@ -331,9 +353,174 @@ export default function CollectionItemPicker({
   ] = useState<Feedback>(null)
 
   const [
+    searchError,
+    setSearchError,
+  ] = useState<string | null>(
+    null
+  )
+
+  const [
+    isSearching,
+    setIsSearching,
+  ] = useState(false)
+
+  const [
     isPending,
     startTransition,
   ] = useTransition()
+
+  const latestSearchIdRef =
+    useRef(0)
+
+  useEffect(() => {
+    if (
+      !normalizedCollectionId ||
+      normalizedQuery.length <
+        MINIMUM_SEARCH_LENGTH
+    ) {
+      latestSearchIdRef.current += 1
+
+      setCandidates([])
+      setSelectedIds(new Set())
+      setSearchError(null)
+      setIsSearching(false)
+
+      return
+    }
+
+    const searchId =
+      latestSearchIdRef.current + 1
+
+    latestSearchIdRef.current =
+      searchId
+
+    let cancelled = false
+
+    const timeoutId =
+      window.setTimeout(
+        () => {
+          if (cancelled) {
+            return
+          }
+
+          setIsSearching(true)
+          setSearchError(null)
+
+          void searchItemsAction({
+            collectionId:
+              normalizedCollectionId,
+            query:
+              normalizedQuery,
+          })
+            .then((result) => {
+              if (
+                cancelled ||
+                latestSearchIdRef.current !==
+                  searchId
+              ) {
+                return
+              }
+
+              if (!result.success) {
+                setCandidates([])
+                setSelectedIds(
+                  new Set()
+                )
+                setSearchError(
+                  normalizeFeedbackMessage(
+                    result.error
+                  ) ??
+                    'Available items could not be searched.'
+                )
+
+                return
+              }
+
+              const nextCandidates =
+                normalizeCandidates(
+                  result.data
+                    .candidates
+                )
+
+              setCandidates(
+                nextCandidates
+              )
+
+              const nextCandidateIds =
+                new Set(
+                  nextCandidates.map(
+                    (candidate) =>
+                      candidate.id
+                  )
+                )
+
+              setSelectedIds(
+                (current) =>
+                  new Set(
+                    [...current].filter(
+                      (candidateId) =>
+                        nextCandidateIds.has(
+                          candidateId
+                        ) &&
+                        !existingIds.has(
+                          candidateId
+                        )
+                    )
+                  )
+              )
+            })
+            .catch(
+              (error: unknown) => {
+                if (
+                  cancelled ||
+                  latestSearchIdRef.current !==
+                    searchId
+                ) {
+                  return
+                }
+
+                console.error(
+                  '[CollectionItemPicker] Search action failed:',
+                  error
+                )
+
+                setCandidates([])
+                setSelectedIds(
+                  new Set()
+                )
+                setSearchError(
+                  'Available items could not be searched. Try again.'
+                )
+              }
+            )
+            .finally(() => {
+              if (
+                !cancelled &&
+                latestSearchIdRef.current ===
+                  searchId
+              ) {
+                setIsSearching(
+                  false
+                )
+              }
+            })
+        },
+        SEARCH_DEBOUNCE_MS
+      )
+
+    return () => {
+      cancelled = true
+
+      window.clearTimeout(
+        timeoutId
+      )
+    }
+  }, [
+    existingIds,
+    normalizedCollectionId,
+    normalizedQuery,
+    searchItemsAction,
+  ])
 
   const filteredCandidates =
     useMemo(
@@ -341,13 +528,10 @@ export default function CollectionItemPicker({
         filterCandidates({
           candidates:
             normalizedCandidates,
-          query:
-            deferredQuery,
           activeType,
         }),
       [
         normalizedCandidates,
-        deferredQuery,
         activeType,
       ]
     )
@@ -390,6 +574,10 @@ export default function CollectionItemPicker({
       feedback?.type === 'error'
     ) {
       setFeedback(null)
+    }
+
+    if (searchError) {
+      setSearchError(null)
     }
   }
 
@@ -534,6 +722,10 @@ export default function CollectionItemPicker({
             new Set()
           )
 
+          setCandidates([])
+          setQuery('')
+          setSearchError(null)
+
           setFeedback({
             type: 'success',
             message:
@@ -617,15 +809,45 @@ export default function CollectionItemPicker({
           />
         ) : null}
 
-        {filteredCandidates.length ===
-        0 ? (
-          <PickerEmptyState
-            hasCandidates={
-              normalizedCandidates.length >
-              0
+        {searchError ? (
+          <SearchErrorState
+            message={
+              searchError
             }
-            query={query}
-            activeType={activeType}
+            className={
+              feedback
+                ? 'mt-4'
+                : ''
+            }
+          />
+        ) : isSearching ? (
+          <SearchLoadingState
+            className={
+              feedback
+                ? 'mt-4'
+                : ''
+            }
+          />
+        ) : normalizedQuery.length <
+          MINIMUM_SEARCH_LENGTH ? (
+          <PickerEmptyState
+            mode="prompt"
+            activeType={
+              activeType
+            }
+            className={
+              feedback
+                ? 'mt-4'
+                : ''
+            }
+          />
+        ) : filteredCandidates.length ===
+          0 ? (
+          <PickerEmptyState
+            mode="no-results"
+            activeType={
+              activeType
+            }
             className={
               feedback
                 ? 'mt-4'
@@ -635,7 +857,10 @@ export default function CollectionItemPicker({
         ) : (
           <ul
             aria-label="Available collection items"
-            aria-busy={isPending}
+            aria-busy={
+              isPending ||
+              isSearching
+            }
             className={[
               'grid min-w-0 gap-3 md:grid-cols-2',
               feedback
@@ -759,7 +984,7 @@ function PickerHeader({
 
       <div className="flex shrink-0 flex-wrap gap-2">
         <MetricBadge
-          label="Available"
+          label="Results"
           value={candidateCount}
         />
 
@@ -856,7 +1081,9 @@ function SearchAndFilters({
           value={query}
           disabled={disabled}
           onChange={onQueryChange}
-          placeholder="Search by title, city, category, or description"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Enter at least 2 characters to search"
           className="w-full min-w-0 rounded-xl border border-neutral-800 bg-black py-2.5 pl-10 pr-10 text-sm text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-60"
         />
 
@@ -1188,7 +1415,7 @@ function getTypeLabel(
 }
 
 /* =========================================================
- * Feedback and empty states
+ * Feedback and search states
  * ======================================================= */
 
 function PickerFeedback({
@@ -1257,21 +1484,82 @@ function PickerFeedback({
   )
 }
 
+function SearchLoadingState({
+  className = '',
+}: {
+  className?: string
+}) {
+  return (
+    <div
+      role="status"
+      className={[
+        'flex min-w-0 items-center justify-center gap-3 rounded-[1.5rem] border border-neutral-800 bg-black/20 px-5 py-10 text-center',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <Loader2
+        aria-hidden="true"
+        className="h-5 w-5 animate-spin text-cyan-300"
+      />
+
+      <p className="text-sm font-medium text-neutral-400">
+        Searching available items…
+      </p>
+    </div>
+  )
+}
+
+function SearchErrorState({
+  message,
+  className = '',
+}: {
+  message: string
+  className?: string
+}) {
+  return (
+    <div
+      role="alert"
+      className={[
+        'flex min-w-0 items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <AlertCircle
+        aria-hidden="true"
+        className="mt-0.5 h-4 w-4 shrink-0 text-red-300"
+      />
+
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-red-200">
+          Search failed
+        </p>
+
+        <p className="mt-1 break-words text-xs leading-5 text-red-300/80">
+          {message}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function PickerEmptyState({
-  hasCandidates,
-  query,
+  mode,
   activeType,
   className = '',
 }: {
-  hasCandidates: boolean
-  query: string
+  mode:
+    | 'prompt'
+    | 'no-results'
   activeType:
     | CollectionItemPickerType
     | 'all'
   className?: string
 }) {
-  const hasFilters =
-    query.trim().length > 0 ||
+  const filteredToType =
     activeType !== 'all'
 
   return (
@@ -1291,17 +1579,17 @@ function PickerEmptyState({
       </span>
 
       <h3 className="mt-4 text-base font-semibold text-white">
-        {hasCandidates &&
-        hasFilters
-          ? 'No matching items'
-          : 'No items available'}
+        {mode === 'prompt'
+          ? 'Search for collection items'
+          : 'No matching items'}
       </h3>
 
       <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-neutral-500">
-        {hasCandidates &&
-        hasFilters
-          ? 'Change the search terms or type filter to reveal more candidates.'
-          : 'The server did not provide any eligible items for this collection.'}
+        {mode === 'prompt'
+          ? `Enter at least ${MINIMUM_SEARCH_LENGTH} characters to search for eligible items.`
+          : filteredToType
+            ? 'No search results match the selected type. Change the search terms or type filter.'
+            : 'No eligible items matched your search. Try a different name or spelling.'}
       </p>
     </div>
   )
@@ -1442,66 +1730,22 @@ function PickerFooter({
 
 function filterCandidates({
   candidates,
-  query,
   activeType,
 }: {
   candidates:
     CollectionItemPickerCandidate[]
-  query: string
   activeType:
     | CollectionItemPickerType
     | 'all'
 }): CollectionItemPickerCandidate[] {
-  const normalizedQuery =
-    normalizeSearchText(query)
+  if (activeType === 'all') {
+    return candidates
+  }
 
   return candidates.filter(
-    (candidate) => {
-      if (
-        activeType !== 'all' &&
-        candidate.item_type !==
-          activeType
-      ) {
-        return false
-      }
-
-      if (!normalizedQuery) {
-        return true
-      }
-
-      return buildSearchHaystack(
-        candidate
-      ).includes(
-        normalizedQuery
-      )
-    }
-  )
-}
-
-function buildSearchHaystack(
-  candidate:
-    CollectionItemPickerCandidate
-): string {
-  return normalizeSearchText(
-    [
-      candidate.title,
-      candidate.subtitle,
-      candidate.description,
-      candidate.city,
-      getTypeLabel(
-        candidate.item_type
-      ),
-      ...(candidate.search_terms ??
-        []),
-    ]
-      .filter(
-        (
-          value
-        ): value is string =>
-          typeof value ===
-          'string'
-      )
-      .join(' ')
+    (candidate) =>
+      candidate.item_type ===
+      activeType
   )
 }
 

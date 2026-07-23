@@ -16,11 +16,9 @@ const CITY_ALIASES: Record<string, string> = {
   lisbon: 'lisbon',
   lisboa: 'lisbon',
 
-  // 🇬🇧 London
   london: 'london',
   londres: 'london',
 
-  // 🇺🇸 Los Angeles
   la: 'la',
   'los angeles': 'la',
   hollywood: 'la',
@@ -28,7 +26,76 @@ const CITY_ALIASES: Record<string, string> = {
   'west hollywood': 'la',
 }
 
-export function normalizeCityKey(input?: string | null) {
-  const raw = (input ?? '').trim().toLowerCase()
+export const SUPPORTED_CITIES = [
+  {
+    value: 'atl',
+    label: 'Atlanta',
+  },
+  {
+    value: 'nyc',
+    label: 'New York City',
+  },
+  {
+    value: 'porto',
+    label: 'Porto',
+  },
+  {
+    value: 'lisbon',
+    label: 'Lisbon',
+  },
+  {
+    value: 'london',
+    label: 'London',
+  },
+  {
+    value: 'la',
+    label: 'Los Angeles',
+  },
+] as const
+
+export type SupportedCityKey =
+  (typeof SUPPORTED_CITIES)[number]['value']
+
+export function normalizeCityKey(
+  input?: string | null
+): string {
+  const raw = (input ?? '')
+    .trim()
+    .toLowerCase()
+
   return CITY_ALIASES[raw] ?? raw
+}
+
+export function isSupportedCityKey(
+  input: unknown
+): input is SupportedCityKey {
+  if (typeof input !== 'string') {
+    return false
+  }
+
+  const normalized =
+    normalizeCityKey(input)
+
+  return SUPPORTED_CITIES.some(
+    (city) =>
+      city.value === normalized
+  )
+}
+
+export function getCityLabel(
+  input?: string | null
+): string | null {
+  const normalized =
+    normalizeCityKey(input)
+
+  if (!normalized) {
+    return null
+  }
+
+  return (
+    SUPPORTED_CITIES.find(
+      (city) =>
+        city.value === normalized
+    )?.label ?? normalized
+  )
 }

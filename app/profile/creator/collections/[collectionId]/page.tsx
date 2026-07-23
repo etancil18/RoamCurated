@@ -1,12 +1,26 @@
-import type { Metadata } from 'next'
+import type {
+  Metadata,
+} from 'next'
+import type {
+  ReactNode,
+} from 'react'
 import Link from 'next/link'
 import {
   notFound,
   redirect,
 } from 'next/navigation'
 
+import CollectionItemList, {
+  type CollectionItemListItem,
+} from '@/components/profile/creator/collections/CollectionItemList'
+import CollectionItemPicker from '@/components/profile/creator/collections/CollectionItemPicker'
+
 import {
+  addCreatorCollectionItemsAction,
   deleteCreatorCollectionAction,
+  removeCreatorCollectionItemAction,
+  reorderCreatorCollectionItemsAction,
+  searchCreatorCollectionVenuesAction,
   setCreatorCollectionFeaturedAction,
   setCreatorCollectionVisibilityAction,
   updateCreatorCollectionAction,
@@ -17,10 +31,17 @@ import {
   createServerClient,
 } from '@/lib/supabase/server'
 
+import {
+  getCityLabel,
+  normalizeCityKey,
+  SUPPORTED_CITIES,
+} from '@/lib/cities/normalizeCity'
+
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Manage Creator Collection | Roam',
+  title:
+    'Manage Creator Collection | Roam',
   description:
     'Edit, publish, feature, and manage a Roam creator collection.',
   robots: {
@@ -47,7 +68,9 @@ type Props = {
 type ProfileRow = {
   id: string
   username: string | null
-  creator_mode_enabled: boolean | null
+  creator_mode_enabled:
+    | boolean
+    | null
 }
 
 type CreatorCollectionRow = {
@@ -56,19 +79,47 @@ type CreatorCollectionRow = {
   title: string
   slug: string
   description: string | null
-  cover_image_url: string | null
+  cover_image_url:
+    | string
+    | null
   city: string | null
   category: string | null
-  visibility: 'public' | 'private'
+  visibility:
+    | 'public'
+    | 'private'
   featured: boolean
   sort_order: number
   created_at: string
   updated_at: string
 }
 
+type CreatorCollectionVenueRow = {
+  id: string
+  collection_id: string
+  venue_id: string
+  sort_order: number
+  created_at: string
+}
+
+type VenueRow = {
+  id: string
+  name: string
+  slug: string | null
+  city: string | null
+  category: string | null
+  description: string | null
+  cover_image_url:
+    | string
+    | null
+  created_at: string | null
+}
+
 type CollectionPageData = {
   profile: ProfileRow
-  collection: CreatorCollectionRow
+  collection:
+    CreatorCollectionRow
+  selectedVenues:
+    CollectionItemListItem[]
 }
 
 /* =========================================================
@@ -80,7 +131,8 @@ export default async function CreatorCollectionPage({
   searchParams,
 }: Props) {
   const {
-    collectionId: rawCollectionId,
+    collectionId:
+      rawCollectionId,
   } = await params
 
   const resolvedSearchParams =
@@ -119,23 +171,27 @@ export default async function CreatorCollectionPage({
   }
 
   if (
-    pageData.status === 'not-found'
+    pageData.status ===
+    'not-found'
   ) {
     notFound()
   }
 
   const {
-    profile,
-    collection,
-  } = pageData.data
+  profile,
+  collection,
+  selectedVenues,
+} = pageData.data
 
   const feedback =
     normalizeActionFeedback({
       status:
-        resolvedSearchParams?.status,
+        resolvedSearchParams
+          ?.status,
 
       message:
-        resolvedSearchParams?.message,
+        resolvedSearchParams
+          ?.message,
     })
 
   const publicProfileHref =
@@ -147,7 +203,8 @@ export default async function CreatorCollectionPage({
 
   const publicCollectionHref =
     profile.username &&
-    collection.visibility === 'public'
+    collection.visibility ===
+      'public'
       ? `/u/${encodeURIComponent(
           profile.username
         )}/collections/${encodeURIComponent(
@@ -155,11 +212,26 @@ export default async function CreatorCollectionPage({
         )}`
       : null
 
+  const existingVenueIds =
+    selectedVenues
+      .map(
+        (venue) =>
+          venue.item_id
+      )
+      .filter(
+        (
+          venueId
+        ): venueId is string =>
+          venueId !== null
+      )
+
   return (
     <main className="min-h-screen w-full overflow-x-clip bg-black px-4 pb-16 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6">
       <div className="mx-auto w-full min-w-0 max-w-4xl">
         <CollectionPageHeader
-          collection={collection}
+          collection={
+            collection
+          }
           publicProfileHref={
             publicProfileHref
           }
@@ -171,8 +243,12 @@ export default async function CreatorCollectionPage({
         <div className="mt-6 space-y-5">
           {feedback ? (
             <ActionFeedback
-              status={feedback.status}
-              message={feedback.message}
+              status={
+                feedback.status
+              }
+              message={
+                feedback.message
+              }
             />
           ) : null}
 
@@ -185,19 +261,39 @@ export default async function CreatorCollectionPage({
           ) : null}
 
           <CollectionStatusOverview
-            collection={collection}
+            collection={
+              collection
+            }
           />
 
           <CollectionEditor
-            collection={collection}
+            collection={
+              collection
+            }
           />
 
+          <CollectionVenueManager
+            collection={
+                collection
+            }
+            selectedVenues={
+                selectedVenues
+            }
+            existingVenueIds={
+                existingVenueIds
+            }
+            />
+
           <CollectionPublishingControls
-            collection={collection}
+            collection={
+              collection
+            }
           />
 
           <CollectionDangerZone
-            collection={collection}
+            collection={
+              collection
+            }
           />
         </div>
       </div>
@@ -214,9 +310,14 @@ function CollectionPageHeader({
   publicProfileHref,
   publicCollectionHref,
 }: {
-  collection: CreatorCollectionRow
-  publicProfileHref: string | null
-  publicCollectionHref: string | null
+  collection:
+    CreatorCollectionRow
+  publicProfileHref:
+    | string
+    | null
+  publicCollectionHref:
+    | string
+    | null
 }) {
   return (
     <header className="w-full min-w-0">
@@ -240,7 +341,9 @@ function CollectionPageHeader({
 
         {publicProfileHref ? (
           <Link
-            href={publicProfileHref}
+            href={
+              publicProfileHref
+            }
             className="inline-flex items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/40 hover:text-white"
           >
             Public Profile
@@ -249,7 +352,9 @@ function CollectionPageHeader({
 
         {publicCollectionHref ? (
           <Link
-            href={publicCollectionHref}
+            href={
+              publicCollectionHref
+            }
             className="inline-flex items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:border-indigo-400/60 hover:bg-indigo-500/20 hover:text-white"
           >
             Preview Collection →
@@ -271,8 +376,9 @@ function CollectionPageHeader({
         </p>
 
         <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-400">
-          Edit the collection’s public
-          identity, publishing status, and
+          Edit the collection’s
+          public identity,
+          publishing status, and
           featured placement.
         </p>
       </div>
@@ -288,7 +394,9 @@ function ActionFeedback({
   status,
   message,
 }: {
-  status: 'success' | 'error'
+  status:
+    | 'success'
+    | 'error'
   message: string
 }) {
   if (status === 'success') {
@@ -336,11 +444,13 @@ function CreatorModeInactiveNotice() {
       </p>
 
       <p className="mt-1 text-xs leading-5 text-amber-200/70">
-        You can continue editing this
-        collection, but it will not appear
-        through the Creator Mode sections
-        of your public profile until
-        Creator Mode is enabled.
+        You can continue editing
+        this collection, but it
+        will not appear through
+        the Creator Mode sections
+        of your public profile
+        until Creator Mode is
+        enabled.
       </p>
 
       <Link
@@ -357,13 +467,15 @@ function UsernameMissingNotice() {
   return (
     <section className="rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] px-4 py-3">
       <p className="text-sm font-semibold text-cyan-200">
-        Public collection URL unavailable
+        Public collection URL
+        unavailable
       </p>
 
       <p className="mt-1 text-xs leading-5 text-cyan-200/70">
-        Add a username before publishing
-        and sharing this collection through
-        a public URL.
+        Add a username before
+        publishing and sharing
+        this collection through a
+        public URL.
       </p>
 
       <Link
@@ -383,7 +495,8 @@ function UsernameMissingNotice() {
 function CollectionStatusOverview({
   collection,
 }: {
-  collection: CreatorCollectionRow
+  collection:
+    CreatorCollectionRow
 }) {
   return (
     <section
@@ -408,11 +521,13 @@ function CollectionStatusOverview({
 
           <p className="mt-4 max-w-xl text-sm leading-6 text-neutral-400">
             Public collections are
-            eligible for public collection
-            routes. Featured public
-            collections receive priority
-            in the creator profile’s
-            featured collection section.
+            eligible for public
+            collection routes.
+            Featured public
+            collections receive
+            priority in the creator
+            profile’s featured
+            collection section.
           </p>
         </div>
 
@@ -420,7 +535,8 @@ function CollectionStatusOverview({
           <StatusMetric
             label="Order"
             value={
-              collection.sort_order + 1
+              collection.sort_order +
+              1
             }
           />
 
@@ -439,7 +555,9 @@ function CollectionStatusOverview({
 function VisibilityBadge({
   visibility,
 }: {
-  visibility: 'public' | 'private'
+  visibility:
+    | 'public'
+    | 'private'
 }) {
   const isPublic =
     visibility === 'public'
@@ -496,12 +614,15 @@ function StatusMetric({
   value,
 }: {
   label: string
-  value: number | string
+  value:
+    | number
+    | string
 }) {
   return (
     <div className="min-w-[92px] rounded-2xl border border-neutral-800 bg-black/30 px-3 py-3 text-center">
       <dd className="break-words text-sm font-semibold text-white">
-        {typeof value === 'number'
+        {typeof value ===
+        'number'
           ? value.toLocaleString()
           : value}
       </dd>
@@ -520,7 +641,8 @@ function StatusMetric({
 function CollectionEditor({
   collection,
 }: {
-  collection: CreatorCollectionRow
+  collection:
+    CreatorCollectionRow
 }) {
   return (
     <section
@@ -540,15 +662,17 @@ function CollectionEditor({
         </h2>
 
         <p className="mt-1 text-xs leading-5 text-neutral-500">
-          Updating the title does not
-          change the existing collection
-          URL slug.
+          Updating the title does
+          not change the existing
+          collection URL slug.
         </p>
       </div>
 
       <div className="grid min-w-0 gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_260px]">
         <form
-          action={updateCollectionFormAction}
+          action={
+            updateCollectionFormAction
+          }
           className="min-w-0 space-y-5"
         >
           <input
@@ -560,7 +684,9 @@ function CollectionEditor({
           <input
             type="hidden"
             name="sort_order"
-            value={collection.sort_order}
+            value={
+              collection.sort_order
+            }
           />
 
           <FormField
@@ -578,7 +704,9 @@ function CollectionEditor({
               defaultValue={
                 collection.title
               }
-              className={inputClassName}
+              className={
+                inputClassName
+              }
             />
           </FormField>
 
@@ -605,17 +733,31 @@ function CollectionEditor({
               id="collection-city"
               label="City"
             >
-              <input
+              <select
                 id="collection-city"
                 name="city"
-                type="text"
-                autoComplete="address-level2"
-                maxLength={160}
                 defaultValue={
-                  collection.city ?? ''
+                    normalizeCityKey(
+                    collection.city
+                    )
                 }
                 className={inputClassName}
-              />
+                >
+                <option value="">
+                    Select a city
+                </option>
+
+                {SUPPORTED_CITIES.map(
+                    (city) => (
+                    <option
+                        key={city.value}
+                        value={city.value}
+                    >
+                        {city.label}
+                    </option>
+                    )
+                )}
+            </select>
             </FormField>
 
             <FormField
@@ -631,7 +773,9 @@ function CollectionEditor({
                   collection.category ??
                   ''
                 }
-                className={inputClassName}
+                className={
+                  inputClassName
+                }
               />
             </FormField>
           </div>
@@ -652,16 +796,22 @@ function CollectionEditor({
                 collection.cover_image_url ??
                 ''
               }
-              className={inputClassName}
+              className={
+                inputClassName
+              }
             />
           </FormField>
 
           <VisibilityFields
-            collection={collection}
+            collection={
+              collection
+            }
           />
 
           <FeaturedField
-            collection={collection}
+            collection={
+              collection
+            }
           />
 
           <div className="flex flex-wrap gap-3 border-t border-neutral-800/80 pt-5">
@@ -682,7 +832,9 @@ function CollectionEditor({
         </form>
 
         <CollectionCoverPreview
-          collection={collection}
+          collection={
+            collection
+          }
         />
       </div>
     </section>
@@ -692,7 +844,8 @@ function CollectionEditor({
 function VisibilityFields({
   collection,
 }: {
-  collection: CreatorCollectionRow
+  collection:
+    CreatorCollectionRow
 }) {
   return (
     <fieldset className="min-w-0">
@@ -719,8 +872,9 @@ function VisibilityFields({
             </span>
 
             <span className="mt-1 block text-xs leading-5 text-neutral-500">
-              Visible only inside your
-              creator collection manager.
+              Visible only inside
+              your creator collection
+              manager.
             </span>
           </span>
         </label>
@@ -743,8 +897,9 @@ function VisibilityFields({
             </span>
 
             <span className="mt-1 block text-xs leading-5 text-neutral-500">
-              Eligible for public profile
-              and collection routes.
+              Eligible for public
+              profile and collection
+              routes.
             </span>
           </span>
         </label>
@@ -756,7 +911,8 @@ function VisibilityFields({
 function FeaturedField({
   collection,
 }: {
-  collection: CreatorCollectionRow
+  collection:
+    CreatorCollectionRow
 }) {
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.05] p-4">
@@ -775,13 +931,128 @@ function FeaturedField({
         </span>
 
         <span className="mt-1 block text-xs leading-5 text-neutral-500">
-          Featured public collections
-          receive priority on the creator
-          profile. Private collections
-          remain hidden even when featured.
+          Featured public
+          collections receive
+          priority on the creator
+          profile. Private
+          collections remain hidden
+          even when featured.
         </span>
       </span>
     </label>
+  )
+}
+
+/* =========================================================
+ * Focused venue manager
+ * ======================================================= */
+
+function CollectionVenueManager({
+  collection,
+  selectedVenues,
+  existingVenueIds,
+}: {
+  collection:
+    CreatorCollectionRow
+  selectedVenues:
+    CollectionItemListItem[]
+  existingVenueIds: string[]
+}) {
+  return (
+    <section
+      aria-labelledby="collection-venues-title"
+      className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-cyan-500/20 bg-neutral-950/75"
+    >
+      <div className="border-b border-neutral-800/80 px-4 py-4 sm:px-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
+          Collection venues
+        </p>
+
+        <div className="mt-1 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h2
+              id="collection-venues-title"
+              className="text-lg font-semibold text-white"
+            >
+              Build this collection
+              with venues
+            </h2>
+
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500">
+              {collection.city
+                ? `Choose venues located in ${
+                    getCityLabel(
+                      collection.city
+                    ) ?? collection.city
+                  }. Selected venues link to their Roam venue profiles.`
+                : 'Save a city on this collection before selecting venues.'}
+            </p>
+          </div>
+
+          <span className="w-fit shrink-0 rounded-full border border-neutral-800 bg-black/30 px-3 py-1.5 text-xs font-medium text-neutral-400">
+            {selectedVenues.length.toLocaleString()}{' '}
+            {selectedVenues.length ===
+            1
+              ? 'venue'
+              : 'venues'}
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-6 p-4 sm:p-5">
+        <CollectionItemList
+          collectionId={
+            collection.id
+          }
+          initialItems={
+            selectedVenues
+          }
+          removeItemAction={
+            removeCreatorCollectionItemAction
+          }
+          reorderItemsAction={
+            reorderCreatorCollectionItemsAction
+          }
+          showHeading
+        />
+
+        {collection.city ? (
+          <div className="border-t border-neutral-800/80 pt-6">
+            <CollectionItemPicker
+              collectionId={
+                collection.id
+              }
+              existingItemIds={
+                existingVenueIds
+              }
+              addItemsAction={
+                addCreatorCollectionItemsAction
+              }
+              searchItemsAction={
+                searchCreatorCollectionVenuesAction
+              }
+              initialType="venue"
+              selectionLimit={25}
+            />
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-4">
+            <p className="text-sm font-semibold text-amber-200">
+              Collection city
+              required
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-amber-200/70">
+              Enter a city in the
+              collection editor and
+              save your changes.
+              Matching venues will
+              then appear here.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
 
@@ -792,7 +1063,8 @@ function FeaturedField({
 function CollectionCoverPreview({
   collection,
 }: {
-  collection: CreatorCollectionRow
+  collection:
+    CreatorCollectionRow
 }) {
   return (
     <aside className="min-w-0">
@@ -832,16 +1104,19 @@ function CollectionCoverPreview({
 
           {collection.city ? (
             <p className="mt-1 truncate text-xs text-neutral-500">
-              {collection.city}
+                {getCityLabel(
+                collection.city
+                ) ?? collection.city}
             </p>
-          ) : null}
+            ) : null}
         </div>
       </div>
 
       <p className="mt-3 text-xs leading-5 text-neutral-600">
-        This preview reflects the currently
-        saved cover. Submit the form before
-        a new URL appears here.
+        This preview reflects the
+        currently saved cover.
+        Submit the form before a
+        new URL appears here.
       </p>
     </aside>
   )
@@ -854,10 +1129,12 @@ function CollectionCoverPreview({
 function CollectionPublishingControls({
   collection,
 }: {
-  collection: CreatorCollectionRow
+  collection:
+    CreatorCollectionRow
 }) {
   const nextVisibility =
-    collection.visibility === 'public'
+    collection.visibility ===
+    'public'
       ? 'private'
       : 'public'
 
@@ -906,8 +1183,9 @@ function CollectionPublishingControls({
           </p>
 
           <p className="mt-1 text-xs leading-5 text-neutral-600">
-            Change only the visibility
-            state without submitting the
+            Change only the
+            visibility state
+            without submitting the
             full editor form.
           </p>
 
@@ -952,9 +1230,11 @@ function CollectionPublishingControls({
           </p>
 
           <p className="mt-1 text-xs leading-5 text-neutral-600">
-            Change featured placement
-            without modifying the remaining
-            collection fields.
+            Change featured
+            placement without
+            modifying the
+            remaining collection
+            fields.
           </p>
 
           <button
@@ -978,7 +1258,8 @@ function CollectionPublishingControls({
 function CollectionDangerZone({
   collection,
 }: {
-  collection: CreatorCollectionRow
+  collection:
+    CreatorCollectionRow
 }) {
   return (
     <section
@@ -997,15 +1278,17 @@ function CollectionDangerZone({
       </h2>
 
       <p className="mt-2 max-w-2xl text-sm leading-6 text-red-200/60">
-        Deleting this collection is
-        permanent. Associated collection
-        items may also be removed by
-        database cascade rules.
+        Deleting this collection
+        is permanent. Associated
+        collection items may also
+        be removed by database
+        cascade rules.
       </p>
 
       <details className="mt-4 rounded-2xl border border-red-900/50 bg-black/20">
         <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-red-300">
-          Permanently delete this collection
+          Permanently delete this
+          collection
         </summary>
 
         <form
@@ -1038,8 +1321,9 @@ function CollectionDangerZone({
             />
 
             <span>
-              I understand this action
-              cannot be undone.
+              I understand this
+              action cannot be
+              undone.
             </span>
           </label>
 
@@ -1070,7 +1354,7 @@ function FormField({
   label: string
   required?: boolean
   description?: string
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <div className="min-w-0">
@@ -1151,14 +1435,19 @@ async function updateCollectionFormAction(
         formData.get('city'),
 
       category:
-        formData.get('category'),
+        formData.get(
+          'category'
+        ),
 
       visibility:
-        formData.get('visibility'),
+        formData.get(
+          'visibility'
+        ),
 
       featured:
-        formData.get('featured') ===
-        'on',
+        formData.get(
+          'featured'
+        ) === 'on',
 
       sort_order:
         formData.get(
@@ -1271,7 +1560,8 @@ async function deleteCollectionFormAction(
 
   if (
     !collectionId ||
-    confirmation !== collectionId
+    confirmation !==
+      collectionId
   ) {
     if (collectionId) {
       redirectToCollection({
@@ -1322,7 +1612,8 @@ type CollectionPageLoadResult =
       data: CollectionPageData
     }
   | {
-      status: 'unauthenticated'
+      status:
+        'unauthenticated'
     }
   | {
       status: 'not-found'
@@ -1346,13 +1637,15 @@ async function loadCollectionPageData(
     )
 
     return {
-      status: 'unauthenticated',
+      status:
+        'unauthenticated',
     }
   }
 
   if (!user) {
     return {
-      status: 'unauthenticated',
+      status:
+        'unauthenticated',
     }
   }
 
@@ -1371,7 +1664,9 @@ async function loadCollectionPageData(
       .maybeSingle(),
 
     supabase
-      .from('creator_collections')
+      .from(
+        'creator_collections'
+      )
       .select(`
         id,
         user_id,
@@ -1442,12 +1737,220 @@ async function loadCollectionPageData(
     }
   }
 
+  const venueLayer =
+    await loadCollectionVenueLayer({
+      supabase,
+      collection,
+      userId: user.id,
+    })
+
   return {
     status: 'success',
     data: {
-      profile,
-      collection,
+        profile,
+        collection,
+        selectedVenues:
+        venueLayer.selectedVenues,
     },
+  }
+}
+
+/* =========================================================
+ * Focused venue loader
+ * ======================================================= */
+
+async function loadCollectionVenueLayer({
+  supabase,
+  collection,
+  userId,
+}: {
+  supabase: SupabaseServerClient
+  collection:
+    CreatorCollectionRow
+  userId: string
+}): Promise<{
+  selectedVenues:
+    CollectionItemListItem[]
+}> {
+  const relationshipsResult =
+    await supabase
+      .from(
+        'creator_collection_venues'
+      )
+      .select(`
+        id,
+        collection_id,
+        venue_id,
+        sort_order,
+        created_at
+      `)
+      .eq(
+        'collection_id',
+        collection.id
+      )
+      .order('sort_order', {
+        ascending: true,
+      })
+      .order('created_at', {
+        ascending: true,
+      })
+
+  if (
+    relationshipsResult.error
+  ) {
+    console.error(
+      '[creator collection page] Collection venue relationship query failed:',
+      {
+        userId,
+        collectionId:
+          collection.id,
+        error:
+          relationshipsResult.error,
+      }
+    )
+
+    throw new Error(
+      'Collection venues could not be loaded.'
+    )
+  }
+
+  const relationships =
+    normalizeCollectionVenueRows(
+      relationshipsResult.data,
+      collection.id
+    )
+
+  const selectedVenueIds = [
+    ...new Set(
+      relationships.map(
+        (relationship) =>
+          relationship.venue_id
+      )
+    ),
+  ]
+
+  const selectedVenueResult =
+    selectedVenueIds.length > 0
+      ? await supabase
+          .from('venues')
+          .select(`
+            id,
+            name,
+            slug,
+            city,
+            description,
+            cover_image_url:cover
+          `)
+          .in(
+            'id',
+            selectedVenueIds
+          )
+      : {
+          data: [],
+          error: null,
+        }
+
+  if (
+    selectedVenueResult.error
+  ) {
+    console.error(
+      '[creator collection page] Selected venue query failed:',
+      {
+        userId,
+        collectionId:
+          collection.id,
+        error:
+          selectedVenueResult.error,
+      }
+    )
+
+    throw new Error(
+      'Selected collection venues could not be loaded.'
+    )
+  }
+
+  const selectedVenueRows =
+    normalizeVenueRows(
+      selectedVenueResult.data
+    )
+
+  const selectedVenueById =
+    new Map(
+      selectedVenueRows.map(
+        (venue) => [
+          venue.id,
+          venue,
+        ]
+      )
+    )
+
+  const selectedVenues =
+    relationships
+      .map(
+        (
+          relationship
+        ): CollectionItemListItem | null => {
+          const venue =
+            selectedVenueById.get(
+              relationship.venue_id
+            )
+
+          if (!venue) {
+            return null
+          }
+
+          return {
+            id:
+              relationship.id,
+
+            collection_id:
+              collection.id,
+
+            item_type:
+              'venue',
+
+            item_id:
+              venue.id,
+
+            title:
+              venue.name,
+
+            subtitle:
+              venue.category,
+
+            description:
+              venue.description,
+
+            image_url:
+              venue.cover_image_url,
+
+            href:
+              buildVenueProfileHref(
+                venue
+              ),
+
+            city:
+              venue.city,
+
+            sort_order:
+              relationship.sort_order,
+
+            created_at:
+              relationship.created_at,
+
+            updated_at: null,
+          }
+        }
+      )
+      .filter(
+        (
+          venue
+        ): venue is CollectionItemListItem =>
+          venue !== null
+      )
+
+  return {
+    selectedVenues,
   }
 }
 
@@ -1474,7 +1977,8 @@ function redirectWithCollectionResult({
     redirectToCollection({
       collectionId,
       status: 'success',
-      message: successMessage,
+      message:
+        successMessage,
     })
   }
 
@@ -1494,7 +1998,9 @@ function redirectToCollection({
   message,
 }: {
   collectionId: string
-  status: 'success' | 'error'
+  status:
+    | 'success'
+    | 'error'
   message: string
 }): never {
   const query =
@@ -1518,7 +2024,9 @@ function redirectToCollectionsManager({
   status,
   message,
 }: {
-  status: 'success' | 'error'
+  status:
+    | 'success'
+    | 'error'
   message: string
 }): never {
   const query =
@@ -1537,7 +2045,8 @@ function redirectToCollectionsManager({
 }
 
 function getActionErrorMessage(
-  result: CollectionActionFailure
+  result:
+    CollectionActionFailure
 ): string {
   const fieldMessage =
     getFirstFieldError(
@@ -1577,7 +2086,8 @@ function getFirstFieldError(
   ] as const
 
   for (
-    const field of preferredFields
+    const field of
+      preferredFields
   ) {
     const message =
       fieldErrors[field]?.[0]
@@ -1588,9 +2098,10 @@ function getFirstFieldError(
   }
 
   for (
-    const messages of Object.values(
-      fieldErrors
-    )
+    const messages of
+      Object.values(
+        fieldErrors
+      )
   ) {
     const message =
       messages?.[0]
@@ -1615,7 +2126,9 @@ function normalizeActionFeedback({
   message: unknown
 }):
   | {
-      status: 'success' | 'error'
+      status:
+        | 'success'
+        | 'error'
       message: string
     }
   | null {
@@ -1641,14 +2154,18 @@ function normalizeActionFeedback({
 function normalizeFeedbackMessage(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
-  const normalized = value
-    .trim()
-    .replace(/\s+/g, ' ')
-    .slice(0, 300)
+  const normalized =
+    value
+      .trim()
+      .replace(/\s+/g, ' ')
+      .slice(0, 300)
 
   return normalized.length > 0
     ? normalized
@@ -1668,7 +2185,8 @@ function normalizeProfileRow(
   }
 
   if (
-    value.id !== expectedUserId
+    value.id !==
+    expectedUserId
   ) {
     return null
   }
@@ -1717,8 +2235,10 @@ function normalizeCollectionRow(
     )
 
   const visibility =
-    value.visibility === 'public' ||
-    value.visibility === 'private'
+    value.visibility ===
+      'public' ||
+    value.visibility ===
+      'private'
       ? value.visibility
       : null
 
@@ -1733,8 +2253,10 @@ function normalizeCollectionRow(
     )
 
   if (
-    id !== expectedCollectionId ||
-    userId !== expectedUserId ||
+    id !==
+      expectedCollectionId ||
+    userId !==
+      expectedUserId ||
     !title ||
     !slug ||
     !visibility ||
@@ -1780,23 +2302,264 @@ function normalizeCollectionRow(
         value.sort_order
       ),
 
-    created_at: createdAt,
-    updated_at: updatedAt,
+    created_at:
+      createdAt,
+
+    updated_at:
+      updatedAt,
   }
+}
+
+function normalizeCollectionVenueRows(
+  value: unknown,
+  expectedCollectionId: string
+): CreatorCollectionVenueRow[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map(
+      (
+        row
+      ): CreatorCollectionVenueRow | null => {
+        if (!isRecord(row)) {
+          return null
+        }
+
+        const id =
+          normalizeUuid(
+            row.id
+          )
+
+        const collectionId =
+          normalizeUuid(
+            row.collection_id
+          )
+
+        const venueId =
+          normalizeUuid(
+            row.venue_id
+          )
+
+        const createdAt =
+          normalizeIsoDate(
+            row.created_at
+          )
+
+        if (
+          !id ||
+          collectionId !==
+            expectedCollectionId ||
+          !venueId ||
+          !createdAt
+        ) {
+          return null
+        }
+
+        return {
+          id,
+          collection_id:
+            collectionId,
+          venue_id:
+            venueId,
+          sort_order:
+            normalizeNonNegativeInteger(
+              row.sort_order
+            ),
+          created_at:
+            createdAt,
+        }
+      }
+    )
+    .filter(
+      (
+        row
+      ): row is CreatorCollectionVenueRow =>
+        row !== null
+    )
+    .sort(
+      (
+        first,
+        second
+      ) => {
+        if (
+          first.sort_order !==
+          second.sort_order
+        ) {
+          return (
+            first.sort_order -
+            second.sort_order
+          )
+        }
+
+        const createdComparison =
+          Date.parse(
+            first.created_at
+          ) -
+          Date.parse(
+            second.created_at
+          )
+
+        if (
+          createdComparison !== 0
+        ) {
+          return createdComparison
+        }
+
+        return first.id.localeCompare(
+          second.id
+        )
+      }
+    )
+}
+
+function normalizeVenueRows(
+  value: unknown
+): VenueRow[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const byId =
+    new Map<
+      string,
+      VenueRow
+    >()
+
+  for (const rawRow of value) {
+    if (!isRecord(rawRow)) {
+      continue
+    }
+
+    const id =
+      normalizeUuid(
+        rawRow.id
+      )
+
+    const name =
+      normalizeRequiredText(
+        rawRow.name
+      )
+
+    if (!id || !name) {
+      continue
+    }
+
+    byId.set(id, {
+    id,
+    name,
+
+    slug:
+        normalizeNullableText(
+        rawRow.slug
+        ),
+
+    city:
+        normalizeNullableText(
+        rawRow.city
+        ),
+
+    category: null,
+
+    description:
+        normalizeNullableText(
+        rawRow.description
+        ),
+
+    cover_image_url:
+        normalizeNullableText(
+        rawRow.cover_image_url
+        ),
+
+    created_at: null,
+    })
+  }
+
+  return [
+    ...byId.values(),
+  ].sort(
+    (
+      first,
+      second
+    ) =>
+      first.name.localeCompare(
+        second.name,
+        undefined,
+        {
+          sensitivity:
+            'base',
+        }
+      )
+  )
+}
+
+/* =========================================================
+ * Venue helpers
+ * ======================================================= */
+
+function buildVenueProfileHref(
+  venue: VenueRow
+): string {
+  const identifier =
+    venue.slug ?? venue.id
+
+  return `/venues/${encodeURIComponent(
+    identifier
+  )}`
+}
+
+function citiesMatch(
+  first: string | null,
+  second: string | null
+): boolean {
+  if (!first || !second) {
+    return false
+  }
+
+  return (
+    normalizeCity(first) ===
+    normalizeCity(second)
+  )
+}
+
+function normalizeCity(
+  value: string
+): string {
+  return value
+    .normalize('NFKD')
+    .replace(
+      /[\u0300-\u036f]/g,
+      ''
+    )
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
 }
 
 /* =========================================================
  * Primitive helpers
  * ======================================================= */
 
+type SupabaseServerClient =
+  Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
+
 function normalizeCollectionId(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
-  const normalized = value.trim()
+  const normalized =
+    value.trim()
 
   if (
     !normalized ||
@@ -1806,6 +2569,24 @@ function normalizeCollectionId(
   }
 
   return normalized
+}
+
+function normalizeUuid(
+  value: unknown
+): string | null {
+  if (
+    typeof value !==
+    'string'
+  ) {
+    return null
+  }
+
+  const normalized =
+    value.trim()
+
+  return isUuid(normalized)
+    ? normalized
+    : null
 }
 
 function isUuid(
@@ -1823,11 +2604,15 @@ function getRequiredFormString(
   const value =
     formData.get(key)
 
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
-  const normalized = value.trim()
+  const normalized =
+    value.trim()
 
   return normalized.length > 0
     ? normalized
@@ -1837,11 +2622,15 @@ function getRequiredFormString(
 function normalizeRequiredText(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
-  const normalized = value.trim()
+  const normalized =
+    value.trim()
 
   return normalized.length > 0
     ? normalized
@@ -1851,13 +2640,17 @@ function normalizeRequiredText(
 function normalizeNullableText(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
-  const normalized = value
-    .trim()
-    .replace(/\s+/g, ' ')
+  const normalized =
+    value
+      .trim()
+      .replace(/\s+/g, ' ')
 
   return normalized.length > 0
     ? normalized
@@ -1868,7 +2661,8 @@ function normalizeNonNegativeInteger(
   value: unknown
 ): number {
   if (
-    typeof value !== 'number' ||
+    typeof value !==
+      'number' ||
     !Number.isFinite(value)
   ) {
     return 0
@@ -1883,14 +2677,21 @@ function normalizeNonNegativeInteger(
 function normalizeIsoDate(
   value: unknown
 ): string | null {
-  if (typeof value !== 'string') {
+  if (
+    typeof value !==
+    'string'
+  ) {
     return null
   }
 
   const timestamp =
     Date.parse(value)
 
-  if (Number.isNaN(timestamp)) {
+  if (
+    Number.isNaN(
+      timestamp
+    )
+  ) {
     return null
   }
 
@@ -1905,7 +2706,11 @@ function formatDate(
   const timestamp =
     Date.parse(value)
 
-  if (Number.isNaN(timestamp)) {
+  if (
+    Number.isNaN(
+      timestamp
+    )
+  ) {
     return 'Unknown'
   }
 
@@ -1928,7 +2733,8 @@ function isRecord(
   unknown
 > {
   return (
-    typeof value === 'object' &&
+    typeof value ===
+      'object' &&
     value !== null &&
     !Array.isArray(value)
   )
