@@ -1,13 +1,324 @@
 [
   {
-    "slug": "read-the-room-atl",
-    "name": "Read The Room",
-    "vibe": "clandestine, analog, immersive, artdeco, intimate, transportive",
-    "type": ["cocktail", "lounge"],
-    "lat": "33.7589028",
-    "lon": "-84.364802",
-    "link": "https://www.instagram.com/readtheroom.atl/",
-    "cover": "img/venues/read-the-room-atl.jpg",
+    "slug": "kyoto-garden-ldn",
+    "name": "Kyoto Garden",
+    "vibe": "tranquil, contemplative, serene, restorative, picturesque, meditative",
+    "type": [
+      "garden"
+    ],
+    "lat": "51.5029922",
+    "lon": "-0.2046902",
+    "link": "https://www.instagram.com/kensingtonandchelseacouncil/",
+    "cover": "img/venues/kyoto-garden-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:30 AM–8:00 PM",
+      "Monday: 7:30 AM–8:00 PM",
+      "Tuesday: 7:30 AM–8:00 PM",
+      "Wednesday: 7:30 AM–8:00 PM",
+      "Thursday: 7:30 AM–8:00 PM",
+      "Friday: 7:30 AM–8:00 PM",
+      "Saturday: 7:30 AM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": {
+        "open": 7.5,
+        "close": 20
+      },
+      "mon": {
+        "open": 7.5,
+        "close": 20
+      },
+      "tue": {
+        "open": 7.5,
+        "close": 20
+      },
+      "wed": {
+        "open": 7.5,
+        "close": 20
+      },
+      "thu": {
+        "open": 7.5,
+        "close": 20
+      },
+      "fri": {
+        "open": 7.5,
+        "close": 20
+      },
+      "sat": {
+        "open": 7.5,
+        "close": 20
+      }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "koi, waterfall, pond, peacocks, bridges, strolling, photography, gardens, reflection, landscaping",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "sir-john-soanes-museum-ldn",
+    "name": "Sir John Soane's Museum",
+    "vibe": "eccentric, atmospheric, historic, labyrinthine, contemplative, intimate",
+    "type": [
+      "museum"
+    ],
+    "lat": "51.5170382",
+    "lon": "-0.1174699",
+    "link": "https://www.instagram.com/soanemuseum/?hl=en",
+    "cover": "img/venues/sir-john-soanes-museum-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–5:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 10:00 AM–5:00 PM",
+      "Thursday: 10:00 AM–5:00 PM",
+      "Friday: 10:00 AM–5:00 PM",
+      "Saturday: 10:00 AM–5:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": {
+        "open": 10,
+        "close": 17
+      },
+      "mon": null,
+      "tue": null,
+      "wed": {
+        "open": 10,
+        "close": 17
+      },
+      "thu": {
+        "open": 10,
+        "close": 17
+      },
+      "fri": {
+        "open": 10,
+        "close": 17
+      },
+      "sat": {
+        "open": 10,
+        "close": 17
+      }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "-",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "architecture, antiquities, paintings, sculpture, drawings, collections, exhibitions, archives, lectures, preservation",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "st-marys-secret-garden-hoxton-ldn",
+    "name": "St Mary's Secret Garden, Hoxton",
+    "vibe": "restorative, nurturing, verdant, communal, peaceful, welcoming",
+    "type": [
+      "garden"
+    ],
+    "lat": "51.5327502",
+    "lon": "-0.0741131",
+    "link": "https://www.instagram.com/stmarysgarden/?hl=en",
+    "cover": "img/venues/st-marys-secret-garden-hoxton-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 10:00 AM–4:00 PM",
+      "Thursday: 10:00 AM–4:00 PM",
+      "Friday: Closed",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": {
+        "open": 10,
+        "close": 16
+      },
+      "thu": {
+        "open": 10,
+        "close": 16
+      },
+      "fri": null,
+      "sat": null
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "A",
+      "thu": "A",
+      "fri": "-",
+      "sat": "-"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "horticulture, gardening, volunteering, wellbeing, wildlife, education, workshops, composting, planting, therapy",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "dalston-eastern-curve-garden-ldn",
+    "name": "Dalston Eastern Curve Garden",
+    "vibe": "bohemian, leafy, communal, relaxed, rustic, welcoming",
+    "type": [
+      "garden"
+    ],
+    "lat": "51.5468122",
+    "lon": "-0.0736168",
+    "link": "https://www.instagram.com/dalstongarden/?hl=en",
+    "cover": "img/venues/dalston-eastern-curve-garden-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–8:00 PM",
+      "Monday: 1:00 PM–8:00 PM",
+      "Tuesday: 2:00 PM–10:00 PM",
+      "Wednesday: 1:00 PM–8:00 PM",
+      "Thursday: 1:00 PM–10:00 PM",
+      "Friday: 1:00 PM–10:00 PM",
+      "Saturday: 12:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": {
+        "open": 12,
+        "close": 20
+      },
+      "mon": {
+        "open": 13,
+        "close": 20
+      },
+      "tue": {
+        "open": 14,
+        "close": 22
+      },
+      "wed": {
+        "open": 13,
+        "close": 20
+      },
+      "thu": {
+        "open": 13,
+        "close": 22
+      },
+      "fri": {
+        "open": 13,
+        "close": 22
+      },
+      "sat": {
+        "open": 12,
+        "close": 22
+      }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "E",
+      "wed": "A",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "gardening, volunteering, vegetables, wildlife, workshops, events, coffee, lunches, composting, planting",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "glasshouse-coffee-fulham-ldn",
+    "name": "Glasshouse Coffee, Fulham",
+    "vibe": "airy, minimalist, bright, welcoming, calm, polished",
+    "type": [
+      "coffee"
+    ],
+    "lat": "51.4739847",
+    "lon": "-0.2134629",
+    "link": "https://www.instagram.com/glasshouse.coffee/?hl=en",
+    "cover": "img/venues/glasshouse-coffee-fulham-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–4:00 PM",
+      "Monday: 9:00 AM–5:00 PM",
+      "Tuesday: 9:00 AM–5:00 PM",
+      "Wednesday: 9:00 AM–5:00 PM",
+      "Thursday: 9:00 AM–5:00 PM",
+      "Friday: 9:00 AM–5:00 PM",
+      "Saturday: 9:00 AM–5:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": {
+        "open": 11,
+        "close": 16
+      },
+      "mon": {
+        "open": 9,
+        "close": 17
+      },
+      "tue": {
+        "open": 9,
+        "close": 17
+      },
+      "wed": {
+        "open": 9,
+        "close": 17
+      },
+      "thu": {
+        "open": 9,
+        "close": 17
+      },
+      "fri": {
+        "open": 9,
+        "close": 17
+      },
+      "sat": {
+        "open": 9,
+        "close": 17
+      }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "espresso, pourover, beans, roasting, pastries, matcha, lattes, sandwiches, filtercoffee, brewing",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "omvedgardens-ldn",
+    "name": "OmvedGardens",
+    "vibe": "regenerative, holistic, tranquil, earthy, intentional, contemplative",
+    "type": [
+      "garden"
+    ],
+    "lat": "51.5713697",
+    "lon": "-0.1465693",
+    "link": "https://www.instagram.com/omvedgardens/?hl=en",
+    "cover": "img/venues/omvedgardens-ldn.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -15,8 +326,8 @@
       "Tuesday: Closed",
       "Wednesday: Closed",
       "Thursday: Closed",
-      "Friday: 5:00 PM–2:30 AM",
-      "Saturday: 5:00 PM–2:30 AM"
+      "Friday: Closed",
+      "Saturday: Closed"
     ],
     "hoursNumeric": {
       "sun": null,
@@ -24,8 +335,8 @@
       "tue": null,
       "wed": null,
       "thu": null,
-      "fri": { "open": 17, "close": 26.5 },
-      "sat": { "open": 17, "close": 26.5 }
+      "fri": null,
+      "sat": null
     },
     "dayParts": {
       "sun": "-",
@@ -33,13 +344,5723 @@
       "tue": "-",
       "wed": "-",
       "thu": "-",
+      "fri": "-",
+      "sat": "-"
+    },
+    "timeCategory": "",
+    "energyRamp": 1,
+    "tags": "biodiversity, gardening, foraging, workshops, farming, fermentation, ecology, education, exhibitions, wellbeing",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "olfaclub-ldn",
+    "name": "OLFACLUB",
+    "vibe": "intimate, analog, understated, immersive, sophisticated, moody",
+    "type": [
+      "wine bar"
+    ],
+    "lat": "51.5800113",
+    "lon": "-0.0328271",
+    "link": "https://www.instagram.com/olfaclub/?hl=en",
+    "cover": "img/venues/olfaclub-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 4:00 PM–10:00 PM",
+      "Thursday: 4:00 PM–11:00 PM",
+      "Friday: 4:00 PM–11:00 PM",
+      "Saturday: 4:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": {
+        "open": 16,
+        "close": 22
+      },
+      "thu": {
+        "open": 16,
+        "close": 23
+      },
+      "fri": {
+        "open": 16,
+        "close": 23
+      },
+      "sat": {
+        "open": 16,
+        "close": 23
+      }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "afternoon, evening",
+    "energyRamp": 1,
+    "tags": "naturalwine, vinyl, listening, hifi, bottles, tastings, producers, snacks, pairings, mineralwater",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "hanar-ldn",
+    "name": "Hanar",
+    "vibe": "intimate, contemporary, refined, understated, warm, convivial",
+    "type": [
+      "dinner"
+    ],
+    "lat": "51.4703925",
+    "lon": "-0.0683112",
+    "link": "https://www.instagram.com/hanar163/",
+    "cover": "img/venues/hanar-ldn.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–11:00 PM",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–11:00 PM",
+      "Friday: 5:00 PM–11:00 PM",
+      "Saturday: 1:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": {
+        "open": 17,
+        "close": 23
+      },
+      "wed": {
+        "open": 17,
+        "close": 23
+      },
+      "thu": {
+        "open": 17,
+        "close": 23
+      },
+      "fri": {
+        "open": 17,
+        "close": 23
+      },
+      "sat": {
+        "open": 13,
+        "close": 23
+      }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "korean, fermentation, seafood, noodles, kimchi, banchan, soju, rice, cocktails, seasonal",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "toulouse-lautrec-ldn",
+    "name": "Toulouse Lautrec",
+    "vibe": "parisian, artistic, nostalgic, theatrical, convivial, intimate",
+    "type": [
+      "lunch",
+      "dinner"
+    ],
+    "lat": "51.4911429",
+    "lon": "-0.1033481",
+    "link": "https://www.instagram.com/toulouse.london/?hl=en",
+    "cover": "img/venues/toulouse-lautrec-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–10:00 PM",
+      "Monday: 12:00 PM–10:30 PM",
+      "Tuesday: 12:00 PM–10:30 PM",
+      "Wednesday: 12:00 PM–10:30 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–12:00 AM",
+      "Saturday: 10:00 AM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": {
+        "open": 10,
+        "close": 22
+      },
+      "mon": {
+        "open": 12,
+        "close": 22.5
+      },
+      "tue": {
+        "open": 12,
+        "close": 22.5
+      },
+      "wed": {
+        "open": 12,
+        "close": 22.5
+      },
+      "thu": {
+        "open": 12,
+        "close": 23
+      },
+      "fri": {
+        "open": 12,
+        "close": 24
+      },
+      "sat": {
+        "open": 10,
+        "close": 24
+      }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "french, jazz, cabaret, champagne, oysters, steakfrites, concerts, piano, brunches, wine",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "cloth-ldn",
+    "name": "Cloth",
+    "vibe": "understated, refined, candlelit, intimate, thoughtful, elegant",
+    "type": [
+      "lunch",
+      "dinner"
+    ],
+    "lat": "51.5188691",
+    "lon": "-0.1000864",
+    "link": "https://www.instagram.com/clothrestaurant/?hl=en",
+    "cover": "img/venues/cloth-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 12:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": {
+        "open": 12,
+        "close": 23
+      },
+      "tue": {
+        "open": 12,
+        "close": 23
+      },
+      "wed": {
+        "open": 12,
+        "close": 23
+      },
+      "thu": {
+        "open": 12,
+        "close": 23
+      },
+      "fri": {
+        "open": 12,
+        "close": 23
+      },
+      "sat": null
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "-"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "seasonal, naturalwine, oysters, charcuterie, vegetables, seafood, pasta, fermentation, pairings, desserts",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "paulette-ldn",
+    "name": "Paulette",
+    "vibe": "charming, neighborhood, warm, relaxed, inviting, intimate",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5245646",
+    "lon": "-0.1851326",
+    "link": "https://www.instagram.com/mamiegood.uk/",
+    "cover": "img/venues/paulette-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–11:00 PM",
+      "Monday: 5:30 PM–11:00 PM",
+      "Tuesday: 5:30 PM–11:00 PM",
+      "Wednesday: 5:30 PM–11:00 PM",
+      "Thursday: 5:30 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 23 },
+      "mon": { "open": 17.5, "close": 23 },
+      "tue": { "open": 17.5, "close": 23 },
+      "wed": { "open": 17.5, "close": 23 },
+      "thu": { "open": 17.5, "close": 23 },
+      "fri": { "open": 12, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "french, pastries, baguettes, tartines, omelettes, espresso, wine, sandwiches, croissants, cheeses",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "blanchette-ldn",
+    "name": "Blanchette",
+    "vibe": "lively, parisian, rustic, convivial, playful, warm",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5146838",
+    "lon": "-0.1360685",
+    "link": "https://www.instagram.com/blanchettelondon/?hl=en",
+    "cover": "img/venues/blanchette-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 12:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 12, "close": 23 },
+      "tue": { "open": 12, "close": 23 },
+      "wed": { "open": 12, "close": 23 },
+      "thu": { "open": 12, "close": 23 },
+      "fri": { "open": 12, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "french, croquettes, charcuterie, escargots, steakfrites, wine, cocktails, tartare, cheeses, souffle",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "wc-wine-charcuterie-ldn",
+    "name": "WC Wine & Charcuterie",
+    "vibe": "candlelit, subterranean, romantic, atmospheric, quirky, intimate",
+    "type": ["wine bar"],
+    "lat": "51.4617112",
+    "lon": "-0.1383487",
+    "link": "https://www.instagram.com/wcbarslondon/?hl=en",
+    "cover": "img/venues/wc-wine-charcuterie-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:00 PM–10:00 PM",
+      "Monday: 5:00 PM–10:00 PM",
+      "Tuesday: 5:00 PM–11:00 PM",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–11:00 PM",
+      "Friday: 5:00 PM–12:00 AM",
+      "Saturday: 5:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 17, "close": 22 },
+      "mon": { "open": 17, "close": 22 },
+      "tue": { "open": 17, "close": 23 },
+      "wed": { "open": 17, "close": 23 },
+      "thu": { "open": 17, "close": 23 },
+      "fri": { "open": 17, "close": 24 },
+      "sat": { "open": 17, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "afternoon, evening",
+    "energyRamp": 1,
+    "tags": "wine, charcuterie, cheeses, cocktails, champagne, crostini, camembert, bottles, pairings, sharing",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "little-duck-the-picklery-ldn",
+    "name": "Little Duck The Picklery",
+    "vibe": "artisanal, experimental, cozy, creative, understated, ingredientdriven",
+    "type": ["lunch", "dinner", "wine bar"],
+    "lat": "51.546132",
+    "lon": "-0.0707499",
+    "link": "https://www.instagram.com/littleduckthepicklery/?hl=en",
+    "cover": "img/venues/little-duck-the-picklery-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–3:00 PM; 5:30 PM–10:00 PM",
+      "Monday: 5:30 PM–10:00 PM",
+      "Tuesday: 5:30 PM–10:00 PM",
+      "Wednesday: 12:00 PM–3:00 PM; 5:30 PM–10:00 PM",
+      "Thursday: 12:00 PM–3:00 PM; 5:30 PM–10:00 PM",
+      "Friday: 12:00 PM–3:00 PM; 5:30 PM–10:00 PM",
+      "Saturday: 12:00 PM–3:00 PM; 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 12, "close": 15 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "mon": { "open": 17.5, "close": 22 },
+      "tue": { "open": 17.5, "close": 22 },
+      "wed": [
+        { "open": 12, "close": 15 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "sat": [
+        { "open": 12, "close": 15 },
+        { "open": 17.5, "close": 22 }
+      ]
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 1,
+    "tags": "fermentation, pickles, preserves, naturalwine, vegetables, workshops, seasonal, sourdough, bottling, sharing",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "culpeper-community-garden-ldn",
+    "name": "Culpeper Community Garden",
+    "vibe": "communal, peaceful, verdant, educational, restorative, welcoming",
+    "type": ["garden"],
+    "lat": "51.5348313",
+    "lon": "-0.1095818",
+    "link": "https://www.instagram.com/culpepergarden/?hl=en",
+    "cover": "img/venues/culpeper-community-garden-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–2:00 PM",
+      "Monday: 10:00 AM–6:00 PM",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 14 },
+      "mon": { "open": 10, "close": 18 },
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "gardening, volunteering, beekeeping, biodiversity, vegetables, workshops, composting, wildlife, planting, education",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "la-poule-au-pot-ldn",
+    "name": "La Poule Au Pot",
+    "vibe": "classic, elegant, nostalgic, refined, romantic, timeless",
+    "type": ["lunch", "dinner"],
+    "lat": "51.4909892",
+    "lon": "-0.1525584",
+    "link": "https://www.instagram.com/LaPouleAuPotRestaurant/",
+    "cover": "img/venues/la-poule-au-pot-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–9:00 PM",
+      "Monday: 12:00 PM–9:00 PM",
+      "Tuesday: 12:00 PM–9:00 PM",
+      "Wednesday: 12:00 PM–9:00 PM",
+      "Thursday: 12:00 PM–9:00 PM",
+      "Friday: 12:00 PM–9:00 PM",
+      "Saturday: 12:00 PM–9:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 21 },
+      "mon": { "open": 12, "close": 21 },
+      "tue": { "open": 12, "close": 21 },
+      "wed": { "open": 12, "close": 21 },
+      "thu": { "open": 12, "close": 21 },
+      "fri": { "open": 12, "close": 21 },
+      "sat": { "open": 12, "close": 21 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "french, foiegras, escargots, souffle, steakfrites, oysters, champagne, wine, cheeses, desserts",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "lower-wine-bar-bottleshop-ldn",
+    "name": "Lower Wine Bar & Bottleshop",
+    "vibe": "relaxed, neighborhood, intimate, understated, warm, approachable",
+    "type": ["wine bar"],
+    "lat": "51.5006171",
+    "lon": "-0.1130095",
+    "link": "https://www.instagram.com/lowerwine/?hl=en",
+    "cover": "img/venues/lower-wine-bar-bottleshop-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–10:30 PM",
+      "Wednesday: 5:00 PM–10:30 PM",
+      "Thursday: 5:00 PM–10:30 PM",
+      "Friday: 3:00 PM–10:30 PM",
+      "Saturday: 3:00 PM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17, "close": 22.5 },
+      "wed": { "open": 17, "close": 22.5 },
+      "thu": { "open": 17, "close": 22.5 },
+      "fri": { "open": 15, "close": 22.5 },
+      "sat": { "open": 15, "close": 22.5 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "afternoon, evening",
+    "energyRamp": 1,
+    "tags": "naturalwine, bottles, tastings, charcuterie, cheeses, producers, snacks, pairings, vermouth, aperitifs",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "franks-cafe-at-bold-tendencies-ldn",
+    "name": "Frank's Cafe at Bold Tendencies",
+    "vibe": "breezy, artistic, vibrant, openair, communal, seasonal",
+    "type": ["bar"],
+    "lat": "51.4706345",
+    "lon": "-0.0684284",
+    "link": "https://www.instagram.com/frankspeckham/?hl=en",
+    "cover": "img/venues/franks-cafe-at-bold-tendencies-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–11:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 11:00 AM–11:00 PM",
+      "Thursday: 11:00 AM–11:00 PM",
+      "Friday: 11:00 AM–11:00 PM",
+      "Saturday: 11:00 AM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 23 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 11, "close": 23 },
+      "thu": { "open": 11, "close": 23 },
+      "fri": { "open": 11, "close": 23 },
+      "sat": { "open": 11, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 1,
+    "tags": "cocktails, wine, spritzes, rooftopviews, exhibitions, sunsets, music, snacks, campari, gatherings",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "lucias-ldn",
+    "name": "Lucia's",
+    "vibe": "warm, elegant, neighborhood, polished, convivial, inviting",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5430673",
+    "lon": "-0.0235713",
+    "link": "https://www.instagram.com/lucias_e9/",
+    "cover": "img/venues/lucias-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–5:00 PM",
+      "Monday: 5:00 PM–10:00 PM",
+      "Tuesday: 5:00 PM–10:00 PM",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–11:00 PM",
+      "Friday: 5:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 17 },
+      "mon": { "open": 17, "close": 22 },
+      "tue": { "open": 17, "close": 22 },
+      "wed": { "open": 17, "close": 23 },
+      "thu": { "open": 17, "close": 23 },
+      "fri": { "open": 17, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "italian, pasta, antipasti, espresso, wine, seafood, focaccia, cocktails, tiramisu, gelato",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "andrew-edmunds-ldn",
+    "name": "Andrew Edmunds",
+    "vibe": "candlelit, intimate, timeless, romantic, understated, convivial",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5131254",
+    "lon": "-0.1362165",
+    "link": "https://www.instagram.com/andrew.edmunds/?hl=en",
+    "cover": "img/venues/andrew-edmunds-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 1:00 PM–10:30 PM",
+      "Monday: 12:00 PM–10:30 PM",
+      "Tuesday: 12:00 PM–10:30 PM",
+      "Wednesday: 12:00 PM–10:30 PM",
+      "Thursday: 12:00 PM–10:30 PM",
+      "Friday: 12:00 PM–10:30 PM",
+      "Saturday: 12:30 PM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 13, "close": 22.5 },
+      "mon": { "open": 12, "close": 22.5 },
+      "tue": { "open": 12, "close": 22.5 },
+      "wed": { "open": 12, "close": 22.5 },
+      "thu": { "open": 12, "close": 22.5 },
+      "fri": { "open": 12, "close": 22.5 },
+      "sat": { "open": 12.5, "close": 22.5 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "french, british, seasonal, naturalwine, game, seafood, puddings, setmenu, vegetables, bottles",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "bouchon-racine-ldn",
+    "name": "Bouchon Racine",
+    "vibe": "nostalgic, bustling, indulgent, parisian, convivial, traditional",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5200328",
+    "lon": "-0.1038862",
+    "link": "https://www.instagram.com/bouchonracine",
+    "cover": "img/venues/bouchon-racine-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–3:00 PM; 6:00 PM–10:00 PM",
+      "Wednesday: 12:00 PM–3:00 PM; 6:00 PM–10:00 PM",
+      "Thursday: 12:00 PM–3:00 PM; 6:00 PM–10:00 PM",
+      "Friday: 12:00 PM–3:00 PM; 6:00 PM–10:00 PM",
+      "Saturday: 12:00 PM–3:00 PM; 6:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 22 }
+      ],
+      "wed": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 22 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 22 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 22 }
+      ],
+      "sat": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 22 }
+      ]
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "french, lyonnaise, offal, game, terrines, souffles, wine, steak, seafood, desserts",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "autm-haus-ldn",
+    "name": "AUTM HAUS",
+    "vibe": "restorative, minimalist, tranquil, intentional, contemporary, serene",
+    "type": ["spa"],
+    "lat": "51.5352358",
+    "lon": "-0.0198506",
+    "link": "https://www.instagram.com/autmhaus/",
+    "cover": "img/venues/autm-haus-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–9:30 PM",
+      "Monday: 7:00 AM–9:30 PM",
+      "Tuesday: 7:00 AM–9:30 PM",
+      "Wednesday: Closed",
+      "Thursday: 7:00 AM–11:30 PM",
+      "Friday: 7:00 AM–11:30 PM",
+      "Saturday: 9:00 AM–11:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 21.5 },
+      "mon": { "open": 7, "close": 21.5 },
+      "tue": { "open": 7, "close": 21.5 },
+      "wed": null,
+      "thu": { "open": 7, "close": 23.5 },
+      "fri": { "open": 7, "close": 23.5 },
+      "sat": { "open": 9, "close": 23.5 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "-",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "sauna, coldplunge, breathwork, recovery, wellness, massage, rituals, memberships, infrared, community",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "bar-blondie-ldn",
+    "name": "Bar Blondie",
+    "vibe": "neighborhood, relaxed, playful, intimate, vibrant, convivial",
+    "type": ["lunch", "wine bar"],
+    "lat": "51.5372544",
+    "lon": "-0.2031382",
+    "link": "https://www.instagram.com/bar.blondie/",
+    "cover": "img/venues/bar-blondie-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–11:00 PM",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–12:00 AM",
+      "Friday: 12:00 PM–12:00 AM",
+      "Saturday: 12:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 21 },
+      "mon": null,
+      "tue": { "open": 17, "close": 23 },
+      "wed": { "open": 17, "close": 23 },
+      "thu": { "open": 12, "close": 24 },
+      "fri": { "open": 12, "close": 24 },
+      "sat": { "open": 12, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 1,
+    "tags": "naturalwine, cocktails, brunch, sandwiches, oysters, smallplates, coffee, bottles, aperitifs, pastries",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "castiglione-ldn",
+    "name": "Castiglione",
+    "vibe": "elegant, intimate, refined, understated, calm, welcoming",
+    "type": ["coffee"],
+    "lat": "51.5088817",
+    "lon": "-0.1303905",
+    "link": "https://www.instagram.com/castiglione.london/",
+    "cover": "img/venues/castiglione-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–5:00 PM",
+      "Monday: 8:00 AM–5:00 PM",
+      "Tuesday: 8:00 AM–5:00 PM",
+      "Wednesday: 8:00 AM–5:00 PM",
+      "Thursday: 8:00 AM–5:00 PM",
+      "Friday: 8:00 AM–4:00 PM",
+      "Saturday: 10:15 AM–5:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 17 },
+      "mon": { "open": 8, "close": 17 },
+      "tue": { "open": 8, "close": 17 },
+      "wed": { "open": 8, "close": 17 },
+      "thu": { "open": 8, "close": 17 },
+      "fri": { "open": 8, "close": 16 },
+      "sat": { "open": 10.25, "close": 17 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "espresso, pastries, italian, panini, cornetti, focaccia, sandwiches, cappuccino, desserts, coffeebeans",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "fortitude-bakehouse-ldn",
+    "name": "Fortitude Bakehouse",
+    "vibe": "cozy, artisanal, welcoming, rustic, neighborhood, fragrant",
+    "type": ["bakery"],
+    "lat": "51.5228207",
+    "lon": "-0.1242042",
+    "link": "https://www.instagram.com/fortitudebakehouse/?hl=en",
+    "cover": "img/venues/fortitude-bakehouse-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:30 AM–4:00 PM",
+      "Monday: 7:30 AM–4:00 PM",
+      "Tuesday: 7:30 AM–4:00 PM",
+      "Wednesday: 7:30 AM–4:00 PM",
+      "Thursday: 7:30 AM–4:00 PM",
+      "Friday: 7:30 AM–4:00 PM",
+      "Saturday: 8:30 AM–4:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8.5, "close": 16 },
+      "mon": { "open": 7.5, "close": 16 },
+      "tue": { "open": 7.5, "close": 16 },
+      "wed": { "open": 7.5, "close": 16 },
+      "thu": { "open": 7.5, "close": 16 },
+      "fri": { "open": 7.5, "close": 16 },
+      "sat": { "open": 8.5, "close": 16 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "pastries, doughnuts, viennoiserie, sourdough, buns, coffee, cakes, sandwiches, focaccia, baking",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "clifton-nurseries-ldn",
+    "name": "Clifton Nurseries",
+    "vibe": "verdant, tranquil, picturesque, elegant, restorative, timeless",
+    "type": ["garden"],
+    "lat": "51.5222367",
+    "lon": "-0.1845952",
+    "link": "https://www.instagram.com/cliftonnurseries/?hl=en",
+    "cover": "img/venues/clifton-nurseries-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:30 AM–5:00 PM",
+      "Monday: 9:00 AM–6:00 PM",
+      "Tuesday: 9:00 AM–6:00 PM",
+      "Wednesday: 9:00 AM–6:00 PM",
+      "Thursday: 9:00 AM–6:00 PM",
+      "Friday: 9:00 AM–7:00 PM",
+      "Saturday: 9:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10.5, "close": 17 },
+      "mon": { "open": 9, "close": 18 },
+      "tue": { "open": 9, "close": 18 },
+      "wed": { "open": 9, "close": 18 },
+      "thu": { "open": 9, "close": 18 },
+      "fri": { "open": 9, "close": 19 },
+      "sat": { "open": 9, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "plants, gardening, landscaping, pottery, furniture, gifts, greenhouse, floristry, cafe, workshops",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "vesper-restaurant-ldn",
+    "name": "Vesper Restaurant",
+    "vibe": "polished, contemporary, elegant, relaxed, ingredientdriven, refined",
+    "type": ["lunch", "dinner"],
+    "lat": "51.525188",
+    "lon": "-0.1100861",
+    "link": "https://www.instagram.com/vesper.restaurant/?hl=en",
+    "cover": "img/venues/vesper-restaurant-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:30 PM–10:00 PM",
+      "Wednesday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM",
+      "Thursday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM",
+      "Friday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM",
+      "Saturday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17.5, "close": 22 },
+      "wed": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "sat": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ]
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "mediterranean, seafood, pasta, cocktails, wine, sharing, vegetables, desserts, brunch, seasonal",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "marylebone-farmers-market-ldn",
+    "name": "Marylebone Farmers' Market",
+    "vibe": "bustling, wholesome, local, vibrant, community, seasonal",
+    "type": ["market"],
+    "lat": "51.5187815",
+    "lon": "-0.1525735",
+    "link": "https://www.instagram.com/londonfarmersmarkets/",
+    "cover": "img/venues/marylebone-farmers-market-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–2:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: Closed",
+      "Friday: Closed",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 14 },
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": null,
+      "fri": null,
+      "sat": null
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "-",
+      "fri": "-",
+      "sat": "-"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "produce, vegetables, fruit, cheeses, bread, meat, fish, preserves, honey, pastries",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "queens-park-farmers-market-ldn",
+    "name": "Queen's Park Farmers' Market",
+    "vibe": "welcoming, neighborhood, wholesome, lively, seasonal, communal",
+    "type": ["market"],
+    "lat": "51.5367012",
+    "lon": "-0.2055266",
+    "link": "https://www.instagram.com/londonfarmersmarkets/",
+    "cover": "img/venues/queens-park-farmers-market-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–2:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: Closed",
+      "Friday: Closed",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 14 },
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": null,
+      "fri": null,
+      "sat": null
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "-",
+      "fri": "-",
+      "sat": "-"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "produce, vegetables, fruit, cheeses, bread, meat, fish, pastries, flowers, honey",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "pierre-marcolini-london-regent-street-ldn",
+    "name": "PIERRE MARCOLINI London Regent Street",
+    "vibe": "luxurious, elegant, refined, polished, indulgent, sophisticated",
+    "type": ["dessert"],
+    "lat": "51.5100663",
+    "lon": "-0.1358872",
+    "link": "https://www.instagram.com/pierremarcolini/",
+    "cover": "img/venues/pierre-marcolini-london-regent-street-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–6:00 PM",
+      "Monday: 11:00 AM–8:00 PM",
+      "Tuesday: 11:00 AM–8:00 PM",
+      "Wednesday: 11:00 AM–8:00 PM",
+      "Thursday: 11:00 AM–8:00 PM",
+      "Friday: 11:00 AM–8:00 PM",
+      "Saturday: 11:00 AM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 18 },
+      "mon": { "open": 11, "close": 20 },
+      "tue": { "open": 11, "close": 20 },
+      "wed": { "open": 11, "close": 20 },
+      "thu": { "open": 11, "close": 20 },
+      "fri": { "open": 11, "close": 20 },
+      "sat": { "open": 11, "close": 20 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "afternoon, evening",
+    "energyRamp": 1,
+    "tags": "chocolate, macarons, patisserie, icecream, truffles, pralines, pastries, gifting, confectionery, desserts",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "lillies-wine-bar-restaurant-ldn",
+    "name": "Lillie's Wine Bar & Restaurant",
+    "vibe": "classic, cozy, intimate, relaxed, traditional, welcoming",
+    "type": ["lunch", "dinner", "wine bar"],
+    "lat": "51.4968077",
+    "lon": "-0.2096142",
+    "link": "https://www.instagram.com/lilliesolympia/",
+    "cover": "img/venues/lillies-wine-bar-restaurant-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–10:00 PM",
+      "Monday: 12:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 22 },
+      "mon": { "open": 12, "close": 23 },
+      "tue": { "open": 12, "close": 23 },
+      "wed": { "open": 12, "close": 23 },
+      "thu": { "open": 12, "close": 23 },
+      "fri": { "open": 12, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 1,
+    "tags": "wine, charcuterie, cheeses, steaks, seafood, cocktails, bottles, desserts, lunches, dinners",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "juls-london-ldn",
+    "name": "Jul's London",
+    "vibe": "glamorous, vibrant, polished, eclectic, lively, contemporary",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5077127",
+    "lon": "-0.1332693",
+    "link": "https://www.instagram.com/juls.london/?hl=en",
+    "cover": "img/venues/juls-london-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 12:00 PM–2:30 PM; 5:30 PM–10:30 PM",
+      "Tuesday: 12:00 PM–2:30 PM; 5:30 PM–10:30 PM",
+      "Wednesday: 12:00 PM–2:30 PM; 5:30 PM–10:30 PM",
+      "Thursday: 12:00 PM–2:30 PM; 5:30 PM–10:30 PM",
+      "Friday: 12:00 PM–2:30 PM; 5:30 PM–10:30 PM",
+      "Saturday: 12:00 PM–2:30 PM; 5:30 PM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22.5 }
+      ],
+      "tue": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22.5 }
+      ],
+      "wed": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22.5 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22.5 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22.5 }
+      ],
+      "sat": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22.5 }
+      ]
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "mediterranean, cocktails, wine, seafood, pasta, brunch, djsets, desserts, sharing, champagne",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "below-stone-nest-ldn",
+    "name": "Below Stone Nest",
+    "vibe": "subterranean, cinematic, immersive, experimental, moody, intimate",
+    "type": ["cocktail", "music"],
+    "lat": "51.5129552",
+    "lon": "-0.1293207",
+    "link": "https://www.instagram.com/below.stonenest/?hl=en",
+    "cover": "img/venues/below-stone-nest-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 6:00 PM–2:00 AM",
+      "Wednesday: 6:00 PM–2:00 AM",
+      "Thursday: 6:00 PM–2:00 AM",
+      "Friday: 6:00 PM–2:00 AM",
+      "Saturday: 6:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 18, "close": 26 },
+      "wed": { "open": 18, "close": 26 },
+      "thu": { "open": 18, "close": 26 },
+      "fri": { "open": 18, "close": 26 },
+      "sat": { "open": 18, "close": 26 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "L",
+      "wed": "L",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, performances, concerts, djs, cabaret, theatre, jazz, tickets, music, events",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "firebird-ldn",
+    "name": "Firebird",
+    "vibe": "smoky, lively, contemporary, energetic, convivial, stylish",
+    "type": ["lunch", "dinner"],
+    "lat": "51.51542",
+    "lon": "-0.1374429",
+    "link": "https://www.instagram.com/firebird.london/?hl=en",
+    "cover": "img/venues/firebird-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 1:00 PM–10:00 PM",
+      "Monday: 5:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–3:00 PM; 5:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–3:00 PM; 5:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–3:00 PM; 5:00 PM–11:00 PM",
+      "Friday: 12:00 PM–3:00 PM; 5:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 13, "close": 22 },
+      "mon": { "open": 17, "close": 23 },
+      "tue": [
+        { "open": 12, "close": 15 },
+        { "open": 17, "close": 23 }
+      ],
+      "wed": [
+        { "open": 12, "close": 15 },
+        { "open": 17, "close": 23 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 17, "close": 23 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 17, "close": 23 }
+      ],
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "firecooking, vegetables, seafood, cocktails, naturalwine, sharing, skewers, desserts, grill, seasonal",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "apricity-restaurant-ldn",
+    "name": "Apricity Restaurant",
+    "vibe": "thoughtful, elegant, sustainable, refined, serene, ingredientdriven",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5135846",
+    "lon": "-0.1513096",
+    "link": "https://www.instagram.com/apricityrestaurant/?hl=en",
+    "cover": "img/venues/apricity-restaurant-ldn.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–2:30 PM; 5:30 PM–8:30 PM",
+      "Wednesday: 12:00 PM–2:30 PM; 5:30 PM–8:30 PM",
+      "Thursday: 12:00 PM–2:30 PM; 5:30 PM–8:30 PM",
+      "Friday: 12:00 PM–2:30 PM; 5:30 PM–8:30 PM",
+      "Saturday: 12:00 PM–2:30 PM; 5:30 PM–8:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 20.5 }
+      ],
+      "wed": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 20.5 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 20.5 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 20.5 }
+      ],
+      "sat": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 20.5 }
+      ]
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "seasonal, sustainable, fermentation, seafood, vegetables, naturalwine, tasting, desserts, british, cocktails",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "lima-peruvian-restaurant-fitzrovia-ldn",
+    "name": "LIMA Peruvian Restaurant Fitzrovia",
+    "vibe": "vibrant, refined, contemporary, colorful, polished, lively",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5177444",
+    "lon": "-0.1343306",
+    "link": "https://www.instagram.com/lima_london/?hl=en",
+    "cover": "img/venues/lima-peruvian-restaurant-fitzrovia-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 12:00 PM–10:30 PM",
+      "Tuesday: 12:00 PM–10:30 PM",
+      "Wednesday: 12:00 PM–10:30 PM",
+      "Thursday: 12:00 PM–10:30 PM",
+      "Friday: 12:00 PM–10:30 PM",
+      "Saturday: 12:00 PM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 12, "close": 22.5 },
+      "tue": { "open": 12, "close": 22.5 },
+      "wed": { "open": 12, "close": 22.5 },
+      "thu": { "open": 12, "close": 22.5 },
+      "fri": { "open": 12, "close": 22.5 },
+      "sat": { "open": 12, "close": 22.5 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "peruvian, ceviche, anticuchos, pisco, seafood, corn, quinoa, tasting, cocktails, desserts",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "zylia-ldn",
+    "name": "Zylia",
+    "vibe": "elegant, contemporary, intimate, refined, polished, inviting",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5102361",
+    "lon": "-0.1242071",
+    "link": "https://www.instagram.com/zylia_taverna/?hl=en",
+    "cover": "img/venues/zylia-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–9:00 PM",
+      "Monday: 12:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 21 },
+      "mon": { "open": 12, "close": 23 },
+      "tue": { "open": 12, "close": 23 },
+      "wed": { "open": 12, "close": 23 },
+      "thu": { "open": 12, "close": 23 },
+      "fri": { "open": 12, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "polish, pierogi, vodka, seafood, dumplings, cocktails, wine, desserts, seasonal, sharing",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "mortimer-house-kitchen-ldn",
+    "name": "Mortimer House Kitchen",
+    "vibe": "airy, relaxed, stylish, wellnessfocused, bright, contemporary",
+    "type": ["breakfast", "lunch", "dinner"],
+    "lat": "51.5180183",
+    "lon": "-0.1388831",
+    "link": "https://www.instagram.com/mortimerhousekitchen/?hl=en",
+    "cover": "img/venues/mortimer-house-kitchen-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–4:00 PM",
+      "Monday: 7:30 AM–10:00 PM",
+      "Tuesday: 7:30 AM–10:00 PM",
+      "Wednesday: 7:30 AM–11:00 PM",
+      "Thursday: 7:30 AM–11:00 PM",
+      "Friday: 7:30 AM–11:00 PM",
+      "Saturday: 10:00 AM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 16 },
+      "mon": { "open": 7.5, "close": 22 },
+      "tue": { "open": 7.5, "close": 22 },
+      "wed": { "open": 7.5, "close": 23 },
+      "thu": { "open": 7.5, "close": 23 },
+      "fri": { "open": 7.5, "close": 23 },
+      "sat": { "open": 10, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "morning, midday, evening",
+    "energyRamp": 1,
+    "tags": "mediterranean, brunch, cocktails, coffee, vegetables, grains, wine, pastries, sharing, juices",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "clipstone-ldn",
+    "name": "Clipstone",
+    "vibe": "understated, refined, relaxed, neighborhood, contemporary, welcoming",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5208314",
+    "lon": "-0.1421667",
+    "link": "https://www.instagram.com/clipstonerestaurant",
+    "cover": "img/venues/clipstone-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–2:45 PM; 5:30 PM–9:45 PM",
+      "Wednesday: 12:00 PM–2:45 PM; 5:30 PM–9:45 PM",
+      "Thursday: 12:00 PM–2:45 PM; 5:30 PM–9:45 PM",
+      "Friday: 12:00 PM–2:45 PM; 5:30 PM–9:45 PM",
+      "Saturday: 12:00 PM–2:45 PM; 5:30 PM–9:45 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 21.75 }
+      ],
+      "wed": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 21.75 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 21.75 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 21.75 }
+      ],
+      "sat": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 21.75 }
+      ]
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "seasonal, british, naturalwine, seafood, vegetables, pasta, cocktails, desserts, brunch, sharing",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "goldies-soho-ldn",
+    "name": "Goldies Soho",
+    "vibe": "lively, smoky, convivial, vibrant, relaxed, contemporary",
+    "type": ["lunch", "dinner"],
+    "lat": "51.512541",
+    "lon": "-0.1389043",
+    "link": "https://www.instagram.com/goldieslondon/?hl=en",
+    "cover": "img/venues/goldies-soho-ldn.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–9:00 PM",
+      "Monday: 12:00 PM–10:00 PM",
+      "Tuesday: 12:00 PM–10:00 PM",
+      "Wednesday: 12:00 PM–10:00 PM",
+      "Thursday: 12:00 PM–10:00 PM",
+      "Friday: 12:00 PM–10:00 PM",
+      "Saturday: 12:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 21 },
+      "mon": { "open": 12, "close": 22 },
+      "tue": { "open": 12, "close": 22 },
+      "wed": { "open": 12, "close": 22 },
+      "thu": { "open": 12, "close": 22 },
+      "fri": { "open": 12, "close": 22 },
+      "sat": { "open": 12, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "fire, rotisserie, chicken, vegetables, cocktails, naturalwine, sharing, desserts, lunch, seasonal",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "noize-ldn",
+    "name": "Noizé",
+    "vibe": "elegant, intimate, refined, polished, contemporary, sophisticated",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5201024",
+    "lon": "-0.1351144",
+    "link": "https://www.instagram.com/noize_restaurant/?hl=en",
+    "cover": "img/venues/noize-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 6:00 PM–9:30 PM",
+      "Wednesday: 12:00 PM–2:00 PM; 6:00 PM–9:30 PM",
+      "Thursday: 12:00 PM–2:00 PM; 6:00 PM–9:30 PM",
+      "Friday: 12:00 PM–2:00 PM; 6:00 PM–9:30 PM",
+      "Saturday: 6:00 PM–9:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 18, "close": 21.5 },
+      "wed": [
+        { "open": 12, "close": 14 },
+        { "open": 18, "close": 21.5 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14 },
+        { "open": 18, "close": 21.5 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14 },
+        { "open": 18, "close": 21.5 }
+      ],
+      "sat": { "open": 18, "close": 21.5 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "french, seafood, oysters, champagne, wine, tasting, caviar, desserts, seasonal, cocktails",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "le-beaujolais-ldn",
+    "name": "Le Beaujolais",
+    "vibe": "nostalgic, intimate, rustic, convivial, parisian, timeless",
+    "type": ["wine bar"],
+    "lat": "51.5128394",
+    "lon": "-0.1285005",
+    "link": "https://www.instagram.com/lebeaujolaiswinebar/?hl=en",
+    "cover": "img/venues/le-beaujolais-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–10:00 PM",
+      "Monday: 12:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 22 },
+      "mon": { "open": 12, "close": 23 },
+      "tue": { "open": 12, "close": 23 },
+      "wed": { "open": 12, "close": 23 },
+      "thu": { "open": 12, "close": 23 },
+      "fri": { "open": 12, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 1,
+    "tags": "french, wine, beaujolais, charcuterie, cheeses, escargots, terrines, bottles, desserts, bistro",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "the-arches-wine-bar-kitchen-ldn",
+    "name": "The Arches Wine Bar & Kitchen",
+    "vibe": "neighborhood, relaxed, welcoming, cozy, intimate, warm",
+    "type": ["wine bar"],
+    "lat": "51.541963",
+    "lon": "-0.1807718",
+    "link": "https://www.instagram.com/thearcheswinebar/?hl=en",
+    "cover": "img/venues/the-arches-wine-bar-kitchen-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–10:00 PM",
+      "Monday: 4:00 PM–10:00 PM",
+      "Tuesday: 4:00 PM–11:00 PM",
+      "Wednesday: 4:00 PM–11:00 PM",
+      "Thursday: 4:00 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 22 },
+      "mon": { "open": 16, "close": 22 },
+      "tue": { "open": 16, "close": 23 },
+      "wed": { "open": 16, "close": 23 },
+      "thu": { "open": 16, "close": 23 },
+      "fri": { "open": 12, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening",
+    "energyRamp": 1,
+    "tags": "wine, naturalwine, charcuterie, cheeses, smallplates, bottles, cocktails, brunch, sharing, desserts",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "morocco-bound-bookshop-bermondsey-ldn",
+    "name": "Morocco Bound Bookshop Bermondsey",
+    "vibe": "literary, independent, cozy, eclectic, welcoming, community",
+    "type": ["bookstore"],
+    "lat": "51.5003916",
+    "lon": "-0.082088",
+    "link": "https://www.instagram.com/morocco_bound_bookshop/?hl=en",
+    "cover": "img/venues/morocco-bound-bookshop-bermondsey-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–7:00 PM",
+      "Monday: 10:00 AM–11:00 PM",
+      "Tuesday: 10:00 AM–11:00 PM",
+      "Wednesday: 10:00 AM–11:00 PM",
+      "Thursday: 10:00 AM–11:00 PM",
+      "Friday: 10:00 AM–11:00 PM",
+      "Saturday: 11:00 AM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 19 },
+      "mon": { "open": 10, "close": 23 },
+      "tue": { "open": 10, "close": 23 },
+      "wed": { "open": 10, "close": 23 },
+      "thu": { "open": 10, "close": 23 },
+      "fri": { "open": 10, "close": 23 },
+      "sat": { "open": 11, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday, afternoon",
+    "energyRamp": 1,
+    "tags": "books, publishing, readings, coffee, wine, events, poetry, magazines, talks, stationery",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "the-old-library-bar-ldn",
+    "name": "The Old Library Bar",
+    "vibe": "historic, intimate, eclectic, soulful, relaxed, creative",
+    "type": ["music"],
+    "lat": "51.4760375",
+    "lon": "-0.0483243",
+    "link": "https://www.instagram.com/musicroomlondon/?hl=en",
+    "cover": "img/venues/the-old-library-bar-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 1:00 PM–9:00 PM",
+      "Monday: 5:00 PM–11:00 PM",
+      "Tuesday: 5:00 PM–11:00 PM",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–11:00 PM",
+      "Friday: 5:00 PM–11:00 PM",
+      "Saturday: 5:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 13, "close": 21 },
+      "mon": { "open": 17, "close": 23 },
+      "tue": { "open": 17, "close": 23 },
+      "wed": { "open": 17, "close": 23 },
+      "thu": { "open": 17, "close": 23 },
+      "fri": { "open": 17, "close": 23 },
+      "sat": { "open": 17, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "L",
+      "mon": "L",
+      "tue": "L",
+      "wed": "L",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "cocktails, concerts, jazz, djs, performances, beer, wine, spirits, music, events",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "telegraph-hill-upper-park-ldn",
+    "name": "Telegraph Hill Upper Park",
+    "vibe": "peaceful, elevated, leafy, panoramic, restorative, spacious",
+    "type": ["park"],
+    "lat": "51.467282",
+    "lon": "-0.0463659",
+    "link": "https://www.instagram.com/telegraphhillpark/?hl=en",
+    "cover": "img/venues/telegraph-hill-upper-park-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 AM–9:00 PM",
+      "Monday: 6:00 AM–9:00 PM",
+      "Tuesday: 6:00 AM–9:00 PM",
+      "Wednesday: 6:00 AM–9:00 PM",
+      "Thursday: 6:00 AM–9:00 PM",
+      "Friday: 6:00 AM–9:00 PM",
+      "Saturday: 6:00 AM–9:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 6, "close": 21 },
+      "mon": { "open": 6, "close": 21 },
+      "tue": { "open": 6, "close": 21 },
+      "wed": { "open": 6, "close": 21 },
+      "thu": { "open": 6, "close": 21 },
+      "fri": { "open": 6, "close": 21 },
+      "sat": { "open": 6, "close": 21 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday, afternoon",
+    "energyRamp": 1,
+    "tags": "walking, picnics, playground, viewpoints, wildlife, gardens, tennis, jogging, photography, relaxation",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "thaddaeus-ropac-ldn",
+    "name": "Thaddaeus Ropac",
+    "vibe": "contemplative, refined, expansive, minimalist, cerebral, prestigious",
+    "type": ["gallery"],
+    "lat": "51.5085581",
+    "lon": "-0.1424679",
+    "link": "https://www.instagram.com/thaddaeusropac/?hl=en",
+    "cover": "img/venues/thaddaeus-ropac-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "exhibitions, contemporaryart, sculpture, painting, photography, installations, artists, publications, talks, collections",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "hayward-gallery-ldn",
+    "name": "Hayward Gallery",
+    "vibe": "immersive, bold, experimental, cultural, contemporary, monumental",
+    "type": ["gallery"],
+    "lat": "51.5062085",
+    "lon": "-0.1154442",
+    "link": "https://www.instagram.com/hayward.gallery/?hl=en",
+    "cover": "img/venues/hayward-gallery-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–6:00 PM",
+      "Monday: Closed",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 18 },
+      "mon": null,
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 20 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "exhibitions, installations, sculpture, photography, talks, performances, artists, publishing, collections, architecture",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "realisation-par-ldn",
+    "name": "Réalisation Par",
+    "vibe": "effortless, feminine, nostalgic, minimalist, chic, playful",
+    "type": ["lifestyle"],
+    "lat": "51.509552",
+    "lon": "-0.1508877",
+    "link": "https://www.instagram.com/realisationpar/?hl=en",
+    "cover": "img/venues/realisation-par-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–5:00 PM",
+      "Monday: 10:00 AM–6:00 PM",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–7:00 PM",
+      "Friday: 10:00 AM–7:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 17 },
+      "mon": { "open": 10, "close": 18 },
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 19 },
+      "fri": { "open": 10, "close": 19 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 1,
+    "tags": "dresses, silk, linen, denim, knitwear, accessories, fitting, fashion, apparel, styling",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "royal-drawing-school-ldn",
+    "name": "Royal Drawing School",
+    "vibe": "academic, creative, contemplative, inspiring, focused, traditional",
+    "type": ["gallery"],
+    "lat": "51.525848",
+    "lon": "-0.081276",
+    "link": "https://www.instagram.com/royaldrawingschool/?hl=en",
+    "cover": "img/venues/royal-drawing-school-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 10:00 AM–5:00 PM",
+      "Tuesday: 10:00 AM–5:00 PM",
+      "Wednesday: 10:00 AM–5:00 PM",
+      "Thursday: 10:00 AM–5:00 PM",
+      "Friday: 10:00 AM–5:00 PM",
+      "Saturday: 10:00 AM–4:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 10, "close": 17 },
+      "tue": { "open": 10, "close": 17 },
+      "wed": { "open": 10, "close": 17 },
+      "thu": { "open": 10, "close": 17 },
+      "fri": { "open": 10, "close": 17 },
+      "sat": { "open": 10, "close": 16 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "drawing, exhibitions, education, workshops, lectures, studios, scholarships, anatomy, printmaking, courses",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "herald-st-ldn",
+    "name": "Herald St",
+    "vibe": "experimental, understated, intellectual, minimalist, contemporary, curated",
+    "type": ["gallery"],
+    "lat": "51.5248299",
+    "lon": "-0.0555033",
+    "link": "https://www.instagram.com/herald_st/?hl=en",
+    "cover": "img/venues/herald-st-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 11:00 AM–6:00 PM",
+      "Wednesday: 11:00 AM–6:00 PM",
+      "Thursday: 11:00 AM–6:00 PM",
+      "Friday: 11:00 AM–6:00 PM",
+      "Saturday: 11:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 11, "close": 18 },
+      "wed": { "open": 11, "close": 18 },
+      "thu": { "open": 11, "close": 18 },
+      "fri": { "open": 11, "close": 18 },
+      "sat": { "open": 11, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 1,
+    "tags": "exhibitions, painting, sculpture, installations, artists, publishing, collections, talks, photography, commissions",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "emalin-helmet-row-ldn",
+    "name": "Emalin, Helmet Row",
+    "vibe": "minimalist, cerebral, contemporary, refined, experimental, quiet",
+    "type": ["gallery"],
+    "lat": "51.5250703",
+    "lon": "-0.0945097",
+    "link": "https://www.instagram.com/emalinofficial/?hl=en",
+    "cover": "img/venues/emalin-helmet-row-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 11:00 AM–6:00 PM",
+      "Thursday: 11:00 AM–6:00 PM",
+      "Friday: 11:00 AM–6:00 PM",
+      "Saturday: 11:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 11, "close": 18 },
+      "thu": { "open": 11, "close": 18 },
+      "fri": { "open": 11, "close": 18 },
+      "sat": { "open": 11, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 1,
+    "tags": "exhibitions, painting, sculpture, installations, artists, publishing, photography, commissions, talks, collections",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "maureen-paley-ldn",
+    "name": "Maureen Paley",
+    "vibe": "pioneering, contemplative, contemporary, refined, intellectual, influential",
+    "type": ["gallery"],
+    "lat": "51.5245916",
+    "lon": "-0.0556656",
+    "link": "https://www.instagram.com/maureenpaley/?hl=en",
+    "cover": "img/venues/maureen-paley-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: Closed",
+      "Friday: 11:00 AM–6:00 PM",
+      "Saturday: 11:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": null,
+      "fri": { "open": 11, "close": 18 },
+      "sat": { "open": 11, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "-",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 1,
+    "tags": "exhibitions, photography, painting, sculpture, installations, artists, publishing, collections, talks, commissions",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "the-approach-gallery-ldn",
+    "name": "The Approach Gallery",
+    "vibe": "understated, contemplative, experimental, intimate, contemporary, thoughtful",
+    "type": ["gallery"],
+    "lat": "51.5313659",
+    "lon": "-0.0516633",
+    "link": "https://www.instagram.com/approachgallery/?hl=en",
+    "cover": "img/venues/the-approach-gallery-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 12:00 PM–6:00 PM",
+      "Thursday: 12:00 PM–6:00 PM",
+      "Friday: 12:00 PM–6:00 PM",
+      "Saturday: 12:00 PM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 12, "close": 18 },
+      "thu": { "open": 12, "close": 18 },
+      "fri": { "open": 12, "close": 18 },
+      "sat": { "open": 12, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 1,
+    "tags": "exhibitions, painting, sculpture, photography, installations, artists, publishing, talks, collections, commissions",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "dalston-jazz-bar-ldn",
+    "name": "Dalston Jazz Bar",
+    "vibe": "soulful, intimate, lively, analog, convivial, nocturnal",
+    "type": ["bar", "music"],
+    "lat": "51.5486742",
+    "lon": "-0.0760634",
+    "link": "https://www.instagram.com/dalstonjazzbar/?hl=en",
+    "cover": "img/venues/dalston-jazz-bar-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 6:00 PM–1:00 AM",
+      "Friday: 6:00 PM–3:00 AM",
+      "Saturday: 6:00 PM–3:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": { "open": 18, "close": 25 },
+      "fri": { "open": 18, "close": 27 },
+      "sat": { "open": 18, "close": 27 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "jazz, cocktails, wine, beer, performances, djs, concerts, spirits, dancing, vinyl",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "sourdough-sophia-primrose-hill-ldn",
+    "name": "Sourdough Sophia - Primrose Hill",
+    "vibe": "artisanal, cozy, neighborhood, welcoming, fragrant, rustic",
+    "type": ["bakery"],
+    "lat": "51.5409114",
+    "lon": "-0.1571854",
+    "link": "https://www.instagram.com/sourdoughsophia/?hl=en",
+    "cover": "img/venues/sourdough-sophia-primrose-hill-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–4:30 PM",
+      "Monday: 8:00 AM–4:30 PM",
+      "Tuesday: 8:00 AM–4:30 PM",
+      "Wednesday: 8:00 AM–4:30 PM",
+      "Thursday: 8:00 AM–4:30 PM",
+      "Friday: 8:00 AM–4:30 PM",
+      "Saturday: 8:00 AM–4:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 16.5 },
+      "mon": { "open": 8, "close": 16.5 },
+      "tue": { "open": 8, "close": 16.5 },
+      "wed": { "open": 8, "close": 16.5 },
+      "thu": { "open": 8, "close": 16.5 },
+      "fri": { "open": 8, "close": 16.5 },
+      "sat": { "open": 8, "close": 16.5 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "sourdough, viennoiserie, pastries, sandwiches, coffee, focaccia, cakes, bread, buns, espresso",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "wellcome-collection-ldn",
+    "name": "Wellcome Collection",
+    "vibe": "inquisitive, thoughtprovoking, contemplative, interdisciplinary, immersive, educational",
+    "type": ["museum", "library"],
+    "lat": "51.5259047",
+    "lon": "-0.1338785",
+    "link": "https://www.instagram.com/wellcomecollection/",
+    "cover": "img/venues/wellcome-collection-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–6:00 PM",
+      "Monday: Closed",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 18 },
+      "mon": null,
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "exhibitions, library, archives, medicine, science, books, talks, collections, reading, research",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "maya-marylebone-ldn",
+    "name": "Maya Marylebone",
+    "vibe": "glamorous, moody, polished, sophisticated, intimate, luxurious",
+    "type": ["cocktail"],
+    "lat": "51.5163423",
+    "lon": "-0.149571",
+    "link": "https://www.instagram.com/maya.marylebone/",
+    "cover": "img/venues/maya-marylebone-ldn.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–12:30 AM",
+      "Wednesday: 5:00 PM–12:30 AM",
+      "Thursday: 5:00 PM–12:30 AM",
+      "Friday: 5:00 PM–12:30 AM",
+      "Saturday: 5:00 PM–12:30 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17, "close": 24.5 },
+      "wed": { "open": 17, "close": 24.5 },
+      "thu": { "open": 17, "close": 24.5 },
+      "fri": { "open": 17, "close": 24.5 },
+      "sat": { "open": 17, "close": 24.5 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "L",
+      "wed": "L",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, agave, tequila, mezcal, champagne, spirits, martinis, tasting, mixology, nightlife",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "bar-lina-shoreditch-ldn",
+    "name": "Bar Lina Shoreditch",
+    "vibe": "stylish, intimate, lively, italianate, relaxed, polished",
+    "type": ["cocktail"],
+    "lat": "51.5243836",
+    "lon": "-0.0774171",
+    "link": "https://www.instagram.com/bar___lina/?hl=en",
+    "cover": "img/venues/bar-lina-shoreditch-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–11:00 PM",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–1:00 AM",
+      "Friday: 5:00 PM–1:00 AM",
+      "Saturday: 5:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17, "close": 23 },
+      "wed": { "open": 17, "close": 23 },
+      "thu": { "open": 17, "close": 25 },
+      "fri": { "open": 17, "close": 25 },
+      "sat": { "open": 17, "close": 25 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, negronis, spritzes, amaro, aperitivo, martinis, pasta, wine, snacks, espresso",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "napoli-on-the-road-soho-ldn",
+    "name": "Napoli on the Road • Soho",
+    "vibe": "vibrant, bustling, authentic, convivial, casual, artisanal",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5145602",
+    "lon": "-0.1345361",
+    "link": "https://www.instagram.com/napoli_ontheroad/",
+    "cover": "img/venues/napoli-on-the-road-soho-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–10:30 PM",
+      "Monday: 12:00 PM–10:30 PM",
+      "Tuesday: 12:00 PM–10:30 PM",
+      "Wednesday: 12:00 PM–10:30 PM",
+      "Thursday: 12:00 PM–10:30 PM",
+      "Friday: 12:00 PM–10:30 PM",
+      "Saturday: 12:00 PM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 22.5 },
+      "mon": { "open": 12, "close": 22.5 },
+      "tue": { "open": 12, "close": 22.5 },
+      "wed": { "open": 12, "close": 22.5 },
+      "thu": { "open": 12, "close": 22.5 },
+      "fri": { "open": 12, "close": 22.5 },
+      "sat": { "open": 12, "close": 22.5 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "neapolitan, pizza, sourdough, mozzarella, tomatoes, burrata, antipasti, tiramisu, spritzes, espresso",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "kiez-ldn",
+    "name": "Kiez",
+    "vibe": "intimate, neighborhood, rustic, welcoming, relaxed, convivial",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5213362",
+    "lon": "-0.2095218",
+    "link": "https://www.instagram.com/kiezkebab/",
+    "cover": "img/venues/kiez-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–11:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–12:00 AM",
+      "Friday: 12:00 PM–12:30 AM",
+      "Saturday: 12:00 PM–12:30 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 23 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 12, "close": 23 },
+      "thu": { "open": 12, "close": 24 },
+      "fri": { "open": 12, "close": 24.5 },
+      "sat": { "open": 12, "close": 24.5 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "german, schnitzel, sausages, beer, wine, spatzle, pickles, strudel, pretzels, cocktails",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "kamara-bar-soho-ldn",
+    "name": "Kamara Bar Soho",
+    "vibe": "moody, intimate, sophisticated, contemporary, polished, lowlit",
+    "type": ["cocktail"],
+    "lat": "51.5138381",
+    "lon": "-0.1366367",
+    "link": "https://www.instagram.com/kamarabar/?hl=en",
+    "cover": "img/venues/kamara-bar-soho-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–11:30 PM",
+      "Wednesday: 5:00 PM–11:30 PM",
+      "Thursday: 5:00 PM–11:30 PM",
+      "Friday: 5:00 PM–12:00 AM",
+      "Saturday: 5:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17, "close": 23.5 },
+      "wed": { "open": 17, "close": 23.5 },
+      "thu": { "open": 17, "close": 23.5 },
+      "fri": { "open": 17, "close": 24 },
+      "sat": { "open": 17, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, agave, tequila, mezcal, martinis, spirits, aperitifs, mixology, champagne, latehours",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "goodgood-studio-yoga-pilates-ldn",
+    "name": "GoodGood Studio - Yoga & Pilates",
+    "vibe": "calming, uplifting, minimalist, welcoming, mindful, restorative",
+    "type": ["fitness", "yoga", "pilates"],
+    "lat": "51.4437935",
+    "lon": "-0.1538166",
+    "link": "https://www.instagram.com/goodgood_london/?hl=en",
+    "cover": "img/venues/goodgood-studio-yoga-pilates-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–6:00 PM",
+      "Monday: 6:00 AM–9:00 PM",
+      "Tuesday: 6:00 AM–9:00 PM",
+      "Wednesday: 7:00 AM–9:00 PM",
+      "Thursday: 6:00 AM–9:00 PM",
+      "Friday: 7:00 AM–9:00 PM",
+      "Saturday: 8:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 18 },
+      "mon": { "open": 6, "close": 21 },
+      "tue": { "open": 6, "close": 21 },
+      "wed": { "open": 7, "close": 21 },
+      "thu": { "open": 6, "close": 21 },
+      "fri": { "open": 7, "close": 21 },
+      "sat": { "open": 8, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "yoga, pilates, reformer, matwork, breathwork, mobility, stretching, meditation, memberships, workshops",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "breathe-studio-ldn",
+    "name": "Breathe Studio",
+    "vibe": "serene, modern, focused, restorative, bright, intentional",
+    "type": ["pilates"],
+    "lat": "51.5375906",
+    "lon": "-0.1025286",
+    "link": "https://www.instagram.com/breathestudiolondon/?hl=en",
+    "cover": "img/venues/breathe-studio-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 AM–8:00 PM",
+      "Monday: 7:00 AM–8:00 PM",
+      "Tuesday: 7:00 AM–8:00 PM",
+      "Wednesday: 7:00 AM–8:00 PM",
+      "Thursday: 7:00 AM–8:00 PM",
+      "Friday: 7:00 AM–8:00 PM",
+      "Saturday: 7:00 AM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 7, "close": 20 },
+      "mon": { "open": 7, "close": 20 },
+      "tue": { "open": 7, "close": 20 },
+      "wed": { "open": 7, "close": 20 },
+      "thu": { "open": 7, "close": 20 },
+      "fri": { "open": 7, "close": 20 },
+      "sat": { "open": 7, "close": 20 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "reformer, pilates, matwork, strength, mobility, stretching, breathwork, memberships, beginners, wellness",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "heartcore-reformer-pilates-st-johns-wood-ldn",
+    "name": "Heartcore | Reformer Pilates St John’s Wood",
+    "vibe": "energetic, polished, motivating, contemporary, focused, premium",
+    "type": ["pilates"],
+    "lat": "51.5357743",
+    "lon": "-0.1749081",
+    "link": "https://www.instagram.com/heartcorelife/",
+    "cover": "img/venues/heartcore-reformer-pilates-st-johns-wood-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:45 AM–6:15 PM",
+      "Monday: 6:15 AM–8:30 PM",
+      "Tuesday: 6:15 AM–8:30 PM",
+      "Wednesday: 6:15 AM–8:30 PM",
+      "Thursday: 6:15 AM–8:30 PM",
+      "Friday: 6:15 AM–8:30 PM",
+      "Saturday: 7:45 AM–2:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 7.75, "close": 18.25 },
+      "mon": { "open": 6.25, "close": 20.5 },
+      "tue": { "open": 6.25, "close": 20.5 },
+      "wed": { "open": 6.25, "close": 20.5 },
+      "thu": { "open": 6.25, "close": 20.5 },
+      "fri": { "open": 6.25, "close": 20.5 },
+      "sat": { "open": 7.75, "close": 14 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "reformer, pilates, barre, strength, mobility, cardio, conditioning, memberships, classes, coaching",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "heartcore-reformer-pilates-chelsea-ldn",
+    "name": "Heartcore | Reformer Pilates Chelsea",
+    "vibe": "energetic, polished, motivating, contemporary, focused, premium",
+    "type": ["pilates"],
+    "lat": "51.4887972",
+    "lon": "-0.1662495",
+    "link": "https://www.instagram.com/heartcorelife/",
+    "cover": "img/venues/heartcore-reformer-pilates-chelsea-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–5:45 PM",
+      "Monday: 6:30 AM–8:30 PM",
+      "Tuesday: 6:30 AM–8:30 PM",
+      "Wednesday: 6:30 AM–8:30 PM",
+      "Thursday: 6:30 AM–8:30 PM",
+      "Friday: 6:30 AM–7:15 PM",
+      "Saturday: 8:00 AM–4:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 17.75 },
+      "mon": { "open": 6.5, "close": 20.5 },
+      "tue": { "open": 6.5, "close": 20.5 },
+      "wed": { "open": 6.5, "close": 20.5 },
+      "thu": { "open": 6.5, "close": 20.5 },
+      "fri": { "open": 6.5, "close": 19.25 },
+      "sat": { "open": 8, "close": 16.5 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "reformer, pilates, barre, strength, mobility, cardio, conditioning, memberships, classes, coaching",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "studio-anatomy-london-fields-ldn",
+    "name": "Studio Anatomy, London Fields",
+    "vibe": "minimalist, welcoming, focused, restorative, contemporary, supportive",
+    "type": ["pilates"],
+    "lat": "51.538044",
+    "lon": "-0.0567118",
+    "link": "https://www.instagram.com/studioanatomy_/?hl=en",
+    "cover": "img/venues/studio-anatomy-london-fields-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–4:00 PM",
+      "Monday: 6:45 AM–8:30 PM",
+      "Tuesday: 6:45 AM–8:30 PM",
+      "Wednesday: 6:45 AM–8:30 PM",
+      "Thursday: 6:45 AM–8:30 PM",
+      "Friday: 6:45 AM–7:30 PM",
+      "Saturday: 8:00 AM–4:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 16 },
+      "mon": { "open": 6.75, "close": 20.5 },
+      "tue": { "open": 6.75, "close": 20.5 },
+      "wed": { "open": 6.75, "close": 20.5 },
+      "thu": { "open": 6.75, "close": 20.5 },
+      "fri": { "open": 6.75, "close": 19.5 },
+      "sat": { "open": 8, "close": 16 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "reformer, pilates, mobility, strength, conditioning, matwork, stretching, rehabilitation, wellness, memberships",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "arc-community-sauna-and-ice-ldn",
+    "name": "Arc Community - Sauna and Ice",
+    "vibe": "restorative, social, minimalist, rejuvenating, tranquil, intentional",
+    "type": ["spa"],
+    "lat": "51.5060136",
+    "lon": "-0.0170886",
+    "link": "https://www.instagram.com/arccommunity_/?hl=en",
+    "cover": "img/venues/arc-community-sauna-and-ice-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–10:00 PM",
+      "Monday: 6:15 AM–10:00 PM",
+      "Tuesday: 6:15 AM–10:00 PM",
+      "Wednesday: 6:15 AM–10:00 PM",
+      "Thursday: 6:15 AM–10:00 PM",
+      "Friday: 6:15 AM–10:00 PM",
+      "Saturday: 9:00 AM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 22 },
+      "mon": { "open": 6.25, "close": 22 },
+      "tue": { "open": 6.25, "close": 22 },
+      "wed": { "open": 6.25, "close": 22 },
+      "thu": { "open": 6.25, "close": 22 },
+      "fri": { "open": 6.25, "close": 22 },
+      "sat": { "open": 9, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "sauna, coldplunge, recovery, breathwork, contrasttherapy, wellness, memberships, community, rituals, relaxation",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "rooftop-saunas-hackney-ldn",
+    "name": "Rooftop Saunas Hackney",
+    "vibe": "openair, restorative, social, tranquil, elevated, Scandinavian",
+    "type": ["spa"],
+    "lat": "51.537455",
+    "lon": "-0.05728",
+    "link": "https://www.instagram.com/rooftopsaunas/?hl=en",
+    "cover": "img/venues/rooftop-saunas-hackney-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–7:50 PM",
+      "Monday: 7:30 AM–10:20 PM",
+      "Tuesday: 7:30 AM–10:20 PM",
+      "Wednesday: 7:30 AM–10:20 PM",
+      "Thursday: 7:30 AM–10:20 PM",
+      "Friday: 7:30 AM–10:20 PM",
+      "Saturday: 7:30 AM–10:20 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 19.8333333333 },
+      "mon": { "open": 7.5, "close": 22.3333333333 },
+      "tue": { "open": 7.5, "close": 22.3333333333 },
+      "wed": { "open": 7.5, "close": 22.3333333333 },
+      "thu": { "open": 7.5, "close": 22.3333333333 },
+      "fri": { "open": 7.5, "close": 22.3333333333 },
+      "sat": { "open": 7.5, "close": 22.3333333333 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "sauna, coldplunge, recovery, wellness, contrasttherapy, rituals, bookings, relaxation, community, rooftop",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "sauna-social-club-ldn",
+    "name": "Sauna Social Club",
+    "vibe": "communal, restorative, rustic, welcoming, relaxed, mindful",
+    "type": ["spa"],
+    "lat": "51.4698103",
+    "lon": "-0.0630488",
+    "link": "https://www.instagram.com/sauna_socialclub/?hl=en",
+    "cover": "img/venues/sauna-social-club-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–8:30 PM",
+      "Monday: 8:00 AM–10:30 PM",
+      "Tuesday: 4:00 PM–10:30 PM",
+      "Wednesday: 12:00 PM–10:30 PM",
+      "Thursday: 12:00 PM–10:30 PM",
+      "Friday: 8:00 AM–10:30 PM",
+      "Saturday: 8:00 AM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 20.5 },
+      "mon": { "open": 8, "close": 22.5 },
+      "tue": { "open": 16, "close": 22.5 },
+      "wed": { "open": 12, "close": 22.5 },
+      "thu": { "open": 12, "close": 22.5 },
+      "fri": { "open": 8, "close": 22.5 },
+      "sat": { "open": 8, "close": 22.5 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "sauna, coldplunge, recovery, wellness, breathwork, contrasttherapy, memberships, events, relaxation, community",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "rebase-recovery-ldn",
+    "name": "Rebase Recovery",
+    "vibe": "clinical, modern, restorative, premium, focused, calming",
+    "type": ["spa"],
+    "lat": "51.5187955",
+    "lon": "-0.152065",
+    "link": "https://www.instagram.com/rebaserecovery/?hl=en",
+    "cover": "img/venues/rebase-recovery-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–8:00 PM",
+      "Monday: 7:00 AM–9:00 PM",
+      "Tuesday: 7:00 AM–9:00 PM",
+      "Wednesday: 7:00 AM–9:00 PM",
+      "Thursday: 7:00 AM–9:00 PM",
+      "Friday: 7:00 AM–9:00 PM",
+      "Saturday: 8:00 AM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 20 },
+      "mon": { "open": 7, "close": 21 },
+      "tue": { "open": 7, "close": 21 },
+      "wed": { "open": 7, "close": 21 },
+      "thu": { "open": 7, "close": 21 },
+      "fri": { "open": 7, "close": 21 },
+      "sat": { "open": 8, "close": 20 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "recovery, coldplunge, compression, massage, infrared, cryotherapy, wellness, memberships, physiotherapy, mobility",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "goodman-gallery-london-ldn",
+    "name": "Goodman Gallery London",
+    "vibe": "contemplative, refined, minimalist, intellectual, contemporary, prestigious",
+    "type": ["gallery"],
+    "lat": "51.5103986",
+    "lon": "-0.1413355",
+    "link": "https://www.instagram.com/goodman_gallery/?hl=en",
+    "cover": "img/venues/goodman-gallery-london-ldn.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 11:00 AM–5:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 11, "close": 17 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "exhibitions, painting, sculpture, photography, installations, artists, publishing, collections, talks, commissions",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "opera-gallery-london-ldn",
+    "name": "Opera Gallery London",
+    "vibe": "elegant, prestigious, polished, contemporary, luxurious, refined",
+    "type": ["gallery"],
+    "lat": "51.5134489",
+    "lon": "-0.1454819",
+    "link": "https://www.instagram.com/operagallery/",
+    "cover": "img/venues/opera-gallery-london-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–6:00 PM",
+      "Monday: 10:00 AM–6:30 PM",
+      "Tuesday: 10:00 AM–6:30 PM",
+      "Wednesday: 10:00 AM–6:30 PM",
+      "Thursday: 10:00 AM–6:30 PM",
+      "Friday: 10:00 AM–6:30 PM",
+      "Saturday: 10:00 AM–6:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 18 },
+      "mon": { "open": 10, "close": 18.5 },
+      "tue": { "open": 10, "close": 18.5 },
+      "wed": { "open": 10, "close": 18.5 },
+      "thu": { "open": 10, "close": 18.5 },
+      "fri": { "open": 10, "close": 18.5 },
+      "sat": { "open": 10, "close": 18.5 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "exhibitions, painting, sculpture, photography, editions, artists, collections, publishing, installations, acquisitions",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "gibneys-london-ldn",
+    "name": "Gibney's London",
+    "vibe": "intimate, nostalgic, lively, convivial, classic, welcoming",
+    "type": ["bar", "pub"],
+    "lat": "51.5248024",
+    "lon": "-0.0876849",
+    "link": "https://www.instagram.com/gibneys.london/?hl=en",
+    "cover": "img/venues/gibneys-london-ldn.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–9:00 PM",
+      "Monday: 4:00 PM–12:00 AM",
+      "Tuesday: 4:00 PM–12:00 AM",
+      "Wednesday: 4:00 PM–12:00 AM",
+      "Thursday: 4:00 PM–1:00 AM",
+      "Friday: 4:00 PM–2:00 AM",
+      "Saturday: 12:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 21 },
+      "mon": { "open": 16, "close": 24 },
+      "tue": { "open": 16, "close": 24 },
+      "wed": { "open": 16, "close": 24 },
+      "thu": { "open": 16, "close": 25 },
+      "fri": { "open": 16, "close": 26 },
+      "sat": { "open": 12, "close": 26 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "guinness, whiskey, cocktails, oysters, stout, pints, seafood, livemusic, sandwiches, spirits",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "the-starman-ldn",
+    "name": "The Starman",
+    "vibe": "playful, retro, lively, neighborhood, spirited, welcoming",
+    "type": ["bar", "pub"],
+    "lat": "51.510882",
+    "lon": "-0.1395231",
+    "link": "https://www.instagram.com/thestarmanlondon/?hl=en",
+    "cover": "img/venues/the-starman-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–10:30 PM",
+      "Monday: 12:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–12:00 AM",
+      "Thursday: 12:00 PM–2:00 AM",
+      "Friday: 12:00 PM–2:00 AM",
+      "Saturday: 12:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 22.5 },
+      "mon": { "open": 12, "close": 23 },
+      "tue": { "open": 12, "close": 23 },
+      "wed": { "open": 12, "close": 24 },
+      "thu": { "open": 12, "close": 26 },
+      "fri": { "open": 12, "close": 26 },
+      "sat": { "open": 12, "close": 26 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "midday, afternoon, evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, beer, wine, burgers, snacks, pints, spirits, music, terraces, gatherings",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "the-lighterman-ldn",
+    "name": "The Lighterman",
+    "vibe": "airy, waterside, vibrant, contemporary, spacious, sociable",
+    "type": ["brunch", "lunch", "dinner"],
+    "lat": "51.5352593",
+    "lon": "-0.1243704",
+    "link": "https://www.instagram.com/thelightermankx/?hl=en",
+    "cover": "img/venues/the-lighterman-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–10:30 PM",
+      "Monday: 12:00 PM–11:30 PM",
+      "Tuesday: 12:00 PM–11:30 PM",
+      "Wednesday: 12:00 PM–11:30 PM",
+      "Thursday: 12:00 PM–11:30 PM",
+      "Friday: 12:00 PM–11:30 PM",
+      "Saturday: 10:00 AM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 22.5 },
+      "mon": { "open": 12, "close": 23.5 },
+      "tue": { "open": 12, "close": 23.5 },
+      "wed": { "open": 12, "close": 23.5 },
+      "thu": { "open": 12, "close": 23.5 },
+      "fri": { "open": 12, "close": 23.5 },
+      "sat": { "open": 10, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, afternoon, evening, late",
+    "energyRamp": 1,
+    "tags": "brunch, cocktails, seafood, burgers, steaks, wine, spritzes, roasts, breakfast, terraces",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "auguste-ldn",
+    "name": "Auguste",
+    "vibe": "elegant, intimate, refined, understated, ingredientdriven, contemporary",
+    "type": ["dinner"],
+    "lat": "51.5395179",
+    "lon": "-0.0578203",
+    "link": "https://www.instagram.com/auguste__london/?hl=en",
+    "cover": "img/venues/auguste-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 6:00 PM–10:30 PM",
+      "Thursday: 6:00 PM–10:30 PM",
+      "Friday: 5:30 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 18, "close": 22.5 },
+      "thu": { "open": 18, "close": 22.5 },
+      "fri": { "open": 17.5, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "french, seasonal, tasting, naturalwine, seafood, vegetables, desserts, sauces, pairings, cocktails",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "cafe-1922-ldn",
+    "name": "Café 1922",
+    "vibe": "elegant, parisian, relaxed, refined, charming, welcoming",
+    "type": ["café"],
+    "lat": "51.4904317",
+    "lon": "-0.1572145",
+    "link": "https://www.instagram.com/cafe_1922/",
+    "cover": "img/venues/cafe-1922-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:30 AM–4:00 PM",
+      "Monday: 7:30 AM–4:00 PM",
+      "Tuesday: 7:30 AM–6:00 PM",
+      "Wednesday: 7:30 AM–6:00 PM",
+      "Thursday: 7:30 AM–6:00 PM",
+      "Friday: 7:30 AM–6:00 PM",
+      "Saturday: 8:30 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8.5, "close": 16 },
+      "mon": { "open": 7.5, "close": 16 },
+      "tue": { "open": 7.5, "close": 18 },
+      "wed": { "open": 7.5, "close": 18 },
+      "thu": { "open": 7.5, "close": 18 },
+      "fri": { "open": 7.5, "close": 18 },
+      "sat": { "open": 8.5, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday, afternoon",
+    "energyRamp": 1,
+    "tags": "espresso, pastries, viennoiserie, brunch, sandwiches, coffee, cakes, tea, breakfast, desserts",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "knees-up-ldn",
+    "name": "Knees Up",
+    "vibe": "playful, colorful, nostalgic, community, eclectic, independent",
+    "type": ["lifestyle"],
+    "lat": "51.5323448",
+    "lon": "-0.060444",
+    "link": "https://www.instagram.com/kneesupspace/",
+    "cover": "img/venues/knees-up-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–4:00 PM",
+      "Monday: Closed",
+      "Tuesday: 8:00 AM–4:00 PM",
+      "Wednesday: 8:00 AM–4:00 PM",
+      "Thursday: 8:00 AM–4:00 PM",
+      "Friday: 8:00 AM–4:00 PM",
+      "Saturday: 8:00 AM–4:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 16 },
+      "mon": null,
+      "tue": { "open": 8, "close": 16 },
+      "wed": { "open": 8, "close": 16 },
+      "thu": { "open": 8, "close": 16 },
+      "fri": { "open": 8, "close": 16 },
+      "sat": { "open": 8, "close": 16 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "vintage, apparel, homeware, ceramics, prints, accessories, workshops, gifts, design, events",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "labour-and-wait-ldn",
+    "name": "Labour and Wait",
+    "vibe": "utilitarian, timeless, understated, tactile, curated, nostalgic",
+    "type": ["lifestyle"],
+    "lat": "51.5247104",
+    "lon": "-0.0733592",
+    "link": "https://www.instagram.com/labourandwait/?hl=en",
+    "cover": "img/venues/labour-and-wait-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:00 AM–6:00 PM",
+      "Monday: 10:00 AM–6:00 PM",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 10, "close": 18 },
+      "mon": { "open": 10, "close": 18 },
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 1,
+    "tags": "homeware, kitchenware, tools, stationery, brushes, ceramics, glassware, textiles, gardening, gifts",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "air-mail-news-ldn",
+    "name": "Air Mail News",
+    "vibe": "editorial, minimalist, curated, intellectual, contemporary, refined",
+    "type": ["bookstore", "lifefstyle"],
+    "lat": "51.5186085",
+    "lon": "-0.1545658",
+    "link": "https://www.instagram.com/airmailweekly/",
+    "cover": "img/venues/air-mail-news-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:30 AM–4:00 PM",
+      "Monday: 8:30 AM–4:00 PM",
+      "Tuesday: 8:30 AM–4:00 PM",
+      "Wednesday: 8:30 AM–4:00 PM",
+      "Thursday: 8:30 AM–6:00 PM",
+      "Friday: 8:30 AM–4:00 PM",
+      "Saturday: 8:30 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8.5, "close": 16 },
+      "mon": { "open": 8.5, "close": 16 },
+      "tue": { "open": 8.5, "close": 16 },
+      "wed": { "open": 8.5, "close": 16 },
+      "thu": { "open": 8.5, "close": 18 },
+      "fri": { "open": 8.5, "close": 16 },
+      "sat": { "open": 8.5, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "magazines, books, newspapers, stationery, journals, publishing, photography, fashion, design, gifts",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "sova-ldn",
+    "name": "sova",
+    "vibe": "intimate, refined, understated, contemporary, warm, ingredientdriven",
+    "type": ["dinner"],
+    "lat": "51.5156394",
+    "lon": "-0.2053858",
+    "link": "https://www.instagram.com/sova.london/?hl=en",
+    "cover": "img/venues/sova-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 6:00 PM–10:00 PM",
+      "Wednesday: 6:00 PM–10:00 PM",
+      "Thursday: 6:00 PM–10:00 PM",
+      "Friday: 6:00 PM–11:30 PM",
+      "Saturday: 12:00 PM–11:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 18, "close": 22 },
+      "wed": { "open": 18, "close": 22 },
+      "thu": { "open": 18, "close": 22 },
+      "fri": { "open": 18, "close": 23.5 },
+      "sat": { "open": 12, "close": 23.5 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "seasonal, naturalwine, tasting, seafood, vegetables, fermentation, cocktails, desserts, sharing, british",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "apparatus-ldn",
+    "name": "APPARATUS",
+    "vibe": "sculptural, luxurious, minimalist, atmospheric, refined, dramatic",
+    "type": ["showroom"],
+    "lat": "51.510306",
+    "lon": "-0.1482718",
+    "link": "https://www.instagram.com/apparatusstudio/",
+    "cover": "img/venues/apparatus-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 10:00 AM–6:00 PM",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 12:00 PM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 10, "close": 18 },
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 12, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday, afternoon",
+    "energyRamp": 1,
+    "tags": "lighting, furniture, objects, interiors, design, showroom, fixtures, craftsmanship, homeware, installations",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "st-dunstan-in-the-east-church-garden-ldn",
+    "name": "St Dunstan in the East Church Garden",
+    "vibe": "tranquil, contemplative, atmospheric, historic, romantic, overgrown",
+    "type": ["garden"],
+    "lat": "51.509715",
+    "lon": "-0.0824601",
+    "link": "https://www.instagram.com/cityoflondoncorp/",
+    "cover": "img/venues/st-dunstan-in-the-east-church-garden-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–7:00 PM",
+      "Monday: 8:00 AM–7:00 PM",
+      "Tuesday: 8:00 AM–7:00 PM",
+      "Wednesday: 8:00 AM–7:00 PM",
+      "Thursday: 8:00 AM–7:00 PM",
+      "Friday: 8:00 AM–7:00 PM",
+      "Saturday: 8:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 19 },
+      "mon": { "open": 8, "close": 19 },
+      "tue": { "open": 8, "close": 19 },
+      "wed": { "open": 8, "close": 19 },
+      "thu": { "open": 8, "close": 19 },
+      "fri": { "open": 8, "close": 19 },
+      "sat": { "open": 8, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "ruins, gardens, walking, photography, reflection, architecture, greenery, heritage, sightseeing, relaxation",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "barrys-st-pauls-ldn",
+    "name": "Barry's St Paul's",
+    "vibe": "energetic, intense, motivating, highperformance, immersive, premium",
+    "type": ["fitness"],
+    "lat": "51.5154017",
+    "lon": "-0.0955113",
+    "link": "https://www.instagram.com/barrys",
+    "cover": "img/venues/barrys-st-pauls-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:30 AM–2:00 PM",
+      "Monday: 5:45 AM–9:00 PM",
+      "Tuesday: 5:45 AM–9:00 PM",
+      "Wednesday: 5:45 AM–9:00 PM",
+      "Thursday: 5:45 AM–9:00 PM",
+      "Friday: 5:45 AM–8:00 PM",
+      "Saturday: 8:30 AM–2:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8.5, "close": 14 },
+      "mon": { "open": 5.75, "close": 21 },
+      "tue": { "open": 5.75, "close": 21 },
+      "wed": { "open": 5.75, "close": 21 },
+      "thu": { "open": 5.75, "close": 21 },
+      "fri": { "open": 5.75, "close": 20 },
+      "sat": { "open": 8.5, "close": 14 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "treadmill, strength, intervaltraining, conditioning, memberships, coaching, recovery, endurance, classes, wellness",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "zapoi-ldn",
+    "name": "Zapoi",
+    "vibe": "intimate, analog, lowlit, relaxed, neighborhood, soulful",
+    "type": ["cocktail"],
+    "lat": "51.4684818",
+    "lon": "-0.0675993",
+    "link": "https://www.instagram.com/zapoipeckham/?hl=en",
+    "cover": "img/venues/zapoi-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–12:00 AM",
+      "Monday: 5:00 PM–12:00 AM",
+      "Tuesday: 5:00 PM–12:00 AM",
+      "Wednesday: 5:00 PM–12:00 AM",
+      "Thursday: 5:00 PM–12:00 AM",
+      "Friday: 5:00 PM–1:00 AM",
+      "Saturday: 12:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 24 },
+      "mon": { "open": 17, "close": 24 },
+      "tue": { "open": 17, "close": 24 },
+      "wed": { "open": 17, "close": 24 },
+      "thu": { "open": 17, "close": 24 },
+      "fri": { "open": 17, "close": 25 },
+      "sat": { "open": 12, "close": 25 }
+    },
+    "dayParts": {
+      "sun": "L",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, naturalwine, vinyl, martinis, aperitifs, beer, spirits, listening, snacks, djs",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "biancas-ldn",
+    "name": "Bianca's",
+    "vibe": "warm, neighborhood, convivial, relaxed, contemporary, inviting",
+    "type": ["dinner"],
+    "lat": "51.5574528",
+    "lon": "-0.0747329",
+    "link": "https://www.instagram.com/biancaslondon/",
+    "cover": "img/venues/biancas-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:30 PM–2:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 6:00 PM–9:30 PM",
+      "Thursday: 6:00 PM–9:30 PM",
+      "Friday: 6:00 PM–9:30 PM",
+      "Saturday: 12:30 PM–2:00 PM; 6:00 PM–9:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12.5, "close": 14 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 18, "close": 21.5 },
+      "thu": { "open": 18, "close": 21.5 },
+      "fri": { "open": 18, "close": 21.5 },
+      "sat": [
+        { "open": 12.5, "close": 14 },
+        { "open": 18, "close": 21.5 }
+      ]
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "italian, pasta, naturalwine, seafood, antipasti, vegetables, cocktails, desserts, espresso, sharing",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "duchy-ldn",
+    "name": "Duchy",
+    "vibe": "elegant, refined, understated, intimate, thoughtful, contemporary",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5240274",
+    "lon": "-0.0815671",
+    "link": "https://www.instagram.com/duchy.restaurant/",
+    "cover": "img/venues/duchy-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM",
+      "Wednesday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM",
+      "Thursday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM",
+      "Friday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM",
+      "Saturday: 12:00 PM–2:30 PM; 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "wed": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "sat": [
+        { "open": 12, "close": 14.5 },
+        { "open": 17.5, "close": 22 }
+      ]
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "alpine, italian, french, pasta, naturalwine, seafood, vegetables, desserts, seasonal, cocktails",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "elsa-ldn",
+    "name": "Elsa",
+    "vibe": "elegant, intimate, contemporary, polished, warm, relaxed",
+    "type": ["lunch", "dinner"],
+    "lat": "51.518393",
+    "lon": "-0.1344098",
+    "link": "https://www.instagram.com/elsabistro/",
+    "cover": "img/venues/elsa-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:30 PM–11:00 PM",
+      "Wednesday: 12:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–11:00 PM",
+      "Friday: 12:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17.5, "close": 23 },
+      "wed": { "open": 12, "close": 23 },
+      "thu": { "open": 12, "close": 23 },
+      "fri": { "open": 12, "close": 23 },
+      "sat": { "open": 12, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "european, seasonal, cocktails, wine, seafood, vegetables, desserts, sharing, pasta, brunch",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "brat-x-climpsons-arch-ldn",
+    "name": "Brat x Climpson's Arch",
+    "vibe": "smoky, rustic, lively, communal, openair, convivial",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5395606",
+    "lon": "-0.0583895",
+    "link": "https://www.instagram.com/brat_climpsonsarch/?hl=en",
+    "cover": "img/venues/brat-x-climpsons-arch-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 5:00 PM–10:00 PM",
+      "Thursday: 5:00 PM–10:00 PM",
+      "Friday: 12:00 PM–10:00 PM",
+      "Saturday: 12:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 21 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 17, "close": 22 },
+      "thu": { "open": 17, "close": 22 },
+      "fri": { "open": 12, "close": 22 },
+      "sat": { "open": 12, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "fire, seafood, wholefish, lamb, naturalwine, cider, vegetables, grilling, sharing, desserts",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "dishoom-permit-room-portobello-ldn",
+    "name": "Dishoom Permit Room Portobello",
+    "vibe": "nostalgic, vibrant, playful, neighborhood, lively, colorful",
+    "type": ["breakfast", "lunch", "dinner"],
+    "lat": "51.5160513",
+    "lon": "-0.2048621",
+    "link": "https://www.instagram.com/dishoom/",
+    "cover": "img/venues/dishoom-permit-room-portobello-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–11:00 PM",
+      "Monday: 8:00 AM–11:00 PM",
+      "Tuesday: Closed",
+      "Wednesday: 8:00 AM–11:00 PM",
+      "Thursday: 8:00 AM–11:00 PM",
+      "Friday: 8:00 AM–12:00 AM",
+      "Saturday: 9:00 AM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 23 },
+      "mon": { "open": 8, "close": 23 },
+      "tue": null,
+      "wed": { "open": 8, "close": 23 },
+      "thu": { "open": 8, "close": 23 },
+      "fri": { "open": 8, "close": 24 },
+      "sat": { "open": 9, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "morning, midday, evening",
+    "energyRamp": 1,
+    "tags": "indian, breakfast, curries, cocktails, chai, naan, biryani, snacks, beer, vinyl",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "morchella-ldn",
+    "name": "Morchella",
+    "vibe": "elegant, ingredientdriven, refined, contemporary, relaxed, polished",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5266656",
+    "lon": "-0.1085559",
+    "link": "https://www.instagram.com/morchelladining",
+    "cover": "img/venues/morchella-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–7:00 PM",
+      "Monday: 5:30 PM–10:00 PM",
+      "Tuesday: 12:00 PM–2:45 PM; 5:30 PM–10:00 PM",
+      "Wednesday: 12:00 PM–2:45 PM; 5:30 PM–10:00 PM",
+      "Thursday: 12:00 PM–2:45 PM; 5:30 PM–10:00 PM",
+      "Friday: 12:00 PM–2:45 PM; 5:30 PM–10:00 PM",
+      "Saturday: 12:00 PM–2:45 PM; 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 19 },
+      "mon": { "open": 17.5, "close": 22 },
+      "tue": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "wed": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "sat": [
+        { "open": 12, "close": 14.75 },
+        { "open": 17.5, "close": 22 }
+      ]
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "mediterranean, seafood, vegetables, naturalwine, cocktails, pasta, charcoal, desserts, seasonal, sharing",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "burnt-arches-ldn",
+    "name": "Burnt Arches",
+    "vibe": "industrial, creative, relaxed, neighborhood, vibrant, contemporary",
+    "type": ["breakfast", "brunch", "dinner"],
+    "lat": "51.5305426",
+    "lon": "-0.057047",
+    "link": "https://www.instagram.com/burnt_restaurant/?hl=en",
+    "cover": "img/venues/burnt-arches-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–4:00 PM",
+      "Monday: Closed",
+      "Tuesday: 8:00 AM–4:00 PM",
+      "Wednesday: 8:00 AM–4:00 PM",
+      "Thursday: 8:00 AM–4:00 PM; 6:00 PM–10:30 PM",
+      "Friday: 8:00 AM–4:00 PM; 6:00 PM–11:00 PM",
+      "Saturday: 8:00 AM–4:00 PM; 6:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 16 },
+      "mon": null,
+      "tue": { "open": 8, "close": 16 },
+      "wed": { "open": 8, "close": 16 },
+      "thu": [
+        { "open": 8, "close": 16 },
+        { "open": 18, "close": 22.5 }
+      ],
+      "fri": [
+        { "open": 8, "close": 16 },
+        { "open": 18, "close": 23 }
+      ],
+      "sat": [
+        { "open": 8, "close": 16 },
+        { "open": 18, "close": 23 }
+      ]
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "-",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "morning, midday, evening",
+    "energyRamp": 1,
+    "tags": "brunch, naturalwine, coffee, cocktails, woodfired, pastries, sharing, vegetables, dinner, seasonal",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "one-club-row-ldn",
+    "name": "One Club Row",
+    "vibe": "elegant, nostalgic, intimate, lively, sophisticated, timeless",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5240027",
+    "lon": "-0.074219",
+    "link": "https://www.instagram.com/oneclubrow/?hl=en",
+    "cover": "img/venues/one-club-row-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–3:00 PM; 5:30 PM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: 12:00 PM–2:00 PM; 5:30 PM–9:45 PM",
+      "Wednesday: 12:00 PM–2:00 PM; 5:30 PM–9:45 PM",
+      "Thursday: 12:00 PM–2:00 PM; 5:30 PM–9:45 PM",
+      "Friday: 12:00 PM–2:00 PM; 5:30 PM–9:45 PM",
+      "Saturday: 12:00 PM–2:00 PM; 5:30 PM–9:45 PM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 12, "close": 15 },
+        { "open": 17.5, "close": 21 }
+      ],
+      "mon": null,
+      "tue": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.75 }
+      ],
+      "wed": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.75 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.75 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.75 }
+      ],
+      "sat": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.75 }
+      ]
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "oysters, martinis, seafood, chops, wine, champagne, desserts, cocktails, seasonal, british",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "bistro-freddie-ldn",
+    "name": "Bistro Freddie",
+    "vibe": "parisian, convivial, relaxed, polished, neighborhood, warm",
+    "type": ["lunch", "dinner"],
+    "lat": "51.5242121",
+    "lon": "-0.0815926",
+    "link": "https://www.instagram.com/bistro_freddie/?hl=en",
+    "cover": "img/venues/bistro-freddie-ldn.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 12:00 PM–3:00 PM; 6:00 PM–11:00 PM",
+      "Tuesday: 12:00 PM–3:00 PM; 6:00 PM–11:00 PM",
+      "Wednesday: 12:00 PM–3:00 PM; 6:00 PM–11:00 PM",
+      "Thursday: 12:00 PM–3:00 PM; 6:00 PM–11:00 PM",
+      "Friday: 12:00 PM–3:00 PM; 6:00 PM–11:00 PM",
+      "Saturday: 12:00 PM–3:00 PM; 6:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 23 }
+      ],
+      "tue": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 23 }
+      ],
+      "wed": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 23 }
+      ],
+      "thu": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 23 }
+      ],
+      "fri": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 23 }
+      ],
+      "sat": [
+        { "open": 12, "close": 15 },
+        { "open": 18, "close": 23 }
+      ]
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "french, steakfrites, oysters, wine, seafood, tartare, desserts, cocktails, charcuterie, brunch",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "still-hot-yoga-atl",
+    "name": "Still Hot Yoga",
+    "vibe": "restorative, welcoming, mindful, uplifting, calming, inclusive",
+    "type": ["yoga"],
+    "lat": "33.7991632",
+    "lon": "-84.3069375",
+    "link": "https://www.instagram.com/stillhotyoga/?hl=en",
+    "cover": "img/venues/still-hot-yoga-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–6:00 PM",
+      "Monday: 9:30 AM–8:00 PM",
+      "Tuesday: 8:00 AM–9:00 PM",
+      "Wednesday: 9:30 AM–8:00 PM",
+      "Thursday: 8:00 AM–7:00 PM",
+      "Friday: 9:30 AM–7:30 PM",
+      "Saturday: 9:30 AM–2:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 18 },
+      "mon": { "open": 9.5, "close": 20 },
+      "tue": { "open": 8, "close": 21 },
+      "wed": { "open": 9.5, "close": 20 },
+      "thu": { "open": 8, "close": 19 },
+      "fri": { "open": 9.5, "close": 19.5 },
+      "sat": { "open": 9.5, "close": 14 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "yoga, vinyasa, hotyoga, meditation, breathwork, workshops, memberships, mobility, wellness, community",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "bring-it-om-yoga-studio-atl",
+    "name": "Bring It Om® Yoga Studio",
+    "vibe": "nurturing, peaceful, supportive, mindful, restorative, community",
+    "type": ["yoga"],
+    "lat": "33.7868943",
+    "lon": "-84.3557041",
+    "link": "https://www.instagram.com/bringitomyoga_/?hl=en",
+    "cover": "img/venues/bring-it-om-yoga-studio-atl.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:30 AM–1:00 PM; 4:30 PM–7:30 PM",
+      "Monday: 6:00 AM–8:30 PM",
+      "Tuesday: 6:00 AM–8:30 PM",
+      "Wednesday: 6:00 AM–8:30 PM",
+      "Thursday: 6:00 AM–8:30 PM",
+      "Friday: 7:00 AM–6:00 PM",
+      "Saturday: 9:00 AM–1:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 8.5, "close": 13 },
+        { "open": 16.5, "close": 19.5 }
+      ],
+      "mon": { "open": 6, "close": 20.5 },
+      "tue": { "open": 6, "close": 20.5 },
+      "wed": { "open": 6, "close": 20.5 },
+      "thu": { "open": 6, "close": 20.5 },
+      "fri": { "open": 7, "close": 18 },
+      "sat": { "open": 9, "close": 13 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "yoga, vinyasa, yin, meditation, breathwork, workshops, teachertraining, wellness, mobility, beginners",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "olaria-atl",
+    "name": "Olaria",
+    "vibe": "curated, minimalist, artisanal, refined, contemporary, tactile",
+    "type": ["lifestyle"],
+    "lat": "33.8000248",
+    "lon": "-84.4265778",
+    "link": "https://www.instagram.com/olariausa/?hl=en",
+    "cover": "img/venues/olaria-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–5:00 PM",
+      "Monday: 10:00 AM–6:00 PM",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 17 },
+      "mon": { "open": 10, "close": 18 },
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "furniture, lighting, ceramics, homeware, textiles, objects, interiors, design, decor, vintage",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "the-forum-athletic-club-buckhead",
+    "name": "The Forum Athletic Club",
+    "vibe": "premium, energetic, luxurious, motivating, polished, social",
+    "type": ["fitness"],
+    "lat": "33.8468349",
+    "lon": "-84.3619524",
+    "link": "https://www.instagram.com/tfac_atl/?hl=en",
+    "cover": "img/venues/the-forum-athletic-club-buckhead.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 AM–7:00 PM",
+      "Monday: 5:00 AM–9:30 PM",
+      "Tuesday: 5:00 AM–9:30 PM",
+      "Wednesday: 5:00 AM–9:30 PM",
+      "Thursday: 5:00 AM–9:30 PM",
+      "Friday: 5:00 AM–9:30 PM",
+      "Saturday: 7:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 7, "close": 19 },
+      "mon": { "open": 5, "close": 21.5 },
+      "tue": { "open": 5, "close": 21.5 },
+      "wed": { "open": 5, "close": 21.5 },
+      "thu": { "open": 5, "close": 21.5 },
+      "fri": { "open": 5, "close": 21.5 },
+      "sat": { "open": 7, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "strength, cardio, pilates, recovery, sauna, memberships, coaching, wellness, classes, conditioning",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "the-forum-athletic-club-midtown",
+    "name": "The Forum Athletic Club",
+    "vibe": "premium, energetic, polished, motivating, social, contemporary",
+    "type": ["fitness"],
+    "lat": "33.7722098",
+    "lon": "-84.3651857",
+    "link": "https://www.instagram.com/tfac_atl/?hl=en",
+    "cover": "img/venues/the-forum-athletic-club-midtown.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 7:00 AM–7:00 PM",
+      "Monday: 5:00 AM–9:30 PM",
+      "Tuesday: 5:00 AM–9:30 PM",
+      "Wednesday: 5:00 AM–9:30 PM",
+      "Thursday: 5:00 AM–9:30 PM",
+      "Friday: 5:00 AM–9:30 PM",
+      "Saturday: 7:00 AM–7:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 7, "close": 19 },
+      "mon": { "open": 5, "close": 21.5 },
+      "tue": { "open": 5, "close": 21.5 },
+      "wed": { "open": 5, "close": 21.5 },
+      "thu": { "open": 5, "close": 21.5 },
+      "fri": { "open": 5, "close": 21.5 },
+      "sat": { "open": 7, "close": 19 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "strength, cardio, pilates, recovery, sauna, coaching, conditioning, memberships, wellness, classes",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "tri-barre-atl",
+    "name": "Tri Barre",
+    "vibe": "uplifting, welcoming, energetic, supportive, mindful, boutique",
+    "type": ["yoga"],
+    "lat": "33.8201594",
+    "lon": "-84.3730542",
+    "link": "https://www.instagram.com/tribarreatl/?hl=en",
+    "cover": "img/venues/tri-barre-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 4:30 AM–7:00 PM",
+      "Tuesday: 4:30 AM–7:00 PM",
+      "Wednesday: 4:30 AM–7:00 PM",
+      "Thursday: 4:30 AM–7:00 PM",
+      "Friday: 4:30 AM–7:00 PM",
+      "Saturday: 6:00 AM–2:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 4.5, "close": 19 },
+      "tue": { "open": 4.5, "close": 19 },
+      "wed": { "open": 4.5, "close": 19 },
+      "thu": { "open": 4.5, "close": 19 },
+      "fri": { "open": 4.5, "close": 19 },
+      "sat": { "open": 6, "close": 14 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "barre, yoga, sculpt, pilates, stretching, strength, mobility, memberships, workshops, wellness",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "carbon-performance-atlanta-atl",
+    "name": "Carbon Performance | Atlanta",
+    "vibe": "elite, disciplined, focused, highperformance, modern, resultsdriven",
+    "type": ["fitness"],
+    "lat": "33.7828253",
+    "lon": "-84.4189502",
+    "link": "https://www.instagram.com/carbon_atlanta/?hl=en",
+    "cover": "img/venues/carbon-performance-atlanta-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 AM–8:00 PM",
+      "Monday: 5:00 AM–10:00 PM",
+      "Tuesday: 5:00 AM–10:00 PM",
+      "Wednesday: 5:00 AM–10:00 PM",
+      "Thursday: 5:00 AM–10:00 PM",
+      "Friday: 5:00 AM–10:00 PM",
+      "Saturday: 6:00 AM–8:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 6, "close": 20 },
+      "mon": { "open": 5, "close": 22 },
+      "tue": { "open": 5, "close": 22 },
+      "wed": { "open": 5, "close": 22 },
+      "thu": { "open": 5, "close": 22 },
+      "fri": { "open": 5, "close": 22 },
+      "sat": { "open": 6, "close": 20 }
+    },
+    "dayParts": {
+      "sun": "M",
+      "mon": "M",
+      "tue": "M",
+      "wed": "M",
+      "thu": "M",
+      "fri": "M",
+      "sat": "M"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "strength, conditioning, recovery, coaching, mobility, endurance, performance, rehabilitation, memberships, assessments",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "oberon-asscher-flagship-store-atl",
+    "name": "Oberon Asscher Flagship Store",
+    "vibe": "luxurious, refined, sculptural, elegant, timeless, bespoke",
+    "type": ["lifestyle"],
+    "lat": "33.7557121",
+    "lon": "-84.3798159",
+    "link": "https://www.instagram.com/oberonasscher/?hl=en",
+    "cover": "img/venues/oberon-asscher-flagship-store-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–6:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 12:00 PM–6:00 PM",
+      "Friday: 12:00 PM–6:00 PM",
+      "Saturday: 12:00 PM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 12, "close": 18 },
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": { "open": 12, "close": 18 },
+      "fri": { "open": 12, "close": 18 },
+      "sat": { "open": 12, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 1,
+    "tags": "jewelry, diamonds, engagement, rings, gemstones, craftsmanship, appointments, accessories, design, gifting",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "storyteller-goods-atl",
+    "name": "Storyteller Goods",
+    "vibe": "cozy, artisanal, welcoming, neighborhood, creative, relaxed",
+    "type": ["coffee"],
+    "lat": "33.7468353",
+    "lon": "-84.3559486",
+    "link": "https://www.instagram.com/storytellergoods/?hl=en",
+    "cover": "img/venues/storyteller-goods-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–2:00 PM",
+      "Monday: 8:00 AM–2:00 PM",
+      "Tuesday: 8:00 AM–2:00 PM",
+      "Wednesday: 8:00 AM–2:00 PM",
+      "Thursday: 8:00 AM–2:00 PM",
+      "Friday: 8:00 AM–2:00 PM",
+      "Saturday: 8:00 AM–2:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 14 },
+      "mon": { "open": 8, "close": 14 },
+      "tue": { "open": 8, "close": 14 },
+      "wed": { "open": 8, "close": 14 },
+      "thu": { "open": 8, "close": 14 },
+      "fri": { "open": 8, "close": 14 },
+      "sat": { "open": 8, "close": 14 }
+    },
+    "dayParts": {
+      "sun": "MD",
+      "mon": "MD",
+      "tue": "MD",
+      "wed": "MD",
+      "thu": "MD",
+      "fri": "MD",
+      "sat": "MD"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "espresso, coffee, pastries, beans, brewing, gifts, books, merchandise, sandwiches, community",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "y-bar-e-ristorante-atl",
+    "name": "Y BAR e Ristorante",
+    "vibe": "glamorous, lively, polished, convivial, contemporary, sophisticated",
+    "type": ["cocktail", "dinner"],
+    "lat": "33.8387551",
+    "lon": "-84.3801772",
+    "link": "https://www.instagram.com/ybaratlanta/?hl=en",
+    "cover": "img/venues/y-bar-e-ristorante-atl.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–12:00 AM",
+      "Wednesday: 5:00 PM–12:00 AM",
+      "Thursday: 5:00 PM–12:00 AM",
+      "Friday: 5:00 PM–1:00 AM",
+      "Saturday: 5:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17, "close": 24 },
+      "wed": { "open": 17, "close": 24 },
+      "thu": { "open": 17, "close": 24 },
+      "fri": { "open": 17, "close": 25 },
+      "sat": { "open": 17, "close": 25 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "italian, cocktails, pasta, seafood, martinis, wine, aperitivo, pizza, desserts, brunch",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "ramona-room-la",
+    "name": "Ramona Room",
+    "vibe": "intimate, nostalgic, candlelit, neighborhood, relaxed, romantic",
+    "type": ["wine bar"],
+    "lat": "34.0776068",
+    "lon": "-118.2646526",
+    "link": "https://www.instagram.com/theramonaroom/?hl=en",
+    "cover": "img/venues/ramona-room-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:00 PM–11:00 PM",
+      "Monday: 5:00 PM–11:00 PM",
+      "Tuesday: 5:00 PM–11:00 PM",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–11:00 PM",
+      "Friday: 5:00 PM–11:00 PM",
+      "Saturday: 5:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 17, "close": 23 },
+      "mon": { "open": 17, "close": 23 },
+      "tue": { "open": 17, "close": 23 },
+      "wed": { "open": 17, "close": 23 },
+      "thu": { "open": 17, "close": 23 },
+      "fri": { "open": 17, "close": 23 },
+      "sat": { "open": 17, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "naturalwine, bottles, charcuterie, cheeses, cocktails, aperitifs, vermouth, smallplates, desserts, tastings",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "mitsi-la",
+    "name": "Mitsi",
+    "vibe": "moody, intimate, contemporary, stylish, lowlit, playful",
+    "type": ["cocktail"],
+    "lat": "34.0693164",
+    "lon": "-118.2258305",
+    "link": "https://www.instagram.com/mitsi.la/",
+    "cover": "img/venues/mitsi-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 6:00 PM–1:00 AM",
+      "Friday: 6:00 PM–1:00 AM",
+      "Saturday: 6:00 PM–1:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": { "open": 18, "close": 25 },
+      "fri": { "open": 18, "close": 25 },
+      "sat": { "open": 18, "close": 25 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, martinis, agave, spirits, aperitifs, wine, snacks, vinyl, latehours, mixology",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "erik-lindstrom-la",
+    "name": "Erik Lindstrom",
+    "vibe": "minimalist, sculptural, refined, contemporary, tactile, serene",
+    "type": ["showroom"],
+    "lat": "34.0893308",
+    "lon": "-118.338185",
+    "link": "https://www.instagram.com/eriklindstromrugs/?hl=en",
+    "cover": "img/venues/erik-lindstrom-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 9:00 AM–5:00 PM",
+      "Tuesday: 9:00 AM–5:00 PM",
+      "Wednesday: 9:00 AM–5:00 PM",
+      "Thursday: 9:00 AM–5:00 PM",
+      "Friday: 9:00 AM–5:00 PM",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 9, "close": 17 },
+      "tue": { "open": 9, "close": 17 },
+      "wed": { "open": 9, "close": 17 },
+      "thu": { "open": 9, "close": 17 },
+      "fri": { "open": 9, "close": 17 },
+      "sat": null
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "-"
+    },
+    "timeCategory": "morning, midday",
+    "energyRamp": 1,
+    "tags": "furniture, lighting, interiors, showroom, craftsmanship, upholstery, woodwork, design, furnishings, appointments",
+    "price": "$",
+    "duration": 1
+  },
+  {
+    "slug": "v-wine-room-and-pizza-la",
+    "name": "V Wine Room and Pizza",
+    "vibe": "cozy, neighborhood, relaxed, intimate, welcoming, convivial",
+    "type": ["wine bar"],
+    "lat": "34.0877173",
+    "lon": "-118.3805456",
+    "link": "https://www.instagram.com/vwineroom/?hl=en",
+    "cover": "img/venues/v-wine-room-and-pizza-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 2:30 PM–10:00 PM",
+      "Monday: 4:00 PM–10:00 PM",
+      "Tuesday: 4:00 PM–10:00 PM",
+      "Wednesday: 4:00 PM–10:00 PM",
+      "Thursday: 4:00 PM–12:00 AM",
+      "Friday: 4:00 PM–12:00 AM",
+      "Saturday: 2:30 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 14.5, "close": 22 },
+      "mon": { "open": 16, "close": 22 },
+      "tue": { "open": 16, "close": 22 },
+      "wed": { "open": 16, "close": 22 },
+      "thu": { "open": 16, "close": 24 },
+      "fri": { "open": 16, "close": 24 },
+      "sat": { "open": 14.5, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
       "fri": "E",
       "sat": "E"
     },
     "timeCategory": "evening, late",
     "energyRamp": 1,
-    "tags": "cocktails, dj, vinyl, listening, records, arepas, samosas, aperitifs, hifi, selectors, soul",
+    "tags": "naturalwine, pizza, bottles, charcuterie, cheeses, aperitifs, desserts, salads, tastings, beer",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "cafe-stella-la",
+    "name": "Cafe Stella",
+    "vibe": "parisian, romantic, timeless, lively, candlelit, elegant",
+    "type": ["dinner"],
+    "lat": "34.0921389",
+    "lon": "-118.2804206",
+    "link": "https://www.instagram.com/cafestella/?hl=en",
+    "cover": "img/venues/cafe-stella-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:30 PM–10:30 PM",
+      "Monday: 5:30 PM–10:30 PM",
+      "Tuesday: 5:30 PM–10:30 PM",
+      "Wednesday: 5:30 PM–10:30 PM",
+      "Thursday: 5:30 PM–10:30 PM",
+      "Friday: 5:30 PM–10:30 PM",
+      "Saturday: 5:30 PM–10:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 17.5, "close": 22.5 },
+      "mon": { "open": 17.5, "close": 22.5 },
+      "tue": { "open": 17.5, "close": 22.5 },
+      "wed": { "open": 17.5, "close": 22.5 },
+      "thu": { "open": 17.5, "close": 22.5 },
+      "fri": { "open": 17.5, "close": 22.5 },
+      "sat": { "open": 17.5, "close": 22.5 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "french, brunch, oysters, cocktails, wine, steakfrites, moules, pastries, espresso, desserts",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "tacolina-la",
+    "name": "Tacolina",
+    "vibe": "colorful, vibrant, casual, sunny, convivial, energetic",
+    "type": ["brunch", "lunch", "dinner"],
+    "lat": "34.0821475",
+    "lon": "-118.2719572",
+    "link": "https://www.instagram.com/tacolina.la/?hl=en",
+    "cover": "img/venues/tacolina-la.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 AM–9:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 4:00 PM–9:00 PM",
+      "Thursday: 4:00 PM–9:00 PM",
+      "Friday: 4:00 PM–10:00 PM",
+      "Saturday: 9:00 AM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 9, "close": 21 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 16, "close": 21 },
+      "thu": { "open": 16, "close": 21 },
+      "fri": { "open": 16, "close": 22 },
+      "sat": { "open": 9, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "morning, midday, evening",
+    "energyRamp": 1,
+    "tags": "tacos, margaritas, mezcal, brunch, seafood, tortillas, cocktails, guacamole, ceviche, beer",
     "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "berenjak-la",
+    "name": "Berenjak",
+    "vibe": "lively, aromatic, convivial, contemporary, warm, bustling",
+    "type": ["dinner"],
+    "lat": "34.0312474",
+    "lon": "-118.2298056",
+    "link": "https://www.instagram.com/berenjaklondon",
+    "cover": "img/venues/berenjak-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:30 PM–10:00 PM",
+      "Wednesday: 5:30 PM–10:00 PM",
+      "Thursday: 5:30 PM–10:00 PM",
+      "Friday: 5:30 PM–10:00 PM",
+      "Saturday: 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17.5, "close": 22 },
+      "wed": { "open": 17.5, "close": 22 },
+      "thu": { "open": 17.5, "close": 22 },
+      "fri": { "open": 17.5, "close": 22 },
+      "sat": { "open": 17.5, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "persian, kebabs, flatbreads, stews, rice, yogurt, cocktails, charcoal, herbs, wine",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "javiers-la",
+    "name": "Javier's",
+    "vibe": "glamorous, bustling, upscale, vibrant, polished, festive",
+    "type": ["lunch", "dinner"],
+    "lat": "34.0590869",
+    "lon": "-118.4207455",
+    "link": "https://www.instagram.com/javierscantina/?hl=en",
+    "cover": "img/venues/javiers-la.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:30 AM–10:00 PM",
+      "Monday: 11:30 AM–10:00 PM",
+      "Tuesday: 11:30 AM–10:00 PM",
+      "Wednesday: 11:30 AM–10:00 PM",
+      "Thursday: 11:30 AM–10:00 PM",
+      "Friday: 11:30 AM–11:00 PM",
+      "Saturday: 11:30 AM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11.5, "close": 22 },
+      "mon": { "open": 11.5, "close": 22 },
+      "tue": { "open": 11.5, "close": 22 },
+      "wed": { "open": 11.5, "close": 22 },
+      "thu": { "open": 11.5, "close": 22 },
+      "fri": { "open": 11.5, "close": 23 },
+      "sat": { "open": 11.5, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "mexican, margaritas, tequila, seafood, enchiladas, tacos, guacamole, cocktails, tortillas, fajitas",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "kateen-la",
+    "name": "KA'TEEN",
+    "vibe": "tropical, lush, vibrant, transportive, glamorous, openair",
+    "type": ["dinner"],
+    "lat": "34.0996828",
+    "lon": "-118.3317076",
+    "link": "https://www.instagram.com/kateen_la/?hl=en",
+    "cover": "img/venues/kateen-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:30 PM–10:00 PM",
+      "Monday: Closed",
+      "Tuesday: 6:00 PM–10:00 PM",
+      "Wednesday: 6:00 PM–10:00 PM",
+      "Thursday: 6:00 PM–10:00 PM",
+      "Friday: 6:00 PM–2:00 AM",
+      "Saturday: 5:30 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 17.5, "close": 22 },
+      "mon": null,
+      "tue": { "open": 18, "close": 22 },
+      "wed": { "open": 18, "close": 22 },
+      "thu": { "open": 18, "close": 22 },
+      "fri": { "open": 18, "close": 26 },
+      "sat": { "open": 17.5, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "L",
+      "sat": "E"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "yucatecan, mezcal, seafood, tortillas, cocktails, ceviche, tacos, woodfire, vegetables, brunch",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "bar-di-bello-la",
+    "name": "Bar di Bello",
+    "vibe": "intimate, italianate, relaxed, neighborhood, warm, stylish",
+    "type": ["dinner"],
+    "lat": "34.0863784",
+    "lon": "-118.275724",
+    "link": "https://www.instagram.com/bar_di_bello/?hl=en",
+    "cover": "img/venues/bar-di-bello-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:00 PM–11:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–11:00 PM",
+      "Friday: 5:00 PM–11:00 PM",
+      "Saturday: 5:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 17, "close": 23 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 17, "close": 23 },
+      "thu": { "open": 17, "close": 23 },
+      "fri": { "open": 17, "close": 23 },
+      "sat": { "open": 17, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "pasta, naturalwine, cocktails, aperitivo, spritzes, martinis, seafood, desserts, espresso, sharing",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "morihiro-la",
+    "name": "Morihiro",
+    "vibe": "serene, meticulous, refined, minimalist, contemplative, elegant",
+    "type": ["dinner"],
+    "lat": "34.0671021",
+    "lon": "-118.2489228",
+    "link": "https://www.instagram.com/morihirosunset/",
+    "cover": "img/venues/morihiro-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:30 PM–10:00 PM",
+      "Wednesday: 5:30 PM–10:00 PM",
+      "Thursday: 5:30 PM–10:00 PM",
+      "Friday: 5:30 PM–10:00 PM",
+      "Saturday: 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17.5, "close": 22 },
+      "wed": { "open": 17.5, "close": 22 },
+      "thu": { "open": 17.5, "close": 22 },
+      "fri": { "open": 17.5, "close": 22 },
+      "sat": { "open": 17.5, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "omakase, sushi, sashimi, nigiri, ceramics, sake, seafood, tasting, rice, craftsmanship",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "sei-pizza-bar-la",
+    "name": "Sei Pizza Bar",
+    "vibe": "intimate, modern, artisanal, lively, minimalist, welcoming",
+    "type": ["dinner"],
+    "lat": "34.0549589",
+    "lon": "-118.383437",
+    "link": "https://www.instagram.com/pizzeria.sei/?hl=en",
+    "cover": "img/venues/sei-pizza-bar-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 4:00 PM–10:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 4:00 PM–10:00 PM",
+      "Thursday: 4:00 PM–10:00 PM",
+      "Friday: 4:00 PM–10:00 PM",
+      "Saturday: 4:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 16, "close": 22 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 16, "close": 22 },
+      "thu": { "open": 16, "close": 22 },
+      "fri": { "open": 16, "close": 22 },
+      "sat": { "open": 16, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "pizza, neapolitan, naturalwine, cocktails, burrata, salads, desserts, sourdough, vegetables, beer",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "antico-nuovo-la",
+    "name": "Antico Nuovo",
+    "vibe": "romantic, refined, candlelit, artisanal, elegant, timeless",
+    "type": ["dinner"],
+    "lat": "34.0765597",
+    "lon": "-118.3109803",
+    "link": "https://www.instagram.com/anticonuovo___la/?hl=en",
+    "cover": "img/venues/antico-nuovo-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:30 PM–10:00 PM",
+      "Monday: 5:30 PM–10:00 PM",
+      "Tuesday: 5:30 PM–10:00 PM",
+      "Wednesday: 5:30 PM–10:00 PM",
+      "Thursday: 5:30 PM–10:00 PM",
+      "Friday: 5:30 PM–10:00 PM",
+      "Saturday: 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 17.5, "close": 22 },
+      "mon": { "open": 17.5, "close": 22 },
+      "tue": { "open": 17.5, "close": 22 },
+      "wed": { "open": 17.5, "close": 22 },
+      "thu": { "open": 17.5, "close": 22 },
+      "fri": { "open": 17.5, "close": 22 },
+      "sat": { "open": 17.5, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "pasta, woodfire, italian, naturalwine, vegetables, seafood, cocktails, desserts, handmade, seasonal",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "bar-sinizki-la",
+    "name": "Bar Sinizki",
+    "vibe": "eclectic, neighborhood, relaxed, intimate, creative, convivial",
+    "type": ["breakfast", "lunch", "dinner"],
+    "lat": "34.1172031",
+    "lon": "-118.2622504",
+    "link": "https://www.instagram.com/bar_sinizki/?hl=en",
+    "cover": "img/venues/bar-sinizki-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–12:00 AM",
+      "Monday: 8:00 AM–12:00 AM",
+      "Tuesday: 8:00 AM–12:00 AM",
+      "Wednesday: 8:00 AM–12:00 AM",
+      "Thursday: 8:00 AM–12:00 AM",
+      "Friday: 8:00 AM–12:00 AM",
+      "Saturday: 8:00 AM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 24 },
+      "mon": { "open": 8, "close": 24 },
+      "tue": { "open": 8, "close": 24 },
+      "wed": { "open": 8, "close": 24 },
+      "thu": { "open": 8, "close": 24 },
+      "fri": { "open": 8, "close": 24 },
+      "sat": { "open": 8, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "morning, midday, evening",
+    "energyRamp": 1,
+    "tags": "naturalwine, cocktails, brunch, sandwiches, pastries, coffee, pasta, aperitivo, bottles, smallplates",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "lasita-rotisserie-natural-wine-la",
+    "name": "Lasita Rotisserie & Natural Wine",
+    "vibe": "lively, sunny, convivial, relaxed, contemporary, neighborhood",
+    "type": ["dinner"],
+    "lat": "34.061472",
+    "lon": "-118.2394817",
+    "link": "https://www.instagram.com/lasita.la/?hl=en",
+    "cover": "img/venues/lasita-rotisserie-natural-wine-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 5:30 PM–10:00 PM",
+      "Tuesday: 5:30 PM–10:00 PM",
+      "Wednesday: 5:30 PM–10:00 PM",
+      "Thursday: 5:30 PM–10:00 PM",
+      "Friday: 5:30 PM–10:00 PM",
+      "Saturday: 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 17.5, "close": 22 },
+      "tue": { "open": 17.5, "close": 22 },
+      "wed": { "open": 17.5, "close": 22 },
+      "thu": { "open": 17.5, "close": 22 },
+      "fri": { "open": 17.5, "close": 22 },
+      "sat": { "open": 17.5, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "evening",
+    "energyRamp": 1,
+    "tags": "filipino, rotisserie, naturalwine, chicken, vegetables, cocktails, rice, noodles, desserts, sharing",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "broken-spanish-comedor-la",
+    "name": "Broken Spanish Comedor",
+    "vibe": "vibrant, contemporary, colorful, welcoming, lively, refined",
+    "type": ["brunch", "dinner"],
+    "lat": "33.9970418",
+    "lon": "-118.4322833",
+    "link": "https://www.instagram.com/brokenspanishla/?hl=en",
+    "cover": "img/venues/broken-spanish-comedor-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–2:00 PM; 4:00 PM–9:00 PM",
+      "Monday: 4:00 PM–9:00 PM",
+      "Tuesday: 4:00 PM–9:00 PM",
+      "Wednesday: 4:00 PM–9:00 PM",
+      "Thursday: 4:00 PM–9:00 PM",
+      "Friday: 4:00 PM–9:30 PM",
+      "Saturday: 11:00 AM–2:00 PM; 4:00 PM–9:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 11, "close": 14 },
+        { "open": 16, "close": 21 }
+      ],
+      "mon": { "open": 16, "close": 21 },
+      "tue": { "open": 16, "close": 21 },
+      "wed": { "open": 16, "close": 21 },
+      "thu": { "open": 16, "close": 21 },
+      "fri": { "open": 16, "close": 21.5 },
+      "sat": [
+        { "open": 11, "close": 14 },
+        { "open": 16, "close": 21.5 }
+      ]
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "mexican, tortillas, tacos, mezcal, cocktails, seafood, brunch, ceviche, desserts, agave",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "blondie-la",
+    "name": "Blondie",
+    "vibe": "chic, intimate, playful, glamorous, lowlit, stylish",
+    "type": ["cocktail", "wine bar"],
+    "lat": "34.0828411",
+    "lon": "-118.3752667",
+    "link": "https://www.instagram.com/blondiemelrose/",
+    "cover": "img/venues/blondie-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: Closed",
+      "Tuesday: 5:00 PM–12:00 AM",
+      "Wednesday: 5:00 PM–12:00 AM",
+      "Thursday: 5:00 PM–12:00 AM",
+      "Friday: 5:00 PM–12:00 AM",
+      "Saturday: 5:00 PM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": null,
+      "tue": { "open": 17, "close": 24 },
+      "wed": { "open": 17, "close": 24 },
+      "thu": { "open": 17, "close": 24 },
+      "fri": { "open": 17, "close": 24 },
+      "sat": { "open": 17, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "-",
+      "tue": "L",
+      "wed": "L",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "naturalwine, cocktails, martinis, champagne, oysters, caviar, bottles, aperitifs, smallplates, desserts",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "civico-2064-la",
+    "name": "Civico 2064",
+    "vibe": "warm, neighborhood, relaxed, inviting, convivial, italianate",
+    "type": ["lunch", "dinner"],
+    "lat": "34.1093895",
+    "lon": "-118.2871517",
+    "link": "https://www.instagram.com/civico2064/?hl=en",
+    "cover": "img/venues/civico-2064-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 12:00 PM–3:00 PM; 5:00 PM–9:00 PM",
+      "Monday: 5:00 PM–9:00 PM",
+      "Tuesday: 5:00 PM–9:00 PM",
+      "Wednesday: 5:00 PM–9:00 PM",
+      "Thursday: 5:00 PM–9:00 PM",
+      "Friday: 5:00 PM–10:00 PM",
+      "Saturday: 5:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 12, "close": 15 },
+        { "open": 17, "close": 21 }
+      ],
+      "mon": { "open": 17, "close": 21 },
+      "tue": { "open": 17, "close": 21 },
+      "wed": { "open": 17, "close": 21 },
+      "thu": { "open": 17, "close": 21 },
+      "fri": { "open": 17, "close": 22 },
+      "sat": { "open": 17, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "calabrian, pasta, pizza, seafood, cocktails, wine, antipasti, tiramisu, gelato, espresso",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "fia-restaurant-la",
+    "name": "Fia Restaurant",
+    "vibe": "elegant, gardenlike, romantic, polished, refined, serene",
+    "type": ["brunch", "dinner"],
+    "lat": "34.0349451",
+    "lon": "-118.4784436",
+    "link": "https://www.instagram.com/fiarestaurant/?hl=en",
+    "cover": "img/venues/fia-restaurant-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 10:30 AM–2:30 PM; 5:00 PM–9:00 PM",
+      "Monday: 5:00 PM–9:00 PM",
+      "Tuesday: 5:00 PM–9:00 PM",
+      "Wednesday: 5:00 PM–9:00 PM",
+      "Thursday: 5:00 PM–9:00 PM",
+      "Friday: 5:00 PM–9:30 PM",
+      "Saturday: 10:30 AM–2:30 PM; 5:00 PM–9:30 PM"
+    ],
+    "hoursNumeric": {
+      "sun": [
+        { "open": 10.5, "close": 14.5 },
+        { "open": 17, "close": 21 }
+      ],
+      "mon": { "open": 17, "close": 21 },
+      "tue": { "open": 17, "close": 21 },
+      "wed": { "open": 17, "close": 21 },
+      "thu": { "open": 17, "close": 21 },
+      "fri": { "open": 17, "close": 21.5 },
+      "sat": [
+        { "open": 10.5, "close": 14.5 },
+        { "open": 17, "close": 21.5 }
+      ]
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "mediterranean, woodfire, seafood, pasta, cocktails, vegetables, brunch, wine, desserts, seasonal",
+    "price": "$$$$",
+    "duration": 1
+  },
+  {
+    "slug": "dudley-market-la",
+    "name": "Dudley Market",
+    "vibe": "coastal, airy, relaxed, neighborhood, refined, breezy",
+    "type": ["lunch", "dinner"],
+    "lat": "33.9942477",
+    "lon": "-118.4796167",
+    "link": "https://www.instagram.com/dudleymarketvenice/?hl=en",
+    "cover": "img/venues/dudley-market-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 2:00 PM–11:00 PM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: 5:00 PM–11:00 PM",
+      "Thursday: 5:00 PM–11:00 PM",
+      "Friday: 5:00 PM–11:00 PM",
+      "Saturday: 2:00 PM–11:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 14, "close": 23 },
+      "mon": null,
+      "tue": null,
+      "wed": { "open": 17, "close": 23 },
+      "thu": { "open": 17, "close": 23 },
+      "fri": { "open": 17, "close": 23 },
+      "sat": { "open": 14, "close": 23 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "-",
+      "tue": "-",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "afternoon, evening",
+    "energyRamp": 1,
+    "tags": "seafood, oysters, naturalwine, pasta, vegetables, brunch, cocktails, crudo, desserts, seasonal",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "melanie-restaurant-la",
+    "name": "Melanie Restaurant",
+    "vibe": "intimate, candlelit, elegant, contemporary, romantic, polished",
+    "type": ["wine bar", "dinner"],
+    "lat": "34.0725155",
+    "lon": "-118.3705086",
+    "link": "https://www.instagram.com/melaniefoodwine/",
+    "cover": "img/venues/melanie-restaurant-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:00 PM–9:00 PM",
+      "Monday: 5:00 PM–10:00 PM",
+      "Tuesday: 5:00 PM–10:00 PM",
+      "Wednesday: 5:00 PM–10:00 PM",
+      "Thursday: 5:00 PM–10:00 PM",
+      "Friday: 5:00 PM–10:00 PM",
+      "Saturday: 5:00 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 17, "close": 21 },
+      "mon": { "open": 17, "close": 22 },
+      "tue": { "open": 17, "close": 22 },
+      "wed": { "open": 17, "close": 22 },
+      "thu": { "open": 17, "close": 22 },
+      "fri": { "open": 17, "close": 22 },
+      "sat": { "open": 17, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "afternoon, evening",
+    "energyRamp": 1,
+    "tags": "naturalwine, pasta, seafood, cocktails, vegetables, desserts, sharing, seasonal, bottles, aperitifs",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "hamasaku-la",
+    "name": "Hamasaku",
+    "vibe": "serene, refined, minimalist, understated, authentic, intimate",
+    "type": ["lunch", "dinner"],
+    "lat": "34.0483824",
+    "lon": "-118.4433128",
+    "link": "https://www.instagram.com/hamasakula/?hl=en",
+    "cover": "img/venues/hamasaku-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 5:30 PM–9:30 PM",
+      "Monday: 5:30 PM–9:30 PM",
+      "Tuesday: 12:00 PM–2:00 PM; 5:30 PM–9:30 PM",
+      "Wednesday: 12:00 PM–2:00 PM; 5:30 PM–9:30 PM",
+      "Thursday: 12:00 PM–2:00 PM; 5:30 PM–9:30 PM",
+      "Friday: 12:00 PM–2:00 PM; 5:30 PM–10:00 PM",
+      "Saturday: 5:30 PM–10:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 17.5, "close": 21.5 },
+      "mon": { "open": 17.5, "close": 21.5 },
+      "tue": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.5 }
+      ],
+      "wed": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.5 }
+      ],
+      "thu": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 21.5 }
+      ],
+      "fri": [
+        { "open": 12, "close": 14 },
+        { "open": 17.5, "close": 22 }
+      ],
+      "sat": { "open": 17.5, "close": 22 }
+    },
+    "dayParts": {
+      "sun": "E",
+      "mon": "E",
+      "tue": "E",
+      "wed": "E",
+      "thu": "E",
+      "fri": "E",
+      "sat": "E"
+    },
+    "timeCategory": "midday, evening",
+    "energyRamp": 1,
+    "tags": "sushi, sashimi, omakase, nigiri, sake, seafood, rolls, tempura, bento, lunch",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "figaro-bistrot-la",
+    "name": "Figaro Bistrot",
+    "vibe": "parisian, nostalgic, charming, lively, romantic, timeless",
+    "type": ["breakfast", "brunch", "lunch", "dessert"],
+    "lat": "34.1037771",
+    "lon": "-118.2916356",
+    "link": "https://www.instagram.com/figarobistrola/",
+    "cover": "img/venues/figaro-bistrot-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 8:00 AM–12:00 AM",
+      "Monday: 8:00 AM–12:00 AM",
+      "Tuesday: 8:00 AM–12:00 AM",
+      "Wednesday: 8:00 AM–12:00 AM",
+      "Thursday: 8:00 AM–12:00 AM",
+      "Friday: 8:00 AM–12:00 AM",
+      "Saturday: 8:00 AM–12:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 8, "close": 24 },
+      "mon": { "open": 8, "close": 24 },
+      "tue": { "open": 8, "close": 24 },
+      "wed": { "open": 8, "close": 24 },
+      "thu": { "open": 8, "close": 24 },
+      "fri": { "open": 8, "close": 24 },
+      "sat": { "open": 8, "close": 24 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "morning, midday, afternoon, evening",
+    "energyRamp": 1,
+    "tags": "french, brunch, pastries, coffee, crepes, wine, omelettes, desserts, espresso, sandwiches",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "the-nice-guy-la",
+    "name": "The Nice Guy",
+    "vibe": "glamorous, exclusive, moody, luxurious, cinematic, nocturnal",
+    "type": ["dinner", "cocktail"],
+    "lat": "34.0787212",
+    "lon": "-118.3768326",
+    "link": "https://www.instagram.com/theniceguyla/",
+    "cover": "img/venues/the-nice-guy-la.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 6:00 PM–2:00 AM",
+      "Monday: 6:00 PM–2:00 AM",
+      "Tuesday: 6:00 PM–2:00 AM",
+      "Wednesday: 6:00 PM–2:00 AM",
+      "Thursday: 6:00 PM–2:00 AM",
+      "Friday: 6:00 PM–2:00 AM",
+      "Saturday: 6:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 18, "close": 26 },
+      "mon": { "open": 18, "close": 26 },
+      "tue": { "open": 18, "close": 26 },
+      "wed": { "open": 18, "close": 26 },
+      "thu": { "open": 18, "close": 26 },
+      "fri": { "open": 18, "close": 26 },
+      "sat": { "open": 18, "close": 26 }
+    },
+    "dayParts": {
+      "sun": "L",
+      "mon": "L",
+      "tue": "L",
+      "wed": "L",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "italian, cocktails, martinis, pasta, seafood, steaks, champagne, djsets, celebrities, nightlife",
+    "price": "$$$",
+    "duration": 1
+  },
+  {
+    "slug": "noah-los-angeles-la",
+    "name": "Noah Los Angeles",
+    "vibe": "minimalist, sculptural, refined, contemporary, curated, understated",
+    "type": ["lifestyle"],
+    "lat": "34.0875239",
+    "lon": "-118.3419486",
+    "link": "https://www.instagram.com/noahlosangeles/",
+    "cover": "img/venues/noah-los-angeles-la.png",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 11:00 AM–5:00 PM",
+      "Monday: 10:00 AM–6:00 PM",
+      "Tuesday: 10:00 AM–6:00 PM",
+      "Wednesday: 10:00 AM–6:00 PM",
+      "Thursday: 10:00 AM–6:00 PM",
+      "Friday: 10:00 AM–6:00 PM",
+      "Saturday: 10:00 AM–6:00 PM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 11, "close": 17 },
+      "mon": { "open": 10, "close": 18 },
+      "tue": { "open": 10, "close": 18 },
+      "wed": { "open": 10, "close": 18 },
+      "thu": { "open": 10, "close": 18 },
+      "fri": { "open": 10, "close": 18 },
+      "sat": { "open": 10, "close": 18 }
+    },
+    "dayParts": {
+      "sun": "A",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A"
+    },
+    "timeCategory": "midday, afternoon",
+    "energyRamp": 1,
+    "tags": "furniture, lighting, homeware, interiors, objects, design, ceramics, textiles, showroom, decor",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "bar-franca-la",
+    "name": "Bar Franca",
+    "vibe": "vibrant, artistic, eclectic, energetic, contemporary, social",
+    "type": ["bar", "cocktail"],
+    "lat": "34.0472035",
+    "lon": "-118.2478678",
+    "link": "https://www.instagram.com/barfrancadtla/?hl=en",
+    "cover": "img/venues/bar-franca-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: 9:00 PM–2:00 AM",
+      "Monday: Closed",
+      "Tuesday: Closed",
+      "Wednesday: Closed",
+      "Thursday: 9:00 PM–2:00 AM",
+      "Friday: 9:00 PM–2:00 AM",
+      "Saturday: 9:00 PM–2:00 AM"
+    ],
+    "hoursNumeric": {
+      "sun": { "open": 21, "close": 26 },
+      "mon": null,
+      "tue": null,
+      "wed": null,
+      "thu": { "open": 21, "close": 26 },
+      "fri": { "open": 21, "close": 26 },
+      "sat": { "open": 21, "close": 26 }
+    },
+    "dayParts": {
+      "sun": "L",
+      "mon": "-",
+      "tue": "-",
+      "wed": "-",
+      "thu": "L",
+      "fri": "L",
+      "sat": "L"
+    },
+    "timeCategory": "evening, late",
+    "energyRamp": 1,
+    "tags": "cocktails, wine, beer, djs, performances, aperitifs, spirits, dancing, events, music",
+    "price": "$$",
+    "duration": 1
+  },
+  {
+    "slug": "apparatus-la",
+    "name": "APPARATUS",
+    "vibe": "sculptural, luxurious, atmospheric, minimalist, refined, dramatic",
+    "type": ["showroom"],
+    "lat": "34.0895803",
+    "lon": "-118.337629",
+    "link": "https://www.instagram.com/apparatusstudio/",
+    "cover": "img/venues/apparatus-la.jpg",
+    "openNow": "TRUE",
+    "hours": [
+      "Sunday: Closed",
+      "Monday: 9:00 AM–5:00 PM",
+      "Tuesday: 11:00 AM–5:00 PM",
+      "Wednesday: 9:00 AM–5:00 PM",
+      "Thursday: 9:00 AM–5:00 PM",
+      "Friday: 9:00 AM–5:00 PM",
+      "Saturday: Closed"
+    ],
+    "hoursNumeric": {
+      "sun": null,
+      "mon": { "open": 9, "close": 17 },
+      "tue": { "open": 11, "close": 17 },
+      "wed": { "open": 9, "close": 17 },
+      "thu": { "open": 9, "close": 17 },
+      "fri": { "open": 9, "close": 17 },
+      "sat": null
+    },
+    "dayParts": {
+      "sun": "-",
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "-"
+    },
+    "timeCategory": "morning, midday, afternoon",
+    "energyRamp": 1,
+    "tags": "lighting, furniture, objects, interiors, showroom, craftsmanship, fixtures, design, homeware, installations",
+    "price": "$",
     "duration": 1
   }
 ]

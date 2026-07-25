@@ -47,6 +47,33 @@ function isValidLongitude(value: unknown): value is number {
   )
 }
 
+function isSameUtcDay(
+  firstValue: string,
+  secondValue: string
+): boolean {
+  const firstTimestamp = Date.parse(firstValue)
+  const secondTimestamp = Date.parse(secondValue)
+
+  if (
+    Number.isNaN(firstTimestamp) ||
+    Number.isNaN(secondTimestamp)
+  ) {
+    return false
+  }
+
+  const firstDate = new Date(firstTimestamp)
+  const secondDate = new Date(secondTimestamp)
+
+  return (
+    firstDate.getUTCFullYear() ===
+      secondDate.getUTCFullYear() &&
+    firstDate.getUTCMonth() ===
+      secondDate.getUTCMonth() &&
+    firstDate.getUTCDate() ===
+      secondDate.getUTCDate()
+  )
+}
+
 function calculateDistanceMeters({
   fromLat,
   fromLon,
@@ -331,12 +358,81 @@ export async function POST(req: NextRequest, context: RouteContext) {
     device_timestamp: deviceTimestamp,
   } = body
 
-  if (!isValidRating(rating)) {
+  const now = new Date().toISOString()
+
+  const { data: existingVisit, error: existingVisitError } = await supabase
+    .from('venue_visits')
+    .select('id, rating, visited_at')
+    .eq('venue_id', venueId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existingVisitError) {
+    console.error(
+      '[venue visit][POST] Existing visit check failed:',
+      existingVisitError
+    )
+
+    return NextResponse.json(
+      { error: 'Failed to verify existing venue visit' },
+      { status: 500 }
+    )
+  }
+
+  if (
+    existingVisit?.visited_at &&
+    isSameUtcDay(existingVisit.visited_at, now)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'You have already checked in to this venue today. Try again on a different day.',
+      },
+      { status: 409 }
+    )
+  }
+
+  const ratingWasProvided =
+    rating !== undefined &&
+    rating !== null
+
+  if (
+    ratingWasProvided &&
+    !isValidRating(rating)
+  ) {
     return NextResponse.json(
       { error: 'Rating must be an integer between 1 and 5' },
       { status: 400 }
     )
   }
+
+  if (
+    !existingVisit &&
+    !isValidRating(rating)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'Rating must be an integer between 1 and 5 for your first check-in.',
+      },
+      { status: 400 }
+    )
+  }
+
+  const ratingToSave =
+  isValidRating(rating)
+    ? rating
+    : existingVisit?.rating
+
+if (!isValidRating(ratingToSave)) {
+  return NextResponse.json(
+    {
+      error:
+        'The existing visit does not have a valid rating.',
+    },
+    { status: 400 }
+  )
+}
 
   const geoResult = await verifyVenueLocation({
     supabase,
@@ -356,8 +452,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
       {
         user_id: user.id,
         venue_id: venueId,
-        rating,
-        visited_at: new Date().toISOString(),
+        rating: ratingToSave,
+        visited_at: now,
         user_lat: userLat,
         user_lon: userLon,
         distance_meters: geoResult.distanceMeters,
