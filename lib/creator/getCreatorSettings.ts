@@ -106,7 +106,8 @@ export async function getCreatorSettings(): Promise<
         id,
         username,
         creator_mode_enabled,
-        creator_headline
+        creator_headline,
+        show_public_exploration_map
       `)
       .eq('id', user.id)
       .maybeSingle(),
@@ -307,6 +308,8 @@ function parseBaseProfile({
     creator_mode_enabled:
       value.creator_mode_enabled === true,
     creator_headline: creatorHeadline,
+    show_public_exploration_map:
+      value.show_public_exploration_map === true,
   }
 }
 

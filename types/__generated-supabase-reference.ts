@@ -1973,6 +1973,7 @@ export type Database = {
           preferred_vibes: string[] | null
           show_checkins: boolean | null
           show_completed_flows: boolean | null
+          show_public_exploration_map: boolean
           show_saved_guides: boolean | null
           show_social_groups: boolean | null
           show_xp: boolean | null
@@ -2003,6 +2004,7 @@ export type Database = {
           preferred_vibes?: string[] | null
           show_checkins?: boolean | null
           show_completed_flows?: boolean | null
+          show_public_exploration_map?: boolean
           show_saved_guides?: boolean | null
           show_social_groups?: boolean | null
           show_xp?: boolean | null
@@ -2033,6 +2035,7 @@ export type Database = {
           preferred_vibes?: string[] | null
           show_checkins?: boolean | null
           show_completed_flows?: boolean | null
+          show_public_exploration_map?: boolean
           show_saved_guides?: boolean | null
           show_social_groups?: boolean | null
           show_xp?: boolean | null

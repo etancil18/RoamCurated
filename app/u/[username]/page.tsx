@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import CreatorAuthorityCard from '@/components/public-profile/creator/CreatorAuthorityCard'
 import CreatorCollaborationTags from '@/components/public-profile/creator/CreatorCollaborationTags'
+import CreatorExplorationMapDynamic from '@/components/public-profile/creator/CreatorExplorationMapDynamic'
 import CreatorFeaturedCollections from '@/components/public-profile/creator/CreatorFeaturedCollections'
 import CreatorHero from '@/components/public-profile/creator/CreatorHero'
 import CreatorSocialLinks from '@/components/public-profile/creator/CreatorSocialLinks'
@@ -16,6 +17,9 @@ import {
   getPublicCreatorProfile,
   PublicCreatorProfileLoadError,
 } from '@/lib/creator/getPublicCreatorProfile'
+import {
+  safelyLoadPublicCreatorMap,
+} from '@/lib/creator/safelyLoadPublicCreatorMap'
 import { createServerClient } from '@/lib/supabase/server'
 
 import type {
@@ -48,6 +52,7 @@ type ProfileRow = {
   show_social_groups: boolean | null
   creator_mode_enabled: boolean | null
   creator_headline: string | null
+  show_public_exploration_map: boolean
 }
 
 type ProfilePublicStatsRow = {
@@ -126,7 +131,8 @@ export default async function PublicUserProfilePage({
       show_saved_guides,
       show_social_groups,
       creator_mode_enabled,
-      creator_headline
+      creator_headline,
+      show_public_exploration_map
     `)
     .ilike(
       'username',
@@ -160,10 +166,22 @@ export default async function PublicUserProfilePage({
   const creatorModeRequested =
     profile.creator_mode_enabled === true
 
+  const publicMapRequested =
+    creatorModeRequested &&
+    profile.show_public_exploration_map ===
+      true
+
   const creatorBundlePromise =
     creatorModeRequested
       ? safelyLoadPublicCreatorProfile({
           supabase,
+          userId: profile.id,
+        })
+      : Promise.resolve(null)
+
+  const creatorMapPromise =
+    publicMapRequested
+      ? safelyLoadPublicCreatorMap({
           userId: profile.id,
         })
       : Promise.resolve(null)
@@ -191,6 +209,7 @@ export default async function PublicUserProfilePage({
     socialGroupsResult,
     snapshotResult,
     creatorBundle,
+    creatorMap,
     publicCreatorCollectionCountResult,
   ] = await Promise.all([
     supabase
@@ -286,6 +305,8 @@ export default async function PublicUserProfilePage({
       .limit(9),
 
     creatorBundlePromise,
+
+    creatorMapPromise,
 
     publicCreatorCollectionCountPromise,
   ])
@@ -386,6 +407,11 @@ export default async function PublicUserProfilePage({
   const isCreator =
     creatorUsername !== null &&
     creatorBundle !== null
+
+  const creatorDisplayName =
+    profile.full_name ??
+    profile.username ??
+    'Roam Creator'
 
   const creatorAuthority:
     | CreatorAuthorityStats
@@ -640,6 +666,48 @@ export default async function PublicUserProfilePage({
                 creatorAuthority
               }
             />
+
+            {creatorMap ? (
+              <section
+                aria-labelledby="creator-exploration-map-title"
+                className="min-w-0"
+              >
+                <div className="mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
+                    Local footprint
+                  </p>
+
+                  <h2
+                    id="creator-exploration-map-title"
+                    className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+                  >
+                    Places explored by{' '}
+                    {creatorDisplayName}
+                  </h2>
+
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
+                    A public map of eligible,
+                    geo-verified Roam venue
+                    visits this creator has
+                    chosen to share.
+                  </p>
+                </div>
+
+                <CreatorExplorationMapDynamic
+                  map={creatorMap}
+                  creatorName={
+                    creatorDisplayName
+                  }
+                  primaryCity={
+                    creatorBundle.profile
+                      .primary_city
+                  }
+                  scrollWheelZoom={
+                    false
+                  }
+                />
+              </section>
+            ) : null}
 
             <CreatorFeaturedCollections
               username={creatorUsername}

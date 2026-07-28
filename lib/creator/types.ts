@@ -11,6 +11,9 @@
  *   lib/creator/getCreatorSettings.ts
  *   lib/creator/getPublicCreatorProfile.ts
  *
+ * Public Creator Exploration Map contracts belong in:
+ *   lib/creator/mapTypes.ts
+ *
  * Keep these types aligned with the Creator Mode database migration.
  */
 
@@ -65,10 +68,15 @@ export type CreatorCollectionSourceType =
 
 /**
  * Creator Mode fields added to the existing `profiles` table.
+ *
+ * `show_public_exploration_map` is an explicit, default-off
+ * creator opt-in. Creator Mode must also be enabled before the
+ * public map may be displayed.
  */
 export type CreatorBaseProfileFields = {
   creator_mode_enabled: boolean
   creator_headline: string | null
+  show_public_exploration_map: boolean
 }
 
 /**
@@ -357,6 +365,7 @@ export type CreatorSettingsBaseProfile = {
   username: string | null
   creator_mode_enabled: boolean
   creator_headline: string | null
+  show_public_exploration_map: boolean
 }
 
 export type CreatorSettingsData = {
@@ -374,6 +383,7 @@ export type CreatorSettingsData = {
  */
 export type CreatorSettingsInput = {
   creatorModeEnabled: boolean
+  showPublicExplorationMap: boolean
   creatorHeadline: string | null
   creatorBio: string | null
   primaryCity: string | null
@@ -391,6 +401,7 @@ export type CreatorSettingsInput = {
 export type CreatorActionFieldErrors = Partial<
   Record<
     | 'creatorModeEnabled'
+    | 'showPublicExplorationMap'
     | 'creatorHeadline'
     | 'creatorBio'
     | 'primaryCity'

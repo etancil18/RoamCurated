@@ -1,29 +1,63 @@
 'use client'
 
-import { Marker, Popup, Tooltip } from 'react-leaflet'
-import { useEffect, useMemo, useState } from 'react'
-import type { MutableRefObject } from 'react'
+import {
+  Marker,
+  Popup,
+  Tooltip,
+} from 'react-leaflet'
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import type {
+  MutableRefObject,
+} from 'react'
 import type {
   DivIcon,
   Marker as LeafletMarker,
 } from 'leaflet'
-import type { DateTime } from 'luxon'
-import { DateTime as LuxonDateTime } from 'luxon'
+import type {
+  DateTime,
+} from 'luxon'
+import {
+  DateTime as LuxonDateTime,
+} from 'luxon'
 
-import type { Venue } from '@/types/venue'
-import type { RouteStopRole } from '@/lib/maps/mapTypes'
+import type {
+  Venue,
+} from '@/types/venue'
+import type {
+  RouteStopRole,
+} from '@/lib/maps/mapTypes'
 
-import { isVenueOpenNow } from '@/utils/timeUtils'
-import { coverCandidates } from '@/utils/imageUtils'
-import { logVenueImpression } from '@/lib/logVenue'
-import { FavoritesButton } from '@/components/FavoritesButton'
-import { CITY_CONFIGS } from '@/config/cities'
-import { getVenueMarkerEmoji } from '@/lib/maps/getVenueMarkerEmoji'
+import {
+  isVenueOpenNow,
+} from '@/utils/timeUtils'
+import {
+  coverCandidates,
+} from '@/utils/imageUtils'
+import {
+  logVenueImpression,
+} from '@/lib/logVenue'
+import {
+  FavoritesButton,
+} from '@/components/FavoritesButton'
+import {
+  CITY_CONFIGS,
+} from '@/config/cities'
+import {
+  getVenueMarkerEmoji,
+} from '@/lib/maps/getVenueMarkerEmoji'
 import {
   getVenueIcon,
   getVenueIconZIndex,
   resolveVenueIconVisualState,
 } from '@/lib/maps/icons'
+
+type VenueMarkerInteractionContext =
+  | 'default'
+  | 'creator-exploration-map'
 
 type Props = {
   venue: Venue
@@ -31,8 +65,19 @@ type Props = {
   city: string
   nowForCity: DateTime
   isRouteMode: boolean
-  markerRefs: MutableRefObject<Record<string, LeafletMarker>>
-  eventsByVenueId: Record<string, any[]>
+
+  markerRefs: MutableRefObject<
+    Record<
+      string,
+      LeafletMarker
+    >
+  >
+
+  eventsByVenueId:
+    Record<
+      string,
+      any[]
+    >
 
   /**
    * Premium marker-state inputs.
@@ -49,7 +94,9 @@ type Props = {
   hasUpcomingEvent?: boolean
   isSearchMatch?: boolean
   isDimmed?: boolean
-  onSelect?: (venue: Venue) => void
+  onSelect?: (
+    venue: Venue
+  ) => void
 
   /**
    * Allows parent map surfaces to suppress the Leaflet popup when another
@@ -63,39 +110,96 @@ type Props = {
    * Allows property maps to use a reduced informational popup while all
    * existing map surfaces retain the full default popup.
    */
-  popupVariant?: 'default' | 'property'
+  popupVariant?:
+    | 'default'
+    | 'property'
+
+  /**
+   * Identifies the map surface that owns this marker interaction.
+   *
+   * Creator Exploration Map callers should pass:
+   *
+   *   interactionContext="creator-exploration-map"
+   *
+   * This changes analytics attribution only. Existing visual and interaction
+   * behavior remains unchanged.
+   */
+  interactionContext?:
+    VenueMarkerInteractionContext
 }
 
-const daypartAccentColorMap: Record<string, string> = {
-  M: '#3b82f6',
-  MD: '#10b981',
-  A: '#f97316',
-  HH: '#f59e0b',
-  E: '#8b5cf6',
-  L: '#f43f5e',
-}
-
-function formatListValue(value: unknown): string {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item).trim())
-      .filter(Boolean)
-      .join(', ')
+const daypartAccentColorMap:
+  Record<
+    string,
+    string
+  > = {
+    M: '#3b82f6',
+    MD: '#10b981',
+    A: '#f97316',
+    HH: '#f59e0b',
+    E: '#8b5cf6',
+    L: '#f43f5e',
   }
 
-  if (typeof value === 'string') {
+function formatListValue(
+  value: unknown
+): string {
+  if (
+    Array.isArray(
+      value
+    )
+  ) {
     return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .join(', ')
+      .map(
+        (
+          item
+        ) =>
+          String(
+            item
+          ).trim()
+      )
+      .filter(
+        Boolean
+      )
+      .join(
+        ', '
+      )
+  }
+
+  if (
+    typeof value ===
+    'string'
+  ) {
+    return value
+      .split(
+        ','
+      )
+      .map(
+        (
+          item
+        ) =>
+          item.trim()
+      )
+      .filter(
+        Boolean
+      )
+      .join(
+        ', '
+      )
   }
 
   return ''
 }
 
-function getVenueKey(venue: Venue) {
-  return venue.id ?? venue.slug ?? venue.name ?? null
+function getVenueKey(
+  venue: Venue
+) {
+  return (
+    venue.id ??
+    venue.slug ??
+    venue.name ??
+    null
+  )
 }
 
 function resolveRouteRole({
@@ -105,21 +209,45 @@ function resolveRouteRole({
 }: {
   routeIndex: number
   routeLength?: number
-  explicitRole?: RouteStopRole
+  explicitRole?:
+    RouteStopRole
 }): RouteStopRole {
-  if (explicitRole) return explicitRole
-  if (routeIndex <= 0) return 'start'
+  if (
+    explicitRole
+  ) {
+    return explicitRole
+  }
 
   if (
-    typeof routeLength === 'number' &&
-    Number.isFinite(routeLength) &&
+    routeIndex <= 0
+  ) {
+    return 'start'
+  }
+
+  if (
+    typeof routeLength ===
+      'number' &&
+    Number.isFinite(
+      routeLength
+    ) &&
     routeLength > 0 &&
-    routeIndex >= routeLength - 1
+    routeIndex >=
+      routeLength - 1
   ) {
     return 'end'
   }
 
   return 'middle'
+}
+
+function getInteractionAnalyticsSource(
+  interactionContext:
+    VenueMarkerInteractionContext
+): string {
+  return interactionContext ===
+    'creator-exploration-map'
+    ? 'creator_exploration_map'
+    : 'map_marker'
 }
 
 export default function VenueMarker({
@@ -141,267 +269,499 @@ export default function VenueMarker({
   isDimmed = false,
   onSelect,
   showPopup = true,
-  popupVariant = 'default',
+  popupVariant =
+    'default',
+  interactionContext =
+    'default',
 }: Props) {
-  const [generatingRoute, setGeneratingRoute] = useState(false)
-
-  const [generateRouteError, setGenerateRouteError] =
-    useState<string | null>(null)
-
-  const [icon, setIcon] = useState<DivIcon | null>(null)
-
-  const venueKey = getVenueKey(v)
-  const canGenerateRoute = Boolean(venueKey)
-
-  const isOpen = useMemo(
-    () => isVenueOpenNow(v, nowForCity),
-    [v, nowForCity]
+  const [
+    generatingRoute,
+    setGeneratingRoute,
+  ] = useState(
+    false
   )
 
-  const markerEmoji = useMemo(
-    () =>
-      getVenueMarkerEmoji(
-        (v as any).type ??
-          (v as any).types ??
-          null,
-        nowForCity
-      ),
-    [
-      v.type,
-      (v as any).types,
-      nowForCity.hour,
-    ]
-  )
-
-  const vibeLabel = useMemo(
-    () => formatListValue(v.vibe),
-    [v.vibe]
-  )
-
-  const todayHours = useMemo(() => {
-    if (!Array.isArray(v.hours)) return null
-
-    const today = nowForCity
-      .setLocale('en-US')
-      .toFormat('cccc')
-
-    const match = v.hours.find(
-      (line: string) =>
-        line
-          .toLowerCase()
-          .startsWith(today.toLowerCase())
+  const [
+    generateRouteError,
+    setGenerateRouteError,
+  ] =
+    useState<
+      string | null
+    >(
+      null
     )
 
-    return match
-      ? match.split(': ').slice(1).join(': ')
-      : null
-  }, [v.hours, nowForCity])
+  const [
+    icon,
+    setIcon,
+  ] =
+    useState<
+      DivIcon | null
+    >(
+      null
+    )
+
+  const venueKey =
+    getVenueKey(
+      v
+    )
+
+  const canGenerateRoute =
+    Boolean(
+      venueKey
+    )
+
+  const analyticsSource =
+    getInteractionAnalyticsSource(
+      interactionContext
+    )
+
+  const isOpen =
+    useMemo(
+      () =>
+        isVenueOpenNow(
+          v,
+          nowForCity
+        ),
+      [
+        v,
+        nowForCity,
+      ]
+    )
+
+  const markerEmoji =
+    useMemo(
+      () =>
+        getVenueMarkerEmoji(
+          (
+            v as any
+          ).type ??
+            (
+              v as any
+            ).types ??
+            null,
+          nowForCity
+        ),
+      [
+        v.type,
+        (
+          v as any
+        ).types,
+        nowForCity.hour,
+      ]
+    )
+
+  const vibeLabel =
+    useMemo(
+      () =>
+        formatListValue(
+          v.vibe
+        ),
+      [
+        v.vibe,
+      ]
+    )
+
+  const todayHours =
+    useMemo(
+      () => {
+        if (
+          !Array.isArray(
+            v.hours
+          )
+        ) {
+          return null
+        }
+
+        const today =
+          nowForCity
+            .setLocale(
+              'en-US'
+            )
+            .toFormat(
+              'cccc'
+            )
+
+        const match =
+          v.hours.find(
+            (
+              line:
+                string
+            ) =>
+              line
+                .toLowerCase()
+                .startsWith(
+                  today.toLowerCase()
+                )
+          )
+
+        return match
+          ? match
+              .split(
+                ': '
+              )
+              .slice(
+                1
+              )
+              .join(
+                ': '
+              )
+          : null
+      },
+      [
+        v.hours,
+        nowForCity,
+      ]
+    )
 
   const venueEvents =
-    eventsByVenueId[v.id] ?? []
+    eventsByVenueId[
+      v.id
+    ] ?? []
 
-  const upcomingEvents = useMemo(() => {
-    const nowMillis = nowForCity.toMillis()
+  const upcomingEvents =
+    useMemo(
+      () => {
+        const nowMillis =
+          nowForCity.toMillis()
 
-    return venueEvents
-      .filter((ev) => {
-        if (!ev.starts_at) return false
+        return venueEvents
+          .filter(
+            (
+              ev
+            ) => {
+              if (
+                !ev.starts_at
+              ) {
+                return false
+              }
 
-        return (
-          LuxonDateTime
-            .fromISO(ev.starts_at)
-            .toMillis() >= nowMillis
-        )
-      })
-      .sort(
-        (a, b) =>
-          LuxonDateTime
-            .fromISO(a.starts_at)
-            .toMillis() -
-          LuxonDateTime
-            .fromISO(b.starts_at)
-            .toMillis()
-      )
-  }, [venueEvents, nowForCity])
+              return (
+                LuxonDateTime
+                  .fromISO(
+                    ev.starts_at
+                  )
+                  .toMillis() >=
+                nowMillis
+              )
+            }
+          )
+          .sort(
+            (
+              a,
+              b
+            ) =>
+              LuxonDateTime
+                .fromISO(
+                  a.starts_at
+                )
+                .toMillis() -
+              LuxonDateTime
+                .fromISO(
+                  b.starts_at
+                )
+                .toMillis()
+          )
+      },
+      [
+        venueEvents,
+        nowForCity,
+      ]
+    )
 
   const resolvedHasLiveEvent =
     hasLiveEvent ??
-    venueEvents.some((event) => {
-      if (!event?.starts_at) return false
+    venueEvents.some(
+      (
+        event
+      ) => {
+        if (
+          !event?.starts_at
+        ) {
+          return false
+        }
 
-      const start = LuxonDateTime.fromISO(
-        event.starts_at
-      )
+        const start =
+          LuxonDateTime.fromISO(
+            event.starts_at
+          )
 
-      if (!start.isValid) return false
+        if (
+          !start.isValid
+        ) {
+          return false
+        }
 
-      const end = event.ends_at
-        ? LuxonDateTime.fromISO(event.ends_at)
-        : start.plus({ hours: 3 })
+        const end =
+          event.ends_at
+            ? LuxonDateTime.fromISO(
+                event.ends_at
+              )
+            : start.plus({
+                hours: 3,
+              })
 
-      if (!end.isValid) return false
+        if (
+          !end.isValid
+        ) {
+          return false
+        }
 
-      const nowMillis =
-        nowForCity.toMillis()
+        const nowMillis =
+          nowForCity.toMillis()
 
-      return (
-        start.toMillis() <= nowMillis &&
-        end.toMillis() >= nowMillis
-      )
-    })
+        return (
+          start.toMillis() <=
+            nowMillis &&
+          end.toMillis() >=
+            nowMillis
+        )
+      }
+    )
 
   const resolvedHasUpcomingEvent =
     hasUpcomingEvent ??
-    upcomingEvents.length > 0
+    upcomingEvents.length >
+      0
 
   const resolvedRouteIndex =
     isRouteMode
-      ? routeIndex ?? index
+      ? routeIndex ??
+        index
       : null
 
   const resolvedRouteRole =
-    resolvedRouteIndex !== null
+    resolvedRouteIndex !==
+    null
       ? resolveRouteRole({
-          routeIndex: resolvedRouteIndex,
+          routeIndex:
+            resolvedRouteIndex,
+
           routeLength,
-          explicitRole: routeRole,
+
+          explicitRole:
+            routeRole,
         })
       : null
 
-  const visualState = useMemo(
-    () =>
-      resolveVenueIconVisualState({
-        routeIndex: resolvedRouteIndex,
+  const visualState =
+    useMemo(
+      () =>
+        resolveVenueIconVisualState({
+          routeIndex:
+            resolvedRouteIndex,
+
+          selected,
+
+          isSearchMatch,
+
+          hasLiveEvent:
+            resolvedHasLiveEvent,
+
+          hasUpcomingEvent:
+            resolvedHasUpcomingEvent,
+        }),
+      [
+        resolvedRouteIndex,
         selected,
         isSearchMatch,
+        resolvedHasLiveEvent,
+        resolvedHasUpcomingEvent,
+      ]
+    )
+
+  const accentColor =
+    useMemo(
+      () => {
+        const weekdayIndex =
+          nowForCity.weekday %
+          7
+
+        const todayKey =
+          [
+            'sun',
+            'mon',
+            'tue',
+            'wed',
+            'thu',
+            'fri',
+            'sat',
+          ][
+            weekdayIndex
+          ]
+
+        const daypart =
+          v.dayParts?.[
+            todayKey
+          ] || ''
+
+        if (
+          !isOpen
+        ) {
+          return '#64748b'
+        }
+
+        return (
+          daypartAccentColorMap[
+            daypart
+          ] ??
+          '#22d3ee'
+        )
+      },
+      [
+        v.dayParts,
+        isOpen,
+        nowForCity,
+      ]
+    )
+
+  useEffect(
+    () => {
+      let active =
+        true
+
+      void getVenueIcon({
+        visualState,
+
+        categoryGlyph:
+          markerEmoji,
+
+        accentColor,
+
+        openNow:
+          isOpen,
+
+        selected,
+
+        dimmed:
+          isDimmed,
+
+        scale:
+          markerScale,
+
+        routeIndex:
+          resolvedRouteIndex,
+
+        routeRole:
+          resolvedRouteRole,
+
         hasLiveEvent:
           resolvedHasLiveEvent,
+
         hasUpcomingEvent:
           resolvedHasUpcomingEvent,
-      }),
+
+        isSearchMatch,
+
+        interactive:
+          true,
+      })
+        .then(
+          (
+            nextIcon
+          ) => {
+            if (
+              active
+            ) {
+              setIcon(
+                nextIcon
+              )
+            }
+          }
+        )
+        .catch(
+          (
+            error:
+              unknown
+          ) => {
+            if (
+              active &&
+              process.env
+                .NODE_ENV ===
+                'development'
+            ) {
+              console.error(
+                '[VenueMarker] Failed to create marker icon',
+                {
+                  venueId:
+                    v.id,
+
+                  venueSlug:
+                    v.slug,
+
+                  error,
+                }
+              )
+            }
+          }
+        )
+
+      return () => {
+        active =
+          false
+      }
+    },
     [
-      resolvedRouteIndex,
+      visualState,
+      markerEmoji,
+      accentColor,
+      isOpen,
       selected,
-      isSearchMatch,
+      isDimmed,
+      markerScale,
+      resolvedRouteIndex,
+      resolvedRouteRole,
       resolvedHasLiveEvent,
       resolvedHasUpcomingEvent,
+      isSearchMatch,
+      v.id,
+      v.slug,
     ]
   )
 
-  const accentColor = useMemo(() => {
-    const weekdayIndex =
-      nowForCity.weekday % 7
+  const markerZIndex =
+    getVenueIconZIndex({
+      routeIndex:
+        resolvedRouteIndex,
 
-    const todayKey = [
-      'sun',
-      'mon',
-      'tue',
-      'wed',
-      'thu',
-      'fri',
-      'sat',
-    ][weekdayIndex]
-
-    const daypart =
-      v.dayParts?.[todayKey] || ''
-
-    if (!isOpen) {
-      return '#64748b'
-    }
-
-    return (
-      daypartAccentColorMap[daypart] ??
-      '#22d3ee'
-    )
-  }, [v.dayParts, isOpen, nowForCity])
-
-  useEffect(() => {
-    let active = true
-
-    void getVenueIcon({
-      visualState,
-      categoryGlyph: markerEmoji,
-      accentColor,
-      openNow: isOpen,
       selected,
-      dimmed: isDimmed,
-      scale: markerScale,
-      routeIndex: resolvedRouteIndex,
-      routeRole: resolvedRouteRole,
+
       hasLiveEvent:
         resolvedHasLiveEvent,
-      hasUpcomingEvent:
-        resolvedHasUpcomingEvent,
+
       isSearchMatch,
-      interactive: true,
+
+      dimmed:
+        isDimmed,
     })
-      .then((nextIcon) => {
-        if (active) {
-          setIcon(nextIcon)
-        }
-      })
-      .catch((error: unknown) => {
-        if (
-          active &&
-          process.env.NODE_ENV ===
-            'development'
-        ) {
-          console.error(
-            '[VenueMarker] Failed to create marker icon',
-            {
-              venueId: v.id,
-              venueSlug: v.slug,
-              error,
-            }
-          )
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [
-    visualState,
-    markerEmoji,
-    accentColor,
-    isOpen,
-    selected,
-    isDimmed,
-    markerScale,
-    resolvedRouteIndex,
-    resolvedRouteRole,
-    resolvedHasLiveEvent,
-    resolvedHasUpcomingEvent,
-    isSearchMatch,
-    v.id,
-    v.slug,
-  ])
-
-  const markerZIndex = getVenueIconZIndex({
-    routeIndex: resolvedRouteIndex,
-    selected,
-    hasLiveEvent:
-      resolvedHasLiveEvent,
-    isSearchMatch,
-    dimmed: isDimmed,
-  })
 
   const firstCandidate =
-    coverCandidates(v)[0]
+    coverCandidates(
+      v
+    )[0]
 
   const timezone =
-    CITY_CONFIGS[city]?.timezone ??
+    CITY_CONFIGS[
+      city
+    ]?.timezone ??
     'UTC'
 
-  const primaryImage = v.slug
-    ? `/img/venues/${v.slug}.jpg`
-    : firstCandidate
+  const primaryImage =
+    v.slug
+      ? `/img/venues/${v.slug}.jpg`
+      : firstCandidate
 
   const generateRouteFromVenue =
     async () => {
-      if (generatingRoute) return
+      if (
+        generatingRoute
+      ) {
+        return
+      }
 
-      if (!canGenerateRoute) {
+      if (
+        !canGenerateRoute
+      ) {
         setGenerateRouteError(
           'This venue is missing an id, slug, and name.'
         )
@@ -417,67 +777,122 @@ export default function VenueMarker({
       console.log(
         '[generate route click]',
         {
-          id: v.id,
-          slug: v.slug,
-          name: v.name,
+          id:
+            v.id,
+
+          slug:
+            v.slug,
+
+          name:
+            v.name,
+
           city,
+
+          source:
+            analyticsSource,
         }
       )
 
-      setGeneratingRoute(true)
-      setGenerateRouteError(null)
+      setGeneratingRoute(
+        true
+      )
 
-      let payload: any = null
+      setGenerateRouteError(
+        null
+      )
+
+      let payload:
+        any =
+        null
 
       try {
         logVenueImpression(
           'generate_from_venue_clicked',
           {
             venue_id:
-              venueKey ?? 'unknown',
+              venueKey ??
+              'unknown',
+
             metadata: {
               city,
-              name: v.name,
-              slug: v.slug ?? null,
+
+              name:
+                v.name,
+
+              slug:
+                v.slug ??
+                null,
+
               source:
-                'map_marker_popup',
+                analyticsSource,
             },
           }
         )
 
-        const res = await fetch(
-          '/api/generate-from-venue',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type':
-                'application/json',
-            },
-            body: JSON.stringify({
-              venueId: v.id ?? null,
-              venueSlug:
-                v.slug ?? null,
-              venueName:
-                v.name ?? null,
-              city,
-              plannedStartAt:
-                nowForCity
-                  .plus({
-                    minutes: 15,
-                  })
-                  .toISO(),
-              travelMode: 'walking',
-              tightness: 'medium',
-              maxStops: 5,
-              source: 'map_marker',
-              debug: true,
-            }),
-          }
-        )
+        const res =
+          await fetch(
+            '/api/generate-from-venue',
+            {
+              method:
+                'POST',
 
-        payload = await res
-          .json()
-          .catch(() => null)
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              body:
+                JSON.stringify({
+                  venueId:
+                    v.id ??
+                    null,
+
+                  venueSlug:
+                    v.slug ??
+                    null,
+
+                  venueName:
+                    v.name ??
+                    null,
+
+                  city,
+
+                  plannedStartAt:
+                    nowForCity
+                      .plus({
+                        minutes:
+                          15,
+                      })
+                      .toISO(),
+
+                  travelMode:
+                    'walking',
+
+                  tightness:
+                    'medium',
+
+                  maxStops:
+                    5,
+
+                  source:
+                    interactionContext ===
+                    'creator-exploration-map'
+                      ? 'creator_exploration_map'
+                      : 'map_marker',
+
+                  debug:
+                    true,
+                }),
+            }
+          )
+
+        payload =
+          await res
+            .json()
+            .catch(
+              () =>
+                null
+            )
 
         console.log(
           '[generate route payload]',
@@ -487,8 +902,12 @@ export default function VenueMarker({
         console.log(
           '[generate route response]',
           {
-            ok: res.ok,
-            status: res.status,
+            ok:
+              res.ok,
+
+            status:
+              res.status,
+
             statusText:
               res.statusText,
           }
@@ -496,7 +915,8 @@ export default function VenueMarker({
 
         if (
           !res.ok ||
-          !payload?.route?.stops
+          !payload?.route
+            ?.stops
             ?.length
         ) {
           throw new Error(
@@ -508,10 +928,15 @@ export default function VenueMarker({
         const generatedVenues =
           payload.route.stops
             .map(
-              (stop: any) =>
+              (
+                stop:
+                  any
+              ) =>
                 stop.venue
             )
-            .filter(Boolean)
+            .filter(
+              Boolean
+            )
 
         console.log(
           '[generated venues before dispatch]',
@@ -526,10 +951,13 @@ export default function VenueMarker({
                 detail: {
                   route:
                     generatedVenues,
+
                   generatedRoute:
                     payload.route,
+
                   anchorVenueId:
                     venueKey,
+
                   city,
                 },
               }
@@ -539,7 +967,9 @@ export default function VenueMarker({
           console.log(
             '[generated route event dispatched]'
           )
-        } catch (dispatchError) {
+        } catch (
+          dispatchError
+        ) {
           console.error(
             '[generated route dispatch failed]',
             dispatchError
@@ -552,20 +982,36 @@ export default function VenueMarker({
           'generate_from_venue_succeeded',
           {
             venue_id:
-              venueKey ?? 'unknown',
+              venueKey ??
+              'unknown',
+
             metadata: {
               city,
-              name: v.name,
-              slug: v.slug ?? null,
+
+              name:
+                v.name,
+
+              slug:
+                v.slug ??
+                null,
+
+              source:
+                analyticsSource,
+
               stop_count:
                 generatedVenues.length,
+
               debug:
-                payload?.route
-                  ?.debug ?? null,
+                payload
+                  ?.route
+                  ?.debug ??
+                null,
             },
           }
         )
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           '[generate route from venue failed after payload]',
           error,
@@ -573,76 +1019,132 @@ export default function VenueMarker({
         )
 
         const message =
-          error instanceof Error
+          error instanceof
+          Error
             ? error.message
             : 'Could not generate a route from this venue.'
 
-        setGenerateRouteError(message)
+        setGenerateRouteError(
+          message
+        )
 
         logVenueImpression(
           'generate_from_venue_failed',
           {
             venue_id:
-              venueKey ?? 'unknown',
+              venueKey ??
+              'unknown',
+
             metadata: {
               city,
-              name: v.name,
-              slug: v.slug ?? null,
+
+              name:
+                v.name,
+
+              slug:
+                v.slug ??
+                null,
+
+              source:
+                analyticsSource,
+
               message,
+
               debug:
-                payload?.route
-                  ?.debug ?? null,
+                payload
+                  ?.route
+                  ?.debug ??
+                null,
             },
           }
         )
       } finally {
-        setGeneratingRoute(false)
+        setGeneratingRoute(
+          false
+        )
       }
     }
 
-  if (!icon) return null
+  if (
+    !icon
+  ) {
+    return null
+  }
 
   return (
     <Marker
-      position={[v.lat, v.lon]}
+      position={[
+        v.lat,
+        v.lon,
+      ]}
       icon={icon}
-      zIndexOffset={markerZIndex}
-      ref={(ref) => {
-        if (!v.slug) return
+      zIndexOffset={
+        markerZIndex
+      }
+      ref={(
+        ref
+      ) => {
+        if (
+          !v.slug
+        ) {
+          return
+        }
 
-        if (ref) {
-          markerRefs.current[v.slug] =
+        if (
+          ref
+        ) {
+          markerRefs.current[
+            v.slug
+          ] =
             ref
         } else {
-          delete markerRefs.current[
-            v.slug
-          ]
+          delete markerRefs
+            .current[
+              v.slug
+            ]
         }
       }}
       eventHandlers={{
-        click: () => {
-          onSelect?.(v)
-
-          if (venueKey) {
-            logVenueImpression(
-              'map_marker_click',
-              {
-                venue_id: venueKey,
-                metadata: {
-                  screen:
-                    'map_marker',
-                  city,
-                  name: v.name,
-                  slug:
-                    v.slug ?? null,
-                },
-              }
+        click:
+          () => {
+            onSelect?.(
+              v
             )
-          }
-        },
+
+            if (
+              venueKey
+            ) {
+              logVenueImpression(
+                'map_marker_click',
+                {
+                  venue_id:
+                    venueKey,
+
+                  metadata: {
+                    screen:
+                      analyticsSource,
+
+                    source:
+                      analyticsSource,
+
+                    city,
+
+                    name:
+                      v.name,
+
+                    slug:
+                      v.slug ??
+                      null,
+                  },
+                }
+              )
+            }
+          },
       }}
     >
-      <Tooltip>{v.name}</Tooltip>
+      <Tooltip>
+        {v.name}
+      </Tooltip>
 
       {showPopup && (
         <Popup>
@@ -659,6 +1161,7 @@ export default function VenueMarker({
                     <span className="font-semibold text-zinc-700">
                       More Info:
                     </span>{' '}
+
                     {v.id ? (
                       <a
                         href={`/venue-profile/${v.id}`}
@@ -679,6 +1182,7 @@ export default function VenueMarker({
                     <span className="font-semibold text-zinc-700">
                       Vibe:
                     </span>{' '}
+
                     <span className="text-zinc-600">
                       {vibeLabel ||
                         'Not available'}
@@ -689,6 +1193,7 @@ export default function VenueMarker({
                     <span className="font-semibold text-zinc-700">
                       Price:
                     </span>{' '}
+
                     <span className="text-zinc-600">
                       {v.price ||
                         'Not available'}
@@ -699,6 +1204,7 @@ export default function VenueMarker({
                     <span className="font-semibold text-zinc-700">
                       Status:
                     </span>{' '}
+
                     <span
                       className={
                         isOpen
@@ -716,6 +1222,7 @@ export default function VenueMarker({
                     <span className="font-semibold text-zinc-700">
                       Hours:
                     </span>{' '}
+
                     <span className="text-zinc-600">
                       {todayHours ||
                         'Not available'}
@@ -734,10 +1241,16 @@ export default function VenueMarker({
 
                   {primaryImage && (
                     <img
-                      src={primaryImage}
-                      alt={v.name}
+                      src={
+                        primaryImage
+                      }
+                      alt={
+                        v.name
+                      }
                       className="mt-2 h-[132px] w-full rounded-xl object-cover"
-                      onError={(e) => {
+                      onError={(
+                        e
+                      ) => {
                         const img =
                           e.currentTarget
 
@@ -760,6 +1273,7 @@ export default function VenueMarker({
                       <span className="font-semibold text-zinc-700">
                         Vibe:
                       </span>{' '}
+
                       <span className="text-zinc-600">
                         {vibeLabel}
                       </span>
@@ -771,6 +1285,7 @@ export default function VenueMarker({
                       <span className="font-semibold text-zinc-700">
                         Price:
                       </span>{' '}
+
                       <span className="text-zinc-600">
                         {v.price}
                       </span>
@@ -781,6 +1296,7 @@ export default function VenueMarker({
                     <span className="font-semibold text-zinc-700">
                       Status:
                     </span>{' '}
+
                     <span
                       className={
                         isOpen
@@ -799,6 +1315,7 @@ export default function VenueMarker({
                       <span className="font-semibold text-zinc-700">
                         Hours:
                       </span>{' '}
+
                       <span className="text-zinc-600">
                         {todayHours}
                       </span>
@@ -809,7 +1326,9 @@ export default function VenueMarker({
                 <div className="space-y-2 rounded-2xl border border-zinc-200 bg-white p-2 shadow-sm">
                   <button
                     type="button"
-                    onClick={(e) => {
+                    onClick={(
+                      e
+                    ) => {
                       e.preventDefault()
                       e.stopPropagation()
 
@@ -845,9 +1364,11 @@ export default function VenueMarker({
                     <div className="flex min-h-[34px] items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-2 text-xs font-bold text-zinc-800 transition hover:bg-zinc-100">
                       <FavoritesButton
                         venue={
-                          v as Venue & {
-                            id: string
-                          }
+                          v as
+                            Venue & {
+                              id:
+                                string
+                            }
                         }
                       />
                     </div>
@@ -855,7 +1376,9 @@ export default function VenueMarker({
 
                   {generateRouteError ? (
                     <p className="rounded-lg bg-red-50 px-2 py-1.5 text-xs leading-4 text-red-600">
-                      {generateRouteError}
+                      {
+                        generateRouteError
+                      }
                     </p>
                   ) : null}
                 </div>
@@ -869,8 +1392,14 @@ export default function VenueMarker({
 
                     <ul className="mt-2 space-y-1.5 pl-4 text-xs text-zinc-700">
                       {upcomingEvents.map(
-                        (ev) => (
-                          <li key={ev.id}>
+                        (
+                          ev
+                        ) => (
+                          <li
+                            key={
+                              ev.id
+                            }
+                          >
                             {LuxonDateTime
                               .fromISO(
                                 ev.starts_at
@@ -881,7 +1410,10 @@ export default function VenueMarker({
                               .toFormat(
                                 'M/d h:mm a'
                               )}{' '}
-                            — {ev.title}
+                            —{' '}
+                            {
+                              ev.title
+                            }
                           </li>
                         )
                       )}

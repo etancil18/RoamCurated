@@ -15,6 +15,7 @@ import {
   GripVertical,
   Link2,
   Loader2,
+  MapPinned,
   Plus,
   Trash2,
 } from 'lucide-react'
@@ -77,6 +78,14 @@ export default function CreatorModeForm({
       settings.baseProfile.creator_mode_enabled === true
     )
 
+  const [
+    showPublicExplorationMap,
+    setShowPublicExplorationMap,
+  ] = useState(
+    settings.baseProfile
+      .show_public_exploration_map === true
+  )
+
   const [creatorHeadline, setCreatorHeadline] =
     useState(
       settings.baseProfile.creator_headline ?? ''
@@ -133,8 +142,10 @@ export default function CreatorModeForm({
       null
     )
 
-  const [showDisableConfirmation, setShowDisableConfirmation] =
-    useState(false)
+  const [
+    showDisableConfirmation,
+    setShowDisableConfirmation,
+  ] = useState(false)
 
   const selectedTagIdSet = useMemo(
     () =>
@@ -190,11 +201,29 @@ export default function CreatorModeForm({
     }
 
     setCreatorModeEnabled(enabled)
+
+    if (!enabled) {
+      setShowPublicExplorationMap(false)
+    }
   }
 
   function confirmDisableCreatorMode() {
     setCreatorModeEnabled(false)
+    setShowPublicExplorationMap(false)
     setShowDisableConfirmation(false)
+  }
+
+  function updatePublicExplorationMap(
+    enabled: boolean
+  ) {
+    clearResult()
+
+    if (!creatorModeEnabled) {
+      setShowPublicExplorationMap(false)
+      return
+    }
+
+    setShowPublicExplorationMap(enabled)
   }
 
   function addSocialLink() {
@@ -356,18 +385,29 @@ export default function CreatorModeForm({
 
     const payload = {
       creatorModeEnabled,
+
+      showPublicExplorationMap:
+        creatorModeEnabled &&
+        showPublicExplorationMap,
+
       creatorHeadline:
         nullableTrimmedString(
           creatorHeadline
         ),
+
       creatorBio:
         nullableTrimmedString(creatorBio),
+
       primaryCity:
         nullableTrimmedString(primaryCity),
+
       availableForTravel,
+
       acceptingCollaborations,
+
       publicEmail:
         nullableTrimmedString(publicEmail),
+
       socialLinks:
         normalizeSocialLinkOrder(
           socialLinks
@@ -377,12 +417,14 @@ export default function CreatorModeForm({
             ...link
           }) => ({
             ...link,
+
             handle:
               nullableTrimmedString(
                 link.handle
               ),
           })
         ),
+
       collaborationTagIds:
         selectedCollaborationTagIds,
     }
@@ -419,6 +461,23 @@ export default function CreatorModeForm({
             fieldErrors,
             'creatorModeEnabled'
           )}
+        />
+
+        <PublicExplorationMapSection
+          enabled={
+            showPublicExplorationMap
+          }
+          creatorModeEnabled={
+            creatorModeEnabled
+          }
+          disabled={isPending}
+          error={getFirstFieldError(
+            fieldErrors,
+            'showPublicExplorationMap'
+          )}
+          onChange={
+            updatePublicExplorationMap
+          }
         />
 
         <CreatorIdentitySection
@@ -534,6 +593,7 @@ export default function CreatorModeForm({
                   aria-hidden="true"
                   className="h-4 w-4 animate-spin"
                 />
+
                 Saving…
               </>
             ) : (
@@ -542,6 +602,7 @@ export default function CreatorModeForm({
                   aria-hidden="true"
                   className="h-4 w-4"
                 />
+
                 Save Creator Mode
               </>
             )}
@@ -660,6 +721,157 @@ function CreatorModeToggleSection({
           ? 'Creator Mode will be public after saving'
           : 'Creator Mode is hidden'}
       </div>
+
+      <FieldError message={error} />
+    </section>
+  )
+}
+
+/* =========================================================
+ * Public exploration map
+ * ======================================================= */
+
+function PublicExplorationMapSection({
+  enabled,
+  creatorModeEnabled,
+  disabled,
+  error,
+  onChange,
+}: {
+  enabled: boolean
+  creatorModeEnabled: boolean
+  disabled: boolean
+  error?: string
+  onChange: (enabled: boolean) => void
+}) {
+  const controlDisabled =
+    disabled ||
+    !creatorModeEnabled
+
+  return (
+    <section
+      aria-labelledby="public-exploration-map-title"
+      className={[
+        'w-full min-w-0 rounded-2xl border p-4 transition sm:p-5',
+        enabled &&
+        creatorModeEnabled
+          ? 'border-indigo-500/30 bg-indigo-500/[0.07]'
+          : 'border-neutral-800 bg-black/25',
+      ].join(' ')}
+    >
+      <div className="flex min-w-0 items-start justify-between gap-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            aria-hidden="true"
+            className={[
+              'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border',
+              enabled &&
+              creatorModeEnabled
+                ? 'border-indigo-400/30 bg-indigo-500/15 text-indigo-200'
+                : 'border-neutral-800 bg-neutral-950 text-neutral-500',
+            ].join(' ')}
+          >
+            <MapPinned className="h-5 w-5" />
+          </span>
+
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-400">
+              Exploration map
+            </p>
+
+            <h3
+              id="public-exploration-map-title"
+              className="mt-2 text-base font-semibold text-white"
+            >
+              Show my public exploration map
+            </h3>
+
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
+              Publish an interactive map of venues
+              connected to your verified Roam
+              activity. Visitors will be able to
+              explore the places represented by the
+              public map.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={
+            creatorModeEnabled &&
+            enabled
+          }
+          aria-label={
+            enabled
+              ? 'Hide public exploration map'
+              : 'Show public exploration map'
+          }
+          aria-describedby="public-exploration-map-privacy"
+          disabled={controlDisabled}
+          onClick={() =>
+            onChange(!enabled)
+          }
+          className={[
+            'relative mt-1 h-7 w-12 shrink-0 rounded-full border transition disabled:cursor-not-allowed disabled:opacity-40',
+            enabled &&
+            creatorModeEnabled
+              ? 'border-indigo-300 bg-indigo-400'
+              : 'border-neutral-700 bg-neutral-900',
+          ].join(' ')}
+        >
+          <span
+            aria-hidden="true"
+            className={[
+              'absolute top-1 h-5 w-5 rounded-full shadow transition',
+              enabled &&
+              creatorModeEnabled
+                ? 'left-6 bg-black'
+                : 'left-1 bg-neutral-500',
+            ].join(' ')}
+          />
+        </button>
+      </div>
+
+      <div
+        id="public-exploration-map-privacy"
+        className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3"
+      >
+        <p className="text-xs font-semibold text-amber-200">
+          Explicit public opt-in
+        </p>
+
+        <p className="mt-1 text-xs leading-5 text-amber-200/70">
+          This setting is off by default. Turning
+          it on authorizes Roam to display
+          eligible venue activity on your public
+          creator profile. Your raw location
+          coordinates, check-in distance, device
+          location accuracy, and private visit
+          records are not displayed.
+        </p>
+      </div>
+
+      {!creatorModeEnabled ? (
+        <p className="mt-3 text-xs leading-5 text-neutral-600">
+          Enable Creator Mode before publishing
+          an exploration map.
+        </p>
+      ) : (
+        <div
+          className={[
+            'mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+            enabled
+              ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200'
+              : 'border-neutral-700 bg-neutral-950 text-neutral-500',
+          ].join(' ')}
+        >
+          {enabled
+            ? 'Map will be public after saving'
+            : 'Map remains private'}
+        </div>
+      )}
 
       <FieldError message={error} />
     </section>
@@ -907,6 +1119,7 @@ function CreatorSocialLinksSection({
             aria-hidden="true"
             className="h-4 w-4"
           />
+
           Add Social Link
         </button>
       </div>
@@ -1521,6 +1734,7 @@ function TextField({
       <span className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium text-neutral-200">
           {label}
+
           {required ? (
             <span className="text-cyan-400">
               {' '}
@@ -1550,7 +1764,10 @@ function TextField({
           description
             ? descriptionId
             : null,
-          error ? errorId : null,
+
+          error
+            ? errorId
+            : null,
         ]
           .filter(Boolean)
           .join(' ') || undefined}
@@ -1630,7 +1847,9 @@ function TextAreaField({
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
         aria-describedby={
-          error ? errorId : undefined
+          error
+            ? errorId
+            : undefined
         }
         onChange={(event) =>
           onChange(event.target.value)
@@ -1831,9 +2050,10 @@ function DisableCreatorModeDialog({
         >
           Your creator details, social links,
           tags, and collections will remain
-          saved, but the Creator Mode layer will
-          be hidden from your public profile
-          after you save.
+          saved. Your public exploration map
+          opt-in will be turned off, and the
+          Creator Mode layer will be hidden from
+          your public profile after you save.
         </p>
 
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

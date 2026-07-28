@@ -739,6 +739,9 @@ export const creatorSettingsSchema = z
     creatorModeEnabled:
       creatorBooleanSchema,
 
+    showPublicExplorationMap:
+      creatorBooleanSchema,
+
     creatorHeadline:
       creatorHeadlineSchema,
 
@@ -821,6 +824,18 @@ export const creatorSettingsSchema = z
         }
       }
     )
+
+    if (
+      settings.showPublicExplorationMap &&
+      !settings.creatorModeEnabled
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['showPublicExplorationMap'],
+        message:
+          'Enable Creator Mode before publishing your exploration map.',
+      })
+    }
 
     if (!settings.creatorModeEnabled) {
       return

@@ -9,14 +9,37 @@ type Props = {
   selectedCity: CitySlug | null
   onSelectCity: (city: CitySlug | null) => void
   panelOpen?: boolean
+
+  /**
+   * Optional city whitelist.
+   *
+   * Creator Exploration Map callers can supply only the cities
+   * represented by the creator's public venue dataset.
+   *
+   * When omitted, all configured Roam cities remain available,
+   * preserving the existing MapCanvas behavior.
+   */
+  availableCities?: readonly CitySlug[]
+
+  /**
+   * `fixed` preserves the existing full-screen map placement.
+   *
+   * `embedded` positions the selector inside a relatively
+   * positioned map surface such as CreatorExplorationMap.
+   */
+  variant?: 'fixed' | 'embedded'
 }
 
 function joinClassNames(
-  ...values: Array<string | false | null | undefined>
+  ...values: Array<
+    string | false | null | undefined
+  >
 ): string {
   return values
     .filter(
-      (value): value is string =>
+      (
+        value
+      ): value is string =>
         typeof value === 'string' &&
         value.trim().length > 0
     )
@@ -27,25 +50,65 @@ export default function CitySelector({
   selectedCity,
   onSelectCity,
   panelOpen = false,
+  availableCities,
+  variant = 'fixed',
 }: Props) {
-  const cities = useMemo(
-    () =>
-      Object.entries(CITY_CONFIGS) as Array<
-        [CitySlug, (typeof CITY_CONFIGS)[CitySlug]]
-      >,
-    []
-  )
+  const availableCitySet =
+    useMemo(
+      () =>
+        availableCities
+          ? new Set<CitySlug>(
+              availableCities
+            )
+          : null,
+      [
+        availableCities,
+      ]
+    )
+
+  const cities =
+    useMemo(
+      () =>
+        (
+          Object.entries(
+            CITY_CONFIGS
+          ) as Array<
+            [
+              CitySlug,
+              (typeof CITY_CONFIGS)[CitySlug],
+            ]
+          >
+        ).filter(
+          (
+            [
+              slug,
+            ]
+          ) =>
+            availableCitySet ===
+              null ||
+            availableCitySet.has(
+              slug
+            )
+        ),
+      [
+        availableCitySet,
+      ]
+    )
+
+  const isEmbedded =
+    variant === 'embedded'
 
   return (
     <section
       aria-label="Choose a city"
+      data-city-selector-variant={
+        variant
+      }
       className={joinClassNames(
         `
           pointer-events-auto
-          fixed
           left-1/2
           z-[1000]
-          w-[min(calc(100vw-1.5rem),460px)]
           -translate-x-1/2
           rounded-[24px]
           border
@@ -59,9 +122,22 @@ export default function CitySelector({
           transition-[bottom,transform,opacity]
           duration-200
         `,
-        panelOpen
-          ? 'bottom-[calc(env(safe-area-inset-bottom)+11.5rem)]'
-          : 'bottom-[calc(env(safe-area-inset-bottom)+3.25rem)]'
+        isEmbedded
+          ? `
+              absolute
+              bottom-3
+              w-[min(calc(100%-1.5rem),460px)]
+            `
+          : `
+              fixed
+              w-[min(calc(100vw-1.5rem),460px)]
+            `,
+        !isEmbedded &&
+          (
+            panelOpen
+              ? 'bottom-[calc(env(safe-area-inset-bottom)+11.5rem)]'
+              : 'bottom-[calc(env(safe-area-inset-bottom)+3.25rem)]'
+          )
       )}
     >
       <div className="mb-2.5 flex items-center justify-between gap-3 px-1">
@@ -77,8 +153,15 @@ export default function CitySelector({
 
         <button
           type="button"
-          onClick={() => onSelectCity(null)}
-          aria-pressed={selectedCity === null}
+          onClick={() =>
+            onSelectCity(
+              null
+            )
+          }
+          aria-pressed={
+            selectedCity ===
+            null
+          }
           className={joinClassNames(
             `
               shrink-0
@@ -95,7 +178,8 @@ export default function CitySelector({
               focus-visible:ring-offset-2
               focus-visible:ring-offset-zinc-950
             `,
-            selectedCity === null
+            selectedCity ===
+              null
               ? `
                   border-white
                   bg-white
@@ -131,72 +215,87 @@ export default function CitySelector({
           [&::-webkit-scrollbar]:hidden
         "
       >
-        {cities.map(([slug, city]) => {
-          const isActive = slug === selectedCity
+        {cities.map(
+          (
+            [
+              slug,
+              city,
+            ]
+          ) => {
+            const isActive =
+              slug ===
+              selectedCity
 
-          return (
-            <button
-              key={slug}
-              type="button"
-              role="listitem"
-              onClick={() => onSelectCity(slug)}
-              aria-pressed={isActive}
-              className={joinClassNames(
-                `
-                  relative
-                  shrink-0
-                  rounded-full
-                  border
-                  px-3.5
-                  py-2
-                  text-sm
-                  font-bold
-                  transition
-                  duration-150
-                  focus-visible:outline-none
-                  focus-visible:ring-2
-                  focus-visible:ring-cyan-300
-                  focus-visible:ring-offset-2
-                  focus-visible:ring-offset-zinc-950
-                `,
-                isActive
-                  ? `
-                      border-cyan-300/40
-                      bg-cyan-300/15
-                      text-cyan-100
-                      shadow-[0_0_22px_rgba(34,211,238,0.12)]
-                    `
-                  : `
-                      border-white/10
-                      bg-white/[0.055]
-                      text-zinc-300
-                      hover:border-white/20
-                      hover:bg-white/10
-                      hover:text-white
-                    `
-              )}
-            >
-              {city.name}
-
-              {isActive && (
-                <span
-                  aria-hidden="true"
-                  className="
-                    absolute
-                    bottom-1
-                    left-1/2
-                    h-1
-                    w-1
-                    -translate-x-1/2
+            return (
+              <button
+                key={slug}
+                type="button"
+                role="listitem"
+                onClick={() =>
+                  onSelectCity(
+                    slug
+                  )
+                }
+                aria-pressed={
+                  isActive
+                }
+                className={joinClassNames(
+                  `
+                    relative
+                    shrink-0
                     rounded-full
-                    bg-cyan-300
-                    shadow-[0_0_8px_rgba(34,211,238,0.9)]
-                  "
-                />
-              )}
-            </button>
-          )
-        })}
+                    border
+                    px-3.5
+                    py-2
+                    text-sm
+                    font-bold
+                    transition
+                    duration-150
+                    focus-visible:outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-cyan-300
+                    focus-visible:ring-offset-2
+                    focus-visible:ring-offset-zinc-950
+                  `,
+                  isActive
+                    ? `
+                        border-cyan-300/40
+                        bg-cyan-300/15
+                        text-cyan-100
+                        shadow-[0_0_22px_rgba(34,211,238,0.12)]
+                      `
+                    : `
+                        border-white/10
+                        bg-white/[0.055]
+                        text-zinc-300
+                        hover:border-white/20
+                        hover:bg-white/10
+                        hover:text-white
+                      `
+                )}
+              >
+                {city.name}
+
+                {isActive ? (
+                  <span
+                    aria-hidden="true"
+                    className="
+                      absolute
+                      bottom-1
+                      left-1/2
+                      h-1
+                      w-1
+                      -translate-x-1/2
+                      rounded-full
+                      bg-cyan-300
+                      shadow-[0_0_8px_rgba(34,211,238,0.9)]
+                    "
+                  />
+                ) : null}
+              </button>
+            )
+          }
+        )}
       </div>
     </section>
   )

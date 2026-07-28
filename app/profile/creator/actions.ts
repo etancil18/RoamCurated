@@ -27,6 +27,7 @@ import type {
 
 export type SaveCreatorSettingsData = {
   creatorModeEnabled: boolean
+  showPublicExplorationMap: boolean
   updatedAt: string
 }
 
@@ -42,6 +43,7 @@ type ExistingBaseProfile = {
   username: string | null
   creator_mode_enabled: boolean | null
   creator_headline: string | null
+  show_public_exploration_map: boolean | null
 }
 
 type ExistingCreatorTagSelection = {
@@ -78,6 +80,8 @@ type NormalizedSocialLinkInsert = {
  * - all input is runtime validated
  * - selected collaboration tags must exist and be active
  * - social URLs are platform-validated and normalized
+ * - the public exploration map requires explicit creator opt-in
+ * - disabling Creator Mode always disables the public map
  * - Creator Mode is enabled only after supporting data saves
  * - failures trigger a best-effort rollback
  * - public profile paths are revalidated after success
@@ -169,10 +173,22 @@ export async function saveCreatorSettingsAction(
   const previousState = snapshotResult.snapshot
   const now = new Date().toISOString()
 
+  /**
+   * Defense in depth:
+   *
+   * The schema already rejects an enabled exploration map when
+   * Creator Mode is disabled. This resolved value ensures the
+   * database write still fails closed if that validation changes
+   * or the action is refactored later.
+   */
+  const showPublicExplorationMap =
+    values.creatorModeEnabled === true &&
+    values.showPublicExplorationMap === true
+
   try {
     /**
      * When disabling Creator Mode, hide the public creator layer
-     * before changing its supporting rows.
+     * and public exploration map before changing supporting rows.
      *
      * When enabling Creator Mode, keep the public creator layer
      * hidden until every supporting write has succeeded.
@@ -184,6 +200,7 @@ export async function saveCreatorSettingsAction(
         creatorModeEnabled: false,
         creatorHeadline:
           values.creatorHeadline,
+        showPublicExplorationMap: false,
       })
     }
 
@@ -209,7 +226,8 @@ export async function saveCreatorSettingsAction(
     })
 
     /**
-     * This final write exposes the completed creator profile.
+     * This final write exposes the completed creator profile and,
+     * only when explicitly enabled, its public exploration map.
      *
      * It also updates the headline when Creator Mode was already
      * enabled.
@@ -221,6 +239,7 @@ export async function saveCreatorSettingsAction(
         values.creatorModeEnabled,
       creatorHeadline:
         values.creatorHeadline,
+      showPublicExplorationMap,
     })
   } catch (error) {
     console.error(
@@ -270,6 +289,7 @@ export async function saveCreatorSettingsAction(
     data: {
       creatorModeEnabled:
         values.creatorModeEnabled,
+      showPublicExplorationMap,
       updatedAt: now,
     },
   }
@@ -483,7 +503,8 @@ async function loadCreatorSettingsSnapshot({
         id,
         username,
         creator_mode_enabled,
-        creator_headline
+        creator_headline,
+        show_public_exploration_map
       `)
       .eq('id', userId)
       .maybeSingle(),
@@ -563,6 +584,41 @@ async function loadCreatorSettingsSnapshot({
     }
   }
 
+  const baseProfileData =
+    baseProfileResult.data as Record<
+      string,
+      unknown
+    >
+
+  const existingBaseProfile: ExistingBaseProfile = {
+    id:
+      typeof baseProfileData.id === 'string'
+        ? baseProfileData.id
+        : userId,
+
+    username:
+      typeof baseProfileData.username === 'string'
+        ? baseProfileData.username
+        : null,
+
+    creator_mode_enabled:
+      baseProfileData.creator_mode_enabled === true,
+
+    creator_headline:
+      typeof baseProfileData.creator_headline === 'string'
+        ? baseProfileData.creator_headline
+        : null,
+
+    /**
+     * Fail closed when reading the rollback snapshot.
+     *
+     * A null, missing, or malformed value must never be restored
+     * as public.
+     */
+    show_public_exploration_map:
+      baseProfileData.show_public_exploration_map === true,
+  }
+
   const socialLinks = (
     socialLinksResult.data ?? []
   ) as CreatorSocialLink[]
@@ -585,7 +641,7 @@ async function loadCreatorSettingsSnapshot({
     success: true,
     snapshot: {
       baseProfile:
-        baseProfileResult.data as ExistingBaseProfile,
+        existingBaseProfile,
 
       creatorProfile:
         creatorProfileResult.data as
@@ -608,6 +664,7 @@ async function updateBaseProfileOrThrow({
   userId,
   creatorModeEnabled,
   creatorHeadline,
+  showPublicExplorationMap,
 }: {
   supabase: Awaited<
     ReturnType<typeof createServerClient>
@@ -615,6 +672,7 @@ async function updateBaseProfileOrThrow({
   userId: string
   creatorModeEnabled: boolean
   creatorHeadline: string | null
+  showPublicExplorationMap: boolean
 }): Promise<void> {
   const { error } = await supabase
     .from('profiles')
@@ -625,6 +683,9 @@ async function updateBaseProfileOrThrow({
         normalizeNullableText(
           creatorHeadline
         ),
+      show_public_exploration_map:
+        creatorModeEnabled === true &&
+        showPublicExplorationMap === true,
     })
     .eq('id', userId)
 
@@ -842,6 +903,16 @@ async function rollbackCreatorSettings({
         creator_headline:
           snapshot.baseProfile
             .creator_headline,
+
+        /**
+         * Restore the exact prior public state, while failing
+         * closed for null or malformed historical values.
+         */
+        show_public_exploration_map:
+          snapshot.baseProfile
+            .creator_mode_enabled === true &&
+          snapshot.baseProfile
+            .show_public_exploration_map === true,
       })
       .eq('id', userId)
   )
@@ -1014,6 +1085,7 @@ function mapSchemaFieldErrors(
 
     switch (rootField) {
       case 'creatorModeEnabled':
+      case 'showPublicExplorationMap':
       case 'creatorHeadline':
       case 'creatorBio':
       case 'primaryCity':

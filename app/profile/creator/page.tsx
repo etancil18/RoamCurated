@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Creator Mode | Roam',
   description:
-    'Build and manage your Roam creator profile, social links, collaboration availability, and public collections.',
+    'Build and manage your Roam creator profile, social links, collaboration availability, public exploration map, and collections.',
   robots: {
     index: false,
     follow: false,
@@ -70,6 +70,16 @@ export default async function CreatorSettingsPage() {
   const creatorModeEnabled =
     baseProfile.creator_mode_enabled === true
 
+  /**
+   * Fail closed.
+   *
+   * The exploration map is considered public only when both
+   * Creator Mode and the explicit map opt-in are enabled.
+   */
+  const showPublicExplorationMap =
+    creatorModeEnabled &&
+    baseProfile.show_public_exploration_map === true
+
   const publicProfileHref =
     baseProfile.username
       ? CREATOR_ROUTES.publicProfile(
@@ -82,12 +92,18 @@ export default async function CreatorSettingsPage() {
       <div className="mx-auto w-full min-w-0 max-w-4xl">
         <CreatorSettingsHeader
           creatorModeEnabled={creatorModeEnabled}
+          showPublicExplorationMap={
+            showPublicExplorationMap
+          }
           publicProfileHref={publicProfileHref}
         />
 
         <div className="mt-6 grid w-full min-w-0 gap-5">
           <CreatorModeStatusCard
             creatorModeEnabled={creatorModeEnabled}
+            showPublicExplorationMap={
+              showPublicExplorationMap
+            }
             username={baseProfile.username}
             hasCreatorProfile={creatorProfile !== null}
             publicSocialLinkCount={
@@ -147,9 +163,11 @@ export default async function CreatorSettingsPage() {
 
 function CreatorSettingsHeader({
   creatorModeEnabled,
+  showPublicExplorationMap,
   publicProfileHref,
 }: {
   creatorModeEnabled: boolean
+  showPublicExplorationMap: boolean
   publicProfileHref: string | null
 }) {
   return (
@@ -171,6 +189,12 @@ function CreatorSettingsHeader({
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <CreatorModeBadge
               enabled={creatorModeEnabled}
+            />
+
+            <CreatorExplorationMapBadge
+              enabled={
+                showPublicExplorationMap
+              }
             />
 
             <span className="text-xs text-neutral-600">
@@ -236,18 +260,51 @@ function CreatorModeBadge({
   )
 }
 
+function CreatorExplorationMapBadge({
+  enabled,
+}: {
+  enabled: boolean
+}) {
+  return (
+    <span
+      className={[
+        'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+        enabled
+          ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200'
+          : 'border-neutral-700 bg-neutral-900 text-neutral-500',
+      ].join(' ')}
+    >
+      <span
+        aria-hidden="true"
+        className={[
+          'h-2 w-2 rounded-full',
+          enabled
+            ? 'bg-indigo-400'
+            : 'bg-neutral-600',
+        ].join(' ')}
+      />
+
+      {enabled
+        ? 'Exploration map public'
+        : 'Exploration map private'}
+    </span>
+  )
+}
+
 /* =========================================================
  * Status overview
  * ======================================================= */
 
 function CreatorModeStatusCard({
   creatorModeEnabled,
+  showPublicExplorationMap,
   username,
   hasCreatorProfile,
   publicSocialLinkCount,
   collaborationTagCount,
 }: {
   creatorModeEnabled: boolean
+  showPublicExplorationMap: boolean
   username: string | null
   hasCreatorProfile: boolean
   publicSocialLinkCount: number
@@ -352,7 +409,80 @@ function CreatorModeStatusCard({
           </div>
         ))}
       </div>
+
+      <ExplorationMapStatus
+        creatorModeEnabled={
+          creatorModeEnabled
+        }
+        showPublicExplorationMap={
+          showPublicExplorationMap
+        }
+      />
     </section>
+  )
+}
+
+function ExplorationMapStatus({
+  creatorModeEnabled,
+  showPublicExplorationMap,
+}: {
+  creatorModeEnabled: boolean
+  showPublicExplorationMap: boolean
+}) {
+  const isPublic =
+    creatorModeEnabled &&
+    showPublicExplorationMap
+
+  return (
+    <div
+      className={[
+        'mt-4 flex min-w-0 items-start gap-3 rounded-2xl border p-3',
+        isPublic
+          ? 'border-indigo-500/25 bg-indigo-500/[0.07]'
+          : 'border-neutral-800 bg-black/25',
+      ].join(' ')}
+    >
+      <span
+        aria-hidden="true"
+        className={[
+          'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border text-sm',
+          isPublic
+            ? 'border-indigo-500/30 bg-indigo-500/15 text-indigo-200'
+            : 'border-neutral-800 bg-neutral-950 text-neutral-500',
+        ].join(' ')}
+      >
+        🗺️
+      </span>
+
+      <div className="min-w-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <p className="text-sm font-medium text-neutral-200">
+            Public exploration map
+          </p>
+
+          <span
+            className={[
+              'rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]',
+              isPublic
+                ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200'
+                : 'border-neutral-700 bg-neutral-900 text-neutral-500',
+            ].join(' ')}
+          >
+            {isPublic
+              ? 'Public'
+              : 'Private'}
+          </span>
+        </div>
+
+        <p className="mt-1 text-xs leading-5 text-neutral-500">
+          {isPublic
+            ? 'Eligible venue activity can appear on your public creator profile.'
+            : creatorModeEnabled
+              ? 'Your eligible venue activity remains private until you explicitly publish the map.'
+              : 'The exploration map cannot be public while Creator Mode is inactive.'}
+        </p>
+      </div>
+    </div>
   )
 }
 
@@ -424,7 +554,7 @@ function CreatorModeGuidance() {
         <GuidanceItem
           number="02"
           title="Show proof"
-          description="Use real Roam activity and collections instead of vague authority claims."
+          description="Use real Roam activity, your optional exploration map, and collections instead of vague authority claims."
         />
 
         <GuidanceItem

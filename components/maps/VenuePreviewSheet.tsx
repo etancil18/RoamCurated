@@ -7,14 +7,28 @@ import {
   useMemo,
   useState,
 } from 'react'
-import type { DateTime } from 'luxon'
-import { DateTime as LuxonDateTime } from 'luxon'
+import type {
+  DateTime,
+} from 'luxon'
+import {
+  DateTime as LuxonDateTime,
+} from 'luxon'
 
-import type { Venue } from '@/types/venue'
-import { CITY_CONFIGS } from '@/config/cities'
-import { FavoritesButton } from '@/components/FavoritesButton'
-import { coverCandidates } from '@/utils/imageUtils'
-import { isVenueOpenNow } from '@/utils/timeUtils'
+import type {
+  Venue,
+} from '@/types/venue'
+import {
+  CITY_CONFIGS,
+} from '@/config/cities'
+import {
+  FavoritesButton,
+} from '@/components/FavoritesButton'
+import {
+  coverCandidates,
+} from '@/utils/imageUtils'
+import {
+  isVenueOpenNow,
+} from '@/utils/timeUtils'
 
 export type VenuePreviewEvent = {
   id: string | number
@@ -22,6 +36,10 @@ export type VenuePreviewEvent = {
   starts_at: string
   ends_at?: string | null
 }
+
+export type VenuePreviewSheetInteractionContext =
+  | 'default'
+  | 'creator-exploration-map'
 
 type Props = {
   venue: Venue | null
@@ -47,7 +65,21 @@ type Props = {
    * Optional callback for analytics or selection synchronization before the
    * user navigates to the venue profile.
    */
-  onViewVenue?: (venue: Venue) => void
+  onViewVenue?: (
+    venue: Venue
+  ) => void
+
+  /**
+   * Identifies the map surface that owns this preview.
+   *
+   * Creator Exploration Map callers should pass:
+   *
+   *   interactionContext="creator-exploration-map"
+   *
+   * Existing callers may omit this prop and preserve all current behavior.
+   */
+  interactionContext?:
+    VenuePreviewSheetInteractionContext
 }
 
 type UpcomingEvent = {
@@ -58,21 +90,48 @@ type UpcomingEvent = {
 function formatListValue(
   value: unknown
 ): string {
-  if (Array.isArray(value)) {
+  if (
+    Array.isArray(
+      value
+    )
+  ) {
     return value
-      .map((item) =>
-        String(item).trim()
+      .map(
+        (
+          item
+        ) =>
+          String(
+            item
+          ).trim()
       )
-      .filter(Boolean)
-      .join(', ')
+      .filter(
+        Boolean
+      )
+      .join(
+        ', '
+      )
   }
 
-  if (typeof value === 'string') {
+  if (
+    typeof value ===
+    'string'
+  ) {
     return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean)
-      .join(', ')
+      .split(
+        ','
+      )
+      .map(
+        (
+          item
+        ) =>
+          item.trim()
+      )
+      .filter(
+        Boolean
+      )
+      .join(
+        ', '
+      )
   }
 
   return ''
@@ -82,53 +141,146 @@ function getTodayHours(
   venue: Venue,
   nowForCity: DateTime
 ): string | null {
-  if (!Array.isArray(venue.hours)) {
+  if (
+    !Array.isArray(
+      venue.hours
+    )
+  ) {
     return null
   }
 
-  const today = nowForCity
-    .setLocale('en-US')
-    .toFormat('cccc')
-    .toLowerCase()
+  const today =
+    nowForCity
+      .setLocale(
+        'en-US'
+      )
+      .toFormat(
+        'cccc'
+      )
+      .toLowerCase()
 
-  const match = venue.hours.find(
-    (line: string) =>
-      line
-        .trim()
-        .toLowerCase()
-        .startsWith(today)
+  const match =
+    venue.hours.find(
+      (
+        line:
+          string
+      ) =>
+        line
+          .trim()
+          .toLowerCase()
+          .startsWith(
+            today
+          )
+    )
+
+  if (
+    !match
+  ) {
+    return null
+  }
+
+  const [
+    ,
+    ...rest
+  ] =
+    match.split(
+      ': '
+    )
+
+  return (
+    rest
+      .join(
+        ': '
+      )
+      .trim() ||
+    null
   )
-
-  if (!match) {
-    return null
-  }
-
-  const [, ...rest] = match.split(': ')
-
-  return rest.join(': ').trim() || null
 }
 
 function getPrimaryImage(
-  venue: Venue
+  venue: Venue,
+  {
+    preferCanonicalCover = false,
+  }: {
+    preferCanonicalCover?: boolean
+  } = {}
 ): {
   primary: string | null
   fallback: string | null
 } {
-  const candidates =
-    coverCandidates(venue)
+  const canonicalCover =
+    typeof venue.cover ===
+      'string'
+      ? venue.cover.trim()
+      : ''
+
+  const candidateImages =
+    coverCandidates(
+      venue
+    )
+      .map(
+        (
+          candidate
+        ) =>
+          typeof candidate ===
+            'string'
+            ? candidate.trim()
+            : ''
+      )
+      .filter(
+        (
+          candidate
+        ): candidate is string =>
+          candidate.length >
+          0
+      )
+
+  const uniqueCandidates =
+    Array.from(
+      new Set([
+        canonicalCover,
+        ...candidateImages,
+      ].filter(Boolean))
+    )
+
+  /**
+   * Creator Exploration Map venues should prefer the sanitized
+   * canonical cover supplied by the public loader.
+   *
+   * Some existing venue records still rely on the shared image
+   * candidate resolver, so retain those candidates as a fallback
+   * rather than rendering an empty image state immediately.
+   */
+  if (
+    preferCanonicalCover
+  ) {
+    return {
+      primary:
+        uniqueCandidates[0] ??
+        null,
+
+      fallback:
+        uniqueCandidates[1] ??
+        null,
+    }
+  }
 
   const fallback =
-    candidates[0] ?? null
+    candidateImages[0] ??
+    null
 
-  const primary = venue.slug
-    ? `/img/venues/${venue.slug}.jpg`
-    : fallback
+  const primary =
+    venue.slug
+      ? `/img/venues/${venue.slug}.jpg`
+      : fallback
 
   return {
     primary,
+
     fallback:
       fallback &&
-      fallback !== primary
+      fallback !==
+        primary
         ? fallback
         : null,
   }
@@ -139,7 +291,10 @@ function getCityTimezone(
 ): string {
   if (
     !city ||
-    !(city in CITY_CONFIGS)
+    !(
+      city in
+      CITY_CONFIGS
+    )
   ) {
     return 'UTC'
   }
@@ -147,7 +302,8 @@ function getCityTimezone(
   return (
     CITY_CONFIGS[
       city as keyof typeof CITY_CONFIGS
-    ]?.timezone ?? 'UTC'
+    ]?.timezone ??
+    'UTC'
   )
 }
 
@@ -161,163 +317,255 @@ export default function VenuePreviewSheet({
   isGeneratingFlow = false,
   generateFlowError = null,
   onViewVenue,
+  interactionContext =
+    'default',
 }: Props) {
-  const titleId = useId()
-  const descriptionId = useId()
+  const titleId =
+    useId()
+
+  const descriptionId =
+    useId()
 
   const [
     imageSource,
     setImageSource,
-  ] = useState<string | null>(null)
+  ] =
+    useState<
+      string | null
+    >(
+      null
+    )
 
   const [
     hasUsedImageFallback,
     setHasUsedImageFallback,
-  ] = useState(false)
+  ] =
+    useState(
+      false
+    )
 
   const [
     localGenerating,
     setLocalGenerating,
-  ] = useState(false)
+  ] =
+    useState(
+      false
+    )
 
   const [
     localGenerateError,
     setLocalGenerateError,
-  ] = useState<string | null>(null)
+  ] =
+    useState<
+      string | null
+    >(
+      null
+    )
 
-  const timezone = useMemo(
-    () => getCityTimezone(city),
-    [city]
-  )
+  const isCreatorExplorationMap =
+    interactionContext ===
+    'creator-exploration-map'
 
-  const resolvedNow = useMemo(
+  const timezone =
+    useMemo(
+      () =>
+        getCityTimezone(
+          city
+        ),
+      [
+        city,
+      ]
+    )
+
+  const resolvedNow =
+    useMemo(
+      () =>
+        nowForCity ??
+        LuxonDateTime
+          .now()
+          .setZone(
+            timezone
+          ),
+      [
+        nowForCity,
+        timezone,
+      ]
+    )
+
+  const image =
+  useMemo(
     () =>
-      nowForCity ??
-      LuxonDateTime.now().setZone(
-        timezone
-      ),
+      venue
+        ? getPrimaryImage(
+            venue,
+            {
+              preferCanonicalCover:
+                isCreatorExplorationMap,
+            }
+          )
+        : {
+            primary:
+              null,
+
+            fallback:
+              null,
+          },
     [
-      nowForCity,
-      timezone,
+      venue,
+      isCreatorExplorationMap,
     ]
   )
 
-  const image = useMemo(
-    () =>
-      venue
-        ? getPrimaryImage(venue)
-        : {
-            primary: null,
-            fallback: null,
-          },
-    [venue]
-  )
+  useEffect(
+  () => {
+    setImageSource(
+      image.primary
+    )
 
-  useEffect(() => {
-    setImageSource(image.primary)
-    setHasUsedImageFallback(false)
-    setLocalGenerateError(null)
-    setLocalGenerating(false)
-  }, [
+    setHasUsedImageFallback(
+      false
+    )
+
+    setLocalGenerateError(
+      null
+    )
+
+    setLocalGenerating(
+      false
+    )
+  },
+  [
     venue?.id,
     venue?.slug,
+    venue?.cover,
     image.primary,
-  ])
+    image.fallback,
+  ]
+)
 
-  const isOpen = useMemo(
-    () =>
-      venue
-        ? isVenueOpenNow(
-            venue,
-            resolvedNow
-          )
-        : false,
-    [
-      venue,
-      resolvedNow,
-    ]
-  )
+  const isOpen =
+    useMemo(
+      () =>
+        venue
+          ? isVenueOpenNow(
+              venue,
+              resolvedNow
+            )
+          : false,
+      [
+        venue,
+        resolvedNow,
+      ]
+    )
 
-  const vibeLabel = useMemo(
-    () =>
-      venue
-        ? formatListValue(
-            venue.vibe
-          )
-        : '',
-    [venue]
-  )
+  const vibeLabel =
+    useMemo(
+      () =>
+        venue
+          ? formatListValue(
+              venue.vibe
+            )
+          : '',
+      [
+        venue,
+      ]
+    )
 
-
-  const todayHours = useMemo(
-    () =>
-      venue
-        ? getTodayHours(
-            venue,
-            resolvedNow
-          )
-        : null,
-    [
-      venue,
-      resolvedNow,
-    ]
-  )
+  const todayHours =
+    useMemo(
+      () =>
+        venue
+          ? getTodayHours(
+              venue,
+              resolvedNow
+            )
+          : null,
+      [
+        venue,
+        resolvedNow,
+      ]
+    )
 
   const upcomingEvents =
-    useMemo<UpcomingEvent[]>(() => {
-      const nowMillis =
-        resolvedNow.toMillis()
+    useMemo<
+      UpcomingEvent[]
+    >(
+      () => {
+        const nowMillis =
+          resolvedNow.toMillis()
 
-      return events
-        .map(
-          (
-            event
-          ): UpcomingEvent | null => {
-            const startsAt =
-              LuxonDateTime.fromISO(
-                event.starts_at,
-                {
-                  setZone: true,
-                }
-              ).setZone(timezone)
+        return events
+          .map(
+            (
+              event
+            ):
+              | UpcomingEvent
+              | null => {
+              const startsAt =
+                LuxonDateTime
+                  .fromISO(
+                    event.starts_at,
+                    {
+                      setZone:
+                        true,
+                    }
+                  )
+                  .setZone(
+                    timezone
+                  )
 
-            if (!startsAt.isValid) {
-              return null
+              if (
+                !startsAt.isValid
+              ) {
+                return null
+              }
+
+              return {
+                event,
+                startsAt,
+              }
             }
+          )
+          .filter(
+            (
+              item
+            ): item is UpcomingEvent => {
+              if (
+                item ===
+                null
+              ) {
+                return false
+              }
 
-            return {
-              event,
-              startsAt,
+              return (
+                item.startsAt.toMillis() >=
+                nowMillis
+              )
             }
-          }
-        )
-        .filter(
-          (
-            item
-          ): item is UpcomingEvent => {
-            if (item === null) {
-              return false
-            }
+          )
+          .sort(
+            (
+              first,
+              second
+            ) =>
+              first.startsAt.toMillis() -
+              second.startsAt.toMillis()
+          )
+          .slice(
+            0,
+            3
+          )
+      },
+      [
+        events,
+        resolvedNow,
+        timezone,
+      ]
+    )
 
-            return (
-              item.startsAt.toMillis() >=
-              nowMillis
-            )
-          }
-        )
-        .sort(
-          (first, second) =>
-            first.startsAt.toMillis() -
-            second.startsAt.toMillis()
-        )
-        .slice(0, 3)
-    }, [
-      events,
-      resolvedNow,
-      timezone,
-    ])
-
-  if (!venue) {
+  if (
+    !venue
+  ) {
     return null
   }
 
@@ -330,14 +578,19 @@ export default function VenuePreviewSheet({
     localGenerateError
 
   const canGenerateFlow =
-    Boolean(onGenerateFlow) &&
+    Boolean(
+      onGenerateFlow
+    ) &&
     !isGenerating
 
   const favoritableVenue =
     venue.id
-      ? (venue as Venue & {
-          id: string
-        })
+      ? (
+          venue as
+            Venue & {
+              id: string
+            }
+        )
       : null
 
   const handleGenerateFlow =
@@ -349,14 +602,24 @@ export default function VenuePreviewSheet({
         return
       }
 
-      setLocalGenerating(true)
-      setLocalGenerateError(null)
+      setLocalGenerating(
+        true
+      )
+
+      setLocalGenerateError(
+        null
+      )
 
       try {
-        await onGenerateFlow(venue)
-      } catch (error) {
+        await onGenerateFlow(
+          venue
+        )
+      } catch (
+        error
+      ) {
         const message =
-          error instanceof Error
+          error instanceof
+          Error
             ? error.message
             : 'Could not build a Flow from this venue.'
 
@@ -364,9 +627,356 @@ export default function VenuePreviewSheet({
           message
         )
       } finally {
-        setLocalGenerating(false)
+        setLocalGenerating(
+          false
+        )
       }
     }
+
+  /**
+ * Creator Exploration Map previews deliberately expose only:
+ *
+ * - the Creator explored badge
+ * - the canonical venue cover image
+ * - the venue name
+ * - a link to the canonical venue profile
+ *
+ * All default venue details and actions remain untouched for
+ * every other map context.
+ */
+if (
+  isCreatorExplorationMap
+) {
+  return (
+    <div
+      className="
+        pointer-events-none
+        fixed
+        inset-x-0
+        bottom-0
+        z-[1100]
+        flex
+        justify-center
+        px-3
+        pb-[max(0.75rem,env(safe-area-inset-bottom))]
+        md:inset-x-auto
+        md:right-4
+        md:w-[380px]
+        md:px-0
+        md:pb-4
+      "
+    >
+      <section
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby={
+          titleId
+        }
+        aria-describedby={
+          descriptionId
+        }
+        data-roam-map-context={
+          interactionContext
+        }
+        className="
+          pointer-events-auto
+          relative
+          w-full
+          max-w-lg
+          overflow-hidden
+          rounded-[24px]
+          border
+          border-white/10
+          bg-zinc-950/[0.94]
+          text-white
+          shadow-[0_24px_80px_rgba(0,0,0,0.55)]
+          backdrop-blur-2xl
+          md:max-w-none
+        "
+      >
+        <h2
+          id={
+            titleId
+          }
+          className="sr-only"
+        >
+          {venue.name}
+        </h2>
+
+        <p
+          id={
+            descriptionId
+          }
+          className="sr-only"
+        >
+          {`${venue.name}, selected from this creator's public exploration map.`}
+        </p>
+
+        <div
+          className="
+            flex
+            justify-center
+            pb-1
+            pt-2
+            md:hidden
+          "
+          aria-hidden="true"
+        >
+          <span className="h-1 w-10 rounded-full bg-white/20" />
+        </div>
+
+        <button
+          type="button"
+          onClick={
+            onClose
+          }
+          aria-label="Close venue preview"
+          className="
+            absolute
+            right-3
+            top-3
+            z-20
+            grid
+            h-9
+            w-9
+            place-items-center
+            rounded-full
+            border
+            border-white/10
+            bg-black/55
+            text-lg
+            font-medium
+            text-white
+            shadow-lg
+            backdrop-blur-md
+            transition
+            hover:bg-black/75
+            focus-visible:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-cyan-300
+          "
+        >
+          ×
+        </button>
+
+        {imageSource ? (
+          <div className="relative h-48 w-full overflow-hidden md:h-52">
+            <img
+              src={
+                imageSource
+              }
+              alt=""
+              width={
+                760
+              }
+              height={
+                416
+              }
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+              onError={
+                () => {
+                  if (
+                    image.fallback &&
+                    !hasUsedImageFallback
+                  ) {
+                    setHasUsedImageFallback(
+                      true
+                    )
+
+                    setImageSource(
+                      image.fallback
+                    )
+
+                    return
+                  }
+
+                  setImageSource(
+                    null
+                  )
+                }
+              }
+            />
+
+            <div
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                bg-gradient-to-t
+                from-zinc-950
+                via-transparent
+                to-black/25
+              "
+            />
+
+            <div
+              className="
+                absolute
+                inset-x-0
+                bottom-0
+                z-10
+                space-y-2
+                px-4
+                pb-4
+                pr-16
+              "
+            >
+              <span
+                className="
+                  inline-flex
+                  rounded-full
+                  border
+                  border-cyan-300/30
+                  bg-zinc-950/85
+                  px-3
+                  py-1.5
+                  text-[11px]
+                  font-bold
+                  text-cyan-200
+                  shadow-lg
+                  backdrop-blur-xl
+                "
+              >
+                Creator explored
+              </span>
+
+              <p
+                aria-hidden="true"
+                className="
+                  line-clamp-2
+                  text-xl
+                  font-black
+                  leading-tight
+                  tracking-tight
+                  text-white
+                  drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]
+                  md:text-2xl
+                "
+              >
+                {venue.name}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="
+              relative
+              flex
+              h-32
+              items-end
+              bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_45%),#09090b]
+              p-4
+            "
+          >
+            <div className="space-y-2 pr-12">
+              <span
+                className="
+                  inline-flex
+                  rounded-full
+                  border
+                  border-cyan-300/30
+                  bg-zinc-950/85
+                  px-3
+                  py-1.5
+                  text-[11px]
+                  font-bold
+                  text-cyan-200
+                  shadow-lg
+                  backdrop-blur-xl
+                "
+              >
+                Creator explored
+              </span>
+
+              <p
+                aria-hidden="true"
+                className="
+                  line-clamp-2
+                  text-xl
+                  font-black
+                  leading-tight
+                  tracking-tight
+                  text-white
+                  md:text-2xl
+                "
+              >
+                {venue.name}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="p-3">
+          {venue.id ? (
+            <Link
+              href={`/venue-profile/${encodeURIComponent(
+                venue.id
+              )}`}
+              onClick={
+                () =>
+                  onViewVenue?.(
+                    venue
+                  )
+              }
+              className="
+                flex
+                min-h-12
+                w-full
+                items-center
+                justify-center
+                rounded-2xl
+                border
+                border-cyan-300/25
+                bg-cyan-300/10
+                px-4
+                py-3
+                text-center
+                text-sm
+                font-bold
+                text-cyan-100
+                transition
+                hover:border-cyan-300/45
+                hover:bg-cyan-300/15
+                hover:text-white
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-cyan-300
+                focus-visible:ring-offset-2
+                focus-visible:ring-offset-zinc-950
+              "
+            >
+              View venue
+            </Link>
+          ) : (
+            <div
+              aria-disabled="true"
+              className="
+                flex
+                min-h-12
+                w-full
+                items-center
+                justify-center
+                rounded-2xl
+                border
+                border-white/10
+                bg-white/[0.04]
+                px-4
+                py-3
+                text-sm
+                font-semibold
+                text-zinc-500
+              "
+            >
+              Venue profile unavailable
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  )
+}
 
   return (
     <div
@@ -390,9 +1000,14 @@ export default function VenuePreviewSheet({
       <section
         role="dialog"
         aria-modal="false"
-        aria-labelledby={titleId}
+        aria-labelledby={
+          titleId
+        }
         aria-describedby={
           descriptionId
+        }
+        data-roam-map-context={
+          interactionContext
         }
         className="
           pointer-events-auto
@@ -410,6 +1025,15 @@ export default function VenuePreviewSheet({
           md:max-w-none
         "
       >
+        <p
+          id={
+            descriptionId
+          }
+          className="sr-only"
+        >
+          {`Venue details for ${venue.name}.`}
+        </p>
+
         <div
           className="
             flex
@@ -425,7 +1049,9 @@ export default function VenuePreviewSheet({
 
         <button
           type="button"
-          onClick={onClose}
+          onClick={
+            onClose
+          }
           aria-label="Close venue preview"
           className="
             absolute
@@ -465,31 +1091,41 @@ export default function VenuePreviewSheet({
           {imageSource && (
             <div className="relative h-40 w-full overflow-hidden md:h-44">
               <img
-                src={imageSource}
+                src={
+                  imageSource
+                }
                 alt=""
-                width={760}
-                height={352}
+                width={
+                  760
+                }
+                height={
+                  352
+                }
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-cover"
-                onError={() => {
-                  if (
-                    image.fallback &&
-                    !hasUsedImageFallback
-                  ) {
-                    setHasUsedImageFallback(
-                      true
-                    )
+                onError={
+                  () => {
+                    if (
+                      image.fallback &&
+                      !hasUsedImageFallback
+                    ) {
+                      setHasUsedImageFallback(
+                        true
+                      )
+
+                      setImageSource(
+                        image.fallback
+                      )
+
+                      return
+                    }
 
                     setImageSource(
-                      image.fallback
+                      null
                     )
-
-                    return
                   }
-
-                  setImageSource(null)
-                }}
+                }
               />
 
               <div
@@ -529,7 +1165,9 @@ export default function VenuePreviewSheet({
 
                 {venue.price && (
                   <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-zinc-300">
-                    {venue.price}
+                    {
+                      venue.price
+                    }
                   </span>
                 )}
 
@@ -542,7 +1180,9 @@ export default function VenuePreviewSheet({
               </div>
 
               <h2
-                id={titleId}
+                id={
+                  titleId
+                }
                 className="
                   text-xl
                   font-black
@@ -552,9 +1192,10 @@ export default function VenuePreviewSheet({
                   md:text-2xl
                 "
               >
-                {venue.name}
+                {
+                  venue.name
+                }
               </h2>
-
             </header>
 
             {(todayHours ||
@@ -578,7 +1219,9 @@ export default function VenuePreviewSheet({
                     </span>
 
                     <span className="text-right font-medium text-zinc-100">
-                      {todayHours}
+                      {
+                        todayHours
+                      }
                     </span>
                   </div>
                 )}
@@ -590,7 +1233,9 @@ export default function VenuePreviewSheet({
                     </span>
 
                     <span className="max-w-[68%] text-right font-medium text-zinc-100">
-                      {vibeLabel}
+                      {
+                        vibeLabel
+                      }
                     </span>
                   </div>
                 )}
@@ -619,7 +1264,9 @@ export default function VenuePreviewSheet({
                       startsAt,
                     }) => (
                       <li
-                        key={event.id}
+                        key={
+                          event.id
+                        }
                         className="flex items-start gap-3 text-sm"
                       >
                         <time
@@ -644,7 +1291,9 @@ export default function VenuePreviewSheet({
                         </time>
 
                         <span className="pt-0.5 font-medium leading-5 text-zinc-200">
-                          {event.title}
+                          {
+                            event.title
+                          }
                         </span>
                       </li>
                     )
@@ -656,9 +1305,11 @@ export default function VenuePreviewSheet({
             <div className="space-y-2">
               <button
                 type="button"
-                onClick={() => {
-                  void handleGenerateFlow()
-                }}
+                onClick={
+                  () => {
+                    void handleGenerateFlow()
+                  }
+                }
                 disabled={
                   !canGenerateFlow
                 }
@@ -703,10 +1354,11 @@ export default function VenuePreviewSheet({
                 {venue.id ? (
                   <Link
                     href={`/venue-profile/${venue.id}`}
-                    onClick={() =>
-                      onViewVenue?.(
-                        venue
-                      )
+                    onClick={
+                      () =>
+                        onViewVenue?.(
+                          venue
+                        )
                     }
                     className="
                       flex
@@ -793,7 +1445,9 @@ export default function VenuePreviewSheet({
                     text-rose-200
                   "
                 >
-                  {resolvedGenerateError}
+                  {
+                    resolvedGenerateError
+                  }
                 </p>
               )}
             </div>

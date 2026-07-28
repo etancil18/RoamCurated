@@ -23,6 +23,10 @@ import {
   getClusterLabel,
 } from '@/lib/maps/clustering'
 
+export type VenueClusterMarkerInteractionContext =
+  | 'default'
+  | 'creator-exploration-map'
+
 export type VenueClusterMarkerProps = {
   cluster: VenueCluster
 
@@ -61,6 +65,19 @@ export type VenueClusterMarkerProps = {
     number,
     number,
   ]
+
+  /**
+   * Identifies the surface that owns this cluster marker.
+   *
+   * Creator Exploration Map callers should pass:
+   *
+   *   interactionContext="creator-exploration-map"
+   *
+   * Existing callers may omit this prop and retain the current
+   * visual and interaction behavior.
+   */
+  interactionContext?:
+    VenueClusterMarkerInteractionContext
 
   zIndexOffset?: number
   className?: string
@@ -145,10 +162,15 @@ export default function VenueClusterMarker({
   disableDefaultExpansion = false,
   paddingTopLeft = [56, 96],
   paddingBottomRight = [56, 112],
+  interactionContext = 'default',
   zIndexOffset,
   className,
 }: VenueClusterMarkerProps) {
   const map = useMap()
+
+  const isCreatorExplorationMap =
+    interactionContext ===
+    'creator-exploration-map'
 
   const isSelected =
     selected ||
@@ -222,12 +244,19 @@ export default function VenueClusterMarker({
             'roam-cluster-marker--route',
           cluster.hasSearchMatch &&
             'roam-cluster-marker--search',
+          isCreatorExplorationMap &&
+            'roam-cluster-marker--creator-exploration',
           className
         )
 
       const safeLabel =
         escapeHtml(
           accessibleLabel
+        )
+
+      const safeInteractionContext =
+        escapeHtml(
+          interactionContext
         )
 
       return L.divIcon({
@@ -244,6 +273,7 @@ export default function VenueClusterMarker({
             role="button"
             aria-label="${safeLabel}"
             title="${safeLabel}"
+            data-roam-map-context="${safeInteractionContext}"
           >
             <span
               class="roam-cluster-marker__halo"
@@ -319,6 +349,8 @@ export default function VenueClusterMarker({
       cluster.hasRouteVenue,
       cluster.hasSearchMatch,
       cluster.liveEventCount,
+      interactionContext,
+      isCreatorExplorationMap,
       isSelected,
       safeScale,
     ])
@@ -469,6 +501,7 @@ export default function VenueClusterMarker({
       eventHandlers={{
         click:
           handleExpand,
+
         keydown: (
           event: any
         ) => {
@@ -498,7 +531,9 @@ export default function VenueClusterMarker({
         <div className="min-w-[132px] text-center">
           <strong className="block text-xs font-black">
             {cluster.count}{' '}
-            curated places
+            {isCreatorExplorationMap
+              ? 'explored places'
+              : 'curated places'}
           </strong>
 
           {cluster.liveEventCount >
