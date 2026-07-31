@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 const SNAPSHOT_BUCKET = 'flow-snapshots'
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024
@@ -373,6 +374,27 @@ export async function POST(request: Request) {
           previousFileDeleteError
         )
       }
+    }
+
+    if (
+      snapshot.visibility ===
+      'public'
+    ) {
+      await safelyRefreshCreatorReputation(
+        user.id,
+        {
+          mutation:
+            existingSnapshot
+              ? 'public_flow_snapshot_updated'
+              : 'public_flow_snapshot_created',
+
+          rankingRefreshMode:
+            'affected',
+
+          calculatedAt:
+            now,
+        }
+      )
     }
 
     return NextResponse.json(

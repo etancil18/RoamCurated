@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 const SNAPSHOT_BUCKET = 'flow-snapshots'
 const ALLOWED_VISIBILITIES = new Set(['public', 'private'])
@@ -290,6 +291,23 @@ export async function PATCH(
       )
     }
 
+    await safelyRefreshCreatorReputation(
+      user.id,
+      {
+        mutation:
+          visibility === 'public'
+            ? 'flow_snapshot_published'
+            : 'flow_snapshot_unpublished',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          snapshot.updated_at ??
+          new Date().toISOString(),
+      }
+    )
+
     return NextResponse.json(
       {
         snapshot,
@@ -352,7 +370,8 @@ export async function DELETE(
           user_id,
           source_type,
           source_id,
-          cover_image_url
+          cover_image_url,
+          visibility
         `)
         .eq('id', snapshotId)
         .eq('user_id', user.id)
@@ -362,6 +381,7 @@ export async function DELETE(
           source_type: string
           source_id: string
           cover_image_url: string | null
+          visibility: SnapshotVisibility
         }>()
 
     if (snapshotError) {
@@ -398,6 +418,19 @@ export async function DELETE(
       return NextResponse.json(
         { error: 'Failed to delete snapshot.' },
         { status: 500 }
+      )
+    }
+
+    if (snapshot.visibility === 'public') {
+      await safelyRefreshCreatorReputation(
+        user.id,
+        {
+          mutation:
+            'public_flow_snapshot_deleted',
+
+          rankingRefreshMode:
+            'affected',
+        }
       )
     }
 

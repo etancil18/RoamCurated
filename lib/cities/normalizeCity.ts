@@ -1,101 +1,187 @@
 // lib/cities/normalizeCity.ts
 
-const CITY_ALIASES: Record<string, string> = {
-  atl: 'atl',
-  atlanta: 'atl',
-  'atlanta ga': 'atl',
+import {
+  CITY_CONFIGS,
+} from '@/config/cities'
 
-  nyc: 'nyc',
-  'new york': 'nyc',
-  'new york city': 'nyc',
-  manhattan: 'nyc',
+const CITY_ALIASES:
+  Record<
+    string,
+    string
+  > = {
+  atl:
+    'atl',
+  atlanta:
+    'atl',
+  'atlanta ga':
+    'atl',
+  'atlanta georgia':
+    'atl',
 
-  porto: 'porto',
-  oporto: 'porto',
+  nyc:
+    'nyc',
+  'new york':
+    'nyc',
+  'new york city':
+    'nyc',
+  manhattan:
+    'nyc',
 
-  lisbon: 'lisbon',
-  lisboa: 'lisbon',
+  la:
+    'la',
+  'los angeles':
+    'la',
+  hollywood:
+    'la',
+  weho:
+    'la',
+  'west hollywood':
+    'la',
 
-  london: 'london',
-  londres: 'london',
+  mia:
+    'mia',
+  miami:
+    'mia',
+  'miami fl':
+    'mia',
+  'miami florida':
+    'mia',
 
-  la: 'la',
-  'los angeles': 'la',
-  hollywood: 'la',
-  weho: 'la',
-  'west hollywood': 'la',
+  london:
+    'london',
+  londres:
+    'london',
+
+  lisbon:
+    'lisbon',
+  lisboa:
+    'lisbon',
+
+  porto:
+    'porto',
+  oporto:
+    'porto',
+
+  rome:
+    'rome',
+  roma:
+    'rome',
+
+  paris:
+    'paris',
 }
 
-export const SUPPORTED_CITIES = [
-  {
-    value: 'atl',
-    label: 'Atlanta',
-  },
-  {
-    value: 'nyc',
-    label: 'New York City',
-  },
-  {
-    value: 'porto',
-    label: 'Porto',
-  },
-  {
-    value: 'lisbon',
-    label: 'Lisbon',
-  },
-  {
-    value: 'london',
-    label: 'London',
-  },
-  {
-    value: 'la',
-    label: 'Los Angeles',
-  },
-] as const
-
 export type SupportedCityKey =
-  (typeof SUPPORTED_CITIES)[number]['value']
+  keyof typeof CITY_CONFIGS
+
+export const SUPPORTED_CITIES =
+  Object.entries(
+    CITY_CONFIGS
+  ).map(
+    ([
+      value,
+      city,
+    ]) => ({
+      value:
+        value as SupportedCityKey,
+
+      label:
+        city.name,
+    })
+  )
 
 export function normalizeCityKey(
-  input?: string | null
+  input?:
+    string | null
 ): string {
-  const raw = (input ?? '')
-    .trim()
-    .toLowerCase()
+  const raw =
+    normalizeCityInput(
+      input
+    )
 
-  return CITY_ALIASES[raw] ?? raw
+  if (
+    !raw
+  ) {
+    return ''
+  }
+
+  return (
+    CITY_ALIASES[
+      raw
+    ] ??
+    raw
+  )
 }
 
 export function isSupportedCityKey(
-  input: unknown
+  input:
+    unknown
 ): input is SupportedCityKey {
-  if (typeof input !== 'string') {
+  if (
+    typeof input !==
+      'string'
+  ) {
     return false
   }
 
   const normalized =
-    normalizeCityKey(input)
+    normalizeCityKey(
+      input
+    )
 
-  return SUPPORTED_CITIES.some(
-    (city) =>
-      city.value === normalized
-  )
+  return normalized in
+    CITY_CONFIGS
 }
 
 export function getCityLabel(
-  input?: string | null
+  input?:
+    string | null
 ): string | null {
   const normalized =
-    normalizeCityKey(input)
+    normalizeCityKey(
+      input
+    )
 
-  if (!normalized) {
+  if (
+    !normalized
+  ) {
     return null
   }
 
+  if (
+    isSupportedCityKey(
+      normalized
+    )
+  ) {
+    return (
+      CITY_CONFIGS[
+        normalized
+      ]?.name ??
+      normalized
+    )
+  }
+
+  return normalized
+}
+
+function normalizeCityInput(
+  input?:
+    string | null
+): string {
   return (
-    SUPPORTED_CITIES.find(
-      (city) =>
-        city.value === normalized
-    )?.label ?? normalized
+    input ??
+    ''
   )
+    .trim()
+    .toLocaleLowerCase(
+      'en-US'
+    )
+    .replace(
+      /[.,]/g,
+      ' '
+    )
+    .replace(
+      /\s+/g,
+      ' '
+    )
 }

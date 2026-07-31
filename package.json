@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "reputation:rebuild-venues": "tsx scripts/rebuild-venue-reputation-categories.ts",
+    "reputation:rebuild-creators": "tsx scripts/rebuild-all-creator-reputation.ts --skip-rankings",
+    "reputation:rebuild-rankings": "tsx scripts/rebuild-reputation-rankings.ts",
+    "reputation:rebuild-all": "npm run reputation:rebuild-venues && npm run reputation:rebuild-creators && npm run reputation:rebuild-rankings"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",

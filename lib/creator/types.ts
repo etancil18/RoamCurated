@@ -1,3 +1,8 @@
+import type {
+  PublicCreatorCategoryReputation,
+  PublicReputationLevel,
+} from '@/lib/reputation/publicTypes'
+
 /**
  * Shared Creator Mode domain types.
  *
@@ -317,16 +322,27 @@ export type CreatorAuthorityStats = {
 }
 
 /**
- * Optional future expansion for richer local authority.
+ * Optional expansion for richer local authority and earned
+ * reputation.
  *
- * These fields should only be populated after the underlying
- * venue geography/category data is reliable.
+ * These fields remain optional during rollout so existing
+ * loaders, components, and cached payloads remain compatible.
+ *
+ * Geographic fields should only be populated when the
+ * underlying venue geography is reliable.
  */
 export type ExtendedCreatorAuthorityStats =
   CreatorAuthorityStats & {
     cityCount?: number
     neighborhoodCount?: number
     topCategories?: string[]
+
+    reputationTier?: PublicReputationLevel
+    reputationScore?: number
+    primaryCityRank?: number
+    primaryCityPercentile?: number
+    topCategoryStatuses?:
+      PublicCreatorCategoryReputation[]
   }
 
 /* =========================================================

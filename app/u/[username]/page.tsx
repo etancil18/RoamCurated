@@ -6,7 +6,6 @@ import CreatorCollaborationTags from '@/components/public-profile/creator/Creato
 import CreatorExplorationMapDynamic from '@/components/public-profile/creator/CreatorExplorationMapDynamic'
 import CreatorFeaturedCollections from '@/components/public-profile/creator/CreatorFeaturedCollections'
 import CreatorHero from '@/components/public-profile/creator/CreatorHero'
-import CreatorSocialLinks from '@/components/public-profile/creator/CreatorSocialLinks'
 import FollowButton from '@/components/profile/FollowButton'
 import ShareProfileButton from '@/components/profile/ShareProfileButton'
 
@@ -20,6 +19,9 @@ import {
 import {
   safelyLoadPublicCreatorMap,
 } from '@/lib/creator/safelyLoadPublicCreatorMap'
+import {
+  safelyLoadPublicCreatorReputation,
+} from '@/lib/reputation/safelyLoadPublicCreatorReputation'
 import { createServerClient } from '@/lib/supabase/server'
 
 import type {
@@ -88,6 +90,31 @@ type PublicFlowSnapshotRow = {
   visibility: 'public'
   created_at: string
 }
+
+type PublicCreatorReputationResult =
+  Awaited<
+    ReturnType<
+      typeof safelyLoadPublicCreatorReputation
+    >
+  >
+
+type CreatorProfileSectionId =
+  | 'overview'
+  | 'places'
+  | 'reputation'
+  | 'guides'
+  | 'moments'
+  | 'taste'
+
+type CreatorProfileNavigationItem = {
+  id: CreatorProfileSectionId
+  label: string
+  visible: boolean
+}
+
+/* =========================================================
+ * Page
+ * ======================================================= */
 
 export default async function PublicUserProfilePage({
   params,
@@ -186,16 +213,31 @@ export default async function PublicUserProfilePage({
         })
       : Promise.resolve(null)
 
+  const creatorReputationPromise =
+    creatorModeRequested
+      ? loadPublicCreatorReputationSafely({
+          userId: profile.id,
+        })
+      : Promise.resolve(null)
+
   const publicCreatorCollectionCountPromise =
     creatorModeRequested
       ? supabase
-          .from('creator_collections')
+          .from(
+            'creator_collections'
+          )
           .select('id', {
             count: 'exact',
             head: true,
           })
-          .eq('user_id', profile.id)
-          .eq('visibility', 'public')
+          .eq(
+            'user_id',
+            profile.id
+          )
+          .eq(
+            'visibility',
+            'public'
+          )
       : Promise.resolve({
           count: 0,
           error: null,
@@ -210,6 +252,7 @@ export default async function PublicUserProfilePage({
     snapshotResult,
     creatorBundle,
     creatorMap,
+    creatorReputationResult,
     publicCreatorCollectionCountResult,
   ] = await Promise.all([
     supabase
@@ -218,7 +261,10 @@ export default async function PublicUserProfilePage({
         count: 'exact',
         head: true,
       })
-      .eq('following_id', profile.id),
+      .eq(
+        'following_id',
+        profile.id
+      ),
 
     supabase
       .from('user_follows')
@@ -226,13 +272,19 @@ export default async function PublicUserProfilePage({
         count: 'exact',
         head: true,
       })
-      .eq('follower_id', profile.id),
+      .eq(
+        'follower_id',
+        profile.id
+      ),
 
     user && !isOwnProfile
       ? supabase
           .from('user_follows')
           .select('id')
-          .eq('follower_id', user.id)
+          .eq(
+            'follower_id',
+            user.id
+          )
           .eq(
             'following_id',
             profile.id
@@ -244,7 +296,9 @@ export default async function PublicUserProfilePage({
         }),
 
     supabase
-      .from('profile_public_stats')
+      .from(
+        'profile_public_stats'
+      )
       .select(`
         hosted_crawls,
         joined_crawls,
@@ -263,7 +317,10 @@ export default async function PublicUserProfilePage({
         passport_progress_percent,
         updated_at
       `)
-      .eq('user_id', profile.id)
+      .eq(
+        'user_id',
+        profile.id
+      )
       .maybeSingle<ProfilePublicStatsRow>(),
 
     profile.show_social_groups === false
@@ -279,10 +336,15 @@ export default async function PublicUserProfilePage({
             count: 'exact',
             head: true,
           })
-          .eq('user_id', profile.id),
+          .eq(
+            'user_id',
+            profile.id
+          ),
 
     supabase
-      .from('flow_snapshots' as any)
+      .from(
+        'flow_snapshots' as any
+      )
       .select(`
         id,
         title,
@@ -297,16 +359,27 @@ export default async function PublicUserProfilePage({
         visibility,
         created_at
       `)
-      .eq('user_id', profile.id)
-      .eq('visibility', 'public')
-      .order('created_at', {
-        ascending: false,
-      })
+      .eq(
+        'user_id',
+        profile.id
+      )
+      .eq(
+        'visibility',
+        'public'
+      )
+      .order(
+        'created_at',
+        {
+          ascending: false,
+        }
+      )
       .limit(9),
 
     creatorBundlePromise,
 
     creatorMapPromise,
+
+    creatorReputationPromise,
 
     publicCreatorCollectionCountPromise,
   ])
@@ -436,28 +509,103 @@ export default async function PublicUserProfilePage({
       })
     : null
 
+  const creatorReputation =
+    creatorReputationResult?.found === true
+      ? creatorReputationResult.reputation
+      : null
+
+  const hasTasteProfile =
+    (
+      profile.preferred_vibes
+        ?.length ??
+      0
+    ) >
+      0 ||
+    (
+      profile.interest_categories
+        ?.length ??
+      0
+    ) >
+      0
+
+  const hasFeaturedCollections =
+    isCreator &&
+    creatorBundle.featuredCollections
+      .length > 0
+
+  const creatorNavigationItems:
+    CreatorProfileNavigationItem[] =
+    isCreator
+      ? [
+          {
+            id: 'overview',
+            label: 'Overview',
+            visible: true,
+          },
+          {
+            id: 'places',
+            label: 'Places',
+            visible:
+              creatorMap !== null,
+          },
+          {
+            id: 'reputation',
+            label: 'Reputation',
+            visible:
+              creatorReputation !==
+              null,
+          },
+          {
+            id: 'guides',
+            label: 'Guides',
+            visible:
+              hasFeaturedCollections,
+          },
+          {
+            id: 'moments',
+            label: 'Moments',
+            visible:
+              snapshots.length > 0,
+          },
+          {
+            id: 'taste',
+            label: 'Taste',
+            visible:
+              hasTasteProfile,
+          },
+        ]
+      : []
+
   return (
-    <main className="min-h-screen bg-black px-4 pb-10 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white">
-      <div className="mx-auto max-w-4xl space-y-6">
-        <div className="flex flex-wrap gap-2">
-          {isOwnProfile ? (
-            <Link
-              href="/profile"
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:text-white"
-            >
-              Edit Profile
-            </Link>
-          ) : (
-            <Link
-              href="/discover"
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:text-white"
-            >
-              ← Back to Discover
-            </Link>
-          )}
+    <main className="min-h-screen bg-black px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white sm:px-6">
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            {isOwnProfile ? (
+              <Link
+                href="/profile"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:bg-neutral-900 hover:text-white"
+              >
+                Edit Profile
+              </Link>
+            ) : (
+              <Link
+                href="/discover"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:bg-neutral-900 hover:text-white"
+              >
+                <span aria-hidden="true">
+                  ←
+                </span>
+
+                Back to Discover
+              </Link>
+            )}
+          </div>
 
           <ShareProfileButton
-            username={profile.username}
+            username={
+              profile.username
+            }
             fullName={
               profile.full_name
             }
@@ -465,12 +613,20 @@ export default async function PublicUserProfilePage({
         </div>
 
         {isCreator ? (
-          <>
+          <div className="space-y-5">
             <CreatorHero
-              displayName={profile.full_name}
-              username={creatorUsername}
-              avatarUrl={profile.avatar_url}
-              headline={profile.creator_headline}
+              displayName={
+                profile.full_name
+              }
+              username={
+                creatorUsername
+              }
+              avatarUrl={
+                profile.avatar_url
+              }
+              headline={
+                profile.creator_headline
+              }
               bio={
                 creatorBundle.profile
                   .creator_bio
@@ -508,27 +664,32 @@ export default async function PublicUserProfilePage({
             />
 
             {!isOwnProfile ? (
-              <section
-                aria-label="Creator profile actions"
-                className="flex flex-wrap items-center gap-3 rounded-2xl border border-neutral-800 bg-neutral-950 p-4"
-              >
-                <FollowButton
-                  userId={profile.id}
-                  initialIsFollowing={Boolean(
+              <CreatorActionBar
+                userId={profile.id}
+                existingFollow={
+                  Boolean(
                     existingFollow
-                  )}
-                  initialFollowersCount={
-                    followersCount
-                  }
-                  disabled={!user}
-                />
-              </section>
+                  )
+                }
+                followersCount={
+                  followersCount
+                }
+                isAuthenticated={
+                  Boolean(user)
+                }
+              />
             ) : null}
-          </>
+
+            <CreatorProfileNavigation
+              items={
+                creatorNavigationItems
+              }
+            />
+          </div>
         ) : (
-          <section className="rounded-[2rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 to-black p-6">
+          <section className="rounded-[2rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 to-black p-5 sm:p-6">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 text-4xl">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 text-4xl">
                 {profile.avatar_url ? (
                   <img
                     src={
@@ -542,25 +703,26 @@ export default async function PublicUserProfilePage({
                 )}
               </div>
 
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs uppercase tracking-[0.25em] text-cyan-400">
                   Roam Passport
                 </p>
 
-                <h1 className="mt-2 text-3xl font-bold">
+                <h1 className="mt-2 break-words text-3xl font-bold">
                   {profile.full_name ??
                     profile.username}
                 </h1>
 
-                <p className="mt-1 text-sm text-neutral-400">
+                <p className="mt-1 break-words text-sm text-neutral-400">
                   @{profile.username}
+
                   {profile.home_neighborhood
                     ? ` · ${profile.home_neighborhood}`
                     : ''}
                 </p>
 
                 {profile.bio ? (
-                  <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-300">
+                  <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-6 text-neutral-300">
                     {profile.bio}
                   </p>
                 ) : null}
@@ -569,9 +731,11 @@ export default async function PublicUserProfilePage({
               {!isOwnProfile ? (
                 <FollowButton
                   userId={profile.id}
-                  initialIsFollowing={Boolean(
-                    existingFollow
-                  )}
+                  initialIsFollowing={
+                    Boolean(
+                      existingFollow
+                    )
+                  }
                   initialFollowersCount={
                     followersCount
                   }
@@ -583,7 +747,10 @@ export default async function PublicUserProfilePage({
         )}
 
         {!isCreator ? (
-          <section className="flex flex-wrap gap-2">
+          <section
+            aria-label="Profile stats"
+            className="mt-5 flex flex-wrap gap-2"
+          >
             <Stat
               label="Followers"
               value={
@@ -648,50 +815,37 @@ export default async function PublicUserProfilePage({
         ) : null}
 
         {isCreator ? (
-          <>
-            <CreatorSocialLinks
-              links={
-                creatorBundle.socialLinks
-              }
-            />
+          <div className="mt-8 space-y-12 sm:mt-10 sm:space-y-16">
+            <section
+              id="overview"
+              aria-labelledby="creator-overview-title"
+              className="scroll-mt-28 space-y-5"
+            >
+              <ProfileSectionHeading
+                id="creator-overview-title"
+                eyebrow="Creator overview"
+                title={`How ${creatorDisplayName} roams`}
+                description="A quick look at their verified activity, creative interests, and the kinds of collaborations they are open to."
+              />
 
-            <CreatorCollaborationTags
-              tags={
-                creatorBundle.collaborationTags
-              }
-            />
+              <CreatorAuthorityCard
+                authority={
+                  creatorAuthority
+                }
+              />
 
-            <CreatorAuthorityCard
-              authority={
-                creatorAuthority
-              }
-            />
-
-            {creatorMap ? (
+              {creatorMap ? (
               <section
+                id="places"
                 aria-labelledby="creator-exploration-map-title"
-                className="min-w-0"
+                className="scroll-mt-28 space-y-5"
               >
-                <div className="mb-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
-                    Local footprint
-                  </p>
-
-                  <h2
-                    id="creator-exploration-map-title"
-                    className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
-                  >
-                    Places explored by{' '}
-                    {creatorDisplayName}
-                  </h2>
-
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
-                    A public map of eligible,
-                    geo-verified Roam venue
-                    visits this creator has
-                    chosen to share.
-                  </p>
-                </div>
+                <ProfileSectionHeading
+                  id="creator-exploration-map-title"
+                  eyebrow="Places"
+                  title={`Explore ${creatorDisplayName}’s city footprint`}
+                  description="A map of eligible, geo-verified places this creator has visited and chosen to share publicly."
+                />
 
                 <CreatorExplorationMapDynamic
                   map={creatorMap}
@@ -709,123 +863,1446 @@ export default async function PublicUserProfilePage({
               </section>
             ) : null}
 
-            <CreatorFeaturedCollections
-              username={creatorUsername}
-              collections={
-                creatorBundle.featuredCollections
-              }
-            />
-          </>
-        ) : null}
+              {creatorReputation ? (
+              <section
+                id="reputation"
+                aria-labelledby="creator-earned-reputation-heading"
+                className="scroll-mt-28 space-y-5"
+              >
+                <ProfileSectionHeading
+                  id="creator-earned-reputation-heading"
+                  eyebrow="Earned reputation"
+                  title="What their Roam activity supports"
+                  description="Category statuses earned through relevant verified visits and completed activity. These are different from their total profile activity."
+                />
 
-        {snapshots.length > 0 ? (
-          <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
+                <CreatorReputationSection
+                  reputation={
+                    creatorReputation
+                  }
+                />
+              </section>
+            ) : null}
+
+              {creatorBundle
+                .collaborationTags
+                .length > 0 ? (
+                <div className="rounded-[1.75rem] border border-neutral-800 bg-neutral-950/70 p-5 sm:p-6">
+                  <div className="mb-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-400">
+                      Open to
+                    </p>
+
+                    <h3 className="mt-2 text-lg font-semibold text-white">
+                      Collaborations and
+                      creative opportunities
+                    </h3>
+
+                    <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
+                      The projects, partnerships,
+                      and experiences this creator
+                      is interested in exploring.
+                    </p>
+                  </div>
+
+                  <CreatorCollaborationTags
+                    tags={
+                      creatorBundle
+                        .collaborationTags
+                    }
+                  />
+                </div>
+              ) : null}
+            </section>
+
+            {hasFeaturedCollections ? (
+              <section
+                id="guides"
+                aria-labelledby="creator-guides-title"
+                className="scroll-mt-28 space-y-5"
+              >
+                <ProfileSectionHeading
+                  id="creator-guides-title"
+                  eyebrow="Guides"
+                  title="Curated places worth knowing"
+                  description={`Public collections assembled by ${creatorDisplayName} to help people find great places faster.`}
+                />
+
+                <CreatorFeaturedCollections
+                  username={
+                    creatorUsername
+                  }
+                  collections={
+                    creatorBundle
+                      .featuredCollections
+                  }
+                />
+              </section>
+            ) : null}
+
+            {snapshots.length > 0 ? (
+              <section
+                id="moments"
+                aria-labelledby="creator-roam-moments-title"
+                className="scroll-mt-28 space-y-5"
+              >
+                <ProfileSectionHeading
+                  id="creator-roam-moments-title"
+                  eyebrow="Recent moments"
+                  title="Roams they have completed"
+                  description="Highlights from completed routes, shared as public snapshots."
+                  trailing={
+                    `Latest ${Math.min(
+                      snapshots.length,
+                      9
+                    )}`
+                  }
+                />
+
+                <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-3">
+                  {snapshots.map(
+                    (snapshot) => (
+                      <SnapshotCard
+                        key={
+                          snapshot.id
+                        }
+                        snapshot={
+                          snapshot
+                        }
+                      />
+                    )
+                  )}
+                </div>
+              </section>
+            ) : null}
+
+            {hasTasteProfile ? (
+              <section
+                id="taste"
+                aria-labelledby="creator-taste-profile-title"
+                className="scroll-mt-28"
+              >
+                <div className="overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-cyan-950/20">
+                  <div className="border-b border-neutral-800/80 p-5 sm:p-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-400">
+                      Taste
+                    </p>
+
+                    <h2
+                      id="creator-taste-profile-title"
+                      className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+                    >
+                      Their kind of city
+                    </h2>
+
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
+                      The moods, scenes, and
+                      experiences they naturally
+                      gravitate toward.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-6 p-5 sm:grid-cols-2 sm:p-6">
+                    <ChipGroup
+                      title="Vibes"
+                      values={
+                        profile.preferred_vibes ??
+                        []
+                      }
+                    />
+
+                    <ChipGroup
+                      title="Interests"
+                      values={
+                        profile.interest_categories ??
+                        []
+                      }
+                    />
+                  </div>
+                </div>
+              </section>
+            ) : null}
+          </div>
+        ) : (
+          <>
+            {snapshots.length > 0 ? (
+              <section className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+                      Recent Roams
+                    </h2>
+
+                    <p className="mt-1 text-xs text-neutral-500">
+                      Public moments from
+                      completed Roam flows.
+                    </p>
+                  </div>
+
+                  <p className="shrink-0 text-xs text-neutral-500">
+                    Latest{' '}
+                    {Math.min(
+                      snapshots.length,
+                      9
+                    )}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-3">
+                  {snapshots.map(
+                    (snapshot) => (
+                      <SnapshotCard
+                        key={
+                          snapshot.id
+                        }
+                        snapshot={
+                          snapshot
+                        }
+                      />
+                    )
+                  )}
+                </div>
+              </section>
+            ) : null}
+
+            {hasTasteProfile ? (
+              <section className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
-                  Flow Snapshots
+                  Taste Profile
                 </h2>
 
-                <p className="mt-1 text-xs text-neutral-500">
-                  Public moments from
-                  completed Roam flows.
-                </p>
-              </div>
-
-              <p className="shrink-0 text-xs text-neutral-500">
-                Latest{' '}
-                {Math.min(
-                  snapshots.length,
-                  9
-                )}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {snapshots.map(
-                (snapshot) => (
-                  <article
-                    key={
-                      snapshot.id
+                <div className="mt-4 space-y-5">
+                  <ChipGroup
+                    title="Preferred Vibes"
+                    values={
+                      profile.preferred_vibes ??
+                      []
                     }
-                    className="group overflow-hidden rounded-2xl border border-neutral-800 bg-black"
-                  >
-                    <div className="relative aspect-square overflow-hidden bg-neutral-900">
-                      {snapshot.cover_image_url ? (
-                        <img
-                          src={
-                            snapshot.cover_image_url
-                          }
-                          alt={
-                            snapshot.title ??
-                            'Roam flow snapshot'
-                          }
-                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.28),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.22),transparent_42%),#09090b] text-4xl">
-                          🗺️
-                        </div>
-                      )}
+                  />
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-transparent" />
-
-                      <div className="absolute inset-x-0 bottom-0 p-3">
-                        <p className="line-clamp-2 text-sm font-semibold leading-tight text-white">
-                          {snapshot.title ??
-                            'Roam Flow'}
-                        </p>
-
-                        <p className="mt-1 text-[11px] text-neutral-300">
-                          {buildSnapshotMetadata(
-                            snapshot
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    {snapshot.route_summary ? (
-                      <div className="border-t border-neutral-800 px-3 py-3">
-                        <p className="line-clamp-2 text-xs leading-5 text-neutral-500">
-                          {
-                            snapshot.route_summary
-                          }
-                        </p>
-                      </div>
-                    ) : null}
-                  </article>
-                )
-              )}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
-            Taste Profile
-          </h2>
-
-          <div className="mt-4 space-y-4">
-            <ChipGroup
-              title="Preferred Vibes"
-              values={
-                profile.preferred_vibes ??
-                []
-              }
-            />
-
-            <ChipGroup
-              title="Interests"
-              values={
-                profile.interest_categories ??
-                []
-              }
-            />
-          </div>
-        </section>
+                  <ChipGroup
+                    title="Interests"
+                    values={
+                      profile.interest_categories ??
+                      []
+                    }
+                  />
+                </div>
+              </section>
+            ) : null}
+          </>
+        )}
       </div>
     </main>
   )
+}
+
+/* =========================================================
+ * Creator page navigation and structure
+ * ======================================================= */
+
+function CreatorActionBar({
+  userId,
+  existingFollow,
+  followersCount,
+  isAuthenticated,
+}: {
+  userId: string
+  existingFollow: boolean
+  followersCount: number
+  isAuthenticated: boolean
+}) {
+  return (
+    <section
+      aria-label="Creator profile actions"
+      className="flex flex-col gap-3 rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-white">
+          Keep up with this creator
+        </p>
+
+        <p className="mt-1 text-xs leading-5 text-neutral-500">
+          Follow their new guides,
+          completed Roams, and city
+          discoveries.
+        </p>
+      </div>
+
+      <div className="shrink-0">
+        <FollowButton
+          userId={userId}
+          initialIsFollowing={
+            existingFollow
+          }
+          initialFollowersCount={
+            followersCount
+          }
+          disabled={
+            !isAuthenticated
+          }
+        />
+      </div>
+    </section>
+  )
+}
+
+function CreatorProfileNavigation({
+  items,
+}: {
+  items:
+    CreatorProfileNavigationItem[]
+}) {
+  const visibleItems =
+    items.filter(
+      (item) =>
+        item.visible
+    )
+
+  if (
+    visibleItems.length <= 1
+  ) {
+    return null
+  }
+
+  return (
+    <nav
+      aria-label="Creator profile sections"
+      className="sticky top-[calc(4rem+env(safe-area-inset-top)+0.5rem)] z-20 -mx-4 border-y border-neutral-800/80 bg-black/85 px-4 py-3 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border"
+    >
+      <div className="flex min-w-0 gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {visibleItems.map(
+          (item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-xs font-semibold text-neutral-400 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            >
+              {item.label}
+            </a>
+          )
+        )}
+      </div>
+    </nav>
+  )
+}
+
+function ProfileSectionHeading({
+  id,
+  eyebrow,
+  title,
+  description,
+  trailing,
+}: {
+  id: string
+  eyebrow: string
+  title: string
+  description: string
+  trailing?: string
+}) {
+  return (
+    <div className="flex min-w-0 items-end justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
+          {eyebrow}
+        </p>
+
+        <h2
+          id={id}
+          className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+        >
+          {title}
+        </h2>
+
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
+          {description}
+        </p>
+      </div>
+
+      {trailing ? (
+        <p className="hidden shrink-0 text-xs text-neutral-600 sm:block">
+          {trailing}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function SnapshotCard({
+  snapshot,
+}: {
+  snapshot:
+    PublicFlowSnapshotRow
+}) {
+  return (
+    <article className="group min-w-0 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950/70 transition hover:border-neutral-700">
+      <div className="relative aspect-[4/5] overflow-hidden bg-neutral-900 sm:aspect-square">
+        {snapshot.cover_image_url ? (
+          <img
+            src={
+              snapshot.cover_image_url
+            }
+            alt={
+              snapshot.title ??
+              'Roam snapshot'
+            }
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.2),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.24),transparent_45%),#09090b] text-4xl">
+            🗺️
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
+
+        <div className="absolute inset-x-0 bottom-0 p-4">
+          <p className="line-clamp-2 text-base font-semibold leading-tight text-white">
+            {snapshot.title ??
+              'Roam Flow'}
+          </p>
+
+          <p className="mt-1.5 text-[11px] text-neutral-300">
+            {buildSnapshotMetadata(
+              snapshot
+            )}
+          </p>
+        </div>
+      </div>
+
+      {snapshot.route_summary ? (
+        <div className="border-t border-neutral-800 px-4 py-3">
+          <p className="line-clamp-2 text-xs leading-5 text-neutral-500">
+            {
+              snapshot.route_summary
+            }
+          </p>
+        </div>
+      ) : null}
+    </article>
+  )
+}
+
+/* =========================================================
+ * Public creator reputation presentation
+ * ======================================================= */
+
+function CreatorReputationSection({
+  reputation,
+}: {
+  reputation: unknown
+}) {
+  const normalized =
+    normalizePublicCreatorReputation(
+      reputation
+    )
+
+  if (!normalized) {
+    return null
+  }
+
+  return (
+    <section
+      aria-labelledby="creator-reputation-title"
+      className="relative min-w-0 overflow-hidden rounded-[1.75rem] border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.08] via-neutral-950 to-indigo-500/[0.08] p-5 sm:p-6"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/35 to-transparent"
+      />
+
+      <div className="relative z-10 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
+            Public identity
+          </p>
+
+          <h2
+            id="creator-reputation-title"
+            className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+          >
+            {normalized.headline ??
+              'Roam creator reputation'}
+          </h2>
+
+          
+        </div>
+
+        {normalized.highestLevel ? (
+          <span className="inline-flex w-fit shrink-0 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
+            {formatReputationLevel(
+              normalized.highestLevel
+            )}
+          </span>
+        ) : null}
+      </div>
+
+      {normalized.categories.length > 0 ? (
+        <div className="relative z-10 mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {normalized.categories.map(
+            (
+              category,
+              index
+            ) => {
+              const standing =
+                buildPublicReputationStanding(
+                  category
+                )
+
+              return (
+                <article
+                  key={
+                    category.key ??
+                    `${category.label}-${index}`
+                  }
+                  className="min-w-0 rounded-2xl border border-neutral-800 bg-black/30 p-4"
+                >
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-semibold text-white">
+                        {category.label}
+                      </p>
+
+                      <p className="mt-1 text-xs text-neutral-500">
+                        {buildPublicReputationScopeLabel(
+                          category
+                        )}
+                      </p>
+                    </div>
+
+                    {category.level ? (
+                      <span className="shrink-0 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-200">
+                        {formatReputationLevel(
+                          category.level
+                        )}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-950/70 p-3">
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
+                      Percentile standing
+                    </p>
+
+                    <p
+                      className={[
+                        'mt-1 break-words font-semibold',
+                        standing.available
+                          ? 'text-lg text-cyan-300'
+                          : 'text-sm text-neutral-400',
+                      ].join(' ')}
+                    >
+                      {standing.primary}
+                    </p>
+
+                    {standing.secondary ? (
+                      <p className="mt-1 text-[11px] leading-5 text-neutral-500">
+                        {standing.secondary}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-3 flex min-w-0 items-center justify-between gap-3 border-t border-neutral-800/80 pt-3">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                        Verified evidence
+                      </p>
+
+                      <p className="mt-1 text-xs font-medium text-neutral-300">
+                        {category.verifiedVenueCount !==
+                        null
+                          ? `${category.verifiedVenueCount.toLocaleString(
+                              'en-US'
+                            )} ${
+                              category.verifiedVenueCount ===
+                              1
+                                ? 'venue'
+                                : 'venues'
+                            }`
+                          : 'Not published'}
+                      </p>
+                    </div>
+
+                    {category.eligibleCreatorCount !==
+                    null ? (
+                      <div className="min-w-0 text-right">
+                        <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                          Compared with
+                        </p>
+
+                        <p className="mt-1 text-xs font-medium text-neutral-300">
+                          {category.eligibleCreatorCount.toLocaleString(
+                            'en-US'
+                          )}{' '}
+                          eligible{' '}
+                          {category.eligibleCreatorCount ===
+                          1
+                            ? 'creator'
+                            : 'creators'}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                </article>
+              )
+            }
+          )}
+        </div>
+      ) : null}
+
+      <p className="relative z-10 mt-4 text-[11px] leading-5 text-neutral-600">
+        Percentiles compare this creator
+        only with eligible creators in
+        the same category and geographic
+        scope. City and global standings
+        are calculated separately.
+      </p>
+    </section>
+  )
+}
+
+type NormalizedPublicCreatorReputation = {
+  headline: string | null
+  summary: string | null
+  highestLevel: string | null
+
+  categories:
+    NormalizedPublicCreatorReputationCategory[]
+}
+
+type NormalizedPublicCreatorReputationCategory = {
+  key: string | null
+
+  categoryId: string | null
+  label: string
+
+  scope:
+    | 'global'
+    | 'city'
+    | null
+
+  cityKey: string | null
+  cityLabel: string | null
+
+  level: string | null
+
+  verifiedVenueCount:
+    number | null
+
+  rank:
+    number | null
+
+  eligibleCreatorCount:
+    number | null
+
+  topPercent:
+    number | null
+
+  percentileStanding:
+    number | null
+
+  rankLabel:
+    string | null
+}
+
+type PublicReputationStanding = {
+  available: boolean
+  primary: string
+  secondary: string | null
+}
+
+function normalizePublicCreatorReputation(
+  value: unknown
+): NormalizedPublicCreatorReputation | null {
+  if (!isRecord(value)) {
+    return null
+  }
+
+  const headline =
+    nullableString(
+      value.headline
+    )
+
+  const summary =
+    nullableString(
+      value.summary
+    )
+
+  const highestLevel =
+    nullableString(
+      value.highestLevel ??
+        value.highest_level
+    )
+
+  const categories =
+    normalizePublicCreatorReputationCategories(
+      value.categories
+    )
+
+  if (
+    !headline &&
+    !summary &&
+    !highestLevel &&
+    categories.length === 0
+  ) {
+    return null
+  }
+
+  return {
+    headline,
+    summary,
+    highestLevel,
+    categories,
+  }
+}
+
+function normalizePublicCreatorReputationCategories(
+  value: unknown
+): NormalizedPublicCreatorReputationCategory[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const categories:
+    NormalizedPublicCreatorReputationCategory[] =
+    []
+
+  const seen =
+    new Set<string>()
+
+  for (const item of value) {
+    if (!isRecord(item)) {
+      continue
+    }
+
+    const nestedCategory =
+      isRecord(
+        item.category
+      )
+        ? item.category
+        : null
+
+    const nestedTier =
+      isRecord(
+        item.tier
+      )
+        ? item.tier
+        : null
+
+    const nestedLabels =
+      isRecord(
+        item.labels
+      )
+        ? item.labels
+        : null
+
+    const nestedEvidence =
+      isRecord(
+        item.evidence
+      )
+        ? item.evidence
+        : null
+
+    const nestedRanking =
+      isRecord(
+        item.ranking
+      )
+        ? item.ranking
+        : null
+
+    const categoryId =
+      nullableString(
+        item.categoryId ??
+          item.category_id ??
+          nestedCategory?.id
+      )
+
+    const label =
+      nullableString(
+        item.primaryLabel ??
+          item.primary_label ??
+          item.categoryLabel ??
+          item.category_label ??
+          item.label ??
+          nestedCategory?.label ??
+          nestedLabels?.primary
+      )
+
+    if (!label) {
+      continue
+    }
+
+    const rawScope =
+      nullableString(
+        item.scope
+      )
+
+    const scope =
+      rawScope === 'city'
+        ? 'city'
+        : rawScope === 'global'
+          ? 'global'
+          : null
+
+    const cityKey =
+      nullableString(
+        item.cityKey ??
+          item.city_key
+      )
+
+    const cityLabel =
+      nullableString(
+        item.cityLabel ??
+          item.city_label ??
+          nestedLabels?.city
+      )
+
+    const level =
+      nullableString(
+        item.reputationLevel ??
+          item.reputation_level ??
+          item.level ??
+          nestedTier?.level ??
+          nestedTier?.id
+      )
+
+    const verifiedVenueCount =
+      nullableFiniteNumber(
+        item.verifiedVenueCount ??
+          item.verified_venue_count ??
+          nestedEvidence
+            ?.verifiedVenueCount ??
+          nestedEvidence
+            ?.verified_venue_count
+      )
+
+    const rank =
+      nullablePositiveInteger(
+        item.rank ??
+          item.cityRank ??
+          item.city_rank ??
+          nestedRanking?.rank
+      )
+
+    const eligibleCreatorCount =
+      nullableNonNegativeInteger(
+        item.eligibleCreatorCount ??
+          item.eligible_creator_count ??
+          item.eligibleUserCount ??
+          item.eligible_user_count ??
+          nestedRanking
+            ?.eligibleCreatorCount ??
+          nestedRanking
+            ?.eligible_creator_count ??
+          nestedRanking
+            ?.eligibleUserCount ??
+          nestedRanking
+            ?.eligible_user_count
+      )
+
+    const explicitTopPercent =
+      nullablePercentage(
+        item.topPercent ??
+          item.top_percent ??
+          nestedRanking
+            ?.topPercent ??
+          nestedRanking
+            ?.top_percent
+      )
+
+    const explicitPercentileStanding =
+      nullablePercentage(
+        item.percentileStanding ??
+          item.percentile_standing ??
+          nestedRanking
+            ?.percentileStanding ??
+          nestedRanking
+            ?.percentile_standing
+      )
+
+    const genericPercentile =
+      nullablePercentage(
+        item.percentile ??
+          nestedRanking
+            ?.percentile
+      )
+
+    const topPercent =
+      explicitTopPercent ??
+      (
+        explicitPercentileStanding ===
+        null
+          ? genericPercentile
+          : null
+      ) ??
+      calculateTopPercentFromRank({
+        rank,
+        eligibleCreatorCount,
+      })
+
+    const percentileStanding =
+      explicitPercentileStanding
+
+    const rankLabel =
+      nullableString(
+        item.rankLabel ??
+          item.rank_label ??
+          nestedRanking?.label ??
+          nestedLabels?.rank
+      )
+
+    const keyParts = [
+      categoryId ??
+        label.toLocaleLowerCase(
+          'en-US'
+        ),
+      scope ??
+        'unknown',
+      cityKey ??
+        '__global__',
+    ]
+
+    const key =
+      keyParts.join(':')
+
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+
+    categories.push({
+      key,
+
+      categoryId,
+
+      label,
+
+      scope,
+
+      cityKey,
+
+      cityLabel,
+
+      level,
+
+      verifiedVenueCount,
+
+      rank,
+
+      eligibleCreatorCount,
+
+      topPercent,
+
+      percentileStanding,
+
+      rankLabel,
+    })
+
+    if (
+      categories.length >=
+      6
+    ) {
+      break
+    }
+  }
+
+  return categories.sort(
+    comparePublicReputationCategories
+  )
+}
+
+function comparePublicReputationCategories(
+  first:
+    NormalizedPublicCreatorReputationCategory,
+  second:
+    NormalizedPublicCreatorReputationCategory
+): number {
+  const firstHasStanding =
+    hasPublishedStanding(
+      first
+    )
+
+  const secondHasStanding =
+    hasPublishedStanding(
+      second
+    )
+
+  if (
+    firstHasStanding !==
+    secondHasStanding
+  ) {
+    return firstHasStanding
+      ? -1
+      : 1
+  }
+
+  if (
+    first.topPercent !==
+      null &&
+    second.topPercent !==
+      null &&
+    first.topPercent !==
+      second.topPercent
+  ) {
+    return (
+      first.topPercent -
+      second.topPercent
+    )
+  }
+
+  if (
+    first.rank !== null &&
+    second.rank !== null &&
+    first.rank !==
+      second.rank
+  ) {
+    return (
+      first.rank -
+      second.rank
+    )
+  }
+
+  if (
+    first.scope !==
+    second.scope
+  ) {
+    return first.scope ===
+      'city'
+      ? -1
+      : 1
+  }
+
+  return first.label.localeCompare(
+    second.label,
+    'en-US',
+    {
+      sensitivity:
+        'base',
+    }
+  )
+}
+
+function hasPublishedStanding(
+  category:
+    NormalizedPublicCreatorReputationCategory
+): boolean {
+  return (
+    category.topPercent !==
+      null ||
+    category.percentileStanding !==
+      null ||
+    category.rank !==
+      null ||
+    category.rankLabel !==
+      null
+  )
+}
+
+function buildPublicReputationStanding(
+  category:
+    NormalizedPublicCreatorReputationCategory
+): PublicReputationStanding {
+  const topPercent =
+    category.topPercent ??
+    calculateTopPercentFromRank({
+      rank:
+        category.rank,
+
+      eligibleCreatorCount:
+        category
+          .eligibleCreatorCount,
+    })
+
+  if (
+    topPercent !==
+    null
+  ) {
+    const rankContext =
+      buildRankContext(
+        category
+      )
+
+    return {
+      available:
+        true,
+
+      primary:
+        `Top ${formatPublicPercentile(
+          topPercent
+        )}%`,
+
+      secondary:
+        rankContext ??
+        category.rankLabel,
+    }
+  }
+
+  if (
+    category.percentileStanding !==
+    null
+  ) {
+    const rankContext =
+      buildRankContext(
+        category
+      )
+
+    return {
+      available:
+        true,
+
+      primary:
+        `Ahead of ${formatPublicPercentile(
+          category
+            .percentileStanding
+        )}%`,
+
+      secondary:
+        rankContext ??
+        category.rankLabel,
+    }
+  }
+
+  if (
+    category.rank !== null
+  ) {
+    return {
+      available:
+        true,
+
+      primary:
+        category.eligibleCreatorCount !==
+          null &&
+        category.eligibleCreatorCount >
+          0
+          ? `#${category.rank.toLocaleString(
+              'en-US'
+            )} of ${category.eligibleCreatorCount.toLocaleString(
+              'en-US'
+            )}`
+          : `Rank #${category.rank.toLocaleString(
+              'en-US'
+            )}`,
+
+      secondary:
+        category.rankLabel,
+    }
+  }
+
+  if (category.rankLabel) {
+    return {
+      available:
+        true,
+
+      primary:
+        category.rankLabel,
+
+      secondary:
+        null,
+    }
+  }
+
+  return {
+    available:
+      false,
+
+    primary:
+      'Standing is building',
+
+    secondary:
+      category.level
+        ? `${formatReputationLevel(
+            category.level
+          )} status earned; a comparison standing is not available yet.`
+        : 'More eligible creators are needed before a comparison can be shown.',
+  }
+}
+
+function buildRankContext(
+  category:
+    NormalizedPublicCreatorReputationCategory
+): string | null {
+  if (
+    category.rank !==
+      null &&
+    category.eligibleCreatorCount !==
+      null &&
+    category.eligibleCreatorCount >
+      0
+  ) {
+    return `#${category.rank.toLocaleString(
+      'en-US'
+    )} of ${category.eligibleCreatorCount.toLocaleString(
+      'en-US'
+    )} eligible creators`
+  }
+
+  if (
+    category.rank !==
+    null
+  ) {
+    return `Rank #${category.rank.toLocaleString(
+      'en-US'
+    )}`
+  }
+
+  if (
+    category.eligibleCreatorCount !==
+      null &&
+    category.eligibleCreatorCount >
+      0
+  ) {
+    return `Compared with ${category.eligibleCreatorCount.toLocaleString(
+      'en-US'
+    )} eligible ${
+      category.eligibleCreatorCount ===
+      1
+        ? 'creator'
+        : 'creators'
+    }`
+  }
+
+  return null
+}
+
+function buildPublicReputationScopeLabel(
+  category:
+    NormalizedPublicCreatorReputationCategory
+): string {
+  if (
+    category.scope ===
+    'city'
+  ) {
+    const city =
+      category.cityLabel ??
+      (
+        category.cityKey
+          ? formatReputationLevel(
+              category.cityKey
+            )
+          : null
+      ) ??
+      'City'
+
+    return `${city} standing`
+  }
+
+  if (
+    category.scope ===
+    'global'
+  ) {
+    return 'Global standing'
+  }
+
+  return 'Category standing'
+}
+
+function calculateTopPercentFromRank({
+  rank,
+  eligibleCreatorCount,
+}: {
+  rank:
+    number | null
+
+  eligibleCreatorCount:
+    number | null
+}): number | null {
+  if (
+    rank === null ||
+    eligibleCreatorCount ===
+      null ||
+    rank <= 0 ||
+    eligibleCreatorCount <=
+      0 ||
+    rank >
+      eligibleCreatorCount
+  ) {
+    return null
+  }
+
+  return roundPublicPercentage(
+    Math.min(
+      100,
+      (
+        rank /
+        eligibleCreatorCount
+      ) *
+        100
+    ),
+    2
+  )
+}
+
+function nullableFiniteNumber(
+  value: unknown
+): number | null {
+  if (
+    typeof value ===
+      'number' &&
+    Number.isFinite(
+      value
+    )
+  ) {
+    return value
+  }
+
+  if (
+    typeof value ===
+      'string' &&
+    value.trim().length >
+      0
+  ) {
+    const parsed =
+      Number(
+        value
+      )
+
+    return Number.isFinite(
+      parsed
+    )
+      ? parsed
+      : null
+  }
+
+  return null
+}
+
+function nullablePositiveInteger(
+  value: unknown
+): number | null {
+  const normalized =
+    nullableFiniteNumber(
+      value
+    )
+
+  if (
+    normalized === null ||
+    normalized <= 0
+  ) {
+    return null
+  }
+
+  return Math.trunc(
+    normalized
+  )
+}
+
+function nullableNonNegativeInteger(
+  value: unknown
+): number | null {
+  const normalized =
+    nullableFiniteNumber(
+      value
+    )
+
+  if (
+    normalized === null ||
+    normalized < 0
+  ) {
+    return null
+  }
+
+  return Math.trunc(
+    normalized
+  )
+}
+
+function nullablePercentage(
+  value: unknown
+): number | null {
+  const normalized =
+    nullableFiniteNumber(
+      value
+    )
+
+  if (
+    normalized === null ||
+    normalized < 0
+  ) {
+    return null
+  }
+
+  return Math.min(
+    100,
+    normalized
+  )
+}
+
+function roundPublicPercentage(
+  value: number,
+  decimalPlaces: number
+): number {
+  if (
+    !Number.isFinite(
+      value
+    )
+  ) {
+    return 0
+  }
+
+  const factor =
+    10 **
+    Math.max(
+      0,
+      Math.min(
+        4,
+        Math.trunc(
+          decimalPlaces
+        )
+      )
+    )
+
+  return (
+    Math.round(
+      (
+        value +
+        Number.EPSILON
+      ) *
+        factor
+    ) /
+    factor
+  )
+}
+
+function formatPublicPercentile(
+  value: number
+): string {
+  return value.toLocaleString(
+    'en-US',
+    {
+      minimumFractionDigits:
+        0,
+
+      maximumFractionDigits:
+        value < 1
+          ? 2
+          : value < 10
+            ? 1
+            : 0,
+    }
+  )
+}
+
+function formatReputationLevel(
+  value: string
+): string {
+  return value
+    .replace(
+      /[_-]+/g,
+      ' '
+    )
+    .replace(
+      /\s+/g,
+      ' '
+    )
+    .trim()
+    .replace(
+      /\b\w/g,
+      (
+        character
+      ) =>
+        character.toUpperCase()
+    )
 }
 
 /* =========================================================
@@ -870,6 +2347,36 @@ async function safelyLoadPublicCreatorProfile({
   }
 }
 
+async function loadPublicCreatorReputationSafely({
+  userId,
+}: {
+  userId: string
+}): Promise<PublicCreatorReputationResult | null> {
+  try {
+    return await safelyLoadPublicCreatorReputation(
+      userId,
+      {
+        includeUnranked: false,
+        includeGlobal: true,
+        includeCity: true,
+      }
+    )
+  } catch (error) {
+    console.error(
+      '[public profile] Creator reputation could not be loaded:',
+      {
+        userId,
+        error:
+          serializeUnknownError(
+            error
+          ),
+      }
+    )
+
+    return null
+  }
+}
+
 async function logPublicProfileViewed({
   supabase,
   viewerUserId,
@@ -891,31 +2398,45 @@ async function logPublicProfileViewed({
 }): Promise<void> {
   try {
     await supabase
-      .from('user_impressions')
+      .from(
+        'user_impressions'
+      )
       .insert(
         [
           {
             impression_type:
               'public_profile_viewed',
+
             user_id:
               viewerUserId,
-            venue_id: null,
-            crawl_id: null,
+
+            venue_id:
+              null,
+
+            crawl_id:
+              null,
+
             metadata: {
               profile_user_id:
                 profileUserId,
+
               username,
+
               is_own_profile:
                 isOwnProfile,
+
               is_public:
                 isPublic,
             },
+
             created_at:
-              new Date().toISOString(),
+              new Date()
+                .toISOString(),
           },
         ],
         {
-          returning: 'minimal',
+          returning:
+            'minimal',
         } as any
       )
   } catch (error) {
@@ -925,6 +2446,10 @@ async function logPublicProfileViewed({
     )
   }
 }
+
+/* =========================================================
+ * Snapshot normalization
+ * ======================================================= */
 
 function normalizePublicSnapshots(
   value: unknown
@@ -962,7 +2487,8 @@ function normalizePublicSnapshots(
         }
 
         return {
-          id: row.id,
+          id:
+            row.id,
 
           title:
             nullableString(
@@ -1009,7 +2535,8 @@ function normalizePublicSnapshots(
               row.source_id
             ),
 
-          visibility: 'public',
+          visibility:
+            'public',
 
           created_at:
             row.created_at,
@@ -1028,14 +2555,17 @@ function nullableString(
   value: unknown
 ): string | null {
   if (
-    typeof value !== 'string'
+    typeof value !==
+    'string'
   ) {
     return null
   }
 
-  const trimmed = value.trim()
+  const trimmed =
+    value.trim()
 
-  return trimmed.length > 0
+  return trimmed.length >
+    0
     ? trimmed
     : null
 }
@@ -1044,7 +2574,8 @@ function nullableNumber(
   value: unknown
 ): number | null {
   return (
-    typeof value === 'number' &&
+    typeof value ===
+      'number' &&
     Number.isFinite(value)
   )
     ? value
@@ -1052,12 +2583,15 @@ function nullableNumber(
 }
 
 function buildSnapshotMetadata(
-  snapshot: PublicFlowSnapshotRow
+  snapshot:
+    PublicFlowSnapshotRow
 ): string {
   const parts: string[] = []
 
   if (snapshot.city) {
-    parts.push(snapshot.city)
+    parts.push(
+      snapshot.city
+    )
   }
 
   const checkedInCount =
@@ -1065,7 +2599,8 @@ function buildSnapshotMetadata(
     0
 
   const totalStops =
-    snapshot.total_stops ?? 0
+    snapshot.total_stops ??
+    0
 
   parts.push(
     `${checkedInCount}/${totalStops} ${
@@ -1078,6 +2613,10 @@ function buildSnapshotMetadata(
   return parts.join(' · ')
 }
 
+/* =========================================================
+ * Standard profile presentation
+ * ======================================================= */
+
 function Stat({
   label,
   value,
@@ -1088,7 +2627,9 @@ function Stat({
   return (
     <div className="inline-flex min-w-[104px] flex-col rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-3">
       <p className="text-lg font-semibold leading-none">
-        {value.toLocaleString()}
+        {value.toLocaleString(
+          'en-US'
+        )}
       </p>
 
       <p className="mt-1.5 text-[11px] leading-tight text-neutral-500">
@@ -1102,19 +2643,44 @@ const CHIP_LABELS: Record<
   string,
   string
 > = {
-  chill: 'Chill',
-  romantic: 'Romantic',
-  upbeat: 'Upbeat',
-  trendy: 'Trendy',
-  social: 'Social',
-  cozy: 'Cozy',
-  high_energy: 'High Energy',
-  art: 'Art',
-  hidden_gems: 'Hidden Gems',
-  live_events: 'Live Events',
-  music: 'Music',
-  dancing: 'Dancing',
-  foodie_spots: 'Foodie Spots',
+  chill:
+    'Chill',
+
+  romantic:
+    'Romantic',
+
+  upbeat:
+    'Upbeat',
+
+  trendy:
+    'Trendy',
+
+  social:
+    'Social',
+
+  cozy:
+    'Cozy',
+
+  high_energy:
+    'High Energy',
+
+  art:
+    'Art',
+
+  hidden_gems:
+    'Hidden Gems',
+
+  live_events:
+    'Live Events',
+
+  music:
+    'Music',
+
+  dancing:
+    'Dancing',
+
+  foodie_spots:
+    'Foodie Spots',
 }
 
 function formatChipLabel(
@@ -1123,8 +2689,14 @@ function formatChipLabel(
   return (
     CHIP_LABELS[value] ??
     value
-      .replace(/_/g, ' ')
-      .replace(/\s+/g, ' ')
+      .replace(
+        /_/g,
+        ' '
+      )
+      .replace(
+        /\s+/g,
+        ' '
+      )
       .trim()
       .replace(
         /\b\w/g,
@@ -1142,8 +2714,8 @@ function ChipGroup({
   values: string[]
 }) {
   return (
-    <div>
-      <p className="mb-2 text-sm text-neutral-500">
+    <div className="min-w-0">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
         {title}
       </p>
 
@@ -1153,18 +2725,79 @@ function ChipGroup({
         </p>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {values.map((value) => (
-            <span
-              key={value}
-              className="rounded-full border border-cyan-500/15 bg-gradient-to-b from-neutral-900 to-black px-4 py-2 text-sm font-medium text-neutral-200 transition hover:border-cyan-400/40 hover:text-white"
-            >
-              {formatChipLabel(
-                value
-              )}
-            </span>
-          ))}
+          {values.map(
+            (value) => (
+              <span
+                key={value}
+                className="rounded-full border border-cyan-500/15 bg-gradient-to-b from-neutral-900 to-black px-4 py-2 text-sm font-medium text-neutral-200 transition hover:border-cyan-400/40 hover:text-white"
+              >
+                {formatChipLabel(
+                  value
+                )}
+              </span>
+            )
+          )}
         </div>
       )}
     </div>
+  )
+}
+
+/* =========================================================
+ * Error serialization
+ * ======================================================= */
+
+function serializeUnknownError(
+  error: unknown
+): Record<string, unknown> {
+  if (
+    error instanceof Error
+  ) {
+    return {
+      name:
+        error.name,
+
+      message:
+        error.message,
+    }
+  }
+
+  if (isRecord(error)) {
+    return {
+      code:
+        error.code ??
+        null,
+
+      message:
+        error.message ??
+        null,
+
+      details:
+        error.details ??
+        null,
+
+      hint:
+        error.hint ??
+        null,
+    }
+  }
+
+  return {
+    value:
+      String(error),
+  }
+}
+
+function isRecord(
+  value: unknown
+): value is Record<
+  string,
+  unknown
+> {
+  return (
+    typeof value ===
+      'object' &&
+    value !== null &&
+    !Array.isArray(value)
   )
 }

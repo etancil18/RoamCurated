@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 type RouteContext = {
   params: Promise<{
@@ -518,6 +519,20 @@ export async function POST(
         user.id
       )
 
+      await safelyRefreshCreatorReputation(
+        user.id,
+        {
+          mutation:
+            'event_check_in_existing',
+
+          rankingRefreshMode:
+            'affected',
+
+          calculatedAt:
+            now,
+        }
+      )
+
       return NextResponse.json({
         checkedIn:
           true,
@@ -650,6 +665,20 @@ export async function POST(
           user.id
         )
 
+        await safelyRefreshCreatorReputation(
+          user.id,
+          {
+            mutation:
+              'event_check_in_duplicate',
+
+            rankingRefreshMode:
+              'affected',
+
+            calculatedAt:
+              now,
+          }
+        )
+
         return NextResponse.json({
           checkedIn:
             true,
@@ -779,6 +808,20 @@ export async function POST(
         user.id
       )
 
+      await safelyRefreshCreatorReputation(
+        user.id,
+        {
+          mutation:
+            'event_check_in_xp_failure',
+
+          rankingRefreshMode:
+            'affected',
+
+          calculatedAt:
+            now,
+        }
+      )
+
       if (
         xpError.code ===
         '23505'
@@ -824,6 +867,20 @@ export async function POST(
 
     await refreshPublicPassportStats(
       user.id
+    )
+
+    await safelyRefreshCreatorReputation(
+      user.id,
+      {
+        mutation:
+          'event_check_in',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
     )
 
     return NextResponse.json({

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 
 type RouteContext = {
@@ -420,19 +421,19 @@ export async function POST(req: NextRequest, context: RouteContext) {
   }
 
   const ratingToSave =
-  isValidRating(rating)
-    ? rating
-    : existingVisit?.rating
+    isValidRating(rating)
+      ? rating
+      : existingVisit?.rating
 
-if (!isValidRating(ratingToSave)) {
-  return NextResponse.json(
-    {
-      error:
-        'The existing visit does not have a valid rating.',
-    },
-    { status: 400 }
-  )
-}
+  if (!isValidRating(ratingToSave)) {
+    return NextResponse.json(
+      {
+        error:
+          'The existing visit does not have a valid rating.',
+      },
+      { status: 400 }
+    )
+  }
 
   const geoResult = await verifyVenueLocation({
     supabase,
@@ -487,6 +488,20 @@ if (!isValidRating(ratingToSave)) {
   }
 
   await refreshPublicPassportStats(user.id, 'POST')
+
+  await safelyRefreshCreatorReputation(
+    user.id,
+    {
+      mutation:
+        'venue_visit_post',
+
+      rankingRefreshMode:
+        'affected',
+
+      calculatedAt:
+        now,
+    }
+  )
 
   return NextResponse.json({
     visited: true,
@@ -562,6 +577,20 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     }
 
     await refreshPublicPassportStats(user.id, 'PATCH')
+
+    await safelyRefreshCreatorReputation(
+      user.id,
+      {
+        mutation:
+          'venue_visit_patch',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
+    )
 
     return NextResponse.json({
       visited: true,
@@ -639,6 +668,20 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     await refreshPublicPassportStats(user.id, 'PATCH_ACTIVE_FLOW')
 
+    await safelyRefreshCreatorReputation(
+      user.id,
+      {
+        mutation:
+          'venue_visit_patch_active_flow',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
+    )
+
     return NextResponse.json({
       visited: true,
       rating: data.rating,
@@ -685,6 +728,17 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
   }
 
   await refreshPublicPassportStats(user.id, 'DELETE')
+
+  await safelyRefreshCreatorReputation(
+    user.id,
+    {
+      mutation:
+        'venue_visit_delete',
+
+      rankingRefreshMode:
+        'affected',
+    }
+  )
 
   return NextResponse.json({
     visited: false,

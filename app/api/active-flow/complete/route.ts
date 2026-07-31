@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 type CompleteActiveFlowBody = {
   session_id?: string
@@ -177,6 +178,15 @@ export async function POST(req: Request) {
     }
 
     await refreshPublicPassportStats(user.id)
+
+    await safelyRefreshCreatorReputation(
+      user.id,
+      {
+        mutation: 'active_flow_completed',
+        rankingRefreshMode: 'affected',
+        calculatedAt: completedAt,
+      }
+    )
 
     return NextResponse.json(
       {

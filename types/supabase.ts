@@ -2419,6 +2419,45 @@ export type Database = {
           },
         ]
       }
+      reputation_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          label: string
+          minimum_venues_for_ranking: number
+          minimum_venues_for_status: number
+          plural_label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id: string
+          is_active?: boolean
+          label: string
+          minimum_venues_for_ranking?: number
+          minimum_venues_for_status?: number
+          plural_label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          minimum_venues_for_ranking?: number
+          minimum_venues_for_status?: number
+          plural_label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       route_failures: {
         Row: {
           attempted_at: string | null
@@ -3219,6 +3258,90 @@ export type Database = {
           },
         ]
       }
+      venue_reputation_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          mapping_weight: number
+          matched_raw_types: string[]
+          matched_type_count: number
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          mapping_weight: number
+          matched_raw_types?: string[]
+          matched_type_count?: number
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          mapping_weight?: number
+          matched_raw_types?: string[]
+          matched_type_count?: number
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_reputation_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "reputation_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_reputation_categories_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_reputation_categories_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_type_category_mappings: {
+        Row: {
+          category_id: string
+          created_at: string
+          mapping_weight: number
+          raw_type: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          mapping_weight?: number
+          raw_type: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          mapping_weight?: number
+          raw_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_type_category_mappings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "reputation_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       venue_users: {
         Row: {
           created_at: string | null
@@ -3331,6 +3454,7 @@ export type Database = {
         Row: {
           access_token: string | null
           address: string | null
+          canonical_city: string | null
           city: string | null
           contact: string[] | null
           cover: string | null
@@ -3363,6 +3487,7 @@ export type Database = {
         Insert: {
           access_token?: string | null
           address?: string | null
+          canonical_city?: string | null
           city?: string | null
           contact?: string[] | null
           cover?: string | null
@@ -3395,6 +3520,7 @@ export type Database = {
         Update: {
           access_token?: string | null
           address?: string | null
+          canonical_city?: string | null
           city?: string | null
           contact?: string[] | null
           cover?: string | null
@@ -3905,6 +4031,7 @@ export type Database = {
         Returns: {
           access_token: string | null
           address: string | null
+          canonical_city: string | null
           city: string | null
           contact: string[] | null
           cover: string | null
@@ -3998,6 +4125,7 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      rebuild_venue_reputation_categories: { Args: never; Returns: number }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
@@ -4578,6 +4706,10 @@ export type Database = {
       st_wrapx: {
         Args: { geom: unknown; move: number; wrap: number }
         Returns: unknown
+      }
+      sync_venue_reputation_categories: {
+        Args: { target_venue_id: string }
+        Returns: undefined
       }
       unlockrows: { Args: { "": string }; Returns: number }
       updategeometrysrid: {

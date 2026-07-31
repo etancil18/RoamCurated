@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 import { createServerClient } from '@/lib/supabase/server'
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 import {
   isSupportedCityKey,
@@ -875,11 +876,30 @@ export async function createCreatorCollectionAction(
         }
       }
 
-      revalidateCreatorCollectionPaths({
+            revalidateCreatorCollectionPaths({
         username,
         slug:
           collection.slug,
       })
+
+      if (
+        collection.visibility ===
+        'public'
+      ) {
+        await safelyRefreshCreatorReputation(
+          userId,
+          {
+            mutation:
+              'creator_collection_created',
+
+            rankingRefreshMode:
+              'affected',
+
+            calculatedAt:
+              now,
+          }
+        )
+      }
 
       return {
         success: true,
@@ -1077,7 +1097,7 @@ export async function updateCreatorCollectionAction(
     }
   }
 
-  revalidateCreatorCollectionPaths({
+    revalidateCreatorCollectionPaths({
     username,
     slug: existing.slug,
   })
@@ -1091,6 +1111,27 @@ export async function updateCreatorCollectionAction(
       slug:
         collection.slug,
     })
+  }
+
+  if (
+    existing.visibility ===
+      'public' ||
+    collection.visibility ===
+      'public'
+  ) {
+    await safelyRefreshCreatorReputation(
+      userId,
+      {
+        mutation:
+          'creator_collection_updated',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
+    )
   }
 
   return {
@@ -1188,12 +1229,29 @@ export async function deleteCreatorCollectionAction(
     }
   }
 
-  revalidateCreatorCollectionPaths({
+    revalidateCreatorCollectionPaths({
     username,
     slug:
       existingResult.collection
         .slug,
   })
+
+  if (
+    existingResult.collection
+      .visibility ===
+    'public'
+  ) {
+    await safelyRefreshCreatorReputation(
+      userId,
+      {
+        mutation:
+          'creator_collection_deleted',
+
+        rankingRefreshMode:
+          'affected',
+      }
+    )
+  }
 
   return {
     success: true,
@@ -1485,12 +1543,32 @@ export async function setCreatorCollectionVisibilityAction(
       userId,
     })
 
-  revalidateCreatorCollectionPaths({
+    revalidateCreatorCollectionPaths({
     username,
     slug:
       existingResult.collection
         .slug,
   })
+
+  if (
+    existingResult.collection
+      .visibility !==
+    parsed.data.visibility
+  ) {
+    await safelyRefreshCreatorReputation(
+      userId,
+      {
+        mutation:
+          'creator_collection_visibility_changed',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
+    )
+  }
 
   return {
     success: true,
@@ -2400,6 +2478,26 @@ async function performAddCreatorCollectionVenues({
       collection.id,
   })
 
+  if (
+    collection.visibility ===
+      'public' &&
+    addedVenueIds.length > 0
+  ) {
+    await safelyRefreshCreatorReputation(
+      userId,
+      {
+        mutation:
+          'creator_collection_venues_added',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
+    )
+  }
+
   return {
     success: true,
     data: {
@@ -2622,6 +2720,26 @@ async function performRemoveCreatorCollectionVenue({
         .slug,
     collectionId,
   })
+
+  if (
+    collectionResult.collection
+      .visibility ===
+    'public'
+  ) {
+    await safelyRefreshCreatorReputation(
+      userId,
+      {
+        mutation:
+          'creator_collection_venue_removed',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
+    )
+  }
 
   return {
     success: true,
@@ -3023,6 +3141,9 @@ type OwnedCollectionResult =
       collection: {
         id: string
         slug: string
+        visibility:
+          | 'public'
+          | 'private'
       }
     }
   | {
@@ -3042,7 +3163,9 @@ async function loadOwnedCollection({
   const result =
     await supabase
       .from('creator_collections')
-      .select('id, slug')
+      .select(
+        'id, slug, visibility'
+      )
       .eq('id', collectionId)
       .eq('user_id', userId)
       .maybeSingle()
@@ -3066,12 +3189,23 @@ async function loadOwnedCollection({
     }
   }
 
+  const visibility =
+    result.data
+      ?.visibility ===
+      'public' ||
+    result.data
+      ?.visibility ===
+      'private'
+      ? result.data.visibility
+      : null
+
   if (
     !result.data ||
     typeof result.data.id !==
       'string' ||
     typeof result.data.slug !==
-      'string'
+      'string' ||
+    !visibility
   ) {
     return {
       success: false,
@@ -3088,6 +3222,7 @@ async function loadOwnedCollection({
     collection: {
       id: result.data.id,
       slug: result.data.slug,
+      visibility,
     },
   }
 }
@@ -3099,6 +3234,9 @@ type OwnedCollectionWithCityResult =
         id: string
         slug: string
         city: string | null
+        visibility:
+          | 'public'
+          | 'private'
       }
     }
   | {
@@ -3118,7 +3256,9 @@ async function loadOwnedCollectionWithCity({
   const result =
     await supabase
       .from('creator_collections')
-      .select('id, slug, city')
+      .select(
+        'id, slug, city, visibility'
+      )
       .eq('id', collectionId)
       .eq('user_id', userId)
       .maybeSingle()
@@ -3152,7 +3292,21 @@ async function loadOwnedCollectionWithCity({
       result.data?.slug
     )
 
-  if (!id || !slug) {
+  const visibility =
+    result.data
+      ?.visibility ===
+      'public' ||
+    result.data
+      ?.visibility ===
+      'private'
+      ? result.data.visibility
+      : null
+
+  if (
+    !id ||
+    !slug ||
+    !visibility
+  ) {
     return {
       success: false,
       result: {
@@ -3168,10 +3322,11 @@ async function loadOwnedCollectionWithCity({
     collection: {
       id,
       slug,
-        city:
+      city:
         normalizeCollectionCity(
           result.data?.city
         ),
+      visibility,
     },
   }
 }

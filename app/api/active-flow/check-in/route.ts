@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 type CheckInActiveFlowBody = {
   session_id?: string
@@ -672,6 +673,28 @@ export async function POST(req: Request) {
 
     await refreshPublicPassportStats(
       user.id
+    )
+
+    /**
+     * Refresh creator reputation only after the canonical
+     * verified venue visit and active-flow progress writes have
+     * succeeded.
+     *
+     * The safe refresh boundary records failures without
+     * invalidating the completed user check-in.
+     */
+    await safelyRefreshCreatorReputation(
+      user.id,
+      {
+        mutation:
+          'active_flow_check_in',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
     )
 
     return NextResponse.json(

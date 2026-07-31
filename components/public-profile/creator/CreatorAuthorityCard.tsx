@@ -9,6 +9,8 @@ import {
   Route,
 } from 'lucide-react'
 
+import CreatorReputationIdentity from '@/components/reputation/CreatorReputationIdentity'
+
 import {
   buildCreatorAuthoritySummary,
   getCreatorAuthorityMetrics,
@@ -19,6 +21,10 @@ import type {
   CreatorAuthorityStats,
   ExtendedCreatorAuthorityStats,
 } from '@/lib/creator/types'
+
+import type {
+  PublicCreatorReputationSnapshot,
+} from '@/lib/reputation/publicTypes'
 
 /* =========================================================
  * Public component contract
@@ -34,6 +40,17 @@ export type CreatorAuthorityCardProps = {
   authority:
     | CreatorAuthorityStats
     | ExtendedCreatorAuthorityStats
+    | null
+    | undefined
+
+  /**
+   * Public creator reputation interpretation.
+   *
+   * Reputation presents the creator's earned status first.
+   * Authority remains the underlying evidence supporting it.
+   */
+  reputation?:
+    | PublicCreatorReputationSnapshot
     | null
     | undefined
 
@@ -92,6 +109,7 @@ export type CreatorAuthorityCardProps = {
 
 export default function CreatorAuthorityCard({
   authority,
+  reputation,
   title = 'Roam activity',
   description =
     'Verified activity and public contributions recorded through this creator’s use of Roam.',
@@ -102,28 +120,50 @@ export default function CreatorAuthorityCard({
   showExtendedDetails = true,
   className = '',
 }: CreatorAuthorityCardProps) {
-  if (!authority || !hasCreatorAuthority(authority)) {
+  const hasReputation =
+    reputation !== null &&
+    reputation !== undefined
+
+  const hasAuthority =
+    authority !== null &&
+    authority !== undefined &&
+    hasCreatorAuthority(authority)
+
+  if (!hasReputation && !hasAuthority) {
     return null
   }
 
   const normalizedMetricLimit =
     normalizeMetricLimit(metricLimit)
 
-  const metrics = getCreatorAuthorityMetrics({
-    stats: authority,
-    includeZeroValues,
-  }).slice(0, normalizedMetricLimit)
+  const metrics = hasAuthority
+    ? getCreatorAuthorityMetrics({
+        stats: authority,
+        includeZeroValues,
+      }).slice(
+        0,
+        normalizedMetricLimit
+      )
+    : []
 
-  const summary = showSummary
-    ? buildCreatorAuthoritySummary(authority)
-    : null
+  const summary =
+    hasAuthority &&
+    showSummary
+      ? buildCreatorAuthoritySummary(
+          authority
+        )
+      : null
 
   const extendedDetails =
+    hasAuthority &&
     showExtendedDetails
-      ? normalizeExtendedAuthority(authority)
+      ? normalizeExtendedAuthority(
+          authority
+        )
       : null
 
   const hasPrimaryCity =
+    hasAuthority &&
     normalizeNullableText(
       authority.primaryCity
     ) !== null
@@ -140,6 +180,7 @@ export default function CreatorAuthorityCard({
     )
 
   if (
+    !hasReputation &&
     !hasPrimaryCity &&
     !hasMetricContent &&
     !hasExtendedContent
@@ -167,61 +208,81 @@ export default function CreatorAuthorityCard({
       <AuthorityCardBackground />
 
       <div className="relative z-10 min-w-0">
-        {showHeading ? (
-          <AuthorityHeading
-            id={headingId}
-            title={title}
-            description={description}
-            summary={summary}
-          />
-        ) : summary ? (
-          <p className="break-words text-sm leading-6 text-neutral-400">
-            {summary}
-          </p>
+        {hasReputation ? (
+          <div className="mb-5 min-w-0">
+            <CreatorReputationIdentity
+              reputation={
+                reputation
+              }
+              categoryLimit={3}
+            />
+          </div>
         ) : null}
 
-        {hasPrimaryCity ? (
-          <PrimaryCityCard
-            primaryCity={
-              authority.primaryCity
-            }
-            className={
-              showHeading || summary
-                ? 'mt-5'
-                : ''
-            }
-          />
-        ) : null}
+        {hasAuthority ? (
+          <>
+            {showHeading ? (
+              <AuthorityHeading
+                id={headingId}
+                title={title}
+                description={
+                  description
+                }
+                summary={summary}
+              />
+            ) : summary ? (
+              <p className="break-words text-sm leading-6 text-neutral-400">
+                {summary}
+              </p>
+            ) : null}
 
-        {hasMetricContent ? (
-          <AuthorityMetricsGrid
-            metrics={metrics}
-            className={
-              hasPrimaryCity ||
-              showHeading ||
-              summary
-                ? 'mt-4'
-                : ''
-            }
-          />
-        ) : null}
+            {hasPrimaryCity ? (
+              <PrimaryCityCard
+                primaryCity={
+                  authority.primaryCity
+                }
+                className={
+                  showHeading ||
+                  summary
+                    ? 'mt-5'
+                    : ''
+                }
+              />
+            ) : null}
 
-        {hasExtendedContent &&
-        extendedDetails ? (
-          <ExtendedAuthorityDetails
-            details={extendedDetails}
-            className={
-              hasPrimaryCity ||
-              hasMetricContent ||
-              showHeading ||
-              summary
-                ? 'mt-5'
-                : ''
-            }
-          />
-        ) : null}
+            {hasMetricContent ? (
+              <AuthorityMetricsGrid
+                metrics={metrics}
+                className={
+                  hasPrimaryCity ||
+                  showHeading ||
+                  summary
+                    ? 'mt-4'
+                    : ''
+                }
+              />
+            ) : null}
 
-        <AuthorityDisclosure />
+            {hasExtendedContent &&
+            extendedDetails ? (
+              <ExtendedAuthorityDetails
+                details={
+                  extendedDetails
+                }
+                className={
+                  hasPrimaryCity ||
+                  hasMetricContent ||
+                  showHeading ||
+                  summary
+                    ? 'mt-5'
+                    : ''
+                }
+              />
+            ) : null}
+
+            <AuthorityDisclosure />
+          </>
+        ) : null}
       </div>
     </section>
   )
@@ -555,7 +616,13 @@ function ExtendedAuthorityDetails({
       ) : null}
 
       {hasCategories ? (
-        <div className={hasGeography ? 'mt-4' : 'mt-3'}>
+        <div
+          className={
+            hasGeography
+              ? 'mt-4'
+              : 'mt-3'
+          }
+        >
           <p className="text-xs font-medium text-neutral-400">
             Most represented categories
           </p>
@@ -635,9 +702,10 @@ function AuthorityDisclosure() {
       />
 
       <p className="text-[11px] leading-5 text-neutral-600">
-        These figures reflect recorded Roam activity. They do not
-        represent follower reach, engagement, ranking, audience
-        quality, or guaranteed campaign performance.
+        These figures reflect recorded Roam activity. Reputation
+        interprets that evidence into earned public standing; the
+        underlying activity counts remain separately visible and
+        verifiable.
       </p>
     </div>
   )
@@ -793,5 +861,9 @@ function formatCount(
     return '0'
   }
 
-  return Math.trunc(value).toLocaleString()
+  return Math.trunc(
+    value
+  ).toLocaleString(
+    'en-US'
+  )
 }

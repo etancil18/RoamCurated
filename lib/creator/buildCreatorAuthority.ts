@@ -1,4 +1,9 @@
 import type {
+  PublicCreatorCategoryReputation,
+  PublicReputationLevel,
+} from '@/lib/reputation/publicTypes'
+
+import type {
   CreatorAuthorityStats,
   ExtendedCreatorAuthorityStats,
 } from './types'
@@ -20,16 +25,29 @@ export type CreatorAuthorityInput = {
 }
 
 /**
- * Optional richer authority values.
+ * Optional richer authority and reputation values.
  *
- * Only supply these fields when the underlying geographic and
- * category data is reliable enough to support the claims.
+ * Geographic values should only be supplied when the underlying
+ * data is reliable enough to support the claims.
+ *
+ * Reputation values must already have been calculated by the
+ * canonical reputation system. This builder only normalizes and
+ * attaches them; it does not derive scores, tiers, ranks, or
+ * percentiles.
  */
 export type ExtendedCreatorAuthorityInput =
   CreatorAuthorityInput & {
     cityCount?: number | null
     neighborhoodCount?: number | null
     topCategories?: readonly unknown[] | null
+
+    reputationTier?: PublicReputationLevel | null
+    reputationScore?: number | null
+    primaryCityRank?: number | null
+    primaryCityPercentile?: number | null
+    topCategoryStatuses?:
+      | readonly PublicCreatorCategoryReputation[]
+      | null
   }
 
 /**
@@ -141,10 +159,16 @@ export function buildCreatorAuthority(
 
 /**
  * Builds the richer authority object used when Roam has
- * reliable geographic and category data.
+ * reliable geographic, category, and reputation data.
  *
- * Empty optional values are omitted rather than represented as
- * misleading zeros or empty arrays.
+ * The base authority fields remain factual evidence.
+ *
+ * The optional reputation fields remain interpretation produced
+ * by the separate canonical reputation system.
+ *
+ * Empty or invalid optional values are omitted rather than
+ * represented as misleading zeros, empty arrays, or unsupported
+ * status claims.
  */
 export function buildExtendedCreatorAuthority(
   input: ExtendedCreatorAuthorityInput
@@ -165,6 +189,31 @@ export function buildExtendedCreatorAuthority(
       input.topCategories
     )
 
+  const reputationTier =
+    normalizeReputationLevel(
+      input.reputationTier
+    )
+
+  const reputationScore =
+    normalizeOptionalNonNegativeNumber(
+      input.reputationScore
+    )
+
+  const primaryCityRank =
+    normalizeOptionalPositiveInteger(
+      input.primaryCityRank
+    )
+
+  const primaryCityPercentile =
+    normalizeOptionalPercentage(
+      input.primaryCityPercentile
+    )
+
+  const topCategoryStatuses =
+    normalizeTopCategoryStatuses(
+      input.topCategoryStatuses
+    )
+
   return {
     ...base,
 
@@ -178,6 +227,30 @@ export function buildExtendedCreatorAuthority(
 
     ...(topCategories.length > 0
       ? { topCategories }
+      : {}),
+
+    ...(reputationTier !== null
+      ? { reputationTier }
+      : {}),
+
+    ...(reputationScore !== null
+      ? { reputationScore }
+      : {}),
+
+    ...(primaryCityRank !== null
+      ? { primaryCityRank }
+      : {}),
+
+    ...(primaryCityPercentile !== null
+      ? {
+          primaryCityPercentile,
+        }
+      : {}),
+
+    ...(topCategoryStatuses.length > 0
+      ? {
+          topCategoryStatuses,
+        }
       : {}),
   }
 }
@@ -366,10 +439,11 @@ export function createEmptyCreatorAuthority(
 }
 
 /**
- * Compares two authority objects by value.
+ * Compares two base authority objects by factual evidence value.
  *
- * Useful for memoization, cache checks, and avoiding unnecessary
- * client-state updates.
+ * Reputation interpretation is intentionally excluded because
+ * this helper accepts CreatorAuthorityStats rather than the
+ * extended reputation-aware contract.
  */
 export function creatorAuthorityEquals(
   first: CreatorAuthorityStats,
@@ -391,13 +465,15 @@ export function creatorAuthorityEquals(
 }
 
 /**
- * Adds authority counts together.
+ * Adds factual authority counts together.
  *
  * The primary city is retained only when both values agree or
  * one side has no primary city.
  *
- * This helper is useful for combining independently loaded
- * activity aggregates without duplicating normalization logic.
+ * Reputation interpretation is intentionally not merged here.
+ * Scores, tiers, ranks, and percentiles must come from one
+ * canonical reputation calculation rather than being added
+ * together.
  */
 export function mergeCreatorAuthorityStats(
   first: CreatorAuthorityStats,
@@ -502,6 +578,132 @@ function normalizeOptionalCount(
   }
 
   return Math.max(0, Math.trunc(value))
+}
+
+/**
+ * Normalizes an optional reputation score.
+ *
+ * Scores may be fractional, so this helper intentionally does
+ * not truncate valid values.
+ */
+function normalizeOptionalNonNegativeNumber(
+  value: number | null | undefined
+): number | null {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value)
+  ) {
+    return null
+  }
+
+  return Math.max(0, value)
+}
+
+/**
+ * Normalizes an optional one-based ranking position.
+ */
+function normalizeOptionalPositiveInteger(
+  value: number | null | undefined
+): number | null {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    value <= 0
+  ) {
+    return null
+  }
+
+  return Math.trunc(value)
+}
+
+/**
+ * Normalizes a percentage or percentile value to the inclusive
+ * zero-through-100 range.
+ */
+function normalizeOptionalPercentage(
+  value: number | null | undefined
+): number | null {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value)
+  ) {
+    return null
+  }
+
+  return Math.min(
+    100,
+    Math.max(0, value)
+  )
+}
+
+/**
+ * Restricts reputation tiers to the canonical public union.
+ */
+function normalizeReputationLevel(
+  value:
+    | PublicReputationLevel
+    | null
+    | undefined
+): PublicReputationLevel | null {
+  if (
+    value === 'unranked' ||
+    value === 'emerging' ||
+    value === 'established' ||
+    value === 'expert' ||
+    value === 'elite'
+  ) {
+    return value
+  }
+
+  return null
+}
+
+/**
+ * Returns a shallow copy of the strongest public category
+ * statuses while preventing an uncontrolled list from reaching
+ * profile surfaces.
+ *
+ * The canonical public reputation loader is responsible for
+ * producing and validating these records.
+ */
+function normalizeTopCategoryStatuses(
+  value:
+    | readonly PublicCreatorCategoryReputation[]
+    | null
+    | undefined
+): PublicCreatorCategoryReputation[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .filter(
+      (
+        status
+      ): status is PublicCreatorCategoryReputation =>
+        Boolean(status)
+    )
+    .slice(0, 5)
+    .map((status) => ({
+      ...status,
+      category: {
+        ...status.category,
+      },
+      tier: {
+        ...status.tier,
+      },
+      labels: {
+        ...status.labels,
+      },
+      evidence: {
+        ...status.evidence,
+      },
+      ranking: status.ranking
+        ? {
+            ...status.ranking,
+          }
+        : null,
+    }))
 }
 
 /**
