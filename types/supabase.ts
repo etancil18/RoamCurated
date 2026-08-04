@@ -546,6 +546,80 @@ export type Database = {
           },
         ]
       }
+      creator_onboarding_answers: {
+        Row: {
+          answer_confirmed: boolean
+          answer_confirmed_at: string | null
+          answer_metadata: Json
+          answer_text: string
+          created_at: string
+          creator_user_id: string
+          extracted_at: string | null
+          extracted_data: Json | null
+          extraction_error: string | null
+          extraction_model: string | null
+          extraction_reviewed_at: string | null
+          extraction_status: string
+          extraction_version: number | null
+          id: string
+          is_public: boolean
+          prompt_key: string
+          prompt_text: string
+          prompt_version: number
+          updated_at: string
+        }
+        Insert: {
+          answer_confirmed?: boolean
+          answer_confirmed_at?: string | null
+          answer_metadata?: Json
+          answer_text: string
+          created_at?: string
+          creator_user_id: string
+          extracted_at?: string | null
+          extracted_data?: Json | null
+          extraction_error?: string | null
+          extraction_model?: string | null
+          extraction_reviewed_at?: string | null
+          extraction_status?: string
+          extraction_version?: number | null
+          id?: string
+          is_public?: boolean
+          prompt_key: string
+          prompt_text: string
+          prompt_version?: number
+          updated_at?: string
+        }
+        Update: {
+          answer_confirmed?: boolean
+          answer_confirmed_at?: string | null
+          answer_metadata?: Json
+          answer_text?: string
+          created_at?: string
+          creator_user_id?: string
+          extracted_at?: string | null
+          extracted_data?: Json | null
+          extraction_error?: string | null
+          extraction_model?: string | null
+          extraction_reviewed_at?: string | null
+          extraction_status?: string
+          extraction_version?: number | null
+          id?: string
+          is_public?: boolean
+          prompt_key?: string
+          prompt_text?: string
+          prompt_version?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_onboarding_answers_creator_user_id_fkey"
+            columns: ["creator_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_profiles: {
         Row: {
           accepting_collaborations: boolean
@@ -583,6 +657,205 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_reputation_category_stats: {
+        Row: {
+          average_eligible_score: number | null
+          average_verified_venue_count: number | null
+          calculated_at: string
+          can_publish_percentile: boolean
+          can_publish_rank: boolean
+          can_publish_top_1_percent: boolean
+          can_publish_top_10_percent: boolean
+          can_publish_top_5_percent: boolean
+          category_id: string
+          city_key: string | null
+          created_at: string
+          earned_user_count: number
+          eligible_user_count: number
+          elite_user_count: number
+          emerging_user_count: number
+          established_user_count: number
+          expert_user_count: number
+          id: string
+          maximum_eligible_score: number | null
+          maximum_verified_venue_count: number | null
+          median_eligible_score: number | null
+          median_verified_venue_count: number | null
+          minimum_eligible_score: number | null
+          policy_version: number
+          scope: string
+          scope_city_key: string | null
+          top_1_percent_score: number | null
+          top_10_percent_score: number | null
+          top_25_percent_score: number | null
+          top_5_percent_score: number | null
+          total_user_count: number
+          unranked_user_count: number
+          updated_at: string
+        }
+        Insert: {
+          average_eligible_score?: number | null
+          average_verified_venue_count?: number | null
+          calculated_at?: string
+          can_publish_percentile?: boolean
+          can_publish_rank?: boolean
+          can_publish_top_1_percent?: boolean
+          can_publish_top_10_percent?: boolean
+          can_publish_top_5_percent?: boolean
+          category_id: string
+          city_key?: string | null
+          created_at?: string
+          earned_user_count?: number
+          eligible_user_count?: number
+          elite_user_count?: number
+          emerging_user_count?: number
+          established_user_count?: number
+          expert_user_count?: number
+          id?: string
+          maximum_eligible_score?: number | null
+          maximum_verified_venue_count?: number | null
+          median_eligible_score?: number | null
+          median_verified_venue_count?: number | null
+          minimum_eligible_score?: number | null
+          policy_version?: number
+          scope: string
+          scope_city_key?: string | null
+          top_1_percent_score?: number | null
+          top_10_percent_score?: number | null
+          top_25_percent_score?: number | null
+          top_5_percent_score?: number | null
+          total_user_count?: number
+          unranked_user_count?: number
+          updated_at?: string
+        }
+        Update: {
+          average_eligible_score?: number | null
+          average_verified_venue_count?: number | null
+          calculated_at?: string
+          can_publish_percentile?: boolean
+          can_publish_rank?: boolean
+          can_publish_top_1_percent?: boolean
+          can_publish_top_10_percent?: boolean
+          can_publish_top_5_percent?: boolean
+          category_id?: string
+          city_key?: string | null
+          created_at?: string
+          earned_user_count?: number
+          eligible_user_count?: number
+          elite_user_count?: number
+          emerging_user_count?: number
+          established_user_count?: number
+          expert_user_count?: number
+          id?: string
+          maximum_eligible_score?: number | null
+          maximum_verified_venue_count?: number | null
+          median_eligible_score?: number | null
+          median_verified_venue_count?: number | null
+          minimum_eligible_score?: number | null
+          policy_version?: number
+          scope?: string
+          scope_city_key?: string | null
+          top_1_percent_score?: number | null
+          top_10_percent_score?: number | null
+          top_25_percent_score?: number | null
+          top_5_percent_score?: number | null
+          total_user_count?: number
+          unranked_user_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_reputation_category_stats_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "reputation_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_reputation_stats: {
+        Row: {
+          calculated_at: string
+          category_id: string
+          city_count: number
+          city_key: string | null
+          completed_flow_count: number
+          created_at: string
+          curated_venue_count: number
+          id: string
+          latest_evidence_at: string | null
+          policy_version: number
+          public_collection_count: number
+          public_snapshot_count: number
+          quality_score: number
+          recency_score: number
+          reputation_level: string
+          reputation_score: number
+          scope: string
+          scope_city_key: string | null
+          updated_at: string
+          user_id: string
+          verified_venue_count: number
+          weighted_venue_count: number
+        }
+        Insert: {
+          calculated_at?: string
+          category_id: string
+          city_count?: number
+          city_key?: string | null
+          completed_flow_count?: number
+          created_at?: string
+          curated_venue_count?: number
+          id?: string
+          latest_evidence_at?: string | null
+          policy_version?: number
+          public_collection_count?: number
+          public_snapshot_count?: number
+          quality_score?: number
+          recency_score?: number
+          reputation_level?: string
+          reputation_score?: number
+          scope: string
+          scope_city_key?: string | null
+          updated_at?: string
+          user_id: string
+          verified_venue_count?: number
+          weighted_venue_count?: number
+        }
+        Update: {
+          calculated_at?: string
+          category_id?: string
+          city_count?: number
+          city_key?: string | null
+          completed_flow_count?: number
+          created_at?: string
+          curated_venue_count?: number
+          id?: string
+          latest_evidence_at?: string | null
+          policy_version?: number
+          public_collection_count?: number
+          public_snapshot_count?: number
+          quality_score?: number
+          recency_score?: number
+          reputation_level?: string
+          reputation_score?: number
+          scope?: string
+          scope_city_key?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_venue_count?: number
+          weighted_venue_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_reputation_stats_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "reputation_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -1958,6 +2231,7 @@ export type Database = {
           created_at: string | null
           creator_headline: string | null
           creator_mode_enabled: boolean
+          creator_onboarding_completed_at: string | null
           days_out: string[] | null
           deleted_at: string | null
           frequency: string | null
@@ -1969,6 +2243,8 @@ export type Database = {
           intent_level: string | null
           interest_categories: string[] | null
           is_public: boolean | null
+          onboarding_path: string | null
+          onboarding_path_selected_at: string | null
           personality_style: string | null
           preferred_vibes: string[] | null
           show_checkins: boolean | null
@@ -1989,6 +2265,7 @@ export type Database = {
           created_at?: string | null
           creator_headline?: string | null
           creator_mode_enabled?: boolean
+          creator_onboarding_completed_at?: string | null
           days_out?: string[] | null
           deleted_at?: string | null
           frequency?: string | null
@@ -2000,6 +2277,8 @@ export type Database = {
           intent_level?: string | null
           interest_categories?: string[] | null
           is_public?: boolean | null
+          onboarding_path?: string | null
+          onboarding_path_selected_at?: string | null
           personality_style?: string | null
           preferred_vibes?: string[] | null
           show_checkins?: boolean | null
@@ -2020,6 +2299,7 @@ export type Database = {
           created_at?: string | null
           creator_headline?: string | null
           creator_mode_enabled?: boolean
+          creator_onboarding_completed_at?: string | null
           days_out?: string[] | null
           deleted_at?: string | null
           frequency?: string | null
@@ -2031,6 +2311,8 @@ export type Database = {
           intent_level?: string | null
           interest_categories?: string[] | null
           is_public?: boolean | null
+          onboarding_path?: string | null
+          onboarding_path_selected_at?: string | null
           personality_style?: string | null
           preferred_vibes?: string[] | null
           show_checkins?: boolean | null

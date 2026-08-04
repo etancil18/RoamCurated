@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 
+import {
+  evaluateOnboardingNextPath,
+} from '@/lib/onboarding/getOnboardingNextPath'
+
 type OnboardingProfilePayload = {
   full_name?: unknown
   username?: unknown
@@ -86,7 +90,16 @@ export async function POST(req: Request) {
       )
     }
 
-    return NextResponse.json({ profile: data }, { status: 200 })
+    const routing =
+      evaluateOnboardingNextPath(data)
+
+    return NextResponse.json(
+      {
+        profile: data,
+        nextPath: routing.nextPath,
+      },
+      { status: 200 }
+    )
   } catch (error) {
     console.error('Unexpected profile onboarding error:', error)
 

@@ -1,7 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import {
+  useRouter,
+  useSearchParams,
+} from 'next/navigation'
 
 const VIBE_OPTIONS = [
   'rooftops',
@@ -36,8 +39,37 @@ const DAY_OPTIONS = [
   'sundays',
 ]
 
+const ALLOWED_NEXT_PATHS = [
+  '/profile',
+  '/onboarding/creator',
+] as const
+
+type AllowedNextPath =
+  (typeof ALLOWED_NEXT_PATHS)[number]
+
+function getValidatedNextPath(
+  value: string | null
+): AllowedNextPath {
+  if (
+    value &&
+    (
+      ALLOWED_NEXT_PATHS as readonly string[]
+    ).includes(value)
+  ) {
+    return value as AllowedNextPath
+  }
+
+  return '/profile'
+}
+
 export default function OnboardingProfilePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const nextPath =
+  getValidatedNextPath(
+    searchParams?.get('next') ?? null
+  )
 
   const [form, setForm] = useState({
     full_name: '',
@@ -110,7 +142,7 @@ export default function OnboardingProfilePage() {
         return
       }
 
-      router.replace('/profile')
+      router.replace(nextPath)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save profile')
     } finally {

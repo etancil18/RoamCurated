@@ -1,6 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 
+import {
+  evaluateOnboardingNextPath,
+  type OnboardingRoutingResult,
+} from '@/lib/onboarding/getOnboardingNextPath'
+
+const PROFILE_ONBOARDING_COLUMNS = `
+  id,
+  full_name,
+  username,
+  home_neighborhood,
+  preferred_vibes,
+  interest_categories,
+  deleted_at,
+  has_seen_roam_intro,
+  onboarding_path,
+  creator_onboarding_completed_at
+` as const
+
+type OnboardingStatusResponse = {
+  hasSeenRoamIntro: boolean
+  onboardingPath: OnboardingRoutingResult['onboardingPath']
+  profileCompleted: boolean
+  creatorOnboardingCompleted: boolean
+  nextPath: string
+}
+
 export async function GET(_req: NextRequest) {
   const supabase = await supabaseServerApi()
 
@@ -18,7 +44,7 @@ export async function GET(_req: NextRequest) {
 
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('has_seen_roam_intro')
+    .select(PROFILE_ONBOARDING_COLUMNS)
     .eq('id', user.id)
     .maybeSingle()
 
@@ -31,9 +57,42 @@ export async function GET(_req: NextRequest) {
     )
   }
 
+  /**
+   * Preserve the existing behavior for authenticated users whose profile row
+   * has not been created yet.
+   *
+   * They have not seen the intro, have not selected a path, and should begin
+   * at the Welcome page.
+   */
+  if (!profile) {
+    return NextResponse.json({
+      hasSeenRoamIntro: false,
+      onboardingPath: null,
+      profileCompleted: false,
+      creatorOnboardingCompleted: false,
+      nextPath: '/welcome',
+    } satisfies OnboardingStatusResponse)
+  }
+
+  const routing =
+    evaluateOnboardingNextPath(profile)
+
   return NextResponse.json({
-    hasSeenRoamIntro: profile?.has_seen_roam_intro === true,
-  })
+    hasSeenRoamIntro:
+      routing.hasSeenRoamIntro,
+
+    onboardingPath:
+      routing.onboardingPath,
+
+    profileCompleted:
+      routing.profileCompleted,
+
+    creatorOnboardingCompleted:
+      routing.creatorOnboardingCompleted,
+
+    nextPath:
+      routing.nextPath,
+  } satisfies OnboardingStatusResponse)
 }
 
 export async function POST(_req: NextRequest) {
@@ -63,7 +122,7 @@ export async function POST(_req: NextRequest) {
         onConflict: 'id',
       }
     )
-    .select('id, has_seen_roam_intro')
+    .select(PROFILE_ONBOARDING_COLUMNS)
     .single()
 
   if (error) {
@@ -75,8 +134,25 @@ export async function POST(_req: NextRequest) {
     )
   }
 
+  const routing =
+    evaluateOnboardingNextPath(data)
+
   return NextResponse.json({
     success: true,
-    hasSeenRoamIntro: data.has_seen_roam_intro === true,
+
+    hasSeenRoamIntro:
+      routing.hasSeenRoamIntro,
+
+    onboardingPath:
+      routing.onboardingPath,
+
+    profileCompleted:
+      routing.profileCompleted,
+
+    creatorOnboardingCompleted:
+      routing.creatorOnboardingCompleted,
+
+    nextPath:
+      routing.nextPath,
   })
 }

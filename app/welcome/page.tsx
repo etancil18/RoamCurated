@@ -62,34 +62,23 @@ export default function WelcomePage() {
   }, [router])
 
   const startRoaming = async () => {
-    setStarting(true)
-    setError(null)
+  setStarting(true)
+  setError(null)
 
-    try {
-      const res = await fetch('/api/user/onboarding', {
-        method: 'POST',
-        credentials: 'include',
-      })
+  try {
+    router.replace('/onboarding')
+  } catch (err) {
+    console.error('[WelcomePage] Failed to start onboarding:', err)
 
-      const data = (await res.json().catch(() => null)) as
-        | OnboardingStatusResponse
-        | null
+    setError(
+      err instanceof Error
+        ? err.message
+        : 'Something went wrong starting onboarding.'
+    )
 
-      if (!res.ok) {
-        throw new Error(data?.error || 'Failed to start Roam')
-      }
-
-      router.replace('/')
-    } catch (err) {
-      console.error('[WelcomePage] Failed to complete onboarding:', err)
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Something went wrong starting Roam.'
-      )
-      setStarting(false)
-    }
+    setStarting(false)
   }
+}
 
   if (loading) {
     return (

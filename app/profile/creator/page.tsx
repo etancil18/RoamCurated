@@ -10,6 +10,8 @@ import {
 
 import CreatorModeForm from '@/components/profile/creator/CreatorModeForm'
 
+import CreatorKnowledgeAnswersEditor from '@/components/profile/creator/CreatorKnowledgeAnswersEditor'
+
 import {
   CreatorSettingsLoadError,
   getCreatorSettings,
@@ -23,6 +25,19 @@ import {
 import {
   safelyLoadPublicCreatorReputation,
 } from '@/lib/reputation/safelyLoadPublicCreatorReputation'
+
+import {
+  CreatorOnboardingLoadError,
+  getPrivateCreatorOnboarding,
+} from '@/lib/creator-onboarding/getCreatorOnboarding'
+
+import {
+  createServerClient,
+} from '@/lib/supabase/server'
+
+import type {
+  CreatorOnboardingState,
+} from '@/lib/creator-onboarding/types'
 
 export const dynamic =
   'force-dynamic'
@@ -103,6 +118,43 @@ export default async function CreatorSettingsPage() {
     availableTags,
   } =
     settings
+
+  let creatorOnboarding:
+    CreatorOnboardingState | null =
+      null
+
+  try {
+    const supabase =
+      await createServerClient()
+
+    creatorOnboarding =
+      await getPrivateCreatorOnboarding({
+        supabase,
+        creatorUserId:
+          userId,
+      })
+  } catch (error) {
+    if (
+      error instanceof
+      CreatorOnboardingLoadError
+    ) {
+      console.error(
+        '[app/profile/creator/page] Creator knowledge failed to load:',
+        {
+          code:
+            error.code,
+
+          message:
+            error.message,
+        }
+      )
+    } else {
+      console.error(
+        '[app/profile/creator/page] Unexpected creator knowledge load failure:',
+        error
+      )
+    }
+  }
 
   /**
    * Server-component equivalent of the authenticated
@@ -272,6 +324,27 @@ export default async function CreatorSettingsPage() {
           </section>
 
           <section
+            id="creator-knowledge"
+            aria-labelledby="creator-knowledge-title"
+            className="scroll-mt-28"
+          >
+            <SectionHeading
+              id="creator-knowledge-title"
+              eyebrow="Your point of view"
+              title="Manage your creator knowledge"
+              description="Review and update the answers that capture your recommendations, routines, local expertise, and personal taste."
+            />
+
+            <div className="mt-4">
+              <CreatorKnowledgeAnswersEditor
+                initialOnboarding={
+                  creatorOnboarding
+                }
+              />
+            </div>
+          </section>
+
+          <section
             id="creator-collections"
             aria-labelledby="creator-collections-title"
             className="scroll-mt-28"
@@ -425,6 +498,13 @@ function CreatorSettingsNavigation() {
 
       label:
         'Profile',
+    },
+    {
+      id:
+        'creator-knowledge',
+
+      label:
+        'Knowledge',
     },
     {
       id:
