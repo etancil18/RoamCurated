@@ -66,8 +66,12 @@ export default function LoginPage() {
       return
     }
 
+    const origin = window.location.origin
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://roam-curated.vercel.app/auth/update-password',
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
+        '/auth/update-password'
+      )}`,
     })
 
     if (error) {

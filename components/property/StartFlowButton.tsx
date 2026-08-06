@@ -147,6 +147,42 @@ export default function StartFlowButton({
 
       const json = await response.json().catch(() => null)
 
+      if (response.status === 401) {
+        safeLogEvent(
+          'property_flow_auth_required',
+          analytics
+        )
+
+        const createAccount = window.confirm(
+          'Create a free Roam account to start this Flow, save your progress, check in at each stop, and unlock the full Roam experience.'
+        )
+
+        if (createAccount) {
+          const returnTo = `${window.location.pathname}${window.location.search}`
+
+          const loginUrl = new URL(
+            json?.redirectTo ?? '/login',
+            window.location.origin
+          )
+
+          loginUrl.searchParams.set(
+            'intent',
+            'start_flow'
+          )
+
+          loginUrl.searchParams.set(
+            'next',
+            returnTo
+          )
+
+          router.push(
+            `${loginUrl.pathname}${loginUrl.search}`
+          )
+        }
+
+        return
+      }
+
       if (response.status === 409 && json?.activeSession) {
         safeLogEvent(
           'property_flow_existing_session',

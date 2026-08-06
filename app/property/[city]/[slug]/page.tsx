@@ -9,7 +9,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import PropertyCrawls from '@/app/property/components/PropertyCrawls'
 import EventJourneys from '@/app/property/components/EventJourneys'
 import SavePropertyButton from '../../components/SavePropertyButton'
-import PropertyVenueCheckInButton from '@/components/property/PropertyVenueCheckInButton'
 
 import { getPropertyGuideData } from '@/lib/property/getPropertyGuideData'
 import { buildEventJourneyVMs } from '@/lib/view-models/buildEventJourneyVM'
@@ -508,20 +507,11 @@ function VenueSection({
                 )}
 
                 <div className="flex flex-wrap gap-2">
-                  <PropertyVenueCheckInButton
-                    venueId={venue.id}
-                    venueName={venue.name}
-                    city={property.city}
-                    propertyId={property.id}
-                    propertySlug={property.slug}
-                    propertyName={property.name}
-                  />
-
                   <Link
                     href={venue.href}
                     className="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10"
                   >
-                    View
+                    View Profile
                   </Link>
                 </div>
               </div>

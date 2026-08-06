@@ -199,6 +199,42 @@ export default async function VenueProfilePage({
           )}`
         : '/'
 
+  const venueAddress =
+    typeof normalizedVenue.address ===
+      'string' &&
+    normalizedVenue.address.trim().length >
+      0
+      ? normalizedVenue.address.trim()
+      : null
+
+  const venueMapsQuery =
+  venueAddress ??
+  (
+    [
+      normalizedVenue.name,
+      normalizedVenue.city,
+    ]
+      .filter(
+        (
+          value
+        ): value is string =>
+          typeof value === 'string' &&
+          value.trim().length > 0
+      )
+      .join(', ') ||
+    (
+      venueLat !== null &&
+      venueLon !== null
+        ? `${venueLat},${venueLon}`
+        : normalizedVenue.name
+    )
+  )
+
+const venueMapsHref =
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    venueMapsQuery
+  )}`
+
   const nowIso =
     new Date().toISOString()
 
@@ -543,12 +579,18 @@ export default async function VenueProfilePage({
                 )}
 
                 {normalizedVenue.address && (
-                  <p className="whitespace-pre-line rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-slate-300">
+                  <a
+                    href={venueMapsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Open ${normalizedVenue.name} in Google Maps`}
+                    className="block whitespace-pre-line rounded-2xl border border-white/10 bg-black/30 p-4 text-sm leading-6 text-slate-300 transition hover:border-cyan-400/40 hover:bg-white/[0.07] hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                  >
                     📍{' '}
                     {
                       normalizedVenue.address
                     }
-                  </p>
+                  </a>
                 )}
               </div>
 
@@ -564,8 +606,6 @@ export default async function VenueProfilePage({
                     shadow-black/20
                   "
                 >
-                  
-
                   <VenueVisitButton
                     venueId={
                       venueId

@@ -233,7 +233,7 @@ export function ControlPanel({
                   },
                 })
               }}
-              className={`${inputBase} pl-10`}
+              className={`${inputBase} pl-10 text-base sm:text-sm`}
               aria-label="Search venues"
             />
           </div>

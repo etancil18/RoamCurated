@@ -23,7 +23,13 @@ export async function POST(req: Request) {
 
     if (userError || !user) {
       return NextResponse.json(
-        { error: 'User not authenticated' },
+        {
+          error:
+            'Create a free Roam account to start this Flow and unlock the full experience.',
+          code: 'AUTH_REQUIRED',
+          authRequired: true,
+          redirectTo: '/login',
+        },
         { status: 401 }
       )
     }
