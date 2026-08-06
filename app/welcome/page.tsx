@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 type OnboardingStatusResponse = {
   hasSeenRoamIntro?: boolean
+  nextPath?: string
   error?: string
 }
 
@@ -62,23 +63,38 @@ export default function WelcomePage() {
   }, [router])
 
   const startRoaming = async () => {
-  setStarting(true)
-  setError(null)
+    setStarting(true)
+    setError(null)
 
-  try {
-    router.replace('/onboarding')
-  } catch (err) {
-    console.error('[WelcomePage] Failed to start onboarding:', err)
+    try {
+      const response = await fetch('/api/user/onboarding', {
+        method: 'POST',
+        credentials: 'include',
+      })
 
-    setError(
-      err instanceof Error
-        ? err.message
-        : 'Something went wrong starting onboarding.'
-    )
+      const data = (await response.json().catch(() => null)) as
+        | OnboardingStatusResponse
+        | null
 
-    setStarting(false)
+      if (!response.ok) {
+        throw new Error(
+          data?.error || 'Something went wrong starting onboarding.'
+        )
+      }
+
+      router.replace(data?.nextPath || '/onboarding')
+    } catch (err) {
+      console.error('[WelcomePage] Failed to start onboarding:', err)
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong starting onboarding.'
+      )
+
+      setStarting(false)
+    }
   }
-}
 
   if (loading) {
     return (
