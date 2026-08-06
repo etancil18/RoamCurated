@@ -43,6 +43,7 @@ export async function GET(_req: NextRequest) {
   }
 
   const { data: profile, error } = await supabase
+    .schema('public')
     .from('profiles')
     .select(PROFILE_ONBOARDING_COLUMNS)
     .eq('id', user.id)
@@ -111,6 +112,7 @@ export async function POST(_req: NextRequest) {
   }
 
   const { data, error } = await supabase
+    .schema('public')
     .from('profiles')
     .upsert(
       {
