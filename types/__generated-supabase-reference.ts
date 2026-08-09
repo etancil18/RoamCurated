@@ -2922,6 +2922,336 @@ export type Database = {
           },
         ]
       }
+      social_group_event_attendee_activity: {
+        Row: {
+          after_venue_1_at: string | null
+          after_venue_1_id: string | null
+          after_venue_2_at: string | null
+          after_venue_2_id: string | null
+          after_window_end: string | null
+          attendance_at: string
+          attendance_source: string
+          before_venue_1_at: string | null
+          before_venue_1_id: string | null
+          before_venue_2_at: string | null
+          before_venue_2_id: string | null
+          before_window_start: string | null
+          calculated_at: string
+          calculation_version: number
+          created_at: string
+          event_checkin_at: string | null
+          event_end: string | null
+          event_id: string
+          event_start: string | null
+          event_timezone: string | null
+          event_venue_id: string | null
+          event_venue_visit_at: string | null
+          had_after_movement: boolean | null
+          had_before_and_after_movement: boolean | null
+          had_before_movement: boolean | null
+          id: string
+          is_first_time_group_attendee: boolean
+          is_repeat_group_attendee: boolean
+          roam_flow_completions: number
+          roam_flow_starts: number
+          roam_flow_venue_stops: number
+          social_group_id: string
+          updated_at: string
+          user_id: string
+          xp_generated: number
+        }
+        Insert: {
+          after_venue_1_at?: string | null
+          after_venue_1_id?: string | null
+          after_venue_2_at?: string | null
+          after_venue_2_id?: string | null
+          after_window_end?: string | null
+          attendance_at: string
+          attendance_source: string
+          before_venue_1_at?: string | null
+          before_venue_1_id?: string | null
+          before_venue_2_at?: string | null
+          before_venue_2_id?: string | null
+          before_window_start?: string | null
+          calculated_at?: string
+          calculation_version?: number
+          created_at?: string
+          event_checkin_at?: string | null
+          event_end?: string | null
+          event_id: string
+          event_start?: string | null
+          event_timezone?: string | null
+          event_venue_id?: string | null
+          event_venue_visit_at?: string | null
+          had_after_movement?: boolean | null
+          had_before_and_after_movement?: boolean | null
+          had_before_movement?: boolean | null
+          id?: string
+          is_first_time_group_attendee?: boolean
+          is_repeat_group_attendee?: boolean
+          roam_flow_completions?: number
+          roam_flow_starts?: number
+          roam_flow_venue_stops?: number
+          social_group_id: string
+          updated_at?: string
+          user_id: string
+          xp_generated?: number
+        }
+        Update: {
+          after_venue_1_at?: string | null
+          after_venue_1_id?: string | null
+          after_venue_2_at?: string | null
+          after_venue_2_id?: string | null
+          after_window_end?: string | null
+          attendance_at?: string
+          attendance_source?: string
+          before_venue_1_at?: string | null
+          before_venue_1_id?: string | null
+          before_venue_2_at?: string | null
+          before_venue_2_id?: string | null
+          before_window_start?: string | null
+          calculated_at?: string
+          calculation_version?: number
+          created_at?: string
+          event_checkin_at?: string | null
+          event_end?: string | null
+          event_id?: string
+          event_start?: string | null
+          event_timezone?: string | null
+          event_venue_id?: string | null
+          event_venue_visit_at?: string | null
+          had_after_movement?: boolean | null
+          had_before_and_after_movement?: boolean | null
+          had_before_movement?: boolean | null
+          id?: string
+          is_first_time_group_attendee?: boolean
+          is_repeat_group_attendee?: boolean
+          roam_flow_completions?: number
+          roam_flow_starts?: number
+          roam_flow_venue_stops?: number
+          social_group_id?: string
+          updated_at?: string
+          user_id?: string
+          xp_generated?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_group_event_attendee_activity_after_venue_1_id_fkey"
+            columns: ["after_venue_1_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_after_venue_1_id_fkey"
+            columns: ["after_venue_1_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_after_venue_2_id_fkey"
+            columns: ["after_venue_2_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_after_venue_2_id_fkey"
+            columns: ["after_venue_2_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_before_venue_1_id_fkey"
+            columns: ["before_venue_1_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_before_venue_1_id_fkey"
+            columns: ["before_venue_1_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_before_venue_2_id_fkey"
+            columns: ["before_venue_2_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_before_venue_2_id_fkey"
+            columns: ["before_venue_2_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_event_venue_id_fkey"
+            columns: ["event_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_event_venue_id_fkey"
+            columns: ["event_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_group_event_attendee_activity_social_group_id_fkey"
+            columns: ["social_group_id"]
+            isOneToOne: false
+            referencedRelation: "social_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_group_event_metrics: {
+        Row: {
+          after_venue_visit_count: number
+          after_venue_visitors: number
+          after_window_end: string | null
+          before_venue_visit_count: number
+          before_venue_visitors: number
+          before_window_start: string | null
+          both_before_and_after: number
+          both_checkin_and_venue_visit: number
+          calculated_at: string
+          calculation_version: number
+          created_at: string
+          event_end: string | null
+          event_id: string
+          event_start: string | null
+          event_timezone: string | null
+          explicit_event_checkins: number
+          first_time_group_attendees: number
+          flow_completions: number
+          flow_starts: number
+          flow_venue_stops: number
+          id: string
+          interested_users: number
+          outing_planner_opens: number
+          repeat_group_attendees: number
+          social_group_id: string
+          ticket_clicks: number
+          unique_attendees: number
+          updated_at: string
+          venue_id: string | null
+          venue_only_attendees: number
+          xp_generated: number
+        }
+        Insert: {
+          after_venue_visit_count?: number
+          after_venue_visitors?: number
+          after_window_end?: string | null
+          before_venue_visit_count?: number
+          before_venue_visitors?: number
+          before_window_start?: string | null
+          both_before_and_after?: number
+          both_checkin_and_venue_visit?: number
+          calculated_at?: string
+          calculation_version?: number
+          created_at?: string
+          event_end?: string | null
+          event_id: string
+          event_start?: string | null
+          event_timezone?: string | null
+          explicit_event_checkins?: number
+          first_time_group_attendees?: number
+          flow_completions?: number
+          flow_starts?: number
+          flow_venue_stops?: number
+          id?: string
+          interested_users?: number
+          outing_planner_opens?: number
+          repeat_group_attendees?: number
+          social_group_id: string
+          ticket_clicks?: number
+          unique_attendees?: number
+          updated_at?: string
+          venue_id?: string | null
+          venue_only_attendees?: number
+          xp_generated?: number
+        }
+        Update: {
+          after_venue_visit_count?: number
+          after_venue_visitors?: number
+          after_window_end?: string | null
+          before_venue_visit_count?: number
+          before_venue_visitors?: number
+          before_window_start?: string | null
+          both_before_and_after?: number
+          both_checkin_and_venue_visit?: number
+          calculated_at?: string
+          calculation_version?: number
+          created_at?: string
+          event_end?: string | null
+          event_id?: string
+          event_start?: string | null
+          event_timezone?: string | null
+          explicit_event_checkins?: number
+          first_time_group_attendees?: number
+          flow_completions?: number
+          flow_starts?: number
+          flow_venue_stops?: number
+          id?: string
+          interested_users?: number
+          outing_planner_opens?: number
+          repeat_group_attendees?: number
+          social_group_id?: string
+          ticket_clicks?: number
+          unique_attendees?: number
+          updated_at?: string
+          venue_id?: string | null
+          venue_only_attendees?: number
+          xp_generated?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_group_event_metrics_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_group_event_metrics_social_group_id_fkey"
+            columns: ["social_group_id"]
+            isOneToOne: false
+            referencedRelation: "social_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_group_event_metrics_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "social_group_event_metrics_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_group_members: {
         Row: {
           created_at: string
@@ -4408,6 +4738,11 @@ export type Database = {
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
       rebuild_venue_reputation_categories: { Args: never; Returns: number }
+      refresh_social_group_event_metrics: {
+        Args: { target_event_id: string }
+        Returns: Json
+      }
+      roam_city_timezone: { Args: { city_value: string }; Returns: string }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown

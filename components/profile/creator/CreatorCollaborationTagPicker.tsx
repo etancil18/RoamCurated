@@ -23,6 +23,8 @@ import type {
   CollaborationTagCategory,
 } from '@/lib/creator/types'
 
+import { logEvent } from '@/lib/logEvent'
+
 /* =========================================================
  * Public component contract
  * ======================================================= */
@@ -125,6 +127,17 @@ export default function CreatorCollaborationTagPicker({
     [activeTags]
   )
 
+  const tagById = useMemo(
+    () =>
+      new Map(
+        activeTags.map((tag) => [
+          tag.id,
+          tag,
+        ])
+      ),
+    [activeTags]
+  )
+
   const normalizedSelectedTagIds =
     useMemo(
       () =>
@@ -221,21 +234,69 @@ export default function CreatorCollaborationTagPicker({
 
     interact()
 
+    const tag =
+      tagById.get(tagId)
+
     if (isSelected) {
-      onChange(
+      const nextSelection =
         normalizedSelectedTagIds.filter(
           (selectedId) =>
             selectedId !== tagId
         )
+
+      safeLogCreatorEvent(
+        'creator_collaboration_tag_removed',
+        {
+          tag_id: tagId,
+          tag_label:
+            tag?.label ?? null,
+          tag_slug:
+            tag?.slug ?? null,
+          tag_category:
+            tag?.category ?? null,
+          previous_selection_count:
+            normalizedSelectedTagIds.length,
+          next_selection_count:
+            nextSelection.length,
+          max_selections:
+            normalizedMaxSelections,
+          interaction_source:
+            'tag_picker_option',
+        }
       )
+
+      onChange(nextSelection)
 
       return
     }
 
-    onChange([
+    const nextSelection = [
       ...normalizedSelectedTagIds,
       tagId,
-    ])
+    ]
+
+    safeLogCreatorEvent(
+      'creator_collaboration_tag_selected',
+      {
+        tag_id: tagId,
+        tag_label:
+          tag?.label ?? null,
+        tag_slug:
+          tag?.slug ?? null,
+        tag_category:
+          tag?.category ?? null,
+        previous_selection_count:
+          normalizedSelectedTagIds.length,
+        next_selection_count:
+          nextSelection.length,
+        max_selections:
+          normalizedMaxSelections,
+        interaction_source:
+          'tag_picker_option',
+      }
+    )
+
+    onChange(nextSelection)
   }
 
   function removeTag(tagId: number) {
@@ -248,12 +309,37 @@ export default function CreatorCollaborationTagPicker({
 
     interact()
 
-    onChange(
+    const tag =
+      tagById.get(tagId)
+
+    const nextSelection =
       normalizedSelectedTagIds.filter(
         (selectedId) =>
           selectedId !== tagId
       )
+
+    safeLogCreatorEvent(
+      'creator_collaboration_tag_removed',
+      {
+        tag_id: tagId,
+        tag_label:
+          tag?.label ?? null,
+        tag_slug:
+          tag?.slug ?? null,
+        tag_category:
+          tag?.category ?? null,
+        previous_selection_count:
+          normalizedSelectedTagIds.length,
+        next_selection_count:
+          nextSelection.length,
+        max_selections:
+          normalizedMaxSelections,
+        interaction_source:
+          'selected_tag_summary',
+      }
     )
+
+    onChange(nextSelection)
   }
 
   function clearAll() {
@@ -265,6 +351,25 @@ export default function CreatorCollaborationTagPicker({
     }
 
     interact()
+
+    safeLogCreatorEvent(
+      'creator_collaboration_tags_cleared',
+      {
+        cleared_tag_count:
+          normalizedSelectedTagIds.length,
+        cleared_tag_ids:
+          normalizedSelectedTagIds,
+        cleared_tag_categories:
+          selectedTags.map(
+            (tag) => tag.category
+          ),
+        max_selections:
+          normalizedMaxSelections,
+        interaction_source:
+          'selected_tag_summary',
+      }
+    )
+
     onChange([])
   }
 
@@ -1018,4 +1123,32 @@ function normalizeSelectionLimit(
   }
 
   return Math.min(value, 100)
+}
+
+/* =========================================================
+ * Analytics
+ * ======================================================= */
+
+function safeLogCreatorEvent(
+  eventName: string,
+  metadata: Record<string, unknown>
+) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata: {
+          component:
+            'CreatorCollaborationTagPicker',
+          creator_surface:
+            'collaboration_preferences',
+          ...metadata,
+        },
+      })
+    )
+  } catch (error) {
+    console.warn(
+      '[CreatorCollaborationTagPicker] Analytics logging failed:',
+      error
+    )
+  }
 }

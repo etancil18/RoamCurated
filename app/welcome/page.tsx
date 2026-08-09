@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+
+import { logEvent } from '@/lib/logEvent'
 
 type OnboardingStatusResponse = {
   hasSeenRoamIntro?: boolean
@@ -11,6 +13,9 @@ type OnboardingStatusResponse = {
 
 export default function WelcomePage() {
   const router = useRouter()
+
+  const welcomeImpressionLoggedRef =
+    useRef(false)
 
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
@@ -62,9 +67,41 @@ export default function WelcomePage() {
     }
   }, [router])
 
+  useEffect(() => {
+    if (
+      loading ||
+      welcomeImpressionLoggedRef.current
+    ) {
+      return
+    }
+
+    welcomeImpressionLoggedRef.current = true
+
+    safeLogEvent('welcome_page_viewed', {
+      page: 'welcome',
+      pathname: '/welcome',
+      onboarding_entrypoint:
+        'roam_intro',
+      onboarding_status_error:
+        Boolean(error),
+    })
+  }, [error, loading])
+
   const startRoaming = async () => {
+    if (starting) {
+      return
+    }
+
     setStarting(true)
     setError(null)
+
+    safeLogEvent('welcome_start_roaming_clicked', {
+      page: 'welcome',
+      pathname: '/welcome',
+      onboarding_entrypoint:
+        'roam_intro',
+      cta_label: 'Start Roaming',
+    })
 
     try {
       const response = await fetch('/api/user/onboarding', {
@@ -82,16 +119,35 @@ export default function WelcomePage() {
         )
       }
 
-      router.replace(data?.nextPath || '/onboarding')
+      const nextPath =
+        data?.nextPath || '/onboarding'
+
+      safeLogEvent('welcome_start_roaming_succeeded', {
+        page: 'welcome',
+        pathname: '/welcome',
+        onboarding_entrypoint:
+          'roam_intro',
+        next_path: nextPath,
+      })
+
+      router.replace(nextPath)
     } catch (err) {
       console.error('[WelcomePage] Failed to start onboarding:', err)
 
-      setError(
+      const errorMessage =
         err instanceof Error
           ? err.message
           : 'Something went wrong starting onboarding.'
-      )
 
+      safeLogEvent('welcome_start_roaming_failed', {
+        page: 'welcome',
+        pathname: '/welcome',
+        onboarding_entrypoint:
+          'roam_intro',
+        error: errorMessage,
+      })
+
+      setError(errorMessage)
       setStarting(false)
     }
   }
@@ -250,4 +306,26 @@ function FeatureCard({
       </p>
     </div>
   )
+}
+
+/* =========================================================
+ * Analytics
+ * ======================================================= */
+
+function safeLogEvent(
+  eventName: string,
+  metadata: Record<string, unknown> = {}
+) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn(
+      '[WelcomePage] Analytics logging failed:',
+      error
+    )
+  }
 }

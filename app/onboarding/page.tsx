@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { createServerClient } from '@/lib/supabase/server'
+import { logEvent } from '@/lib/logEvent'
 
 import {
   evaluateOnboardingNextPath,
@@ -378,6 +379,17 @@ async function selectOnboardingPath(
     )
   }
 
+  await safeLogOnboardingEvent(
+    'onboarding_path_selected',
+    {
+      user_id: user.id,
+      selected_path: selectedPath,
+      selected_at: selectedAt,
+      destination: routing.nextPath,
+      source: 'onboarding_path_chooser',
+    }
+  )
+
   redirect(routing.nextPath)
 }
 
@@ -630,6 +642,28 @@ function OnboardingLoadFailure({
       </section>
     </main>
   )
+}
+
+/* =========================================================
+ * Analytics
+ * ======================================================= */
+
+async function safeLogOnboardingEvent(
+  eventName: string,
+  metadata: Record<string, unknown>
+) {
+  try {
+    await Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn(
+      '[app/onboarding/page] Analytics logging failed:',
+      error
+    )
+  }
 }
 
 /* =========================================================

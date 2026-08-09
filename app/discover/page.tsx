@@ -1,10 +1,77 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+
 import UserSearch from '@/components/discover/UserSearch'
 import SuggestedRoamers from '@/components/discover/SuggestedRoamers'
 import RoamLeaderboard from '@/components/discover/RoamLeaderboard'
 
+import { logEvent } from '@/lib/logEvent'
+
 export const dynamic = 'force-dynamic'
 
+/* =========================================================
+ * Analytics
+ * ======================================================= */
+
+type DiscoverNavigationTarget =
+  | 'find_people'
+  | 'suggested_roamers'
+  | 'roam_leaderboard'
+
+type DiscoverClickSurface =
+  | 'hero_cta'
+  | 'section_navigation'
+
+function safeLogEvent(
+  eventName: string,
+  metadata: Record<string, unknown> = {}
+) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        metadata,
+      })
+    )
+  } catch (error) {
+    console.warn(
+      '[DiscoverPage] Analytics logging failed:',
+      error
+    )
+  }
+}
+
 export default function DiscoverPage() {
+  const pageViewLoggedRef = useRef(false)
+
+  useEffect(() => {
+    if (pageViewLoggedRef.current) {
+      return
+    }
+
+    pageViewLoggedRef.current = true
+
+    safeLogEvent('discover_page_viewed', {
+      page: 'discover',
+      pathname: '/discover',
+    })
+  }, [])
+
+  function handleDiscoverNavigation({
+    target,
+    surface,
+  }: {
+    target: DiscoverNavigationTarget
+    surface: DiscoverClickSurface
+  }) {
+    safeLogEvent('discover_navigation_clicked', {
+      page: 'discover',
+      pathname: '/discover',
+      target,
+      surface,
+    })
+  }
+
   return (
     <main className="min-h-screen overflow-x-clip bg-black px-4 pb-16 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6 sm:pt-[calc(4rem+env(safe-area-inset-top)+2rem)]">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -45,6 +112,12 @@ export default function DiscoverPage() {
               <div className="mt-5 flex flex-wrap gap-2">
                 <a
                   href="#find-roamers"
+                  onClick={() =>
+                    handleDiscoverNavigation({
+                      target: 'find_people',
+                      surface: 'hero_cta',
+                    })
+                  }
                   className="inline-flex min-h-10 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                 >
                   Find people
@@ -52,6 +125,12 @@ export default function DiscoverPage() {
 
                 <a
                   href="#roam-leaderboard"
+                  onClick={() =>
+                    handleDiscoverNavigation({
+                      target: 'roam_leaderboard',
+                      surface: 'hero_cta',
+                    })
+                  }
                   className="inline-flex min-h-10 items-center justify-center rounded-full border border-neutral-700 bg-black/30 px-4 py-2 text-xs font-semibold text-neutral-300 transition hover:border-amber-400/40 hover:bg-amber-400/10 hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
                 >
                   Explore rankings
@@ -112,6 +191,12 @@ export default function DiscoverPage() {
           <div className="flex min-w-0 gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <a
               href="#find-roamers"
+              onClick={() =>
+                handleDiscoverNavigation({
+                  target: 'find_people',
+                  surface: 'section_navigation',
+                })
+              }
               className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-xs font-semibold text-neutral-400 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
               Search
@@ -119,6 +204,12 @@ export default function DiscoverPage() {
 
             <a
               href="#suggested-roamers"
+              onClick={() =>
+                handleDiscoverNavigation({
+                  target: 'suggested_roamers',
+                  surface: 'section_navigation',
+                })
+              }
               className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-xs font-semibold text-neutral-400 transition hover:border-indigo-500/30 hover:bg-indigo-500/10 hover:text-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
             >
               Suggested
@@ -126,6 +217,12 @@ export default function DiscoverPage() {
 
             <a
               href="#roam-leaderboard"
+              onClick={() =>
+                handleDiscoverNavigation({
+                  target: 'roam_leaderboard',
+                  surface: 'section_navigation',
+                })
+              }
               className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-xs font-semibold text-neutral-400 transition hover:border-amber-400/30 hover:bg-amber-400/10 hover:text-amber-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
             >
               Leaderboard
