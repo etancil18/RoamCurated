@@ -150,6 +150,17 @@
   z-index: auto;
 }
 
+/*
+ * Venue pins must scale around their geographic anchor.
+ *
+ * The bottom-center of the pin represents the venue's actual lat/lon.
+ * Keeping the transform origin there prevents visual drift when the
+ * marker is scaled or Leaflet animates between zoom levels.
+ */
+.roam-map-icon--venue {
+  transform-origin: 50% 100%;
+}
+
 .roam-venue-marker {
   position: relative;
   width: 38px;

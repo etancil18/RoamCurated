@@ -10,6 +10,8 @@ import {
   type PropertyCrawlCard,
 } from '@/lib/property/buildPropertyCrawlCards'
 
+const PROPERTY_NEARBY_VENUE_RADIUS_KM = 5
+
 type PropertyRow = {
   id: string
   name: string
@@ -274,6 +276,56 @@ function uniqueById<T extends { id: string }>(items: T[]) {
   return result
 }
 
+function calculateDistanceKm(
+  originLat: number,
+  originLon: number,
+  destinationLat: number,
+  destinationLon: number
+): number {
+  const earthRadiusKm = 6371.0088
+
+  const latitudeDelta =
+    degreesToRadians(
+      destinationLat - originLat
+    )
+
+  const longitudeDelta =
+    degreesToRadians(
+      destinationLon - originLon
+    )
+
+  const originLatitude =
+    degreesToRadians(originLat)
+
+  const destinationLatitude =
+    degreesToRadians(destinationLat)
+
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(originLatitude) *
+      Math.cos(destinationLatitude) *
+      Math.sin(longitudeDelta / 2) ** 2
+
+  return (
+    earthRadiusKm *
+    2 *
+    Math.atan2(
+      Math.sqrt(haversine),
+      Math.sqrt(1 - haversine)
+    )
+  )
+}
+
+function degreesToRadians(
+  value: number
+): number {
+  return (
+    value *
+    Math.PI /
+    180
+  )
+}
+
 function isJourneyRelevantNow(
   journey: EventJourneyRecord,
   nowForCity: DateTime,
@@ -497,18 +549,31 @@ export async function getPropertyGuideData({
     ])
   )
 
-  const nearbyVenues = allCityVenues.filter(
-    (venue) => {
-      const latDiff = Math.abs(
-        venue.lat - property.lat
-      )
-      const lonDiff = Math.abs(
-        venue.lon - property.lon
-      )
-
-      return latDiff < 0.02 && lonDiff < 0.02
-    }
-  )
+  const nearbyVenues = allCityVenues
+    .map((venue) => ({
+      venue,
+      distanceKm:
+        calculateDistanceKm(
+          property.lat,
+          property.lon,
+          venue.lat,
+          venue.lon
+        ),
+    }))
+    .filter(
+      ({ distanceKm }) =>
+        distanceKm <=
+        PROPERTY_NEARBY_VENUE_RADIUS_KM
+    )
+    .sort(
+      (left, right) =>
+        left.distanceKm -
+        right.distanceKm
+    )
+    .map(
+      ({ venue }) =>
+        venue
+    )
 
   const coffeeNearby = nearbyVenues.filter(
     (venue) =>
@@ -552,7 +617,7 @@ export async function getPropertyGuideData({
   const mapVenues = uniqueById([
     ...favoriteVenues,
     ...nearbyVenues,
-  ]).slice(0, 40)
+  ])
 
   const { data: nearbyEventsData } =
     await supabase.rpc('get_nearby_events', {

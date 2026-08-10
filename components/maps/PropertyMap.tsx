@@ -157,6 +157,51 @@ export default function PropertyMap({
     })
 
   /* ------------------------------------------------ */
+  /* Property venue diagnostics                      */
+  /* ------------------------------------------------ */
+
+  useEffect(() => {
+    console.log(
+      '[PropertyMap venues received]',
+      {
+        property:
+          property.name,
+
+        propertyLat:
+          property.lat,
+
+        propertyLon:
+          property.lon,
+
+        venueCount:
+          venues.length,
+
+        venues:
+          venues.map(
+            (venue) => ({
+              id:
+                venue.id,
+
+              name:
+                venue.name,
+
+              lat:
+                venue.lat,
+
+              lon:
+                venue.lon,
+            })
+          ),
+      }
+    )
+  }, [
+    property.name,
+    property.lat,
+    property.lon,
+    venues,
+  ])
+
+  /* ------------------------------------------------ */
   /* Scroll zoom guard                                */
   /* ------------------------------------------------ */
 
@@ -357,14 +402,14 @@ export default function PropertyMap({
               ...v,
               lat:
                 typeof v.lat ===
-                'string'
+                  'string'
                   ? parseFloat(
                       v.lat
                     )
                   : v.lat,
               lon:
                 typeof v.lon ===
-                'string'
+                  'string'
                   ? parseFloat(
                       v.lon
                     )
@@ -390,6 +435,7 @@ export default function PropertyMap({
                 isRouteMode={
                   isVenueInRoute
                 }
+                markerScale={1}
                 routeIndex={
                   routeIndex
                 }

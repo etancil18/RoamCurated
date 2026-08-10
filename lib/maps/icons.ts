@@ -223,7 +223,7 @@ export const MAP_ICON_BASE_DIMENSIONS = {
     width: 38,
     height: 44,
     anchorX: 19,
-    anchorY: 40,
+    anchorY: 44,
     popupAnchorX: 0,
     popupAnchorY: -38,
     tooltipAnchorX: 0,

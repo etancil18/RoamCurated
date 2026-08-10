@@ -38,6 +38,15 @@ export type VenueCardLike = {
   city?: string | null
 }
 
+export type VenueCardContext =
+  | 'nearby'
+  | 'coffee'
+  | 'breakfast'
+  | 'lunch'
+  | 'dinner'
+  | 'drinks'
+  | 'wellness'
+
 export type BuildVenueCardVMOptions = {
   origin?: {
     lat: number
@@ -48,19 +57,131 @@ export type BuildVenueCardVMOptions = {
   includeOpenNowLabel?: boolean
   hostPickIds?: string[]
   maxChips?: number
+
+  /**
+   * Optional presentation context for nearby/property surfaces.
+   *
+   * This allows venues with multiple types to resolve the most relevant
+   * primary type for the section in which the card is being displayed.
+   *
+   * Existing callers do not need to provide this.
+   */
+  context?: VenueCardContext
 }
+
+const CONTEXT_TYPE_PRIORITY: Record<
+  Exclude<VenueCardContext, 'nearby'>,
+  string[]
+> = {
+  coffee: [
+    'coffee',
+    'cafe',
+    'café',
+    'coffee shop',
+    'tea',
+    'bakery',
+    'breakfast',
+  ],
+
+  breakfast: [
+    'breakfast',
+    'brunch',
+    'cafe',
+    'café',
+    'coffee',
+    'coffee shop',
+    'bakery',
+    'restaurant',
+  ],
+
+  lunch: [
+    'lunch',
+    'restaurant',
+    'cafe',
+    'café',
+    'sandwich',
+    'pizza',
+    'food',
+    'kitchen',
+  ],
+
+  dinner: [
+    'dinner',
+    'restaurant',
+    'kitchen',
+    'steakhouse',
+    'sushi',
+    'tapas',
+    'pizza',
+    'bbq',
+    'food',
+  ],
+
+  drinks: [
+    'cocktail',
+    'cocktails',
+    'cocktail bar',
+    'wine bar',
+    'wine',
+    'bar',
+    'lounge',
+    'speakeasy',
+    'pub',
+    'brewery',
+  ],
+
+  wellness: [
+    'wellness',
+    'spa',
+    'yoga',
+    'fitness',
+    'gym',
+    'pilates',
+    'recovery',
+  ],
+}
+
+const DISPLAY_VIBE_PRIORITY = [
+  'romantic',
+  'date night',
+  'intimate',
+  'cozy',
+  'lively',
+  'energetic',
+  'buzzing',
+  'upscale',
+  'elevated',
+  'refined',
+  'casual',
+  'easygoing',
+  'laid-back',
+  'social',
+  'relaxed',
+]
 
 export function buildVenueCardVM(
   venue: VenueCardLike,
   options: BuildVenueCardVMOptions = {}
 ): VenueCardVM {
-  const includeDistance = options.includeDistance ?? true
-  const includeWalkTime = options.includeWalkTime ?? true
-  const includeOpenNowLabel = options.includeOpenNowLabel ?? false
-  const maxChips = options.maxChips ?? 3
+  const includeDistance =
+    options.includeDistance ?? true
+
+  const includeWalkTime =
+    options.includeWalkTime ?? true
+
+  const includeOpenNowLabel =
+    options.includeOpenNowLabel ?? false
+
+  const maxChips =
+    options.maxChips ?? 3
+
+  const context =
+    options.context
 
   const distanceMeters =
-    options.origin && isFiniteNumber(venue.lat) && isFiniteNumber(venue.lon)
+    options.origin &&
+    isFiniteNumber(venue.lat) &&
+    isFiniteNumber(venue.lon)
       ? haversineDistanceMeters(
           options.origin.lat,
           options.origin.lon,
@@ -70,68 +191,180 @@ export function buildVenueCardVM(
       : null
 
   const walkTimeMinutes =
-    includeWalkTime && distanceMeters !== null
-      ? estimateWalkMinutes(distanceMeters)
+    includeWalkTime &&
+    distanceMeters !== null
+      ? estimateWalkMinutes(
+          distanceMeters
+        )
       : null
 
-  const primaryType = normalizePrimaryType(venue.type)
-  const typeLabel = primaryType ? humanizeTypeLabel(primaryType) : null
+  const venueTypes =
+    normalizeVenueTypes(
+      venue.type
+    )
+
+  const primaryType =
+    resolvePrimaryType(
+      venueTypes,
+      context
+    )
+
+  const typeLabel =
+    primaryType
+      ? humanizeTypeLabel(
+          primaryType
+        )
+      : null
+
+  const tags =
+    asStringArray(
+      venue.tags
+    )
 
   const vibeLabel =
-    cleanText(venue.vibe) ||
-    firstString(asStringArray(venue.vibes)) ||
-    inferVibeFromTags(asStringArray(venue.tags))
+    resolveVibeLabel({
+      vibe:
+        venue.vibe,
+
+      vibes:
+        asStringArray(
+          venue.vibes
+        ),
+
+      tags,
+    })
+
+  const contextualBestForLabel =
+    getContextBestForLabel(
+      context
+    )
 
   const bestForLabel =
-    firstString(asStringArray(venue.bestFor)) ||
-    firstString(asStringArray(venue.best_for)) ||
+    contextualBestForLabel ||
+    firstString(
+      asStringArray(
+        venue.bestFor
+      )
+    ) ||
+    firstString(
+      asStringArray(
+        venue.best_for
+      )
+    ) ||
     inferBestForLabel({
-      type: primaryType,
-      tags: asStringArray(venue.tags),
-      vibe: vibeLabel,
+      types:
+        venueTypes,
+
+      tags,
+
+      vibe:
+        vibeLabel,
     })
 
   const isHostPick =
-    Boolean(venue.label) ||
-    Boolean(options.hostPickIds?.includes(venue.id))
+    Boolean(
+      venue.label
+    ) ||
+    Boolean(
+      options.hostPickIds?.includes(
+        venue.id
+      )
+    )
 
   const hostPickLabel =
-    cleanText(venue.label) || (isHostPick ? 'Host pick' : null)
+    cleanText(
+      venue.label
+    ) ||
+    (
+      isHostPick
+        ? 'Host pick'
+        : null
+    )
 
-  const openNowLabel = includeOpenNowLabel
-    ? inferOpenNowLabel(venue.hours)
-    : null
+  const openNowLabel =
+    includeOpenNowLabel
+      ? inferOpenNowLabel(
+          venue.hours
+        )
+      : null
 
-  const chips = buildChips(
-    {
-      distanceLabel: includeDistance ? formatDistanceLabel(distanceMeters) : null,
-      walkTimeLabel: includeWalkTime ? formatWalkTimeLabel(walkTimeMinutes) : null,
-      typeLabel,
-      vibeLabel,
-      bestForLabel,
-      openNowLabel,
-      hostPickLabel: isHostPick ? hostPickLabel : null,
-    },
-    maxChips
-  )
+  const distanceLabel =
+    includeDistance
+      ? formatDistanceLabel(
+          distanceMeters
+        )
+      : null
+
+  const walkTimeLabel =
+    includeWalkTime
+      ? formatWalkTimeLabel(
+          walkTimeMinutes
+        )
+      : null
+
+  const chips =
+    buildChips(
+      {
+        distanceLabel,
+        walkTimeLabel,
+        typeLabel,
+        vibeLabel,
+        bestForLabel,
+        openNowLabel,
+        hostPickLabel:
+          isHostPick
+            ? hostPickLabel
+            : null,
+        context,
+      },
+      maxChips
+    )
 
   return {
-    id: venue.id,
-    name: venue.name,
-    href: cleanText(venue.link) || `/venue-profile/${venue.id}`,
-    imageUrl: normalizeImageUrl(venue.cover),
-    description: cleanDescription(venue.description),
+    id:
+      venue.id,
+
+    name:
+      venue.name,
+
+    href:
+      cleanText(
+        venue.link
+      ) ||
+      `/venue-profile/${venue.id}`,
+
+    imageUrl:
+      normalizeImageUrl(
+        venue.cover
+      ),
+
+    description:
+      cleanDescription(
+        venue.description
+      ),
+
     distanceMeters,
-    distanceLabel: includeDistance ? formatDistanceLabel(distanceMeters) : null,
+
+    distanceLabel,
+
     walkTimeMinutes,
-    walkTimeLabel: includeWalkTime ? formatWalkTimeLabel(walkTimeMinutes) : null,
+
+    walkTimeLabel,
+
     primaryType,
+
     typeLabel,
+
     vibeLabel,
+
     bestForLabel,
+
     openNowLabel,
+
     chips,
+
     isHostPick,
+
     hostPickLabel,
   }
 }
@@ -140,109 +373,603 @@ export function buildVenueCardVMs(
   venues: VenueCardLike[],
   options: BuildVenueCardVMOptions = {}
 ): VenueCardVM[] {
-  return venues.map((venue) => buildVenueCardVM(venue, options))
+  return venues.map(
+    (venue) =>
+      buildVenueCardVM(
+        venue,
+        options
+      )
+  )
 }
 
-function normalizePrimaryType(value: string | string[] | null | undefined) {
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const cleaned = cleanText(item)
-      if (cleaned) return cleaned
-    }
+function normalizeVenueTypes(
+  value:
+    | string
+    | string[]
+    | null
+    | undefined
+): string[] {
+  return asStringArray(
+    value
+  )
+    .map(
+      (type) =>
+        normalizeComparableValue(
+          type
+        )
+    )
+    .filter(
+      Boolean
+    )
+}
+
+function resolvePrimaryType(
+  types: string[],
+  context?:
+    VenueCardContext
+): string | null {
+  if (
+    types.length === 0
+  ) {
     return null
   }
 
-  return cleanText(value)
+  if (
+    context &&
+    context !== 'nearby'
+  ) {
+    const priorities =
+      CONTEXT_TYPE_PRIORITY[
+        context
+      ]
+
+    for (
+      const priority of
+        priorities
+    ) {
+      const match =
+        types.find(
+          (type) =>
+            matchesAny(
+              type,
+              [
+                priority,
+              ]
+            )
+        )
+
+      if (
+        match
+      ) {
+        return match
+      }
+    }
+  }
+
+  return (
+    types[0] ??
+    null
+  )
+}
+
+function getContextBestForLabel(
+  context?:
+    VenueCardContext
+): string | null {
+  switch (
+    context
+  ) {
+    case 'coffee':
+      return 'Good for coffee'
+
+    case 'breakfast':
+      return 'Good for breakfast'
+
+    case 'lunch':
+      return 'Good for lunch'
+
+    case 'dinner':
+      return 'Good for dinner'
+
+    case 'drinks':
+      return 'Good for drinks'
+
+    case 'wellness':
+      return 'Good for a reset'
+
+    case 'nearby':
+    default:
+      return null
+  }
 }
 
 function buildChips(
   values: {
-    distanceLabel: string | null
-    walkTimeLabel: string | null
-    typeLabel: string | null
-    vibeLabel: string | null
-    bestForLabel: string | null
-    openNowLabel: string | null
-    hostPickLabel: string | null
+    distanceLabel:
+      string | null
+    walkTimeLabel:
+      string | null
+    typeLabel:
+      string | null
+    vibeLabel:
+      string | null
+    bestForLabel:
+      string | null
+    openNowLabel:
+      string | null
+    hostPickLabel:
+      string | null
+    context?:
+      VenueCardContext
   },
   maxChips: number
 ) {
   const ordered = [
     values.hostPickLabel,
     values.openNowLabel,
-    values.bestForLabel,
-    values.vibeLabel,
-    values.typeLabel,
     values.walkTimeLabel,
     values.distanceLabel,
+    values.vibeLabel,
+    values.typeLabel,
+    values.bestForLabel,
   ]
 
-  const deduped: string[] = []
+  const deduped:
+    string[] = []
 
-  for (const value of ordered) {
-    const cleaned = cleanText(value)
-    if (!cleaned) continue
-    if (deduped.some((existing) => existing.toLowerCase() === cleaned.toLowerCase())) {
+  const usedSemanticGroups =
+    new Set<string>()
+
+  for (
+    const value of
+      ordered
+  ) {
+    const cleaned =
+      cleanText(
+        value
+      )
+
+    if (
+      !cleaned
+    ) {
       continue
     }
-    deduped.push(cleaned)
-    if (deduped.length >= maxChips) break
+
+    if (
+      isContextRedundantChip(
+        cleaned,
+        values.context
+      )
+    ) {
+      continue
+    }
+
+    const normalized =
+      normalizeComparableValue(
+        cleaned
+      )
+
+    if (
+      deduped.some(
+        (existing) =>
+          normalizeComparableValue(
+            existing
+          ) ===
+          normalized
+      )
+    ) {
+      continue
+    }
+
+    const semanticGroup =
+      getChipSemanticGroup(
+        cleaned
+      )
+
+    if (
+      semanticGroup &&
+      usedSemanticGroups.has(
+        semanticGroup
+      )
+    ) {
+      continue
+    }
+
+    deduped.push(
+      cleaned
+    )
+
+    if (
+      semanticGroup
+    ) {
+      usedSemanticGroups.add(
+        semanticGroup
+      )
+    }
+
+    if (
+      deduped.length >=
+      maxChips
+    ) {
+      break
+    }
   }
 
   return deduped
 }
 
+function isContextRedundantChip(
+  value: string,
+  context?:
+    VenueCardContext
+): boolean {
+  if (
+    !context ||
+    context === 'nearby'
+  ) {
+    return false
+  }
+
+  const normalized =
+    normalizeComparableValue(
+      value
+    )
+
+  switch (
+    context
+  ) {
+    case 'coffee':
+      return (
+        normalized ===
+          'good for coffee'
+      )
+
+    case 'breakfast':
+      return (
+        normalized ===
+          'good for breakfast' ||
+        normalized ===
+          'breakfast'
+      )
+
+    case 'lunch':
+      return (
+        normalized ===
+          'good for lunch' ||
+        normalized ===
+          'lunch'
+      )
+
+    case 'dinner':
+      return (
+        normalized ===
+          'good for dinner' ||
+        normalized ===
+          'dinner'
+      )
+
+    case 'drinks':
+      return (
+        normalized ===
+          'good for drinks'
+      )
+
+    case 'wellness':
+      return (
+        normalized ===
+          'good for a reset'
+      )
+
+    default:
+      return false
+  }
+}
+
+function getChipSemanticGroup(
+  value: string
+): string | null {
+  const normalized =
+    normalizeComparableValue(
+      value
+    )
+
+  if (
+    matchesAny(
+      normalized,
+      [
+        'good for coffee',
+        'coffee',
+        'coffee shop',
+        'cafe',
+        'café',
+      ]
+    )
+  ) {
+    return 'coffee'
+  }
+
+  if (
+    matchesAny(
+      normalized,
+      [
+        'good for breakfast',
+        'breakfast',
+        'brunch',
+      ]
+    )
+  ) {
+    return 'breakfast'
+  }
+
+  if (
+    matchesAny(
+      normalized,
+      [
+        'good for lunch',
+        'lunch',
+      ]
+    )
+  ) {
+    return 'lunch'
+  }
+
+  if (
+    matchesAny(
+      normalized,
+      [
+        'good for dinner',
+        'dinner',
+        'restaurant',
+        'kitchen',
+      ]
+    )
+  ) {
+    return 'dinner'
+  }
+
+  if (
+    matchesAny(
+      normalized,
+      [
+        'good for drinks',
+        'cocktail',
+        'cocktail bar',
+        'wine bar',
+        'bar',
+        'pub',
+        'brewery',
+        'lounge',
+      ]
+    )
+  ) {
+    return 'drinks'
+  }
+
+  if (
+    matchesAny(
+      normalized,
+      [
+        'good for a reset',
+        'wellness',
+        'fitness',
+        'spa',
+        'yoga',
+        'pilates',
+      ]
+    )
+  ) {
+    return 'wellness'
+  }
+
+  if (
+    normalized.includes(
+      'min walk'
+    )
+  ) {
+    return 'walk-time'
+  }
+
+  if (
+    normalized.endsWith(
+      ' away'
+    )
+  ) {
+    return 'distance'
+  }
+
+  return null
+}
+
 function inferBestForLabel({
-  type,
+  types,
   tags,
   vibe,
 }: {
-  type: string | null
+  types: string[]
   tags: string[]
   vibe: string | null
 }) {
-  const normalizedType = (type || '').toLowerCase()
-  const normalizedTags = tags.map((tag) => tag.toLowerCase())
-  const normalizedVibe = (vibe || '').toLowerCase()
+  const normalizedTypes =
+    types.map(
+      normalizeComparableValue
+    )
+
+  const normalizedTags =
+    tags.map(
+      normalizeComparableValue
+    )
+
+  const normalizedVibe =
+    normalizeComparableValue(
+      vibe ?? ''
+    )
 
   if (
-    matchesAny(normalizedType, ['coffee', 'cafe', 'café', 'bakery']) ||
-    normalizedTags.some((tag) => matchesAny(tag, ['coffee', 'espresso', 'breakfast']))
+    normalizedTypes.some(
+      (type) =>
+        matchesAny(
+          type,
+          [
+            'coffee',
+            'coffee shop',
+            'cafe',
+            'café',
+            'bakery',
+            'tea',
+          ]
+        )
+    ) ||
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'coffee',
+            'espresso',
+            'coffee shop',
+          ]
+        )
+    )
   ) {
     return 'Good for coffee'
   }
 
   if (
-    matchesAny(normalizedType, ['restaurant', 'dinner', 'kitchen']) ||
-    normalizedTags.some((tag) => matchesAny(tag, ['dinner', 'food', 'meal']))
+    normalizedTypes.some(
+      (type) =>
+        matchesAny(
+          type,
+          [
+            'restaurant',
+            'dinner',
+            'kitchen',
+            'steakhouse',
+            'sushi',
+            'tapas',
+            'pizza',
+            'bbq',
+          ]
+        )
+    ) ||
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'dinner',
+            'food',
+            'meal',
+          ]
+        )
+    )
   ) {
     return 'Good for dinner'
   }
 
   if (
-    matchesAny(normalizedType, ['bar', 'wine bar', 'cocktail', 'pub', 'brewery']) ||
-    normalizedTags.some((tag) => matchesAny(tag, ['cocktails', 'drinks', 'bar']))
+    normalizedTypes.some(
+      (type) =>
+        matchesAny(
+          type,
+          [
+            'bar',
+            'wine bar',
+            'cocktail',
+            'cocktail bar',
+            'pub',
+            'brewery',
+            'lounge',
+            'speakeasy',
+          ]
+        )
+    ) ||
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'cocktail',
+            'cocktails',
+            'drinks',
+            'bar',
+            'wine',
+          ]
+        )
+    )
   ) {
     return 'Good for drinks'
   }
 
   if (
-    matchesAny(normalizedType, ['fitness', 'yoga', 'spa', 'wellness']) ||
-    normalizedTags.some((tag) => matchesAny(tag, ['wellness', 'reset', 'fitness']))
+    normalizedTypes.some(
+      (type) =>
+        matchesAny(
+          type,
+          [
+            'fitness',
+            'yoga',
+            'spa',
+            'wellness',
+            'pilates',
+            'recovery',
+          ]
+        )
+    ) ||
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'wellness',
+            'reset',
+            'fitness',
+            'recovery',
+          ]
+        )
+    )
   ) {
     return 'Good for a reset'
   }
 
   if (
-    normalizedVibe.includes('date') ||
-    normalizedTags.some((tag) => matchesAny(tag, ['date night', 'romantic']))
+    normalizedVibe.includes(
+      'date'
+    ) ||
+    normalizedVibe.includes(
+      'romantic'
+    ) ||
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'date night',
+            'romantic',
+          ]
+        )
+    )
   ) {
     return 'Good for date night'
   }
 
   if (
-    normalizedTags.some((tag) => matchesAny(tag, ['group', 'friends', 'social'])) ||
-    normalizedVibe.includes('lively')
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'group',
+            'friends',
+            'social',
+          ]
+        )
+    ) ||
+    normalizedVibe.includes(
+      'lively'
+    ) ||
+    normalizedVibe.includes(
+      'social'
+    )
   ) {
     return 'Good with friends'
   }
@@ -250,64 +977,434 @@ function inferBestForLabel({
   return null
 }
 
-function inferVibeFromTags(tags: string[]) {
-  const normalizedTags = tags.map((tag) => tag.toLowerCase())
+function resolveVibeLabel({
+  vibe,
+  vibes,
+  tags,
+}: {
+  vibe:
+    string | null | undefined
+  vibes:
+    string[]
+  tags:
+    string[]
+}): string | null {
+  const explicitValues = [
+    ...asStringArray(
+      vibe
+    ),
+    ...vibes,
+  ]
 
-  if (normalizedTags.some((tag) => matchesAny(tag, ['romantic', 'date night']))) {
-    return 'Romantic'
+  const prioritizedExplicit =
+    findPreferredVibe(
+      explicitValues
+    )
+
+  if (
+    prioritizedExplicit
+  ) {
+    return prioritizedExplicit
   }
 
-  if (normalizedTags.some((tag) => matchesAny(tag, ['lively', 'energetic', 'buzzing']))) {
-    return 'Lively'
+  const inferred =
+    inferVibeFromTags(
+      tags
+    )
+
+  if (
+    inferred
+  ) {
+    return inferred
   }
 
-  if (normalizedTags.some((tag) => matchesAny(tag, ['cozy', 'intimate', 'warm']))) {
-    return 'Cozy'
-  }
+  const firstExplicit =
+    firstString(
+      explicitValues
+    )
 
-  if (normalizedTags.some((tag) => matchesAny(tag, ['casual', 'easygoing', 'laid-back']))) {
-    return 'Casual'
-  }
+  return firstExplicit
+    ? humanizeVibeLabel(
+        firstExplicit
+      )
+    : null
+}
 
-  if (normalizedTags.some((tag) => matchesAny(tag, ['upscale', 'elevated']))) {
-    return 'Upscale'
+function findPreferredVibe(
+  values: string[]
+): string | null {
+  const normalizedValues =
+    values.map(
+      (value) => ({
+        original:
+          value,
+
+        normalized:
+          normalizeComparableValue(
+            value
+          ),
+      })
+    )
+
+  for (
+    const preferred of
+      DISPLAY_VIBE_PRIORITY
+  ) {
+    const match =
+      normalizedValues.find(
+        ({
+          normalized,
+        }) =>
+          matchesAny(
+            normalized,
+            [
+              preferred,
+            ]
+          )
+      )
+
+    if (
+      match
+    ) {
+      return humanizeVibeLabel(
+        preferred
+      )
+    }
   }
 
   return null
 }
 
-function inferOpenNowLabel(hours: unknown) {
-  if (!hours) return null
+function humanizeVibeLabel(
+  value: string
+): string {
+  const normalized =
+    normalizeComparableValue(
+      value
+    )
+
+  if (
+    normalized ===
+      'date night'
+  ) {
+    return 'Date night'
+  }
+
+  if (
+    normalized ===
+      'easygoing'
+  ) {
+    return 'Easygoing'
+  }
+
+  if (
+    normalized ===
+      'laid-back'
+  ) {
+    return 'Laid-back'
+  }
+
+  return sentenceCase(
+    normalized
+  )
+}
+
+function inferVibeFromTags(
+  tags: string[]
+) {
+  const normalizedTags =
+    tags.map(
+      normalizeComparableValue
+    )
+
+  if (
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'romantic',
+            'date night',
+          ]
+        )
+    )
+  ) {
+    return 'Romantic'
+  }
+
+  if (
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'lively',
+            'energetic',
+            'buzzing',
+          ]
+        )
+    )
+  ) {
+    return 'Lively'
+  }
+
+  if (
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'cozy',
+            'intimate',
+            'warm',
+          ]
+        )
+    )
+  ) {
+    return 'Cozy'
+  }
+
+  if (
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'casual',
+            'easygoing',
+            'laid-back',
+          ]
+        )
+    )
+  ) {
+    return 'Casual'
+  }
+
+  if (
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'upscale',
+            'elevated',
+            'refined',
+          ]
+        )
+    )
+  ) {
+    return 'Upscale'
+  }
+
+  if (
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'social',
+            'friends',
+          ]
+        )
+    )
+  ) {
+    return 'Social'
+  }
+
+  if (
+    normalizedTags.some(
+      (tag) =>
+        matchesAny(
+          tag,
+          [
+            'relaxed',
+            'chill',
+          ]
+        )
+    )
+  ) {
+    return 'Relaxed'
+  }
+
+  return null
+}
+
+function inferOpenNowLabel(
+  hours: unknown
+) {
+  if (
+    !hours
+  ) {
+    return null
+  }
 
   return 'Hours available'
 }
 
-function humanizeTypeLabel(type: string) {
-  const value = type.trim().toLowerCase()
+function humanizeTypeLabel(
+  type: string
+) {
+  const value =
+    normalizeComparableValue(
+      type
+    )
 
-  if (value === 'wine bar') return 'Wine bar'
-  if (value === 'cocktail') return 'Cocktail bar'
-  if (value === 'cafe' || value === 'café') return 'Cafe'
-  if (value === 'restaurant') return 'Restaurant'
-  if (value === 'fitness') return 'Fitness'
-  if (value === 'lifestyle') return 'Lifestyle'
-  if (value === 'brewery') return 'Brewery'
-  if (value === 'bakery') return 'Bakery'
-  if (value === 'spa') return 'Spa'
-  if (value === 'yoga') return 'Yoga'
+  if (
+    value ===
+      'wine bar'
+  ) {
+    return 'Wine bar'
+  }
 
-  return sentenceCase(value)
+  if (
+    value ===
+      'cocktail' ||
+    value ===
+      'cocktail bar'
+  ) {
+    return 'Cocktail bar'
+  }
+
+  if (
+    value ===
+      'coffee' ||
+    value ===
+      'coffee shop'
+  ) {
+    return 'Coffee'
+  }
+
+  if (
+    value ===
+      'cafe' ||
+    value ===
+      'café'
+  ) {
+    return 'Cafe'
+  }
+
+  if (
+    value ===
+      'restaurant'
+  ) {
+    return 'Restaurant'
+  }
+
+  if (
+    value ===
+      'breakfast'
+  ) {
+    return 'Breakfast'
+  }
+
+  if (
+    value ===
+      'brunch'
+  ) {
+    return 'Brunch'
+  }
+
+  if (
+    value ===
+      'lunch'
+  ) {
+    return 'Lunch'
+  }
+
+  if (
+    value ===
+      'dinner'
+  ) {
+    return 'Dinner'
+  }
+
+  if (
+    value ===
+      'fitness'
+  ) {
+    return 'Fitness'
+  }
+
+  if (
+    value ===
+      'lifestyle'
+  ) {
+    return 'Lifestyle'
+  }
+
+  if (
+    value ===
+      'brewery'
+  ) {
+    return 'Brewery'
+  }
+
+  if (
+    value ===
+      'bakery'
+  ) {
+    return 'Bakery'
+  }
+
+  if (
+    value ===
+      'spa'
+  ) {
+    return 'Spa'
+  }
+
+  if (
+    value ===
+      'yoga'
+  ) {
+    return 'Yoga'
+  }
+
+  if (
+    value ===
+      'wellness'
+  ) {
+    return 'Wellness'
+  }
+
+  return sentenceCase(
+    value
+  )
 }
 
-function normalizeImageUrl(value: string | null | undefined) {
-  const cleaned = cleanText(value)
-  if (!cleaned) return null
+function normalizeImageUrl(
+  value:
+    | string
+    | null
+    | undefined
+) {
+  const cleaned =
+    cleanText(
+      value
+    )
 
-  if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+  if (
+    !cleaned
+  ) {
+    return null
+  }
+
+  if (
+    cleaned.startsWith(
+      'http://'
+    ) ||
+    cleaned.startsWith(
+      'https://'
+    )
+  ) {
     return cleaned
   }
 
-  if (cleaned.startsWith('/')) {
+  if (
+    cleaned.startsWith(
+      '/'
+    )
+  ) {
     return cleaned
   }
 
@@ -315,27 +1412,72 @@ function normalizeImageUrl(value: string | null | undefined) {
 }
 
 function formatDistanceLabel(distanceMeters: number | null) {
-  if (distanceMeters === null || !Number.isFinite(distanceMeters)) return null
-
-  if (distanceMeters < 1000) {
-    return `${Math.round(distanceMeters)} m away`
+  if (
+    distanceMeters === null ||
+    !Number.isFinite(distanceMeters)
+  ) {
+    return null
   }
 
-  const km = Math.round((distanceMeters / 1000) * 10) / 10
-  return `${km} km away`
+  const miles =
+    distanceMeters / 1609.344
+
+  if (miles < 0.1) {
+    return '<0.1 mi away'
+  }
+
+  if (miles < 10) {
+    return `${miles.toFixed(1)} mi away`
+  }
+
+  return `${Math.round(miles)} mi away`
 }
 
-function formatWalkTimeLabel(walkTimeMinutes: number | null) {
-  if (walkTimeMinutes === null || !Number.isFinite(walkTimeMinutes)) return null
-  if (walkTimeMinutes <= 1) return '1 min walk'
+function formatWalkTimeLabel(
+  walkTimeMinutes:
+    number | null
+) {
+  if (
+    walkTimeMinutes ===
+      null ||
+    !Number.isFinite(
+      walkTimeMinutes
+    )
+  ) {
+    return null
+  }
+
+  if (
+    walkTimeMinutes <=
+    1
+  ) {
+    return '1 min walk'
+  }
+
   return `${walkTimeMinutes} min walk`
 }
 
-function estimateWalkMinutes(distanceMeters: number) {
-  if (!Number.isFinite(distanceMeters) || distanceMeters <= 0) return 0
+function estimateWalkMinutes(
+  distanceMeters: number
+) {
+  if (
+    !Number.isFinite(
+      distanceMeters
+    ) ||
+    distanceMeters <= 0
+  ) {
+    return 0
+  }
 
-  const rawMinutes = distanceMeters / 80
-  return Math.max(1, Math.round(rawMinutes))
+  const rawMinutes =
+    distanceMeters / 80
+
+  return Math.max(
+    1,
+    Math.round(
+      rawMinutes
+    )
+  )
 }
 
 function haversineDistanceMeters(
@@ -344,62 +1486,257 @@ function haversineDistanceMeters(
   lat2: number,
   lon2: number
 ) {
-  const R = 6371000
-  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const R =
+    6371000
 
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
+  const toRad =
+    (deg: number) =>
+      (
+        deg *
+        Math.PI
+      ) / 180
+
+  const dLat =
+    toRad(
+      lat2 -
+      lat1
+    )
+
+  const dLon =
+    toRad(
+      lon2 -
+      lon1
+    )
 
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2)
+    Math.sin(
+      dLat / 2
+    ) *
+      Math.sin(
+        dLat / 2
+      ) +
+    Math.cos(
+      toRad(
+        lat1
+      )
+    ) *
+      Math.cos(
+        toRad(
+          lat2
+        )
+      ) *
+      Math.sin(
+        dLon / 2
+      ) *
+      Math.sin(
+        dLon / 2
+      )
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return Math.round(R * c)
+  const c =
+    2 *
+    Math.atan2(
+      Math.sqrt(
+        a
+      ),
+      Math.sqrt(
+        1 - a
+      )
+    )
+
+  return Math.round(
+    R * c
+  )
 }
 
-function asStringArray(value: string[] | string | null | undefined) {
-  if (Array.isArray(value)) {
+function asStringArray(
+  value:
+    | string[]
+    | string
+    | null
+    | undefined
+) {
+  if (
+    Array.isArray(
+      value
+    )
+  ) {
     return value
-      .map((item) => cleanText(item))
-      .filter((item): item is string => Boolean(item))
+      .map(
+        (item) =>
+          cleanText(
+            item
+          )
+      )
+      .filter(
+        (
+          item
+        ): item is string =>
+          Boolean(
+            item
+          )
+      )
   }
 
-  const cleaned = cleanText(value)
-  if (!cleaned) return []
+  const cleaned =
+    cleanText(
+      value
+    )
+
+  if (
+    !cleaned
+  ) {
+    return []
+  }
 
   return cleaned
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
+    .split(
+      ','
+    )
+    .map(
+      (item) =>
+        item.trim()
+    )
+    .filter(
+      Boolean
+    )
 }
 
-function firstString(values: string[]) {
-  return values.length > 0 ? values[0] : null
+function firstString(
+  values: string[]
+) {
+  return (
+    values.length >
+      0
+      ? values[0]
+      : null
+  )
 }
 
-function cleanText(value: string | null | undefined) {
-  const trimmed = String(value ?? '').trim()
-  return trimmed.length > 0 ? trimmed : null
+function cleanText(
+  value:
+    | string
+    | null
+    | undefined
+) {
+  const trimmed =
+    String(
+      value ?? ''
+    ).trim()
+
+  return (
+    trimmed.length >
+      0
+      ? trimmed
+      : null
+  )
 }
 
-function cleanDescription(value: string | null | undefined) {
-  const trimmed = cleanText(value)
-  return trimmed && trimmed.length > 0 ? trimmed : null
+function cleanDescription(
+  value:
+    | string
+    | null
+    | undefined
+) {
+  const trimmed =
+    cleanText(
+      value
+    )
+
+  return (
+    trimmed &&
+    trimmed.length >
+      0
+      ? trimmed
+      : null
+  )
 }
 
-function matchesAny(value: string, candidates: string[]) {
-  return candidates.some((candidate) => value === candidate)
+function normalizeComparableValue(
+  value: string
+): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(
+      /&/g,
+      'and'
+    )
+    .replace(
+      /\s+/g,
+      ' '
+    )
 }
 
-function sentenceCase(value: string) {
-  if (!value) return value
-  return value.charAt(0).toUpperCase() + value.slice(1)
+function matchesAny(
+  value: string,
+  candidates: string[]
+) {
+  const normalizedValue =
+    normalizeComparableValue(
+      value
+    )
+
+  if (
+    !normalizedValue
+  ) {
+    return false
+  }
+
+  return candidates.some(
+    (
+      candidate
+    ) => {
+      const normalizedCandidate =
+        normalizeComparableValue(
+          candidate
+        )
+
+      if (
+        !normalizedCandidate
+      ) {
+        return false
+      }
+
+      return (
+        normalizedValue ===
+          normalizedCandidate ||
+        normalizedValue.includes(
+          normalizedCandidate
+        )
+      )
+    }
+  )
 }
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value)
+function sentenceCase(
+  value: string
+) {
+  if (
+    !value
+  ) {
+    return value
+  }
+
+  return (
+    value
+      .charAt(
+        0
+      )
+      .toUpperCase() +
+    value.slice(
+      1
+    )
+  )
+}
+
+function isFiniteNumber(
+  value: unknown
+): value is number {
+  return (
+    typeof value ===
+      'number' &&
+    Number.isFinite(
+      value
+    )
+  )
 }

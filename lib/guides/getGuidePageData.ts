@@ -12,6 +12,7 @@ import type { NearbyEventVM } from '@/lib/view-models/buildNearbyEventVM'
 import type { Venue } from '@/types/venue'
 
 const GUIDE_NEARBY_VENUE_RADIUS_KM = 5
+
 /* ------------------------------------------------ */
 /* Public input                                     */
 /* ------------------------------------------------ */
@@ -421,7 +422,7 @@ export async function getGuidePageData(
     return null
   }
 
-      const [
+  const [
     brand,
     sections,
     featuredVenues,
@@ -488,12 +489,21 @@ export async function getGuidePageData(
   const suggestedFlows =
     flowsData?.flows ?? []
 
-    const nearbyVenues =
-    buildGuideNearbyVenues({
-      databaseNearbyVenues,
-      featuredVenues,
-      propertyFavorites,
-      suggestedFlows,
+  const nearbyVenues =
+    filterGuideVenuesByRadius({
+      venues:
+        buildGuideNearbyVenues({
+          databaseNearbyVenues,
+          featuredVenues,
+          propertyFavorites,
+          suggestedFlows,
+        }),
+      originLat:
+        property.lat,
+      originLon:
+        property.lon,
+      radiusKm:
+        GUIDE_NEARBY_VENUE_RADIUS_KM,
     })
 
   return {
@@ -508,7 +518,7 @@ export async function getGuidePageData(
       nearbyEventsData?.events ??
       [],
     nearbyVenues,
-        nearbyVenueCount:
+    nearbyVenueCount:
       nearbyVenues.length,
   }
 }
@@ -1293,6 +1303,82 @@ function buildGuideNearbyVenues({
 
   return Array.from(
     venueById.values()
+  )
+}
+
+/**
+ * Apply the same strict nearby-radius rule to every venue source that may
+ * contribute to the guide map.
+ *
+ * This prevents featured venues, property favorites, and venues discovered
+ * through suggested flows from bypassing the geographic boundary already
+ * enforced by loadNearbyGuideVenues().
+ */
+function filterGuideVenuesByRadius({
+  venues,
+  originLat,
+  originLon,
+  radiusKm,
+}: {
+  venues: Venue[]
+  originLat: number
+  originLon: number
+  radiusKm: number
+}): Venue[] {
+  if (
+    !isValidLatitude(
+      originLat
+    ) ||
+    !isValidLongitude(
+      originLon
+    ) ||
+    !Number.isFinite(
+      radiusKm
+    ) ||
+    radiusKm <= 0
+  ) {
+    return []
+  }
+
+  return venues.filter(
+    (venue) => {
+      const venueRecord =
+        venue as unknown as Record<
+          string,
+          unknown
+        >
+
+      const lat =
+        firstFiniteNumber(
+          venueRecord.lat,
+          venueRecord.latitude
+        )
+
+      const lon =
+        firstFiniteNumber(
+          venueRecord.lon,
+          venueRecord.lng,
+          venueRecord.longitude
+        )
+
+      if (
+        lat === null ||
+        lon === null ||
+        !isValidLatitude(lat) ||
+        !isValidLongitude(lon)
+      ) {
+        return false
+      }
+
+      return (
+        calculateDistanceKm(
+          originLat,
+          originLon,
+          lat,
+          lon
+        ) <= radiusKm
+      )
+    }
   )
 }
 
