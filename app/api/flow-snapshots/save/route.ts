@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
+import {
+  getRoamHistorySourceWindow,
+  loadQualifyingRoamDays,
+} from '@/lib/roam/loadQualifyingRoamDays'
 
 const SNAPSHOT_BUCKET = 'flow-snapshots'
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024
@@ -8,6 +12,7 @@ const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024
 const ALLOWED_SOURCE_TYPES = new Set([
   'active_flow',
   'hosted_flow',
+  'roam_history',
 ])
 
 const ALLOWED_STATUSES = new Set([
@@ -32,10 +37,41 @@ const ALLOWED_IMAGE_MIME_TYPES = new Set([
 
 type SnapshotVisibility = 'public' | 'private'
 
+type SnapshotStatus =
+  | 'active'
+  | 'completed'
+  | 'cancelled'
+  | 'partial'
+
 type ExistingSnapshotRow = {
   id: string
   visibility: SnapshotVisibility | null
   cover_image_url: string | null
+}
+
+type ActiveFlowSnapshotSourceRow = {
+  id: string
+  title: string | null
+  city: string | null
+  status: string
+  venue_ids: unknown
+}
+
+type HostedFlowSnapshotSourceRow = {
+  id: string
+  creator_id: string
+  title: string
+  city: string | null
+  venue_ids: unknown
+}
+
+type CanonicalSnapshotSource = {
+  title: string | null
+  city: string | null
+  status: SnapshotStatus
+  venueIds: string[]
+  checkedInCount: number
+  totalStops: number
 }
 
 export async function POST(request: Request) {
@@ -62,12 +98,6 @@ export async function POST(request: Request) {
     )
     const sourceId = stringValue(
       formData.get('source_id')
-    )
-    const title = nullableStringValue(
-      formData.get('title')
-    )
-    const city = nullableStringValue(
-      formData.get('city')
     )
     const status =
       nullableStringValue(formData.get('status')) ??
@@ -212,6 +242,401 @@ export async function POST(request: Request) {
     }
 
     /*
+     * Replay initiative:
+     *
+     * Resolve canonical snapshot evidence from the source on
+     * every save.
+     *
+     * Active-flow snapshots resolve from:
+     *   active_flow_sessions
+     *   active_flow_progress
+     *
+     * Hosted-flow snapshots resolve from:
+     *   crawl_events
+     *   crawl_progress
+     *
+     * Roam-history snapshots resolve from:
+     *   append-only venue_visits
+     *   through the canonical qualifying-roam loader
+     *
+     * Only newly created snapshots persist immutable ordered
+     * flow_snapshot_stops. Existing snapshot stops are never
+     * rewritten during a re-save.
+     */
+    let canonicalSource: CanonicalSnapshotSource | null =
+      null
+
+    if (sourceType === 'active_flow') {
+      const {
+        data: sourceFlow,
+        error: sourceFlowError,
+      } = await supabase
+        .from('active_flow_sessions')
+        .select(
+          'id, title, city, status, venue_ids'
+        )
+        .eq('id', sourceId)
+        .eq('user_id', user.id)
+        .maybeSingle<ActiveFlowSnapshotSourceRow>()
+
+      if (sourceFlowError) {
+        console.error(
+          '[flow-snapshots/save] Active-flow source lookup failed:',
+          sourceFlowError
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Failed to verify the source flow.',
+          },
+          { status: 500 }
+        )
+      }
+
+      if (!sourceFlow) {
+        return NextResponse.json(
+          {
+            error:
+              'The source flow was not found.',
+          },
+          { status: 404 }
+        )
+      }
+
+      const venueIds =
+        normalizeCanonicalSnapshotVenueIds(
+          sourceFlow.venue_ids
+        )
+
+      if (
+        !venueIds ||
+        venueIds.length < 2
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'The source flow does not contain a valid replayable route.',
+          },
+          { status: 400 }
+        )
+      }
+
+      const {
+        data: progressRows,
+        error: progressError,
+      } = await supabase
+        .from('active_flow_progress')
+        .select('stop_index')
+        .eq('session_id', sourceId)
+        .eq('user_id', user.id)
+
+      if (progressError) {
+        console.error(
+          '[flow-snapshots/save] Active-flow progress lookup failed:',
+          progressError
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Failed to verify the source flow progress.',
+          },
+          { status: 500 }
+        )
+      }
+
+      const canonicalCheckedInCount =
+        countCanonicalCompletedStops(
+          progressRows,
+          venueIds.length
+        )
+
+      const canonicalStatus =
+        normalizeActiveFlowSnapshotStatus(
+          sourceFlow.status,
+          canonicalCheckedInCount
+        )
+
+      if (!canonicalStatus) {
+        console.error(
+          '[flow-snapshots/save] Active-flow source returned an invalid status:',
+          sourceFlow.status
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'The source flow has an invalid status.',
+          },
+          { status: 500 }
+        )
+      }
+
+      canonicalSource = {
+        title:
+          normalizeNullableSourceText(
+            sourceFlow.title
+          ),
+        city:
+          normalizeNullableSourceText(
+            sourceFlow.city
+          ),
+        status:
+          canonicalStatus,
+        venueIds,
+        checkedInCount:
+          canonicalCheckedInCount,
+        totalStops:
+          venueIds.length,
+      }
+    }
+
+    if (sourceType === 'hosted_flow') {
+      const {
+        data: sourceFlow,
+        error: sourceFlowError,
+      } = await supabase
+        .from('crawl_events')
+        .select(
+          'id, creator_id, title, city, venue_ids'
+        )
+        .eq('id', sourceId)
+        .eq('creator_id', user.id)
+        .maybeSingle<HostedFlowSnapshotSourceRow>()
+
+      if (sourceFlowError) {
+        console.error(
+          '[flow-snapshots/save] Hosted-flow source lookup failed:',
+          sourceFlowError
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Failed to verify the hosted flow source.',
+          },
+          { status: 500 }
+        )
+      }
+
+      if (!sourceFlow) {
+        return NextResponse.json(
+          {
+            error:
+              'The hosted flow source was not found.',
+          },
+          { status: 404 }
+        )
+      }
+
+      const venueIds =
+        normalizeCanonicalSnapshotVenueIds(
+          sourceFlow.venue_ids
+        )
+
+      if (
+        !venueIds ||
+        venueIds.length < 2
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'The hosted flow does not contain a valid replayable route.',
+          },
+          { status: 400 }
+        )
+      }
+
+      const {
+        data: progressRows,
+        error: progressError,
+      } = await supabase
+        .from('crawl_progress')
+        .select('stop_index')
+        .eq('crawl_id', sourceId)
+        .eq('user_id', user.id)
+
+      if (progressError) {
+        console.error(
+          '[flow-snapshots/save] Hosted-flow progress lookup failed:',
+          progressError
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Failed to verify the hosted flow progress.',
+          },
+          { status: 500 }
+        )
+      }
+
+      const canonicalCheckedInCount =
+        countCanonicalCompletedStops(
+          progressRows,
+          venueIds.length
+        )
+
+      canonicalSource = {
+        title:
+          normalizeNullableSourceText(
+            sourceFlow.title
+          ),
+        city:
+          normalizeNullableSourceText(
+            sourceFlow.city
+          ),
+        status:
+          deriveHostedFlowSnapshotStatus({
+            checkedInCount:
+              canonicalCheckedInCount,
+            totalStops:
+              venueIds.length,
+          }),
+        venueIds,
+        checkedInCount:
+          canonicalCheckedInCount,
+        totalStops:
+          venueIds.length,
+      }
+    }
+
+    /*
+     * Roam history:
+     *
+     * The client submits only the stable roam source identifier.
+     * It cannot submit or control the canonical venue set.
+     *
+     * First reconstruct the exact 03:00 -> 03:00 source window
+     * represented by source_id. Then ask the canonical loader to
+     * qualify only that historical window.
+     *
+     * This avoids depending on the loader's normal result limit
+     * and guarantees that an older valid roam can still be saved.
+     */
+    if (sourceType === 'roam_history') {
+      const sourceWindow =
+        getRoamHistorySourceWindow(
+          sourceId
+        )
+
+      if (!sourceWindow) {
+        return NextResponse.json(
+          {
+            error:
+              'Invalid roam history source_id.',
+          },
+          { status: 400 }
+        )
+      }
+
+      let qualifyingRoams
+
+      try {
+        qualifyingRoams =
+          await loadQualifyingRoamDays({
+            supabase,
+            userId:
+              user.id,
+            visitedAfter:
+              sourceWindow.windowStartAt,
+            visitedBefore:
+              sourceWindow.windowEndAt,
+            limit:
+              10,
+          })
+      } catch (error) {
+        console.error(
+          '[flow-snapshots/save] Roam-history source lookup failed:',
+          error
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Failed to verify the roam history source.',
+          },
+          { status: 500 }
+        )
+      }
+
+      const sourceRoam =
+        qualifyingRoams.find(
+          (roam) =>
+            roam.sourceId ===
+            sourceId
+        ) ?? null
+
+      if (!sourceRoam) {
+        return NextResponse.json(
+          {
+            error:
+              'The qualifying roam was not found.',
+          },
+          { status: 404 }
+        )
+      }
+
+      const venueIds =
+        normalizeCanonicalSnapshotVenueIds(
+          sourceRoam.stops.map(
+            (stop) =>
+              stop.venueId
+          )
+        )
+
+      if (
+        !venueIds ||
+        venueIds.length < 3
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'A roam snapshot requires at least 3 distinct venues.',
+          },
+          { status: 400 }
+        )
+      }
+
+      const roamDay =
+        normalizeNullableSourceText(
+          sourceRoam.roamDay
+        )
+
+      canonicalSource = {
+        title:
+          roamDay
+            ? `Roam · ${roamDay}`
+            : 'Roam',
+        city:
+          normalizeNullableSourceText(
+            sourceRoam.city
+          ) ??
+          normalizeNullableSourceText(
+            sourceWindow.city
+          ),
+        status:
+          'completed',
+        venueIds,
+        checkedInCount:
+          venueIds.length,
+        totalStops:
+          venueIds.length,
+      }
+    }
+
+    if (!canonicalSource) {
+      return NextResponse.json(
+        {
+          error:
+            'The snapshot source could not be resolved.',
+        },
+        { status: 400 }
+      )
+    }
+
+    /*
      * Preserve the user's existing visibility choice.
      *
      * This prevents re-saving a flow from automatically
@@ -276,17 +701,31 @@ export async function POST(request: Request) {
 
     const now = new Date().toISOString()
 
+    /*
+     * Replay initiative:
+     *
+     * Evidence-bearing snapshot values are persisted from the
+     * canonical server-side source rather than client FormData.
+     *
+     * route_summary remains presentation metadata supplied by
+     * the snapshot renderer.
+     */
     const snapshotPayload = {
       user_id: user.id,
       source_type: sourceType,
       source_id: sourceId,
-      title,
-      city,
-      status,
+      title:
+        canonicalSource.title,
+      city:
+        canonicalSource.city,
+      status:
+        canonicalSource.status,
       cover_image_url: publicUrl,
       route_summary: routeSummary,
-      checked_in_count: checkedInCount,
-      total_stops: totalStops,
+      checked_in_count:
+        canonicalSource.checkedInCount,
+      total_stops:
+        canonicalSource.totalStops,
       visibility,
       updated_at: now,
     }
@@ -353,6 +792,78 @@ export async function POST(request: Request) {
         },
         { status: 500 }
       )
+    }
+
+    /*
+     * Replay initiative:
+     *
+     * Persist immutable ordered route evidence only when this
+     * snapshot is first created.
+     */
+    if (!existingSnapshot) {
+      const snapshotStopRows =
+        canonicalSource.venueIds.map(
+          (venueId, stopIndex) => ({
+            snapshot_id: snapshot.id,
+            venue_id: venueId,
+            stop_index: stopIndex,
+          })
+        )
+
+      const {
+        error: snapshotStopsError,
+      } = await supabase
+        .from('flow_snapshot_stops')
+        .insert(snapshotStopRows)
+
+      if (snapshotStopsError) {
+        console.error(
+          '[flow-snapshots/save] Canonical snapshot stop persistence failed:',
+          snapshotStopsError
+        )
+
+        /*
+         * The parent snapshot was created specifically for this
+         * request. If canonical route persistence fails, remove
+         * that new snapshot so a route-less replay artifact is
+         * not left behind.
+         */
+        const {
+          error: snapshotCleanupError,
+        } = await supabase
+          .from('flow_snapshots')
+          .delete()
+          .eq('id', snapshot.id)
+          .eq('user_id', user.id)
+
+        if (snapshotCleanupError) {
+          console.error(
+            '[flow-snapshots/save] Failed to clean up snapshot after stop persistence failure:',
+            snapshotCleanupError
+          )
+        } else {
+          const {
+            error: storageCleanupError,
+          } = await supabase.storage
+            .from(SNAPSHOT_BUCKET)
+            .remove([storagePath])
+
+          if (storageCleanupError) {
+            console.error(
+              '[flow-snapshots/save] Failed to clean up snapshot image after stop persistence failure:',
+              storageCleanupError
+            )
+          }
+        }
+
+        return NextResponse.json(
+          {
+            error:
+              'Failed to preserve the snapshot route.',
+          },
+          { status: 500 }
+        )
+      }
     }
 
     /*
@@ -476,6 +987,151 @@ function integerValue(
 
   return Number.isInteger(parsed)
     ? parsed
+    : null
+}
+
+/*
+ * Replay initiative:
+ *
+ * Normalize canonical snapshot routes without changing their
+ * order. Repeated venues are intentionally rejected because
+ * repeated venues are not a supported Flow invariant.
+ */
+function normalizeCanonicalSnapshotVenueIds(
+  value: unknown
+): string[] | null {
+  if (!Array.isArray(value)) {
+    return null
+  }
+
+  const venueIds: string[] = []
+
+  for (const rawVenueId of value) {
+    if (typeof rawVenueId !== 'string') {
+      return null
+    }
+
+    const venueId = rawVenueId.trim()
+
+    if (!venueId) {
+      return null
+    }
+
+    venueIds.push(venueId)
+  }
+
+  if (
+    new Set(venueIds).size !==
+    venueIds.length
+  ) {
+    return null
+  }
+
+  return venueIds
+}
+
+/*
+ * Replay initiative:
+ *
+ * Count only distinct, valid canonical stop indexes.
+ *
+ * This is especially important for crawl_progress because its
+ * current schema does not enforce uniqueness for
+ * crawl_id + user_id + stop_index.
+ */
+function countCanonicalCompletedStops(
+  value: unknown,
+  totalStops: number
+): number {
+  if (!Array.isArray(value)) {
+    return 0
+  }
+
+  const stopIndexes =
+    new Set<number>()
+
+  for (const row of value) {
+    if (
+      typeof row !== 'object' ||
+      row === null ||
+      Array.isArray(row)
+    ) {
+      continue
+    }
+
+    const stopIndex =
+      (row as Record<string, unknown>)
+        .stop_index
+
+    if (
+      typeof stopIndex !== 'number' ||
+      !Number.isInteger(stopIndex) ||
+      stopIndex < 0 ||
+      stopIndex >= totalStops
+    ) {
+      continue
+    }
+
+    stopIndexes.add(stopIndex)
+  }
+
+  return stopIndexes.size
+}
+
+function normalizeActiveFlowSnapshotStatus(
+  value: unknown,
+  checkedInCount: number
+): SnapshotStatus | null {
+  if (value === 'completed') {
+    return 'completed'
+  }
+
+  if (value === 'cancelled') {
+    return 'cancelled'
+  }
+
+  if (value === 'active') {
+    return checkedInCount > 0
+      ? 'partial'
+      : 'active'
+  }
+
+  return null
+}
+
+function deriveHostedFlowSnapshotStatus({
+  checkedInCount,
+  totalStops,
+}: {
+  checkedInCount: number
+  totalStops: number
+}): SnapshotStatus {
+  if (
+    totalStops > 0 &&
+    checkedInCount === totalStops
+  ) {
+    return 'completed'
+  }
+
+  if (checkedInCount > 0) {
+    return 'partial'
+  }
+
+  return 'active'
+}
+
+function normalizeNullableSourceText(
+  value: unknown
+): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const normalized =
+    value.trim()
+
+  return normalized.length > 0
+    ? normalized
     : null
 }
 

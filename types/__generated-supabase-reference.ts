@@ -82,6 +82,7 @@ export type Database = {
           id: string
           metadata: Json
           source: string
+          source_creator_user_id: string | null
           source_id: string | null
           started_at: string
           status: string
@@ -100,6 +101,7 @@ export type Database = {
           id?: string
           metadata?: Json
           source?: string
+          source_creator_user_id?: string | null
           source_id?: string | null
           started_at?: string
           status?: string
@@ -118,6 +120,7 @@ export type Database = {
           id?: string
           metadata?: Json
           source?: string
+          source_creator_user_id?: string | null
           source_id?: string | null
           started_at?: string
           status?: string
@@ -660,6 +663,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      creator_replay_events: {
+        Row: {
+          created_at: string
+          creator_user_id: string
+          event_type: string
+          id: string
+          occurred_at: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string
+          stop_index: number | null
+          venue_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          creator_user_id: string
+          event_type: string
+          id?: string
+          occurred_at: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string
+          stop_index?: number | null
+          venue_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          creator_user_id?: string
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          replay_user_id?: string
+          session_id?: string
+          snapshot_id?: string
+          stop_index?: number | null
+          venue_id?: string | null
+        }
+        Relationships: []
       }
       creator_reputation_category_stats: {
         Row: {
@@ -1611,6 +1653,52 @@ export type Database = {
           },
         ]
       }
+      flow_snapshot_stops: {
+        Row: {
+          created_at: string
+          id: string
+          snapshot_id: string
+          stop_index: number
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          snapshot_id: string
+          stop_index: number
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          snapshot_id?: string
+          stop_index?: number
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_snapshot_stops_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_snapshot_stops_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "flow_snapshot_stops_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flow_snapshots: {
         Row: {
           checked_in_count: number
@@ -1618,6 +1706,7 @@ export type Database = {
           cover_image_url: string
           created_at: string
           id: string
+          replayable: boolean
           route_summary: string | null
           source_id: string
           source_type: string
@@ -1634,6 +1723,7 @@ export type Database = {
           cover_image_url: string
           created_at?: string
           id?: string
+          replayable?: boolean
           route_summary?: string | null
           source_id: string
           source_type: string
@@ -1650,6 +1740,7 @@ export type Database = {
           cover_image_url?: string
           created_at?: string
           id?: string
+          replayable?: boolean
           route_summary?: string | null
           source_id?: string
           source_type?: string
@@ -4250,6 +4341,18 @@ export type Database = {
       }
     }
     Views: {
+      creator_replay_attribution_totals: {
+        Row: {
+          completed_replayed_flows: number | null
+          creator_user_id: string | null
+          first_replay_attribution_at: string | null
+          latest_replay_attribution_at: string | null
+          replayed_flow_stops: number | null
+          replayed_snapshot_count: number | null
+          unique_replay_users: number | null
+        }
+        Relationships: []
+      }
       geography_columns: {
         Row: {
           coord_dimension: number | null
@@ -4738,6 +4841,32 @@ export type Database = {
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
       rebuild_venue_reputation_categories: { Args: never; Returns: number }
+      record_creator_replay_completion: {
+        Args: { p_session_id: string }
+        Returns: {
+          attributed: boolean
+          creator_user_id: string
+          event_id: string
+          occurred_at: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string
+        }[]
+      }
+      record_creator_replay_stop: {
+        Args: { p_session_id: string; p_stop_index: number }
+        Returns: {
+          attributed: boolean
+          creator_user_id: string
+          event_id: string
+          occurred_at: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string
+          stop_index: number
+          venue_id: string
+        }[]
+      }
       refresh_social_group_event_metrics: {
         Args: { target_event_id: string }
         Returns: Json

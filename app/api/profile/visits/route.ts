@@ -5,6 +5,7 @@ import {
   formatVisitLocalTime,
   groupVisitsByCityAndDay,
 } from '@/lib/profile/groupVisitsByCityAndDay'
+import { loadQualifyingRoamDays } from '@/lib/roam/loadQualifyingRoamDays'
 
 const DEFAULT_LIMIT = 200
 const MAX_LIMIT = 500
@@ -129,6 +130,7 @@ export async function GET(request: NextRequest) {
         {
           cities: [],
           visits: [],
+          qualifyingRoams: [],
           totalVisits: 0,
           returnedVisits: 0,
           filters: {
@@ -159,6 +161,7 @@ export async function GET(request: NextRequest) {
         {
           cities: [],
           visits: [],
+          qualifyingRoams: [],
           totalVisits: typedVisitRows.length,
           returnedVisits: 0,
           filters: {
@@ -295,10 +298,73 @@ export async function GET(request: NextRequest) {
       unknownCityLabel: 'Other',
     })
 
+    /*
+     * Snapshot replay initiative:
+     *
+     * Surface canonical qualifying roam-history groups alongside
+     * the existing raw visit-history response.
+     *
+     * Qualification, 03:00 roam-day boundaries, distinct-venue
+     * deduplication, canonical stop ordering, and existing snapshot
+     * lifecycle state all remain owned by loadQualifyingRoamDays().
+     *
+     * Each qualifying roam therefore exposes the canonical:
+     *
+     * - sourceId
+     * - ordered stops
+     * - alreadySnapshotted state
+     * - snapshot visibility
+     * - snapshot replayable state
+     *
+     * This route remains read-only.
+     */
+    const qualifyingRoams =
+      await loadQualifyingRoamDays({
+        supabase,
+        userId: user.id,
+        limit: Math.min(limit, 100),
+      })
+
+    const filteredQualifyingRoams =
+      qualifyingRoams.filter((roam) => {
+        if (requestedCity) {
+          const normalizedRequestedCity =
+            requestedCity.toLocaleLowerCase()
+
+          const roamCity =
+            normalizeOptionalString(roam.city)
+              ?.toLocaleLowerCase() ??
+            null
+
+          const roamCityKey =
+            normalizeOptionalString(roam.cityKey)
+              ?.toLocaleLowerCase() ??
+            null
+
+          if (
+            roamCity !== normalizedRequestedCity &&
+            roamCityKey !== normalizedRequestedCity
+          ) {
+            return false
+          }
+        }
+
+        if (
+          requestedDate &&
+          roam.roamDay !== requestedDate
+        ) {
+          return false
+        }
+
+        return true
+      })
+
     return NextResponse.json(
       {
         cities,
         visits,
+        qualifyingRoams:
+          filteredQualifyingRoams,
         totalVisits: typedVisitRows.length,
         returnedVisits: visits.length,
         filters: {

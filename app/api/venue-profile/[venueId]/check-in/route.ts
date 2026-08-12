@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+
 import { getCityNow } from '@/lib/getCityNow'
+
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 
 type RouteContext = {
@@ -225,6 +228,7 @@ async function verifyVenueLocation({
 
 export async function POST(req: NextRequest, context: RouteContext) {
   const { venueId } = await context.params
+
   const supabase = await supabaseServerApi()
 
   const {
@@ -233,13 +237,17 @@ export async function POST(req: NextRequest, context: RouteContext) {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
   }
 
   const body = (await req.json().catch(() => ({}))) as VenueCheckInBody
 
   const userLat = body.user_lat
   const userLon = body.user_lon
+
   const locationAccuracyMeters =
     typeof body.location_accuracy_meters === 'number' &&
     Number.isFinite(body.location_accuracy_meters)
@@ -270,13 +278,21 @@ export async function POST(req: NextRequest, context: RouteContext) {
    * the persisted UTC timestamp and the venue-local calendar date.
    */
   const cityNow = getCityNow(geoResult.venue.city)
-  const now = cityNow.toUTC().toISO() ?? new Date().toISOString()
+
+  const now =
+    cityNow.toUTC().toISO() ??
+    new Date().toISOString()
+
   const visitDate =
-    cityNow.toISODate() ?? new Date(now).toISOString().slice(0, 10)
+    cityNow.toISODate() ??
+    new Date(now).toISOString().slice(0, 10)
+
   const venueTimeZone = cityNow.zoneName
 
   const checkInSource =
-    source === 'property_guide' ? 'property_guide' : 'geo'
+    source === 'property_guide'
+      ? 'property_guide'
+      : 'geo'
 
   /*
    * Determine whether the user has ever visited this venue.
@@ -285,9 +301,14 @@ export async function POST(req: NextRequest, context: RouteContext) {
    * maybeSingle() across all matching rows, because repeatable visits mean
    * multiple rows may now exist for this user and venue.
    */
-  const { data: existingVisit, error: existingVisitError } = await supabase
+  const {
+    data: existingVisit,
+    error: existingVisitError,
+  } = await supabase
     .from('venue_visits')
-    .select('id, rating, visited_at, visit_date, created_at, updated_at')
+    .select(
+      'id, rating, visited_at, visit_date, created_at, updated_at'
+    )
     .eq('user_id', user.id)
     .eq('venue_id', venueId)
     .order('visited_at', { ascending: true })
@@ -315,15 +336,19 @@ export async function POST(req: NextRequest, context: RouteContext) {
    * simultaneous requests, but this check lets us return a clear response
    * before attempting the insert.
    */
-  const { data: existingVisitToday, error: existingVisitTodayError } =
-    await supabase
-      .from('venue_visits')
-      .select('id, rating, visited_at, visit_date, created_at, updated_at')
-      .eq('user_id', user.id)
-      .eq('venue_id', venueId)
-      .eq('visit_date', visitDate)
-      .limit(1)
-      .maybeSingle()
+  const {
+    data: existingVisitToday,
+    error: existingVisitTodayError,
+  } = await supabase
+    .from('venue_visits')
+    .select(
+      'id, rating, visited_at, visit_date, created_at, updated_at'
+    )
+    .eq('user_id', user.id)
+    .eq('venue_id', venueId)
+    .eq('visit_date', visitDate)
+    .limit(1)
+    .maybeSingle()
 
   if (existingVisitTodayError) {
     console.error(
@@ -340,7 +365,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
   if (existingVisitToday) {
     return NextResponse.json(
       {
-        error: 'You have already checked in at this venue today.',
+        error:
+          'You have already checked in at this venue today.',
         visited: true,
         visitedToday: true,
         hasEverVisited: true,
@@ -351,7 +377,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
         xpEarned: 0,
         geoVerified: true,
         proofSource: 'venue_visits',
-        distanceMeters: Math.round(geoResult.distanceMeters),
+        distanceMeters:
+          Math.round(geoResult.distanceMeters),
         visitDate,
         venueTimeZone,
       },
@@ -365,7 +392,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
    * Ratings are intentionally omitted so repeat visits cannot overwrite the
    * user's existing venue rating.
    */
-  const { data: visit, error: insertError } = await supabase
+  const {
+    data: visit,
+    error: insertError,
+  } = await supabase
     .from('venue_visits')
     .insert({
       user_id: user.id,
@@ -374,25 +404,38 @@ export async function POST(req: NextRequest, context: RouteContext) {
       visit_date: visitDate,
       user_lat: userLat,
       user_lon: userLon,
-      distance_meters: geoResult.distanceMeters,
-      location_accuracy_meters: locationAccuracyMeters,
+      distance_meters:
+        geoResult.distanceMeters,
+      location_accuracy_meters:
+        locationAccuracyMeters,
       geo_verified: true,
-      check_in_source: checkInSource,
-      device_timestamp: deviceTimestamp,
+      check_in_source:
+        checkInSource,
+      device_timestamp:
+        deviceTimestamp,
       updated_at: now,
     } as any)
-    .select('id, rating, visited_at, visit_date, created_at, updated_at')
+    .select(
+      'id, rating, visited_at, visit_date, created_at, updated_at'
+    )
     .single()
 
-  if (insertError || !visit) {
+  if (
+    insertError ||
+    !visit
+  ) {
     /*
      * PostgreSQL error 23505 means the unique daily constraint rejected a
      * concurrent or duplicate same-day check-in.
      */
-    if (insertError?.code === '23505') {
+    if (
+      insertError?.code ===
+      '23505'
+    ) {
       return NextResponse.json(
         {
-          error: 'You have already checked in at this venue today.',
+          error:
+            'You have already checked in at this venue today.',
           visited: true,
           visitedToday: true,
           hasEverVisited: true,
@@ -401,8 +444,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
           firstVisit: false,
           xpEarned: 0,
           geoVerified: true,
-          proofSource: 'venue_visits',
-          distanceMeters: Math.round(geoResult.distanceMeters),
+          proofSource:
+            'venue_visits',
+          distanceMeters:
+            Math.round(
+              geoResult.distanceMeters
+            ),
           visitDate,
           venueTimeZone,
         },
@@ -410,53 +457,106 @@ export async function POST(req: NextRequest, context: RouteContext) {
       )
     }
 
-    console.error('[venue-profile/check-in] Visit insert failed:', insertError)
+    console.error(
+      '[venue-profile/check-in] Visit insert failed:',
+      insertError
+    )
 
     return NextResponse.json(
-      { error: 'Failed to save check-in.' },
+      {
+        error:
+          'Failed to save check-in.',
+      },
       { status: 500 }
     )
   }
 
-  const xpEarned = alreadyVisited
-    ? 0
-    : source === 'property_guide'
-      ? PROPERTY_GUIDE_SINGLE_VENUE_XP
-      : GENERIC_SINGLE_VENUE_XP
+  const xpEarned =
+    alreadyVisited
+      ? 0
+      : source ===
+          'property_guide'
+        ? PROPERTY_GUIDE_SINGLE_VENUE_XP
+        : GENERIC_SINGLE_VENUE_XP
 
   if (xpEarned > 0) {
     const eventType =
-      source === 'property_guide'
+      source ===
+      'property_guide'
         ? 'property_guide_single_venue_check_in'
         : 'single_venue_check_in'
 
-    const { error: xpError } = await supabase
+    const {
+      error: xpError,
+    } = await supabase
       .from('event_xp_ledger')
       .upsert(
         {
-          user_id: user.id,
-          event_type: eventType,
-          xp: xpEarned,
+          user_id:
+            user.id,
+
+          event_type:
+            eventType,
+
+          xp:
+            xpEarned,
+
           source,
-          source_id: propertyId,
-          venue_id: venueId,
+
+          source_id:
+            propertyId,
+
+          venue_id:
+            venueId,
+
           metadata: {
-            city: city ?? geoResult.venue.city ?? null,
-            venue_id: venueId,
-            venue_name: geoResult.venue.name ?? null,
-            property_id: propertyId,
-            property_slug: propertySlug,
-            property_name: propertyName,
-            geo_verified: true,
-            distance_meters: Math.round(geoResult.distanceMeters),
-            check_in_source: checkInSource,
-            visit_date: visitDate,
-            venue_timezone: venueTimeZone,
+            city:
+              city ??
+              geoResult.venue
+                .city ??
+              null,
+
+            venue_id:
+              venueId,
+
+            venue_name:
+              geoResult.venue
+                .name ??
+              null,
+
+            property_id:
+              propertyId,
+
+            property_slug:
+              propertySlug,
+
+            property_name:
+              propertyName,
+
+            geo_verified:
+              true,
+
+            distance_meters:
+              Math.round(
+                geoResult.distanceMeters
+              ),
+
+            check_in_source:
+              checkInSource,
+
+            visit_date:
+              visitDate,
+
+            venue_timezone:
+              venueTimeZone,
           },
-          created_at: now,
+
+          created_at:
+            now,
         } as any,
         {
-          onConflict: 'user_id,event_type,venue_id,source_id',
+          onConflict:
+            'user_id,event_type,venue_id,source_id',
         }
       )
 
@@ -468,7 +568,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
   }
 
-  await refreshPublicPassportStats(user.id)
+  await refreshPublicPassportStats(
+    user.id
+  )
 
   return NextResponse.json({
     visited: true,
@@ -476,13 +578,20 @@ export async function POST(req: NextRequest, context: RouteContext) {
     hasEverVisited: true,
     hasVisitedToday: true,
     alreadyVisited,
-    firstVisit: !alreadyVisited,
+    firstVisit:
+      !alreadyVisited,
     visit,
-    rating: existingVisit?.rating ?? null,
+    rating:
+      existingVisit?.rating ??
+      null,
     xpEarned,
     geoVerified: true,
-    proofSource: 'venue_visits',
-    distanceMeters: Math.round(geoResult.distanceMeters),
+    proofSource:
+      'venue_visits',
+    distanceMeters:
+      Math.round(
+        geoResult.distanceMeters
+      ),
     visitDate,
     venueTimeZone,
   })

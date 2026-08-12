@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
+
+import { getRoamDay } from '@/lib/roam/roamDay'
+
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 
 type RouteContext = {
@@ -48,30 +53,25 @@ function isValidLongitude(value: unknown): value is number {
   )
 }
 
-function isSameUtcDay(
+function isSameRoamDay(
   firstValue: string,
-  secondValue: string
+  secondValue: string,
+  city: string
 ): boolean {
-  const firstTimestamp = Date.parse(firstValue)
-  const secondTimestamp = Date.parse(secondValue)
+  const firstRoamDay = getRoamDay(
+    firstValue,
+    city
+  )
 
-  if (
-    Number.isNaN(firstTimestamp) ||
-    Number.isNaN(secondTimestamp)
-  ) {
-    return false
-  }
-
-  const firstDate = new Date(firstTimestamp)
-  const secondDate = new Date(secondTimestamp)
+  const secondRoamDay = getRoamDay(
+    secondValue,
+    city
+  )
 
   return (
-    firstDate.getUTCFullYear() ===
-      secondDate.getUTCFullYear() &&
-    firstDate.getUTCMonth() ===
-      secondDate.getUTCMonth() &&
-    firstDate.getUTCDate() ===
-      secondDate.getUTCDate()
+    firstRoamDay !== null &&
+    secondRoamDay !== null &&
+    firstRoamDay === secondRoamDay
   )
 }
 
@@ -165,7 +165,7 @@ async function verifyVenueLocation({
 
   const { data: venue, error: venueError } = await supabase
     .from('venues')
-    .select('id, lat, lon')
+    .select('id, lat, lon, city')
     .eq('id', venueId)
     .maybeSingle()
 
@@ -225,6 +225,7 @@ async function verifyVenueLocation({
   return {
     ok: true as const,
     distanceMeters,
+    city: venue.city,
   }
 }
 
@@ -245,12 +246,16 @@ export async function GET(req: NextRequest, context: RouteContext) {
   }
 
   const url = new URL(req.url)
-  const checkProximity = url.searchParams.get('check_proximity') === '1'
+
+  const checkProximity =
+    url.searchParams.get('check_proximity') === '1'
 
   if (checkProximity) {
     const userLat = Number(url.searchParams.get('user_lat'))
     const userLon = Number(url.searchParams.get('user_lon'))
-    const rawAccuracy = url.searchParams.get('location_accuracy_meters')
+    const rawAccuracy =
+      url.searchParams.get('location_accuracy_meters')
+
     const locationAccuracyMeters =
       rawAccuracy && rawAccuracy.trim().length > 0
         ? Number(rawAccuracy)
@@ -275,11 +280,24 @@ export async function GET(req: NextRequest, context: RouteContext) {
     })
   }
 
+  /*
+   * venue_visits is append-only historical data.
+   *
+   * Return the latest visit rather than assuming one lifetime
+   * row per user and venue.
+   */
   const { data, error } = await supabase
     .from('venue_visits')
     .select('id, rating, visited_at, created_at, updated_at')
     .eq('venue_id', venueId)
     .eq('user_id', user.id)
+    .order(
+      'visited_at',
+      {
+        ascending: false,
+      }
+    )
+    .limit(1)
     .maybeSingle()
 
   if (error) {
@@ -300,7 +318,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
     })
   }
 
-  const { data: activeFlowProof, error: activeFlowProofError } = await supabase
+  const {
+    data: activeFlowProof,
+    error: activeFlowProofError,
+  } = await supabase
     .from('active_flow_progress')
     .select('id, checked_in_at, venue_id, user_id')
     .eq('venue_id', venueId)
@@ -347,10 +368,15 @@ export async function POST(req: NextRequest, context: RouteContext) {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
   }
 
-  const body = (await req.json().catch(() => ({}))) as VenueVisitBody
+  const body =
+    (await req.json().catch(() => ({}))) as VenueVisitBody
+
   const {
     rating,
     user_lat: userLat,
@@ -361,11 +387,27 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const now = new Date().toISOString()
 
-  const { data: existingVisit, error: existingVisitError } = await supabase
+  /*
+   * venue_visits is append-only historical data.
+   *
+   * The latest historical visit is the relevant row for current
+   * eligibility and rating inheritance.
+   */
+  const {
+    data: existingVisit,
+    error: existingVisitError,
+  } = await supabase
     .from('venue_visits')
     .select('id, rating, visited_at')
     .eq('venue_id', venueId)
     .eq('user_id', user.id)
+    .order(
+      'visited_at',
+      {
+        ascending: false,
+      }
+    )
+    .limit(1)
     .maybeSingle()
 
   if (existingVisitError) {
@@ -380,19 +422,6 @@ export async function POST(req: NextRequest, context: RouteContext) {
     )
   }
 
-  if (
-    existingVisit?.visited_at &&
-    isSameUtcDay(existingVisit.visited_at, now)
-  ) {
-    return NextResponse.json(
-      {
-        error:
-          'You have already checked in to this venue today. Try again on a different day.',
-      },
-      { status: 409 }
-    )
-  }
-
   const ratingWasProvided =
     rating !== undefined &&
     rating !== null
@@ -402,7 +431,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
     !isValidRating(rating)
   ) {
     return NextResponse.json(
-      { error: 'Rating must be an integer between 1 and 5' },
+      {
+        error:
+          'Rating must be an integer between 1 and 5',
+      },
       { status: 400 }
     )
   }
@@ -447,47 +479,72 @@ export async function POST(req: NextRequest, context: RouteContext) {
     return geoResult.response
   }
 
+  if (
+    existingVisit?.visited_at &&
+    typeof geoResult.city === 'string' &&
+    geoResult.city.trim().length > 0 &&
+    isSameRoamDay(
+      existingVisit.visited_at,
+      now,
+      geoResult.city
+    )
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'You have already checked in to this venue today. Try again on a different day.',
+      },
+      { status: 409 }
+    )
+  }
+
   const { data, error } = await supabase
     .from('venue_visits')
-    .upsert(
-      {
-        user_id: user.id,
-        venue_id: venueId,
-        rating: ratingToSave,
-        visited_at: now,
-        user_lat: userLat,
-        user_lon: userLon,
-        distance_meters: geoResult.distanceMeters,
-        location_accuracy_meters:
-          typeof locationAccuracyMeters === 'number' &&
-          Number.isFinite(locationAccuracyMeters)
-            ? locationAccuracyMeters
-            : null,
-        geo_verified: true,
-        check_in_source: 'geo',
-        device_timestamp:
-          typeof deviceTimestamp === 'string' &&
-          deviceTimestamp.trim().length > 0
-            ? deviceTimestamp
-            : null,
-      },
-      {
-        onConflict: 'user_id,venue_id',
-      }
+    .insert({
+      user_id: user.id,
+      venue_id: venueId,
+      rating: ratingToSave,
+      visited_at: now,
+      user_lat: userLat,
+      user_lon: userLon,
+      distance_meters: geoResult.distanceMeters,
+      location_accuracy_meters:
+        typeof locationAccuracyMeters === 'number' &&
+        Number.isFinite(locationAccuracyMeters)
+          ? locationAccuracyMeters
+          : null,
+      geo_verified: true,
+      check_in_source: 'geo',
+      device_timestamp:
+        typeof deviceTimestamp === 'string' &&
+        deviceTimestamp.trim().length > 0
+          ? deviceTimestamp
+          : null,
+    })
+    .select(
+      'id, rating, visited_at, created_at, updated_at'
     )
-    .select('id, rating, visited_at, created_at, updated_at')
     .single()
 
   if (error) {
-    console.error('[venue visit][POST] Failed:', error)
+    console.error(
+      '[venue visit][POST] Failed:',
+      error
+    )
 
     return NextResponse.json(
-      { error: 'Failed to save venue visit' },
+      {
+        error:
+          'Failed to save venue visit',
+      },
       { status: 500 }
     )
   }
 
-  await refreshPublicPassportStats(user.id, 'POST')
+  await refreshPublicPassportStats(
+    user.id,
+    'POST'
+  )
 
   await safelyRefreshCreatorReputation(
     user.id,
@@ -508,7 +565,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
     rating: data.rating,
     visit: data,
     geoVerified: true,
-    distanceMeters: Math.round(geoResult.distanceMeters),
+    distanceMeters:
+      Math.round(
+        geoResult.distanceMeters
+      ),
   })
 }
 
@@ -522,26 +582,50 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
   }
 
-  const body = (await req.json().catch(() => ({}))) as VenueVisitBody
+  const body =
+    (await req.json().catch(() => ({}))) as VenueVisitBody
+
   const { rating } = body
 
   if (!isValidRating(rating)) {
     return NextResponse.json(
-      { error: 'Rating must be an integer between 1 and 5' },
+      {
+        error:
+          'Rating must be an integer between 1 and 5',
+      },
       { status: 400 }
     )
   }
 
   const now = new Date().toISOString()
 
-  const { data: existingVisit, error: existingVisitError } = await supabase
+  /*
+   * Historical visit rows are append-only visit events, so multiple
+   * venue_visits rows may exist for the same user and venue.
+   *
+   * Rating edits intentionally target only the latest visit.
+   */
+  const {
+    data: existingVisit,
+    error: existingVisitError,
+  } = await supabase
     .from('venue_visits')
     .select('id')
     .eq('venue_id', venueId)
     .eq('user_id', user.id)
+    .order(
+      'visited_at',
+      {
+        ascending: false,
+      }
+    )
+    .limit(1)
     .maybeSingle()
 
   if (existingVisitError) {
@@ -551,7 +635,10 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     )
 
     return NextResponse.json(
-      { error: 'Failed to verify existing venue visit' },
+      {
+        error:
+          'Failed to verify existing venue visit',
+      },
       { status: 500 }
     )
   }
@@ -564,19 +651,30 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
         updated_at: now,
       })
       .eq('id', existingVisit.id)
-      .select('id, rating, visited_at, created_at, updated_at')
+      .select(
+        'id, rating, visited_at, created_at, updated_at'
+      )
       .maybeSingle()
 
     if (error) {
-      console.error('[venue visit][PATCH] Failed:', error)
+      console.error(
+        '[venue visit][PATCH] Failed:',
+        error
+      )
 
       return NextResponse.json(
-        { error: 'Failed to update venue rating' },
+        {
+          error:
+            'Failed to update venue rating',
+        },
         { status: 500 }
       )
     }
 
-    await refreshPublicPassportStats(user.id, 'PATCH')
+    await refreshPublicPassportStats(
+      user.id,
+      'PATCH'
+    )
 
     await safelyRefreshCreatorReputation(
       user.id,
@@ -594,19 +692,30 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({
       visited: true,
-      rating: data?.rating ?? rating,
-      visit: data,
+      rating:
+        data?.rating ??
+        rating,
+      visit:
+        data,
     })
   }
 
-  const { data: activeFlowProof, error: activeFlowProofError } = await supabase
+  const {
+    data: activeFlowProof,
+    error: activeFlowProofError,
+  } = await supabase
     .from('active_flow_progress')
     .select(
       'id, checked_in_at, user_lat, user_lon, distance_meters, location_accuracy_meters, geo_verified, check_in_source, device_timestamp'
     )
     .eq('venue_id', venueId)
     .eq('user_id', user.id)
-    .order('checked_in_at', { ascending: false })
+    .order(
+      'checked_in_at',
+      {
+        ascending: false,
+      }
+    )
     .limit(1)
     .maybeSingle()
 
@@ -617,41 +726,201 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     )
 
     return NextResponse.json(
-      { error: 'Failed to verify flow check-in proof' },
+      {
+        error:
+          'Failed to verify flow check-in proof',
+      },
       { status: 500 }
     )
   }
 
   if (activeFlowProof) {
     const visitedAt =
-      typeof activeFlowProof.checked_in_at === 'string' &&
-      activeFlowProof.checked_in_at.trim().length > 0
+      typeof activeFlowProof.checked_in_at ===
+        'string' &&
+      activeFlowProof.checked_in_at
+        .trim()
+        .length > 0
         ? activeFlowProof.checked_in_at
         : now
 
-    const { data, error } = await supabase
+    /*
+     * Active-flow check-ins now create venue_visits directly.
+     *
+     * Before backfilling an older active_flow_progress record,
+     * look for the canonical visit generated by that exact
+     * check-in so PATCH cannot manufacture a duplicate historical
+     * visit event.
+     */
+    const {
+      data: existingActiveFlowVisit,
+      error: existingActiveFlowVisitError,
+    } = await supabase
       .from('venue_visits')
-      .upsert(
+      .select(
+        'id, rating, visited_at, created_at, updated_at'
+      )
+      .eq(
+        'user_id',
+        user.id
+      )
+      .eq(
+        'venue_id',
+        venueId
+      )
+      .eq(
+        'check_in_source',
+        'active_flow'
+      )
+      .eq(
+        'visited_at',
+        visitedAt
+      )
+      .limit(1)
+      .maybeSingle()
+
+    if (
+      existingActiveFlowVisitError
+    ) {
+      console.error(
+        '[venue visit][PATCH] Existing active-flow venue visit lookup failed:',
+        existingActiveFlowVisitError
+      )
+
+      return NextResponse.json(
         {
-          user_id: user.id,
-          venue_id: venueId,
+          error:
+            'Failed to verify existing flow venue visit',
+        },
+        { status: 500 }
+      )
+    }
+
+    if (
+      existingActiveFlowVisit
+    ) {
+      const {
+        data,
+        error,
+      } = await supabase
+        .from('venue_visits')
+        .update({
           rating,
-          visited_at: visitedAt,
-          user_lat: activeFlowProof.user_lat ?? null,
-          user_lon: activeFlowProof.user_lon ?? null,
-          distance_meters: activeFlowProof.distance_meters ?? null,
-          location_accuracy_meters:
-            activeFlowProof.location_accuracy_meters ?? null,
-          geo_verified: activeFlowProof.geo_verified === true,
-          check_in_source: 'active_flow',
-          device_timestamp: activeFlowProof.device_timestamp ?? null,
-          updated_at: now,
-        } as any,
+          updated_at:
+            now,
+        })
+        .eq(
+          'id',
+          existingActiveFlowVisit.id
+        )
+        .select(
+          'id, rating, visited_at, created_at, updated_at'
+        )
+        .maybeSingle()
+
+      if (error) {
+        console.error(
+          '[venue visit][PATCH] Failed to update existing active-flow venue visit:',
+          error
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Failed to save venue rating from flow check-in',
+          },
+          { status: 500 }
+        )
+      }
+
+      await refreshPublicPassportStats(
+        user.id,
+        'PATCH_ACTIVE_FLOW'
+      )
+
+      await safelyRefreshCreatorReputation(
+        user.id,
         {
-          onConflict: 'user_id,venue_id',
+          mutation:
+            'venue_visit_patch_active_flow',
+
+          rankingRefreshMode:
+            'affected',
+
+          calculatedAt:
+            now,
         }
       )
-      .select('id, rating, visited_at, created_at, updated_at')
+
+      return NextResponse.json({
+        visited:
+          true,
+        rating:
+          data?.rating ??
+          rating,
+        visit:
+          data,
+        proofSource:
+          'active_flow_progress',
+      })
+    }
+
+    /*
+     * Legacy repair only:
+     *
+     * No canonical active-flow venue visit exists for this exact
+     * progress event, so create the missing historical row once.
+     */
+    const {
+      data,
+      error,
+    } = await supabase
+      .from('venue_visits')
+      .insert({
+        user_id:
+          user.id,
+
+        venue_id:
+          venueId,
+
+        rating,
+
+        visited_at:
+          visitedAt,
+
+        user_lat:
+          activeFlowProof.user_lat ??
+          null,
+
+        user_lon:
+          activeFlowProof.user_lon ??
+          null,
+
+        distance_meters:
+          activeFlowProof.distance_meters ??
+          null,
+
+        location_accuracy_meters:
+          activeFlowProof.location_accuracy_meters ??
+          null,
+
+        geo_verified:
+          activeFlowProof.geo_verified ===
+          true,
+
+        check_in_source:
+          'active_flow',
+
+        device_timestamp:
+          activeFlowProof.device_timestamp ??
+          null,
+
+        updated_at:
+          now,
+      } as any)
+      .select(
+        'id, rating, visited_at, created_at, updated_at'
+      )
       .single()
 
     if (error) {
@@ -661,12 +930,18 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
       )
 
       return NextResponse.json(
-        { error: 'Failed to save venue rating from flow check-in' },
+        {
+          error:
+            'Failed to save venue rating from flow check-in',
+        },
         { status: 500 }
       )
     }
 
-    await refreshPublicPassportStats(user.id, 'PATCH_ACTIVE_FLOW')
+    await refreshPublicPassportStats(
+      user.id,
+      'PATCH_ACTIVE_FLOW'
+    )
 
     await safelyRefreshCreatorReputation(
       user.id,
@@ -684,9 +959,12 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     return NextResponse.json({
       visited: true,
-      rating: data.rating,
-      visit: data,
-      proofSource: 'active_flow_progress',
+      rating:
+        data.rating,
+      visit:
+        data,
+      proofSource:
+        'active_flow_progress',
     })
   }
 
@@ -699,7 +977,10 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   )
 }
 
-export async function DELETE(_req: NextRequest, context: RouteContext) {
+export async function DELETE(
+  _req: NextRequest,
+  context: RouteContext
+) {
   const { venueId } = await context.params
   const supabase = await supabaseServerApi()
 
@@ -709,7 +990,10 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
   }
 
   const { error } = await supabase
@@ -719,15 +1003,24 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
     .eq('user_id', user.id)
 
   if (error) {
-    console.error('[venue visit][DELETE] Failed:', error)
+    console.error(
+      '[venue visit][DELETE] Failed:',
+      error
+    )
 
     return NextResponse.json(
-      { error: 'Failed to remove venue visit' },
+      {
+        error:
+          'Failed to remove venue visit',
+      },
       { status: 500 }
     )
   }
 
-  await refreshPublicPassportStats(user.id, 'DELETE')
+  await refreshPublicPassportStats(
+    user.id,
+    'DELETE'
+  )
 
   await safelyRefreshCreatorReputation(
     user.id,

@@ -8,6 +8,7 @@ import CreatorFeaturedCollections from '@/components/public-profile/creator/Crea
 import CreatorHero from '@/components/public-profile/creator/CreatorHero'
 import FollowButton from '@/components/profile/FollowButton'
 import ShareProfileButton from '@/components/profile/ShareProfileButton'
+import PublicRoamCard from '@/components/public-profile/PublicRoamCard'
 
 import {
   buildCreatorAuthority,
@@ -76,6 +77,18 @@ type ProfilePublicStatsRow = {
   updated_at: string
 }
 
+type PublicFlowSnapshotStop = {
+  venueId: string
+  stopIndex: number
+  venue: {
+    id: string
+    name: string | null
+    city: string | null
+    lat: number | null
+    lon: number | null
+  }
+}
+
 type PublicFlowSnapshotRow = {
   id: string
   title: string | null
@@ -88,7 +101,9 @@ type PublicFlowSnapshotRow = {
   source_type: string | null
   source_id: string | null
   visibility: 'public'
+  replayable: boolean
   created_at: string
+  stops: PublicFlowSnapshotStop[]
 }
 
 type PublicCreatorReputationResult =
@@ -357,7 +372,19 @@ export default async function PublicUserProfilePage({
         source_type,
         source_id,
         visibility,
-        created_at
+        replayable,
+        created_at,
+        flow_snapshot_stops (
+          venue_id,
+          stop_index,
+          venues (
+            id,
+            name,
+            city,
+            lat,
+            lon
+          )
+        )
       `)
       .eq(
         'user_id',
@@ -835,54 +862,54 @@ export default async function PublicUserProfilePage({
               />
 
               {creatorMap ? (
-              <section
-                id="places"
-                aria-labelledby="creator-exploration-map-title"
-                className="scroll-mt-28 space-y-5"
-              >
-                <ProfileSectionHeading
-                  id="creator-exploration-map-title"
-                  eyebrow="Places"
-                  title={`Explore ${creatorDisplayName}’s city footprint`}
-                  description="A map of eligible, geo-verified places this creator has visited and chosen to share publicly."
-                />
+                <section
+                  id="places"
+                  aria-labelledby="creator-exploration-map-title"
+                  className="scroll-mt-28 space-y-5"
+                >
+                  <ProfileSectionHeading
+                    id="creator-exploration-map-title"
+                    eyebrow="Places"
+                    title={`Explore ${creatorDisplayName}’s city footprint`}
+                    description="A map of eligible, geo-verified places this creator has visited and chosen to share publicly."
+                  />
 
-                <CreatorExplorationMapDynamic
-                  map={creatorMap}
-                  creatorName={
-                    creatorDisplayName
-                  }
-                  primaryCity={
-                    creatorBundle.profile
-                      .primary_city
-                  }
-                  scrollWheelZoom={
-                    false
-                  }
-                />
-              </section>
-            ) : null}
+                  <CreatorExplorationMapDynamic
+                    map={creatorMap}
+                    creatorName={
+                      creatorDisplayName
+                    }
+                    primaryCity={
+                      creatorBundle.profile
+                        .primary_city
+                    }
+                    scrollWheelZoom={
+                      false
+                    }
+                  />
+                </section>
+              ) : null}
 
               {creatorReputation ? (
-              <section
-                id="reputation"
-                aria-labelledby="creator-earned-reputation-heading"
-                className="scroll-mt-28 space-y-5"
-              >
-                <ProfileSectionHeading
-                  id="creator-earned-reputation-heading"
-                  eyebrow="Earned reputation"
-                  title="What their Roam activity supports"
-                  description="Category statuses earned through relevant verified visits and completed activity. These are different from their total profile activity."
-                />
+                <section
+                  id="reputation"
+                  aria-labelledby="creator-earned-reputation-heading"
+                  className="scroll-mt-28 space-y-5"
+                >
+                  <ProfileSectionHeading
+                    id="creator-earned-reputation-heading"
+                    eyebrow="Earned reputation"
+                    title="What their Roam activity supports"
+                    description="Category statuses earned through relevant verified visits and completed activity. These are different from their total profile activity."
+                  />
 
-                <CreatorReputationSection
-                  reputation={
-                    creatorReputation
-                  }
-                />
-              </section>
-            ) : null}
+                  <CreatorReputationSection
+                    reputation={
+                      creatorReputation
+                    }
+                  />
+                </section>
+              ) : null}
 
               {creatorBundle
                 .collaborationTags
@@ -944,34 +971,56 @@ export default async function PublicUserProfilePage({
               <section
                 id="moments"
                 aria-labelledby="creator-roam-moments-title"
-                className="scroll-mt-28 space-y-5"
+                className="scroll-mt-28"
               >
-                <ProfileSectionHeading
-                  id="creator-roam-moments-title"
-                  eyebrow="Recent moments"
-                  title="Roams they have completed"
-                  description="Highlights from completed routes, shared as public snapshots."
-                  trailing={
-                    `Latest ${Math.min(
-                      snapshots.length,
-                      9
-                    )}`
-                  }
-                />
+                <div className="overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-indigo-950/10">
+                  <div className="border-b border-neutral-800/80 p-5 sm:p-6">
+                    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
+                          Recent moments
+                        </p>
 
-                <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-3">
-                  {snapshots.map(
-                    (snapshot) => (
-                      <SnapshotCard
-                        key={
-                          snapshot.id
-                        }
-                        snapshot={
-                          snapshot
-                        }
-                      />
-                    )
-                  )}
+                        <h2
+                          id="creator-roam-moments-title"
+                          className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+                        >
+                          Roams they have completed
+                        </h2>
+
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
+                          Completed routes worth revisiting. Public Roams can be explored here and replayed when the creator has enabled replay.
+                        </p>
+                      </div>
+
+                      <div className="shrink-0">
+                        <span className="inline-flex items-center rounded-full border border-neutral-800 bg-neutral-950 px-3 py-1.5 text-xs font-medium text-neutral-400">
+                          Latest{' '}
+                          {Math.min(
+                            snapshots.length,
+                            9
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 sm:p-5">
+                    <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+                      {snapshots.map(
+                        (snapshot) => (
+                          <PublicRoamCard
+                            key={
+                              snapshot.id
+                            }
+                            snapshot={
+                              snapshot
+                            }
+                          />
+                        )
+                      )}
+                    </div>
+                  </div>
                 </div>
               </section>
             ) : null}
@@ -1026,41 +1075,44 @@ export default async function PublicUserProfilePage({
         ) : (
           <>
             {snapshots.length > 0 ? (
-              <section className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
-                <div className="mb-4 flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
-                      Recent Roams
-                    </h2>
+              <section className="mt-6 overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-indigo-950/10">
+                <div className="border-b border-neutral-800/80 p-5">
+                  <div className="flex min-w-0 items-end justify-between gap-4">
+                    <div className="min-w-0">
+                      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
+                        Recent Roams
+                      </h2>
 
-                    <p className="mt-1 text-xs text-neutral-500">
-                      Public moments from
-                      completed Roam flows.
+                      <p className="mt-1 text-xs text-neutral-500">
+                        Public moments from completed Roam flows.
+                      </p>
+                    </div>
+
+                    <p className="shrink-0 text-xs text-neutral-500">
+                      Latest{' '}
+                      {Math.min(
+                        snapshots.length,
+                        9
+                      )}
                     </p>
                   </div>
-
-                  <p className="shrink-0 text-xs text-neutral-500">
-                    Latest{' '}
-                    {Math.min(
-                      snapshots.length,
-                      9
-                    )}
-                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-3">
-                  {snapshots.map(
-                    (snapshot) => (
-                      <SnapshotCard
-                        key={
-                          snapshot.id
-                        }
-                        snapshot={
-                          snapshot
-                        }
-                      />
-                    )
-                  )}
+                <div className="p-4 sm:p-5">
+                  <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+                    {snapshots.map(
+                      (snapshot) => (
+                        <PublicRoamCard
+                          key={
+                            snapshot.id
+                          }
+                          snapshot={
+                            snapshot
+                          }
+                        />
+                      )
+                    )}
+                  </div>
                 </div>
               </section>
             ) : null}
@@ -1228,61 +1280,6 @@ function ProfileSectionHeading({
   )
 }
 
-function SnapshotCard({
-  snapshot,
-}: {
-  snapshot:
-    PublicFlowSnapshotRow
-}) {
-  return (
-    <article className="group min-w-0 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950/70 transition hover:border-neutral-700">
-      <div className="relative aspect-[4/5] overflow-hidden bg-neutral-900 sm:aspect-square">
-        {snapshot.cover_image_url ? (
-          <img
-            src={
-              snapshot.cover_image_url
-            }
-            alt={
-              snapshot.title ??
-              'Roam snapshot'
-            }
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.2),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.24),transparent_45%),#09090b] text-4xl">
-            🗺️
-          </div>
-        )}
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
-
-        <div className="absolute inset-x-0 bottom-0 p-4">
-          <p className="line-clamp-2 text-base font-semibold leading-tight text-white">
-            {snapshot.title ??
-              'Roam Flow'}
-          </p>
-
-          <p className="mt-1.5 text-[11px] text-neutral-300">
-            {buildSnapshotMetadata(
-              snapshot
-            )}
-          </p>
-        </div>
-      </div>
-
-      {snapshot.route_summary ? (
-        <div className="border-t border-neutral-800 px-4 py-3">
-          <p className="line-clamp-2 text-xs leading-5 text-neutral-500">
-            {
-              snapshot.route_summary
-            }
-          </p>
-        </div>
-      ) : null}
-    </article>
-  )
-}
-
 /* =========================================================
  * Public creator reputation presentation
  * ======================================================= */
@@ -1324,8 +1321,6 @@ function CreatorReputationSection({
             {normalized.headline ??
               'Roam creator reputation'}
           </h2>
-
-          
         </div>
 
         {normalized.highestLevel ? (
@@ -2538,8 +2533,17 @@ function normalizePublicSnapshots(
           visibility:
             'public',
 
+          replayable:
+            row.replayable ===
+            true,
+
           created_at:
             row.created_at,
+
+          stops:
+            normalizePublicSnapshotStops(
+              row.flow_snapshot_stops
+            ),
         }
       }
     )
@@ -2548,6 +2552,138 @@ function normalizePublicSnapshots(
         snapshot
       ): snapshot is PublicFlowSnapshotRow =>
         snapshot !== null
+    )
+}
+
+function normalizePublicSnapshotStops(
+  value: unknown
+): PublicFlowSnapshotStop[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const stops:
+    PublicFlowSnapshotStop[] =
+    []
+
+  for (const rawStop of value) {
+    if (!isRecord(rawStop)) {
+      continue
+    }
+
+    const venueId =
+      nullableString(
+        rawStop.venue_id
+      )
+
+    const stopIndex =
+      nullableNonNegativeInteger(
+        rawStop.stop_index
+      )
+
+    if (
+      !venueId ||
+      stopIndex === null
+    ) {
+      continue
+    }
+
+    const rawVenue =
+      Array.isArray(
+        rawStop.venues
+      )
+        ? rawStop.venues[0]
+        : rawStop.venues
+
+    if (
+      !isRecord(
+        rawVenue
+      )
+    ) {
+      continue
+    }
+
+    const canonicalVenueId =
+      nullableString(
+        rawVenue.id
+      )
+
+    if (
+      !canonicalVenueId ||
+      canonicalVenueId !==
+        venueId
+    ) {
+      continue
+    }
+
+    stops.push({
+      venueId,
+
+      stopIndex,
+
+      venue: {
+        id:
+          canonicalVenueId,
+
+        name:
+          nullableString(
+            rawVenue.name
+          ),
+
+        city:
+          nullableString(
+            rawVenue.city
+          ),
+
+        lat:
+          nullableCoordinate(
+            rawVenue.lat,
+            -90,
+            90
+          ),
+
+        lon:
+          nullableCoordinate(
+            rawVenue.lon,
+            -180,
+            180
+          ),
+      },
+    })
+  }
+
+  return stops
+    .sort(
+      (
+        first,
+        second
+      ) =>
+        first.stopIndex -
+        second.stopIndex
+    )
+    .filter(
+      (
+        stop,
+        index,
+        orderedStops
+      ) => {
+        if (
+          stop.stopIndex !==
+          index
+        ) {
+          return false
+        }
+
+        return (
+          orderedStops.findIndex(
+            (
+              candidate
+            ) =>
+              candidate.venueId ===
+              stop.venueId
+          ) === index
+        )
+      }
     )
 }
 
@@ -2582,35 +2718,24 @@ function nullableNumber(
     : null
 }
 
-function buildSnapshotMetadata(
-  snapshot:
-    PublicFlowSnapshotRow
-): string {
-  const parts: string[] = []
-
-  if (snapshot.city) {
-    parts.push(
-      snapshot.city
-    )
+function nullableCoordinate(
+  value: unknown,
+  minimum: number,
+  maximum: number
+): number | null {
+  if (
+    typeof value !==
+      'number' ||
+    !Number.isFinite(
+      value
+    ) ||
+    value < minimum ||
+    value > maximum
+  ) {
+    return null
   }
 
-  const checkedInCount =
-    snapshot.checked_in_count ??
-    0
-
-  const totalStops =
-    snapshot.total_stops ??
-    0
-
-  parts.push(
-    `${checkedInCount}/${totalStops} ${
-      totalStops === 1
-        ? 'stop'
-        : 'stops'
-    }`
-  )
-
-  return parts.join(' · ')
+  return value
 }
 
 /* =========================================================

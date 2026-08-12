@@ -49,6 +49,12 @@ type CrawlEventRow = {
   venue_ids?: unknown
 }
 
+type CreatorReplayAttributionTotalsRow = {
+  creator_user_id?: string | null
+  replayed_flow_stops?: number | string | null
+  completed_replayed_flows?: number | string | null
+}
+
 function normalizeCount(
   value: number
 ): number {
@@ -60,6 +66,37 @@ function normalizeCount(
   }
 
   return Math.floor(value)
+}
+
+function normalizeCountValue(
+  value: unknown
+): number {
+  if (
+    typeof value === 'number' &&
+    Number.isFinite(value)
+  ) {
+    return normalizeCount(
+      value
+    )
+  }
+
+  if (
+    typeof value === 'string' &&
+    value.trim().length > 0
+  ) {
+    const parsed =
+      Number(value)
+
+    if (
+      Number.isFinite(parsed)
+    ) {
+      return normalizeCount(
+        parsed
+      )
+    }
+  }
+
+  return 0
 }
 
 function normalizeXpValue(
@@ -224,6 +261,7 @@ export async function rebuildPublicPassportStats(
     crawlProgressResult,
     eventXpResult,
     eventCheckinsResult,
+    creatorReplayAttributionResult,
   ] = await Promise.all([
     supabase
       .from('crawl_events')
@@ -319,6 +357,30 @@ export async function rebuildPublicPassportStats(
         'user_id',
         normalizedUserId
       ),
+
+    /**
+     * Creator replay attribution:
+     *
+     * This aggregate is derived from the append-only canonical
+     * creator_replay_events ledger.
+     *
+     * It attributes verified downstream replay execution to the
+     * creator without changing the replaying user's own Flow XP.
+     */
+    supabase
+      .from(
+        'creator_replay_attribution_totals'
+      )
+      .select(`
+        creator_user_id,
+        replayed_flow_stops,
+        completed_replayed_flows
+      `)
+      .eq(
+        'creator_user_id',
+        normalizedUserId
+      )
+      .maybeSingle<CreatorReplayAttributionTotalsRow>(),
   ])
 
   throwIfQueryFailed(
@@ -361,6 +423,11 @@ export async function rebuildPublicPassportStats(
     eventCheckinsResult.error
   )
 
+  throwIfQueryFailed(
+    'creator_replay_attribution_totals',
+    creatorReplayAttributionResult.error
+  )
+
   const crawlRsvps =
     (
       crawlRsvpsResult.data ??
@@ -390,6 +457,13 @@ export async function rebuildPublicPassportStats(
       eventXpResult.data ??
       []
     ) as EventXpRow[]
+
+  const creatorReplayAttribution =
+    (
+      creatorReplayAttributionResult.data as
+        CreatorReplayAttributionTotalsRow | null
+    ) ??
+    null
 
   const hostedCrawls =
     normalizeCount(
@@ -510,6 +584,29 @@ export async function rebuildPublicPassportStats(
     normalizeCount(
       eventCheckinsResult.count ??
         0
+    )
+
+  /**
+   * Creator replay attribution:
+   *
+   * Counts are already deduplicated by the canonical replay
+   * attribution ledger constraints.
+   *
+   * score.ts owns the XP economics:
+   *
+   * - replayed Flow stop: 10 XP
+   * - completed replayed Flow: 50 XP
+   */
+  const replayedFlowStops =
+    normalizeCountValue(
+      creatorReplayAttribution
+        ?.replayed_flow_stops
+    )
+
+  const completedReplayedFlows =
+    normalizeCountValue(
+      creatorReplayAttribution
+        ?.completed_replayed_flows
     )
 
   const progressedCrawlIds = [
@@ -643,6 +740,10 @@ export async function rebuildPublicPassportStats(
     completedFlowStops,
     hostedFlowStops,
     completedHostedFlows,
+
+    replayedFlowStops,
+    completedReplayedFlows,
+
     venueVisits,
     eventXp,
     eventCheckins,

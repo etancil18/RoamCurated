@@ -15,6 +15,7 @@ type RouteContext = {
 
 type UpdateSnapshotBody = {
   visibility?: unknown
+  replayable?: unknown
 }
 
 type SnapshotRow = {
@@ -30,6 +31,7 @@ type SnapshotRow = {
   checked_in_count: number | null
   total_stops: number | null
   visibility: SnapshotVisibility
+  replayable: boolean
   created_at: string
   updated_at: string | null
 }
@@ -77,6 +79,7 @@ export async function GET(
         checked_in_count,
         total_stops,
         visibility,
+        replayable,
         created_at,
         updated_at
       `)
@@ -158,9 +161,42 @@ export async function PATCH(
       .json()
       .catch(() => ({}))) as UpdateSnapshotBody
 
-    const visibility = normalizeVisibility(body.visibility)
+    const hasVisibility =
+      Object.prototype.hasOwnProperty.call(
+        body,
+        'visibility'
+      )
 
-    if (!visibility) {
+    const hasReplayable =
+      Object.prototype.hasOwnProperty.call(
+        body,
+        'replayable'
+      )
+
+    if (
+      !hasVisibility &&
+      !hasReplayable
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Provide visibility or replayable to update the snapshot.',
+        },
+        { status: 400 }
+      )
+    }
+
+    const visibility =
+      hasVisibility
+        ? normalizeVisibility(
+            body.visibility
+          )
+        : null
+
+    if (
+      hasVisibility &&
+      !visibility
+    ) {
       return NextResponse.json(
         {
           error:
@@ -170,16 +206,42 @@ export async function PATCH(
       )
     }
 
-    const { data: existingSnapshot, error: existingError } =
-      await supabase
-        .from('flow_snapshots')
-        .select('id, visibility')
-        .eq('id', snapshotId)
-        .eq('user_id', user.id)
-        .maybeSingle<{
-          id: string
-          visibility: SnapshotVisibility
-        }>()
+    const replayable =
+      hasReplayable
+        ? normalizeReplayable(
+            body.replayable
+          )
+        : null
+
+    if (
+      hasReplayable &&
+      replayable === null
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Replayable must be a boolean.',
+        },
+        { status: 400 }
+      )
+    }
+
+    const {
+      data: existingSnapshot,
+      error: existingError,
+    } = await supabase
+      .from('flow_snapshots')
+      .select(
+        'id, visibility, replayable, status'
+      )
+      .eq('id', snapshotId)
+      .eq('user_id', user.id)
+      .maybeSingle<{
+        id: string
+        visibility: SnapshotVisibility
+        replayable: boolean
+        status: string
+      }>()
 
     if (existingError) {
       console.error(
@@ -188,7 +250,10 @@ export async function PATCH(
       )
 
       return NextResponse.json(
-        { error: 'Failed to verify snapshot ownership.' },
+        {
+          error:
+            'Failed to verify snapshot ownership.',
+        },
         { status: 500 }
       )
     }
@@ -200,60 +265,126 @@ export async function PATCH(
       )
     }
 
-    if (existingSnapshot.visibility === visibility) {
-      const { data: unchangedSnapshot, error: unchangedError } =
-        await supabase
-          .from('flow_snapshots')
-          .select(`
-            id,
-            user_id,
-            source_type,
-            source_id,
-            title,
-            city,
-            status,
-            cover_image_url,
-            route_summary,
-            checked_in_count,
-            total_stops,
-            visibility,
-            created_at,
-            updated_at
-          `)
-          .eq('id', snapshotId)
-          .eq('user_id', user.id)
-          .single<SnapshotRow>()
+    const nextVisibility =
+      visibility ??
+      existingSnapshot.visibility
 
-      if (unchangedError || !unchangedSnapshot) {
+    /*
+     * Replay initiative:
+     *
+     * Visibility and replayability are distinct lifecycle controls.
+     *
+     * Changing visibility must not silently mutate replayability,
+     * and changing replayability must not silently mutate
+     * visibility.
+     *
+     * Invalid combinations are rejected below rather than
+     * automatically rewriting the other state.
+     */
+    const nextReplayable =
+      hasReplayable
+        ? replayable === true
+        : existingSnapshot.replayable
+
+    /*
+     * Replay initiative:
+     *
+     * A snapshot may become or remain replayable only when:
+     *
+     *   - it is public;
+     *   - its canonical status is completed;
+     *   - it has at least two canonical immutable snapshot stops.
+     *
+     * Because visibility and replayable are separate controls,
+     * making an existing replayable snapshot private requires
+     * replayable to be disabled explicitly, either first or in
+     * the same PATCH request.
+     */
+    if (nextReplayable) {
+      if (
+        nextVisibility !== 'public'
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'Only public snapshots can be replayable. Disable replayable before making this snapshot private.',
+          },
+          { status: 400 }
+        )
+      }
+
+      if (
+        existingSnapshot.status !==
+        'completed'
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'Only completed snapshots can be replayable.',
+          },
+          { status: 400 }
+        )
+      }
+
+      const {
+        count: snapshotStopCount,
+        error: snapshotStopsError,
+      } = await supabase
+        .from('flow_snapshot_stops')
+        .select('id', {
+          count: 'exact',
+          head: true,
+        })
+        .eq(
+          'snapshot_id',
+          snapshotId
+        )
+
+      if (snapshotStopsError) {
         console.error(
-          '[flow-snapshots/[snapshotId]][PATCH] Unchanged snapshot fetch failed:',
-          unchangedError
+          '[flow-snapshots/[snapshotId]][PATCH] Replayable stop verification failed:',
+          snapshotStopsError
         )
 
         return NextResponse.json(
-          { error: 'Failed to load updated snapshot.' },
+          {
+            error:
+              'Failed to verify the snapshot route.',
+          },
           { status: 500 }
         )
       }
 
-      return NextResponse.json(
-        {
-          snapshot: unchangedSnapshot,
-          updated: false,
-        },
-        { status: 200 }
-      )
+      if (
+        (snapshotStopCount ?? 0) < 2
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'This snapshot does not have enough canonical stops to be replayable.',
+          },
+          { status: 400 }
+        )
+      }
     }
 
-    const { data: snapshot, error: updateError } =
-      await supabase
+    const visibilityChanged =
+      existingSnapshot.visibility !==
+      nextVisibility
+
+    const replayableChanged =
+      existingSnapshot.replayable !==
+      nextReplayable
+
+    if (
+      !visibilityChanged &&
+      !replayableChanged
+    ) {
+      const {
+        data: unchangedSnapshot,
+        error: unchangedError,
+      } = await supabase
         .from('flow_snapshots')
-        .update({
-          visibility,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', snapshotId)
-        .eq('user_id', user.id)
         .select(`
           id,
           user_id,
@@ -267,19 +398,87 @@ export async function PATCH(
           checked_in_count,
           total_stops,
           visibility,
+          replayable,
           created_at,
           updated_at
         `)
-        .maybeSingle<SnapshotRow>()
+        .eq('id', snapshotId)
+        .eq('user_id', user.id)
+        .single<SnapshotRow>()
+
+      if (
+        unchangedError ||
+        !unchangedSnapshot
+      ) {
+        console.error(
+          '[flow-snapshots/[snapshotId]][PATCH] Unchanged snapshot fetch failed:',
+          unchangedError
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Failed to load updated snapshot.',
+          },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json(
+        {
+          snapshot:
+            unchangedSnapshot,
+          updated: false,
+        },
+        { status: 200 }
+      )
+    }
+
+    const {
+      data: snapshot,
+      error: updateError,
+    } = await supabase
+      .from('flow_snapshots')
+      .update({
+        visibility:
+          nextVisibility,
+        replayable:
+          nextReplayable,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq('id', snapshotId)
+      .eq('user_id', user.id)
+      .select(`
+        id,
+        user_id,
+        source_type,
+        source_id,
+        title,
+        city,
+        status,
+        cover_image_url,
+        route_summary,
+        checked_in_count,
+        total_stops,
+        visibility,
+        replayable,
+        created_at,
+        updated_at
+      `)
+      .maybeSingle<SnapshotRow>()
 
     if (updateError) {
       console.error(
-        '[flow-snapshots/[snapshotId]][PATCH] Visibility update failed:',
+        '[flow-snapshots/[snapshotId]][PATCH] Snapshot update failed:',
         updateError
       )
 
       return NextResponse.json(
-        { error: 'Failed to update snapshot visibility.' },
+        {
+          error:
+            'Failed to update snapshot.',
+        },
         { status: 500 }
       )
     }
@@ -291,22 +490,34 @@ export async function PATCH(
       )
     }
 
-    await safelyRefreshCreatorReputation(
-      user.id,
-      {
-        mutation:
-          visibility === 'public'
-            ? 'flow_snapshot_published'
-            : 'flow_snapshot_unpublished',
+    /*
+     * Replay initiative:
+     *
+     * Replayability itself is not currently a reputation
+     * contribution.
+     *
+     * Preserve the existing reputation refresh boundary only
+     * when public visibility actually changes.
+     */
+    if (visibilityChanged) {
+      await safelyRefreshCreatorReputation(
+        user.id,
+        {
+          mutation:
+            nextVisibility ===
+            'public'
+              ? 'flow_snapshot_published'
+              : 'flow_snapshot_unpublished',
 
-        rankingRefreshMode:
-          'affected',
+          rankingRefreshMode:
+            'affected',
 
-        calculatedAt:
-          snapshot.updated_at ??
-          new Date().toISOString(),
-      }
-    )
+          calculatedAt:
+            snapshot.updated_at ??
+            new Date().toISOString(),
+        }
+      )
+    }
 
     return NextResponse.json(
       {
@@ -323,7 +534,8 @@ export async function PATCH(
 
     return NextResponse.json(
       {
-        error: 'Unexpected error updating snapshot.',
+        error:
+          'Unexpected error updating snapshot.',
         details:
           error instanceof Error
             ? error.message
@@ -362,27 +574,29 @@ export async function DELETE(
       )
     }
 
-    const { data: snapshot, error: snapshotError } =
-      await supabase
-        .from('flow_snapshots')
-        .select(`
-          id,
-          user_id,
-          source_type,
-          source_id,
-          cover_image_url,
-          visibility
-        `)
-        .eq('id', snapshotId)
-        .eq('user_id', user.id)
-        .maybeSingle<{
-          id: string
-          user_id: string
-          source_type: string
-          source_id: string
-          cover_image_url: string | null
-          visibility: SnapshotVisibility
-        }>()
+    const {
+      data: snapshot,
+      error: snapshotError,
+    } = await supabase
+      .from('flow_snapshots')
+      .select(`
+        id,
+        user_id,
+        source_type,
+        source_id,
+        cover_image_url,
+        visibility
+      `)
+      .eq('id', snapshotId)
+      .eq('user_id', user.id)
+      .maybeSingle<{
+        id: string
+        user_id: string
+        source_type: string
+        source_id: string
+        cover_image_url: string | null
+        visibility: SnapshotVisibility
+      }>()
 
     if (snapshotError) {
       console.error(
@@ -391,7 +605,10 @@ export async function DELETE(
       )
 
       return NextResponse.json(
-        { error: 'Failed to verify snapshot ownership.' },
+        {
+          error:
+            'Failed to verify snapshot ownership.',
+        },
         { status: 500 }
       )
     }
@@ -403,11 +620,12 @@ export async function DELETE(
       )
     }
 
-    const { error: deleteError } = await supabase
-      .from('flow_snapshots')
-      .delete()
-      .eq('id', snapshotId)
-      .eq('user_id', user.id)
+    const { error: deleteError } =
+      await supabase
+        .from('flow_snapshots')
+        .delete()
+        .eq('id', snapshotId)
+        .eq('user_id', user.id)
 
     if (deleteError) {
       console.error(
@@ -416,12 +634,18 @@ export async function DELETE(
       )
 
       return NextResponse.json(
-        { error: 'Failed to delete snapshot.' },
+        {
+          error:
+            'Failed to delete snapshot.',
+        },
         { status: 500 }
       )
     }
 
-    if (snapshot.visibility === 'public') {
+    if (
+      snapshot.visibility ===
+      'public'
+    ) {
       await safelyRefreshCreatorReputation(
         user.id,
         {
@@ -434,19 +658,24 @@ export async function DELETE(
       )
     }
 
-    const storagePaths = buildPossibleStoragePaths({
-      userId: user.id,
-      sourceType: snapshot.source_type,
-      sourceId: snapshot.source_id,
-      coverImageUrl: snapshot.cover_image_url,
-    })
+    const storagePaths =
+      buildPossibleStoragePaths({
+        userId: user.id,
+        sourceType:
+          snapshot.source_type,
+        sourceId:
+          snapshot.source_id,
+        coverImageUrl:
+          snapshot.cover_image_url,
+      })
 
     let storageDeleted = true
 
     if (storagePaths.length > 0) {
-      const { error: storageError } = await supabase.storage
-        .from(SNAPSHOT_BUCKET)
-        .remove(storagePaths)
+      const { error: storageError } =
+        await supabase.storage
+          .from(SNAPSHOT_BUCKET)
+          .remove(storagePaths)
 
       if (storageError) {
         storageDeleted = false
@@ -474,7 +703,8 @@ export async function DELETE(
 
     return NextResponse.json(
       {
-        error: 'Unexpected error deleting snapshot.',
+        error:
+          'Unexpected error deleting snapshot.',
         details:
           error instanceof Error
             ? error.message
@@ -490,12 +720,22 @@ function normalizeVisibility(
 ): SnapshotVisibility | null {
   if (
     typeof value !== 'string' ||
-    !ALLOWED_VISIBILITIES.has(value)
+    !ALLOWED_VISIBILITIES.has(
+      value
+    )
   ) {
     return null
   }
 
   return value as SnapshotVisibility
+}
+
+function normalizeReplayable(
+  value: unknown
+): boolean | null {
+  return typeof value === 'boolean'
+    ? value
+    : null
 }
 
 function buildPossibleStoragePaths({
@@ -512,13 +752,16 @@ function buildPossibleStoragePaths({
   const paths = new Set<string>()
 
   const pathFromPublicUrl =
-    extractStoragePathFromPublicUrl(coverImageUrl)
+    extractStoragePathFromPublicUrl(
+      coverImageUrl
+    )
 
   if (pathFromPublicUrl) {
     paths.add(pathFromPublicUrl)
   }
 
-  const basePath = `${userId}/${sourceType}/${sourceId}/snapshot`
+  const basePath =
+    `${userId}/${sourceType}/${sourceId}/snapshot`
 
   paths.add(`${basePath}.png`)
   paths.add(`${basePath}.jpg`)
@@ -536,24 +779,35 @@ function extractStoragePathFromPublicUrl(
   if (!publicUrl) return null
 
   try {
-    const url = new URL(publicUrl)
+    const url = new URL(
+      publicUrl
+    )
 
-    const marker = `/storage/v1/object/public/${SNAPSHOT_BUCKET}/`
-    const markerIndex = url.pathname.indexOf(marker)
+    const marker =
+      `/storage/v1/object/public/${SNAPSHOT_BUCKET}/`
+
+    const markerIndex =
+      url.pathname.indexOf(
+        marker
+      )
 
     if (markerIndex === -1) {
       return null
     }
 
-    const encodedPath = url.pathname.slice(
-      markerIndex + marker.length
-    )
+    const encodedPath =
+      url.pathname.slice(
+        markerIndex +
+          marker.length
+      )
 
     if (!encodedPath) {
       return null
     }
 
-    return decodeURIComponent(encodedPath)
+    return decodeURIComponent(
+      encodedPath
+    )
   } catch {
     return null
   }

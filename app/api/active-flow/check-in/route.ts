@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server'
+
 import { createServerClient } from '@/lib/supabase/server'
+
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
+
+import { getRoamDay } from '@/lib/roam/roamDay'
 
 type CheckInActiveFlowBody = {
   session_id?: string
@@ -14,13 +19,38 @@ type CheckInActiveFlowBody = {
   device_timestamp?: string
 }
 
+type ActiveFlowVenueVisitRow = {
+  id: string
+  venue_id: string
+  rating: number
+  visited_at: string
+  geo_verified: boolean
+  check_in_source: string
+}
+
+type CreatorReplayStopAttributionRow = {
+  attributed: boolean
+  event_id: string | null
+  creator_user_id: string
+  replay_user_id: string
+  snapshot_id: string
+  session_id: string
+  stop_index: number
+  venue_id: string | null
+  occurred_at: string | null
+}
+
 const BASE_CHECK_IN_RADIUS_METERS = 125
 const FLEXIBLE_RADIUS_METERS = 75
 const MAX_REASONABLE_ACCURACY_METERS = 250
 
-async function refreshPublicPassportStats(userId: string) {
+async function refreshPublicPassportStats(
+  userId: string
+) {
   try {
-    await rebuildPublicPassportStats(userId)
+    await rebuildPublicPassportStats(
+      userId
+    )
   } catch (error) {
     console.error(
       '[active-flow/check-in] Failed to rebuild public Passport stats:',
@@ -29,24 +59,152 @@ async function refreshPublicPassportStats(userId: string) {
   }
 }
 
-export async function POST(req: Request) {
+/**
+ * Creator replay attribution:
+ *
+ * Replay creator credit is recorded only through the hardened
+ * canonical Postgres RPC.
+ *
+ * The application supplies only:
+ *
+ *   - replay session ID
+ *   - canonical stop index
+ *
+ * Creator identity, snapshot identity, venue identity, verified
+ * progress, replay eligibility, and self-replay suppression are
+ * all resolved and enforced by the database function.
+ *
+ * Attribution is intentionally best-effort relative to the
+ * user's already-successful physical check-in. Failure to record
+ * creator attribution must never roll back or invalidate genuine
+ * user progress.
+ *
+ * The RPC itself is lifetime-idempotent, so this may also be
+ * called for an existing progress row to repair attribution that
+ * may have been missed by an earlier application version or
+ * transient request failure.
+ */
+async function recordCreatorReplayStopAttribution({
+  supabase,
+  sessionId,
+  stopIndex,
+  source,
+}: {
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
+  sessionId: string
+  stopIndex: number
+  source: unknown
+}): Promise<
+  CreatorReplayStopAttributionRow | null
+> {
+  if (
+    source !==
+    'flow_snapshot'
+  ) {
+    return null
+  }
+
   try {
-    const supabase = await createServerClient()
+    const {
+      data,
+      error,
+    } = await supabase.rpc(
+      'record_creator_replay_stop',
+      {
+        p_session_id:
+          sessionId,
+
+        p_stop_index:
+          stopIndex,
+      }
+    )
+
+    if (error) {
+      console.error(
+        '[active-flow/check-in] Creator replay stop attribution failed:',
+        {
+          sessionId,
+          stopIndex,
+          error,
+        }
+      )
+
+      return null
+    }
+
+    const row =
+      Array.isArray(data)
+        ? data[0]
+        : data
+
+    if (
+      !row ||
+      typeof row !==
+        'object'
+    ) {
+      console.warn(
+        '[active-flow/check-in] Creator replay stop attribution returned no canonical row:',
+        {
+          sessionId,
+          stopIndex,
+        }
+      )
+
+      return null
+    }
+
+    return row as
+      CreatorReplayStopAttributionRow
+  } catch (error) {
+    console.error(
+      '[active-flow/check-in] Unexpected creator replay stop attribution failure:',
+      {
+        sessionId,
+        stopIndex,
+        error,
+      }
+    )
+
+    return null
+  }
+}
+
+export async function POST(
+  req: Request
+) {
+  try {
+    const supabase =
+      await createServerClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser()
+    } =
+      await supabase.auth.getUser()
 
-    if (userError || !user) {
+    if (
+      userError ||
+      !user
+    ) {
       return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
+        {
+          error:
+            'User not authenticated',
+        },
+        {
+          status:
+            401,
+        }
       )
     }
 
     const body =
-      (await req.json()) as CheckInActiveFlowBody
+      (await req.json()) as
+        CheckInActiveFlowBody
 
     const sessionId =
       body.session_id
@@ -79,7 +237,8 @@ export async function POST(req: Request) {
             'Missing session_id.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -91,7 +250,8 @@ export async function POST(req: Request) {
             'Missing venue_id.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -110,7 +270,8 @@ export async function POST(req: Request) {
             'Invalid stop_index.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -121,14 +282,19 @@ export async function POST(req: Request) {
      * Validate the real user-supplied rating before either
      * active_flow_progress or venue_visits is written.
      */
-    if (!isValidRating(rating)) {
+    if (
+      !isValidRating(
+        rating
+      )
+    ) {
       return NextResponse.json(
         {
           error:
             'Rating must be an integer between 1 and 5.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -147,7 +313,8 @@ export async function POST(req: Request) {
             'Location is required to check in.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -167,7 +334,8 @@ export async function POST(req: Request) {
             'We could not confirm your location accurately enough. Try again closer to the venue entrance.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -204,7 +372,8 @@ export async function POST(req: Request) {
             'Could not fetch active flow.',
         },
         {
-          status: 500,
+          status:
+            500,
         }
       )
     }
@@ -216,7 +385,8 @@ export async function POST(req: Request) {
             'Flow not found.',
         },
         {
-          status: 404,
+          status:
+            404,
         }
       )
     }
@@ -231,7 +401,8 @@ export async function POST(req: Request) {
             'Only active flows can be checked into.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -256,7 +427,8 @@ export async function POST(req: Request) {
             'Venue is not part of this flow.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -272,7 +444,8 @@ export async function POST(req: Request) {
             'Stop index does not match this venue.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -285,7 +458,7 @@ export async function POST(req: Request) {
         'venues'
       )
       .select(
-        'id, lat, lon'
+        'id, lat, lon, city'
       )
       .eq(
         'id',
@@ -305,7 +478,8 @@ export async function POST(req: Request) {
             'Could not verify venue location.',
         },
         {
-          status: 500,
+          status:
+            500,
         }
       )
     }
@@ -325,7 +499,8 @@ export async function POST(req: Request) {
             'This venue does not have a valid check-in location.',
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
@@ -376,13 +551,15 @@ export async function POST(req: Request) {
             BASE_CHECK_IN_RADIUS_METERS,
         },
         {
-          status: 400,
+          status:
+            400,
         }
       )
     }
 
     const now =
-      new Date().toISOString()
+      new Date()
+        .toISOString()
 
     const normalizedLocationAccuracyMeters =
       typeof locationAccuracyMeters ===
@@ -401,6 +578,547 @@ export async function POST(req: Request) {
         .length > 0
         ? deviceTimestamp
         : null
+
+    /**
+     * Idempotency boundary.
+     *
+     * active_flow_progress is the canonical proof that this exact
+     * session stop has already been completed. A retry must reuse
+     * that event instead of upserting it with a new checked_in_at
+     * timestamp and then manufacturing another venue_visits row.
+     */
+    const {
+      data: existingProgress,
+      error:
+        existingProgressError,
+    } = await supabase
+      .from(
+        'active_flow_progress'
+      )
+      .select(
+        '*'
+      )
+      .eq(
+        'session_id',
+        sessionId
+      )
+      .eq(
+        'user_id',
+        user.id
+      )
+      .eq(
+        'venue_id',
+        venueId
+      )
+      .maybeSingle()
+
+    if (
+      existingProgressError
+    ) {
+      console.error(
+        '[active-flow/check-in] Existing progress lookup failed:',
+        existingProgressError
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Could not verify existing flow progress.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    if (existingProgress) {
+      const canonicalVisitedAt =
+        typeof existingProgress.checked_in_at ===
+          'string' &&
+        existingProgress.checked_in_at
+          .trim()
+          .length > 0
+          ? existingProgress.checked_in_at
+          : null
+
+      let venueVisit:
+        ActiveFlowVenueVisitRow | null =
+        null
+
+      let repairedVenueVisit =
+        false
+
+      if (canonicalVisitedAt) {
+        const {
+          data:
+            existingVenueVisit,
+          error:
+            existingVenueVisitError,
+        } = await supabase
+          .from(
+            'venue_visits'
+          )
+          .select(`
+            id,
+            venue_id,
+            rating,
+            visited_at,
+            geo_verified,
+            check_in_source
+          `)
+          .eq(
+            'user_id',
+            user.id
+          )
+          .eq(
+            'venue_id',
+            venueId
+          )
+          .eq(
+            'check_in_source',
+            'active_flow'
+          )
+          .eq(
+            'visited_at',
+            canonicalVisitedAt
+          )
+          .limit(
+            1
+          )
+          .maybeSingle<ActiveFlowVenueVisitRow>()
+
+        if (
+          existingVenueVisitError
+        ) {
+          console.error(
+            '[active-flow/check-in] Existing canonical venue visit lookup failed:',
+            existingVenueVisitError
+          )
+
+          return NextResponse.json(
+            {
+              error:
+                'The check-in already exists, but its venue visit could not be verified.',
+            },
+            {
+              status:
+                500,
+            }
+          )
+        }
+
+        venueVisit =
+          existingVenueVisit
+      }
+
+      /**
+       * Legacy repair:
+       *
+       * A historical progress row may predate venue_visits
+       * synchronization or may have survived an earlier partial
+       * request failure. Only create the missing canonical visit
+       * when no matching active-flow visit exists.
+       */
+      if (!venueVisit) {
+        const repairVisitedAt =
+          canonicalVisitedAt ??
+          now
+
+        const {
+          data:
+            repairedVenueVisitRow,
+          error:
+            repairedVenueVisitError,
+        } = await supabase
+          .from(
+            'venue_visits'
+          )
+          .insert({
+            user_id:
+              user.id,
+
+            venue_id:
+              venueId,
+
+            rating,
+
+            visited_at:
+              repairVisitedAt,
+
+            user_lat:
+              typeof existingProgress.user_lat ===
+                'number'
+                ? existingProgress.user_lat
+                : userLat,
+
+            user_lon:
+              typeof existingProgress.user_lon ===
+                'number'
+                ? existingProgress.user_lon
+                : userLon,
+
+            distance_meters:
+              typeof existingProgress.distance_meters ===
+                'number'
+                ? existingProgress.distance_meters
+                : distanceMeters,
+
+            location_accuracy_meters:
+              typeof existingProgress.location_accuracy_meters ===
+                'number'
+                ? existingProgress.location_accuracy_meters
+                : normalizedLocationAccuracyMeters,
+
+            geo_verified:
+              existingProgress.geo_verified ===
+              true,
+
+            check_in_source:
+              'active_flow',
+
+            device_timestamp:
+              typeof existingProgress.device_timestamp ===
+                'string'
+                ? existingProgress.device_timestamp
+                : normalizedDeviceTimestamp,
+
+            updated_at:
+              now,
+          })
+          .select(`
+            id,
+            venue_id,
+            rating,
+            visited_at,
+            geo_verified,
+            check_in_source
+          `)
+          .single<ActiveFlowVenueVisitRow>()
+
+        if (
+          repairedVenueVisitError ||
+          !repairedVenueVisitRow
+        ) {
+          console.error(
+            '[active-flow/check-in] Existing progress venue visit repair failed:',
+            {
+              userId:
+                user.id,
+
+              venueId,
+
+              sessionId,
+
+              stopIndex,
+
+              error:
+                repairedVenueVisitError,
+            }
+          )
+
+          return NextResponse.json(
+            {
+              error:
+                'The check-in already exists, but its venue visit could not be recorded.',
+            },
+            {
+              status:
+                500,
+            }
+          )
+        }
+
+        venueVisit =
+          repairedVenueVisitRow
+
+        repairedVenueVisit =
+          true
+      }
+
+      const {
+        data: progressRows,
+        error: progressError,
+      } = await supabase
+        .from(
+          'active_flow_progress'
+        )
+        .select(
+          'venue_id'
+        )
+        .eq(
+          'session_id',
+          sessionId
+        )
+        .eq(
+          'user_id',
+          user.id
+        )
+
+      if (progressError) {
+        console.error(
+          '[active-flow/check-in] Progress refresh failed:',
+          progressError
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Check-in saved, but progress could not be refreshed.',
+          },
+          {
+            status:
+              500,
+          }
+        )
+      }
+
+      const completedVenueIds =
+        new Set(
+          (
+            progressRows ??
+            []
+          )
+            .map(
+              (
+                row
+              ) =>
+                row.venue_id
+            )
+            .filter(
+              Boolean
+            )
+        )
+
+      const completedStops =
+        completedVenueIds.size
+
+      const totalStops =
+        venueIds.length
+
+      const flowCompleted =
+        completedStops ===
+        totalStops
+
+      const {
+        error:
+          sessionProgressUpdateError,
+      } = await supabase
+        .from(
+          'active_flow_sessions'
+        )
+        .update({
+          completed_stops:
+            completedStops,
+
+          updated_at:
+            now,
+        } as any)
+        .eq(
+          'id',
+          sessionId
+        )
+        .eq(
+          'user_id',
+          user.id
+        )
+
+      if (
+        sessionProgressUpdateError
+      ) {
+        console.error(
+          '[active-flow/check-in] Session completed_stops cache update failed:',
+          sessionProgressUpdateError
+        )
+      }
+
+      /**
+       * Replay attribution repair / idempotency:
+       *
+       * Even though this stop already has canonical progress,
+       * call the attribution RPC again for snapshot replays.
+       *
+       * The database unique boundary prevents duplicate creator
+       * credit while allowing a previously missed attribution
+       * event to be repaired.
+       */
+      const replayAttribution =
+        await recordCreatorReplayStopAttribution({
+          supabase,
+          sessionId,
+          stopIndex,
+          source:
+            session.source,
+        })
+
+      /**
+       * A pure retry has not created new canonical evidence and
+       * therefore does not need another Passport/reputation
+       * rebuild. A repaired missing venue visit does.
+       */
+      if (repairedVenueVisit) {
+        await refreshPublicPassportStats(
+          user.id
+        )
+
+        await safelyRefreshCreatorReputation(
+          user.id,
+          {
+            mutation:
+              'active_flow_check_in',
+
+            rankingRefreshMode:
+              'affected',
+
+            calculatedAt:
+              now,
+          }
+        )
+      }
+
+      return NextResponse.json(
+        {
+          progress:
+            existingProgress,
+
+          venueVisit,
+
+          completedStops,
+
+          totalStops,
+
+          flowCompleted,
+
+          xpEarned:
+            0,
+
+          geoVerified:
+            existingProgress.geo_verified ===
+            true,
+
+          distanceMeters:
+            Math.round(
+              typeof existingProgress.distance_meters ===
+                'number'
+                ? existingProgress.distance_meters
+                : distanceMeters
+            ),
+
+          source:
+            session.source ??
+            null,
+
+          sourceId:
+            session.source_id ??
+            null,
+
+          replayAttribution:
+            replayAttribution
+              ? {
+                  attributed:
+                    replayAttribution.attributed,
+
+                  creatorUserId:
+                    replayAttribution.creator_user_id,
+
+                  snapshotId:
+                    replayAttribution.snapshot_id,
+
+                  eventId:
+                    replayAttribution.event_id,
+                }
+              : null,
+        },
+        {
+          status:
+            200,
+        }
+      )
+    }
+
+    /**
+     * A new flow stop must not manufacture a second historical
+     * venue visit during the same Roam day.
+     */
+    if (
+      typeof venue.city ===
+        'string' &&
+      venue.city
+        .trim()
+        .length > 0
+    ) {
+      const {
+        data:
+          latestVenueVisit,
+        error:
+          latestVenueVisitError,
+      } = await supabase
+        .from(
+          'venue_visits'
+        )
+        .select(
+          'visited_at'
+        )
+        .eq(
+          'user_id',
+          user.id
+        )
+        .eq(
+          'venue_id',
+          venueId
+        )
+        .order(
+          'visited_at',
+          {
+            ascending:
+              false,
+          }
+        )
+        .limit(
+          1
+        )
+        .maybeSingle()
+
+      if (
+        latestVenueVisitError
+      ) {
+        console.error(
+          '[active-flow/check-in] Latest venue visit lookup failed:',
+          latestVenueVisitError
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Could not verify existing venue visit.',
+          },
+          {
+            status:
+              500,
+          }
+        )
+      }
+
+      if (
+        latestVenueVisit?.visited_at &&
+        isSameRoamDay(
+          latestVenueVisit.visited_at,
+          now,
+          venue.city
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'You have already checked in to this venue today. Try again on a different day.',
+          },
+          {
+            status:
+              409,
+          }
+        )
+      }
+    }
 
     const {
       data: progress,
@@ -472,7 +1190,8 @@ export async function POST(req: Request) {
             'Could not check in.',
         },
         {
-          status: 500,
+          status:
+            500,
         }
       )
     }
@@ -492,48 +1211,42 @@ export async function POST(req: Request) {
       .from(
         'venue_visits'
       )
-      .upsert(
-        {
-          user_id:
-            user.id,
+      .insert({
+        user_id:
+          user.id,
 
-          venue_id:
-            venueId,
+        venue_id:
+          venueId,
 
-          rating,
+        rating,
 
-          visited_at:
-            now,
+        visited_at:
+          now,
 
-          user_lat:
-            userLat,
+        user_lat:
+          userLat,
 
-          user_lon:
-            userLon,
+        user_lon:
+          userLon,
 
-          distance_meters:
-            distanceMeters,
+        distance_meters:
+          distanceMeters,
 
-          location_accuracy_meters:
-            normalizedLocationAccuracyMeters,
+        location_accuracy_meters:
+          normalizedLocationAccuracyMeters,
 
-          geo_verified:
-            true,
+        geo_verified:
+          true,
 
-          check_in_source:
-            'active_flow',
+        check_in_source:
+          'active_flow',
 
-          device_timestamp:
-            normalizedDeviceTimestamp,
+        device_timestamp:
+          normalizedDeviceTimestamp,
 
-          updated_at:
-            now,
-        },
-        {
-          onConflict:
-            'user_id,venue_id',
-        }
-      )
+        updated_at:
+          now,
+      })
       .select(`
         id,
         venue_id,
@@ -542,7 +1255,7 @@ export async function POST(req: Request) {
         geo_verified,
         check_in_source
       `)
-      .single()
+      .single<ActiveFlowVenueVisitRow>()
 
     if (
       venueVisitError ||
@@ -571,7 +1284,8 @@ export async function POST(req: Request) {
             'The check-in was verified, but the venue visit could not be recorded.',
         },
         {
-          status: 500,
+          status:
+            500,
         }
       )
     }
@@ -607,7 +1321,8 @@ export async function POST(req: Request) {
             'Check-in saved, but progress could not be refreshed.',
         },
         {
-          status: 500,
+          status:
+            500,
         }
       )
     }
@@ -671,6 +1386,28 @@ export async function POST(req: Request) {
       )
     }
 
+    /**
+     * Creator replay attribution:
+     *
+     * Only flow_snapshot sessions reach the RPC.
+     *
+     * This happens after both canonical verified progress and
+     * venue_visits evidence have successfully persisted.
+     *
+     * The RPC verifies the immutable snapshot stop and records
+     * lifetime-idempotent creator attribution. Attribution
+     * failure remains non-fatal to the user's successful
+     * physical check-in.
+     */
+    const replayAttribution =
+      await recordCreatorReplayStopAttribution({
+        supabase,
+        sessionId,
+        stopIndex,
+        source:
+          session.source,
+      })
+
     await refreshPublicPassportStats(
       user.id
     )
@@ -727,9 +1464,27 @@ export async function POST(req: Request) {
         sourceId:
           session.source_id ??
           null,
+
+        replayAttribution:
+          replayAttribution
+            ? {
+                attributed:
+                  replayAttribution.attributed,
+
+                creatorUserId:
+                  replayAttribution.creator_user_id,
+
+                snapshotId:
+                  replayAttribution.snapshot_id,
+
+                eventId:
+                  replayAttribution.event_id,
+              }
+            : null,
       },
       {
-        status: 200,
+        status:
+          200,
       }
     )
   } catch (err) {
@@ -744,10 +1499,38 @@ export async function POST(req: Request) {
           'Unexpected error checking in.',
       },
       {
-        status: 500,
+        status:
+          500,
       }
     )
   }
+}
+
+function isSameRoamDay(
+  firstValue: string,
+  secondValue: string,
+  city: string
+): boolean {
+  const firstRoamDay =
+    getRoamDay(
+      firstValue,
+      city
+    )
+
+  const secondRoamDay =
+    getRoamDay(
+      secondValue,
+      city
+    )
+
+  return (
+    firstRoamDay !==
+      null &&
+    secondRoamDay !==
+      null &&
+    firstRoamDay ===
+      secondRoamDay
+  )
 }
 
 function isValidRating(

@@ -51,12 +51,88 @@ type VisitCityGroup = {
   days: VisitDayGroup[]
 }
 
+type QualifyingRoamStop = {
+  visitId: string
+  venueId: string
+  stopIndex: number
+  visitedAt: string
+  rating: number | null
+  checkInSource: string | null
+  venue: {
+    id: string
+    name: string | null
+    city: string | null
+    address: string | null
+    lat: number | null
+    lon: number | null
+  }
+}
+
+type QualifyingRoamSnapshot = {
+  id: string
+  visibility: 'public' | 'private'
+  replayable: boolean
+  status: string | null
+  createdAt: string
+}
+
+type QualifyingRoamDay = {
+  sourceId: string
+  roamDay: string
+  cityKey: string
+  city: string | null
+  timezone: string
+  windowStartAt: string
+  windowEndAt: string
+  firstVisitedAt: string
+  lastVisitedAt: string
+  distinctVenueCount: number
+  stops: QualifyingRoamStop[]
+  snapshot: QualifyingRoamSnapshot | null
+  alreadySnapshotted: boolean
+}
+
 type VisitHistoryResponse = {
   cities?: VisitCityGroup[]
   visits?: ProfileVisit[]
+  qualifyingRoams?: QualifyingRoamDay[]
   totalVisits?: number
   returnedVisits?: number
   error?: string
+}
+
+type SaveRoamSnapshotResponse = {
+  snapshot?: {
+    id: string
+    visibility?: 'public' | 'private' | null
+    replayable?: boolean | null
+    status?: string | null
+    created_at?: string | null
+  }
+  error?: string
+  details?: string
+}
+
+type UpdateRoamSnapshotResponse = {
+  snapshot?: {
+    id: string
+    visibility?: 'public' | 'private' | null
+    replayable?: boolean | null
+    status?: string | null
+    created_at?: string | null
+  }
+  updated?: boolean
+  error?: string
+  details?: string
+}
+
+type SnapshotLifecycleField =
+  | 'visibility'
+  | 'replayable'
+
+type SnapshotLifecycleUpdate = {
+  sourceId: string
+  field: SnapshotLifecycleField
 }
 
 type StickerStop = {
@@ -77,6 +153,14 @@ type StickerSelection = {
   stops: StickerStop[]
 }
 
+type RoamSnapshotSelection = {
+  sourceId: string
+  city: string
+  date: string
+  label: string
+  stops: StickerStop[]
+}
+
 type Props = {
   initialCities?: VisitCityGroup[]
   initialTotalVisits?: number
@@ -91,12 +175,20 @@ export default function VisitHistorySection({
   const transparentStickerRef =
     useRef<HTMLDivElement>(null)
 
+  const roamSnapshotRef =
+    useRef<HTMLDivElement>(null)
+
   const [
     cities,
     setCities,
   ] = useState<VisitCityGroup[]>(
     initialCities ?? []
   )
+
+  const [
+    qualifyingRoams,
+    setQualifyingRoams,
+  ] = useState<QualifyingRoamDay[]>([])
 
   const [
     totalVisits,
@@ -161,6 +253,34 @@ export default function VisitHistorySection({
     portalMounted,
     setPortalMounted,
   ] = useState(false)
+
+  const [
+    savingRoamSourceId,
+    setSavingRoamSourceId,
+  ] = useState<string | null>(
+    null
+  )
+
+  const [
+    snapshotLifecycleUpdate,
+    setSnapshotLifecycleUpdate,
+  ] = useState<
+    SnapshotLifecycleUpdate | null
+  >(null)
+
+  const [
+    roamSnapshotSelection,
+    setRoamSnapshotSelection,
+  ] = useState<
+    RoamSnapshotSelection | null
+  >(null)
+
+  const [
+    roamSnapshotRouteLine,
+    setRoamSnapshotRouteLine,
+  ] = useState<
+    RouteLinePoint[]
+  >([])
 
   useEffect(() => {
     setPortalMounted(true)
@@ -228,8 +348,19 @@ export default function VisitHistorySection({
               ? payload.cities
               : []
 
+          const nextQualifyingRoams =
+            Array.isArray(
+              payload?.qualifyingRoams
+            )
+              ? payload.qualifyingRoams
+              : []
+
           setCities(
             nextCities
+          )
+
+          setQualifyingRoams(
+            nextQualifyingRoams
           )
 
           setTotalVisits(
@@ -289,6 +420,71 @@ export default function VisitHistorySection({
       []
     )
 
+  const loadQualifyingRoams =
+    useCallback(
+      async () => {
+        try {
+          const timezone =
+            Intl.DateTimeFormat()
+              .resolvedOptions()
+              .timeZone ||
+            'UTC'
+
+          const params =
+            new URLSearchParams({
+              timezone,
+              limit: '500',
+            })
+
+          const response =
+            await fetch(
+              `/api/profile/visits?${params.toString()}`,
+              {
+                method:
+                  'GET',
+
+                cache:
+                  'no-store',
+              }
+            )
+
+          const payload =
+            (
+              await response
+                .json()
+                .catch(
+                  () => null
+                )
+            ) as
+              | VisitHistoryResponse
+              | null
+
+          if (
+            !response.ok
+          ) {
+            throw new Error(
+              payload?.error ||
+                'Failed to load qualifying roams.'
+            )
+          }
+
+          setQualifyingRoams(
+            Array.isArray(
+              payload?.qualifyingRoams
+            )
+              ? payload.qualifyingRoams
+              : []
+          )
+        } catch (err) {
+          console.error(
+            '[VisitHistorySection] Failed to load qualifying roams:',
+            err
+          )
+        }
+      },
+      []
+    )
+
   useEffect(() => {
     if (initialCities) {
       if (
@@ -303,12 +499,15 @@ export default function VisitHistorySection({
         )
       }
 
+      void loadQualifyingRoams()
+
       return
     }
 
     void loadVisitHistory()
   }, [
     initialCities,
+    loadQualifyingRoams,
     loadVisitHistory,
   ])
 
@@ -464,6 +663,506 @@ export default function VisitHistorySection({
       } finally {
         setStickerLoading(
           false
+        )
+      }
+    }
+
+  const saveRoamSnapshot =
+    async (
+      roam: QualifyingRoamDay
+    ) => {
+      if (
+        savingRoamSourceId ||
+        roam.alreadySnapshotted
+      ) {
+        return
+      }
+
+      const stops:
+        StickerStop[] =
+        roam.stops.map(
+          (
+            stop,
+            index
+          ) => ({
+            id:
+              stop.visitId,
+
+            venueId:
+              stop.venueId,
+
+            stopOrder:
+              index + 1,
+
+            title:
+              stop.venue.name,
+
+            city:
+              stop.venue.city ??
+              roam.city,
+
+            checkedInAt:
+              stop.visitedAt,
+
+            lat:
+              stop.venue.lat,
+
+            lon:
+              stop.venue.lon,
+          })
+        )
+
+      if (
+        stops.length <
+        3
+      ) {
+        setError(
+          'This roam no longer contains enough qualifying stops to save.'
+        )
+
+        return
+      }
+
+      const cityName =
+        roam.city ??
+        roam.cityKey
+
+      const label =
+        formatRoamDayLabel(
+          roam.roamDay
+        )
+
+      setSavingRoamSourceId(
+        roam.sourceId
+      )
+
+      setError(null)
+
+      try {
+        const routeLine =
+          await buildSnapshotRouteLine(
+            stops
+          )
+
+        setRoamSnapshotSelection({
+          sourceId:
+            roam.sourceId,
+
+          city:
+            cityName,
+
+          date:
+            roam.roamDay,
+
+          label,
+
+          stops,
+        })
+
+        setRoamSnapshotRouteLine(
+          routeLine
+        )
+
+        await waitForFonts()
+        await waitForDomPaint()
+
+        const target =
+          roamSnapshotRef.current
+
+        if (!target) {
+          throw new Error(
+            'Roam snapshot export target was not found.'
+          )
+        }
+
+        const {
+          toBlob,
+        } =
+          await import(
+            'html-to-image'
+          )
+
+        const blob =
+          await toBlob(
+            target,
+            {
+              width:
+                1080,
+
+              height:
+                1080,
+
+              canvasWidth:
+                1080,
+
+              canvasHeight:
+                1080,
+
+              pixelRatio:
+                2,
+
+              cacheBust:
+                true,
+
+              backgroundColor:
+                '#020617',
+            }
+          )
+
+        if (!blob) {
+          throw new Error(
+            'Failed to create the roam snapshot image.'
+          )
+        }
+
+        const file =
+          new File(
+            [
+              blob,
+            ],
+            `roam-${slugify(
+              cityName
+            )}-${roam.roamDay}-snapshot.png`,
+            {
+              type:
+                'image/png',
+            }
+          )
+
+        const formData =
+          new FormData()
+
+        formData.append(
+          'file',
+          file
+        )
+
+        formData.append(
+          'source_type',
+          'roam_history'
+        )
+
+        formData.append(
+          'source_id',
+          roam.sourceId
+        )
+
+        formData.append(
+          'route_summary',
+          stops
+            .map(
+              (
+                stop
+              ) =>
+                stop.title ??
+                `Stop ${stop.stopOrder}`
+            )
+            .join(
+              ' → '
+            )
+        )
+
+        /*
+         * Saving historical evidence should not silently publish
+         * it. The visibility lifecycle remains an explicit action.
+         */
+        formData.append(
+          'visibility',
+          'private'
+        )
+
+        const response =
+          await fetch(
+            '/api/flow-snapshots/save',
+            {
+              method:
+                'POST',
+
+              body:
+                formData,
+            }
+          )
+
+        const payload =
+          (
+            await response
+              .json()
+              .catch(
+                () => null
+              )
+          ) as
+            | SaveRoamSnapshotResponse
+            | null
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            payload?.error ||
+              payload?.details ||
+              'Failed to save roam snapshot.'
+          )
+        }
+
+        if (
+          !payload?.snapshot?.id
+        ) {
+          throw new Error(
+            'The roam snapshot was saved but no snapshot record was returned.'
+          )
+        }
+
+        const snapshot =
+          payload.snapshot
+
+        setQualifyingRoams(
+          (
+            current
+          ) =>
+            current.map(
+              (
+                candidate
+              ) => {
+                if (
+                  candidate.sourceId !==
+                  roam.sourceId
+                ) {
+                  return candidate
+                }
+
+                return {
+                  ...candidate,
+
+                  alreadySnapshotted:
+                    true,
+
+                  snapshot: {
+                    id:
+                      snapshot.id,
+
+                    visibility:
+                      snapshot.visibility ===
+                      'public'
+                        ? 'public'
+                        : 'private',
+
+                    replayable:
+                      snapshot.replayable ===
+                      true,
+
+                    status:
+                      typeof snapshot.status ===
+                        'string'
+                        ? snapshot.status
+                        : 'completed',
+
+                    createdAt:
+                      typeof snapshot.created_at ===
+                        'string'
+                        ? snapshot.created_at
+                        : new Date()
+                            .toISOString(),
+                  },
+                }
+              }
+            )
+        )
+      } catch (err) {
+        console.error(
+          '[VisitHistorySection] Failed to save qualifying roam snapshot:',
+          err
+        )
+
+        setError(
+          err instanceof
+            Error
+            ? err.message
+            : 'Failed to save roam snapshot.'
+        )
+      } finally {
+        setSavingRoamSourceId(
+          null
+        )
+      }
+    }
+
+  /*
+   * Snapshot visibility and replayability are intentionally
+   * independent lifecycle controls.
+   *
+   * Each action PATCHes only the field the user explicitly chose.
+   * Server-side policy remains authoritative for combinations
+   * such as private + replayable.
+   */
+  const updateRoamSnapshotLifecycle =
+    async ({
+      roam,
+      field,
+      value,
+    }: {
+      roam: QualifyingRoamDay
+      field: SnapshotLifecycleField
+      value:
+        | 'public'
+        | 'private'
+        | boolean
+    }) => {
+      const snapshot =
+        roam.snapshot
+
+      if (
+        !snapshot ||
+        snapshotLifecycleUpdate
+      ) {
+        return
+      }
+
+      if (
+        field ===
+          'visibility' &&
+        value !==
+          'public' &&
+        value !==
+          'private'
+      ) {
+        return
+      }
+
+      if (
+        field ===
+          'replayable' &&
+        typeof value !==
+          'boolean'
+      ) {
+        return
+      }
+
+      setSnapshotLifecycleUpdate({
+        sourceId:
+          roam.sourceId,
+        field,
+      })
+
+      setError(null)
+
+      try {
+        const response =
+          await fetch(
+            `/api/flow-snapshots/${encodeURIComponent(
+              snapshot.id
+            )}`,
+            {
+              method:
+                'PATCH',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              body:
+                JSON.stringify({
+                  [field]:
+                    value,
+                }),
+            }
+          )
+
+        const payload =
+          (
+            await response
+              .json()
+              .catch(
+                () => null
+              )
+          ) as
+            | UpdateRoamSnapshotResponse
+            | null
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            payload?.error ||
+              payload?.details ||
+              'Failed to update snapshot.'
+          )
+        }
+
+        if (
+          !payload?.snapshot?.id
+        ) {
+          throw new Error(
+            'The snapshot was updated but no snapshot record was returned.'
+          )
+        }
+
+        const updatedSnapshot =
+          payload.snapshot
+
+        setQualifyingRoams(
+          (
+            current
+          ) =>
+            current.map(
+              (
+                candidate
+              ) => {
+                if (
+                  candidate.sourceId !==
+                  roam.sourceId ||
+                  !candidate.snapshot
+                ) {
+                  return candidate
+                }
+
+                return {
+                  ...candidate,
+
+                  snapshot: {
+                    ...candidate.snapshot,
+
+                    visibility:
+                      updatedSnapshot.visibility ===
+                      'public'
+                        ? 'public'
+                        : 'private',
+
+                    replayable:
+                      updatedSnapshot.replayable ===
+                      true,
+
+                    status:
+                      typeof updatedSnapshot.status ===
+                        'string'
+                        ? updatedSnapshot.status
+                        : candidate.snapshot.status,
+
+                    createdAt:
+                      typeof updatedSnapshot.created_at ===
+                        'string'
+                        ? updatedSnapshot.created_at
+                        : candidate.snapshot.createdAt,
+                  },
+                }
+              }
+            )
+        )
+      } catch (err) {
+        console.error(
+          '[VisitHistorySection] Failed to update roam snapshot lifecycle:',
+          err
+        )
+
+        setError(
+          err instanceof
+            Error
+            ? err.message
+            : 'Failed to update snapshot.'
+        )
+      } finally {
+        setSnapshotLifecycleUpdate(
+          null
         )
       }
     }
@@ -722,6 +1421,53 @@ export default function VisitHistorySection({
           ) : null}
         </div>
 
+        {!loading &&
+        qualifyingRoams.length >
+          0 ? (
+          <QualifyingRoamsPanel
+            roams={
+              qualifyingRoams
+            }
+            savingRoamSourceId={
+              savingRoamSourceId
+            }
+            snapshotLifecycleUpdate={
+              snapshotLifecycleUpdate
+            }
+            onSaveSnapshot={(
+              roam
+            ) =>
+              void saveRoamSnapshot(
+                roam
+              )
+            }
+            onUpdateVisibility={(
+              roam,
+              visibility
+            ) =>
+              void updateRoamSnapshotLifecycle({
+                roam,
+                field:
+                  'visibility',
+                value:
+                  visibility,
+              })
+            }
+            onUpdateReplayable={(
+              roam,
+              replayable
+            ) =>
+              void updateRoamSnapshotLifecycle({
+                roam,
+                field:
+                  'replayable',
+                value:
+                  replayable,
+              })
+            }
+          />
+        ) : null}
+
         {loading ? (
           <VisitHistorySkeleton />
         ) : error &&
@@ -915,6 +1661,71 @@ export default function VisitHistorySection({
         </div>
       </div>
 
+      <div
+        className="pointer-events-none fixed"
+        aria-hidden="true"
+        style={{
+          left:
+            '-12000px',
+
+          top:
+            0,
+
+          width:
+            1080,
+
+          height:
+            1080,
+
+          background:
+            '#020617',
+
+          zIndex:
+            -1,
+
+          overflow:
+            'hidden',
+        }}
+      >
+        <div
+          ref={
+            roamSnapshotRef
+          }
+          style={{
+            width:
+              1080,
+
+            height:
+              1080,
+
+            background:
+              '#020617',
+          }}
+        >
+          {roamSnapshotSelection ? (
+            <FlowRouteSticker
+              title={`${roamSnapshotSelection.city} · ${roamSnapshotSelection.label}`}
+              city={
+                roamSnapshotSelection.city
+              }
+              stops={
+                roamSnapshotSelection.stops
+              }
+              routeLine={
+                roamSnapshotRouteLine
+              }
+              width={
+                1080
+              }
+              height={
+                1080
+              }
+              routeKind="personal"
+            />
+          ) : null}
+        </div>
+      </div>
+
       {portalMounted &&
       stickerOpen &&
       selectedSticker
@@ -968,6 +1779,254 @@ export default function VisitHistorySection({
           )
         : null}
     </>
+  )
+}
+
+function QualifyingRoamsPanel({
+  roams,
+  savingRoamSourceId,
+  snapshotLifecycleUpdate,
+  onSaveSnapshot,
+  onUpdateVisibility,
+  onUpdateReplayable,
+}: {
+  roams: QualifyingRoamDay[]
+  savingRoamSourceId: string | null
+  snapshotLifecycleUpdate:
+    SnapshotLifecycleUpdate | null
+  onSaveSnapshot: (
+    roam: QualifyingRoamDay
+  ) => void
+  onUpdateVisibility: (
+    roam: QualifyingRoamDay,
+    visibility:
+      | 'public'
+      | 'private'
+  ) => void
+  onUpdateReplayable: (
+    roam: QualifyingRoamDay,
+    replayable: boolean
+  ) => void
+}) {
+  return (
+    <section className="mt-5 rounded-2xl border border-indigo-800/60 bg-indigo-950/20 p-4">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-300">
+          Snapshot-ready roams
+        </p>
+
+        <p className="mt-1 text-sm text-neutral-400">
+          Roams with at least three distinct verified stops can be preserved as snapshots.
+        </p>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {roams.map(
+          (
+            roam
+          ) => {
+            const city =
+              roam.city ??
+              roam.cityKey
+
+            const saving =
+              savingRoamSourceId ===
+              roam.sourceId
+
+            const snapshot =
+              roam.snapshot
+
+            const lifecycleBusy =
+              snapshotLifecycleUpdate !==
+              null
+
+            const updatingVisibility =
+              snapshotLifecycleUpdate
+                ?.sourceId ===
+                roam.sourceId &&
+              snapshotLifecycleUpdate
+                .field ===
+                'visibility'
+
+            const updatingReplayable =
+              snapshotLifecycleUpdate
+                ?.sourceId ===
+                roam.sourceId &&
+              snapshotLifecycleUpdate
+                .field ===
+                'replayable'
+
+            const isPublic =
+              snapshot?.visibility ===
+              'public'
+
+            const isReplayable =
+              snapshot?.replayable ===
+              true
+
+            const replayEnableBlocked =
+              Boolean(
+                snapshot &&
+                !isPublic &&
+                !isReplayable
+              )
+
+            return (
+              <article
+                key={
+                  roam.sourceId
+                }
+                className="rounded-xl border border-neutral-800 bg-neutral-950/80 p-4"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white">
+                      {city}
+                      {' · '}
+                      {formatRoamDayLabel(
+                        roam.roamDay
+                      )}
+                    </p>
+
+                    <p className="mt-1 text-xs text-neutral-500">
+                      {
+                        roam.distinctVenueCount
+                      }{' '}
+                      distinct stops
+                    </p>
+
+                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-neutral-400">
+                      {roam.stops
+                        .map(
+                          (
+                            stop
+                          ) =>
+                            stop.venue
+                              .name ??
+                            'Roam stop'
+                        )
+                        .join(
+                          ' → '
+                        )}
+                    </p>
+                  </div>
+
+                  {roam.alreadySnapshotted &&
+                  snapshot ? (
+                    <div className="w-full shrink-0 space-y-3 sm:w-auto sm:min-w-[220px]">
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                        <span className="rounded-full border border-emerald-800 bg-emerald-950/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-300">
+                          Snapshot saved
+                        </span>
+
+                        <span
+                          className={[
+                            'rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide',
+                            isPublic
+                              ? 'border-cyan-800 bg-cyan-950/30 text-cyan-300'
+                              : 'border-neutral-700 bg-neutral-900 text-neutral-400',
+                          ].join(
+                            ' '
+                          )}
+                        >
+                          {isPublic
+                            ? 'Public'
+                            : 'Private'}
+                        </span>
+
+                        
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          disabled={
+                            lifecycleBusy ||
+                            Boolean(
+                              savingRoamSourceId
+                            )
+                          }
+                          onClick={() =>
+                            onUpdateVisibility(
+                              roam,
+                              isPublic
+                                ? 'private'
+                                : 'public'
+                            )
+                          }
+                          className="inline-flex min-h-10 items-center justify-center rounded-lg border border-cyan-800 bg-cyan-950/30 px-3 py-2 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {updatingVisibility
+                            ? 'Updating…'
+                            : isPublic
+                              ? 'Make Private'
+                              : 'Make Public'}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={
+                            lifecycleBusy ||
+                            Boolean(
+                              savingRoamSourceId
+                            ) ||
+                            replayEnableBlocked
+                          }
+                          title={
+                            replayEnableBlocked
+                              ? 'Make this snapshot public before allowing replay.'
+                              : undefined
+                          }
+                          onClick={() =>
+                            onUpdateReplayable(
+                              roam,
+                              !isReplayable
+                            )
+                          }
+                          className="inline-flex min-h-10 items-center justify-center rounded-lg border border-indigo-800 bg-indigo-950/30 px-3 py-2 text-xs font-semibold text-indigo-200 transition hover:bg-indigo-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {updatingReplayable
+                            ? 'Updating…'
+                            : isReplayable
+                              ? 'Disable Replay'
+                              : 'Allow Replay'}
+                        </button>
+                      </div>
+
+                      {replayEnableBlocked ? (
+                        <p className="text-left text-[10px] leading-4 text-neutral-600 sm:text-right">
+                          Make this snapshot public before allowing replay.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={
+                        Boolean(
+                          savingRoamSourceId
+                        ) ||
+                        lifecycleBusy
+                      }
+                      onClick={() =>
+                        onSaveSnapshot(
+                          roam
+                        )
+                      }
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-indigo-700 bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {saving
+                        ? 'Saving…'
+                        : 'Save Snapshot'}
+                    </button>
+                  )}
+                </div>
+              </article>
+            )
+          }
+        )}
+      </div>
+    </section>
   )
 }
 
@@ -1159,6 +2218,70 @@ function EmptyVisitHistory() {
       </p>
     </div>
   )
+}
+
+async function buildSnapshotRouteLine(
+  stops: StickerStop[]
+): Promise<RouteLinePoint[]> {
+  const fallbackLine =
+    stops
+      .filter(
+        (
+          stop
+        ): stop is StickerStop & {
+          lat: number
+          lon: number
+        } =>
+          typeof stop.lat ===
+            'number' &&
+          Number.isFinite(
+            stop.lat
+          ) &&
+          Math.abs(
+            stop.lat
+          ) <=
+            90 &&
+          typeof stop.lon ===
+            'number' &&
+          Number.isFinite(
+            stop.lon
+          ) &&
+          Math.abs(
+            stop.lon
+          ) <=
+            180
+      )
+      .map(
+        (
+          stop
+        ) => ({
+          lat:
+            stop.lat,
+
+          lon:
+            stop.lon,
+        })
+      )
+
+  if (
+    fallbackLine.length <
+    2
+  ) {
+    return fallbackLine
+  }
+
+  try {
+    return await fetchRouteLine(
+      stops
+    )
+  } catch (error) {
+    console.warn(
+      '[VisitHistorySection] Routed roam snapshot line unavailable; using visit coordinates:',
+      error
+    )
+
+    return fallbackLine
+  }
 }
 
 async function fetchRouteLine(
@@ -1831,6 +2954,41 @@ function hasValidVisitCoordinate(
   )
 }
 
+function formatRoamDayLabel(
+  roamDay: string
+): string {
+  const timestamp =
+    Date.parse(
+      `${roamDay}T12:00:00.000Z`
+    )
+
+  if (
+    Number.isNaN(
+      timestamp
+    )
+  ) {
+    return roamDay
+  }
+
+  return new Intl.DateTimeFormat(
+    undefined,
+    {
+      month:
+        'short',
+
+      day:
+        'numeric',
+
+      year:
+        'numeric',
+    }
+  ).format(
+    new Date(
+      timestamp
+    )
+  )
+}
+
 function humanizeSource(
   value: string
 ): string {
@@ -1926,6 +3084,24 @@ function downloadBlob(
       )
     },
     1500
+  )
+}
+
+async function waitForDomPaint() {
+  await new Promise<void>(
+    (
+      resolve
+    ) => {
+      window.requestAnimationFrame(
+        () => {
+          window.requestAnimationFrame(
+            () => {
+              resolve()
+            }
+          )
+        }
+      )
+    }
   )
 }
 

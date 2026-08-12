@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
+
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 type RouteContext = {
@@ -18,7 +21,9 @@ type EventCheckInBody = {
 }
 
 const BASE_CHECK_IN_RADIUS_METERS = 125
+
 const FLEXIBLE_RADIUS_METERS = 75
+
 const MAX_REASONABLE_ACCURACY_METERS = 250
 
 async function refreshPublicPassportStats(
@@ -456,6 +461,10 @@ export async function POST(
      * Existing event attendance may still be missing its
      * canonical venue_visits relationship because older versions
      * of this endpoint did not synchronize it.
+     *
+     * Do not blindly append historical repair visits. Reuse an
+     * existing canonical event_checkin visit when one already
+     * exists for this user and venue.
      */
     if (
       existingCheckin
@@ -466,20 +475,29 @@ export async function POST(
         error:
           venueVisitError,
       } =
-        await upsertEventVenueVisit({
+        await ensureEventVenueVisitExists({
           supabase,
+
           userId:
             user.id,
+
           venueId:
             event.venue_id,
+
           rating,
+
           visitedAt:
             now,
+
           userLat,
+
           userLon,
+
           distanceMeters,
+
           locationAccuracyMeters:
             normalizedLocationAccuracyMeters,
+
           deviceTimestamp:
             normalizedDeviceTimestamp,
         })
@@ -612,20 +630,29 @@ export async function POST(
           error:
             venueVisitError,
         } =
-          await upsertEventVenueVisit({
+          await ensureEventVenueVisitExists({
             supabase,
+
             userId:
               user.id,
+
             venueId:
               event.venue_id,
+
             rating,
+
             visitedAt:
               now,
+
             userLat,
+
             userLon,
+
             distanceMeters,
+
             locationAccuracyMeters:
               normalizedLocationAccuracyMeters,
+
             deviceTimestamp:
               normalizedDeviceTimestamp,
           })
@@ -711,9 +738,9 @@ export async function POST(
     }
 
     /**
-     * Synchronize the verified event check-in into the canonical
-     * venue_visits relationship used by Passport stats and the
-     * public Creator Exploration Map.
+     * Synchronize the newly verified event check-in into the
+     * canonical append-only venue_visits history used by Passport
+     * stats and the public Creator Exploration Map.
      */
     const {
       data:
@@ -721,20 +748,29 @@ export async function POST(
       error:
         venueVisitError,
     } =
-      await upsertEventVenueVisit({
+      await insertEventVenueVisit({
         supabase,
+
         userId:
           user.id,
+
         venueId:
           event.venue_id,
+
         rating,
+
         visitedAt:
           now,
+
         userLat,
+
         userLon,
+
         distanceMeters,
+
         locationAccuracyMeters:
           normalizedLocationAccuracyMeters,
+
         deviceTimestamp:
           normalizedDeviceTimestamp,
       })
@@ -932,18 +968,7 @@ export async function POST(
  * Canonical venue-visit synchronization
  * ======================================================= */
 
-async function upsertEventVenueVisit({
-  supabase,
-  userId,
-  venueId,
-  rating,
-  visitedAt,
-  userLat,
-  userLon,
-  distanceMeters,
-  locationAccuracyMeters,
-  deviceTimestamp,
-}: {
+type EventVenueVisitInput = {
   supabase:
     Awaited<
       ReturnType<
@@ -961,53 +986,64 @@ async function upsertEventVenueVisit({
     number | null
   deviceTimestamp:
     string | null
-}) {
+}
+
+/**
+ * Genuine newly verified event attendance creates a new
+ * historical venue visit event.
+ */
+async function insertEventVenueVisit({
+  supabase,
+  userId,
+  venueId,
+  rating,
+  visitedAt,
+  userLat,
+  userLon,
+  distanceMeters,
+  locationAccuracyMeters,
+  deviceTimestamp,
+}: EventVenueVisitInput) {
   return supabase
     .from(
       'venue_visits'
     )
-    .upsert(
-      {
-        user_id:
-          userId,
+    .insert({
+      user_id:
+        userId,
 
-        venue_id:
-          venueId,
+      venue_id:
+        venueId,
 
-        rating,
+      rating,
 
-        visited_at:
-          visitedAt,
+      visited_at:
+        visitedAt,
 
-        user_lat:
-          userLat,
+      user_lat:
+        userLat,
 
-        user_lon:
-          userLon,
+      user_lon:
+        userLon,
 
-        distance_meters:
-          distanceMeters,
+      distance_meters:
+        distanceMeters,
 
-        location_accuracy_meters:
-          locationAccuracyMeters,
+      location_accuracy_meters:
+        locationAccuracyMeters,
 
-        geo_verified:
-          true,
+      geo_verified:
+        true,
 
-        check_in_source:
-          'event_checkin',
+      check_in_source:
+        'event_checkin',
 
-        device_timestamp:
-          deviceTimestamp,
+      device_timestamp:
+        deviceTimestamp,
 
-        updated_at:
-          visitedAt,
-      },
-      {
-        onConflict:
-          'user_id,venue_id',
-      }
-    )
+      updated_at:
+        visitedAt,
+    })
     .select(`
       id,
       venue_id,
@@ -1017,6 +1053,81 @@ async function upsertEventVenueVisit({
       check_in_source
     `)
     .single()
+}
+
+/**
+ * Historical/duplicate event attendance repair must not blindly
+ * append another venue visit.
+ *
+ * Reuse the latest canonical event_checkin venue visit for the
+ * same user and venue when one already exists. Only backfill a
+ * row when that canonical relationship is absent.
+ */
+async function ensureEventVenueVisitExists({
+  supabase,
+  userId,
+  venueId,
+  rating,
+  visitedAt,
+  userLat,
+  userLon,
+  distanceMeters,
+  locationAccuracyMeters,
+  deviceTimestamp,
+}: EventVenueVisitInput) {
+  const existingResult =
+    await supabase
+      .from(
+        'venue_visits'
+      )
+      .select(`
+        id,
+        venue_id,
+        rating,
+        visited_at,
+        geo_verified,
+        check_in_source
+      `)
+      .eq(
+        'user_id',
+        userId
+      )
+      .eq(
+        'venue_id',
+        venueId
+      )
+      .eq(
+        'check_in_source',
+        'event_checkin'
+      )
+      .order(
+        'visited_at',
+        {
+          ascending: false,
+        }
+      )
+      .limit(1)
+      .maybeSingle()
+
+  if (
+    existingResult.error ||
+    existingResult.data
+  ) {
+    return existingResult
+  }
+
+  return insertEventVenueVisit({
+    supabase,
+    userId,
+    venueId,
+    rating,
+    visitedAt,
+    userLat,
+    userLon,
+    distanceMeters,
+    locationAccuracyMeters,
+    deviceTimestamp,
+  })
 }
 
 /* =========================================================

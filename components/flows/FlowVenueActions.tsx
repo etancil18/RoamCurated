@@ -44,7 +44,8 @@ export default function FlowVenueActions({
   className = '',
 }: Props) {
   const hasBookingOptions =
-    Array.isArray(venue.booking_options) && venue.booking_options.length > 0
+    Array.isArray(venue.booking_options) &&
+    venue.booking_options.length > 0
 
   const showUber =
     showRideshare &&
@@ -75,13 +76,19 @@ export default function FlowVenueActions({
         <UberRideButton
           pickup={{
             name: previousVenue?.name ?? null,
-            address: previousVenue?.address ?? previousVenue?.city ?? null,
+            address:
+              previousVenue?.address ??
+              previousVenue?.city ??
+              null,
             lat: previousVenue?.lat ?? null,
             lon: previousVenue?.lon ?? null,
           }}
           dropoff={{
             name: venue.name,
-            address: venue.address ?? venue.city ?? null,
+            address:
+              venue.address ??
+              venue.city ??
+              null,
             lat: venue.lat ?? null,
             lon: venue.lon ?? null,
           }}
@@ -94,10 +101,19 @@ export default function FlowVenueActions({
             ride_context: context,
             flow_id: flowId,
             stop_index: stopIndex,
-            pickup_name: previousVenue?.name ?? null,
-            pickup_address: previousVenue?.address ?? previousVenue?.city ?? null,
-            dropoff_name: venue.name,
-            dropoff_address: venue.address ?? venue.city ?? null,
+            pickup_name:
+              previousVenue?.name ??
+              null,
+            pickup_address:
+              previousVenue?.address ??
+              previousVenue?.city ??
+              null,
+            dropoff_name:
+              venue.name,
+            dropoff_address:
+              venue.address ??
+              venue.city ??
+              null,
           }}
         />
       )}
