@@ -174,158 +174,71 @@ export default function SuggestedRoamers() {
 
   return (
     <section
-      aria-labelledby="suggested-roamers-title"
-      className="relative w-full min-w-0 overflow-hidden rounded-[2rem] border border-neutral-800 bg-neutral-950 p-4 sm:p-6"
+      aria-label="Suggested Roamers"
+      className="w-full min-w-0"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/40 to-transparent"
-      />
+      {!loading &&
+      !error &&
+      users.length >
+        0 ? (
+        <div className="mb-3 flex min-w-0 items-center justify-end">
+          <p className="inline-flex shrink-0 items-center gap-2 text-[10px] font-bold text-zinc-600">
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 rounded-full bg-indigo-300/70 shadow-[0_0_8px_rgba(165,180,252,0.35)]"
+            />
 
-      <div className="relative z-10">
-        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-indigo-400 sm:text-xs">
-              Suggested Roamers
-            </p>
-
-            <h2
-              id="suggested-roamers-title"
-              className="mt-2 text-xl font-bold tracking-tight text-white sm:text-2xl"
-            >
-              People worth discovering
-            </h2>
-
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
-              Meet Roamers with shared
-              interests, nearby city
-              energy, and activity that
-              may inspire your next
-              outing.
-            </p>
-          </div>
-
-          {!loading &&
-          !error &&
-          users.length >
-            0 ? (
-            <div className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/[0.07] px-3 py-1.5 text-xs font-medium text-indigo-200">
-              <span
-                aria-hidden="true"
-                className="h-1.5 w-1.5 rounded-full bg-indigo-400"
-              />
-
-              {users.length.toLocaleString(
-                'en-US'
-              )}{' '}
-              {users.length ===
-              1
-                ? 'suggestion'
-                : 'suggestions'}
-            </div>
-          ) : null}
+            {users.length.toLocaleString(
+              'en-US'
+            )}{' '}
+            {users.length ===
+            1
+              ? 'person'
+              : 'people'}
+          </p>
         </div>
+      ) : null}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <SuggestionSignal
-            icon="📍"
-            label="Nearby activity"
-          />
+      {error ? (
+        <SuggestedRoamersError
+          message={
+            error
+          }
+        />
+      ) : null}
 
-          <SuggestionSignal
-            icon="✨"
-            label="Shared interests"
-          />
-
-          <SuggestionSignal
-            icon="🧭"
-            label="New city perspectives"
-          />
-        </div>
-
-        {error ? (
-          <SuggestedRoamersError
-            message={
-              error
-            }
-          />
+      <div className="space-y-3">
+        {loading ? (
+          <SuggestedRoamersSkeleton />
         ) : null}
-
-        <div className="mt-5 space-y-3">
-          {loading ? (
-            <SuggestedRoamersSkeleton />
-          ) : null}
-
-          {!loading &&
-          users.length ===
-            0 &&
-          !error ? (
-            <EmptySuggestedRoamers />
-          ) : null}
-
-          {!loading &&
-            users.map(
-              (
-                user
-              ) => (
-                <UserResultCard
-                  key={
-                    user.id
-                  }
-                  user={
-                    user
-                  }
-                  currentUserId={
-                    currentUserId
-                  }
-                />
-              )
-            )}
-        </div>
 
         {!loading &&
-        users.length >
+        users.length ===
           0 &&
         !error ? (
-          <p className="mt-4 text-[11px] leading-5 text-neutral-600">
-            Suggestions are designed to
-            help you discover people,
-            not declare who is best.
-            Reputation rankings appear
-            separately in the
-            leaderboard.
-          </p>
+          <EmptySuggestedRoamers />
         ) : null}
+
+        {!loading &&
+          users.map(
+            (
+              user
+            ) => (
+              <UserResultCard
+                key={
+                  user.id
+                }
+                user={
+                  user
+                }
+                currentUserId={
+                  currentUserId
+                }
+              />
+            )
+          )}
       </div>
     </section>
-  )
-}
-
-/* =========================================================
- * Suggestion signals
- * ======================================================= */
-
-function SuggestionSignal({
-  icon,
-  label,
-}: {
-  icon:
-    string
-
-  label:
-    string
-}) {
-  return (
-    <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-neutral-800 bg-black/30 px-3 py-1.5 text-[11px] font-medium text-neutral-500">
-      <span
-        aria-hidden="true"
-        className="text-xs"
-      >
-        {icon}
-      </span>
-
-      {label}
-    </span>
   )
 }
 
@@ -342,14 +255,13 @@ function SuggestedRoamersError({
   return (
     <div
       role="alert"
-      className="mt-5 rounded-2xl border border-red-500/30 bg-red-950/30 px-4 py-3"
+      className="rounded-[1.4rem] bg-red-400/[0.055] px-4 py-3.5 ring-1 ring-red-400/15"
     >
-      <p className="text-sm font-semibold text-red-200">
-        Suggested Roamers are
-        temporarily unavailable
+      <p className="text-sm font-black tracking-tight text-red-200">
+        Suggestions are unavailable
       </p>
 
-      <p className="mt-1 break-words text-xs leading-5 text-red-300/80">
+      <p className="mt-1 break-words text-xs leading-5 text-red-200/55">
         {message}
       </p>
     </div>
@@ -362,23 +274,33 @@ function SuggestedRoamersError({
 
 function EmptySuggestedRoamers() {
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-black/30 px-4 py-8 text-center sm:px-6">
+    <div className="relative overflow-hidden rounded-[1.5rem] bg-white/[0.02] px-5 py-8 text-center ring-1 ring-white/[0.045] sm:px-6">
       <div
         aria-hidden="true"
-        className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.07] text-xl"
+        className="pointer-events-none absolute inset-0"
       >
-        🧭
+        <div className="absolute left-1/2 top-0 h-28 w-48 -translate-x-1/2 rounded-full bg-indigo-300/[0.035] blur-[70px]" />
       </div>
 
-      <p className="mt-3 text-sm font-semibold text-neutral-300">
-        No new suggestions yet
-      </p>
+      <div className="relative z-10">
+        <div
+          aria-hidden="true"
+          className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-indigo-300/[0.06] text-sm text-indigo-200/70 ring-1 ring-indigo-300/10"
+        >
+          ✦
+        </div>
 
-      <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-neutral-500">
-        As more people join, explore,
-        and share their city interests,
-        new Roamers will appear here.
-      </p>
+        <p className="mt-3 text-sm font-black tracking-tight text-white">
+          Your orbit is still forming
+        </p>
+
+        <p className="mx-auto mt-1.5 max-w-md text-xs leading-5 text-zinc-600">
+          New people will show up here
+          as more Roamers explore,
+          connect, and build their city
+          footprint.
+        </p>
+      </div>
     </div>
   )
 }
@@ -405,27 +327,27 @@ function SuggestedRoamersSkeleton() {
             key={
               item
             }
-            className="animate-pulse rounded-2xl border border-neutral-800 bg-black/50 p-4"
+            className="animate-pulse rounded-[1.5rem] bg-white/[0.025] p-4 ring-1 ring-white/[0.05] sm:p-5"
           >
-            <div className="flex min-w-0 items-start gap-3 sm:items-center">
-              <div className="h-14 w-14 shrink-0 rounded-2xl bg-neutral-800" />
+            <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
+              <div className="h-14 w-14 shrink-0 rounded-[1.1rem] bg-white/[0.065] sm:h-16 sm:w-16" />
 
               <div className="min-w-0 flex-1">
-                <div className="h-4 w-36 max-w-full rounded bg-neutral-800" />
+                <div className="h-4 w-36 max-w-full rounded bg-white/[0.065]" />
 
-                <div className="mt-2 h-3 w-24 max-w-full rounded bg-neutral-900" />
+                <div className="mt-2 h-3 w-24 max-w-full rounded bg-white/[0.035]" />
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <div className="h-7 w-20 rounded-full bg-neutral-900" />
+                  <div className="h-7 w-20 rounded-full bg-white/[0.035]" />
 
-                  <div className="h-7 w-24 rounded-full bg-neutral-900" />
+                  <div className="h-7 w-24 rounded-full bg-white/[0.035]" />
                 </div>
               </div>
 
-              <div className="hidden h-10 w-24 shrink-0 rounded-full bg-neutral-800 sm:block" />
+              <div className="hidden h-10 w-24 shrink-0 rounded-full bg-white/[0.055] sm:block" />
             </div>
 
-            <div className="mt-3 h-10 w-full rounded-full bg-neutral-800 sm:hidden" />
+            <div className="mt-3 h-10 w-full rounded-full bg-white/[0.055] sm:hidden" />
           </div>
         )
       )}

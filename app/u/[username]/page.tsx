@@ -604,27 +604,37 @@ export default async function PublicUserProfilePage({
       : []
 
   return (
-    <main className="min-h-screen bg-black px-4 pb-12 pt-[calc(4rem+env(safe-area-inset-top)+2rem)] text-white sm:px-6">
-      <div className="mx-auto w-full max-w-5xl">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <main className="relative min-h-screen overflow-x-clip bg-[#070809] px-4 pb-20 pt-[calc(4rem+env(safe-area-inset-top)+1.25rem)] text-white sm:px-6 sm:pb-28">
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="absolute left-[-22%] top-[-10%] h-[28rem] w-[28rem] rounded-full bg-cyan-400/[0.07] blur-[120px] sm:left-[-8%]" />
+
+        <div className="absolute right-[-25%] top-[12%] h-[34rem] w-[34rem] rounded-full bg-indigo-500/[0.08] blur-[140px] sm:right-[-10%]" />
+
+        <div className="absolute bottom-[-18%] left-[26%] h-[30rem] w-[30rem] rounded-full bg-fuchsia-500/[0.035] blur-[140px]" />
+
+        <div className="absolute inset-x-0 top-0 h-80 bg-gradient-to-b from-white/[0.02] to-transparent" />
+      </div>
+
+      <div className="relative z-10 mx-auto w-full max-w-5xl">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
             {isOwnProfile ? (
               <Link
                 href="/profile"
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:bg-neutral-900 hover:text-white"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-white/[0.045] px-4 py-2 text-sm font-semibold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.08] hover:text-white"
               >
-                Edit Profile
+                Edit profile
               </Link>
             ) : (
               <Link
                 href="/discover"
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-cyan-400/50 hover:bg-neutral-900 hover:text-white"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-white/[0.045] px-4 py-2 text-sm font-semibold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.08] hover:text-white"
               >
                 <span aria-hidden="true">
                   ←
                 </span>
 
-                Back to Discover
+                Discover
               </Link>
             )}
           </div>
@@ -641,54 +651,56 @@ export default async function PublicUserProfilePage({
 
         {isCreator ? (
           <div className="space-y-5">
-            <CreatorHero
-              displayName={
-                profile.full_name
-              }
-              username={
-                creatorUsername
-              }
-              avatarUrl={
-                profile.avatar_url
-              }
-              headline={
-                profile.creator_headline
-              }
-              bio={
-                creatorBundle.profile
-                  .creator_bio
-              }
-              primaryCity={
-                creatorBundle.profile
-                  .primary_city
-              }
-              acceptingCollaborations={
-                creatorBundle.profile
-                  .accepting_collaborations
-              }
-              availableForTravel={
-                creatorBundle.profile
-                  .available_for_travel
-              }
-              publicEmail={
-                creatorBundle.profile
-                  .public_email
-              }
-              socialLinks={
-                creatorBundle.socialLinks
-              }
-              followersCount={
-                followersCount
-              }
-              followingCount={
-                followingCount
-              }
-              passportLevel={
-                profile.show_xp !== false
-                  ? passportLevel
-                  : null
-              }
-            />
+            <div className="overflow-hidden rounded-[2.25rem] bg-gradient-to-br from-white/[0.07] via-white/[0.035] to-transparent shadow-[0_30px_100px_rgba(0,0,0,0.3)] ring-1 ring-white/[0.075]">
+              <CreatorHero
+                displayName={
+                  profile.full_name
+                }
+                username={
+                  creatorUsername
+                }
+                avatarUrl={
+                  profile.avatar_url
+                }
+                headline={
+                  profile.creator_headline
+                }
+                bio={
+                  creatorBundle.profile
+                    .creator_bio
+                }
+                primaryCity={
+                  creatorBundle.profile
+                    .primary_city
+                }
+                acceptingCollaborations={
+                  creatorBundle.profile
+                    .accepting_collaborations
+                }
+                availableForTravel={
+                  creatorBundle.profile
+                    .available_for_travel
+                }
+                publicEmail={
+                  creatorBundle.profile
+                    .public_email
+                }
+                socialLinks={
+                  creatorBundle.socialLinks
+                }
+                followersCount={
+                  followersCount
+                }
+                followingCount={
+                  followingCount
+                }
+                passportLevel={
+                  profile.show_xp !== false
+                    ? passportLevel
+                    : null
+                }
+              />
+            </div>
 
             {!isOwnProfile ? (
               <CreatorActionBar
@@ -714,9 +726,11 @@ export default async function PublicUserProfilePage({
             />
           </div>
         ) : (
-          <section className="rounded-[2rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 to-black p-5 sm:p-6">
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 text-4xl">
+          <section className="relative overflow-hidden rounded-[2.25rem] bg-gradient-to-br from-white/[0.07] via-white/[0.035] to-transparent p-5 shadow-[0_30px_100px_rgba(0,0,0,0.3)] ring-1 ring-white/[0.075] sm:p-7">
+            <div className="pointer-events-none absolute right-[-5rem] top-[-6rem] h-56 w-56 rounded-full bg-cyan-400/[0.08] blur-3xl" />
+
+            <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.75rem] bg-white/[0.05] text-4xl ring-1 ring-white/[0.08]">
                 {profile.avatar_url ? (
                   <img
                     src={
@@ -726,21 +740,25 @@ export default async function PublicUserProfilePage({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <span>🧭</span>
+                  <span>⌖</span>
                 )}
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-[0.25em] text-cyan-400">
-                  Roam Passport
-                </p>
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
 
-                <h1 className="mt-2 break-words text-3xl font-bold">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+                    Roam Passport
+                  </p>
+                </div>
+
+                <h1 className="mt-4 break-words text-3xl font-black tracking-[-0.04em] sm:text-4xl">
                   {profile.full_name ??
                     profile.username}
                 </h1>
 
-                <p className="mt-1 break-words text-sm text-neutral-400">
+                <p className="mt-1.5 break-words text-sm text-zinc-500">
                   @{profile.username}
 
                   {profile.home_neighborhood
@@ -749,7 +767,7 @@ export default async function PublicUserProfilePage({
                 </p>
 
                 {profile.bio ? (
-                  <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-6 text-neutral-300">
+                  <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-6 text-zinc-400">
                     {profile.bio}
                   </p>
                 ) : null}
@@ -776,7 +794,7 @@ export default async function PublicUserProfilePage({
         {!isCreator ? (
           <section
             aria-label="Profile stats"
-            className="mt-5 flex flex-wrap gap-2"
+            className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6"
           >
             <Stat
               label="Followers"
@@ -794,7 +812,7 @@ export default async function PublicUserProfilePage({
 
             {profile.show_xp !== false ? (
               <Stat
-                label="Passport Level"
+                label="Passport level"
                 value={passportLevel}
               />
             ) : null}
@@ -812,7 +830,7 @@ export default async function PublicUserProfilePage({
             {profile.show_checkins !==
             false ? (
               <Stat
-                label="Event Check-ins"
+                label="Check-ins"
                 value={
                   eventCheckinsCount
                 }
@@ -822,7 +840,7 @@ export default async function PublicUserProfilePage({
             {profile.show_saved_guides !==
             false ? (
               <Stat
-                label="Saved Guides"
+                label="Saved guides"
                 value={
                   savedPropertiesCount
                 }
@@ -832,7 +850,7 @@ export default async function PublicUserProfilePage({
             {profile.show_social_groups !==
             false ? (
               <Stat
-                label="Social Groups"
+                label="Groups"
                 value={
                   socialGroupsCount
                 }
@@ -842,17 +860,17 @@ export default async function PublicUserProfilePage({
         ) : null}
 
         {isCreator ? (
-          <div className="mt-8 space-y-12 sm:mt-10 sm:space-y-16">
+          <div className="mt-10 space-y-20 sm:mt-14 sm:space-y-24">
             <section
               id="overview"
               aria-labelledby="creator-overview-title"
-              className="scroll-mt-28 space-y-5"
+              className="scroll-mt-32 space-y-6"
             >
               <ProfileSectionHeading
                 id="creator-overview-title"
-                eyebrow="Creator overview"
-                title={`How ${creatorDisplayName} roams`}
-                description="A quick look at their verified activity, creative interests, and the kinds of collaborations they are open to."
+                eyebrow="Point of view"
+                title={`How ${creatorDisplayName} sees the city`}
+                description="A look at the places they know, the experiences they complete, and the perspective they are building through real-world activity."
               />
 
               <CreatorAuthorityCard
@@ -865,28 +883,30 @@ export default async function PublicUserProfilePage({
                 <section
                   id="places"
                   aria-labelledby="creator-exploration-map-title"
-                  className="scroll-mt-28 space-y-5"
+                  className="scroll-mt-32 space-y-6 pt-6"
                 >
                   <ProfileSectionHeading
                     id="creator-exploration-map-title"
-                    eyebrow="Places"
-                    title={`Explore ${creatorDisplayName}’s city footprint`}
-                    description="A map of eligible, geo-verified places this creator has visited and chosen to share publicly."
+                    eyebrow="Their footprint"
+                    title={`Places ${creatorDisplayName} actually knows`}
+                    description="Geo-verified places this creator has visited and chosen to make part of their public city story."
                   />
 
-                  <CreatorExplorationMapDynamic
-                    map={creatorMap}
-                    creatorName={
-                      creatorDisplayName
-                    }
-                    primaryCity={
-                      creatorBundle.profile
-                        .primary_city
-                    }
-                    scrollWheelZoom={
-                      false
-                    }
-                  />
+                  <div className="overflow-hidden rounded-[2rem] bg-white/[0.025] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
+                    <CreatorExplorationMapDynamic
+                      map={creatorMap}
+                      creatorName={
+                        creatorDisplayName
+                      }
+                      primaryCity={
+                        creatorBundle.profile
+                          .primary_city
+                      }
+                      scrollWheelZoom={
+                        false
+                      }
+                    />
+                  </div>
                 </section>
               ) : null}
 
@@ -894,13 +914,13 @@ export default async function PublicUserProfilePage({
                 <section
                   id="reputation"
                   aria-labelledby="creator-earned-reputation-heading"
-                  className="scroll-mt-28 space-y-5"
+                  className="scroll-mt-32 space-y-6 pt-6"
                 >
                   <ProfileSectionHeading
                     id="creator-earned-reputation-heading"
-                    eyebrow="Earned reputation"
-                    title="What their Roam activity supports"
-                    description="Category statuses earned through relevant verified visits and completed activity. These are different from their total profile activity."
+                    eyebrow="What they know"
+                    title="Reputation earned through real activity"
+                    description="Category credibility built from relevant verified visits and completed Roam activity—not follower count."
                   />
 
                   <CreatorReputationSection
@@ -914,21 +934,20 @@ export default async function PublicUserProfilePage({
               {creatorBundle
                 .collaborationTags
                 .length > 0 ? (
-                <div className="rounded-[1.75rem] border border-neutral-800 bg-neutral-950/70 p-5 sm:p-6">
-                  <div className="mb-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-400">
+                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-transparent p-5 shadow-[0_24px_80px_rgba(0,0,0,0.18)] ring-1 ring-white/[0.065] sm:p-6">
+                  <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-indigo-400/[0.06] blur-3xl" />
+
+                  <div className="relative z-10 mb-5">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">
                       Open to
                     </p>
 
-                    <h3 className="mt-2 text-lg font-semibold text-white">
-                      Collaborations and
-                      creative opportunities
+                    <h3 className="mt-2 text-xl font-black tracking-tight text-white">
+                      Make something together
                     </h3>
 
-                    <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
-                      The projects, partnerships,
-                      and experiences this creator
-                      is interested in exploring.
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+                      The collaborations, projects, and experiences this creator is open to exploring.
                     </p>
                   </div>
 
@@ -946,13 +965,13 @@ export default async function PublicUserProfilePage({
               <section
                 id="guides"
                 aria-labelledby="creator-guides-title"
-                className="scroll-mt-28 space-y-5"
+                className="scroll-mt-32 space-y-6"
               >
                 <ProfileSectionHeading
                   id="creator-guides-title"
-                  eyebrow="Guides"
-                  title="Curated places worth knowing"
-                  description={`Public collections assembled by ${creatorDisplayName} to help people find great places faster.`}
+                  eyebrow="Their picks"
+                  title="Places worth knowing"
+                  description={`Collections built by ${creatorDisplayName} around places, moods, and experiences they genuinely think are worth your time.`}
                 />
 
                 <CreatorFeaturedCollections
@@ -971,30 +990,30 @@ export default async function PublicUserProfilePage({
               <section
                 id="moments"
                 aria-labelledby="creator-roam-moments-title"
-                className="scroll-mt-28"
+                className="scroll-mt-32"
               >
-                <div className="overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-indigo-950/10">
-                  <div className="border-b border-neutral-800/80 p-5 sm:p-6">
+                <div className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-indigo-400/[0.04] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
+                  <div className="border-b border-white/[0.055] p-5 sm:p-6">
                     <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                       <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
+                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
                           Recent moments
                         </p>
 
                         <h2
                           id="creator-roam-moments-title"
-                          className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+                          className="mt-2 text-2xl font-black tracking-[-0.035em] text-white"
                         >
-                          Roams they have completed
+                          Nights and routes worth remembering
                         </h2>
 
-                        <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
-                          Completed routes worth revisiting. Public Roams can be explored here and replayed when the creator has enabled replay.
+                        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+                          Completed Roams this creator chose to make public. Some can be replayed so you can experience the route yourself.
                         </p>
                       </div>
 
                       <div className="shrink-0">
-                        <span className="inline-flex items-center rounded-full border border-neutral-800 bg-neutral-950 px-3 py-1.5 text-xs font-medium text-neutral-400">
+                        <span className="inline-flex items-center rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-zinc-500 ring-1 ring-white/[0.06]">
                           Latest{' '}
                           {Math.min(
                             snapshots.length,
@@ -1029,29 +1048,29 @@ export default async function PublicUserProfilePage({
               <section
                 id="taste"
                 aria-labelledby="creator-taste-profile-title"
-                className="scroll-mt-28"
+                className="scroll-mt-32"
               >
-                <div className="overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-cyan-950/20">
-                  <div className="border-b border-neutral-800/80 p-5 sm:p-6">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-400">
+                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-cyan-300/[0.035] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
+                  <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-cyan-300/[0.06] blur-3xl" />
+
+                  <div className="relative z-10 border-b border-white/[0.055] p-5 sm:p-6">
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
                       Taste
                     </p>
 
                     <h2
                       id="creator-taste-profile-title"
-                      className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+                      className="mt-2 text-2xl font-black tracking-[-0.035em] text-white"
                     >
                       Their kind of city
                     </h2>
 
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
-                      The moods, scenes, and
-                      experiences they naturally
-                      gravitate toward.
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+                      The moods, scenes, and experiences they naturally gravitate toward.
                     </p>
                   </div>
 
-                  <div className="grid gap-6 p-5 sm:grid-cols-2 sm:p-6">
+                  <div className="relative z-10 grid gap-7 p-5 sm:grid-cols-2 sm:p-6">
                     <ChipGroup
                       title="Vibes"
                       values={
@@ -1075,20 +1094,24 @@ export default async function PublicUserProfilePage({
         ) : (
           <>
             {snapshots.length > 0 ? (
-              <section className="mt-6 overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-indigo-950/10">
-                <div className="border-b border-neutral-800/80 p-5">
+              <section className="mt-8 overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-indigo-400/[0.035] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
+                <div className="border-b border-white/[0.055] p-5">
                   <div className="flex min-w-0 items-end justify-between gap-4">
                     <div className="min-w-0">
-                      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
-                        Recent Roams
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
+                        Recent moments
+                      </p>
+
+                      <h2 className="mt-2 text-xl font-black tracking-tight text-white">
+                        Roams worth sharing
                       </h2>
 
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className="mt-1.5 text-xs leading-5 text-zinc-500">
                         Public moments from completed Roam flows.
                       </p>
                     </div>
 
-                    <p className="shrink-0 text-xs text-neutral-500">
+                    <p className="shrink-0 text-xs text-zinc-600">
                       Latest{' '}
                       {Math.min(
                         snapshots.length,
@@ -1118,14 +1141,18 @@ export default async function PublicUserProfilePage({
             ) : null}
 
             {hasTasteProfile ? (
-              <section className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">
-                  Taste Profile
+              <section className="mt-8 rounded-[2rem] bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-5 ring-1 ring-white/[0.065] sm:p-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
+                  Taste
+                </p>
+
+                <h2 className="mt-2 text-xl font-black tracking-tight text-white">
+                  Their kind of city
                 </h2>
 
-                <div className="mt-4 space-y-5">
+                <div className="mt-6 space-y-6">
                   <ChipGroup
-                    title="Preferred Vibes"
+                    title="Preferred vibes"
                     values={
                       profile.preferred_vibes ??
                       []
@@ -1167,17 +1194,15 @@ function CreatorActionBar({
   return (
     <section
       aria-label="Creator profile actions"
-      className="flex flex-col gap-3 rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-4 rounded-[1.75rem] bg-white/[0.035] p-4 ring-1 ring-white/[0.065] sm:flex-row sm:items-center sm:justify-between sm:px-5"
     >
       <div className="min-w-0">
-        <p className="text-sm font-medium text-white">
-          Keep up with this creator
+        <p className="text-sm font-black text-white">
+          Follow their point of view
         </p>
 
-        <p className="mt-1 text-xs leading-5 text-neutral-500">
-          Follow their new guides,
-          completed Roams, and city
-          discoveries.
+        <p className="mt-1 text-xs leading-5 text-zinc-500">
+          New collections, completed Roams, and city discoveries will be easier to find.
         </p>
       </div>
 
@@ -1220,15 +1245,15 @@ function CreatorProfileNavigation({
   return (
     <nav
       aria-label="Creator profile sections"
-      className="sticky top-[calc(4rem+env(safe-area-inset-top)+0.5rem)] z-20 -mx-4 border-y border-neutral-800/80 bg-black/85 px-4 py-3 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border"
+      className="sticky top-[calc(4rem+env(safe-area-inset-top)+0.5rem)] z-20 -mx-4 bg-[#070809]/90 px-4 py-2.5 backdrop-blur-2xl sm:mx-0 sm:rounded-full sm:bg-black/55 sm:px-2 sm:ring-1 sm:ring-white/[0.07]"
     >
-      <div className="flex min-w-0 gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {visibleItems.map(
           (item) => (
             <a
               key={item.id}
               href={`#${item.id}`}
-              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-xs font-semibold text-neutral-400 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full px-4 py-2 text-xs font-bold text-zinc-500 transition hover:bg-white/[0.07] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
               {item.label}
             </a>
@@ -1255,24 +1280,28 @@ function ProfileSectionHeading({
   return (
     <div className="flex min-w-0 items-end justify-between gap-4">
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
-          {eyebrow}
-        </p>
+        <div className="flex items-center gap-2">
+          <span className="h-px w-5 bg-cyan-300/70" />
+
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+            {eyebrow}
+          </p>
+        </div>
 
         <h2
           id={id}
-          className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+          className="mt-3 max-w-3xl text-2xl font-black tracking-[-0.035em] text-white sm:text-[2rem]"
         >
           {title}
         </h2>
 
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-[15px] sm:leading-7">
           {description}
         </p>
       </div>
 
       {trailing ? (
-        <p className="hidden shrink-0 text-xs text-neutral-600 sm:block">
+        <p className="hidden shrink-0 text-xs text-zinc-600 sm:block">
           {trailing}
         </p>
       ) : null}
@@ -1301,30 +1330,33 @@ function CreatorReputationSection({
   return (
     <section
       aria-labelledby="creator-reputation-title"
-      className="relative min-w-0 overflow-hidden rounded-[1.75rem] border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.08] via-neutral-950 to-indigo-500/[0.08] p-5 sm:p-6"
+      className="relative min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-300/[0.055] via-white/[0.025] to-indigo-400/[0.05] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.07] sm:p-6"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/35 to-transparent"
-      />
+      <div className="pointer-events-none absolute right-[-5rem] top-[-6rem] h-52 w-52 rounded-full bg-cyan-300/[0.07] blur-[90px]" />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="relative z-10 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
-            Public identity
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+            Earned identity
           </p>
 
           <h2
             id="creator-reputation-title"
-            className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+            className="mt-2 text-2xl font-black tracking-[-0.035em] text-white"
           >
             {normalized.headline ??
-              'Roam creator reputation'}
+              'What their city history supports'}
           </h2>
+
+          {normalized.summary ? (
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+              {normalized.summary}
+            </p>
+          ) : null}
         </div>
 
         {normalized.highestLevel ? (
-          <span className="inline-flex w-fit shrink-0 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
+          <span className="inline-flex w-fit shrink-0 rounded-full bg-cyan-300 px-3 py-1.5 text-xs font-black text-black">
             {formatReputationLevel(
               normalized.highestLevel
             )}
@@ -1333,7 +1365,7 @@ function CreatorReputationSection({
       </div>
 
       {normalized.categories.length > 0 ? (
-        <div className="relative z-10 mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="relative z-10 mt-6 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {normalized.categories.map(
             (
               category,
@@ -1350,15 +1382,15 @@ function CreatorReputationSection({
                     category.key ??
                     `${category.label}-${index}`
                   }
-                  className="min-w-0 rounded-2xl border border-neutral-800 bg-black/30 p-4"
+                  className="min-w-0 rounded-[1.5rem] bg-black/30 p-4 ring-1 ring-white/[0.055]"
                 >
                   <div className="flex min-w-0 items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="break-words text-sm font-semibold text-white">
+                      <p className="break-words text-sm font-black text-white">
                         {category.label}
                       </p>
 
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className="mt-1 text-[11px] text-zinc-600">
                         {buildPublicReputationScopeLabel(
                           category
                         )}
@@ -1366,7 +1398,7 @@ function CreatorReputationSection({
                     </div>
 
                     {category.level ? (
-                      <span className="shrink-0 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-200">
+                      <span className="shrink-0 rounded-full bg-white/[0.05] px-2.5 py-1 text-[10px] font-bold text-zinc-400 ring-1 ring-white/[0.065]">
                         {formatReputationLevel(
                           category.level
                         )}
@@ -1374,36 +1406,36 @@ function CreatorReputationSection({
                     ) : null}
                   </div>
 
-                  <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-950/70 p-3">
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
-                      Percentile standing
+                  <div className="mt-4 rounded-[1.25rem] bg-cyan-300/[0.055] p-3.5 ring-1 ring-cyan-300/10">
+                    <p className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-600">
+                      Standing
                     </p>
 
                     <p
                       className={[
-                        'mt-1 break-words font-semibold',
+                        'mt-1 break-words font-black tracking-tight',
                         standing.available
-                          ? 'text-lg text-cyan-300'
-                          : 'text-sm text-neutral-400',
+                          ? 'text-xl text-cyan-200'
+                          : 'text-sm text-zinc-400',
                       ].join(' ')}
                     >
                       {standing.primary}
                     </p>
 
                     {standing.secondary ? (
-                      <p className="mt-1 text-[11px] leading-5 text-neutral-500">
+                      <p className="mt-1.5 text-[11px] leading-5 text-zinc-600">
                         {standing.secondary}
                       </p>
                     ) : null}
                   </div>
 
-                  <div className="mt-3 flex min-w-0 items-center justify-between gap-3 border-t border-neutral-800/80 pt-3">
+                  <div className="mt-3 flex min-w-0 items-center justify-between gap-3 border-t border-white/[0.055] pt-3">
                     <div className="min-w-0">
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
-                        Verified evidence
+                      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-700">
+                        Verified
                       </p>
 
-                      <p className="mt-1 text-xs font-medium text-neutral-300">
+                      <p className="mt-1 text-xs font-semibold text-zinc-400">
                         {category.verifiedVenueCount !==
                         null
                           ? `${category.verifiedVenueCount.toLocaleString(
@@ -1411,8 +1443,8 @@ function CreatorReputationSection({
                             )} ${
                               category.verifiedVenueCount ===
                               1
-                                ? 'venue'
-                                : 'venues'
+                                ? 'place'
+                                : 'places'
                             }`
                           : 'Not published'}
                       </p>
@@ -1421,15 +1453,14 @@ function CreatorReputationSection({
                     {category.eligibleCreatorCount !==
                     null ? (
                       <div className="min-w-0 text-right">
-                        <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-600">
+                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-700">
                           Compared with
                         </p>
 
-                        <p className="mt-1 text-xs font-medium text-neutral-300">
+                        <p className="mt-1 text-xs font-semibold text-zinc-400">
                           {category.eligibleCreatorCount.toLocaleString(
                             'en-US'
                           )}{' '}
-                          eligible{' '}
                           {category.eligibleCreatorCount ===
                           1
                             ? 'creator'
@@ -1445,12 +1476,8 @@ function CreatorReputationSection({
         </div>
       ) : null}
 
-      <p className="relative z-10 mt-4 text-[11px] leading-5 text-neutral-600">
-        Percentiles compare this creator
-        only with eligible creators in
-        the same category and geographic
-        scope. City and global standings
-        are calculated separately.
+      <p className="relative z-10 mt-4 text-[11px] leading-5 text-zinc-600">
+        Reputation compares verified activity within the same category and geographic scope. City and global standings remain separate.
       </p>
     </section>
   )
@@ -2034,7 +2061,7 @@ function buildRankContext(
 
   if (
     category.rank !==
-    null
+      null
   ) {
     return `Rank #${category.rank.toLocaleString(
       'en-US'
@@ -2750,14 +2777,14 @@ function Stat({
   value: number
 }) {
   return (
-    <div className="inline-flex min-w-[104px] flex-col rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-3">
-      <p className="text-lg font-semibold leading-none">
+    <div className="flex min-h-[92px] min-w-0 flex-col justify-between rounded-[1.4rem] bg-white/[0.035] p-4 ring-1 ring-white/[0.06]">
+      <p className="text-2xl font-black leading-none tracking-[-0.04em] text-white">
         {value.toLocaleString(
           'en-US'
         )}
       </p>
 
-      <p className="mt-1.5 text-[11px] leading-tight text-neutral-500">
+      <p className="mt-3 text-[10px] font-bold uppercase leading-tight tracking-[0.12em] text-zinc-600">
         {label}
       </p>
     </div>
@@ -2840,12 +2867,12 @@ function ChipGroup({
 }) {
   return (
     <div className="min-w-0">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
+      <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-600">
         {title}
       </p>
 
       {values.length === 0 ? (
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-zinc-600">
           Nothing shared yet.
         </p>
       ) : (
@@ -2854,7 +2881,7 @@ function ChipGroup({
             (value) => (
               <span
                 key={value}
-                className="rounded-full border border-cyan-500/15 bg-gradient-to-b from-neutral-900 to-black px-4 py-2 text-sm font-medium text-neutral-200 transition hover:border-cyan-400/40 hover:text-white"
+                className="rounded-full bg-white/[0.04] px-4 py-2 text-sm font-semibold text-zinc-300 ring-1 ring-white/[0.065] transition hover:bg-cyan-300/[0.08] hover:text-white hover:ring-cyan-300/15"
               >
                 {formatChipLabel(
                   value

@@ -71,19 +71,19 @@ const LEVEL_LABELS = {
 
 const LEVEL_STYLES = {
   unranked:
-    'border-neutral-700 bg-neutral-900 text-neutral-400',
+    'bg-white/[0.035] text-zinc-500 ring-1 ring-white/[0.065]',
 
   emerging:
-    'border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
+    'bg-cyan-300/[0.09] text-cyan-200 ring-1 ring-cyan-300/15',
 
   established:
-    'border-indigo-500/30 bg-indigo-500/10 text-indigo-200',
+    'bg-indigo-400/[0.09] text-indigo-200 ring-1 ring-indigo-300/15',
 
   expert:
-    'border-violet-500/30 bg-violet-500/10 text-violet-200',
+    'bg-violet-400/[0.1] text-violet-200 ring-1 ring-violet-300/15',
 
   elite:
-    'border-amber-400/30 bg-amber-400/10 text-amber-200',
+    'bg-amber-300/[0.1] text-amber-200 ring-1 ring-amber-300/15',
 } as const satisfies Record<
   ReputationLevel,
   string
@@ -91,19 +91,19 @@ const LEVEL_STYLES = {
 
 const LEVEL_ACCENT_STYLES = {
   unranked:
-    'from-neutral-500/10',
+    'from-white/[0.025]',
 
   emerging:
-    'from-cyan-500/10',
+    'from-cyan-300/[0.055]',
 
   established:
-    'from-indigo-500/10',
+    'from-indigo-400/[0.055]',
 
   expert:
-    'from-violet-500/10',
+    'from-violet-400/[0.055]',
 
   elite:
-    'from-amber-400/10',
+    'from-amber-300/[0.06]',
 } as const satisfies Record<
   ReputationLevel,
   string
@@ -153,14 +153,14 @@ export default function CreatorReputationCard({
     <article
       aria-label={`${normalized.primaryLabel} reputation`}
       className={[
-        'relative w-full min-w-0 overflow-hidden rounded-[1.5rem] border border-neutral-800',
-        'bg-gradient-to-br via-neutral-950 to-black',
+        'relative w-full min-w-0 overflow-hidden rounded-[1.75rem]',
+        'bg-gradient-to-br via-white/[0.025] to-transparent shadow-[0_22px_70px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]',
         LEVEL_ACCENT_STYLES[
           normalized.level
         ],
         compact
           ? 'p-4'
-          : 'p-5',
+          : 'p-5 sm:p-6',
         className,
       ]
         .filter(Boolean)
@@ -168,22 +168,30 @@ export default function CreatorReputationCard({
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent"
-      />
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-cyan-300/[0.04] blur-[80px]" />
+
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
+      </div>
 
       <div className="relative min-w-0">
-        <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400">
-              Earned reputation
-            </p>
+            <div className="flex items-center gap-2">
+              <span className="h-px w-5 bg-cyan-300/60" />
+
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300">
+                What they know
+              </p>
+            </div>
 
             <h3
               className={[
-                'mt-2 break-words font-semibold tracking-tight text-white',
+                'mt-3 break-words font-black tracking-[-0.03em] text-white',
                 compact
-                  ? 'text-base'
-                  : 'text-lg',
+                  ? 'text-lg'
+                  : 'text-xl sm:text-[1.35rem]',
               ].join(' ')}
             >
               {
@@ -192,7 +200,7 @@ export default function CreatorReputationCard({
             </h3>
 
             {normalized.secondaryLabel ? (
-              <p className="mt-1 break-words text-xs leading-5 text-neutral-500">
+              <p className="mt-2 max-w-2xl break-words text-xs leading-5 text-zinc-500 sm:text-sm sm:leading-6">
                 {
                   normalized.secondaryLabel
                 }
@@ -205,27 +213,25 @@ export default function CreatorReputationCard({
           />
         </div>
 
-        <div className="mt-4 flex min-w-0 items-start gap-3 rounded-2xl border border-neutral-800 bg-black/25 px-3.5 py-3">
+        <div className="mt-5 flex min-w-0 items-start gap-3 rounded-[1.4rem] bg-black/25 px-4 py-3.5 ring-1 ring-white/[0.055]">
           <span
             aria-hidden="true"
-            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/10 text-sm text-cyan-300"
+            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-cyan-300/[0.07] text-sm text-cyan-200 ring-1 ring-cyan-300/12"
           >
             ◎
           </span>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
-              Reputation scope
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
+              This reputation is for
             </p>
 
-            <p className="mt-1 break-words text-sm font-semibold text-neutral-200">
+            <p className="mt-1 break-words text-sm font-black text-white">
               {scopeLabel}
             </p>
 
-            <p className="mt-1 text-[11px] leading-5 text-neutral-600">
-              Evidence shown below applies only to this
-              category and scope, not the creator’s total
-              Roam footprint.
+            <p className="mt-1 text-[11px] leading-5 text-zinc-600">
+              Only activity relevant to this exact category and location contributes here.
             </p>
           </div>
         </div>
@@ -233,21 +239,21 @@ export default function CreatorReputationCard({
         {showScore &&
         normalized.score !==
           null ? (
-          <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="min-w-0 rounded-2xl border border-neutral-800 bg-black/30 px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
-                Category score
+          <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
+            <div className="min-w-0 rounded-[1.4rem] bg-black/25 px-4 py-4 ring-1 ring-white/[0.055]">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
+                Reputation score
               </p>
 
-              <p className="mt-1 truncate text-2xl font-semibold text-white">
+              <p className="mt-2 truncate text-[2rem] font-black leading-none tracking-[-0.045em] text-white">
                 {formatNumber(
                   normalized.score,
                   1
                 )}
               </p>
 
-              <p className="mt-1 text-[11px] leading-5 text-neutral-600">
-                Score for this exact reputation identity.
+              <p className="mt-2 text-[11px] leading-5 text-zinc-600">
+                Strength of the verified evidence behind this reputation.
               </p>
             </div>
 
@@ -281,30 +287,29 @@ export default function CreatorReputationCard({
         {showEvidence &&
         evidenceMetrics.length >
           0 ? (
-          <div className="mt-4 border-t border-neutral-800/80 pt-4">
-            <div className="flex min-w-0 flex-wrap items-end justify-between gap-2">
+          <div className="mt-5 border-t border-white/[0.055] pt-5">
+            <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
-                  Scoped supporting activity
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
+                  Why they earned it
                 </p>
 
-                <p className="mt-1 text-[11px] leading-5 text-neutral-600">
-                  Evidence supporting this specific earned
-                  status.
+                <p className="mt-1 text-[11px] leading-5 text-zinc-600">
+                  The verified activity supporting this specific reputation.
                 </p>
               </div>
 
-              <span className="shrink-0 rounded-full border border-neutral-800 bg-black/25 px-2.5 py-1 text-[10px] font-medium text-neutral-500">
+              <span className="shrink-0 rounded-full bg-white/[0.035] px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-600 ring-1 ring-white/[0.055]">
                 {normalized.scope ===
                 'city'
-                  ? 'City + category'
-                  : 'Global + category'}
+                  ? 'City · category'
+                  : 'Global · category'}
               </span>
             </div>
 
             <div
               className={[
-                'mt-3 grid min-w-0 gap-2',
+                'mt-3 grid min-w-0 gap-2.5',
                 compact
                   ? 'grid-cols-2'
                   : 'grid-cols-2 sm:grid-cols-3',
@@ -343,7 +348,7 @@ function ReputationLevelBadge({
   return (
     <span
       className={[
-        'inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold',
+        'inline-flex shrink-0 items-center rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.11em]',
         LEVEL_STYLES[level],
       ].join(' ')}
     >
@@ -369,38 +374,38 @@ function RankingStatus({
   return (
     <div
       className={[
-        'min-w-0 rounded-2xl border px-4 py-3',
+        'min-w-0 rounded-[1.4rem] px-4 py-4 ring-1',
         hasPublishedRanking
-          ? 'border-cyan-500/20 bg-cyan-500/[0.06]'
-          : 'border-neutral-800 bg-black/30',
+          ? 'bg-cyan-300/[0.055] ring-cyan-300/12'
+          : 'bg-black/25 ring-white/[0.055]',
         className,
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
-        Public standing
+      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
+        Standing
       </p>
 
       <p
         className={[
-          'mt-1 break-words text-sm font-semibold leading-5',
+          'mt-2 break-words font-black leading-5 tracking-tight',
           hasPublishedRanking
-            ? 'text-cyan-300'
+            ? 'text-lg text-cyan-200'
             : level ===
                 'unranked'
-              ? 'text-neutral-400'
-              : 'text-neutral-300',
+              ? 'text-sm text-zinc-500'
+              : 'text-sm text-zinc-300',
         ].join(' ')}
       >
         {rankingSummary ??
           qualificationMessage}
       </p>
 
-      <p className="mt-1 text-[11px] leading-5 text-neutral-600">
+      <p className="mt-2 text-[11px] leading-5 text-zinc-600">
         {hasPublishedRanking
-          ? 'Published against a sufficiently large eligible creator population.'
-          : 'Ranking claims remain private until both evidence and population requirements are satisfied.'}
+          ? 'Published once enough comparable creators exist for the result to mean something.'
+          : 'A public comparison appears only when both the activity and comparison population are strong enough.'}
       </p>
     </div>
   )
@@ -414,14 +419,14 @@ function EvidenceMetric({
   value: number
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-neutral-800 bg-black/25 px-3 py-2.5">
-      <p className="truncate text-sm font-semibold text-white">
+    <div className="min-w-0 rounded-[1.15rem] bg-black/20 px-3 py-3 ring-1 ring-white/[0.05]">
+      <p className="truncate text-lg font-black leading-none tracking-[-0.03em] text-white">
         {value.toLocaleString(
           'en-US'
         )}
       </p>
 
-      <p className="mt-1 text-[10px] leading-4 text-neutral-500">
+      <p className="mt-2 text-[10px] font-medium leading-4 text-zinc-600">
         {label}
       </p>
     </div>

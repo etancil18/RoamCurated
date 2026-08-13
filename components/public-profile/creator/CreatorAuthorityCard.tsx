@@ -199,7 +199,7 @@ export default function CreatorAuthorityCard({
           : undefined
       }
       className={[
-        'relative w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/70 p-4 text-white shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-5',
+        'relative w-full min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-cyan-300/[0.025] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.22)] ring-1 ring-white/[0.07] sm:p-6',
         className,
       ]
         .filter(Boolean)
@@ -209,7 +209,7 @@ export default function CreatorAuthorityCard({
 
       <div className="relative z-10 min-w-0">
         {hasReputation ? (
-          <div className="mb-5 min-w-0">
+          <div className="mb-6 min-w-0">
             <CreatorReputationIdentity
               reputation={
                 reputation
@@ -231,7 +231,7 @@ export default function CreatorAuthorityCard({
                 summary={summary}
               />
             ) : summary ? (
-              <p className="break-words text-sm leading-6 text-neutral-400">
+              <p className="break-words text-sm leading-6 text-zinc-500">
                 {summary}
               </p>
             ) : null}
@@ -244,7 +244,7 @@ export default function CreatorAuthorityCard({
                 className={
                   showHeading ||
                   summary
-                    ? 'mt-5'
+                    ? 'mt-6'
                     : ''
                 }
               />
@@ -257,7 +257,7 @@ export default function CreatorAuthorityCard({
                   hasPrimaryCity ||
                   showHeading ||
                   summary
-                    ? 'mt-4'
+                    ? 'mt-5'
                     : ''
                 }
               />
@@ -274,7 +274,7 @@ export default function CreatorAuthorityCard({
                   hasMetricContent ||
                   showHeading ||
                   summary
-                    ? 'mt-5'
+                    ? 'mt-6'
                     : ''
                 }
               />
@@ -298,11 +298,11 @@ function AuthorityCardBackground() {
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.06] via-transparent to-indigo-500/[0.05]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(103,232,249,0.06),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.05),_transparent_36%)]" />
 
-      <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-500/[0.07] blur-3xl" />
+      <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-300/[0.06] blur-[100px]" />
 
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
     </div>
   )
 }
@@ -326,46 +326,46 @@ function AuthorityHeading({
     <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-cyan-300/[0.08] text-cyan-200 ring-1 ring-cyan-300/15">
             <BadgeCheck
               aria-hidden="true"
               className="h-4 w-4"
             />
           </span>
 
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-400">
-            Local footprint
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+            Earned local knowledge
           </p>
         </div>
 
         <h2
           id={id}
-          className="mt-3 break-words text-xl font-semibold tracking-tight text-white"
+          className="mt-3 break-words text-2xl font-black tracking-[-0.035em] text-white"
         >
           {title}
         </h2>
 
         {description ? (
-          <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-neutral-400">
+          <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-zinc-500">
             {description}
+          </p>
+        ) : null}
+
+        {summary ? (
+          <p className="mt-3 max-w-2xl break-words text-sm font-medium leading-6 text-zinc-300">
+            {summary}
           </p>
         ) : null}
       </div>
 
-      <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-neutral-800 bg-black/35 px-3 py-1.5 text-xs font-semibold text-neutral-400">
+      <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-white/[0.04] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500 ring-1 ring-white/[0.06]">
         <Compass
           aria-hidden="true"
-          className="h-3.5 w-3.5 text-cyan-400"
+          className="h-3.5 w-3.5 text-cyan-300"
         />
 
         Roam verified
       </span>
-
-      {summary ? (
-        <p className="sr-only">
-          {summary}
-        </p>
-      ) : null}
     </div>
   )
 }
@@ -391,13 +391,13 @@ function PrimaryCityCard({
   return (
     <div
       className={[
-        'flex min-w-0 items-start gap-3 rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] p-4',
+        'flex min-w-0 items-start gap-3 rounded-[1.5rem] bg-cyan-300/[0.055] p-4 ring-1 ring-cyan-300/12',
         className,
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-300/[0.08] text-cyan-200 ring-1 ring-cyan-300/15">
         <MapPin
           aria-hidden="true"
           className="h-5 w-5"
@@ -405,17 +405,16 @@ function PrimaryCityCard({
       </span>
 
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-400">
-          Primary city
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300">
+          Home base
         </p>
 
-        <p className="mt-1 break-words text-base font-semibold text-white">
+        <p className="mt-1 break-words text-lg font-black tracking-tight text-white">
           {normalizedCity}
         </p>
 
-        <p className="mt-1 text-xs leading-5 text-neutral-500">
-          The location this creator identifies as their primary
-          Roam market.
+        <p className="mt-1 text-xs leading-5 text-zinc-600">
+          The city most closely associated with this creator’s public Roam activity.
         </p>
       </div>
     </div>
@@ -463,7 +462,7 @@ function AuthorityMetricCard({
   metric: AuthorityMetric
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-neutral-800 bg-black/30 p-3 sm:p-4">
+    <div className="min-w-0 rounded-[1.5rem] bg-black/25 p-4 ring-1 ring-white/[0.055]">
       <div className="flex items-start justify-between gap-2">
         <AuthorityMetricIcon
           metricKey={metric.key}
@@ -472,23 +471,23 @@ function AuthorityMetricCard({
         <span
           aria-hidden="true"
           className={[
-            'mt-1 h-2 w-2 shrink-0 rounded-full',
+            'mt-1 h-1.5 w-1.5 shrink-0 rounded-full',
             metric.value > 0
-              ? 'bg-emerald-400'
-              : 'bg-neutral-700',
+              ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.55)]'
+              : 'bg-zinc-700',
           ].join(' ')}
         />
       </div>
 
-      <dd className="mt-4 break-words text-2xl font-semibold tracking-tight text-white">
+      <dd className="mt-5 break-words text-[2rem] font-black leading-none tracking-[-0.045em] text-white">
         {formatCount(metric.value)}
       </dd>
 
-      <dt className="mt-1 break-words text-xs font-semibold leading-5 text-neutral-300">
+      <dt className="mt-2 break-words text-xs font-black uppercase leading-5 tracking-[0.08em] text-zinc-400">
         {metric.shortLabel}
       </dt>
 
-      <p className="mt-2 text-[11px] leading-5 text-neutral-600">
+      <p className="mt-2 text-[11px] leading-5 text-zinc-600">
         {metric.description}
       </p>
     </div>
@@ -501,7 +500,7 @@ function AuthorityMetricIcon({
   metricKey: AuthorityMetric['key']
 }) {
   const wrapperClassName =
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-400'
+    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-zinc-400 ring-1 ring-white/[0.06]'
 
   switch (metricKey) {
     case 'verifiedVisitCount':
@@ -577,14 +576,14 @@ function ExtendedAuthorityDetails({
   return (
     <div
       className={[
-        'min-w-0 border-t border-neutral-800/80 pt-5',
+        'min-w-0 border-t border-white/[0.055] pt-5',
         className,
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
-        Additional footprint
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
+        Wider footprint
       </p>
 
       {hasGeography ? (
@@ -594,7 +593,7 @@ function ExtendedAuthorityDetails({
               icon={
                 <MapPin className="h-4 w-4" />
               }
-              label="Cities represented"
+              label="Cities explored"
               value={details.cityCount}
               description="Distinct cities supported by recorded Roam activity."
             />
@@ -605,7 +604,7 @@ function ExtendedAuthorityDetails({
               icon={
                 <Building2 className="h-4 w-4" />
               }
-              label="Neighborhoods represented"
+              label="Neighborhoods explored"
               value={
                 details.neighborhoodCount
               }
@@ -619,17 +618,17 @@ function ExtendedAuthorityDetails({
         <div
           className={
             hasGeography
-              ? 'mt-4'
+              ? 'mt-5'
               : 'mt-3'
           }
         >
-          <p className="text-xs font-medium text-neutral-400">
-            Most represented categories
+          <p className="text-xs font-bold text-zinc-400">
+            Categories they keep showing up in
           </p>
 
           <ul
             aria-label="Most represented activity categories"
-            className="mt-2 flex min-w-0 flex-wrap gap-2"
+            className="mt-2.5 flex min-w-0 flex-wrap gap-2"
           >
             {details.topCategories.map(
               (category) => (
@@ -637,7 +636,7 @@ function ExtendedAuthorityDetails({
                   key={category.toLocaleLowerCase()}
                   className="max-w-full"
                 >
-                  <span className="inline-flex max-w-full rounded-full border border-neutral-800 bg-black/30 px-3 py-1.5 text-xs font-medium text-neutral-300">
+                  <span className="inline-flex max-w-full rounded-full bg-white/[0.035] px-3 py-1.5 text-xs font-semibold text-zinc-400 ring-1 ring-white/[0.06]">
                     <span className="break-words">
                       {category}
                     </span>
@@ -664,24 +663,24 @@ function ExtendedMetric({
   description: string
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-3 rounded-2xl border border-neutral-800 bg-black/25 p-3">
+    <div className="flex min-w-0 items-start gap-3 rounded-[1.5rem] bg-black/20 p-4 ring-1 ring-white/[0.05]">
       <span
         aria-hidden="true"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-400"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-zinc-400 ring-1 ring-white/[0.06]"
       >
         {icon}
       </span>
 
       <div className="min-w-0">
-        <dt className="text-xs font-medium text-neutral-400">
+        <dt className="text-xs font-bold text-zinc-400">
           {label}
         </dt>
 
-        <dd className="mt-1 text-lg font-semibold text-white">
+        <dd className="mt-1 text-xl font-black tracking-tight text-white">
           {formatCount(value)}
         </dd>
 
-        <p className="mt-1 text-[11px] leading-5 text-neutral-600">
+        <p className="mt-1 text-[11px] leading-5 text-zinc-600">
           {description}
         </p>
       </div>
@@ -695,17 +694,14 @@ function ExtendedMetric({
 
 function AuthorityDisclosure() {
   return (
-    <div className="mt-5 flex min-w-0 items-start gap-2 border-t border-neutral-800/70 pt-4">
+    <div className="mt-6 flex min-w-0 items-start gap-2 border-t border-white/[0.05] pt-4">
       <BadgeCheck
         aria-hidden="true"
-        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-600"
+        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-700"
       />
 
-      <p className="text-[11px] leading-5 text-neutral-600">
-        These figures reflect recorded Roam activity. Reputation
-        interprets that evidence into earned public standing; the
-        underlying activity counts remain separately visible and
-        verifiable.
+      <p className="text-[11px] leading-5 text-zinc-600">
+        These figures come from recorded Roam activity. Reputation turns that evidence into public standing; the underlying activity remains visible on its own.
       </p>
     </div>
   )

@@ -155,19 +155,19 @@ const LEVEL_RANK = {
 
 const LEVEL_STYLES = {
   unranked:
-    'border-neutral-700 bg-neutral-900 text-neutral-400',
+    'bg-white/[0.035] text-zinc-500 ring-1 ring-white/[0.06]',
 
   emerging:
-    'border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
+    'bg-cyan-300/[0.09] text-cyan-200 ring-1 ring-cyan-300/15',
 
   established:
-    'border-indigo-500/30 bg-indigo-500/10 text-indigo-200',
+    'bg-indigo-400/[0.09] text-indigo-200 ring-1 ring-indigo-300/15',
 
   expert:
-    'border-violet-500/30 bg-violet-500/10 text-violet-200',
+    'bg-violet-400/[0.1] text-violet-200 ring-1 ring-violet-300/15',
 
   elite:
-    'border-amber-400/30 bg-amber-400/10 text-amber-200',
+    'bg-amber-300/[0.1] text-amber-200 ring-1 ring-amber-300/15',
 } as const satisfies Record<
   ReputationLevel,
   string
@@ -243,7 +243,7 @@ export default function MyReputationDashboard({
     <section
       aria-labelledby="my-reputation-dashboard-title"
       className={[
-        'w-full min-w-0 space-y-7',
+        'w-full min-w-0 space-y-9',
         className,
       ]
         .filter(Boolean)
@@ -301,15 +301,15 @@ export default function MyReputationDashboard({
           className="w-full min-w-0"
         >
           <SectionHeading
-            eyebrow="Public identity"
-            title="Earned category statuses"
-            description="These are category-and-scope-specific statuses that may appear on your public creator profile. Their evidence counts are not your creator-wide totals."
+            eyebrow="What people can see"
+            title="Your earned reputations"
+            description="These are the category-and-location reputations that can become part of your public creator identity."
             id="my-public-reputation-title"
           />
 
           <PublicStatusExplanation />
 
-          <div className="mt-4 grid min-w-0 gap-4 md:grid-cols-2">
+          <div className="mt-5 grid min-w-0 gap-4 md:grid-cols-2">
             {publicCategories.map(
               (category) => (
                 <PublicReputationCategoryCard
@@ -328,15 +328,15 @@ export default function MyReputationDashboard({
           className="w-full min-w-0"
         >
           <SectionHeading
-            eyebrow="Private diagnostics"
-            title="Full reputation breakdown"
-            description="Owner-only category evidence, scores, eligibility populations, policy versions, and calculation timestamps. These diagnostic rows are not all public claims."
+            eyebrow="Behind the scenes"
+            title="How your reputation is being calculated"
+            description="Owner-only evidence, ranking populations, policy versions, and calculation timestamps. These details help you understand the system without turning every internal metric into a public claim."
             id="my-reputation-details-title"
           />
 
           <OwnerDetailDisclosure />
 
-          <div className="mt-4 space-y-4">
+          <div className="mt-5 space-y-4">
             {normalizedDetails.map(
               (detail) => (
                 <OwnerReputationDetailCard
@@ -370,41 +370,40 @@ function DashboardContextHeader({
     'unranked'
 
   return (
-    <header className="relative overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-cyan-950/20 p-5 sm:p-6">
+    <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.055] via-white/[0.025] to-cyan-300/[0.025] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.24)] ring-1 ring-white/[0.07] sm:p-6">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
       >
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
 
-        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-cyan-500/[0.06] blur-3xl" />
+        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-cyan-300/[0.055] blur-[100px]" />
+
+        <div className="absolute -bottom-28 -left-24 h-64 w-64 rounded-full bg-indigo-400/[0.04] blur-[110px]" />
       </div>
 
       <div className="relative z-10 flex min-w-0 flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
-            Reputation control center
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-cyan-300/60" />
 
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl">
-            Your earned identity and
-            qualification progress
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+              Your reputation
+            </p>
+          </div>
+
+          <h2 className="mt-3 max-w-3xl text-2xl font-black tracking-[-0.035em] text-white sm:text-[1.85rem]">
+            What your real-world activity says about your taste
           </h2>
 
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-400">
-            Status is earned from
-            verified, category-specific
-            activity. Ranking is a
-            separate claim that appears
-            only when both your evidence
-            and the comparison population
-            are large enough.
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">
+            Reputation is earned from verified activity in specific categories and places. Rankings come later, only when there is enough evidence and a meaningful group to compare against.
           </p>
         </div>
 
         <span
           className={[
-            'inline-flex w-fit shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-semibold',
+            'inline-flex w-fit shrink-0 items-center rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em]',
             LEVEL_STYLES[
               highestLevel
             ],
@@ -418,9 +417,9 @@ function DashboardContextHeader({
         </span>
       </div>
 
-      <div className="relative z-10 mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
+      <div className="relative z-10 mt-6 grid min-w-0 gap-3 sm:grid-cols-3">
         <DashboardContextMetric
-          label="Public statuses"
+          label="Earned reputations"
           value={
             publicCategoryCount.toLocaleString(
               'en-US'
@@ -428,19 +427,19 @@ function DashboardContextHeader({
           }
           description={
             hasPublicReputation
-              ? 'Earned category statuses available for public identity.'
+              ? 'Category statuses currently available for your public identity.'
               : 'No earned public category status yet.'
           }
         />
 
         <DashboardContextMetric
-          label="Ranking eligible"
+          label="Status-qualified"
           value={
             summary.eligibleCategoryCount.toLocaleString(
               'en-US'
             )
           }
-          description="Scoped rows that have earned status. Publication still depends on population size."
+          description="Scoped reputation rows that have moved beyond Building."
         />
 
         <DashboardContextMetric
@@ -450,7 +449,7 @@ function DashboardContextHeader({
               'en-US'
             )
           }
-          description="Exact ranking positions currently present in owner data."
+          description="Exact ranking positions currently available in your owner data."
         />
       </div>
     </header>
@@ -467,16 +466,16 @@ function DashboardContextMetric({
   description: string
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-neutral-800 bg-black/30 px-4 py-3">
-      <p className="text-xl font-semibold text-white">
+    <div className="min-w-0 rounded-[1.45rem] bg-black/25 px-4 py-4 ring-1 ring-white/[0.055]">
+      <p className="text-2xl font-black leading-none tracking-[-0.04em] text-white">
         {value}
       </p>
 
-      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+      <p className="mt-3 text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">
         {label}
       </p>
 
-      <p className="mt-2 text-[10px] leading-4 text-neutral-600">
+      <p className="mt-1.5 text-[10px] leading-4 text-zinc-600">
         {description}
       </p>
     </div>
@@ -485,23 +484,23 @@ function DashboardContextMetric({
 
 function PublicStatusExplanation() {
   return (
-    <div className="mt-4 grid min-w-0 gap-3 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.04] p-4 sm:grid-cols-3">
+    <div className="mt-5 grid min-w-0 gap-3 rounded-[1.6rem] bg-cyan-300/[0.04] p-4 ring-1 ring-cyan-300/10 sm:grid-cols-3">
       <StatusStage
         step="1"
-        label="Status"
-        description="Earned after the category’s minimum verified evidence is satisfied."
+        label="Earn status"
+        description="Build enough verified category evidence to move beyond Building."
       />
 
       <StatusStage
         step="2"
-        label="Eligibility"
-        description="Reached after the stricter leaderboard evidence requirement is satisfied."
+        label="Become rankable"
+        description="Reach the stronger evidence threshold required for leaderboard comparison."
       />
 
       <StatusStage
         step="3"
-        label="Published rank"
-        description="Displayed only after enough eligible creators exist for a defensible comparison."
+        label="Publish standing"
+        description="A rank appears only when enough eligible creators exist for the comparison to mean something."
       />
     </div>
   )
@@ -518,16 +517,16 @@ function StatusStage({
 }) {
   return (
     <div className="flex min-w-0 items-start gap-3">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-cyan-500/20 bg-cyan-500/10 text-[10px] font-bold text-cyan-300">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-300/[0.08] text-[10px] font-black text-cyan-200 ring-1 ring-cyan-300/15">
         {step}
       </span>
 
       <div className="min-w-0">
-        <p className="text-xs font-semibold text-white">
+        <p className="text-xs font-black text-white">
           {label}
         </p>
 
-        <p className="mt-1 text-[10px] leading-4 text-neutral-600">
+        <p className="mt-1 text-[10px] leading-4 text-zinc-600">
           {description}
         </p>
       </div>
@@ -537,20 +536,13 @@ function StatusStage({
 
 function OwnerDetailDisclosure() {
   return (
-    <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-950/70 px-4 py-3">
-      <p className="text-xs font-medium text-neutral-300">
-        Why several rows can represent
-        the same activity
+    <div className="mt-5 rounded-[1.5rem] bg-white/[0.025] px-4 py-3.5 ring-1 ring-white/[0.055]">
+      <p className="text-xs font-bold text-zinc-300">
+        Why the same activity can appear in more than one row
       </p>
 
-      <p className="mt-1 text-[11px] leading-5 text-neutral-600">
-        One verified venue or completed
-        Flow may support several
-        categories, and the same category
-        may have separate city and global
-        rows. Do not add these rows
-        together to calculate your total
-        footprint.
+      <p className="mt-1.5 text-[11px] leading-5 text-zinc-600">
+        One verified venue or completed Flow can support multiple categories, and a category can have separate city and global reputations. These rows overlap, so they should never be added together as your total footprint.
       </p>
     </div>
   )
@@ -623,41 +615,44 @@ function PublicReputationCategoryCard({
   return (
     <article
       aria-label={`${category.categoryLabel} reputation`}
-      className="relative w-full min-w-0 overflow-hidden rounded-[1.5rem] border border-neutral-800 bg-gradient-to-br from-cyan-500/[0.06] via-neutral-950 to-black p-5"
+      className="relative w-full min-w-0 overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-cyan-300/[0.05] via-white/[0.025] to-transparent p-5 shadow-[0_20px_60px_rgba(0,0,0,0.18)] ring-1 ring-white/[0.065]"
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent"
-      />
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
+
+        <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-cyan-300/[0.04] blur-[80px]" />
+      </div>
 
       <div className="relative z-10">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400">
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-300">
                 {scopeLabel}
               </p>
 
-              <span className="rounded-full border border-neutral-800 bg-black/30 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-neutral-500">
+              <span className="rounded-full bg-white/[0.035] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] text-zinc-600 ring-1 ring-white/[0.055]">
                 {category.scope}
               </span>
             </div>
 
-            <h3 className="mt-2 break-words text-lg font-semibold tracking-tight text-white">
+            <h3 className="mt-3 break-words text-xl font-black tracking-[-0.03em] text-white">
               {
                 category.categoryLabel
               }
             </h3>
 
-            <p className="mt-1 text-xs leading-5 text-neutral-500">
-              Category-specific earned
-              reputation
+            <p className="mt-1 text-xs leading-5 text-zinc-600">
+              Reputation earned within this exact category and scope.
             </p>
           </div>
 
           <span
             className={[
-              'inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold',
+              'inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em]',
               LEVEL_STYLES[
                 category.reputationLevel
               ],
@@ -671,43 +666,42 @@ function PublicReputationCategoryCard({
           </span>
         </div>
 
-        <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-2">
-          <div className="min-w-0 rounded-2xl border border-neutral-800 bg-black/30 px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
-              Category score
+        <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-2">
+          <div className="min-w-0 rounded-[1.4rem] bg-black/25 px-4 py-4 ring-1 ring-white/[0.055]">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
+              Reputation score
             </p>
 
-            <p className="mt-1 truncate text-2xl font-semibold text-white">
+            <p className="mt-2 truncate text-[2rem] font-black leading-none tracking-[-0.045em] text-white">
               {formatNumber(
                 category.reputationScore,
                 1
               )}
             </p>
 
-            <p className="mt-1 text-[10px] leading-4 text-neutral-600">
-              Applies only to this
-              category and scope.
+            <p className="mt-2 text-[10px] leading-4 text-zinc-600">
+              Strength of the evidence in this exact reputation.
             </p>
           </div>
 
           <div
             className={[
-              'min-w-0 rounded-2xl border px-4 py-3',
+              'min-w-0 rounded-[1.4rem] px-4 py-4 ring-1',
               rankingState.published
-                ? 'border-cyan-500/20 bg-cyan-500/[0.05]'
-                : 'border-neutral-800 bg-black/30',
+                ? 'bg-cyan-300/[0.055] ring-cyan-300/12'
+                : 'bg-black/25 ring-white/[0.055]',
             ].join(' ')}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
               Public standing
             </p>
 
             <p
               className={[
-                'mt-1 break-words text-sm font-semibold leading-5',
+                'mt-2 break-words font-black leading-5 tracking-tight',
                 rankingState.published
-                  ? 'text-cyan-300'
-                  : 'text-neutral-300',
+                  ? 'text-base text-cyan-200'
+                  : 'text-sm text-zinc-400',
               ].join(' ')}
             >
               {
@@ -715,7 +709,7 @@ function PublicReputationCategoryCard({
               }
             </p>
 
-            <p className="mt-1 text-[10px] leading-4 text-neutral-600">
+            <p className="mt-1.5 text-[10px] leading-4 text-zinc-600">
               {
                 rankingState.description
               }
@@ -724,15 +718,14 @@ function PublicReputationCategoryCard({
         </div>
 
         {evidence.length > 0 ? (
-          <div className="mt-4 border-t border-neutral-800/80 pt-4">
+          <div className="mt-5 border-t border-white/[0.055] pt-4">
             <div className="flex min-w-0 flex-wrap items-end justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
-                Scoped supporting
-                evidence
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
+                Why you earned it
               </p>
 
-              <p className="text-[9px] text-neutral-600">
-                Not creator-wide totals
+              <p className="text-[9px] text-zinc-700">
+                Scoped evidence only
               </p>
             </div>
 
@@ -741,15 +734,15 @@ function PublicReputationCategoryCard({
                 (metric) => (
                   <div
                     key={metric.label}
-                    className="min-w-0 rounded-xl border border-neutral-800 bg-black/25 px-3 py-2.5"
+                    className="min-w-0 rounded-[1.05rem] bg-black/20 px-3 py-3 ring-1 ring-white/[0.05]"
                   >
-                    <p className="truncate text-sm font-semibold text-white">
+                    <p className="truncate text-base font-black leading-none tracking-[-0.02em] text-white">
                       {metric.value.toLocaleString(
                         'en-US'
                       )}
                     </p>
 
-                    <p className="mt-1 truncate text-[10px] leading-4 text-neutral-500">
+                    <p className="mt-2 truncate text-[9px] font-medium leading-4 text-zinc-600">
                       {metric.label}
                     </p>
                   </div>
@@ -896,34 +889,36 @@ function DashboardSummaryGrid({
     >
       <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-500">
-            Owner summary
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-white/15" />
 
-          <p className="mt-1 text-xs leading-5 text-neutral-600">
-            Summary values avoid adding
-            overlapping category and
-            geographic rows together.
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
+              Your evidence
+            </p>
+          </div>
+
+          <p className="mt-2 max-w-2xl text-xs leading-5 text-zinc-600">
+            These summary values avoid double-counting overlapping category and geographic rows.
           </p>
         </div>
       </div>
 
-      <dl className="mt-3 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <dl className="mt-4 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {metrics.map(
           (metric) => (
             <div
               key={metric.label}
-              className="min-w-0 rounded-2xl border border-neutral-800 bg-neutral-950/80 px-4 py-3"
+              className="min-w-0 rounded-[1.35rem] bg-white/[0.025] px-4 py-4 ring-1 ring-white/[0.05]"
             >
-              <dd className="truncate text-lg font-semibold text-white">
+              <dd className="truncate text-xl font-black leading-none tracking-[-0.035em] text-white">
                 {metric.value}
               </dd>
 
-              <dt className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
+              <dt className="mt-3 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">
                 {metric.label}
               </dt>
 
-              <p className="mt-2 text-[9px] leading-4 text-neutral-600">
+              <p className="mt-1.5 text-[9px] leading-4 text-zinc-700">
                 {metric.detail}
               </p>
             </div>
@@ -1002,11 +997,11 @@ function OwnerReputationDetailCard({
   ]
 
   return (
-    <article className="w-full min-w-0 overflow-hidden rounded-[1.5rem] border border-neutral-800 bg-neutral-950/80">
-      <div className="flex min-w-0 flex-col gap-4 border-b border-neutral-800/80 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+    <article className="w-full min-w-0 overflow-hidden rounded-[1.75rem] bg-white/[0.025] ring-1 ring-white/[0.06]">
+      <div className="flex min-w-0 flex-col gap-4 border-b border-white/[0.055] p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-400">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-300">
               {detail.scope ===
               'city'
                 ? detail.cityLabel ??
@@ -1015,24 +1010,24 @@ function OwnerReputationDetailCard({
                 : 'Global'}
             </p>
 
-            <span className="rounded-full border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
+            <span className="rounded-full bg-white/[0.035] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-zinc-600 ring-1 ring-white/[0.055]">
               {detail.scope}
             </span>
 
-            <span className="rounded-full border border-neutral-800 bg-black/30 px-2 py-0.5 text-[9px] font-medium text-neutral-600">
+            <span className="rounded-full bg-black/20 px-2 py-0.5 text-[9px] font-medium text-zinc-700 ring-1 ring-white/[0.045]">
               Owner only
             </span>
           </div>
 
-          <h3 className="mt-2 break-words text-lg font-semibold text-white">
+          <h3 className="mt-3 break-words text-lg font-black tracking-[-0.025em] text-white">
             {
               detail.categoryLabel
             }
           </h3>
 
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-[10px] text-zinc-700">
             Category ID:{' '}
-            <span className="font-mono text-neutral-400">
+            <span className="font-mono text-zinc-600">
               {
                 detail.categoryId
               }
@@ -1041,7 +1036,7 @@ function OwnerReputationDetailCard({
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <span className="rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
+          <span className="rounded-full bg-cyan-300/[0.07] px-3 py-1.5 text-[10px] font-black text-cyan-200 ring-1 ring-cyan-300/12">
             {formatNumber(
               detail.reputationScore,
               1
@@ -1051,7 +1046,7 @@ function OwnerReputationDetailCard({
 
           <span
             className={[
-              'rounded-full border px-3 py-1.5 text-xs font-semibold',
+              'rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em]',
               LEVEL_STYLES[
                 detail.reputationLevel
               ],
@@ -1069,13 +1064,12 @@ function OwnerReputationDetailCard({
       <div className="grid min-w-0 gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-end justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
-              Scoped evidence
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
+              Evidence in this row
             </p>
 
-            <p className="text-[9px] text-neutral-600">
-              Category and scope
-              specific
+            <p className="text-[9px] text-zinc-700">
+              Category + scope specific
             </p>
           </div>
 
@@ -1084,15 +1078,15 @@ function OwnerReputationDetailCard({
               (metric) => (
                 <div
                   key={metric.label}
-                  className="min-w-0 rounded-xl border border-neutral-800 bg-black/25 px-3 py-2.5"
+                  className="min-w-0 rounded-[1.05rem] bg-black/20 px-3 py-3 ring-1 ring-white/[0.05]"
                 >
-                  <p className="truncate text-sm font-semibold text-white">
+                  <p className="truncate text-base font-black leading-none tracking-[-0.02em] text-white">
                     {metric.value.toLocaleString(
                       'en-US'
                     )}
                   </p>
 
-                  <p className="mt-1 truncate text-[10px] text-neutral-500">
+                  <p className="mt-2 truncate text-[9px] text-zinc-600">
                     {metric.label}
                   </p>
                 </div>
@@ -1103,34 +1097,34 @@ function OwnerReputationDetailCard({
 
         <div
           className={[
-            'min-w-0 rounded-2xl border p-4',
+            'min-w-0 rounded-[1.4rem] p-4 ring-1',
             rankingState.published
-              ? 'border-cyan-500/20 bg-cyan-500/[0.04]'
-              : 'border-neutral-800 bg-black/25',
+              ? 'bg-cyan-300/[0.045] ring-cyan-300/10'
+              : 'bg-black/20 ring-white/[0.05]',
           ].join(' ')}
         >
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
             Ranking state
           </p>
 
           <p
             className={[
-              'mt-2 break-words text-sm font-semibold leading-5',
+              'mt-2 break-words font-black leading-5 tracking-tight',
               rankingState.published
-                ? 'text-cyan-300'
-                : 'text-neutral-300',
+                ? 'text-sm text-cyan-200'
+                : 'text-sm text-zinc-400',
             ].join(' ')}
           >
             {rankingState.label}
           </p>
 
-          <p className="mt-1 text-[10px] leading-4 text-neutral-600">
+          <p className="mt-1.5 text-[10px] leading-4 text-zinc-600">
             {
               rankingState.description
             }
           </p>
 
-          <dl className="mt-4 space-y-2 border-t border-neutral-800/80 pt-4">
+          <dl className="mt-4 space-y-2.5 border-t border-white/[0.055] pt-4">
             <DetailRow
               label="Exact rank"
               value={
@@ -1183,10 +1177,10 @@ function OwnerReputationDetailCard({
         </div>
       </div>
 
-      <div className="grid min-w-0 gap-3 border-t border-neutral-800/80 px-4 py-3 text-[11px] text-neutral-600 sm:grid-cols-2 sm:px-5">
+      <div className="grid min-w-0 gap-3 border-t border-white/[0.055] px-4 py-3 text-[10px] text-zinc-700 sm:grid-cols-2 sm:px-5">
         <p>
           Score calculated:{' '}
-          <span className="text-neutral-500">
+          <span className="text-zinc-600">
             {formatTimestamp(
               detail.calculatedAt
             )}
@@ -1195,7 +1189,7 @@ function OwnerReputationDetailCard({
 
         <p>
           Population calculated:{' '}
-          <span className="text-neutral-500">
+          <span className="text-zinc-600">
             {formatTimestamp(
               detail.rankingCalculatedAt
             )}
@@ -1215,11 +1209,11 @@ function DetailRow({
 }) {
   return (
     <div className="flex min-w-0 items-center justify-between gap-3">
-      <dt className="text-xs text-neutral-600">
+      <dt className="text-[10px] text-zinc-700">
         {label}
       </dt>
 
-      <dd className="truncate text-xs font-medium text-neutral-300">
+      <dd className="truncate text-[10px] font-semibold text-zinc-400">
         {value}
       </dd>
     </div>
@@ -1243,7 +1237,7 @@ function EmptyReputationDashboard({
     <section
       aria-labelledby="empty-reputation-dashboard-title"
       className={[
-        'relative w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-gradient-to-br from-neutral-950 via-black to-cyan-950/20 p-5 sm:p-6',
+        'relative w-full min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-cyan-300/[0.025] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065] sm:p-6',
         className,
       ]
         .filter(Boolean)
@@ -1251,63 +1245,60 @@ function EmptyReputationDashboard({
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
-      />
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
+
+        <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-cyan-300/[0.05] blur-[100px]" />
+      </div>
 
       <div className="relative z-10">
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
-          My reputation
-        </p>
+        <div className="flex items-center gap-2">
+          <span className="h-px w-5 bg-cyan-300/60" />
+
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+            Your reputation
+          </p>
+        </div>
 
         <h2
           id="empty-reputation-dashboard-title"
-          className="mt-2 text-xl font-semibold text-white"
+          className="mt-3 text-2xl font-black tracking-[-0.035em] text-white"
         >
-          No reputation yet
+          Start becoming known for something
         </h2>
 
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
-          Build your Roam reputation by
-          recording verified venue
-          visits. Completed Flows,
-          useful public collections, and
-          public snapshots can strengthen
-          category evidence, but they do
-          not replace verified venue
-          breadth.
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
+          Verified visits are the foundation of your Roam reputation. Completed Flows, strong public collections, and snapshots can deepen the evidence, but genuine venue breadth comes first.
         </p>
 
-        <div className="mt-5 grid min-w-0 gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid min-w-0 gap-3 sm:grid-cols-3">
           <EmptyProgressStage
             number="1"
-            title="Build local expertise"
-            description="Record genuine geo-verified visits across relevant venues."
+            title="Explore for real"
+            description="Check in at qualifying venues through genuine geo-verified activity."
           />
 
           <EmptyProgressStage
             number="2"
-            title="Earn category status"
-            description="Meet the verified and weighted evidence minimum for a category."
+            title="Build a point of view"
+            description="Create enough relevant evidence to earn a reputation in a category."
           />
 
           <EmptyProgressStage
             number="3"
-            title="Enter rankings"
-            description="Meet ranking evidence requirements and wait for a defensible creator population."
+            title="Earn a standing"
+            description="Meet ranking requirements and enter a meaningful creator comparison population."
           />
         </div>
 
-        <div className="mt-4 rounded-2xl border border-neutral-800 bg-black/25 p-4">
-          <p className="text-sm font-medium text-neutral-300">
-            Your next step
+        <div className="mt-4 rounded-[1.5rem] bg-black/20 p-4 ring-1 ring-white/[0.05]">
+          <p className="text-sm font-black text-white">
+            Your next move
           </p>
 
-          <p className="mt-1 text-xs leading-5 text-neutral-500">
-            Complete a verified visit at
-            a qualifying venue. Progress
-            will appear here after the
-            reputation snapshot is
-            rebuilt.
+          <p className="mt-1.5 text-xs leading-5 text-zinc-600">
+            Complete a verified visit at a qualifying venue. Your progress will appear here after the reputation snapshot is rebuilt.
           </p>
         </div>
 
@@ -1341,17 +1332,17 @@ function EmptyProgressStage({
   description: string
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-3 rounded-2xl border border-neutral-800 bg-black/25 p-4">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-cyan-500/20 bg-cyan-500/10 text-xs font-bold text-cyan-300">
+    <div className="flex min-w-0 items-start gap-3 rounded-[1.5rem] bg-black/20 p-4 ring-1 ring-white/[0.05]">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-300/[0.08] text-xs font-black text-cyan-200 ring-1 ring-cyan-300/15">
         {number}
       </span>
 
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-white">
+        <p className="text-sm font-black text-white">
           {title}
         </p>
 
-        <p className="mt-1 text-[11px] leading-5 text-neutral-600">
+        <p className="mt-1 text-[11px] leading-5 text-zinc-600">
           {description}
         </p>
       </div>
@@ -1374,17 +1365,17 @@ function MyReputationDashboardSkeleton({
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="animate-pulse rounded-[1.75rem] border border-neutral-800 bg-neutral-950/80 p-5">
-        <div className="h-3 w-32 rounded bg-neutral-800" />
-        <div className="mt-3 h-7 w-64 max-w-full rounded bg-neutral-800" />
-        <div className="mt-2 h-4 w-96 max-w-full rounded bg-neutral-900" />
+      <div className="animate-pulse rounded-[2rem] bg-white/[0.025] p-5 ring-1 ring-white/[0.055]">
+        <div className="h-3 w-32 rounded bg-white/[0.07]" />
+        <div className="mt-3 h-7 w-64 max-w-full rounded bg-white/[0.07]" />
+        <div className="mt-2 h-4 w-96 max-w-full rounded bg-white/[0.035]" />
 
         <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {[0, 1, 2].map(
             (item) => (
               <div
                 key={item}
-                className="h-24 rounded-2xl border border-neutral-800 bg-black/25"
+                className="h-24 rounded-[1.4rem] bg-black/20 ring-1 ring-white/[0.05]"
               />
             )
           )}
@@ -1402,7 +1393,7 @@ function MyReputationDashboardSkeleton({
           (item) => (
             <div
               key={item}
-              className="h-24 animate-pulse rounded-2xl border border-neutral-800 bg-neutral-950/80"
+              className="h-24 animate-pulse rounded-[1.35rem] bg-white/[0.025] ring-1 ring-white/[0.05]"
             />
           )
         )}
@@ -1424,8 +1415,8 @@ function DashboardNotice({
 }) {
   const styles =
     tone === 'error'
-      ? 'border-red-900/50 bg-red-950/20 text-red-200'
-      : 'border-amber-500/20 bg-amber-500/[0.06] text-amber-200'
+      ? 'bg-red-500/[0.07] text-red-200 ring-1 ring-red-400/15'
+      : 'bg-amber-300/[0.07] text-amber-200 ring-1 ring-amber-300/15'
 
   return (
     <div
@@ -1435,11 +1426,11 @@ function DashboardNotice({
           : 'status'
       }
       className={[
-        'mt-4 rounded-2xl border px-4 py-3',
+        'mt-4 rounded-[1.4rem] px-4 py-3.5',
         styles,
       ].join(' ')}
     >
-      <p className="text-sm font-semibold">
+      <p className="text-sm font-black">
         {title}
       </p>
 
@@ -1463,18 +1454,22 @@ function SectionHeading({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-400">
-        {eyebrow}
-      </p>
+      <div className="flex items-center gap-2">
+        <span className="h-px w-5 bg-cyan-300/60" />
+
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          {eyebrow}
+        </p>
+      </div>
 
       <h2
         id={id}
-        className="mt-2 text-xl font-semibold tracking-tight text-white"
+        className="mt-3 text-2xl font-black tracking-[-0.035em] text-white"
       >
         {title}
       </h2>
 
-      <p className="mt-1 max-w-3xl text-sm leading-6 text-neutral-400">
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-500">
         {description}
       </p>
     </div>

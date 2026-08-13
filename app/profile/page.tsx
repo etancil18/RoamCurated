@@ -609,7 +609,7 @@ export default function UserProfilePage() {
           "activity",
 
         label:
-          "Activity",
+          "History",
       },
       {
         id:
@@ -635,21 +635,25 @@ export default function UserProfilePage() {
     ]
 
   return (
-    <div className="min-h-screen w-full overflow-x-clip bg-black text-white">
+    <div className="min-h-screen w-full overflow-x-clip bg-[#070809] text-white">
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute left-[-20%] top-[-8%] h-80 w-80 rounded-full bg-cyan-500/10 blur-3xl sm:left-[-12%]" />
+        <div className="absolute left-[-24%] top-[-12%] h-[28rem] w-[28rem] rounded-full bg-cyan-400/[0.08] blur-[120px] sm:left-[-10%]" />
 
-        <div className="absolute right-[-25%] top-[18%] h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl sm:right-[-15%]" />
+        <div className="absolute right-[-28%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-500/[0.09] blur-[140px] sm:right-[-12%]" />
+
+        <div className="absolute bottom-[-22%] left-[22%] h-[30rem] w-[30rem] rounded-full bg-fuchsia-500/[0.04] blur-[140px]" />
+
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.025] to-transparent" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 pb-16 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] sm:px-6">
+      <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 pb-24 pt-[calc(4rem+env(safe-area-inset-top)+1.25rem)] sm:px-6 sm:pb-28">
         <ProfileHeader
           username={
             username
           }
         />
 
-        <div className="mt-5">
+        <div className="mt-7">
           <ProfileNavigation
             items={
               navigationItems
@@ -657,20 +661,20 @@ export default function UserProfilePage() {
           />
         </div>
 
-        <div className="mt-8 space-y-12 sm:space-y-16">
+        <div className="mt-10 space-y-20 sm:mt-14 sm:space-y-24">
           <section
             id="passport"
             aria-labelledby="profile-passport-title"
-            className="scroll-mt-28"
+            className="scroll-mt-32"
           >
             <ProfileSectionHeading
               id="profile-passport-title"
-              eyebrow="Your Roam identity"
-              title="Passport and reputation"
-              description="See your activity, progress, earned category standing, and what your verified Roam footprint supports."
+              eyebrow="Your city identity"
+              title="Your Passport"
+              description="A living record of where you go, what you gravitate toward, and the local knowledge you are building over time."
             />
 
-            <div className="mt-5 w-full min-w-0 space-y-5">
+            <div className="mt-7 w-full min-w-0 space-y-6">
               <RoamPassport />
 
               {reputationLoading ? (
@@ -703,28 +707,28 @@ export default function UserProfilePage() {
           <section
             id="activity"
             aria-labelledby="profile-activity-title"
-            className="scroll-mt-28"
+            className="scroll-mt-32"
           >
             <ProfileSectionHeading
               id="profile-activity-title"
-              eyebrow="Your Roams"
-              title="Activity and memories"
-              description="Revisit the places you explored, the flows you completed, and the moments you saved."
+              eyebrow="Where you have been"
+              title="Your city history"
+              description="Places you discovered, nights you built, and moments worth remembering."
             />
 
-            <div className="mt-5 space-y-5">
+            <div className="mt-7 space-y-5">
               <ProfilePanel
-                eyebrow="Places"
-                title="Visit history"
-                description="A record of your verified venue activity."
+                eyebrow="Visited"
+                title="Places you know"
+                description="Your verified venue history, built one real-world visit at a time."
               >
                 <VisitHistorySection />
               </ProfilePanel>
 
               <ProfileDisclosure
-                eyebrow="Moments"
+                eyebrow="Memories"
                 title="Flow snapshots"
-                description="Photos and highlights saved from completed Roams."
+                description="The routes, places, and moments you decided were worth keeping."
                 defaultOpen={
                   snapshots.length >
                   0
@@ -749,8 +753,8 @@ export default function UserProfilePage() {
 
               <ProfileDisclosure
                 eyebrow="Flows"
-                title="Hosted, upcoming, and past"
-                description="Manage the Roams you created, joined, or completed."
+                title="Your nights and routes"
+                description="Revisit the Flows you created, joined, hosted, or completed."
               >
                 <UserCrawls />
               </ProfileDisclosure>
@@ -760,28 +764,28 @@ export default function UserProfilePage() {
           <section
             id="saved"
             aria-labelledby="profile-saved-title"
-            className="scroll-mt-28"
+            className="scroll-mt-32"
           >
             <ProfileSectionHeading
               id="profile-saved-title"
-              eyebrow="For later"
-              title="Saved places and guides"
-              description="Keep your favorite neighborhoods, venues, and routes easy to find."
+              eyebrow="Your city shelf"
+              title="Saved for later"
+              description="The places, routes, and guides you do not want to lose when the next plan comes together."
             />
 
-            <div className="mt-5 grid min-w-0 gap-5 lg:grid-cols-2 lg:items-start">
+            <div className="mt-7 grid min-w-0 gap-5 lg:grid-cols-2 lg:items-start">
               <ProfilePanel
                 eyebrow="Guides"
-                title="Property guides"
-                description="Neighborhood and destination guides you saved."
+                title="Places worth coming back to"
+                description="Neighborhood and destination guides you have kept close."
               >
                 <SavedProperties />
               </ProfilePanel>
 
               <ProfilePanel
                 eyebrow="Library"
-                title="Saved venues and flows"
-                description="Places and routes you may want to revisit."
+                title="Your saved picks"
+                description="Venues and Flows waiting for the right day, night, or person."
               >
                 <SavedLibraryShell />
               </ProfilePanel>
@@ -791,27 +795,27 @@ export default function UserProfilePage() {
           <section
             id="creator"
             aria-labelledby="profile-creator-title"
-            className="scroll-mt-28"
+            className="scroll-mt-32"
           >
             <ProfileSectionHeading
               id="profile-creator-title"
-              eyebrow="Creator tools"
-              title="Build your creator profile"
-              description="Share your taste, collaborations, collections, and city perspective with the people discovering you."
+              eyebrow="Your point of view"
+              title="Curate what you know"
+              description="Turn the places and experiences you genuinely understand into a public perspective people can follow."
             />
 
-            <div className="mt-5">
+            <div className="mt-7">
               <ProfilePanel
-                eyebrow="Creator Mode"
+                eyebrow="Creator"
                 title={
                   creatorModeEnabled
-                    ? "Your creator profile"
-                    : "Become a Roam creator"
+                    ? "Your perspective is live"
+                    : "Build your public point of view"
                 }
                 description={
                   creatorModeEnabled
-                    ? "Manage what people see when they visit your public creator profile."
-                    : "Turn your Passport into a polished public profile when you are ready."
+                    ? "Shape the version of your city knowledge that other people discover."
+                    : "When you are ready, turn your existing Roam activity into collections, recommendations, and a public creator identity."
                 }
               >
                 <CreatorModeEntryCard
@@ -832,20 +836,20 @@ export default function UserProfilePage() {
           <section
             id="settings"
             aria-labelledby="profile-settings-title"
-            className="scroll-mt-28"
+            className="scroll-mt-32"
           >
             <ProfileSectionHeading
               id="profile-settings-title"
-              eyebrow="Preferences"
-              title="Profile settings"
-              description="Update your identity, privacy, taste preferences, and social details."
+              eyebrow="Your account"
+              title="Make Roam yours"
+              description="Update the profile, preferences, privacy, and taste signals that shape your experience."
             />
 
-            <div className="mt-5">
+            <div className="mt-7">
               <ProfileDisclosure
-                eyebrow="Account"
-                title="Edit profile and preferences"
-                description="Open this section when you need to make changes."
+                eyebrow="Profile"
+                title="Edit your details"
+                description="Update your identity, preferences, and the information connected to your Roam account."
               >
                 <ProfileForm />
               </ProfileDisclosure>
@@ -868,54 +872,69 @@ function ProfileHeader({
     string | null
 }) {
   return (
-    <header className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-cyan-400 sm:text-xs">
-          My Roam
-        </p>
+    <header className="relative min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.075] via-white/[0.035] to-transparent px-5 py-7 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.07] sm:px-8 sm:py-9">
+      <div className="pointer-events-none absolute right-[-4rem] top-[-6rem] h-56 w-56 rounded-full bg-cyan-400/[0.09] blur-3xl" />
 
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          Your city life,
-          all together
-        </h1>
+      <div className="pointer-events-none absolute bottom-[-7rem] left-[28%] h-64 w-64 rounded-full bg-indigo-500/[0.08] blur-3xl" />
 
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
-          Track where you have been,
-          save what you love, and shape
-          what people see when they find
-          you on Roam.
-        </p>
-      </div>
+      <div className="relative z-10 flex min-w-0 flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.055] px-3 py-1.5 ring-1 ring-white/[0.07]">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.8)]" />
 
-      {username ? (
-        <Link
-          href={`/u/${username}`}
-          onClick={() =>
-            safeLogEvent(
-              "profile_public_profile_clicked",
-              {
-                username,
-              }
-            )
-          }
-          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-5 py-2.5 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:text-white sm:w-auto"
-        >
-          View public profile
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">
+              My Roam
+            </p>
+          </div>
 
-          <span
-            aria-hidden="true"
-            className="ml-2"
-          >
-            →
-          </span>
-        </Link>
-      ) : (
-        <div className="w-full rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 text-xs leading-5 text-amber-200/80 sm:max-w-xs">
-          Add a username in Settings
-          before your public profile can
-          be shared.
+          <h1 className="mt-5 max-w-3xl text-[2.35rem] font-black leading-[0.96] tracking-[-0.045em] text-white sm:text-5xl">
+            Your city,
+            according to you.
+          </h1>
+
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-[15px] sm:leading-7">
+            Every place you save, visit,
+            revisit, and recommend builds
+            a clearer picture of your taste.
+          </p>
+
+          {username ? (
+            <p className="mt-5 text-xs font-semibold text-zinc-500">
+              @{username}
+            </p>
+          ) : null}
         </div>
-      )}
+
+        {username ? (
+          <Link
+            href={`/u/${username}`}
+            onClick={() =>
+              safeLogEvent(
+                "profile_public_profile_clicked",
+                {
+                  username,
+                }
+              )
+            }
+            className="group inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-cyan-200 sm:w-auto"
+          >
+            View public profile
+
+            <span
+              aria-hidden="true"
+              className="ml-2 transition-transform group-hover:translate-x-0.5"
+            >
+              ↗
+            </span>
+          </Link>
+        ) : (
+          <div className="w-full rounded-2xl bg-amber-400/[0.07] px-4 py-3 text-xs leading-5 text-amber-100/75 ring-1 ring-amber-300/15 sm:max-w-xs">
+            Add a username in Settings
+            to make your Roam identity
+            shareable.
+          </div>
+        )}
+      </div>
     </header>
   )
 }
@@ -929,9 +948,9 @@ function ProfileNavigation({
   return (
     <nav
       aria-label="Profile sections"
-      className="sticky top-[calc(4rem+env(safe-area-inset-top)+0.5rem)] z-30 -mx-4 border-y border-neutral-800/80 bg-black/85 px-4 py-3 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border"
+      className="sticky top-[calc(4rem+env(safe-area-inset-top)+0.5rem)] z-30 -mx-4 bg-[#070809]/90 px-4 py-2.5 backdrop-blur-2xl sm:mx-0 sm:rounded-full sm:bg-black/55 sm:px-2 sm:ring-1 sm:ring-white/[0.07]"
     >
-      <div className="flex min-w-0 gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map(
           (
             item
@@ -941,7 +960,7 @@ function ProfileNavigation({
                 item.id
               }
               href={`#${item.id}`}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-xs font-semibold text-neutral-400 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full px-4 py-2 text-xs font-bold text-zinc-500 transition hover:bg-white/[0.07] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
               {item.label}
             </a>
@@ -972,18 +991,22 @@ function ProfileSectionHeading({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
-        {eyebrow}
-      </p>
+      <div className="flex items-center gap-2">
+        <span className="h-px w-5 bg-cyan-300/70" />
+
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          {eyebrow}
+        </p>
+      </div>
 
       <h2
         id={id}
-        className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+        className="mt-3 max-w-3xl text-2xl font-black tracking-[-0.03em] text-white sm:text-[2rem]"
       >
         {title}
       </h2>
 
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-[15px] sm:leading-7">
         {description}
       </p>
     </div>
@@ -1064,35 +1087,35 @@ function OwnerReputationPanel({
   return (
     <section
       aria-labelledby="category-standing-title"
-      className="relative w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800 bg-neutral-950/70 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-5"
+      className="relative w-full min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.065] via-white/[0.03] to-transparent p-5 shadow-[0_24px_80px_rgba(0,0,0,0.24)] ring-1 ring-white/[0.07] sm:p-6"
     >
-      <div className="relative z-10 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-cyan-400/[0.07] blur-3xl" />
+
+      <div className="relative z-10 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">
-            Category standing
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            Your strongest lanes
           </p>
 
           <h3
             id="category-standing-title"
-            className="mt-2 text-lg font-semibold text-white"
+            className="mt-2 text-xl font-black tracking-tight text-white"
           >
-            How you compare in your
-            strongest categories
+            What your city history
+            says you know
           </h3>
 
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500 sm:text-sm sm:leading-6">
-            Percentiles compare your
-            qualifying activity with other
-            eligible Roam creators. Smaller
-            populations remain private
-            until the comparison is
-            meaningful.
+          <p className="mt-2 max-w-2xl text-xs leading-5 text-zinc-500 sm:text-sm sm:leading-6">
+            Your standing grows from real
+            Roam activity, verified places,
+            and the categories where your
+            experience keeps showing up.
           </p>
         </div>
 
         {reputation
           ?.highestLevel ? (
-          <span className="inline-flex w-fit shrink-0 items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
+          <span className="inline-flex w-fit shrink-0 items-center rounded-full bg-cyan-300 px-3 py-1.5 text-[11px] font-black text-black">
             {formatDisplayLabel(
               reputation
                 .highestLevel
@@ -1104,7 +1127,7 @@ function OwnerReputationPanel({
       {visibleStandings.length >
       0 ? (
         <>
-          <div className="relative z-10 mt-5 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="relative z-10 mt-6 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {visibleStandings.map(
               (
                 standing
@@ -1119,25 +1142,25 @@ function OwnerReputationPanel({
                     key={
                       standing.key
                     }
-                    className="min-w-0 rounded-2xl border border-neutral-800 bg-black/25 p-4"
+                    className="min-w-0 rounded-[1.5rem] bg-black/30 p-4 ring-1 ring-white/[0.065]"
                   >
                     <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="break-words text-sm font-semibold text-white">
+                        <p className="break-words text-sm font-bold text-white">
                           {
                             standing
                               .categoryLabel
                           }
                         </p>
 
-                        <p className="mt-1 text-[11px] text-neutral-500">
+                        <p className="mt-1 text-[11px] text-zinc-600">
                           {buildStandingScopeLabel(
                             standing
                           )}
                         </p>
                       </div>
 
-                      <span className="shrink-0 rounded-full border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-[10px] font-semibold text-neutral-300">
+                      <span className="shrink-0 rounded-full bg-white/[0.06] px-2.5 py-1 text-[10px] font-bold text-zinc-400 ring-1 ring-white/[0.07]">
                         {formatDisplayLabel(
                           standing
                             .reputationLevel
@@ -1147,28 +1170,28 @@ function OwnerReputationPanel({
 
                     <div
                       className={[
-                        "mt-4 rounded-2xl border px-4 py-4",
+                        "mt-5 rounded-[1.25rem] px-4 py-4",
 
                         display.tone ===
                         "active"
-                          ? "border-cyan-500/20 bg-cyan-500/[0.07]"
-                          : "border-neutral-800 bg-neutral-950/70",
+                          ? "bg-cyan-300/[0.08] ring-1 ring-cyan-300/15"
+                          : "bg-white/[0.025] ring-1 ring-white/[0.055]",
                       ].join(
                         " "
                       )}
                     >
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
                         Your standing
                       </p>
 
                       <p
                         className={[
-                          "mt-1 break-words text-2xl font-semibold tracking-tight",
+                          "mt-1 break-words text-2xl font-black tracking-[-0.035em]",
 
                           display.tone ===
                           "active"
                             ? "text-cyan-200"
-                            : "text-neutral-300",
+                            : "text-zinc-300",
                         ].join(
                           " "
                         )}
@@ -1178,14 +1201,14 @@ function OwnerReputationPanel({
                         }
                       </p>
 
-                      <p className="mt-1 text-xs leading-5 text-neutral-500">
+                      <p className="mt-1.5 text-xs leading-5 text-zinc-500">
                         {
                           display.secondary
                         }
                       </p>
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-neutral-500">
+                    <div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-zinc-600">
                       <span>
                         {standing
                           .verifiedVenueCount
@@ -1196,8 +1219,8 @@ function OwnerReputationPanel({
                         {standing
                           .verifiedVenueCount ===
                         1
-                          ? "venue"
-                          : "venues"}
+                          ? "place"
+                          : "places"}
                       </span>
 
                       {standing.rank !==
@@ -1227,7 +1250,7 @@ function OwnerReputationPanel({
 
           {hiddenStandingCount >
           0 ? (
-            <p className="relative z-10 mt-4 text-xs leading-5 text-neutral-500">
+            <p className="relative z-10 mt-4 text-xs leading-5 text-zinc-600">
               Showing your strongest{" "}
               {visibleStandings.length.toLocaleString(
                 "en-US"
@@ -1236,31 +1259,29 @@ function OwnerReputationPanel({
               {hiddenStandingCount.toLocaleString(
                 "en-US"
               )}{" "}
-              more are still being
-              tracked.
+              more are still taking shape.
             </p>
           ) : null}
         </>
       ) : (
-        <div className="relative z-10 mt-5 rounded-2xl border border-neutral-800 bg-black/25 p-4">
-          <p className="text-sm font-semibold text-white">
-            Category comparisons are
-            still building
+        <div className="relative z-10 mt-6 rounded-[1.5rem] bg-black/30 p-4 ring-1 ring-white/[0.06]">
+          <p className="text-sm font-bold text-white">
+            Your city identity is still
+            taking shape
           </p>
 
-          <p className="mt-1 text-xs leading-5 text-neutral-500">
-            Keep visiting verified venues
+          <p className="mt-1.5 text-xs leading-5 text-zinc-500">
+            Keep exploring verified places
             and completing genuine Roam
-            activity. Percentile standings
-            appear once enough eligible
-            creators can be compared
-            fairly.
+            activity. Your strongest
+            categories will surface as your
+            history grows.
           </p>
         </div>
       )}
 
       {warning ? (
-        <p className="relative z-10 mt-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-200/80">
+        <p className="relative z-10 mt-4 rounded-xl bg-amber-400/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-100/70 ring-1 ring-amber-300/15">
           {warning}
         </p>
       ) : null}
@@ -1271,15 +1292,15 @@ function OwnerReputationPanel({
 function ReputationSkeleton() {
   return (
     <section
-      className="w-full min-w-0 rounded-[1.75rem] border border-neutral-800 bg-neutral-950/70 p-5"
+      className="w-full min-w-0 rounded-[2rem] bg-white/[0.035] p-5 ring-1 ring-white/[0.07]"
       aria-label="Loading category standings"
     >
       <div className="animate-pulse">
-        <div className="h-3 w-32 rounded bg-neutral-800" />
+        <div className="h-3 w-32 rounded bg-white/[0.08]" />
 
-        <div className="mt-3 h-6 w-72 max-w-full rounded bg-neutral-800" />
+        <div className="mt-3 h-6 w-72 max-w-full rounded bg-white/[0.08]" />
 
-        <div className="mt-2 h-4 w-96 max-w-full rounded bg-neutral-900" />
+        <div className="mt-2 h-4 w-96 max-w-full rounded bg-white/[0.045]" />
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
@@ -1294,7 +1315,7 @@ function ReputationSkeleton() {
                 key={
                   item
                 }
-                className="h-44 rounded-2xl border border-neutral-800 bg-black/25"
+                className="h-44 rounded-[1.5rem] bg-black/25 ring-1 ring-white/[0.055]"
               />
             )
           )}
@@ -1311,16 +1332,16 @@ function ReputationError({
     string
 }) {
   return (
-    <section className="w-full min-w-0 rounded-[1.75rem] border border-red-900/50 bg-red-950/20 p-5 text-white">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-red-400">
+    <section className="w-full min-w-0 rounded-[2rem] bg-red-950/15 p-5 text-white ring-1 ring-red-500/20">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-red-400">
         Category standing
       </p>
 
-      <h3 className="mt-2 text-xl font-semibold text-white">
+      <h3 className="mt-2 text-xl font-black text-white">
         Reputation unavailable
       </h3>
 
-      <p className="mt-2 break-words text-sm leading-6 text-red-300">
+      <p className="mt-2 break-words text-sm leading-6 text-red-300/80">
         {message}
       </p>
     </section>
@@ -1754,24 +1775,28 @@ function CreatorModeEntryCard({
     <div className="w-full min-w-0 space-y-4">
       <div
         className={[
-          "w-full min-w-0 rounded-2xl border p-4",
+          "relative w-full min-w-0 overflow-hidden rounded-[1.5rem] p-5 ring-1",
 
           enabled
-            ? "border-emerald-500/25 bg-emerald-500/[0.07]"
-            : "border-neutral-800 bg-black/25",
+            ? "bg-emerald-400/[0.055] ring-emerald-300/15"
+            : "bg-black/25 ring-white/[0.06]",
         ].join(
           " "
         )}
       >
-        <div className="flex min-w-0 items-start justify-between gap-3">
+        {enabled ? (
+          <div className="pointer-events-none absolute right-[-4rem] top-[-5rem] h-40 w-40 rounded-full bg-emerald-400/[0.08] blur-3xl" />
+        ) : null}
+
+        <div className="relative z-10 flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
             <div
               className={[
-                "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                "inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ring-1",
 
                 enabled
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                  : "border-neutral-700 bg-neutral-900 text-neutral-500",
+                  ? "bg-emerald-400/10 text-emerald-300 ring-emerald-300/20"
+                  : "bg-white/[0.04] text-zinc-500 ring-white/[0.07]",
               ].join(
                 " "
               )}
@@ -1782,8 +1807,8 @@ function CreatorModeEntryCard({
                   "h-2 w-2 rounded-full",
 
                   enabled
-                    ? "bg-emerald-400"
-                    : "bg-neutral-600",
+                    ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.75)]"
+                    : "bg-zinc-700",
                 ].join(
                   " "
                 )}
@@ -1794,19 +1819,19 @@ function CreatorModeEntryCard({
                 : "Not active"}
             </div>
 
-            <p className="mt-3 break-words text-base font-semibold text-white">
+            <p className="mt-4 break-words text-lg font-black tracking-tight text-white">
               {headline ??
                 (
                   enabled
-                    ? "Your creator profile is live"
-                    : "Share your city taste with more people"
+                    ? "Your point of view is out in the world"
+                    : "Turn your city knowledge into something people can follow"
                 )}
             </p>
 
-            <p className="mt-1 text-sm leading-6 text-neutral-500">
+            <p className="mt-2 text-sm leading-6 text-zinc-500">
               {enabled
-                ? "Your public profile can feature your city activity, social links, collaboration interests, collections, and reputation."
-                : "Creator Mode turns your existing Roam activity into a polished public profile. Nothing changes publicly until you enable and save it."}
+                ? "Your public creator profile brings together your city history, collections, recommendations, collaborations, and reputation."
+                : "Creator Mode turns what you already know into a polished public perspective. Nothing becomes public until you decide it should."}
             </p>
           </div>
         </div>
@@ -1827,11 +1852,11 @@ function CreatorModeEntryCard({
               }
             )
           }
-          className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-center text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:text-cyan-100"
+          className="inline-flex min-h-12 min-w-0 items-center justify-center rounded-full bg-white px-4 py-3 text-center text-sm font-black text-black transition hover:bg-cyan-200"
         >
           {enabled
-            ? "Manage Creator Mode"
-            : "Set up Creator Mode"}
+            ? "Manage creator profile"
+            : "Build creator profile"}
         </Link>
 
         <Link
@@ -1848,9 +1873,9 @@ function CreatorModeEntryCard({
               }
             )
           }
-          className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-center text-sm font-semibold text-indigo-300 transition hover:border-indigo-400/60 hover:bg-indigo-500/20 hover:text-indigo-100"
+          className="inline-flex min-h-12 min-w-0 items-center justify-center rounded-full bg-indigo-400/10 px-4 py-3 text-center text-sm font-bold text-indigo-200 ring-1 ring-indigo-300/15 transition hover:bg-indigo-400/15 hover:text-white"
         >
-          Manage collections
+          Your collections
         </Link>
       </div>
 
@@ -1868,13 +1893,13 @@ function CreatorModeEntryCard({
               }
             )
           }
-          className="inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2.5 text-center text-sm font-medium text-neutral-300 transition hover:border-neutral-600 hover:bg-neutral-900 hover:text-white"
+          className="group inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-full bg-white/[0.035] px-4 py-2.5 text-center text-sm font-semibold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.065] hover:text-white"
         >
-          Preview creator profile
+          See what people see
 
           <span
             aria-hidden="true"
-            className="ml-2"
+            className="ml-2 transition-transform group-hover:translate-x-0.5"
           >
             →
           </span>
@@ -1882,7 +1907,7 @@ function CreatorModeEntryCard({
       ) : null}
 
       {!username ? (
-        <p className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-200/80">
+        <p className="rounded-xl bg-amber-400/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-100/70 ring-1 ring-amber-300/15">
           Add a username in Profile
           Settings before your creator
           profile can have a public link.
@@ -1907,7 +1932,7 @@ function SavedLibraryShell() {
     <div className="w-full min-w-0 space-y-3">
       <div
         className={[
-          "relative w-full min-w-0 overflow-hidden rounded-2xl border border-neutral-800 bg-black/20",
+          "relative w-full min-w-0 overflow-hidden rounded-[1.5rem] bg-black/20 ring-1 ring-white/[0.055]",
 
           expanded
             ? "max-h-none"
@@ -1922,17 +1947,17 @@ function SavedLibraryShell() {
 
             "[&_section]:min-w-0 [&_section]:space-y-3",
 
-            "[&_h2]:mb-2 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:text-white",
+            "[&_h2]:mb-2 [&_h2]:text-sm [&_h2]:font-bold [&_h2]:text-white",
 
             "[&_ul]:min-w-0 [&_ul]:gap-3 [&_ul]:space-y-3",
 
-            "[&_li]:!min-w-0 [&_li]:!rounded-2xl [&_li]:!border-neutral-800 [&_li]:!bg-neutral-900/70 [&_li]:!p-3 [&_li]:!shadow-none",
+            "[&_li]:!min-w-0 [&_li]:!rounded-[1.25rem] [&_li]:!border-transparent [&_li]:!bg-white/[0.04] [&_li]:!p-3 [&_li]:!shadow-none [&_li]:!ring-1 [&_li]:!ring-white/[0.055]",
 
-            "[&_h3]:!text-sm [&_h3]:!font-semibold [&_h3]:!text-white",
+            "[&_h3]:!text-sm [&_h3]:!font-bold [&_h3]:!text-white",
 
-            "[&_p]:!text-xs [&_p]:!text-neutral-400",
+            "[&_p]:!text-xs [&_p]:!text-zinc-500",
 
-            "[&_span]:!text-neutral-300",
+            "[&_span]:!text-zinc-300",
 
             "[&_a]:!text-cyan-300 [&_a:hover]:!text-cyan-100",
 
@@ -1942,11 +1967,11 @@ function SavedLibraryShell() {
 
             "[&_.text-blue-600]:!text-cyan-300",
 
-            "[&_.text-gray-500]:!text-neutral-500",
+            "[&_.text-gray-500]:!text-zinc-500",
 
-            "[&_.bg-white]:!bg-neutral-900/70",
+            "[&_.bg-white]:!bg-white/[0.04]",
 
-            "[&_.border-gray-200]:!border-neutral-800",
+            "[&_.border-gray-200]:!border-transparent",
           ].join(
             " "
           )}
@@ -1955,7 +1980,7 @@ function SavedLibraryShell() {
         </div>
 
         {!expanded ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-neutral-950 via-neutral-950/95 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/95 to-transparent" />
         ) : null}
       </div>
 
@@ -1972,11 +1997,11 @@ function SavedLibraryShell() {
         aria-expanded={
           expanded
         }
-        className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-neutral-800 bg-neutral-950/80 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:border-cyan-500/40 hover:bg-cyan-500/10 sm:w-auto"
+        className="inline-flex min-h-10 w-full items-center justify-center rounded-full bg-white/[0.04] px-4 py-2 text-sm font-bold text-cyan-300 ring-1 ring-white/[0.07] transition hover:bg-cyan-300/10 hover:text-cyan-100 sm:w-auto"
       >
         {expanded
           ? "Show less"
-          : "View full saved library"}
+          : "See everything saved"}
       </button>
     </div>
   )
@@ -1989,15 +2014,15 @@ function SavedLibraryShell() {
 function SnapshotLibrarySkeleton() {
   return (
     <section
-      className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-white sm:p-5"
+      className="w-full min-w-0 rounded-[1.5rem] bg-black/25 p-4 text-white ring-1 ring-white/[0.055] sm:p-5"
       aria-label="Loading snapshot library"
     >
       <div className="min-w-0 animate-pulse">
-        <div className="h-3 w-28 max-w-full rounded bg-neutral-800" />
+        <div className="h-3 w-28 max-w-full rounded bg-white/[0.07]" />
 
-        <div className="mt-3 h-6 w-48 max-w-full rounded bg-neutral-800" />
+        <div className="mt-3 h-6 w-48 max-w-full rounded bg-white/[0.07]" />
 
-        <div className="mt-2 h-4 w-72 max-w-full rounded bg-neutral-900" />
+        <div className="mt-2 h-4 w-72 max-w-full rounded bg-white/[0.04]" />
 
         <div className="mt-5 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
@@ -2012,16 +2037,16 @@ function SnapshotLibrarySkeleton() {
                 key={
                   item
                 }
-                className="min-w-0 overflow-hidden rounded-2xl border border-neutral-800 bg-black/30"
+                className="min-w-0 overflow-hidden rounded-[1.5rem] bg-black/30 ring-1 ring-white/[0.055]"
               >
-                <div className="aspect-square bg-neutral-900" />
+                <div className="aspect-square bg-white/[0.04]" />
 
                 <div className="space-y-3 p-4">
-                  <div className="h-4 w-2/3 rounded bg-neutral-800" />
+                  <div className="h-4 w-2/3 rounded bg-white/[0.07]" />
 
-                  <div className="h-3 w-1/2 rounded bg-neutral-900" />
+                  <div className="h-3 w-1/2 rounded bg-white/[0.04]" />
 
-                  <div className="h-10 rounded-xl bg-neutral-900" />
+                  <div className="h-10 rounded-xl bg-white/[0.04]" />
                 </div>
               </div>
             )
@@ -2039,16 +2064,16 @@ function SnapshotLibraryError({
     string
 }) {
   return (
-    <section className="w-full min-w-0 rounded-2xl border border-red-900/50 bg-red-950/20 p-5 text-white">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-red-400">
+    <section className="w-full min-w-0 rounded-[1.5rem] bg-red-950/15 p-5 text-white ring-1 ring-red-500/20">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-red-400">
         Flow snapshots
       </p>
 
-      <h3 className="mt-2 text-xl font-semibold text-white">
+      <h3 className="mt-2 text-xl font-black text-white">
         Snapshot library unavailable
       </h3>
 
-      <p className="mt-2 break-words text-sm leading-6 text-red-300">
+      <p className="mt-2 break-words text-sm leading-6 text-red-300/80">
         {message}
       </p>
     </section>
@@ -2078,18 +2103,18 @@ function ProfilePanel({
     ReactNode
 }) {
   return (
-    <section className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/70 p-4 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-5">
-      <div className="mb-4 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-neutral-500">
+    <section className="w-full min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-b from-white/[0.05] to-white/[0.025] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065] sm:p-5">
+      <div className="mb-5 min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
           {eyebrow}
         </p>
 
-        <h3 className="mt-1 break-words text-lg font-semibold text-white">
+        <h3 className="mt-1.5 break-words text-lg font-black tracking-tight text-white">
           {title}
         </h3>
 
         {description ? (
-          <p className="mt-1 break-words text-xs leading-5 text-neutral-500">
+          <p className="mt-1.5 break-words text-xs leading-5 text-zinc-500">
             {description}
           </p>
         ) : null}
@@ -2129,20 +2154,20 @@ function ProfileDisclosure({
       open={
         defaultOpen
       }
-      className="group w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/70 shadow-2xl shadow-black/20 backdrop-blur-xl"
+      className="group w-full min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-b from-white/[0.05] to-white/[0.025] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]"
     >
-      <summary className="flex min-h-[88px] cursor-pointer list-none items-center justify-between gap-4 p-4 outline-none transition hover:bg-white/[0.02] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-400 sm:p-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-[92px] cursor-pointer list-none items-center justify-between gap-4 p-4 outline-none transition hover:bg-white/[0.025] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-400 sm:p-5 [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-neutral-500">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
             {eyebrow}
           </p>
 
-          <h3 className="mt-1 break-words text-lg font-semibold text-white">
+          <h3 className="mt-1.5 break-words text-lg font-black tracking-tight text-white">
             {title}
           </h3>
 
           {description ? (
-            <p className="mt-1 break-words text-xs leading-5 text-neutral-500">
+            <p className="mt-1.5 break-words text-xs leading-5 text-zinc-500">
               {description}
             </p>
           ) : null}
@@ -2150,13 +2175,13 @@ function ProfileDisclosure({
 
         <span
           aria-hidden="true"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-black/30 text-lg text-neutral-400 transition group-open:rotate-45 group-open:border-cyan-500/30 group-open:text-cyan-300"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.04] text-lg font-light text-zinc-500 ring-1 ring-white/[0.07] transition group-open:rotate-45 group-open:bg-cyan-300 group-open:text-black group-open:ring-cyan-300"
         >
           +
         </span>
       </summary>
 
-      <div className="border-t border-neutral-800/80 p-3 sm:p-5">
+      <div className="border-t border-white/[0.055] p-3 sm:p-5">
         <div className="w-full min-w-0">
           {children}
         </div>

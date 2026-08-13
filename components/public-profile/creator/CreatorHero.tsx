@@ -189,7 +189,7 @@ export default function CreatorHero({
     <section
       aria-labelledby="creator-hero-title"
       className={[
-        'relative w-full min-w-0 overflow-hidden rounded-[2rem] border border-neutral-800/90 bg-neutral-950/85 text-white shadow-2xl shadow-black/30',
+        'relative w-full min-w-0 overflow-hidden rounded-[2.25rem] bg-gradient-to-br from-white/[0.065] via-white/[0.03] to-transparent text-white shadow-[0_30px_100px_rgba(0,0,0,0.3)] ring-1 ring-white/[0.075]',
         className,
       ]
         .filter(Boolean)
@@ -198,7 +198,7 @@ export default function CreatorHero({
       <CreatorHeroBackground />
 
       <div className="relative z-10 w-full min-w-0 p-5 sm:p-7 lg:p-8">
-        <div className="flex min-w-0 flex-col gap-6 md:flex-row md:items-start">
+        <div className="flex min-w-0 flex-col gap-7 md:flex-row md:items-start md:gap-8">
           <CreatorAvatar
             displayName={
               normalizedDisplayName
@@ -272,13 +272,15 @@ function CreatorHeroBackground() {
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.08] via-transparent to-indigo-500/[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(103,232,249,0.08),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(129,140,248,0.09),_transparent_34%)]" />
 
-      <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
+      <div className="absolute -left-20 -top-24 h-72 w-72 rounded-full bg-cyan-400/[0.07] blur-[100px]" />
 
-      <div className="absolute -bottom-32 right-[-5rem] h-80 w-80 rounded-full bg-indigo-500/10 blur-3xl" />
+      <div className="absolute -bottom-32 right-[-5rem] h-80 w-80 rounded-full bg-indigo-500/[0.08] blur-[110px]" />
 
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/25 to-transparent" />
+
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/[0.08] to-transparent" />
     </div>
   )
 }
@@ -298,31 +300,35 @@ function CreatorAvatar({
 }) {
   return (
     <div className="shrink-0">
-      <div className="relative h-24 w-24 overflow-hidden rounded-[1.75rem] border border-white/10 bg-neutral-900 shadow-xl shadow-black/40 sm:h-28 sm:w-28">
-        {avatarUrl ? (
-          <Image
-            src={avatarUrl}
-            alt={`${displayName} profile photo`}
-            fill
-            sizes="(min-width: 640px) 112px, 96px"
-            unoptimized
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-400/20 to-indigo-500/20">
-            <span
-              aria-label={`${displayName} initials`}
-              className="text-2xl font-semibold tracking-tight text-white"
-            >
-              {initials}
-            </span>
-          </div>
-        )}
+      <div className="relative">
+        <div className="pointer-events-none absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-cyan-300/[0.09] to-indigo-400/[0.08] blur-xl" />
 
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[1.75rem] ring-1 ring-inset ring-white/10"
-        />
+        <div className="relative h-24 w-24 overflow-hidden rounded-[1.75rem] bg-white/[0.05] shadow-[0_18px_50px_rgba(0,0,0,0.35)] ring-1 ring-white/[0.09] sm:h-28 sm:w-28">
+          {avatarUrl ? (
+            <Image
+              src={avatarUrl}
+              alt={`${displayName} profile photo`}
+              fill
+              sizes="(min-width: 640px) 112px, 96px"
+              unoptimized
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-300/[0.12] via-white/[0.03] to-indigo-400/[0.12]">
+              <span
+                aria-label={`${displayName} initials`}
+                className="text-2xl font-black tracking-[-0.04em] text-white"
+              >
+                {initials}
+              </span>
+            </div>
+          )}
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[1.75rem] ring-1 ring-inset ring-white/[0.08]"
+          />
+        </div>
       </div>
     </div>
   )
@@ -347,30 +353,34 @@ function CreatorIdentity({
 }) {
   return (
     <div className="min-w-0">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">
-            Roam Creator
-          </p>
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.7)]" />
+
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+              Roam Creator
+            </p>
+          </div>
 
           <h1
             id="creator-hero-title"
-            className="mt-2 break-words text-3xl font-semibold tracking-tight text-white sm:text-4xl"
+            className="mt-4 break-words text-[2.25rem] font-black leading-[0.98] tracking-[-0.045em] text-white sm:text-5xl"
           >
             {displayName}
           </h1>
 
           {username ? (
-            <p className="mt-1 break-all text-sm font-medium text-neutral-500">
+            <p className="mt-2 break-all text-sm font-semibold text-zinc-500">
               @{username}
             </p>
           ) : null}
         </div>
 
-        <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
+        <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-400 ring-1 ring-white/[0.07]">
           <span
             aria-hidden="true"
-            className="h-2 w-2 rounded-full bg-cyan-300"
+            className="h-1.5 w-1.5 rounded-full bg-cyan-300"
           />
 
           Creator Mode
@@ -378,22 +388,22 @@ function CreatorIdentity({
       </div>
 
       {headline ? (
-        <p className="mt-5 max-w-3xl break-words text-lg font-medium leading-7 text-neutral-100 sm:text-xl">
+        <p className="mt-5 max-w-3xl break-words text-lg font-black leading-7 tracking-[-0.02em] text-white sm:text-[1.35rem] sm:leading-8">
           {headline}
         </p>
       ) : null}
 
       {bio ? (
-        <p className="mt-3 max-w-3xl whitespace-pre-line break-words text-sm leading-6 text-neutral-400 sm:text-base sm:leading-7">
+        <p className="mt-3 max-w-3xl whitespace-pre-line break-words text-sm leading-6 text-zinc-400 sm:text-[15px] sm:leading-7">
           {bio}
         </p>
       ) : null}
 
       {primaryCity ? (
-        <div className="mt-4 flex min-w-0 items-center gap-2 text-sm text-neutral-400">
+        <div className="mt-4 flex min-w-0 items-center gap-2 text-sm font-medium text-zinc-500">
           <MapPin
             aria-hidden="true"
-            className="h-4 w-4 shrink-0 text-cyan-400"
+            className="h-4 w-4 shrink-0 text-cyan-300"
           />
 
           <span className="break-words">
@@ -421,7 +431,7 @@ function CreatorProfileMetrics({
   return (
     <dl
       aria-label="Creator profile statistics"
-      className="mt-5 flex min-w-0 flex-wrap gap-2"
+      className="mt-6 grid min-w-0 grid-cols-2 gap-2.5 sm:flex sm:flex-wrap"
     >
       <CreatorProfileMetric
         label="Followers"
@@ -435,7 +445,7 @@ function CreatorProfileMetrics({
 
       {passportLevel !== null ? (
         <CreatorProfileMetric
-          label="Passport Level"
+          label="Passport level"
           value={passportLevel}
           emphasized
         />
@@ -456,15 +466,15 @@ function CreatorProfileMetric({
   return (
     <div
       className={[
-        'inline-flex min-w-[104px] flex-col rounded-2xl border px-4 py-3',
+        'flex min-h-[88px] min-w-0 flex-col justify-between rounded-[1.35rem] px-4 py-3.5 ring-1 sm:min-w-[112px]',
         emphasized
-          ? 'border-cyan-500/25 bg-cyan-500/[0.08]'
-          : 'border-neutral-800 bg-black/30',
+          ? 'bg-cyan-300/[0.075] ring-cyan-300/15'
+          : 'bg-black/25 ring-white/[0.055]',
       ].join(' ')}
     >
       <dd
         className={[
-          'text-lg font-semibold leading-none',
+          'text-2xl font-black leading-none tracking-[-0.04em]',
           emphasized
             ? 'text-cyan-100'
             : 'text-white',
@@ -475,10 +485,10 @@ function CreatorProfileMetric({
 
       <dt
         className={[
-          'mt-1.5 text-[11px] leading-tight',
+          'mt-3 text-[10px] font-bold uppercase leading-tight tracking-[0.11em]',
           emphasized
             ? 'text-cyan-300/70'
-            : 'text-neutral-500',
+            : 'text-zinc-600',
         ].join(' ')}
       >
         {label}
@@ -511,24 +521,24 @@ function CreatorAvailability({
       className="mt-5 flex flex-wrap gap-2"
     >
       {acceptingCollaborations ? (
-        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-200">
+        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-400/[0.08] px-3 py-2 text-xs font-bold text-emerald-200 ring-1 ring-emerald-300/15">
           <BriefcaseBusiness
             aria-hidden="true"
             className="h-3.5 w-3.5"
           />
 
-          Accepting collaborations
+          Open to collaborations
         </span>
       ) : null}
 
       {availableForTravel ? (
-        <span className="inline-flex items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-3 py-2 text-xs font-semibold text-indigo-200">
+        <span className="inline-flex items-center gap-2 rounded-full bg-indigo-400/[0.08] px-3 py-2 text-xs font-bold text-indigo-200 ring-1 ring-indigo-300/15">
           <Plane
             aria-hidden="true"
             className="h-3.5 w-3.5"
           />
 
-          Available for travel
+          Available to travel
         </span>
       ) : null}
     </div>
@@ -554,11 +564,11 @@ function CreatorHeroActions({
   }
 
   return (
-    <div className="mt-6 flex min-w-0 flex-col gap-3 border-t border-neutral-800/80 pt-5 sm:flex-row sm:flex-wrap sm:items-center">
+    <div className="mt-7 flex min-w-0 flex-col gap-3 border-t border-white/[0.055] pt-5 sm:flex-row sm:flex-wrap sm:items-center">
       {publicEmail ? (
         <a
           href={`mailto:${publicEmail}`}
-          className="inline-flex min-w-0 items-center justify-center gap-2 rounded-full bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+          className="inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-black text-black transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0b0d]"
         >
           <Mail
             aria-hidden="true"
@@ -616,7 +626,7 @@ function CreatorSocialLinkButton({
           ? `${definition.label}: ${displayLabel}`
           : definition.label
       }
-      className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-neutral-800 bg-black/35 px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:border-cyan-500/40 hover:bg-cyan-500/[0.08] hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+      className="group inline-flex min-w-0 max-w-full items-center gap-2 rounded-full bg-white/[0.035] px-3 py-2 text-xs font-bold text-zinc-400 ring-1 ring-white/[0.06] transition hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
     >
       <CreatorSocialIcon
         platform={link.platform}
@@ -629,7 +639,7 @@ function CreatorSocialLinkButton({
 
       <ExternalLink
         aria-hidden="true"
-        className="h-3 w-3 shrink-0 text-neutral-600"
+        className="h-3 w-3 shrink-0 text-zinc-700 transition group-hover:text-zinc-400"
       />
     </a>
   )

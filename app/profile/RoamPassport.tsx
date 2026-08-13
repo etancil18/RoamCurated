@@ -133,19 +133,19 @@ const REPUTATION_TIER_RANK = {
 
 const REPUTATION_TIER_STYLES = {
   unranked:
-    'border-neutral-700 bg-neutral-900 text-neutral-300',
+    'bg-white/[0.05] text-zinc-400 ring-1 ring-white/[0.08]',
 
   emerging:
-    'border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
+    'bg-cyan-300/[0.09] text-cyan-200 ring-1 ring-cyan-300/20',
 
   established:
-    'border-indigo-500/30 bg-indigo-500/10 text-indigo-200',
+    'bg-indigo-400/[0.1] text-indigo-200 ring-1 ring-indigo-300/20',
 
   expert:
-    'border-violet-500/30 bg-violet-500/10 text-violet-200',
+    'bg-violet-400/[0.1] text-violet-200 ring-1 ring-violet-300/20',
 
   elite:
-    'border-amber-400/30 bg-amber-400/10 text-amber-200',
+    'bg-amber-300/[0.1] text-amber-200 ring-1 ring-amber-300/20',
 } as const satisfies Record<
   ReputationTier,
   string
@@ -578,61 +578,232 @@ export default function RoamPassport() {
 
   if (loading) {
     return (
-      <p className="text-sm text-neutral-400">
-        Loading your Passport…
-      </p>
+      <div className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] to-white/[0.02] p-6 ring-1 ring-white/[0.07]">
+        <div className="animate-pulse">
+          <div className="h-3 w-28 rounded-full bg-white/[0.08]" />
+
+          <div className="mt-4 h-8 w-56 max-w-full rounded-lg bg-white/[0.08]" />
+
+          <div className="mt-3 h-4 w-80 max-w-full rounded bg-white/[0.04]" />
+
+          <div className="mt-8 h-2 w-full rounded-full bg-white/[0.06]" />
+        </div>
+      </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-2xl border border-neutral-800 bg-gradient-to-br from-neutral-950 to-black p-6">
-        <div className="flex items-start justify-between gap-4">
+      <section className="relative overflow-hidden rounded-[2.25rem] bg-gradient-to-br from-white/[0.075] via-white/[0.035] to-transparent p-5 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.075] sm:p-7">
+        <div className="pointer-events-none absolute right-[-5rem] top-[-7rem] h-64 w-64 rounded-full bg-cyan-400/[0.1] blur-[90px]" />
+
+        <div className="pointer-events-none absolute bottom-[-8rem] left-[18%] h-64 w-64 rounded-full bg-indigo-500/[0.09] blur-[100px]" />
+
+        <div className="relative z-10">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.055] px-3 py-1.5 ring-1 ring-white/[0.07]">
+                <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.8)]" />
+
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">
+                  Roam Passport
+                </p>
+              </div>
+
+              <h2 className="mt-5 text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl">
+                Level {level} Explorer
+              </h2>
+
+              <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
+                Every place you visit,
+                Flow you finish, event you
+                check into, and guide you
+                save adds another layer to
+                your city story.
+              </p>
+            </div>
+
+            <div className="flex w-fit shrink-0 items-baseline gap-1.5 rounded-2xl bg-black/25 px-4 py-3 ring-1 ring-white/[0.07]">
+              <span className="text-2xl font-black tracking-tight text-white">
+                {xp}
+              </span>
+
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                XP
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-8">
+            <div className="mb-3 flex items-end justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
+                  Next chapter
+                </p>
+
+                <p className="mt-1 text-xs font-semibold text-zinc-400">
+                  {progressToNextLevel} of
+                  250 XP
+                </p>
+              </div>
+
+              <p className="text-xs font-black text-cyan-200">
+                {Math.round(
+                  progressPercent
+                )}
+                %
+              </p>
+            </div>
+
+            <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-indigo-400 to-violet-400 shadow-[0_0_18px_rgba(103,232,249,0.32)] transition-[width] duration-500"
+                style={{
+                  width:
+                    `${progressPercent}%`,
+                }}
+              />
+            </div>
+
+            <p className="mt-3 text-[11px] leading-5 text-zinc-600">
+              Keep exploring. Your
+              Passport becomes more useful
+              as your real-world history
+              grows.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {activeFlow && (
+        <Link
+          href={`/flow/${activeFlow.id}`}
+          className="group block"
+        >
+          <div className="relative overflow-hidden rounded-[1.75rem] bg-indigo-400/[0.075] p-5 ring-1 ring-indigo-300/20 transition duration-200 hover:bg-indigo-400/[0.11] sm:p-6">
+            <div className="pointer-events-none absolute right-[-3rem] top-[-4rem] h-36 w-36 rounded-full bg-indigo-400/10 blur-3xl" />
+
+            <div className="relative z-10">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="inline-flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-300 opacity-50" />
+
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-300" />
+                    </span>
+
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">
+                      In progress
+                    </p>
+                  </div>
+
+                  <h3 className="mt-3 text-xl font-black tracking-tight text-white">
+                    {activeFlow.title ??
+                      'Roam Flow'}
+                  </h3>
+
+                  <p className="mt-1.5 text-sm text-zinc-400">
+                    {activeFlow.city ??
+                      'City'}{' '}
+                    ·{' '}
+                    {
+                      activeFlowCompletedStops
+                    }{' '}
+                    of{' '}
+                    {
+                      activeFlowTotalStops
+                    }{' '}
+                    stops
+                  </p>
+                </div>
+
+                <span
+                  aria-hidden="true"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-lg text-black transition-transform group-hover:translate-x-0.5"
+                >
+                  →
+                </span>
+              </div>
+
+              <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/[0.07]">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-300 to-cyan-300"
+                  style={{
+                    width:
+                      `${activeFlowProgressPercent}%`,
+                  }}
+                />
+              </div>
+
+              <p className="mt-3 text-xs font-bold text-indigo-200">
+                Pick up where you left off
+              </p>
+            </div>
+          </div>
+        </Link>
+      )}
+
+      <section>
+        <div className="mb-4 flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-neutral-500">
-              Roam Passport
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
+              Your footprint
             </p>
 
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-              Level {level} Explorer
-            </h2>
-
-            <p className="mt-1 text-sm text-neutral-400">
-              Your movement, events,
-              hosted crawls, saved
-              guides, venue visits, and
-              city progress.
-            </p>
-          </div>
-
-          <div className="rounded-full border border-neutral-700 px-4 py-2 text-sm font-semibold">
-            {xp} XP
+            <h3 className="mt-1.5 text-lg font-black tracking-tight text-white">
+              The city you have actually
+              lived
+            </h3>
           </div>
         </div>
 
-        <div>
-          <div className="mb-2 flex justify-between text-xs text-neutral-500">
-            <span>
-              {progressToNextLevel} /
-              250 XP
-            </span>
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+          <StatCard
+            label="Hosted"
+            value={
+              stats.hostedCrawls
+            }
+          />
 
-            <span>
-              Next level
-            </span>
-          </div>
+          <StatCard
+            label="Joined"
+            value={
+              stats.joinedCrawls
+            }
+          />
 
-          <div className="h-2 overflow-hidden rounded-full bg-neutral-800">
-            <div
-              className="h-full rounded-full bg-white"
-              style={{
-                width:
-                  `${progressPercent}%`,
-              }}
-            />
-          </div>
+          <StatCard
+            label="Completed"
+            value={
+              stats.pastCrawls +
+              stats.completedFlows +
+              stats.completedHostedFlows
+            }
+          />
+
+          <StatCard
+            label="Event check-ins"
+            value={
+              stats.eventCheckins
+            }
+          />
+
+          <StatCard
+            label="Places visited"
+            value={
+              stats.venueVisits
+            }
+          />
+
+          <StatCard
+            label="Guides saved"
+            value={
+              stats.savedProperties
+            }
+          />
         </div>
-      </div>
+      </section>
 
       <RoamReputationSection
         overview={
@@ -646,101 +817,21 @@ export default function RoamPassport() {
         }
       />
 
-      {activeFlow && (
-        <Link
-          href={`/flow/${activeFlow.id}`}
-        >
-          <div className="rounded-xl border border-indigo-500/40 bg-indigo-950/30 p-5 transition hover:border-indigo-400/70">
-            <p className="text-xs font-semibold uppercase tracking-wide text-indigo-400">
-              Current Active Flow
-            </p>
+      <section className="overflow-hidden rounded-[1.75rem] bg-gradient-to-b from-white/[0.045] to-white/[0.02] p-5 ring-1 ring-white/[0.065] sm:p-6">
+        <div className="mb-5">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
+            Milestones
+          </p>
 
-            <h3 className="mt-2 text-lg font-semibold text-white">
-              {activeFlow.title ??
-                'Roam Flow'}
-            </h3>
+          <h3 className="mt-1.5 text-lg font-black tracking-tight text-white">
+            What you have unlocked
+          </h3>
 
-            <p className="mt-1 text-sm text-neutral-400">
-              {activeFlow.city ??
-                'City'}{' '}
-              •{' '}
-              {
-                activeFlowCompletedStops
-              }{' '}
-              of{' '}
-              {
-                activeFlowTotalStops
-              }{' '}
-              stops complete
-            </p>
-
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-800">
-              <div
-                className="h-full rounded-full bg-indigo-500"
-                style={{
-                  width:
-                    `${activeFlowProgressPercent}%`,
-                }}
-              />
-            </div>
-
-            <p className="mt-3 text-sm font-medium text-indigo-300">
-              Resume Flow →
-            </p>
-          </div>
-        </Link>
-      )}
-
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        <StatCard
-          label="Hosted"
-          value={
-            stats.hostedCrawls
-          }
-        />
-
-        <StatCard
-          label="Joined"
-          value={
-            stats.joinedCrawls
-          }
-        />
-
-        <StatCard
-          label="Completed"
-          value={
-            stats.pastCrawls +
-            stats.completedFlows +
-            stats.completedHostedFlows
-          }
-        />
-
-        <StatCard
-          label="Event Check-ins"
-          value={
-            stats.eventCheckins
-          }
-        />
-
-        <StatCard
-          label="Visited"
-          value={
-            stats.venueVisits
-          }
-        />
-
-        <StatCard
-          label="Saved Guides"
-          value={
-            stats.savedProperties
-          }
-        />
-      </div>
-
-      <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
-        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-400">
-          Badges
-        </h3>
+          <p className="mt-1.5 text-xs leading-5 text-zinc-500">
+            Small markers of how your Roam
+            history is taking shape.
+          </p>
+        </div>
 
         <div className="flex flex-wrap gap-2">
           {badges.map(
@@ -749,26 +840,22 @@ export default function RoamPassport() {
                 key={
                   badge.label
                 }
-                variant={
-                  badge.unlocked
-                    ? 'default'
-                    : 'outline'
-                }
+                variant="outline"
                 className={
                   badge.unlocked
-                    ? ''
-                    : 'border-neutral-700 text-neutral-500'
+                    ? 'rounded-full border-transparent bg-white px-3 py-1.5 font-bold text-black shadow-none'
+                    : 'rounded-full border-white/[0.07] bg-white/[0.025] px-3 py-1.5 text-zinc-600'
                 }
               >
                 {badge.unlocked
                   ? '✓ '
-                  : '🔒 '}
+                  : '○ '}
                 {badge.label}
               </Badge>
             )
           )}
         </div>
-      </div>
+      </section>
     </div>
   )
 }
@@ -790,33 +877,35 @@ function RoamReputationSection({
   return (
     <section
       aria-labelledby="roam-reputation-title"
-      className="overflow-hidden rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.08] via-neutral-950 to-black"
+      className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-300/[0.06] via-white/[0.03] to-indigo-400/[0.055] shadow-[0_24px_80px_rgba(0,0,0,0.22)] ring-1 ring-white/[0.07]"
     >
-      <div className="flex flex-col gap-4 border-b border-neutral-800/80 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+      <div className="pointer-events-none absolute right-[-6rem] top-[-7rem] h-56 w-56 rounded-full bg-cyan-300/[0.08] blur-[90px]" />
+
+      <div className="relative z-10 flex flex-col gap-5 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">
-            Public identity
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+            What you know
           </p>
 
           <h2
             id="roam-reputation-title"
-            className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+            className="mt-2 text-2xl font-black tracking-[-0.035em] text-white"
           >
             Your Roam Reputation
           </h2>
 
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
-            Reputation reflects the
-            strength, consistency, and
-            relevance of your verified
-            Roam activity. It remains
-            separate from Passport XP.
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+            Passport records what you have
+            done. Reputation reflects where
+            your verified city experience
+            is becoming genuinely
+            meaningful.
           </p>
         </div>
 
         <span
           className={[
-            'inline-flex w-fit shrink-0 items-center rounded-full border px-3 py-1.5 text-xs font-semibold',
+            'inline-flex w-fit shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-black',
             REPUTATION_TIER_STYLES[
               overview.tier
             ],
@@ -826,9 +915,9 @@ function RoamReputationSection({
         </span>
       </div>
 
-      <div className="grid min-w-0 grid-cols-1 gap-3 p-5 sm:grid-cols-3 sm:p-6">
+      <div className="relative z-10 grid min-w-0 grid-cols-1 gap-2.5 px-5 pb-5 sm:grid-cols-3 sm:px-6 sm:pb-6">
         <ReputationMetric
-          label="Overall tier"
+          label="Your level"
           value={
             overview.tierLabel
           }
@@ -838,7 +927,7 @@ function RoamReputationSection({
               ? `${formatReputationNumber(
                   overview.score
                 )} reputation score`
-              : 'Evidence is still building'
+              : 'Your signal is still taking shape'
           }
         />
 
@@ -847,26 +936,26 @@ function RoamReputationSection({
           value={
             overview.cityStanding
           }
-          detail="Your strongest eligible city status or ranking"
+          detail="How your strongest eligible city activity compares"
         />
 
         <ReputationMetric
-          label="Strongest category"
+          label="Your lane"
           value={
             overview.strongestCategory
           }
-          detail="Your highest-performing public reputation category"
+          detail="The category where your verified experience is strongest"
         />
       </div>
 
-      <div className="border-t border-neutral-800/80 px-5 py-5 sm:px-6">
+      <div className="relative z-10 border-t border-white/[0.06] px-5 py-5 sm:px-6 sm:py-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-              Ranking eligibility
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
+              Reputation progress
             </p>
 
-            <p className="mt-1 text-sm font-medium text-white">
+            <p className="mt-1.5 text-sm font-bold text-white">
               {
                 overview.eligibilityLabel
               }
@@ -875,7 +964,7 @@ function RoamReputationSection({
 
           {overview.eligibilityPercent !==
           null ? (
-            <p className="text-sm font-semibold text-cyan-300">
+            <p className="text-sm font-black text-cyan-200">
               {
                 overview.eligibilityPercent
               }
@@ -886,9 +975,9 @@ function RoamReputationSection({
 
         {overview.eligibilityPercent !==
         null ? (
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-neutral-800">
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/[0.06]">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500"
+              className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-indigo-400 to-violet-400"
               style={{
                 width:
                   `${overview.eligibilityPercent}%`,
@@ -897,7 +986,7 @@ function RoamReputationSection({
           </div>
         ) : null}
 
-        <div className="mt-2 flex justify-between gap-4 text-[11px] text-neutral-500">
+        <div className="mt-2.5 flex justify-between gap-4 text-[11px] text-zinc-600">
           <span>
             {
               overview.eligibilityCurrent
@@ -905,8 +994,8 @@ function RoamReputationSection({
             verified{' '}
             {overview.eligibilityCurrent ===
             1
-              ? 'venue'
-              : 'venues'}
+              ? 'place'
+              : 'places'}
           </span>
 
           {overview.eligibilityRequired !==
@@ -919,34 +1008,41 @@ function RoamReputationSection({
             </span>
           ) : (
             <span>
-              Qualification details unavailable
+              Still taking shape
             </span>
           )}
         </div>
 
         {error ? (
-          <p className="mt-4 rounded-xl border border-red-900/40 bg-red-950/20 px-3 py-2 text-xs leading-5 text-red-300">
+          <p className="mt-4 rounded-xl bg-red-950/20 px-3 py-2.5 text-xs leading-5 text-red-300 ring-1 ring-red-500/20">
             {error}
           </p>
         ) : warning ? (
-          <p className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-xs leading-5 text-amber-200/80">
+          <p className="mt-4 rounded-xl bg-amber-400/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-100/70 ring-1 ring-amber-300/15">
             {warning}
           </p>
         ) : null}
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-xl text-xs leading-5 text-neutral-500">
-            Passport shows how much you
-            have done. Reputation shows
-            what your verified activity
-            supports publicly.
+        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-xl text-xs leading-5 text-zinc-600">
+            Your reputation is earned from
+            verified activity—not how often
+            you post or how many followers
+            you have.
           </p>
 
           <Link
             href="/profile/creator"
-            className="inline-flex shrink-0 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:text-white"
+            className="group inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-white px-4 py-2.5 text-xs font-black text-black transition hover:bg-cyan-200"
           >
-            Manage Creator Identity →
+            Shape your public identity
+
+            <span
+              aria-hidden="true"
+              className="ml-2 transition-transform group-hover:translate-x-0.5"
+            >
+              →
+            </span>
           </Link>
         </div>
       </div>
@@ -964,16 +1060,16 @@ function ReputationMetric({
   detail: string
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-neutral-800 bg-black/25 p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+    <div className="min-w-0 rounded-[1.4rem] bg-black/25 p-4 ring-1 ring-white/[0.055]">
+      <p className="text-[9px] font-black uppercase tracking-[0.17em] text-zinc-600">
         {label}
       </p>
 
-      <p className="mt-2 break-words text-base font-semibold text-white">
+      <p className="mt-2 break-words text-lg font-black tracking-tight text-white">
         {value}
       </p>
 
-      <p className="mt-1 text-xs leading-5 text-neutral-500">
+      <p className="mt-1.5 text-[11px] leading-5 text-zinc-600">
         {detail}
       </p>
     </div>
@@ -2327,13 +2423,13 @@ function StatCard({
   value: number
 }) {
   return (
-    <Card className="border-neutral-800 bg-neutral-950/90">
-      <CardContent className="flex min-h-[88px] flex-col justify-between p-3 sm:min-h-[96px] sm:p-4">
-        <p className="text-2xl font-semibold leading-none text-white sm:text-3xl">
+    <Card className="border-0 bg-white/[0.035] shadow-none ring-1 ring-white/[0.06]">
+      <CardContent className="flex min-h-[96px] flex-col justify-between p-4 sm:min-h-[104px]">
+        <p className="text-[2rem] font-black leading-none tracking-[-0.04em] text-white sm:text-3xl">
           {value}
         </p>
 
-        <p className="mt-2 text-[11px] font-medium leading-tight text-neutral-500 sm:text-xs">
+        <p className="mt-3 text-[10px] font-bold uppercase leading-tight tracking-[0.12em] text-zinc-600 sm:text-[11px]">
           {label}
         </p>
       </CardContent>

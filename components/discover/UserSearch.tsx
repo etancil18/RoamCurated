@@ -279,231 +279,214 @@ export default function UserSearch() {
 
   return (
     <section
-      aria-labelledby="discover-user-search-title"
-      className="relative w-full min-w-0 overflow-hidden rounded-[2rem] border border-neutral-800 bg-neutral-950 p-4 sm:p-6"
+      aria-label="Search Roamers"
+      className="w-full min-w-0"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
-      />
+      <form
+        role="search"
+        onSubmit={(
+          event
+        ) => {
+          event.preventDefault()
 
-      <div className="relative z-10">
-        <div className="mb-5 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400 sm:text-xs">
-              People search
-            </p>
+          setDebouncedQuery(
+            query
+          )
+        }}
+        className="w-full min-w-0"
+      >
+        <label
+          htmlFor="discover-user-search-input"
+          className="sr-only"
+        >
+          Search Roam users by
+          username or name
+        </label>
 
-            <h2
-              id="discover-user-search-title"
-              className="mt-2 text-2xl font-bold tracking-tight text-white"
+        <div
+          className={[
+            'relative overflow-hidden rounded-[1.6rem] bg-white/[0.035] shadow-[0_18px_55px_rgba(0,0,0,0.18)] ring-1 transition',
+            error
+              ? 'ring-red-400/25 focus-within:ring-red-400/45'
+              : 'ring-white/[0.065] focus-within:bg-white/[0.045] focus-within:ring-cyan-300/25',
+          ].join(
+            ' '
+          )}
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/15 to-transparent"
+          />
+
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base font-black text-zinc-600"
+          >
+            @
+          </span>
+
+          <input
+            id="discover-user-search-input"
+            type="search"
+            value={
+              query
+            }
+            onChange={(
+              event
+            ) =>
+              setQuery(
+                event
+                  .target
+                  .value
+              )
+            }
+            placeholder="Search a name or @username"
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            enterKeyHint="search"
+            aria-describedby="discover-user-search-help discover-user-search-status"
+            className={[
+              'min-h-14 w-full bg-transparent py-4 pl-10 text-base font-semibold text-white outline-none sm:text-sm',
+              query.length >
+                0
+                ? 'pr-14'
+                : 'pr-4',
+              'placeholder:font-medium placeholder:text-zinc-700',
+            ].join(
+              ' '
+            )}
+          />
+
+          {query.length >
+          0 ? (
+            <button
+              type="button"
+              onClick={
+                clearSearch
+              }
+              aria-label="Clear search"
+              className="absolute right-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/[0.035] text-lg text-zinc-600 ring-1 ring-white/[0.05] transition hover:bg-white/[0.07] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
             >
-              Find Roamers
-            </h2>
+              <span
+                aria-hidden="true"
+              >
+                ×
+              </span>
+            </button>
+          ) : null}
+        </div>
 
-            <p className="mt-2 max-w-xl text-sm leading-6 text-neutral-400">
-              Search by name or username
-              to discover people, explore
-              their city activity, and
-              follow their next Roam.
+        <div className="mt-2.5 flex min-w-0 flex-wrap items-center justify-between gap-2 px-1">
+          <p
+            id="discover-user-search-help"
+            className="text-[10px] font-medium leading-5 text-zinc-700"
+          >
+            Name or username ·{' '}
+            {
+              MINIMUM_SEARCH_LENGTH
+            }+
+            characters
+          </p>
+
+          {liveQuery.length >
+            0 &&
+          liveQuery.length <
+            MINIMUM_SEARCH_LENGTH ? (
+            <p className="text-[10px] font-bold text-amber-200/60">
+              Keep typing
             </p>
-          </div>
+          ) : null}
 
           {users.length >
             0 &&
           hasSearch &&
-          !loading ? (
-            <p className="shrink-0 text-xs font-medium text-neutral-500">
+          !loading &&
+          !hasPendingQuery ? (
+            <p className="text-[10px] font-bold text-zinc-600">
               {users.length.toLocaleString(
                 'en-US'
               )}{' '}
               {users.length ===
               1
-                ? 'Roamer'
-                : 'Roamers'}
+                ? 'person'
+                : 'people'}
             </p>
           ) : null}
         </div>
+      </form>
 
-        <form
-          role="search"
-          onSubmit={(
-            event
-          ) => {
-            event.preventDefault()
+      <p
+        id="discover-user-search-status"
+        role="status"
+        aria-live="polite"
+        className="sr-only"
+      >
+        {resultSummary}
+      </p>
 
-            setDebouncedQuery(
-              query
-            )
-          }}
-          className="w-full min-w-0"
+      {error ? (
+        <div
+          role="alert"
+          className="mt-4 rounded-[1.35rem] bg-red-400/[0.06] px-4 py-3.5 ring-1 ring-red-400/15"
         >
-          <label
-            htmlFor="discover-user-search-input"
-            className="sr-only"
-          >
-            Search Roam users by
-            username or name
-          </label>
+          <p className="text-sm font-black text-red-200">
+            Search is unavailable
+          </p>
 
-          <div className="relative">
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-neutral-500"
-            >
-              @
-            </span>
+          <p className="mt-1 break-words text-xs leading-5 text-red-200/60">
+            {error}
+          </p>
+        </div>
+      ) : null}
 
-            <input
-              id="discover-user-search-input"
-              type="search"
-              value={
-                query
-              }
-              onChange={(
-                event
-              ) =>
-                setQuery(
-                  event
-                    .target
-                    .value
-                )
-              }
-              placeholder="Search a name or @username"
-              autoComplete="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              enterKeyHint="search"
-              aria-describedby="discover-user-search-help discover-user-search-status"
-              className={[
-                'min-h-12 w-full rounded-2xl border bg-black py-3 pl-9 text-sm text-white outline-none transition',
-                query.length >
-                  0
-                  ? 'pr-12'
-                  : 'pr-4',
-                error
-                  ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-400/10'
-                  : 'border-neutral-800 focus:border-cyan-400/70 focus:ring-4 focus:ring-cyan-400/10',
-                'placeholder:text-neutral-600',
-              ].join(
-                ' '
-              )}
-            />
-
-            {query.length >
-            0 ? (
-              <button
-                type="button"
-                onClick={
-                  clearSearch
-                }
-                aria-label="Clear search"
-                className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-transparent text-lg text-neutral-500 transition hover:border-neutral-700 hover:bg-neutral-900 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-              >
-                <span
-                  aria-hidden="true"
-                >
-                  ×
-                </span>
-              </button>
-            ) : null}
-          </div>
-
-          <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2 px-1">
-            <p
-              id="discover-user-search-help"
-              className="text-[11px] leading-5 text-neutral-600"
-            >
-              Enter at least{' '}
-              {
-                MINIMUM_SEARCH_LENGTH
-              }{' '}
-              characters.
-            </p>
-
-            {liveQuery.length >
-              0 &&
-            liveQuery.length <
-              MINIMUM_SEARCH_LENGTH ? (
-              <p className="text-[11px] font-medium text-amber-300/70">
-                Type one more character
-              </p>
-            ) : null}
-          </div>
-        </form>
-
-        <p
-          id="discover-user-search-status"
-          role="status"
-          aria-live="polite"
-          className="sr-only"
-        >
-          {resultSummary}
-        </p>
-
-        {error ? (
-          <div
-            role="alert"
-            className="mt-4 rounded-xl border border-red-500/30 bg-red-950/30 px-4 py-3"
-          >
-            <p className="text-sm font-semibold text-red-200">
-              Search unavailable
-            </p>
-
-            <p className="mt-1 break-words text-xs leading-5 text-red-300/80">
-              {error}
-            </p>
-          </div>
+      <div className="mt-5 space-y-3">
+        {(loading ||
+          hasPendingQuery) &&
+        liveQuery.length >=
+          MINIMUM_SEARCH_LENGTH ? (
+          <SearchLoadingState />
         ) : null}
 
-        <div className="mt-5 space-y-3">
-          {(loading ||
-            hasPendingQuery) &&
-          liveQuery.length >=
-            MINIMUM_SEARCH_LENGTH ? (
-            <SearchLoadingState />
-          ) : null}
+        {!loading &&
+        !hasPendingQuery &&
+        liveQuery.length <
+          MINIMUM_SEARCH_LENGTH ? (
+          <SearchPromptState />
+        ) : null}
 
-          {!loading &&
-          !hasPendingQuery &&
-          liveQuery.length <
-            MINIMUM_SEARCH_LENGTH ? (
-            <SearchPromptState />
-          ) : null}
+        {!loading &&
+        !hasPendingQuery &&
+        hasSearch &&
+        users.length ===
+          0 &&
+        !error ? (
+          <SearchEmptyState
+            query={
+              trimmedQuery
+            }
+          />
+        ) : null}
 
-          {!loading &&
-          !hasPendingQuery &&
-          hasSearch &&
-          users.length ===
-            0 &&
-          !error ? (
-            <SearchEmptyState
-              query={
-                trimmedQuery
-              }
-            />
-          ) : null}
-
-          {!loading &&
-          !hasPendingQuery &&
-            users.map(
-              (
-                user
-              ) => (
-                <UserResultCard
-                  key={
-                    user.id
-                  }
-                  user={
-                    user
-                  }
-                  currentUserId={
-                    currentUserId
-                  }
-                />
-              )
-            )}
-        </div>
+        {!loading &&
+        !hasPendingQuery &&
+          users.map(
+            (
+              user
+            ) => (
+              <UserResultCard
+                key={
+                  user.id
+                }
+                user={
+                  user
+                }
+                currentUserId={
+                  currentUserId
+                }
+              />
+            )
+          )}
       </div>
     </section>
   )
@@ -515,27 +498,20 @@ export default function UserSearch() {
 
 function SearchPromptState() {
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-black/25 p-4 sm:p-5">
-      <div className="flex min-w-0 items-start gap-3">
-        <span
-          aria-hidden="true"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.07] text-lg"
-        >
-          🧭
-        </span>
+    <div className="flex min-w-0 items-center gap-3 rounded-[1.35rem] bg-white/[0.02] px-4 py-3.5 ring-1 ring-white/[0.045]">
+      <span
+        aria-hidden="true"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-300/[0.06] text-sm text-cyan-200/70 ring-1 ring-cyan-300/10"
+      >
+        ↗
+      </span>
 
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-neutral-200">
-            Discover someone new
-          </p>
-
-          <p className="mt-1 text-xs leading-5 text-neutral-500">
-            Try a name, username, or
-            someone you met on a recent
-            Roam.
-          </p>
-        </div>
-      </div>
+      <p className="min-w-0 text-xs leading-5 text-zinc-600">
+        Search someone you know,
+        a creator you&apos;ve heard
+        about, or a Roamer you met
+        out in the city.
+      </p>
     </div>
   )
 }
@@ -547,26 +523,26 @@ function SearchEmptyState({
     string
 }) {
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-black/25 p-5 text-center">
+    <div className="rounded-[1.5rem] bg-white/[0.02] px-5 py-7 text-center ring-1 ring-white/[0.045]">
       <div
         aria-hidden="true"
-        className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-neutral-800 bg-neutral-950 text-xl"
+        className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/[0.035] text-base text-zinc-500 ring-1 ring-white/[0.055]"
       >
-        🔎
+        ?
       </div>
 
-      <p className="mt-3 text-sm font-semibold text-white">
-        No Roamers found
+      <p className="mt-3 text-sm font-black text-white">
+        Nobody here yet
       </p>
 
-      <p className="mx-auto mt-1 max-w-sm break-words text-xs leading-5 text-neutral-500">
-        We could not find anyone
-        matching{' '}
-        <span className="font-medium text-neutral-300">
+      <p className="mx-auto mt-1.5 max-w-sm break-words text-xs leading-5 text-zinc-600">
+        No match for{' '}
+        <span className="font-semibold text-zinc-400">
           “{query}”
         </span>
-        . Check the spelling or try a
-        shorter name.
+        . Try their username,
+        a shorter name, or a
+        different spelling.
       </p>
     </div>
   )
@@ -589,24 +565,24 @@ function SearchLoadingState() {
             key={
               item
             }
-            className="animate-pulse rounded-2xl border border-neutral-800 bg-black/30 p-4 sm:p-5"
+            className="animate-pulse rounded-[1.5rem] bg-white/[0.025] p-4 ring-1 ring-white/[0.05] sm:p-5"
           >
             <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-              <div className="h-14 w-14 shrink-0 rounded-2xl bg-neutral-800 sm:h-16 sm:w-16" />
+              <div className="h-14 w-14 shrink-0 rounded-[1.1rem] bg-white/[0.065] sm:h-16 sm:w-16" />
 
               <div className="min-w-0 flex-1">
-                <div className="h-4 w-36 max-w-full rounded bg-neutral-800" />
+                <div className="h-4 w-36 max-w-full rounded bg-white/[0.065]" />
 
-                <div className="mt-2 h-3 w-48 max-w-full rounded bg-neutral-900" />
+                <div className="mt-2 h-3 w-48 max-w-full rounded bg-white/[0.035]" />
 
-                <div className="mt-4 h-3 w-full rounded bg-neutral-900" />
+                <div className="mt-4 h-3 w-full rounded bg-white/[0.035]" />
 
-                <div className="mt-2 h-3 w-3/4 rounded bg-neutral-900" />
+                <div className="mt-2 h-3 w-3/4 rounded bg-white/[0.03]" />
 
                 <div className="mt-4 flex gap-2">
-                  <div className="h-7 w-20 rounded-full bg-neutral-900" />
+                  <div className="h-7 w-20 rounded-full bg-white/[0.035]" />
 
-                  <div className="h-7 w-24 rounded-full bg-neutral-900" />
+                  <div className="h-7 w-24 rounded-full bg-white/[0.035]" />
                 </div>
               </div>
             </div>

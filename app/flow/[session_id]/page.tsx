@@ -8,7 +8,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import ActiveFlowCard from './components/ActiveFlowCard'
 import BackToRouteButton from './components/BackToRouteButton'
 import FlowMap from './components/FlowMap'
-import FlowProgress from './components/FlowProgress'
+
 
 export const dynamic = 'force-dynamic'
 
@@ -710,64 +710,117 @@ export default async function ActiveFlowPage({
   }
 
   return (
-    <main className="min-h-screen bg-black px-4 pb-10 text-white">
-      <div className="mx-auto max-w-3xl space-y-6 pt-[calc(4rem+env(safe-area-inset-top)+1rem)]">
-        <BackToRouteButton />
+    <main className="relative min-h-screen overflow-x-clip bg-black text-white">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 overflow-hidden"
+      >
+        <div className="absolute -left-32 top-20 h-80 w-80 rounded-full bg-cyan-300/[0.045] blur-[110px]" />
 
-        <ActiveFlowCard
-          session={
-            normalizedSession
-          }
-          venues={
-            venues
-          }
-          progress={
-            progress
-          }
-        />
+        <div className="absolute -right-36 top-[32rem] h-96 w-96 rounded-full bg-indigo-400/[0.045] blur-[120px]" />
 
-        <FlowMap
-          venues={
-            venues
-          }
-          completedVenueIds={
-            completedVenueIds
-          }
-          currentVenueId={
-            currentVenueId
-          }
-          travelMode={
-            travelMode
-          }
-          heightPx={
-            320
-          }
-        />
+        <div className="absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-cyan-300/[0.025] to-transparent" />
+      </div>
 
-        <FlowRouteLauncher
-          venues={
-            venues
-          }
-          travelMode={
-            travelMode
-          }
-          flowId={
-            session.id
-          }
-          source="active_flow"
-        />
+      <div className="relative z-10 mx-auto w-full max-w-4xl px-4 pb-14 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] sm:px-6">
+        <div className="flex min-w-0 items-center justify-between gap-4">
+          <BackToRouteButton />
 
-        <FlowProgress
-          venueIds={
-            venueIds
-          }
-          venues={
-            venues
-          }
-          progress={
-            progress
-          }
-        />
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/[0.035] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500 ring-1 ring-white/[0.055]">
+            <span
+              aria-hidden="true"
+              className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.55)]"
+            />
+
+            Live Roam
+          </span>
+        </div>
+
+        
+
+        <div className="mt-7">
+          <ActiveFlowCard
+            session={
+              normalizedSession
+            }
+            venues={
+              venues
+            }
+            progress={
+              progress
+            }
+          />
+        </div>
+
+        <section
+          aria-labelledby="active-flow-route-title"
+          className="mt-8 min-w-0"
+        >
+          <div className="mb-4 flex min-w-0 items-end justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
+                Your route
+              </p>
+
+              <h2
+                id="active-flow-route-title"
+                className="mt-2 text-xl font-black tracking-[-0.03em] text-white"
+              >
+                See where you’re headed
+              </h2>
+            </div>
+
+            <span className="shrink-0 text-[10px] font-bold text-zinc-700">
+              {completedVenueIds.length.toLocaleString(
+                'en-US'
+              )}
+              {' / '}
+              {venueIds.length.toLocaleString(
+                'en-US'
+              )}{' '}
+              stops
+            </span>
+          </div>
+
+          <div className="overflow-hidden rounded-[1.75rem] bg-white/[0.025] p-2 shadow-[0_22px_70px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.06]">
+            <div className="overflow-hidden rounded-[1.4rem]">
+              <FlowMap
+                venues={
+                  venues
+                }
+                completedVenueIds={
+                  completedVenueIds
+                }
+                currentVenueId={
+                  currentVenueId
+                }
+                travelMode={
+                  travelMode
+                }
+                heightPx={
+                  320
+                }
+              />
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <FlowRouteLauncher
+              venues={
+                venues
+              }
+              travelMode={
+                travelMode
+              }
+              flowId={
+                session.id
+              }
+              source="active_flow"
+            />
+          </div>
+        </section>
+
+        
       </div>
     </main>
   )

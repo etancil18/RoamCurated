@@ -104,19 +104,19 @@ const REPUTATION_LEVEL_LABELS = {
 
 const REPUTATION_LEVEL_STYLES = {
   unranked:
-    'border-neutral-700 bg-neutral-900 text-neutral-400',
+    'bg-white/[0.035] text-zinc-500 ring-1 ring-white/[0.06]',
 
   emerging:
-    'border-cyan-500/25 bg-cyan-500/10 text-cyan-200',
+    'bg-cyan-300/[0.09] text-cyan-200 ring-1 ring-cyan-300/15',
 
   established:
-    'border-indigo-500/25 bg-indigo-500/10 text-indigo-200',
+    'bg-indigo-400/[0.09] text-indigo-200 ring-1 ring-indigo-300/15',
 
   expert:
-    'border-violet-500/30 bg-violet-500/10 text-violet-200',
+    'bg-violet-400/[0.1] text-violet-200 ring-1 ring-violet-300/15',
 
   elite:
-    'border-amber-400/30 bg-amber-400/10 text-amber-200',
+    'bg-amber-300/[0.1] text-amber-200 ring-1 ring-amber-300/15',
 } as const satisfies Record<
   ReputationLevel,
   string
@@ -124,19 +124,19 @@ const REPUTATION_LEVEL_STYLES = {
 
 const REPUTATION_LEVEL_ACCENTS = {
   unranked:
-    'from-neutral-500/[0.05]',
+    'from-white/[0.025]',
 
   emerging:
-    'from-cyan-500/[0.08]',
+    'from-cyan-300/[0.055]',
 
   established:
-    'from-indigo-500/[0.08]',
+    'from-indigo-400/[0.055]',
 
   expert:
-    'from-violet-500/[0.08]',
+    'from-violet-400/[0.055]',
 
   elite:
-    'from-amber-400/[0.08]',
+    'from-amber-300/[0.06]',
 } as const satisfies Record<
   ReputationLevel,
   string
@@ -198,12 +198,12 @@ export default function CreatorReputationIdentity({
     <section
       aria-label={identityLabel}
       className={[
-        'relative w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-cyan-500/20',
-        'bg-gradient-to-br via-neutral-950/95 to-indigo-500/[0.07]',
+        'relative w-full min-w-0 overflow-hidden rounded-[2rem]',
+        'bg-gradient-to-br via-white/[0.025] to-indigo-400/[0.035]',
         REPUTATION_LEVEL_ACCENTS[
           highestLevel
         ],
-        'shadow-xl shadow-black/20',
+        'shadow-[0_24px_80px_rgba(0,0,0,0.22)] ring-1 ring-white/[0.07]',
         compact
           ? 'p-4'
           : 'p-5 sm:p-6',
@@ -224,16 +224,20 @@ export default function CreatorReputationIdentity({
           ].join(' ')}
         >
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
-              Public reputation identity
-            </p>
+            <div className="flex items-center gap-2">
+              <span className="h-px w-5 bg-cyan-300/60" />
+
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                Known for
+              </p>
+            </div>
 
             <h2
               className={[
-                'mt-2 break-words font-semibold tracking-tight text-white',
+                'mt-3 break-words font-black tracking-[-0.035em] text-white',
                 compact
                   ? 'text-lg'
-                  : 'text-xl sm:text-2xl',
+                  : 'text-2xl sm:text-[1.75rem]',
               ].join(' ')}
             >
               {normalized.headline ??
@@ -245,7 +249,7 @@ export default function CreatorReputationIdentity({
             {normalized.summary ? (
               <p
                 className={[
-                  'mt-2 max-w-2xl break-words text-neutral-400',
+                  'mt-2 max-w-2xl break-words text-zinc-500',
                   compact
                     ? 'text-xs leading-5'
                     : 'text-sm leading-6',
@@ -256,14 +260,13 @@ export default function CreatorReputationIdentity({
             ) : (
               <p
                 className={[
-                  'mt-2 max-w-2xl text-neutral-500',
+                  'mt-2 max-w-2xl text-zinc-600',
                   compact
                     ? 'text-xs leading-5'
                     : 'text-sm leading-6',
                 ].join(' ')}
               >
-                Earned status based on
-                category-specific,
+                Reputation earned through category-specific,
                 verified Roam activity.
               </p>
             )}
@@ -279,7 +282,7 @@ export default function CreatorReputationIdentity({
           <dl
             aria-label="Creator-wide reputation evidence"
             className={[
-              'mt-5 grid min-w-0 gap-3',
+              'mt-6 grid min-w-0 gap-3',
               compact
                 ? 'grid-cols-2'
                 : 'grid-cols-2 lg:grid-cols-4',
@@ -321,29 +324,22 @@ export default function CreatorReputationIdentity({
 
         {visibleCategories.length >
         0 ? (
-          <div className="mt-5 border-t border-neutral-800/80 pt-5">
+          <div className="mt-6 border-t border-white/[0.055] pt-5">
             <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                  Strongest scoped
-                  statuses
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-zinc-600">
+                  Strongest reputations
                 </p>
 
-                <p className="mt-1 max-w-2xl text-[11px] leading-5 text-neutral-600">
-                  Each status below
-                  represents one specific
-                  category and geographic
-                  scope. Its venue count
-                  is not the creator’s
-                  total footprint.
+                <p className="mt-1 max-w-2xl text-[11px] leading-5 text-zinc-600">
+                  Each one represents a specific category and geographic scope—not their entire Roam history.
                 </p>
               </div>
 
               {normalized.categories
                 .length >
               visibleCategories.length ? (
-                <p className="shrink-0 rounded-full border border-neutral-800 bg-black/25 px-2.5 py-1 text-[10px] font-medium text-neutral-500">
-                  Showing{' '}
+                <p className="shrink-0 rounded-full bg-white/[0.035] px-2.5 py-1 text-[10px] font-bold text-zinc-600 ring-1 ring-white/[0.055]">
                   {
                     visibleCategories.length
                   }{' '}
@@ -396,11 +392,11 @@ function IdentityBackground() {
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/35 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
 
-      <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-500/[0.06] blur-3xl" />
+      <div className="absolute -right-24 -top-24 h-64 w-64 rounded-full bg-cyan-300/[0.055] blur-[100px]" />
 
-      <div className="absolute -bottom-32 -left-32 h-72 w-72 rounded-full bg-indigo-500/[0.05] blur-3xl" />
+      <div className="absolute -bottom-32 -left-32 h-72 w-72 rounded-full bg-indigo-400/[0.045] blur-[110px]" />
     </div>
   )
 }
@@ -417,8 +413,8 @@ function ReputationLevelBadge({
   return (
     <span
       className={[
-        'inline-flex w-fit shrink-0 items-center rounded-full border',
-        'px-3 py-1.5 text-xs font-semibold',
+        'inline-flex w-fit shrink-0 items-center rounded-full',
+        'px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em]',
         REPUTATION_LEVEL_STYLES[
           level
         ],
@@ -443,16 +439,16 @@ function IdentityMetric({
   detail: string
 }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-neutral-800 bg-black/30 px-4 py-3">
-      <dd className="truncate text-lg font-semibold text-white">
+    <div className="min-w-0 rounded-[1.4rem] bg-black/25 px-4 py-4 ring-1 ring-white/[0.055]">
+      <dd className="truncate text-2xl font-black leading-none tracking-[-0.04em] text-white">
         {value}
       </dd>
 
-      <dt className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-neutral-500">
+      <dt className="mt-3 text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">
         {label}
       </dt>
 
-      <p className="mt-1 text-[10px] leading-4 text-neutral-600">
+      <p className="mt-1.5 text-[10px] leading-4 text-zinc-600">
         {detail}
       </p>
     </div>
@@ -478,44 +474,40 @@ function IdentityScopeDisclosure({
   return (
     <div
       className={[
-        'mt-4 grid min-w-0 gap-3 rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.04]',
+        'mt-4 grid min-w-0 gap-3 rounded-[1.5rem] bg-cyan-300/[0.045] ring-1 ring-cyan-300/10',
         compact
-          ? 'p-3'
+          ? 'p-3.5'
           : 'p-4 sm:grid-cols-2',
       ].join(' ')}
     >
       {primaryCityLabel ? (
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-400">
-            Primary reputation city
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-300">
+            Strongest city
           </p>
 
-          <p className="mt-1 break-words text-sm font-semibold text-white">
+          <p className="mt-1.5 break-words text-sm font-black text-white">
             {primaryCityLabel}
           </p>
 
-          <p className="mt-1 text-[11px] leading-5 text-neutral-600">
-            The strongest city scope
-            represented in this
-            reputation snapshot.
+          <p className="mt-1 text-[11px] leading-5 text-zinc-600">
+            The city where this creator’s reputation is strongest.
           </p>
         </div>
       ) : null}
 
       {primaryCategoryLabel ? (
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-400">
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-cyan-300">
             Strongest category
           </p>
 
-          <p className="mt-1 break-words text-sm font-semibold text-white">
+          <p className="mt-1.5 break-words text-sm font-black text-white">
             {primaryCategoryLabel}
           </p>
 
-          <p className="mt-1 text-[11px] leading-5 text-neutral-600">
-            The highest-performing
-            qualifying category, not a
-            creator-wide activity total.
+          <p className="mt-1 text-[11px] leading-5 text-zinc-600">
+            Their highest-performing qualifying category.
           </p>
         </div>
       ) : null}
@@ -539,22 +531,22 @@ function IdentityRankingStatus({
   return (
     <div
       className={[
-        'mt-4 flex min-w-0 gap-3 rounded-2xl border',
+        'mt-4 flex min-w-0 gap-3 rounded-[1.5rem] ring-1',
         status.published
-          ? 'border-cyan-500/20 bg-cyan-500/[0.05]'
-          : 'border-neutral-800 bg-black/25',
+          ? 'bg-cyan-300/[0.05] ring-cyan-300/10'
+          : 'bg-black/25 ring-white/[0.055]',
         compact
-          ? 'p-3'
+          ? 'p-3.5'
           : 'p-4',
       ].join(' ')}
     >
       <span
         aria-hidden="true"
         className={[
-          'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm',
+          'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm ring-1',
           status.published
-            ? 'border-cyan-500/20 bg-cyan-500/10 text-cyan-300'
-            : 'border-neutral-800 bg-neutral-900 text-neutral-500',
+            ? 'bg-cyan-300/[0.08] text-cyan-200 ring-cyan-300/15'
+            : 'bg-white/[0.035] text-zinc-600 ring-white/[0.055]',
         ].join(' ')}
       >
         {status.published
@@ -563,22 +555,22 @@ function IdentityRankingStatus({
       </span>
 
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-600">
-          Public ranking
+        <p className="text-[9px] font-black uppercase tracking-[0.16em] text-zinc-600">
+          Public standing
         </p>
 
         <p
           className={[
-            'mt-1 break-words text-sm font-semibold',
+            'mt-1.5 break-words font-black tracking-tight',
             status.published
-              ? 'text-cyan-300'
-              : 'text-neutral-300',
+              ? 'text-base text-cyan-200'
+              : 'text-sm text-zinc-400',
           ].join(' ')}
         >
           {status.headline}
         </p>
 
-        <p className="mt-1 text-[11px] leading-5 text-neutral-600">
+        <p className="mt-1.5 text-[11px] leading-5 text-zinc-600">
           {status.detail}
         </p>
       </div>
@@ -603,20 +595,20 @@ function ReputationCategoryCard({
     )
 
   return (
-    <article className="relative min-w-0 overflow-hidden rounded-2xl border border-neutral-800 bg-black/30 p-4">
+    <article className="relative min-w-0 overflow-hidden rounded-[1.5rem] bg-black/25 p-4 ring-1 ring-white/[0.055]">
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-700 to-transparent"
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.09] to-transparent"
       />
 
       <div className="relative min-w-0">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-cyan-400">
+            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-cyan-300">
               {scopeLabel}
             </p>
 
-            <h3 className="mt-2 break-words text-sm font-semibold leading-5 text-white">
+            <h3 className="mt-2 break-words text-sm font-black leading-5 text-white">
               {category.primaryLabel}
             </h3>
           </div>
@@ -624,7 +616,7 @@ function ReputationCategoryCard({
           {category.level ? (
             <span
               className={[
-                'shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-semibold',
+                'shrink-0 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em]',
                 REPUTATION_LEVEL_STYLES[
                   category.level
                 ],
@@ -643,7 +635,7 @@ function ReputationCategoryCard({
           {category.verifiedVenueCount !==
           null ? (
             <CategoryMetric
-              label="Scoped venues"
+              label="Verified places"
               value={formatNumber(
                 category.verifiedVenueCount,
                 0
@@ -654,7 +646,7 @@ function ReputationCategoryCard({
           {category.score !==
           null ? (
             <CategoryMetric
-              label="Category score"
+              label="Reputation score"
               value={formatNumber(
                 category.score,
                 1
@@ -666,22 +658,22 @@ function ReputationCategoryCard({
 
         <div
           className={[
-            'mt-3 rounded-xl border px-3 py-2.5',
+            'mt-3 rounded-[1.1rem] px-3 py-2.5 ring-1',
             rankingStatus.published
-              ? 'border-cyan-500/15 bg-cyan-500/[0.04]'
-              : 'border-neutral-800 bg-black/20',
+              ? 'bg-cyan-300/[0.045] ring-cyan-300/10'
+              : 'bg-black/20 ring-white/[0.05]',
           ].join(' ')}
         >
-          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-600">
+          <p className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-600">
             Standing
           </p>
 
           <p
             className={[
-              'mt-1 break-words text-xs font-medium leading-5',
+              'mt-1 break-words text-xs font-bold leading-5',
               rankingStatus.published
-                ? 'text-cyan-300'
-                : 'text-neutral-500',
+                ? 'text-cyan-200'
+                : 'text-zinc-500',
             ].join(' ')}
           >
             {
@@ -704,19 +696,19 @@ function CategoryMetric({
   accent?: boolean
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-neutral-800 bg-black/25 px-3 py-2.5">
+    <div className="min-w-0 rounded-[1.05rem] bg-white/[0.025] px-3 py-3 ring-1 ring-white/[0.05]">
       <dd
         className={[
-          'truncate text-sm font-semibold',
+          'truncate text-base font-black tracking-tight',
           accent
-            ? 'text-cyan-300'
+            ? 'text-cyan-200'
             : 'text-white',
         ].join(' ')}
       >
         {value}
       </dd>
 
-      <dt className="mt-1 text-[9px] uppercase tracking-[0.1em] text-neutral-600">
+      <dt className="mt-1.5 text-[9px] font-bold uppercase tracking-[0.1em] text-zinc-600">
         {label}
       </dt>
     </div>
@@ -725,14 +717,8 @@ function CategoryMetric({
 
 function IdentityDisclosure() {
   return (
-    <p className="mt-5 border-t border-neutral-800/70 pt-4 text-[10px] leading-5 text-neutral-600">
-      Creator-wide evidence summarizes
-      total qualifying activity. Category
-      cards show only the evidence
-      attributed to that exact category
-      and scope. Published ranking claims
-      require a sufficiently large
-      eligible comparison population.
+    <p className="mt-6 border-t border-white/[0.05] pt-4 text-[10px] leading-5 text-zinc-600">
+      Creator-wide evidence summarizes qualifying activity. Individual reputation cards show only the evidence tied to that exact category and scope. Public comparisons appear only when the eligible population is large enough to make them meaningful.
     </p>
   )
 }
