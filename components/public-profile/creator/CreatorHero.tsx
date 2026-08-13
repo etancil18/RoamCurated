@@ -198,7 +198,7 @@ export default function CreatorHero({
       <CreatorHeroBackground />
 
       <div className="relative z-10 w-full min-w-0 p-5 sm:p-7 lg:p-8">
-        <div className="flex min-w-0 flex-row items-start gap-4 sm:gap-6 md:gap-8">
+        <div className="flex min-w-0 items-start gap-4 sm:gap-6">
           <CreatorAvatar
             displayName={
               normalizedDisplayName
@@ -209,54 +209,57 @@ export default function CreatorHero({
             initials={initials}
           />
 
-          <div className="min-w-0 flex-1">
-            <CreatorIdentity
-              displayName={
-                normalizedDisplayName
-              }
-              username={
-                normalizedUsername
-              }
-              headline={
-                normalizedHeadline
-              }
-              bio={normalizedBio}
-              primaryCity={
-                normalizedPrimaryCity
-              }
-            />
-
-            <CreatorProfileMetrics
-              followersCount={
-                normalizedFollowersCount
-              }
-              followingCount={
-                normalizedFollowingCount
-              }
-              passportLevel={
-                normalizedPassportLevel
-              }
-            />
-
-            <CreatorAvailability
-              acceptingCollaborations={
-                acceptingCollaborations
-              }
-              availableForTravel={
-                availableForTravel
-              }
-            />
-
-            <CreatorHeroActions
-              publicEmail={
-                normalizedEmail
-              }
-              socialLinks={
-                visibleSocialLinks
-              }
-            />
-          </div>
+          <CreatorIdentity
+            displayName={
+              normalizedDisplayName
+            }
+            username={
+              normalizedUsername
+            }
+          />
         </div>
+
+        <CreatorStory
+          headline={
+            normalizedHeadline
+          }
+          bio={
+            normalizedBio
+          }
+          primaryCity={
+            normalizedPrimaryCity
+          }
+        />
+
+        <CreatorProfileMetrics
+          followersCount={
+            normalizedFollowersCount
+          }
+          followingCount={
+            normalizedFollowingCount
+          }
+          passportLevel={
+            normalizedPassportLevel
+          }
+        />
+
+        <CreatorAvailability
+          acceptingCollaborations={
+            acceptingCollaborations
+          }
+          availableForTravel={
+            availableForTravel
+          }
+        />
+
+        <CreatorHeroActions
+          publicEmail={
+            normalizedEmail
+          }
+          socialLinks={
+            visibleSocialLinks
+          }
+        />
       </div>
     </section>
   )
@@ -341,66 +344,96 @@ function CreatorAvatar({
 function CreatorIdentity({
   displayName,
   username,
+}: {
+  displayName: string
+  username: string | null
+}) {
+  return (
+    <div className="min-w-0 flex-1">
+      <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
+        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.7)]" />
+
+        <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+          Roam Creator
+        </p>
+      </div>
+
+      <h1
+        id="creator-hero-title"
+        className="mt-3 break-words text-[2rem] font-black leading-[0.98] tracking-[-0.045em] text-white sm:mt-4 sm:text-5xl"
+      >
+        {displayName}
+      </h1>
+
+      {username ? (
+        <p className="mt-2 break-all text-sm font-semibold text-zinc-500">
+          @{username}
+        </p>
+      ) : null}
+
+      <span className="mt-4 inline-flex w-fit max-w-full items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-400 ring-1 ring-white/[0.07]">
+        <span
+          aria-hidden="true"
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300"
+        />
+
+        Creator Mode
+      </span>
+    </div>
+  )
+}
+
+/* =========================================================
+ * Creator story
+ * ======================================================= */
+
+function CreatorStory({
   headline,
   bio,
   primaryCity,
 }: {
-  displayName: string
-  username: string | null
   headline: string | null
   bio: string | null
   primaryCity: string | null
 }) {
+  if (
+    !headline &&
+    !bio &&
+    !primaryCity
+  ) {
+    return null
+  }
+
   return (
-    <div className="min-w-0">
-      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.7)]" />
-
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
-              Roam Creator
-            </p>
-          </div>
-
-          <h1
-            id="creator-hero-title"
-            className="mt-4 break-words text-[2.25rem] font-black leading-[0.98] tracking-[-0.045em] text-white sm:text-5xl"
-          >
-            {displayName}
-          </h1>
-
-          {username ? (
-            <p className="mt-2 break-all text-sm font-semibold text-zinc-500">
-              @{username}
-            </p>
-          ) : null}
-        </div>
-
-        <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-400 ring-1 ring-white/[0.07]">
-          <span
-            aria-hidden="true"
-            className="h-1.5 w-1.5 rounded-full bg-cyan-300"
-          />
-
-          Creator Mode
-        </span>
-      </div>
-
+    <div className="mt-6 min-w-0">
       {headline ? (
-        <p className="mt-5 max-w-3xl break-words text-lg font-black leading-7 tracking-[-0.02em] text-white sm:text-[1.35rem] sm:leading-8">
+        <p className="max-w-3xl break-words text-lg font-black leading-7 tracking-[-0.02em] text-white sm:text-[1.35rem] sm:leading-8">
           {headline}
         </p>
       ) : null}
 
       {bio ? (
-        <p className="mt-3 max-w-3xl whitespace-pre-line break-words text-sm leading-6 text-zinc-400 sm:text-[15px] sm:leading-7">
+        <p
+          className={[
+            'max-w-3xl whitespace-pre-line break-words text-sm leading-6 text-zinc-400 sm:text-[15px] sm:leading-7',
+            headline
+              ? 'mt-3'
+              : '',
+          ].join(' ')}
+        >
           {bio}
         </p>
       ) : null}
 
       {primaryCity ? (
-        <div className="mt-4 flex min-w-0 items-center gap-2 text-sm font-medium text-zinc-500">
+        <div
+          className={[
+            'flex min-w-0 items-center gap-2 text-sm font-medium text-zinc-500',
+            headline || bio
+              ? 'mt-4'
+              : '',
+          ].join(' ')}
+        >
           <MapPin
             aria-hidden="true"
             className="h-4 w-4 shrink-0 text-cyan-300"
