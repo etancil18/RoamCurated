@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import ProfileAvatarUploader from "@/components/profile/ProfileAvatarUploader"
 import PreferredVibes from "@/app/profile/fields/PreferredVibes"
 import InterestCategories from "@/app/profile/fields/InterestCategories"
 import Frequency from "@/app/profile/fields/Frequency"
@@ -21,6 +22,7 @@ export default function ProfileForm() {
   const [error, setError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [fullName, setFullName] = useState<string>("")
   const [username, setUsername] = useState<string>("")
   const [instagramHandle, setInstagramHandle] = useState<string>("")
@@ -51,6 +53,7 @@ export default function ProfileForm() {
       if (error) {
         console.warn("Failed to load profile:", error.message)
       } else if (data) {
+        setAvatarUrl(data.avatar_url ?? null)
         setFullName(data.full_name ?? "")
         setUsername(data.username ?? "")
         setInstagramHandle(data.instagram_handle ?? "")
@@ -156,50 +159,57 @@ export default function ProfileForm() {
   return (
     <div className="space-y-6">
       <SettingsSection title="Identity">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Full Name">
-            <Input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="e.g. Jordan Smith"
-              className="border-neutral-800 bg-black/40 text-white placeholder:text-neutral-600"
-            />
-          </Field>
+        <div className="space-y-5">
+          <ProfileAvatarUploader
+            initialAvatarUrl={avatarUrl}
+            displayName={fullName || username || null}
+          />
 
-          <Field label="Username" help="Used for your public profile URL.">
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">
-                @
-              </span>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Full Name">
               <Input
-                required
-                value={username}
-                onChange={(e) => setUsername(normalizeUsername(e.target.value))}
-                placeholder="citycurator"
-                className="border-neutral-800 bg-black/40 pl-7 text-white placeholder:text-neutral-600"
-                minLength={3}
-                maxLength={30}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="e.g. Jordan Smith"
+                className="border-neutral-800 bg-black/40 text-white placeholder:text-neutral-600"
               />
-            </div>
-          </Field>
+            </Field>
 
-          <Field label="Instagram Handle">
-            <Input
-              value={instagramHandle}
-              onChange={(e) => setInstagramHandle(e.target.value)}
-              placeholder="@yourhandle"
-              className="border-neutral-800 bg-black/40 text-white placeholder:text-neutral-600"
-            />
-          </Field>
+            <Field label="Username" help="Used for your public profile URL.">
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">
+                  @
+                </span>
+                <Input
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(normalizeUsername(e.target.value))}
+                  placeholder="citycurator"
+                  className="border-neutral-800 bg-black/40 pl-7 text-white placeholder:text-neutral-600"
+                  minLength={3}
+                  maxLength={30}
+                />
+              </div>
+            </Field>
 
-          <Field label="Home City">
-            <Input
-              value={homeNeighborhood}
-              onChange={(e) => setHomeNeighborhood(e.target.value)}
-              placeholder="London, New York City, Atlanta, etc."
-              className="border-neutral-800 bg-black/40 text-white placeholder:text-neutral-600"
-            />
-          </Field>
+            <Field label="Instagram Handle">
+              <Input
+                value={instagramHandle}
+                onChange={(e) => setInstagramHandle(e.target.value)}
+                placeholder="@yourhandle"
+                className="border-neutral-800 bg-black/40 text-white placeholder:text-neutral-600"
+              />
+            </Field>
+
+            <Field label="Home City">
+              <Input
+                value={homeNeighborhood}
+                onChange={(e) => setHomeNeighborhood(e.target.value)}
+                placeholder="London, New York City, Atlanta, etc."
+                className="border-neutral-800 bg-black/40 text-white placeholder:text-neutral-600"
+              />
+            </Field>
+          </div>
         </div>
       </SettingsSection>
 
