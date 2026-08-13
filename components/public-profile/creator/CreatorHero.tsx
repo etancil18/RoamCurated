@@ -198,7 +198,7 @@ export default function CreatorHero({
       <CreatorHeroBackground />
 
       <div className="relative z-10 w-full min-w-0 p-5 sm:p-7 lg:p-8">
-        <div className="flex min-w-0 flex-col gap-7 md:flex-row md:items-start md:gap-8">
+        <div className="flex min-w-0 flex-row items-start gap-4 sm:gap-6 md:gap-8">
           <CreatorAvatar
             displayName={
               normalizedDisplayName
