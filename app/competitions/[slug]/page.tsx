@@ -762,12 +762,22 @@ export default async function CompetitionDetailPage({
 
 
   return (
-    <main className="min-h-screen bg-[#070707] text-white">
-      <div className="mx-auto w-full max-w-7xl px-4 pb-28 pt-24 sm:px-6 sm:pt-24 lg:px-8">
+    <main className="relative min-h-screen overflow-x-clip bg-[#070809] px-4 pb-20 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6 sm:pt-[calc(4rem+env(safe-area-inset-top)+2rem)]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[-28%] top-[-10%] h-[28rem] w-[28rem] rounded-full bg-cyan-300/[0.07] blur-[120px] sm:left-[-10%]" />
+
+        <div className="absolute right-[-30%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-400/[0.07] blur-[135px] sm:right-[-12%]" />
+
+        <div className="absolute bottom-[-18%] left-[32%] h-[28rem] w-[28rem] rounded-full bg-amber-300/[0.035] blur-[130px]" />
+
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.02] to-transparent" />
+      </div>
+
+      <div className="relative mx-auto w-full min-w-0 max-w-6xl">
         <div className="mb-7">
           <Link
             href="/competitions"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-white/45 transition hover:text-white"
+            className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/[0.025] px-3.5 py-2 text-xs font-bold text-zinc-500 ring-1 ring-white/[0.06] transition hover:bg-white/[0.05] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
           >
             <span
               aria-hidden="true"
@@ -791,13 +801,13 @@ export default async function CompetitionDetailPage({
 
 
         {startError ? (
-          <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-400/[0.05] px-4 py-3 text-sm text-red-100">
+          <div className="mt-6 rounded-[1.4rem] bg-red-400/[0.045] px-4 py-3 text-sm text-red-100 ring-1 ring-red-400/15">
             {startError}
           </div>
         ) : null}
 
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
           <section>
             <SectionHeading
               eyebrow={
@@ -827,8 +837,8 @@ export default async function CompetitionDetailPage({
 
 
             {entriesError ? (
-              <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.025] p-6">
-                <p className="text-sm text-white/50">
+              <div className="mt-6 rounded-[1.75rem] bg-white/[0.025] p-6 ring-1 ring-white/[0.07]">
+                <p className="text-sm text-zinc-500">
                   Contender routes could not be loaded right now.
                 </p>
               </div>
@@ -926,12 +936,22 @@ function RelayCompetitionDetail({
     () => Promise<void>
 }) {
   return (
-    <main className="min-h-screen bg-[#070707] text-white">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-24 sm:px-6 sm:pt-24 lg:px-8">
+    <main className="relative min-h-screen overflow-x-clip bg-[#070809] px-4 pb-20 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6 sm:pt-[calc(4rem+env(safe-area-inset-top)+2rem)]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[-28%] top-[-10%] h-[28rem] w-[28rem] rounded-full bg-cyan-300/[0.07] blur-[120px] sm:left-[-10%]" />
+
+        <div className="absolute right-[-30%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-400/[0.07] blur-[135px] sm:right-[-12%]" />
+
+        <div className="absolute bottom-[-18%] left-[32%] h-[28rem] w-[28rem] rounded-full bg-amber-300/[0.035] blur-[130px]" />
+
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.02] to-transparent" />
+      </div>
+
+      <div className="relative mx-auto w-full min-w-0 max-w-6xl">
         <div className="mb-7">
           <Link
             href="/competitions"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-white/45 transition hover:text-white"
+            className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/[0.025] px-3.5 py-2 text-xs font-bold text-zinc-500 ring-1 ring-white/[0.06] transition hover:bg-white/[0.05] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
           >
             <span
               aria-hidden="true"
@@ -948,14 +968,22 @@ function RelayCompetitionDetail({
          * HERO
          * ==================================================== */}
 
-        <header className="relative overflow-hidden rounded-[30px] border border-white/[0.09] bg-[linear-gradient(145deg,rgba(255,255,255,0.055),rgba(255,255,255,0.018))] p-5 sm:p-7 lg:p-9">
+        <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.06] via-white/[0.028] to-indigo-400/[0.035] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.07] sm:p-8">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-amber-300/[0.06] blur-3xl"
-          />
+            className="pointer-events-none absolute inset-0 overflow-hidden"
+          >
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/25 to-transparent" />
+
+            <div className="absolute -left-20 -top-24 h-64 w-64 rounded-full bg-cyan-300/[0.055] blur-[100px]" />
+
+            <div className="absolute -bottom-28 right-[-4rem] h-72 w-72 rounded-full bg-indigo-400/[0.05] blur-[110px]" />
+
+            <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-amber-300/[0.045] blur-[110px]" />
+          </div>
 
 
-          <div className="relative">
+          <div className="relative z-10">
             <div className="flex flex-wrap items-center gap-2">
               <RelayStatusBadge
                 kind="relay"
@@ -966,45 +994,49 @@ function RelayCompetitionDetail({
 
 
               {relay.partnerCampaignId ? (
-                <span className="inline-flex items-center rounded-full border border-violet-300/15 bg-violet-300/[0.055] px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.13em] text-violet-100/75">
+                <span className="inline-flex items-center rounded-full bg-violet-300/[0.055] px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.13em] text-violet-100/75 ring-1 ring-violet-300/15">
                   Partner Relay
                 </span>
               ) : null}
 
 
-              <span className="inline-flex items-center rounded-full border border-white/[0.08] bg-black/20 px-2.5 py-1.5 text-[9px] font-medium uppercase tracking-[0.13em] text-white/38">
+              <span className="inline-flex items-center rounded-full bg-white/[0.03] px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.13em] text-zinc-500 ring-1 ring-white/[0.07]">
                 One leg at a time
               </span>
             </div>
 
 
-            <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-100/45">
-              {[
-                relay.city,
-                relay.theme,
-              ]
-                .filter(
-                  Boolean
-                )
-                .join(
-                  ' · '
-                )}
-            </p>
+            <div className="mt-5 flex items-center gap-2">
+              <span className="h-px w-5 bg-cyan-300/60" />
+
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                {[
+                  relay.city,
+                  relay.theme,
+                ]
+                  .filter(
+                    Boolean
+                  )
+                  .join(
+                    ' · '
+                  )}
+              </p>
+            </div>
 
 
-            <h1 className="mt-2 max-w-3xl text-balance text-4xl font-semibold tracking-[-0.045em] text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-4 max-w-3xl text-balance text-3xl font-black tracking-[-0.045em] text-white sm:text-5xl sm:leading-[1.03]">
               {relay.title}
             </h1>
 
 
             {relay.description ? (
-              <p className="mt-5 max-w-2xl text-pretty text-sm leading-7 text-white/50 sm:text-base">
+              <p className="mt-4 max-w-2xl text-pretty text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
                 {
                   relay.description
                 }
               </p>
             ) : (
-              <p className="mt-5 max-w-2xl text-pretty text-sm leading-7 text-white/42 sm:text-base">
+              <p className="mt-4 max-w-2xl text-pretty text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
                 Build one route together. Each teammate owns one
                 leg, completes it in the city, and passes the baton
                 to the next person.
@@ -1012,7 +1044,7 @@ function RelayCompetitionDetail({
             )}
 
 
-            <dl className="mt-7 grid gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07] sm:grid-cols-3">
+            <dl className="mt-7 grid gap-2 sm:grid-cols-3">
               <RelayDetailMetric
                 label="Team"
                 value={
@@ -1052,16 +1084,20 @@ function RelayCompetitionDetail({
          * ==================================================== */}
 
         <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <section className="rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-              How it works
-            </p>
+          <section className="rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+            <div className="flex items-center gap-2">
+              <span className="h-px w-5 bg-cyan-300/60" />
 
-            <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                How it works
+              </p>
+            </div>
+
+            <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
               One team. One route. One leg at a time.
             </h2>
 
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/45">
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-500">
               Each teammate takes one Relay leg. When it&apos;s your
               turn, visit your stop and check in there. Once your stop
               is complete, the baton passes to the next teammate.
@@ -1106,24 +1142,28 @@ function RelayCompetitionDetail({
           />
         </div>
 
-{/* ====================================================
+        {/* ====================================================
          * SLOT SEQUENCE
          * ==================================================== */}
 
-        <section className="mt-8 rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
-          <div className="mb-6 flex flex-col gap-3 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-                Your Relay route
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="h-px w-5 bg-cyan-300/60" />
 
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                  Your Relay route
+                </p>
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
                 The route your team will build
               </h2>
             </div>
 
 
-            <p className="max-w-md text-sm leading-6 text-white/38">
+            <p className="max-w-md text-sm leading-6 text-zinc-500">
               Each leg has its own venue options. Visit the chosen stop
               in person and check in there to complete it.
             </p>
@@ -1146,17 +1186,21 @@ function RelayCompetitionDetail({
          * ==================================================== */}
 
         {rewardPolicy ? (
-          <section className="mt-8 rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
+          <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-amber-300/[0.02] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
             <div className="mb-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-                Competition reward
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="h-px w-5 bg-cyan-300/60" />
 
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                  Competition reward
+                </p>
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
                 What the winning team earns
               </h2>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/40">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
                 Winning XP is a competition reward. You can still earn
                 your regular exploration and Relay XP along the way.
               </p>
@@ -1177,8 +1221,8 @@ function RelayCompetitionDetail({
          * INTEGRITY NOTE
          * ==================================================== */}
 
-        <footer className="mt-8 border-t border-white/[0.07] pt-6">
-          <p className="max-w-3xl text-xs leading-6 text-white/28">
+        <footer className="mt-8 border-t border-white/[0.06] pt-6">
+          <p className="max-w-3xl text-xs leading-6 text-zinc-700">
             Your team&apos;s progress is saved as you go. Roam checks
             that team setup, check-ins, and completed legs meet the
             Relay&apos;s rules before progress moves forward.
@@ -1205,12 +1249,12 @@ function RelayDetailMetric({
     string
 }) {
   return (
-    <div className="bg-[#0b0b0b] px-4 py-4 sm:px-5">
-      <dt className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/25">
+    <div className="min-w-0 rounded-[1.1rem] bg-black/20 px-4 py-4 ring-1 ring-white/[0.055] sm:px-5">
+      <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-700">
         {label}
       </dt>
 
-      <dd className="mt-1.5 text-sm font-medium leading-6 text-white/68">
+      <dd className="mt-1.5 text-sm font-bold leading-6 text-zinc-300">
         {value}
       </dd>
     </div>
@@ -1237,16 +1281,16 @@ function RelayBriefStep({
     string
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-black/15 p-4">
-      <p className="text-[10px] font-semibold tracking-[0.14em] text-amber-100/38">
+    <div className="rounded-[1.1rem] bg-black/20 p-4 ring-1 ring-white/[0.055]">
+      <p className="text-[10px] font-black tracking-[0.14em] text-cyan-300/70">
         {number}
       </p>
 
-      <p className="mt-2 text-sm font-semibold text-white/78">
+      <p className="mt-2 text-sm font-black text-white">
         {title}
       </p>
 
-      <p className="mt-1.5 text-xs leading-5 text-white/34">
+      <p className="mt-1.5 text-xs leading-5 text-zinc-600">
         {description}
       </p>
     </div>
@@ -1279,40 +1323,45 @@ function RelayEligibilityCard({
   const toneClassName =
     eligibility.tone ===
     'open'
-      ? 'border-emerald-300/14 bg-emerald-300/[0.045]'
+      ? 'bg-emerald-300/[0.035] ring-emerald-300/12'
       : eligibility.tone ===
           'upcoming'
-        ? 'border-amber-300/14 bg-amber-300/[0.045]'
+        ? 'bg-amber-300/[0.035] ring-amber-300/12'
         : eligibility.tone ===
             'closed'
-          ? 'border-white/[0.07] bg-white/[0.02]'
-          : 'border-violet-300/12 bg-violet-300/[0.04]'
+          ? 'bg-white/[0.02] ring-white/[0.06]'
+          : 'bg-violet-300/[0.035] ring-violet-300/12'
 
 
   return (
     <aside
       className={[
-        'rounded-[26px]',
-        'border',
+        'rounded-[1.75rem]',
         'p-5',
+        'ring-1',
+        'shadow-[0_18px_60px_rgba(0,0,0,0.16)]',
         toneClassName,
       ].join(
         ' '
       )}
     >
-      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-        Your team
-      </p>
+      <div className="flex items-center gap-2">
+        <span className="h-px w-5 bg-cyan-300/60" />
+
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          Your team
+        </p>
+      </div>
 
 
-      <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white">
+      <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
         {
           eligibility.label
         }
       </h2>
 
 
-      <p className="mt-2 text-sm leading-6 text-white/42">
+      <p className="mt-2 text-sm leading-6 text-zinc-500">
         {
           eligibility.description
         }
@@ -1321,18 +1370,18 @@ function RelayEligibilityCard({
 
       {existingTeam ? (
         <div className="mt-5">
-          <div className="rounded-2xl border border-white/[0.08] bg-black/15 px-4 py-4">
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/28">
+          <div className="rounded-[1.1rem] bg-black/20 px-4 py-4 ring-1 ring-white/[0.055]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-700">
               Your team
             </p>
 
-            <p className="mt-1.5 text-sm font-semibold capitalize text-white/72">
+            <p className="mt-1.5 text-sm font-black capitalize text-white">
               {
                 existingTeam.status
               }
             </p>
 
-            <p className="mt-1 text-xs leading-5 text-white/32">
+            <p className="mt-1 text-xs leading-5 text-zinc-600">
               You already have a team for this Relay. Open it to see
               your teammates, assignments, and progress.
             </p>
@@ -1341,7 +1390,7 @@ function RelayEligibilityCard({
 
           <Link
             href={`/competitions/team/${existingTeam.id}`}
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-violet-300/16 bg-violet-300/[0.055] px-5 text-sm font-semibold text-violet-50 transition hover:border-violet-300/25 hover:bg-violet-300/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+            className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-violet-300/[0.07] px-5 text-sm font-bold text-violet-50 ring-1 ring-violet-300/15 transition hover:bg-violet-300/[0.11] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
           >
             View your Relay team
           </Link>
@@ -1355,7 +1404,7 @@ function RelayEligibilityCard({
         >
           <button
             type="submit"
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-amber-300/20 bg-amber-300/[0.09] px-5 text-sm font-semibold text-amber-50 transition hover:border-amber-300/30 hover:bg-amber-300/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-white px-5 text-sm font-black text-black transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
           >
             Form a Relay team
           </button>
@@ -1363,24 +1412,23 @@ function RelayEligibilityCard({
       ) : !signedIn ? (
         <Link
           href="/login"
-          className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/[0.08] bg-black/15 px-4 text-xs font-semibold text-white/48 transition hover:border-white/[0.14] hover:bg-white/[0.04] hover:text-white/70"
+          className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-white/[0.035] px-4 text-xs font-bold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.06] hover:text-white"
         >
           Sign in to form a team
         </Link>
       ) : (
-        <div className="mt-5 rounded-2xl border border-white/[0.07] bg-black/15 px-4 py-3.5 text-center text-xs font-medium text-white/38">
+        <div className="mt-5 rounded-[1.1rem] bg-black/20 px-4 py-3.5 text-center text-xs font-bold text-zinc-600 ring-1 ring-white/[0.055]">
           Team formation unavailable
         </div>
       )}
 
 
-      <p className="mt-4 text-[10px] leading-5 text-white/23">
+      <p className="mt-4 text-[10px] leading-5 text-zinc-700">
         We&apos;ll confirm your team can join when you continue.
       </p>
     </aside>
   )
 }
-
 
 // ============================================================
 // RELAY PRESENTATION
@@ -1627,27 +1675,35 @@ function CompetitionHero({
 
 
   return (
-    <header className="relative overflow-hidden rounded-[30px] border border-white/10 bg-gradient-to-br from-white/[0.055] via-white/[0.025] to-transparent p-6 sm:p-8 lg:p-10">
+    <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.06] via-white/[0.028] to-indigo-400/[0.035] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.07] sm:p-8">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-28 -top-32 h-96 w-96 rounded-full bg-amber-300/[0.055] blur-3xl"
-      />
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/25 to-transparent" />
+
+        <div className="absolute -left-20 -top-24 h-64 w-64 rounded-full bg-cyan-300/[0.055] blur-[100px]" />
+
+        <div className="absolute -bottom-28 right-[-4rem] h-72 w-72 rounded-full bg-indigo-400/[0.05] blur-[110px]" />
+
+        <div className="absolute -right-28 -top-32 h-96 w-96 rounded-full bg-amber-300/[0.04] blur-[120px]" />
+      </div>
 
 
       {competition.status ===
       'live' ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-40 -left-24 h-80 w-80 rounded-full bg-red-500/[0.055] blur-3xl"
+          className="pointer-events-none absolute -bottom-40 -left-24 h-80 w-80 rounded-full bg-red-500/[0.045] blur-[110px]"
         />
       ) : null}
 
 
-      <div className="relative max-w-4xl">
+      <div className="relative z-10 max-w-4xl">
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={[
-              'inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em]',
+              'inline-flex items-center rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em]',
               status.className,
             ].join(
               ' '
@@ -1659,7 +1715,7 @@ function CompetitionHero({
           </span>
 
 
-          <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+          <span className="inline-flex items-center rounded-full bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 ring-1 ring-white/[0.07]">
             {formatCompetitionType(
               competition.competition_type
             )}
@@ -1669,14 +1725,23 @@ function CompetitionHero({
           {competition.anonymous_entries &&
           competition.status !==
             'completed' ? (
-            <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+            <span className="inline-flex items-center rounded-full bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 ring-1 ring-white/[0.07]">
               Identities hidden
             </span>
           ) : null}
         </div>
 
 
-        <h1 className="mt-7 max-w-3xl text-balance text-4xl font-semibold tracking-[-0.045em] text-white sm:text-5xl lg:text-6xl">
+        <div className="mt-6 flex items-center gap-2">
+          <span className="h-px w-5 bg-cyan-300/60" />
+
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+            Competition
+          </p>
+        </div>
+
+
+        <h1 className="mt-4 max-w-3xl text-balance text-3xl font-black tracking-[-0.045em] text-white sm:text-5xl sm:leading-[1.03]">
           {
             competition.title
           }
@@ -1684,20 +1749,20 @@ function CompetitionHero({
 
 
         {competition.description ? (
-          <p className="mt-5 max-w-2xl text-pretty text-sm leading-7 text-white/55 sm:text-base">
+          <p className="mt-4 max-w-2xl text-pretty text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
             {
               competition.description
             }
           </p>
         ) : (
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-white/45 sm:text-base">
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
             Try the competing routes for yourself. Your real-world
             check-ins help determine which route comes out on top.
           </p>
         )}
 
 
-        <div className="mt-8 flex flex-wrap gap-2">
+        <div className="mt-7 flex flex-wrap gap-2">
           {competition.city ? (
             <HeroChip>
               {
@@ -1768,124 +1833,140 @@ function ContenderCard({
   return (
     <article
       className={[
-        'relative overflow-hidden rounded-[26px] border p-5 sm:p-6',
+        'group relative overflow-hidden rounded-[1.75rem] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 sm:p-6',
         contender.isWinner
-          ? 'border-amber-300/30 bg-gradient-to-br from-amber-300/[0.09] via-white/[0.025] to-transparent'
-          : 'border-white/10 bg-white/[0.025]',
+          ? 'bg-gradient-to-br from-amber-300/[0.08] via-white/[0.028] to-indigo-400/[0.018] ring-amber-300/20'
+          : 'bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] ring-white/[0.07]',
       ].join(
         ' '
       )}
     >
-      {contender.isWinner ? (
-        <div className="mb-5 inline-flex rounded-full border border-amber-300/25 bg-amber-300/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-100">
-          Winner
-        </div>
-      ) : null}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100"
+      >
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
 
-
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/30">
-            Route{' '}
-            {
-              contender.slot
-            }
-          </p>
-
-          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.025em]">
-            {
-              contender.label
-            }
-          </h2>
-        </div>
-
-
-        <div className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-white/45">
-          {
-            contender.venueIds.length
-          }{' '}
-          stops
-        </div>
+        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-indigo-300/[0.05] blur-[100px]" />
       </div>
 
 
-      <ol className="mt-6 space-y-2.5">
-        {contender.venues.map(
-          (
-            venue,
-            index
-          ) => (
-            <li
-              key={`${contender.id}:${index}:${venue.id}`}
-              className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3"
-            >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 text-[10px] font-semibold text-white/40">
-                {index +
-                  1}
-              </span>
+      <div className="relative">
+        {contender.isWinner ? (
+          <div className="mb-5 inline-flex rounded-full bg-amber-300/[0.08] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-100 ring-1 ring-amber-300/20">
+            Winner
+          </div>
+        ) : null}
 
 
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-white/80">
-                  {
-                    venue.name
-                  }
-                </div>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="h-px w-5 bg-cyan-300/60" />
+
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                Route{' '}
+                {
+                  contender.slot
+                }
+              </p>
+            </div>
+
+            <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
+              {
+                contender.label
+              }
+            </h2>
+          </div>
 
 
-                {venue.city ? (
-                  <div className="mt-0.5 truncate text-[11px] text-white/30">
+          <div className="rounded-full bg-white/[0.03] px-3 py-1.5 text-xs font-bold text-zinc-500 ring-1 ring-white/[0.07]">
+            {
+              contender.venueIds.length
+            }{' '}
+            stops
+          </div>
+        </div>
+
+
+        <ol className="mt-6 space-y-2.5">
+          {contender.venues.map(
+            (
+              venue,
+              index
+            ) => (
+              <li
+                key={`${contender.id}:${index}:${venue.id}`}
+                className="flex items-center gap-3 rounded-[1.1rem] bg-black/20 px-4 py-3 ring-1 ring-white/[0.055]"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.025] text-[10px] font-bold text-zinc-600 ring-1 ring-white/[0.07]">
+                  {index +
+                    1}
+                </span>
+
+
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-bold text-zinc-300">
                     {
-                      venue.city
+                      venue.name
                     }
                   </div>
-                ) : null}
-              </div>
-            </li>
-          )
-        )}
-      </ol>
 
 
-      <div className="mt-6 border-t border-white/[0.07] pt-5">
-        {canStart ? (
-          signedIn ? (
-            <StartCompetitionEntryButton
-              competitionId={
-                competition.id
-              }
-              entryId={
-                contender.id
-              }
-              label={`Roam ${contender.label}`}
-            />
+                  {venue.city ? (
+                    <div className="mt-0.5 truncate text-[11px] text-zinc-700">
+                      {
+                        venue.city
+                      }
+                    </div>
+                  ) : null}
+                </div>
+              </li>
+            )
+          )}
+        </ol>
+
+
+        <div className="mt-6 border-t border-white/[0.06] pt-5">
+          {canStart ? (
+            signedIn ? (
+              <StartCompetitionEntryButton
+                competitionId={
+                  competition.id
+                }
+                entryId={
+                  contender.id
+                }
+                label={`Roam ${contender.label}`}
+              />
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-white px-5 text-sm font-black text-black transition hover:bg-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+              >
+                Sign in to explore
+              </Link>
+            )
+          ) : competition.status ===
+            'scheduled' ? (
+            <div className="text-center text-xs font-bold text-zinc-600">
+              You can start this route when the competition goes live.
+            </div>
+          ) : competition.status ===
+            'scoring' ? (
+            <div className="text-center text-xs font-bold text-violet-200/55">
+              Exploring is closed while the results are being reviewed.
+            </div>
+          ) : contender.isWinner ? (
+            <div className="text-center text-xs font-black text-amber-100/75">
+              Winning route
+            </div>
           ) : (
-            <Link
-              href="/login"
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-white px-5 text-sm font-semibold text-black transition hover:bg-amber-100"
-            >
-              Sign in to explore
-            </Link>
-          )
-        ) : competition.status ===
-          'scheduled' ? (
-          <div className="text-center text-xs font-medium text-white/35">
-            You can start this route when the competition goes live.
-          </div>
-        ) : competition.status ===
-          'scoring' ? (
-          <div className="text-center text-xs font-medium text-violet-200/55">
-            Exploring is closed while the results are being reviewed.
-          </div>
-        ) : contender.isWinner ? (
-          <div className="text-center text-xs font-semibold text-amber-100/75">
-            Winning route
-          </div>
-        ) : (
-          <div className="text-center text-xs font-medium text-white/35">
-            This competition has ended.
-          </div>
-        )}
+            <div className="text-center text-xs font-bold text-zinc-600">
+              This competition has ended.
+            </div>
+          )}
+        </div>
       </div>
     </article>
   )
@@ -1907,13 +1988,17 @@ function CompetitionFacts({
     number
 }) {
   return (
-    <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/30">
-        Competition details
-      </p>
+    <section className="rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07]">
+      <div className="flex items-center gap-2">
+        <span className="h-px w-5 bg-cyan-300/60" />
+
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          Competition details
+        </p>
+      </div>
 
 
-      <dl className="mt-5 divide-y divide-white/[0.07]">
+      <dl className="mt-5 divide-y divide-white/[0.06]">
         <Fact
           label="Status"
           value={
@@ -1980,13 +2065,17 @@ function FairnessCard({
     CompetitionRow
 }) {
   return (
-    <section className="rounded-[24px] border border-white/10 bg-white/[0.025] p-5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/30">
-        How this works
-      </p>
+    <section className="rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07]">
+      <div className="flex items-center gap-2">
+        <span className="h-px w-5 bg-cyan-300/60" />
+
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          How this works
+        </p>
+      </div>
 
 
-      <div className="mt-4 space-y-4 text-sm leading-6 text-white/45">
+      <div className="mt-4 space-y-4 text-sm leading-6 text-zinc-500">
         <p>
           Routes are judged by real-world visits and check-ins, not by
           follower count or audience size.
@@ -2025,11 +2114,11 @@ function Fact({
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
-      <dt className="text-xs text-white/30">
+      <dt className="text-xs text-zinc-700">
         {label}
       </dt>
 
-      <dd className="text-right text-xs font-semibold text-white/65">
+      <dd className="text-right text-xs font-bold text-zinc-400">
         {value}
       </dd>
     </div>
@@ -2056,16 +2145,20 @@ function SectionHeading({
     string
 }) {
   return (
-    <div className="border-b border-white/[0.08] pb-5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/30">
-        {eyebrow}
-      </p>
+    <div className="min-w-0">
+      <div className="flex items-center gap-2">
+        <span className="h-px w-5 bg-cyan-300/60" />
 
-      <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] sm:text-3xl">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          {eyebrow}
+        </p>
+      </div>
+
+      <h2 className="mt-3 max-w-3xl text-2xl font-black tracking-[-0.035em] text-white sm:text-[2rem]">
         {title}
       </h2>
 
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-white/45">
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
         {description}
       </p>
     </div>
@@ -2080,7 +2173,7 @@ function HeroChip({
     React.ReactNode
 }) {
   return (
-    <span className="inline-flex rounded-full border border-white/10 bg-black/15 px-3 py-1.5 text-[11px] font-medium text-white/45">
+    <span className="inline-flex rounded-full bg-white/[0.025] px-3 py-1.5 text-[11px] font-medium text-zinc-500 ring-1 ring-white/[0.06]">
       {children}
     </span>
   )
@@ -2094,8 +2187,8 @@ function EmptyContenders({
     CompetitionStatus
 }) {
   return (
-    <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.025] p-8 text-center">
-      <p className="text-sm font-medium text-white/55">
+    <div className="mt-6 rounded-[1.75rem] bg-white/[0.025] p-8 text-center ring-1 ring-white/[0.07]">
+      <p className="text-sm font-bold text-zinc-500">
         {status ===
         'scheduled'
           ? 'Routes have not been published yet.'
@@ -2108,23 +2201,35 @@ function EmptyContenders({
 
 function CompetitionLoadError() {
   return (
-    <main className="min-h-screen bg-[#070707] px-4 py-16 text-white">
-      <div className="mx-auto max-w-2xl rounded-[26px] border border-red-400/15 bg-red-400/[0.04] p-7">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-red-200/60">
-          Competition unavailable
-        </p>
+    <main className="relative min-h-screen overflow-x-clip bg-[#070809] px-4 py-16 text-white">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[-28%] top-[-10%] h-[28rem] w-[28rem] rounded-full bg-cyan-300/[0.07] blur-[120px] sm:left-[-10%]" />
 
-        <h1 className="mt-3 text-2xl font-semibold">
+        <div className="absolute right-[-30%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-400/[0.07] blur-[135px] sm:right-[-12%]" />
+
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.02] to-transparent" />
+      </div>
+
+      <div className="relative mx-auto max-w-2xl rounded-[2rem] bg-red-400/[0.035] p-7 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-red-400/15">
+        <div className="flex items-center gap-2">
+          <span className="h-px w-5 bg-red-300/60" />
+
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-200/70">
+            Competition unavailable
+          </p>
+        </div>
+
+        <h1 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
           This competition could not be loaded.
         </h1>
 
-        <p className="mt-3 text-sm leading-6 text-white/45">
+        <p className="mt-3 text-sm leading-6 text-zinc-500">
           Nothing was changed. Try again in a moment.
         </p>
 
         <Link
           href="/competitions"
-          className="mt-6 inline-flex rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-white/65 transition hover:bg-white/[0.05] hover:text-white"
+          className="mt-6 inline-flex min-h-10 items-center justify-center rounded-full bg-white/[0.035] px-4 py-2 text-xs font-bold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.06] hover:text-white"
         >
           Back to competitions
         </Link>
@@ -2389,7 +2494,7 @@ function getStatusPresentation(
           'Live',
 
         className:
-          'border-red-400/25 bg-red-400/[0.08] text-red-200',
+          'border-red-400/20 bg-red-400/[0.07] text-red-200',
       }
 
     case 'scheduled':
@@ -2398,7 +2503,7 @@ function getStatusPresentation(
           'Upcoming',
 
         className:
-          'border-sky-300/20 bg-sky-300/[0.06] text-sky-100',
+          'border-sky-300/15 bg-sky-300/[0.055] text-sky-100',
       }
 
     case 'scoring':
@@ -2407,7 +2512,7 @@ function getStatusPresentation(
           'Reviewing results',
 
         className:
-          'border-violet-300/20 bg-violet-300/[0.06] text-violet-100',
+          'border-violet-300/15 bg-violet-300/[0.055] text-violet-100',
       }
 
     case 'completed':
@@ -2416,7 +2521,7 @@ function getStatusPresentation(
           'Completed',
 
         className:
-          'border-emerald-300/20 bg-emerald-300/[0.05] text-emerald-100',
+          'border-emerald-300/15 bg-emerald-300/[0.045] text-emerald-100',
       }
 
     default:
@@ -2425,7 +2530,7 @@ function getStatusPresentation(
           competition.status,
 
         className:
-          'border-white/10 bg-white/[0.04] text-white/50',
+          'border-white/[0.07] bg-white/[0.035] text-zinc-500',
       }
   }
 }

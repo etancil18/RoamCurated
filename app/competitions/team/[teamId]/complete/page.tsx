@@ -895,8 +895,18 @@ export default async function RelayCompletionPage({
 
 
   return (
-    <main className="min-h-screen bg-[#070707] text-white">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+    <main className="relative min-h-screen overflow-x-clip bg-[#070809] px-4 pb-20 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6 sm:pt-[calc(4rem+env(safe-area-inset-top)+2rem)]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[-28%] top-[-10%] h-[28rem] w-[28rem] rounded-full bg-cyan-300/[0.07] blur-[120px] sm:left-[-10%]" />
+
+        <div className="absolute right-[-30%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-400/[0.07] blur-[135px] sm:right-[-12%]" />
+
+        <div className="absolute bottom-[-18%] left-[32%] h-[28rem] w-[28rem] rounded-full bg-amber-300/[0.035] blur-[130px]" />
+
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.02] to-transparent" />
+      </div>
+
+      <div className="relative mx-auto w-full min-w-0 max-w-6xl">
         {/* ====================================================
          * HEADER
          * ==================================================== */}
@@ -918,7 +928,7 @@ export default async function RelayCompletionPage({
                 href={
                   `/competitions/team/${team.id}`
                 }
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-white/[0.09] bg-black/20 px-4 text-xs font-semibold text-white/55 transition hover:border-white/15 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+                className="inline-flex min-h-10 items-center justify-center rounded-full bg-white/[0.035] px-4 text-xs font-bold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
               >
                 Team hub
               </Link>
@@ -927,14 +937,14 @@ export default async function RelayCompletionPage({
                 href={
                   `/competitions/${relay.id}`
                 }
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-violet-300/14 bg-violet-300/[0.05] px-4 text-xs font-semibold text-violet-50/70 transition hover:border-violet-300/22 hover:bg-violet-300/[0.08] hover:text-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+                className="inline-flex min-h-10 items-center justify-center rounded-full bg-violet-300/[0.055] px-4 text-xs font-bold text-violet-100/80 ring-1 ring-violet-300/15 transition hover:bg-violet-300/[0.09] hover:text-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
               >
                 View Relay
               </Link>
             </div>
           }
         >
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/38">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-zinc-600">
             <span>
               {completedTeamSlots.length}
               {' / '}
@@ -1008,14 +1018,18 @@ export default async function RelayCompletionPage({
 
         {integrityExceptionSlots.length >
         0 ? (
-          <section className="mt-5 rounded-[22px] border border-amber-300/14 bg-amber-300/[0.035] p-4 sm:p-5">
+          <section className="mt-5 rounded-[1.75rem] bg-gradient-to-br from-amber-300/[0.055] via-white/[0.022] to-indigo-400/[0.015] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-amber-300/12 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="max-w-2xl">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-100/48">
-                  Completion integrity
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="h-px w-5 bg-amber-300/60" />
 
-                <p className="mt-2 text-sm leading-6 text-white/42">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200/75">
+                    Completion integrity
+                  </p>
+                </div>
+
+                <p className="mt-3 text-sm leading-6 text-zinc-500">
                   The team is canonically marked completed, but{' '}
                   {integrityExceptionSlots.length}{' '}
                   materialized Relay leg
@@ -1074,24 +1088,24 @@ export default async function RelayCompletionPage({
                       key={
                         teamSlot.id
                       }
-                      className="flex flex-col gap-2 rounded-2xl border border-white/[0.06] bg-black/15 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-2 rounded-[1.1rem] bg-black/20 px-4 py-3 ring-1 ring-white/[0.055] sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0">
-                        <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/24">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-700">
                           Relay leg{' '}
                           {
                             teamSlot.slot_index
                           }
                         </p>
 
-                        <p className="mt-1 truncate text-sm font-medium text-white/58">
+                        <p className="mt-1 truncate text-sm font-bold text-zinc-300">
                           {relaySlot
                             ?.label ??
                             `Relay leg ${teamSlot.slot_index}`}
                         </p>
                       </div>
 
-                      <span className="w-fit shrink-0 rounded-full border border-amber-300/12 bg-amber-300/[0.035] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-100/50">
+                      <span className="w-fit shrink-0 rounded-full bg-amber-300/[0.04] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-amber-100/60 ring-1 ring-amber-300/12">
                         {formatStatus(
                           teamSlot.status
                         )}
@@ -1109,16 +1123,20 @@ export default async function RelayCompletionPage({
          * TEAM TIMELINE
          * ==================================================== */}
 
-        <section className="mt-8 rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-            Relay timeline
-          </p>
+        <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-cyan-300/60" />
 
-          <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+              Relay timeline
+            </p>
+          </div>
+
+          <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
             From formation to finish
           </h2>
 
-          <dl className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07] sm:grid-cols-4">
+          <dl className="mt-5 grid gap-2 sm:grid-cols-4">
             <TimelineMetric
               label="Team created"
               value={
@@ -1162,16 +1180,20 @@ export default async function RelayCompletionPage({
          * ARTIFACT BOUNDARY
          * ==================================================== */}
 
-        <section className="mt-8 rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-            What happens next
-          </p>
+        <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-cyan-300/60" />
 
-          <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+              What happens next
+            </p>
+          </div>
+
+          <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
             The route is complete. The replay artifact is a separate step.
           </h2>
 
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-white/40">
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-500">
             This page is the canonical completed-team projection. It
             does not claim that a reusable collaborative Roam artifact
             has already been materialized. Artifact creation should
@@ -1185,8 +1207,8 @@ export default async function RelayCompletionPage({
          * FOOTER
          * ==================================================== */}
 
-        <footer className="mt-8 border-t border-white/[0.07] pt-6">
-          <p className="max-w-3xl text-xs leading-6 text-white/27">
+        <footer className="mt-8 border-t border-white/[0.06] pt-6">
+          <p className="max-w-3xl text-xs leading-6 text-zinc-700">
             Completed Relay execution is read-only here. Contributor,
             venue, verification, and completion state are projected
             from canonical Relay team and team-slot records rather than
@@ -1215,12 +1237,12 @@ function TimelineMetric({
     string
 }) {
   return (
-    <div className="bg-[#0b0b0b] px-4 py-4">
-      <dt className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/22">
+    <div className="min-w-0 rounded-[1.1rem] bg-black/20 px-4 py-4 ring-1 ring-white/[0.055]">
+      <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-700">
         {label}
       </dt>
 
-      <dd className="mt-1.5 text-sm font-medium text-white/60">
+      <dd className="mt-1.5 text-sm font-black text-zinc-300">
         {value}
       </dd>
     </div>
@@ -1244,12 +1266,12 @@ function IntegrityCount({
     number
 }) {
   return (
-    <div className="min-w-[6.5rem] rounded-2xl border border-amber-300/10 bg-black/15 px-3.5 py-3">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.13em] text-amber-100/35">
+    <div className="min-w-[6.5rem] rounded-[1.1rem] bg-black/20 px-3.5 py-3 ring-1 ring-amber-300/10">
+      <p className="text-[9px] font-bold uppercase tracking-[0.13em] text-amber-100/45">
         {label}
       </p>
 
-      <p className="mt-1 text-sm font-semibold text-white/62">
+      <p className="mt-1 text-sm font-black text-white">
         {value}
       </p>
     </div>

@@ -527,20 +527,45 @@ export default async function CompetitionsPage({
     ).length
 
   return (
-    <main className="min-h-screen bg-[#070707] text-white">
-      <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8">
-        <header className="border-b border-white/10 pb-8 sm:pb-10">
-          <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <div className="mb-4 flex items-center gap-3">
-                <span className="inline-flex items-center rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-200">
-                  Roam Competitions
-                </span>
+    <main className="relative min-h-screen overflow-x-clip bg-[#070809] px-4 pb-20 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6 sm:pt-[calc(4rem+env(safe-area-inset-top)+2rem)]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[-28%] top-[-10%] h-[28rem] w-[28rem] rounded-full bg-cyan-300/[0.07] blur-[120px] sm:left-[-10%]" />
+
+        <div className="absolute right-[-30%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-400/[0.07] blur-[135px] sm:right-[-12%]" />
+
+        <div className="absolute bottom-[-18%] left-[32%] h-[28rem] w-[28rem] rounded-full bg-amber-300/[0.035] blur-[130px]" />
+
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.02] to-transparent" />
+      </div>
+
+      <div className="relative mx-auto w-full min-w-0 max-w-6xl">
+        <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.06] via-white/[0.028] to-indigo-400/[0.035] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.07] sm:p-8">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden"
+          >
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/25 to-transparent" />
+
+            <div className="absolute -left-20 -top-24 h-64 w-64 rounded-full bg-cyan-300/[0.055] blur-[100px]" />
+
+            <div className="absolute -bottom-28 right-[-4rem] h-72 w-72 rounded-full bg-indigo-400/[0.05] blur-[110px]" />
+          </div>
+
+          <div className="relative z-10 grid min-w-0 gap-7 lg:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)] lg:items-end">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="h-px w-5 bg-cyan-300/60" />
+
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300 sm:text-xs">
+                    Roam Competitions
+                  </p>
+                </div>
 
                 {liveCompetitions.length +
                   liveRelayCount >
                 0 ? (
-                  <span className="inline-flex items-center gap-2 text-xs font-medium text-red-300">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-red-400/[0.06] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-red-200 ring-1 ring-red-400/15">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-400" />
 
                     {liveCompetitions.length +
@@ -550,12 +575,12 @@ export default async function CompetitionsPage({
                 ) : null}
               </div>
 
-              <h1 className="max-w-2xl text-balance text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl lg:text-6xl">
+              <h1 className="mt-4 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-5xl sm:leading-[1.03]">
                 Put your taste on
                 the line.
               </h1>
 
-              <p className="mt-5 max-w-2xl text-pretty text-sm leading-6 text-white/55 sm:text-base sm:leading-7">
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
                 Explore anonymous
                 contender routes,
                 complete them in the
@@ -565,31 +590,56 @@ export default async function CompetitionsPage({
               </p>
             </div>
 
-            <div className="grid w-full max-w-xl grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] lg:w-auto lg:min-w-[430px]">
-              <Stat
-                label="Live"
-                value={
-                  liveCompetitions.length +
-                  liveRelayCount
-                }
-                accent
-              />
+            <div className="min-w-0 rounded-[1.6rem] bg-black/25 p-4 ring-1 ring-white/[0.055] sm:p-5">
+              <div className="flex items-start gap-3">
+                <span
+                  aria-hidden="true"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-300/[0.08] text-lg text-indigo-200 ring-1 ring-indigo-300/15"
+                >
+                  ✦
+                </span>
 
-              <Stat
-                label="Upcoming"
-                value={
-                  scheduledCompetitions.length +
-                  scheduledRelayCount
-                }
-              />
+                <div className="min-w-0">
+                  <p className="text-sm font-black tracking-tight text-white">
+                    Competition board
+                  </p>
 
-              <Stat
-                label="Settled"
-                value={
-                  completedCompetitions.length +
-                  completedRelayCount
-                }
-              />
+                  <p className="mt-1.5 text-xs leading-5 text-zinc-600 sm:text-sm sm:leading-6">
+                    See what is live,
+                    what is coming next,
+                    and which competitions
+                    have already been
+                    decided.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <Stat
+                  label="Live"
+                  value={
+                    liveCompetitions.length +
+                    liveRelayCount
+                  }
+                  accent
+                />
+
+                <Stat
+                  label="Upcoming"
+                  value={
+                    scheduledCompetitions.length +
+                    scheduledRelayCount
+                  }
+                />
+
+                <Stat
+                  label="Settled"
+                  value={
+                    completedCompetitions.length +
+                    completedRelayCount
+                  }
+                />
+              </div>
             </div>
           </div>
         </header>
@@ -619,7 +669,7 @@ export default async function CompetitionsPage({
         {error ? (
           <CompetitionLoadError />
         ) : (
-          <div className="mt-10 space-y-14">
+          <div className="mt-14 space-y-16 sm:mt-16 sm:space-y-20">
             {liveCompetitions.length >
             0 ? (
               <CompetitionSection
@@ -739,16 +789,20 @@ function RelayDiscoverySection({
       0
   ) {
     return (
-      <section className="mt-10 rounded-[24px] border border-amber-300/10 bg-amber-300/[0.025] p-5 sm:p-6">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-100/45">
-          Roam Relay
-        </p>
+      <section className="mt-10 rounded-[2rem] bg-amber-300/[0.025] p-5 ring-1 ring-amber-300/10 sm:p-6">
+        <div className="flex items-center gap-2">
+          <span className="h-px w-5 bg-amber-300/60" />
 
-        <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200/70">
+            Roam Relay
+          </p>
+        </div>
+
+        <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
           Relays are temporarily unavailable.
         </h2>
 
-        <p className="mt-2 text-sm leading-6 text-white/40">
+        <p className="mt-2 text-sm leading-6 text-zinc-500">
           The rest of the competition board is unaffected.
         </p>
       </section>
@@ -763,25 +817,29 @@ function RelayDiscoverySection({
   }
 
   return (
-    <section className="mt-10">
-      <div className="mb-6 flex flex-col gap-3 border-b border-white/[0.08] pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-amber-200/55">
-            Team competition
-          </p>
+    <section className="mt-14 sm:mt-16">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-cyan-300/60" />
 
-          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.025em] text-white sm:text-3xl">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+              Team competition
+            </p>
+          </div>
+
+          <h2 className="mt-3 max-w-3xl text-2xl font-black tracking-[-0.035em] text-white sm:text-[2rem]">
             Roam Relay
           </h2>
         </div>
 
-        <p className="max-w-xl text-sm leading-6 text-white/45">
+        <p className="max-w-xl text-sm leading-6 text-zinc-500">
           Build one route together. Each teammate owns one leg,
           completes it in the city, and passes the baton forward.
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
         {relays.map(
           (relay) => (
             <RelayCard
@@ -818,23 +876,27 @@ function CompetitionSection({
 }) {
   return (
     <section>
-      <div className="mb-6 flex flex-col gap-3 border-b border-white/[0.08] pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/35">
-            {eyebrow}
-          </p>
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-cyan-300/60" />
 
-          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.025em] text-white sm:text-3xl">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+              {eyebrow}
+            </p>
+          </div>
+
+          <h2 className="mt-3 max-w-3xl text-2xl font-black tracking-[-0.035em] text-white sm:text-[2rem]">
             {title}
           </h2>
         </div>
 
-        <p className="max-w-xl text-sm leading-6 text-white/45">
+        <p className="max-w-xl text-sm leading-6 text-zinc-500">
           {description}
         </p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
         {competitions.map(
           (
             competition
@@ -892,10 +954,10 @@ function CompetitionCard({
   return (
     <article
       className={[
-        'group relative overflow-hidden rounded-[24px] border p-5 transition sm:p-6',
+        'group relative overflow-hidden rounded-[1.75rem] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 transition sm:p-6',
         emphasized
-          ? 'border-red-400/20 bg-gradient-to-br from-red-500/[0.07] via-white/[0.035] to-transparent'
-          : 'border-white/10 bg-white/[0.025]',
+          ? 'bg-gradient-to-br from-red-400/[0.065] via-white/[0.032] to-indigo-400/[0.025] ring-red-300/15'
+          : 'bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] ring-white/[0.07]',
       ].join(
         ' '
       )}
@@ -904,7 +966,9 @@ function CompetitionCard({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100"
       >
-        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-amber-300/[0.045] blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
+
+        <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-indigo-300/[0.05] blur-[100px]" />
       </div>
 
       <div className="relative">
@@ -912,7 +976,7 @@ function CompetitionCard({
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={[
-                'inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]',
+                'inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em]',
                 status.className,
               ].join(
                 ' '
@@ -921,7 +985,7 @@ function CompetitionCard({
               {status.label}
             </span>
 
-            <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-white/40">
+            <span className="rounded-full bg-white/[0.03] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500 ring-1 ring-white/[0.07]">
               {formatCompetitionType(
                 competition.competition_type
               )}
@@ -931,7 +995,7 @@ function CompetitionCard({
           {competition.xp_reward >
           0 ? (
             <div className="shrink-0 text-right">
-              <div className="text-sm font-semibold text-amber-200">
+              <div className="text-sm font-black text-amber-200">
                 +
                 {
                   competition.xp_reward
@@ -939,25 +1003,25 @@ function CompetitionCard({
                 XP
               </div>
 
-              <div className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-white/30">
+              <div className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-700">
                 reward
               </div>
             </div>
           ) : null}
         </div>
 
-        <h3 className="mt-6 text-2xl font-semibold tracking-[-0.025em] text-white">
+        <h3 className="mt-6 text-2xl font-black tracking-[-0.035em] text-white">
           {competition.title}
         </h3>
 
         {competition.description ? (
-          <p className="mt-3 line-clamp-3 text-sm leading-6 text-white/50">
+          <p className="mt-3 line-clamp-3 text-sm leading-6 text-zinc-500">
             {
               competition.description
             }
           </p>
         ) : (
-          <p className="mt-3 text-sm leading-6 text-white/35">
+          <p className="mt-3 text-sm leading-6 text-zinc-600">
             Anonymous routes.
             Verified exploration.
             Taste decided in the
@@ -993,7 +1057,7 @@ function CompetitionCard({
           ) : null}
         </div>
 
-        <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07]">
+        <dl className="mt-6 grid grid-cols-2 gap-2">
           <TimelineCell
             label="Starts"
             value={
@@ -1009,8 +1073,8 @@ function CompetitionCard({
           />
         </dl>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-white/[0.07] pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs leading-5 text-white/35">
+        <div className="mt-6 flex flex-col gap-3 border-t border-white/[0.06] pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs leading-5 text-zinc-600">
             {getCompetitionFooter(
               competition
             )}
@@ -1053,7 +1117,7 @@ function CompetitionAction({
   ) {
     if (!signedIn) {
       return (
-        <span className="inline-flex min-h-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-4 text-xs font-semibold text-white/45">
+        <span className="inline-flex min-h-10 items-center justify-center rounded-full bg-white/[0.035] px-4 text-xs font-bold text-zinc-500 ring-1 ring-white/[0.07]">
           Sign in to submit
         </span>
       )
@@ -1083,7 +1147,7 @@ function CompetitionAction({
     return (
       <Link
         href={href}
-        className="inline-flex min-h-10 items-center justify-center rounded-full border border-red-400/25 bg-red-400/[0.08] px-4 text-xs font-semibold text-red-100 transition hover:border-red-300/40 hover:bg-red-400/[0.13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+        className="inline-flex min-h-10 items-center justify-center rounded-full bg-red-400/[0.08] px-4 text-xs font-bold text-red-100 ring-1 ring-red-400/20 transition hover:bg-red-400/[0.13] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
       >
         View live duel
       </Link>
@@ -1097,7 +1161,7 @@ function CompetitionAction({
     return (
       <Link
         href={href}
-        className="inline-flex min-h-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.025] px-4 text-xs font-semibold text-white/60 transition hover:border-white/20 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+        className="inline-flex min-h-10 items-center justify-center rounded-full bg-white/[0.035] px-4 text-xs font-bold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
       >
         Preview contenders
       </Link>
@@ -1111,7 +1175,7 @@ function CompetitionAction({
     return (
       <Link
         href={href}
-        className="inline-flex min-h-10 items-center justify-center rounded-full border border-violet-300/20 bg-violet-300/[0.05] px-4 text-xs font-semibold text-violet-100/80 transition hover:border-violet-300/35 hover:bg-violet-300/[0.09] hover:text-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+        className="inline-flex min-h-10 items-center justify-center rounded-full bg-violet-300/[0.05] px-4 text-xs font-bold text-violet-100/80 ring-1 ring-violet-300/15 transition hover:bg-violet-300/[0.09] hover:text-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
       >
         View scoring
       </Link>
@@ -1121,7 +1185,7 @@ function CompetitionAction({
   return (
     <Link
       href={href}
-      className="inline-flex min-h-10 items-center justify-center rounded-full border border-emerald-300/15 bg-emerald-300/[0.035] px-4 text-xs font-semibold text-emerald-100/70 transition hover:border-emerald-300/30 hover:bg-emerald-300/[0.07] hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+      className="inline-flex min-h-10 items-center justify-center rounded-full bg-emerald-300/[0.035] px-4 text-xs font-bold text-emerald-100/70 ring-1 ring-emerald-300/15 transition hover:bg-emerald-300/[0.07] hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
     >
       View result
     </Link>
@@ -1140,20 +1204,24 @@ function SubmissionIntentBanner({
     'active_flow'
 
   return (
-    <section className="mt-8 overflow-hidden rounded-[24px] border border-amber-300/20 bg-gradient-to-r from-amber-300/[0.09] via-amber-200/[0.035] to-transparent p-5 sm:p-6">
+    <section className="mt-8 overflow-hidden rounded-[1.75rem] bg-gradient-to-r from-amber-300/[0.08] via-white/[0.025] to-indigo-400/[0.025] p-5 ring-1 ring-amber-300/12 sm:p-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-200/70">
-            Ready to enter
-          </p>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-amber-300/60" />
 
-          <h2 className="mt-2 text-xl font-semibold tracking-[-0.02em]">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200/75">
+              Ready to enter
+            </p>
+          </div>
+
+          <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
             {isActiveFlow
               ? 'Choose a competition for this completed Roam.'
               : 'Choose a competition for this Visit History route.'}
           </h2>
 
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
             {signedIn
               ? 'Your source stays attached while you choose. Final eligibility is revalidated by the competition submission API before anything enters moderation.'
               : 'Your route is ready, but you must be signed in before it can be submitted for moderation.'}
@@ -1162,7 +1230,7 @@ function SubmissionIntentBanner({
 
         <Link
           href="/competitions"
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border border-white/10 px-4 text-xs font-semibold text-white/65 transition hover:border-white/20 hover:bg-white/[0.04] hover:text-white"
+          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full bg-white/[0.035] px-4 text-xs font-bold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.06] hover:text-white"
         >
           Clear submission
         </Link>
@@ -1181,10 +1249,10 @@ function Stat({
   accent?: boolean
 }) {
   return (
-    <div className="px-4 py-4 text-center sm:px-6">
+    <div className="min-w-0 rounded-[1.1rem] bg-white/[0.025] px-3 py-3 text-left ring-1 ring-white/[0.05]">
       <div
         className={[
-          'text-xl font-semibold tracking-[-0.02em]',
+          'truncate text-sm font-black tracking-tight',
           accent
             ? 'text-red-300'
             : 'text-white',
@@ -1195,7 +1263,7 @@ function Stat({
         {value}
       </div>
 
-      <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white/30">
+      <div className="mt-1 truncate text-[9px] font-medium text-zinc-700">
         {label}
       </div>
     </div>
@@ -1208,7 +1276,7 @@ function MetaChip({
   value: string
 }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-white/[0.08] bg-black/20 px-3 py-1.5 text-[11px] font-medium text-white/45">
+    <span className="inline-flex items-center rounded-full bg-white/[0.025] px-3 py-1.5 text-[11px] font-medium text-zinc-500 ring-1 ring-white/[0.06]">
       {value}
     </span>
   )
@@ -1222,12 +1290,12 @@ function TimelineCell({
   value: string
 }) {
   return (
-    <div className="bg-[#0b0b0b] px-4 py-3.5">
-      <dt className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/25">
+    <div className="rounded-2xl bg-black/20 px-4 py-3.5 ring-1 ring-white/[0.055]">
+      <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-700">
         {label}
       </dt>
 
-      <dd className="mt-1.5 text-xs font-medium text-white/65">
+      <dd className="mt-1.5 text-xs font-bold text-zinc-400">
         {value}
       </dd>
     </div>
@@ -1236,23 +1304,31 @@ function TimelineCell({
 
 function EmptyLiveState() {
   return (
-    <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.025] p-6 sm:p-8 lg:p-10">
+    <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.02] p-6 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-8 lg:p-10">
       <div
         aria-hidden="true"
-        className="absolute right-0 top-0 h-64 w-64 translate-x-1/3 -translate-y-1/3 rounded-full bg-amber-200/[0.06] blur-3xl"
-      />
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
+
+        <div className="absolute right-0 top-0 h-64 w-64 translate-x-1/3 -translate-y-1/3 rounded-full bg-indigo-300/[0.05] blur-[100px]" />
+      </div>
 
       <div className="relative max-w-xl">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/30">
-          Between rounds
-        </p>
+        <div className="flex items-center gap-2">
+          <span className="h-px w-5 bg-cyan-300/60" />
 
-        <h2 className="mt-3 text-2xl font-semibold tracking-[-0.025em] sm:text-3xl">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+            Between rounds
+          </p>
+        </div>
+
+        <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white sm:text-[2rem]">
           No duel is live right
           now.
         </h2>
 
-        <p className="mt-3 text-sm leading-6 text-white/45">
+        <p className="mt-3 text-sm leading-6 text-zinc-500">
           Upcoming competitions
           will appear here before
           they open. Once live,
@@ -1266,17 +1342,23 @@ function EmptyLiveState() {
 
 function EmptyCompetitionState() {
   return (
-    <section className="border-t border-white/[0.08] py-16 text-center">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/30">
-        No competitions yet
-      </p>
+    <section className="rounded-[2rem] bg-white/[0.025] px-6 py-16 text-center ring-1 ring-white/[0.06]">
+      <div className="mx-auto flex w-fit items-center gap-2">
+        <span className="h-px w-5 bg-cyan-300/60" />
 
-      <h2 className="mx-auto mt-3 max-w-lg text-2xl font-semibold tracking-[-0.025em] text-white">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+          No competitions yet
+        </p>
+
+        <span className="h-px w-5 bg-cyan-300/60" />
+      </div>
+
+      <h2 className="mx-auto mt-3 max-w-lg text-2xl font-black tracking-[-0.035em] text-white">
         The city is quiet for the
         moment.
       </h2>
 
-      <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/45">
+      <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-500">
         When the next Taste Duel
         opens, it will appear here.
       </p>
@@ -1286,17 +1368,21 @@ function EmptyCompetitionState() {
 
 function CompetitionLoadError() {
   return (
-    <section className="mt-10 rounded-[24px] border border-red-400/15 bg-red-400/[0.04] p-6">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-red-200/60">
-        Competitions unavailable
-      </p>
+    <section className="mt-10 rounded-[1.75rem] bg-red-400/[0.035] p-6 ring-1 ring-red-400/15">
+      <div className="flex items-center gap-2">
+        <span className="h-px w-5 bg-red-300/60" />
 
-      <h2 className="mt-2 text-xl font-semibold">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-red-200/70">
+          Competitions unavailable
+        </p>
+      </div>
+
+      <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
         The competition board
         could not be loaded.
       </h2>
 
-      <p className="mt-2 text-sm leading-6 text-white/45">
+      <p className="mt-2 text-sm leading-6 text-zinc-500">
         Try refreshing the page.
         No competition state was
         changed.
@@ -1601,7 +1687,7 @@ function getStatusPresentation(
           'Live',
 
         className:
-          'border-red-400/25 bg-red-400/[0.08] text-red-200',
+          'border-red-400/20 bg-red-400/[0.07] text-red-200',
       }
 
     case 'scheduled':
@@ -1610,7 +1696,7 @@ function getStatusPresentation(
           'Upcoming',
 
         className:
-          'border-sky-300/20 bg-sky-300/[0.06] text-sky-100',
+          'border-sky-300/15 bg-sky-300/[0.055] text-sky-100',
       }
 
     case 'scoring':
@@ -1619,7 +1705,7 @@ function getStatusPresentation(
           'Scoring',
 
         className:
-          'border-violet-300/20 bg-violet-300/[0.06] text-violet-100',
+          'border-violet-300/15 bg-violet-300/[0.055] text-violet-100',
       }
 
     case 'completed':
@@ -1628,7 +1714,7 @@ function getStatusPresentation(
           'Settled',
 
         className:
-          'border-emerald-300/20 bg-emerald-300/[0.05] text-emerald-100',
+          'border-emerald-300/15 bg-emerald-300/[0.045] text-emerald-100',
       }
 
     default:
@@ -1637,7 +1723,7 @@ function getStatusPresentation(
           competition.status,
 
         className:
-          'border-white/10 bg-white/[0.04] text-white/50',
+          'border-white/[0.07] bg-white/[0.035] text-zinc-500',
       }
   }
 }

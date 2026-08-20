@@ -1257,8 +1257,18 @@ export default async function RelayTeamPage({
 
 
   return (
-    <main className="min-h-screen bg-[#070707] text-white">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+    <main className="relative min-h-screen overflow-x-clip bg-[#070809] px-4 pb-20 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6 sm:pt-[calc(4rem+env(safe-area-inset-top)+2rem)]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-[-28%] top-[-10%] h-[28rem] w-[28rem] rounded-full bg-cyan-300/[0.07] blur-[120px] sm:left-[-10%]" />
+
+        <div className="absolute right-[-30%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-400/[0.07] blur-[135px] sm:right-[-12%]" />
+
+        <div className="absolute bottom-[-18%] left-[32%] h-[28rem] w-[28rem] rounded-full bg-amber-300/[0.035] blur-[130px]" />
+
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.02] to-transparent" />
+      </div>
+
+      <div className="relative mx-auto w-full min-w-0 max-w-6xl">
         {/* ====================================================
          * SHARED RELAY HEADER
          * ==================================================== */}
@@ -1295,14 +1305,14 @@ export default async function RelayTeamPage({
                 href={
                   `/competitions/${relay.id}`
                 }
-                className="inline-flex min-h-10 items-center justify-center rounded-full border border-white/[0.09] bg-black/20 px-4 text-xs font-semibold text-white/55 transition hover:border-white/16 hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+                className="inline-flex min-h-10 items-center justify-center rounded-full bg-white/[0.035] px-4 text-xs font-bold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
               >
                 View Relay
               </Link>
             </div>
           }
         >
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/38">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-zinc-600">
             <span>
               {progressLabel}
             </span>
@@ -1321,32 +1331,36 @@ export default async function RelayTeamPage({
             ) : null}
 
             {viewerIsCaptain ? (
-              <span className="font-medium text-amber-100/55">
+              <span className="font-bold text-amber-200/70">
                 You are captain
               </span>
             ) : null}
           </div>
         </RelayDetailHeader>
 
-{/* ====================================================
+        {/* ====================================================
          * PRIMARY TEAM STATE
          * ==================================================== */}
 
         <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          <section className="rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
+          <section className="rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-                  Team progress
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="h-px w-5 bg-cyan-300/60" />
 
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                    Team progress
+                  </p>
+                </div>
+
+                <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
                   {getTeamStateTitle(
                     team.status
                   )}
                 </h2>
 
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/42">
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
                   {getTeamStateDescription(
                     team.status
                   )}
@@ -1361,7 +1375,7 @@ export default async function RelayTeamPage({
             </div>
 
 
-            <dl className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07] sm:grid-cols-4">
+            <dl className="mt-6 grid gap-2 sm:grid-cols-4">
               <TeamMetric
                 label="Teammates"
                 value={`${joinedMembers.length}/${totalSlots}`}
@@ -1388,16 +1402,20 @@ export default async function RelayTeamPage({
             </dl>
           </section>
 
-{/* ==================================================
+          {/* ==================================================
            * VIEWER STATE
            * ================================================== */}
 
-          <aside className="rounded-[26px] border border-violet-300/12 bg-violet-300/[0.035] p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-              Your Relay
-            </p>
+          <aside className="rounded-[1.75rem] bg-violet-300/[0.035] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-violet-300/12">
+            <div className="flex items-center gap-2">
+              <span className="h-px w-5 bg-cyan-300/60" />
 
-            <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                Your Relay
+              </p>
+            </div>
+
+            <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
               {viewerIsCaptain
                 ? 'Team captain'
                 : 'Team member'}
@@ -1405,24 +1423,24 @@ export default async function RelayTeamPage({
 
             {viewerSlot ? (
               <>
-                <p className="mt-2 text-sm leading-6 text-white/42">
+                <p className="mt-2 text-sm leading-6 text-zinc-500">
                   Your assigned leg is{' '}
                   {viewerSlot.slot_index}.
                 </p>
 
-                <div className="mt-5 rounded-2xl border border-white/[0.07] bg-black/15 p-4">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/24">
+                <div className="mt-5 rounded-[1.1rem] bg-black/20 p-4 ring-1 ring-white/[0.055]">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-700">
                     Your leg
                   </p>
 
-                  <p className="mt-1.5 text-sm font-semibold text-white/72">
+                  <p className="mt-1.5 text-sm font-black text-white">
                     {getRelaySlotLabel(
                       viewerSlot,
                       relaySlots
                     )}
                   </p>
 
-                  <p className="mt-1 text-xs capitalize leading-5 text-white/35">
+                  <p className="mt-1 text-xs capitalize leading-5 text-zinc-600">
                     {formatStatus(
                       viewerSlot.status
                     )}
@@ -1430,22 +1448,22 @@ export default async function RelayTeamPage({
                 </div>
               </>
             ) : (
-              <p className="mt-2 text-sm leading-6 text-white/42">
+              <p className="mt-2 text-sm leading-6 text-zinc-500">
                 You do not have a Relay leg assigned yet.
               </p>
             )}
 
             {activeSlot ? (
-              <div className="mt-4 rounded-2xl border border-emerald-300/12 bg-emerald-300/[0.035] p-4">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-emerald-100/42">
+              <div className="mt-4 rounded-[1.1rem] bg-emerald-300/[0.035] p-4 ring-1 ring-emerald-300/12">
+                <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-100/55">
                   Current turn
                 </p>
 
-                <p className="mt-1.5 text-sm font-semibold text-white/70">
+                <p className="mt-1.5 text-sm font-black text-white">
                   Leg {activeSlot.slot_index} is up now
                 </p>
 
-                <p className="mt-1 text-xs leading-5 text-white/34">
+                <p className="mt-1 text-xs leading-5 text-zinc-600">
                   {activeSlot.assigned_user_id ===
                   user.id
                     ? 'It’s your turn to complete this leg.'
@@ -1519,25 +1537,29 @@ export default async function RelayTeamPage({
               href={
                 `/competitions/team/${team.id}/complete`
               }
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-300 px-5 text-sm font-semibold text-black transition hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070707]"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-black text-black transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
             >
               See your completed Relay
             </Link>
           </div>
         ) : null}
 
-{/* ====================================================
+        {/* ====================================================
          * BATON / EXECUTION
          * ==================================================== */}
 
-        <section className="mt-8 rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
-          <div className="flex flex-col gap-3 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-                Current turn
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="h-px w-5 bg-cyan-300/60" />
 
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                  Current turn
+                </p>
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
                 {activeSlot
                   ? `Leg ${activeSlot.slot_index} is up now`
                   : getNoActiveBatonTitle(
@@ -1546,7 +1568,7 @@ export default async function RelayTeamPage({
               </h2>
             </div>
 
-            <p className="max-w-md text-sm leading-6 text-white/38">
+            <p className="max-w-md text-sm leading-6 text-zinc-500">
               Your team completes the Relay one leg at a time. When one
               teammate finishes, the next teammate gets their turn.
             </p>
@@ -1555,21 +1577,21 @@ export default async function RelayTeamPage({
 
           {activeSlot ? (
             <>
-              <div className="mt-5 rounded-2xl border border-emerald-300/12 bg-emerald-300/[0.035] p-5">
+              <div className="mt-5 rounded-[1.2rem] bg-emerald-300/[0.035] p-5 ring-1 ring-emerald-300/12">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-100/45">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-100/55">
                       Current leg
                     </p>
 
-                    <h3 className="mt-2 text-lg font-semibold text-white">
+                    <h3 className="mt-2 text-lg font-black text-white">
                       {getRelaySlotLabel(
                         activeSlot,
                         relaySlots
                       )}
                     </h3>
 
-                    <p className="mt-1 text-sm leading-6 text-white/40">
+                    <p className="mt-1 text-sm leading-6 text-zinc-500">
                       {activeSlot.assigned_user_id ===
                       user.id
                         ? 'It’s your turn. Start this leg when you’re ready.'
@@ -1577,7 +1599,7 @@ export default async function RelayTeamPage({
                     </p>
                   </div>
 
-                  <span className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full border border-emerald-300/16 bg-emerald-300/[0.06] px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-100/70">
+                  <span className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full bg-emerald-300/[0.06] px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-100/70 ring-1 ring-emerald-300/15">
                     In progress
                   </span>
                 </div>
@@ -1633,7 +1655,7 @@ export default async function RelayTeamPage({
               ) : null}
             </>
           ) : (
-            <div className="mt-5 rounded-2xl border border-white/[0.07] bg-black/15 p-5 text-sm leading-6 text-white/38">
+            <div className="mt-5 rounded-[1.2rem] bg-black/20 p-5 text-sm leading-6 text-zinc-500 ring-1 ring-white/[0.055]">
               {getNoActiveBatonDescription(
                 team.status
               )}
@@ -1646,14 +1668,18 @@ export default async function RelayTeamPage({
          * ROSTER
          * ==================================================== */}
 
-        <section className="mt-8 rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
-          <div className="flex flex-col gap-3 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-                Your team
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="h-px w-5 bg-cyan-300/60" />
 
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                  Your team
+                </p>
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
                 {joinedMembers.length} teammate
                 {joinedMembers.length ===
                 1
@@ -1663,7 +1689,7 @@ export default async function RelayTeamPage({
               </h2>
             </div>
 
-            <p className="max-w-md text-sm leading-6 text-white/38">
+            <p className="max-w-md text-sm leading-6 text-zinc-500">
               Each Relay leg needs one teammate before your team can
               start.
             </p>
@@ -1736,19 +1762,23 @@ export default async function RelayTeamPage({
          * MATERIALIZED TEAM ROUTE
          * ==================================================== */}
 
-        <section className="mt-8 rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
-          <div className="flex flex-col gap-3 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-                Team route
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="h-px w-5 bg-cyan-300/60" />
 
-              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-white">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                  Team route
+                </p>
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
                 Who&apos;s doing each leg
               </h2>
             </div>
 
-            <p className="max-w-md text-sm leading-6 text-white/38">
+            <p className="max-w-md text-sm leading-6 text-zinc-500">
               See every leg in order, who it belongs to, and how far
               your team has progressed.
             </p>
@@ -1796,22 +1826,26 @@ export default async function RelayTeamPage({
               )}
             </ol>
           ) : (
-            <div className="mt-5 rounded-2xl border border-dashed border-white/[0.08] px-4 py-8 text-center text-sm text-white/32">
+            <div className="mt-5 rounded-[1.2rem] border border-dashed border-white/[0.08] px-4 py-8 text-center text-sm text-zinc-600">
               Your team&apos;s Relay legs are not available yet.
             </div>
           )}
         </section>
 
-{/* ====================================================
+        {/* ====================================================
          * TEAM TIMELINE
          * ==================================================== */}
 
-        <section className="mt-8 rounded-[26px] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
-            Team timeline
-          </p>
+        <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-cyan-300/60" />
 
-          <dl className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07] sm:grid-cols-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+              Team timeline
+            </p>
+          </div>
+
+          <dl className="mt-5 grid gap-2 sm:grid-cols-4">
             <TeamMetric
               label="Team created"
               value={
@@ -1855,8 +1889,8 @@ export default async function RelayTeamPage({
          * INTEGRITY NOTE
          * ==================================================== */}
 
-        <footer className="mt-8 border-t border-white/[0.07] pt-6">
-          <p className="max-w-3xl text-xs leading-6 text-white/28">
+        <footer className="mt-8 border-t border-white/[0.06] pt-6">
+          <p className="max-w-3xl text-xs leading-6 text-zinc-700">
             Your team&apos;s progress is saved as you go. Roam checks
             assignments, check-ins, and completed legs before moving
             the Relay forward.
@@ -1896,11 +1930,11 @@ function RosterMemberCard({
     RelaySlotRow[]
 }) {
   return (
-    <article className="rounded-2xl border border-white/[0.07] bg-black/15 p-4">
+    <article className="rounded-[1.2rem] bg-black/20 p-4 ring-1 ring-white/[0.055]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold text-white/76">
+            <p className="text-sm font-black text-white">
               {isViewer
                 ? 'You'
                 : isCaptain
@@ -1909,13 +1943,13 @@ function RosterMemberCard({
             </p>
 
             {isCaptain ? (
-              <span className="rounded-full border border-amber-300/12 bg-amber-300/[0.045] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-amber-100/55">
+              <span className="rounded-full bg-amber-300/[0.045] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-amber-100/65 ring-1 ring-amber-300/12">
                 Captain
               </span>
             ) : null}
           </div>
 
-          <p className="mt-1 text-xs capitalize text-white/32">
+          <p className="mt-1 text-xs capitalize text-zinc-600">
             {formatStatus(
               member.member_status
             )}
@@ -1933,11 +1967,11 @@ function RosterMemberCard({
       <div className="mt-4 border-t border-white/[0.06] pt-3">
         {assignedSlot ? (
           <>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/22">
+            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-700">
               Their leg
             </p>
 
-            <p className="mt-1 text-sm font-medium text-white/62">
+            <p className="mt-1 text-sm font-bold text-zinc-300">
               {getRelaySlotLabel(
                 assignedSlot,
                 relaySlots
@@ -1945,7 +1979,7 @@ function RosterMemberCard({
             </p>
           </>
         ) : (
-          <p className="text-xs text-white/28">
+          <p className="text-xs text-zinc-700">
             No leg assigned yet
           </p>
         )}
@@ -2014,11 +2048,11 @@ function TeamSlotCard({
 
 
   return (
-    <li className="rounded-2xl border border-white/[0.07] bg-black/15 p-4 sm:p-5">
+    <li className="rounded-[1.2rem] bg-black/20 p-4 ring-1 ring-white/[0.055] sm:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/24">
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-700">
               Leg {slot.slot_index}
             </span>
 
@@ -2029,19 +2063,19 @@ function TeamSlotCard({
             />
 
             {slot.geo_verified ? (
-              <span className="rounded-full border border-emerald-300/12 bg-emerald-300/[0.04] px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.12em] text-emerald-100/55">
+              <span className="rounded-full bg-emerald-300/[0.04] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-100/65 ring-1 ring-emerald-300/12">
                 Check-in verified
               </span>
             ) : null}
           </div>
 
-          <h3 className="mt-2 text-lg font-semibold text-white/82">
+          <h3 className="mt-2 text-lg font-black text-white">
             {slotLabel}
           </h3>
 
           {templateSlot
             ?.prompt ? (
-            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-white/38">
+            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-500">
               {
                 templateSlot.prompt
               }
@@ -2085,11 +2119,11 @@ function TeamSlotCard({
 
 
         <div className="shrink-0 text-left sm:text-right">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/22">
+          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-700">
             Finished
           </p>
 
-          <p className="mt-1 text-xs text-white/42">
+          <p className="mt-1 text-xs text-zinc-500">
             {formatDate(
               slot.completed_at
             )}
@@ -2144,19 +2178,19 @@ function TeamStatusBadge({
   const className =
     status ===
     'active'
-      ? 'border-emerald-300/16 bg-emerald-300/[0.05] text-emerald-100/70'
+      ? 'bg-emerald-300/[0.05] text-emerald-100/70 ring-emerald-300/16'
       : status ===
           'ready'
-        ? 'border-amber-300/16 bg-amber-300/[0.05] text-amber-100/70'
+        ? 'bg-amber-300/[0.05] text-amber-100/70 ring-amber-300/16'
         : status ===
             'completed'
-          ? 'border-violet-300/16 bg-violet-300/[0.05] text-violet-100/70'
+          ? 'bg-violet-300/[0.05] text-violet-100/70 ring-violet-300/16'
           : status ===
                 'abandoned' ||
               status ===
                 'disqualified'
-            ? 'border-red-300/14 bg-red-300/[0.04] text-red-100/60'
-            : 'border-white/[0.08] bg-white/[0.03] text-white/45'
+            ? 'bg-red-300/[0.04] text-red-100/60 ring-red-300/14'
+            : 'bg-white/[0.03] text-zinc-500 ring-white/[0.08]'
 
 
   return (
@@ -2167,12 +2201,12 @@ function TeamStatusBadge({
         'items-center',
         'justify-center',
         'rounded-full',
-        'border',
         'px-3',
         'text-[10px]',
-        'font-semibold',
+        'font-bold',
         'uppercase',
         'tracking-[0.14em]',
+        'ring-1',
         className,
       ].join(' ')}
     >
@@ -2193,27 +2227,27 @@ function TeamSlotStatusBadge({
   const className =
     status ===
     'active'
-      ? 'border-emerald-300/14 bg-emerald-300/[0.045] text-emerald-100/65'
+      ? 'bg-emerald-300/[0.045] text-emerald-100/65 ring-emerald-300/14'
       : status ===
           'completed'
-        ? 'border-violet-300/14 bg-violet-300/[0.045] text-violet-100/65'
+        ? 'bg-violet-300/[0.045] text-violet-100/65 ring-violet-300/14'
         : status ===
             'skipped'
-          ? 'border-red-300/12 bg-red-300/[0.035] text-red-100/55'
-          : 'border-white/[0.07] bg-white/[0.025] text-white/38'
+          ? 'bg-red-300/[0.035] text-red-100/55 ring-red-300/12'
+          : 'bg-white/[0.025] text-zinc-600 ring-white/[0.07]'
 
 
   return (
     <span
       className={[
         'rounded-full',
-        'border',
         'px-2',
         'py-0.5',
         'text-[9px]',
-        'font-semibold',
+        'font-bold',
         'uppercase',
         'tracking-[0.12em]',
+        'ring-1',
         className,
       ].join(' ')}
     >
@@ -2282,12 +2316,12 @@ function TeamMetric({
     string
 }) {
   return (
-    <div className="bg-[#0b0b0b] px-4 py-4">
-      <dt className="text-[9px] font-semibold uppercase tracking-[0.16em] text-white/24">
+    <div className="min-w-0 rounded-[1.1rem] bg-black/20 px-4 py-4 ring-1 ring-white/[0.055]">
+      <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-700">
         {label}
       </dt>
 
-      <dd className="mt-1.5 text-sm font-medium text-white/68">
+      <dd className="mt-1.5 text-sm font-black text-zinc-300">
         {value}
       </dd>
     </div>
@@ -2307,7 +2341,7 @@ function SmallChip({
     string
 }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-white/[0.07] bg-white/[0.025] px-2.5 py-1 text-[10px] font-medium text-white/38">
+    <span className="inline-flex items-center rounded-full bg-white/[0.025] px-2.5 py-1 text-[10px] font-medium text-zinc-500 ring-1 ring-white/[0.06]">
       {value}
     </span>
   )
