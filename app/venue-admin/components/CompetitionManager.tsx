@@ -387,7 +387,6 @@ export default function CompetitionManager({
     () => {
       void loadCompetitions()
       // Deliberately initial-load only.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
     [],
   )
