@@ -240,6 +240,15 @@ type RelayEligibilityPresentation = {
 }
 
 
+type CompletedRelayTeamRow = {
+  id:
+    string
+
+  completed_at:
+    string | null
+}
+
+
 // ============================================================
 // PAGE
 // ============================================================
@@ -432,6 +441,7 @@ export default async function CompetitionDetailPage({
     const [
       rewardPolicy,
       currentUserTeamResult,
+      completedTeam,
     ] =
       await Promise.all([
         getRelayRewardPolicyDisplay(
@@ -443,6 +453,18 @@ export default async function CompetitionDetailPage({
               relay.id,
               user.id
             )
+          : Promise.resolve(
+              null
+            ),
+
+        user
+          ? getLatestCompletedRelayTeamForUser({
+              supabase,
+              relayId:
+                relay.id,
+              userId:
+                user.id,
+            })
           : Promise.resolve(
               null
             ),
@@ -507,6 +529,11 @@ export default async function CompetitionDetailPage({
         }
         existingTeam={
           existingTeam
+        }
+        completedTeamId={
+          completedTeam
+            ?.id ??
+          null
         }
         eligibility={
           eligibility
@@ -909,6 +936,7 @@ function RelayCompetitionDetail({
   relay,
   rewardPolicy,
   existingTeam,
+  completedTeamId,
   eligibility,
   signedIn,
   createTeamAction,
@@ -925,6 +953,9 @@ function RelayCompetitionDetail({
 
   existingTeam:
     RelayTeam | null
+
+  completedTeamId:
+    string | null
 
   eligibility:
     RelayEligibilityPresentation
@@ -1133,6 +1164,9 @@ function RelayCompetitionDetail({
             existingTeam={
               existingTeam
             }
+            completedTeamId={
+              completedTeamId
+            }
             signedIn={
               signedIn
             }
@@ -1305,6 +1339,7 @@ function RelayBriefStep({
 function RelayEligibilityCard({
   eligibility,
   existingTeam,
+  completedTeamId,
   signedIn,
   createTeamAction,
 }: {
@@ -1313,6 +1348,9 @@ function RelayEligibilityCard({
 
   existingTeam:
     RelayTeam | null
+
+  completedTeamId:
+    string | null
 
   signedIn:
     boolean
@@ -1396,19 +1434,30 @@ function RelayEligibilityCard({
           </Link>
         </div>
       ) : eligibility.canFormTeam ? (
-        <form
-          action={
-            createTeamAction
-          }
-          className="mt-5"
-        >
-          <button
-            type="submit"
-            className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-white px-5 text-sm font-black text-black transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
+        <>
+          <form
+            action={
+              createTeamAction
+            }
+            className="mt-5"
           >
-            Form a Relay team
-          </button>
-        </form>
+            <button
+              type="submit"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-white px-5 text-sm font-black text-black transition hover:bg-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
+            >
+              Form a Relay team
+            </button>
+          </form>
+
+          {completedTeamId ? (
+            <Link
+              href={`/competitions/team/${completedTeamId}/complete`}
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-violet-300/[0.07] px-5 text-sm font-bold text-violet-50 ring-1 ring-violet-300/15 transition hover:bg-violet-300/[0.11] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070809]"
+            >
+              View completed Relay
+            </Link>
+          ) : null}
+        </>
       ) : !signedIn ? (
         <Link
           href="/login"
@@ -2325,6 +2374,255 @@ function normalizeEntry(
         ? row.status
         : '',
   }
+}
+
+
+// ============================================================
+// COMPLETED RELAY TEAM
+// ============================================================
+
+async function getLatestCompletedRelayTeamForUser({
+  supabase,
+  relayId,
+  userId,
+}: {
+  supabase:
+    Awaited<
+      ReturnType<
+        typeof createServerClient
+      >
+    >
+
+  relayId:
+    string
+
+  userId:
+    string
+}): Promise<CompletedRelayTeamRow | null> {
+  const {
+    data:
+      membershipRows,
+    error:
+      membershipError,
+  } =
+    await supabase
+      .from(
+        'roam_relay_team_members'
+      )
+      .select(
+        'team_id'
+      )
+      .eq(
+        'user_id',
+        userId
+      )
+      .eq(
+        'member_status',
+        'joined'
+      )
+
+
+  if (
+    membershipError
+  ) {
+    console.error(
+      '[competitions/[slug]] Completed Relay membership lookup failed:',
+      {
+        relayId,
+        userId,
+        error:
+          membershipError,
+      }
+    )
+  }
+
+
+  const joinedTeamIds =
+    (
+      membershipRows ??
+      []
+    )
+      .map(
+        (
+          row
+        ) =>
+          typeof row.team_id ===
+            'string'
+            ? row.team_id.trim()
+            : ''
+      )
+      .filter(
+        Boolean
+      )
+
+
+  const {
+    data:
+      captainTeamData,
+    error:
+      captainTeamError,
+  } =
+    await supabase
+      .from(
+        'roam_relay_teams'
+      )
+      .select(`
+        id,
+        completed_at
+      `)
+      .eq(
+        'relay_id',
+        relayId
+      )
+      .eq(
+        'captain_user_id',
+        userId
+      )
+      .eq(
+        'status',
+        'completed'
+      )
+      .order(
+        'completed_at',
+        {
+          ascending:
+            false,
+
+          nullsFirst:
+            false,
+        }
+      )
+      .limit(
+        1
+      )
+      .maybeSingle()
+
+
+  if (
+    captainTeamError
+  ) {
+    console.error(
+      '[competitions/[slug]] Completed Relay captain-team lookup failed:',
+      {
+        relayId,
+        userId,
+        error:
+          captainTeamError,
+      }
+    )
+  }
+
+
+  let joinedTeam:
+    CompletedRelayTeamRow | null =
+      null
+
+
+  if (
+    joinedTeamIds.length >
+    0
+  ) {
+    const {
+      data:
+        joinedTeamData,
+      error:
+        joinedTeamError,
+    } =
+      await supabase
+        .from(
+          'roam_relay_teams'
+        )
+        .select(`
+          id,
+          completed_at
+        `)
+        .eq(
+          'relay_id',
+          relayId
+        )
+        .eq(
+          'status',
+          'completed'
+        )
+        .in(
+          'id',
+          joinedTeamIds
+        )
+        .order(
+          'completed_at',
+          {
+            ascending:
+              false,
+
+            nullsFirst:
+              false,
+          }
+        )
+        .limit(
+          1
+        )
+        .maybeSingle()
+
+
+    if (
+      joinedTeamError
+    ) {
+      console.error(
+        '[competitions/[slug]] Completed Relay joined-team lookup failed:',
+        {
+          relayId,
+          userId,
+          error:
+            joinedTeamError,
+        }
+      )
+    }
+
+
+    joinedTeam =
+      joinedTeamData as
+        | CompletedRelayTeamRow
+        | null
+  }
+
+
+  const captainTeam =
+    captainTeamData as
+      | CompletedRelayTeamRow
+      | null
+
+
+  if (
+    captainTeam &&
+    joinedTeam
+  ) {
+    const captainCompletedAt =
+      captainTeam.completed_at
+        ? new Date(
+            captainTeam.completed_at
+          ).getTime()
+        : 0
+
+
+    const joinedCompletedAt =
+      joinedTeam.completed_at
+        ? new Date(
+            joinedTeam.completed_at
+          ).getTime()
+        : 0
+
+
+    return joinedCompletedAt >
+      captainCompletedAt
+      ? joinedTeam
+      : captainTeam
+  }
+
+
+  return (
+    captainTeam ??
+    joinedTeam
+  )
 }
 
 

@@ -29,6 +29,10 @@ import {
 } from '@/lib/relay/actions'
 
 import {
+  getRelayVenueOptions,
+} from '@/lib/relay/queries'
+
+import {
   createServerClient,
 } from '@/lib/supabase/server'
 
@@ -781,6 +785,38 @@ export default async function RelayTeamPage({
 
 
   if (
+    activeRelaySlot
+      ?.selection_mode ===
+    'open'
+  ) {
+    const openVenueOptions =
+      await getRelayVenueOptions(
+        relay.city
+      )
+
+
+    activeLegVenues =
+      openVenueOptions.map(
+        (
+          venue
+        ) => ({
+          id:
+            venue.id,
+
+          name:
+            venue.name,
+
+          city:
+            venue.city,
+
+          address:
+            venue.neighborhood,
+
+          category:
+            venue.category,
+        })
+      )
+  } else if (
     activeLegVenueIds.length >
     0
   ) {
@@ -1474,8 +1510,7 @@ export default async function RelayTeamPage({
           </aside>
         </div>
 
-
-        {/* ====================================================
+{/* ====================================================
          * TEAM LIFECYCLE CONTROLS
          * ==================================================== */}
 

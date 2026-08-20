@@ -152,6 +152,120 @@ async function refreshPublicPassportStats(
 }
 
 /**
+ * Relay baton completion:
+ *
+ * Relay team-slot Active Flows remain ordinary one-stop Active
+ * Flows for physical execution.
+ *
+ * Once the Flow itself is canonically completed, delegate the
+ * Relay slot transition to the existing hardened database RPC.
+ *
+ * The RPC independently verifies:
+ *
+ *   - active baton ownership
+ *   - Relay venue constraints
+ *   - canonical Flow provenance
+ *   - completed Flow evidence
+ *   - geo-verified check-in evidence
+ *   - sequential baton integrity
+ *
+ * It then completes the current Relay slot and either activates
+ * the next baton or completes the team.
+ *
+ * The RPC is idempotent for the same completed evidence, so this
+ * helper is also safe in the already-completed repair path.
+ */
+async function completeRelaySlotFromActiveFlow({
+  supabase,
+  sessionId,
+  source,
+  sourceId,
+  venueIds,
+}: {
+  supabase: Awaited<
+    ReturnType<
+      typeof createServerClient
+    >
+  >
+  sessionId: string
+  source: unknown
+  sourceId: unknown
+  venueIds: unknown
+}): Promise<void> {
+  if (
+    source !==
+    'roam_relay_team_slot'
+  ) {
+    return
+  }
+
+  const normalizedSourceId =
+    typeof sourceId ===
+      'string'
+      ? sourceId.trim()
+      : ''
+
+  const normalizedVenueIds =
+    Array.isArray(
+      venueIds
+    )
+      ? venueIds.filter(
+          (
+            venueId
+          ): venueId is string =>
+            typeof venueId ===
+              'string' &&
+            venueId.trim().length >
+              0
+        )
+      : []
+
+  if (
+    !normalizedSourceId ||
+    normalizedVenueIds.length !==
+      1
+  ) {
+    throw new Error(
+      '[active-flow/complete] Relay team-slot Flow has invalid canonical provenance.'
+    )
+  }
+
+  const {
+    error,
+  } = await supabase.rpc(
+    'complete_roam_relay_slot',
+    {
+      p_team_slot_id:
+        normalizedSourceId,
+
+      p_venue_id:
+        normalizedVenueIds[0],
+
+      p_flow_session_id:
+        sessionId,
+    }
+  )
+
+  if (error) {
+    console.error(
+      '[active-flow/complete] Relay slot completion failed:',
+      {
+        sessionId,
+        teamSlotId:
+          normalizedSourceId,
+        venueId:
+          normalizedVenueIds[0],
+        error,
+      }
+    )
+
+    throw new Error(
+      '[active-flow/complete] Relay slot completion failed.'
+    )
+  }
+}
+
+/**
  * Creator replay attribution:
  *
  * Record creator completion credit only through the hardened
@@ -360,6 +474,27 @@ export async function POST(
       'completed'
     ) {
       /**
+       * Relay baton repair / idempotency:
+       *
+       * A previously completed Relay team-slot Flow may have
+       * missed its Relay slot transition because of an older
+       * application version or a transient downstream failure.
+       *
+       * The canonical completion RPC is idempotent for identical
+       * completion evidence, so it is safe to retry here.
+       */
+      await completeRelaySlotFromActiveFlow({
+        supabase,
+        sessionId,
+        source:
+          session.source,
+        sourceId:
+          session.source_id,
+        venueIds:
+          session.venue_ids,
+      })
+
+      /**
        * Competition participation repair / idempotency:
        *
        * A previously completed competition-linked Flow may have
@@ -493,9 +628,14 @@ export async function POST(
           )
         : []
 
+    const isRelayTeamSlotFlow =
+      session.source ===
+      'roam_relay_team_slot'
+
     if (
       venueIds.length <
-      2
+        2 &&
+      !isRelayTeamSlotFlow
     ) {
       return NextResponse.json(
         {
@@ -672,6 +812,25 @@ export async function POST(
         }
       )
     }
+
+    /**
+     * Relay baton completion:
+     *
+     * The Active Flow is now canonically completed.
+     *
+     * Relay team-slot sessions must now delegate their Relay
+     * transition to the hardened completion RPC so the current
+     * slot is completed and the next baton is activated.
+     */
+    await completeRelaySlotFromActiveFlow({
+      supabase,
+      sessionId,
+      source:
+        session.source,
+      sourceId:
+        session.source_id,
+      venueIds,
+    })
 
     /**
      * Competition participation finalization:

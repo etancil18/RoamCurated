@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import UberRideButton from '@/components/rideshare/UberRideButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
+import VenueRatingModal from '@/components/venue-profile/VenueRatingModal'
 import FlowShareActions from './FlowShareActions'
 import FlowVenueRatingPrompt from './FlowVenueRatingPrompt'
 import { logEvent } from '@/lib/logEvent'
@@ -54,6 +55,11 @@ type GeoLocationPayload = {
   user_lon: number
   location_accuracy_meters: number | null
   device_timestamp: string
+}
+
+type PendingRatingCheckIn = {
+  venueId: string
+  stopIndex: number
 }
 
 type Props = {
@@ -180,6 +186,20 @@ function getCurrentLocationForCheckIn(): Promise<GeoLocationPayload> {
   )
 }
 
+function isValidRating(
+  value: unknown
+): value is number {
+  return (
+    typeof value ===
+      'number' &&
+    Number.isInteger(
+      value
+    ) &&
+    value >= 1 &&
+    value <= 5
+  )
+}
+
 function normalizeExternalUrl(
   value: string
 ): string | null {
@@ -295,6 +315,22 @@ export default function ActiveFlowCard({
   ] =
     useState<
       string | null
+    >(null)
+
+  const [
+    pendingRatingCheckIn,
+    setPendingRatingCheckIn,
+  ] =
+    useState<
+      PendingRatingCheckIn | null
+    >(null)
+
+  const [
+    checkInDraftRating,
+    setCheckInDraftRating,
+  ] =
+    useState<
+      number | null
     >(null)
 
   const [
@@ -640,7 +676,8 @@ export default function ActiveFlowCard({
   const handleCheckIn =
     async (
       venueId: string,
-      stopIndex: number
+      stopIndex: number,
+      rating?: number
     ) => {
       if (
         flowCompleted ||
@@ -697,6 +734,8 @@ export default function ActiveFlowCard({
                   stop_index:
                     stopIndex,
 
+                  rating,
+
                   user_lat:
                     location.user_lat,
 
@@ -716,6 +755,22 @@ export default function ActiveFlowCard({
           await res.json()
 
         if (!res.ok) {
+          if (
+            json?.code ===
+            'rating_required'
+          ) {
+            setPendingRatingCheckIn({
+              venueId,
+              stopIndex,
+            })
+
+            setCheckInDraftRating(
+              null
+            )
+
+            return
+          }
+
           safeLogEvent(
             'active_flow_check_in_failed',
             {
@@ -797,6 +852,20 @@ export default function ActiveFlowCard({
           }
         )
 
+        if (
+          pendingRatingCheckIn
+            ?.venueId ===
+          venueId
+        ) {
+          setPendingRatingCheckIn(
+            null
+          )
+
+          setCheckInDraftRating(
+            null
+          )
+        }
+
         safeLogEvent(
           'active_flow_check_in_completed',
           {
@@ -855,6 +924,43 @@ export default function ActiveFlowCard({
           null
         )
       }
+    }
+
+  const handleSaveCheckInRating =
+    async () => {
+      if (
+        !pendingRatingCheckIn ||
+        !isValidRating(
+          checkInDraftRating
+        )
+      ) {
+        return
+      }
+
+      await handleCheckIn(
+        pendingRatingCheckIn
+          .venueId,
+        pendingRatingCheckIn
+          .stopIndex,
+        checkInDraftRating
+      )
+    }
+
+  const handleCloseCheckInRating =
+    () => {
+      if (
+        checkingInVenueId
+      ) {
+        return
+      }
+
+      setPendingRatingCheckIn(
+        null
+      )
+
+      setCheckInDraftRating(
+        null
+      )
     }
 
   const handleCompleteFlow =
@@ -1332,6 +1438,45 @@ export default function ActiveFlowCard({
           }
         />
       ) : null}
+
+      <VenueRatingModal
+        open={
+          Boolean(
+            pendingRatingCheckIn
+          )
+        }
+        venueName={
+          pendingRatingCheckIn
+            ? orderedVenues.find(
+                (
+                  venue
+                ) =>
+                  venue.id ===
+                  pendingRatingCheckIn
+                    .venueId
+              )
+                ?.name ??
+              null
+            : null
+        }
+        rating={
+          checkInDraftRating
+        }
+        saving={
+          Boolean(
+            checkingInVenueId
+          )
+        }
+        onRatingChange={
+          setCheckInDraftRating
+        }
+        onSave={
+          handleSaveCheckInRating
+        }
+        onClose={
+          handleCloseCheckInRating
+        }
+      />
 
       {(flowCompleted ||
         completedStops >=

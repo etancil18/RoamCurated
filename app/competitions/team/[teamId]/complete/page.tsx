@@ -260,6 +260,33 @@ type RelayTeamSlotRow = {
 }
 
 
+type RelayVenueRow = {
+  id:
+    string
+
+  name:
+    string | null
+
+  city:
+    string | null
+
+  address:
+    string | null
+}
+
+
+type RelayParticipantProfileRow = {
+  id:
+    string
+
+  username:
+    string | null
+
+  full_name:
+    string | null
+}
+
+
 /* ============================================================
  * PAGE
  * ============================================================
@@ -627,6 +654,182 @@ export default async function RelayCompletionPage({
 
 
   /* ==========================================================
+   * COMPLETION PRESENTATION DATA
+   *
+   * Resolve the canonical venue IDs and teammate IDs already
+   * attached to completed Relay legs into human-readable labels.
+   *
+   * These reads are presentation-only and do not alter Relay
+   * completion state or evidence.
+   * ========================================================== */
+
+  const completedVenueIds =
+    Array.from(
+      new Set(
+        teamSlots
+          .map(
+            (
+              slot
+            ) =>
+              slot.venue_id
+          )
+          .filter(
+            (
+              venueId
+            ): venueId is string =>
+              typeof venueId ===
+                'string' &&
+              venueId.trim().length >
+                0
+          )
+      )
+    )
+
+
+  const participantUserIds =
+    Array.from(
+      new Set(
+        teamSlots
+          .map(
+            (
+              slot
+            ) =>
+              slot.assigned_user_id
+          )
+          .filter(
+            (
+              userId
+            ): userId is string =>
+              typeof userId ===
+                'string' &&
+              userId.trim().length >
+                0
+          )
+      )
+    )
+
+
+  let venueRows:
+    RelayVenueRow[] =
+      []
+
+
+  let participantProfiles:
+    RelayParticipantProfileRow[] =
+      []
+
+
+  const [
+    venuePresentationResult,
+    participantPresentationResult,
+  ] =
+    await Promise.all([
+      completedVenueIds.length >
+        0
+        ? supabase
+            .from(
+              'venues'
+            )
+            .select(`
+              id,
+              name,
+              city,
+              address
+            `)
+            .in(
+              'id',
+              completedVenueIds
+            )
+        : Promise.resolve({
+            data:
+              [],
+            error:
+              null,
+          }),
+
+      participantUserIds.length >
+        0
+        ? supabase
+            .from(
+              'profiles'
+            )
+            .select(`
+              id,
+              username,
+              full_name
+            `)
+            .in(
+              'id',
+              participantUserIds
+            )
+        : Promise.resolve({
+            data:
+              [],
+            error:
+              null,
+          }),
+    ])
+
+
+  if (
+    venuePresentationResult.error
+  ) {
+    console.error(
+      '[relay/complete] Venue presentation fetch failed:',
+      venuePresentationResult.error
+    )
+  } else {
+    venueRows =
+      (
+        venuePresentationResult.data ??
+        []
+      ) as RelayVenueRow[]
+  }
+
+
+  if (
+    participantPresentationResult.error
+  ) {
+    console.error(
+      '[relay/complete] Participant presentation fetch failed:',
+      participantPresentationResult.error
+    )
+  } else {
+    participantProfiles =
+      (
+        participantPresentationResult.data ??
+        []
+      ) as RelayParticipantProfileRow[]
+  }
+
+
+  const venueById =
+    new Map(
+      venueRows.map(
+        (
+          venue
+        ) => [
+          venue.id,
+          venue,
+        ]
+      )
+    )
+
+
+  const participantProfileById =
+    new Map(
+      participantProfiles.map(
+        (
+          profile
+        ) => [
+          profile.id,
+          profile,
+        ]
+      )
+    )
+
+
+  /* ==========================================================
    * COMPLETION INTEGRITY
    *
    * The team itself is canonical authority for completion.
@@ -834,6 +1037,24 @@ export default async function RelayCompletionPage({
           })
 
 
+        const participantProfile =
+          teamSlot.assigned_user_id
+            ? participantProfileById.get(
+                teamSlot.assigned_user_id
+              ) ??
+              null
+            : null
+
+
+        const venue =
+          teamSlot.venue_id
+            ? venueById.get(
+                teamSlot.venue_id
+              ) ??
+              null
+            : null
+
+
         return {
           id:
             teamSlot.id,
@@ -852,7 +1073,13 @@ export default async function RelayCompletionPage({
             null,
 
           contributorLabel:
-            contributorPresentation.label,
+            getParticipantName({
+              profile:
+                participantProfile,
+
+              fallback:
+                contributorPresentation.label,
+            }),
 
           contributorSecondaryLabel:
             contributorPresentation.secondaryLabel,
@@ -867,14 +1094,23 @@ export default async function RelayCompletionPage({
             teamSlot.venue_id,
 
           venueLabel:
-            teamSlot.venue_id
-              ? 'Verified Relay venue'
-              : 'Completed Relay stop',
+            venue?.name
+              ?.trim() ||
+            (
+              teamSlot.venue_id
+                ? 'Relay venue'
+                : 'Completed Relay stop'
+            ),
 
           venueSecondaryLabel:
-            teamSlot.geo_verified
-              ? 'Physical verification recorded'
-              : null,
+            getVenueLocationLabel(
+              venue
+            ) ??
+            (
+              teamSlot.geo_verified
+                ? 'Check-in verified'
+                : null
+            ),
 
           completedAt:
             teamSlot.completed_at,
@@ -980,6 +1216,67 @@ export default async function RelayCompletionPage({
 
 
         {/* ====================================================
+         * COMPLETION HERO
+         * ==================================================== */}
+
+        <section className="relative mt-8 overflow-hidden rounded-[2rem] bg-gradient-to-br from-violet-300/[0.08] via-white/[0.035] to-cyan-300/[0.025] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.22)] ring-1 ring-violet-300/14 sm:p-7">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden"
+          >
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-200/30 to-transparent" />
+
+            <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-violet-300/[0.06] blur-[100px]" />
+
+            <div className="absolute -bottom-24 -left-16 h-60 w-60 rounded-full bg-cyan-300/[0.045] blur-[100px]" />
+          </div>
+
+          <div className="relative">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex min-h-7 items-center rounded-full bg-emerald-300/[0.07] px-3 text-[9px] font-black uppercase tracking-[0.16em] text-emerald-100/80 ring-1 ring-emerald-300/16">
+                Relay complete
+              </span>
+
+              <span className="inline-flex min-h-7 items-center rounded-full bg-white/[0.035] px-3 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-400 ring-1 ring-white/[0.07]">
+                {relay.city}
+              </span>
+            </div>
+
+            <h1 className="mt-5 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl">
+              Your team carried the baton all the way through.
+            </h1>
+
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400 sm:text-base">
+              Here&apos;s the finished route: every teammate, every
+              completed leg, and every venue your team visited along
+              the way.
+            </p>
+
+            <dl className="mt-6 grid gap-2 sm:grid-cols-3">
+              <CompletionMetric
+                label="Legs completed"
+                value={`${completedTeamSlots.length}/${totalSlots}`}
+              />
+
+              <CompletionMetric
+                label="Verified visits"
+                value={`${geoVerifiedCompletedSlots.length}`}
+              />
+
+              <CompletionMetric
+                label="Finished"
+                value={
+                  formatDateTime(
+                    team.completed_at
+                  )
+                }
+              />
+            </dl>
+          </div>
+        </section>
+
+
+        {/* ====================================================
          * COLLABORATIVE COMPLETION SUMMARY
          * ==================================================== */}
 
@@ -1006,10 +1303,252 @@ export default async function RelayCompletionPage({
             completedAt={
               team.completed_at
             }
-            title="The baton made it all the way through."
-            description="Every completed stop stays attached to the teammate who carried that leg, preserving the team’s finished route in canonical Relay order."
+            title="Your team’s finished route"
+            description="Each leg shows who carried the baton and the venue they visited before passing it to the next teammate."
           />
         </div>
+
+
+        {/* ====================================================
+         * FINISHED ROUTE
+         * ==================================================== */}
+
+        <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-cyan-300/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="h-px w-5 bg-cyan-300/60" />
+
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                  Where your team went
+                </p>
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white">
+                Every teammate&apos;s stop
+              </h2>
+            </div>
+
+            <p className="max-w-md text-sm leading-6 text-zinc-500">
+              Your completed route stays in Relay order, from the first
+              baton holder to the teammate who finished the final leg.
+            </p>
+          </div>
+
+
+          <ol className="mt-6 space-y-3">
+            {completedTeamSlots.map(
+              (
+                teamSlot,
+                index
+              ) => {
+                const relaySlot =
+                  relaySlots.find(
+                    (
+                      slot
+                    ) =>
+                      slot.id ===
+                      teamSlot.relay_slot_id
+                  ) ??
+                  null
+
+
+                const member =
+                  teamSlot.assigned_user_id
+                    ? members.find(
+                        (
+                          candidate
+                        ) =>
+                          candidate.user_id ===
+                          teamSlot.assigned_user_id
+                      ) ??
+                      null
+                    : null
+
+
+                const contributorPresentation =
+                  getContributorPresentation({
+                    userId:
+                      teamSlot.assigned_user_id,
+
+                    viewerUserId:
+                      user.id,
+
+                    captainUserId:
+                      team.captain_user_id,
+
+                    member,
+                  })
+
+
+                const participantProfile =
+                  teamSlot.assigned_user_id
+                    ? participantProfileById.get(
+                        teamSlot.assigned_user_id
+                      ) ??
+                      null
+                    : null
+
+
+                const participantName =
+                  getParticipantName({
+                    profile:
+                      participantProfile,
+
+                    fallback:
+                      contributorPresentation.label,
+                  })
+
+
+                const venue =
+                  teamSlot.venue_id
+                    ? venueById.get(
+                        teamSlot.venue_id
+                      ) ??
+                      null
+                    : null
+
+
+                const venueName =
+                  venue?.name
+                    ?.trim() ||
+                  (
+                    teamSlot.venue_id
+                      ? 'Relay venue'
+                      : 'Completed Relay stop'
+                  )
+
+
+                const venueLocation =
+                  getVenueLocationLabel(
+                    venue
+                  )
+
+
+                return (
+                  <li
+                    key={
+                      teamSlot.id
+                    }
+                    className="relative overflow-hidden rounded-[1.35rem] bg-black/20 p-4 ring-1 ring-white/[0.06] sm:p-5"
+                  >
+                    <div className="flex gap-4">
+                      <div className="flex shrink-0 flex-col items-center">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-300/[0.07] text-xs font-black text-cyan-100 ring-1 ring-cyan-300/16">
+                          {teamSlot.slot_index}
+                        </span>
+
+                        {index <
+                        completedTeamSlots.length -
+                          1 ? (
+                          <span className="mt-2 h-full min-h-10 w-px bg-gradient-to-b from-cyan-300/20 to-transparent" />
+                        ) : null}
+                      </div>
+
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-600">
+                              Leg {teamSlot.slot_index}
+                            </p>
+
+                            <h3 className="mt-1.5 text-lg font-black text-white">
+                              {relaySlot
+                                ?.label ??
+                                `Relay leg ${teamSlot.slot_index}`}
+                            </h3>
+
+                            {relaySlot
+                              ?.prompt ? (
+                              <p className="mt-1.5 max-w-2xl text-xs leading-5 text-zinc-600">
+                                {
+                                  relaySlot.prompt
+                                }
+                              </p>
+                            ) : null}
+                          </div>
+
+
+                          {teamSlot.geo_verified ? (
+                            <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full bg-emerald-300/[0.055] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-100/70 ring-1 ring-emerald-300/14">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+
+                              Check-in verified
+                            </span>
+                          ) : null}
+                        </div>
+
+
+                        <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+                          <div className="rounded-[1rem] bg-white/[0.025] px-4 py-3.5 ring-1 ring-white/[0.055]">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-700">
+                              Teammate
+                            </p>
+
+                            <p className="mt-1.5 truncate text-sm font-black text-zinc-200">
+                              {participantName}
+                            </p>
+
+                            {contributorPresentation.secondaryLabel ? (
+                              <p className="mt-1 text-xs text-zinc-600">
+                                {
+                                  contributorPresentation.secondaryLabel
+                                }
+                              </p>
+                            ) : null}
+                          </div>
+
+
+                          <div className="rounded-[1rem] bg-violet-300/[0.025] px-4 py-3.5 ring-1 ring-violet-300/10">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-violet-200/40">
+                              Venue visited
+                            </p>
+
+                            <p className="mt-1.5 text-sm font-black text-white">
+                              {venueName}
+                            </p>
+
+                            {venueLocation ? (
+                              <p className="mt-1 text-xs leading-5 text-zinc-500">
+                                {venueLocation}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+
+
+                        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-[11px] text-zinc-700">
+                          {teamSlot.checked_in_at ? (
+                            <span>
+                              Checked in{' '}
+                              {
+                                formatDateTime(
+                                  teamSlot.checked_in_at
+                                )
+                              }
+                            </span>
+                          ) : null}
+
+                          {teamSlot.completed_at ? (
+                            <span>
+                              Finished{' '}
+                              {
+                                formatDateTime(
+                                  teamSlot.completed_at
+                                )
+                              }
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                )
+              }
+            )}
+          </ol>
+        </section>
 
 
         {/* ====================================================
@@ -1025,21 +1564,20 @@ export default async function RelayCompletionPage({
                   <span className="h-px w-5 bg-amber-300/60" />
 
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200/75">
-                    Completion integrity
+                    Route check
                   </p>
                 </div>
 
                 <p className="mt-3 text-sm leading-6 text-zinc-500">
-                  The team is canonically marked completed, but{' '}
+                  Your team is marked complete, but{' '}
                   {integrityExceptionSlots.length}{' '}
-                  materialized Relay leg
+                  Relay leg
                   {integrityExceptionSlots.length ===
                   1
                     ? ''
                     : 's'}{' '}
-                  do not have normal completed state. This page preserves
-                  the canonical database result instead of inventing
-                  completion evidence.
+                  still have an unusual saved status. They&apos;re shown
+                  below so your finished route stays transparent.
                 </p>
               </div>
 
@@ -1133,8 +1671,13 @@ export default async function RelayCompletionPage({
           </div>
 
           <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
-            From formation to finish
+            From team-up to finish
           </h2>
+
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+            A quick look back at when your team came together and
+            completed the Relay.
+          </p>
 
           <dl className="mt-5 grid gap-2 sm:grid-cols-4">
             <TimelineMetric
@@ -1147,7 +1690,7 @@ export default async function RelayCompletionPage({
             />
 
             <TimelineMetric
-              label="Opted in"
+              label="Ready"
               value={
                 formatDateTime(
                   team.opted_in_at
@@ -1185,20 +1728,18 @@ export default async function RelayCompletionPage({
             <span className="h-px w-5 bg-cyan-300/60" />
 
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
-              What happens next
+              Your finished Relay
             </p>
           </div>
 
           <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
-            The route is complete. The replay artifact is a separate step.
+            Your team&apos;s completed route stays here.
           </h2>
 
           <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-500">
-            This page is the canonical completed-team projection. It
-            does not claim that a reusable collaborative Roam artifact
-            has already been materialized. Artifact creation should
-            consume this frozen ordered route through its own canonical
-            materialization path.
+            You can come back to see who completed each leg, which
+            venues your team visited, and when the baton made it to the
+            finish.
           </p>
         </section>
 
@@ -1209,14 +1750,42 @@ export default async function RelayCompletionPage({
 
         <footer className="mt-8 border-t border-white/[0.06] pt-6">
           <p className="max-w-3xl text-xs leading-6 text-zinc-700">
-            Completed Relay execution is read-only here. Contributor,
-            venue, verification, and completion state are projected
-            from canonical Relay team and team-slot records rather than
-            reconstructed in the browser.
+            Completed Relay results are read-only. Your teammates,
+            venues, verified check-ins, and completion times come from
+            the saved Relay team record.
           </p>
         </footer>
       </div>
     </main>
+  )
+}
+
+
+/* ============================================================
+ * COMPLETION METRIC
+ * ============================================================
+ */
+
+function CompletionMetric({
+  label,
+  value,
+}: {
+  label:
+    string
+
+  value:
+    string
+}) {
+  return (
+    <div className="min-w-0 rounded-[1.1rem] bg-black/20 px-4 py-4 ring-1 ring-white/[0.06]">
+      <dt className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-600">
+        {label}
+      </dt>
+
+      <dd className="mt-1.5 text-sm font-black text-white">
+        {value}
+      </dd>
+    </div>
   )
 }
 
@@ -1403,6 +1972,109 @@ function getContributorPresentation({
     isViewer:
       false,
   }
+}
+
+
+/* ============================================================
+ * PARTICIPANT PRESENTATION
+ * ============================================================
+ */
+
+function getParticipantName({
+  profile,
+  fallback,
+}: {
+  profile:
+    RelayParticipantProfileRow | null
+
+  fallback:
+    string
+}): string {
+  const fullName =
+    profile
+      ?.full_name
+      ?.trim() ??
+    ''
+
+
+  if (
+    fullName
+  ) {
+    return fullName
+  }
+
+
+  const username =
+    profile
+      ?.username
+      ?.trim() ??
+    ''
+
+
+  if (
+    username
+  ) {
+    return `@${username}`
+  }
+
+
+  return fallback
+}
+
+
+/* ============================================================
+ * VENUE PRESENTATION
+ * ============================================================
+ */
+
+function getVenueLocationLabel(
+  venue:
+    RelayVenueRow | null
+): string | null {
+  if (
+    !venue
+  ) {
+    return null
+  }
+
+
+  const parts =
+    [
+      venue.address,
+      venue.city,
+    ]
+      .filter(
+        (
+          value
+        ): value is string =>
+          typeof value ===
+            'string' &&
+          value.trim().length >
+            0
+      )
+      .map(
+        (
+          value
+        ) =>
+          value.trim()
+      )
+
+
+  if (
+    parts.length ===
+    0
+  ) {
+    return null
+  }
+
+
+  return Array.from(
+    new Set(
+      parts
+    )
+  ).join(
+    ' · '
+  )
 }
 
 

@@ -100,7 +100,7 @@ export default function FlowVenueRatingPrompt({
 
     try {
       const res = await fetch(`/api/venue-profile/${openVenue.id}/visit`, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -127,39 +127,6 @@ export default function FlowVenueRatingPrompt({
     } catch (err) {
       console.error('[FlowVenueRatingPrompt] Failed to save rating:', err)
       setError(err instanceof Error ? err.message : 'Failed to save rating')
-    } finally {
-      setSavingVenueId(null)
-    }
-  }
-
-  const removeRating = async () => {
-    if (!openVenue) return
-
-    setSavingVenueId(openVenue.id)
-    setError(null)
-
-    try {
-      const res = await fetch(`/api/venue-profile/${openVenue.id}/visit`, {
-        method: 'DELETE',
-      })
-
-      const json = await res.json().catch(() => null)
-
-      if (!res.ok) {
-        throw new Error(json?.error || 'Failed to remove venue rating')
-      }
-
-      setRatedVenues((prev) => {
-        const next = { ...prev }
-        delete next[openVenue.id]
-        return next
-      })
-
-      setOpenVenueId(null)
-      setDraftRating(null)
-    } catch (err) {
-      console.error('[FlowVenueRatingPrompt] Failed to remove rating:', err)
-      setError(err instanceof Error ? err.message : 'Failed to remove rating')
     } finally {
       setSavingVenueId(null)
     }
@@ -245,9 +212,6 @@ export default function FlowVenueRatingPrompt({
         onRatingChange={setDraftRating}
         onSave={saveRating}
         onClose={closeRatingModal}
-        onRemove={
-          openVenue && ratedVenues[openVenue.id] ? removeRating : undefined
-        }
       />
     </>
   )

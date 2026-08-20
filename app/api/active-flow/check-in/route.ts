@@ -23,7 +23,7 @@ type CheckInActiveFlowBody = {
 type ActiveFlowVenueVisitRow = {
   id: string
   venue_id: string
-  rating: number
+  rating: number | null
   visited_at: string
   geo_verified: boolean
   check_in_source: string
@@ -627,29 +627,6 @@ export async function POST(
       )
     }
 
-    /**
-     * venue_visits.rating is required.
-     *
-     * Validate the real user-supplied rating before either
-     * active_flow_progress or venue_visits is written.
-     */
-    if (
-      !isValidRating(
-        rating
-      )
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            'Rating must be an integer between 1 and 5.',
-        },
-        {
-          status:
-            400,
-        }
-      )
-    }
-
     if (
       !isValidLatitude(
         userLat
@@ -1092,7 +1069,12 @@ export async function POST(
             venue_id:
               venueId,
 
-            rating,
+            rating:
+              isValidRating(
+                rating
+              )
+                ? rating
+                : null,
 
             visited_at:
               repairVisitedAt,
@@ -1410,6 +1392,114 @@ export async function POST(
     }
 
     /**
+     * Determine whether this is the user's first historical visit
+     * to the venue.
+     *
+     * First-ever visits require a rating. Later visits may leave
+     * rating null.
+     */
+    const {
+      data:
+        latestVenueVisit,
+      error:
+        latestVenueVisitError,
+    } = await supabase
+      .from(
+        'venue_visits'
+      )
+      .select(`
+        id,
+        visited_at
+      `)
+      .eq(
+        'user_id',
+        user.id
+      )
+      .eq(
+        'venue_id',
+        venueId
+      )
+      .order(
+        'visited_at',
+        {
+          ascending:
+            false,
+        }
+      )
+      .limit(
+        1
+      )
+      .maybeSingle()
+
+    if (
+      latestVenueVisitError
+    ) {
+      console.error(
+        '[active-flow/check-in] Latest venue visit lookup failed:',
+        latestVenueVisitError
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Could not verify existing venue visit.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    /**
+     * If a rating is supplied, it must always be valid.
+     */
+    if (
+      rating !==
+        undefined &&
+      rating !==
+        null &&
+      !isValidRating(
+        rating
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Rating must be an integer between 1 and 5.',
+        },
+        {
+          status:
+            400,
+        }
+      )
+    }
+
+    /**
+     * First-ever venue visits require a rating.
+     */
+    if (
+      !latestVenueVisit &&
+      !isValidRating(
+        rating
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Rate this venue before checking in for the first time.',
+
+          code:
+            'rating_required',
+        },
+        {
+          status:
+            400,
+        }
+      )
+    }
+
+    /**
      * A new flow stop must not manufacture a second historical
      * venue visit during the same Roam day.
      */
@@ -1418,79 +1508,25 @@ export async function POST(
         'string' &&
       venue.city
         .trim()
-        .length > 0
+        .length > 0 &&
+      latestVenueVisit
+        ?.visited_at &&
+      isSameRoamDay(
+        latestVenueVisit.visited_at,
+        now,
+        venue.city
+      )
     ) {
-      const {
-        data:
-          latestVenueVisit,
-        error:
-          latestVenueVisitError,
-      } = await supabase
-        .from(
-          'venue_visits'
-        )
-        .select(
-          'visited_at'
-        )
-        .eq(
-          'user_id',
-          user.id
-        )
-        .eq(
-          'venue_id',
-          venueId
-        )
-        .order(
-          'visited_at',
-          {
-            ascending:
-              false,
-          }
-        )
-        .limit(
-          1
-        )
-        .maybeSingle()
-
-      if (
-        latestVenueVisitError
-      ) {
-        console.error(
-          '[active-flow/check-in] Latest venue visit lookup failed:',
-          latestVenueVisitError
-        )
-
-        return NextResponse.json(
-          {
-            error:
-              'Could not verify existing venue visit.',
-          },
-          {
-            status:
-              500,
-          }
-        )
-      }
-
-      if (
-        latestVenueVisit?.visited_at &&
-        isSameRoamDay(
-          latestVenueVisit.visited_at,
-          now,
-          venue.city
-        )
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              'You have already checked in to this venue today. Try again on a different day.',
-          },
-          {
-            status:
-              409,
-          }
-        )
-      }
+      return NextResponse.json(
+        {
+          error:
+            'You have already checked in to this venue today. Try again on a different day.',
+        },
+        {
+          status:
+            409,
+        }
+      )
     }
 
     const {
@@ -1574,8 +1610,8 @@ export async function POST(
      * canonical venue_visits relationship used by Passport stats
      * and public Creator Exploration Maps.
      *
-     * A real rating is included because venue_visits.rating is
-     * intentionally non-nullable.
+     * First-ever visits carry the required rating. Later visits
+     * may store a null rating.
      */
     const {
       data: venueVisit,
@@ -1591,7 +1627,12 @@ export async function POST(
         venue_id:
           venueId,
 
-        rating,
+        rating:
+          isValidRating(
+            rating
+          )
+            ? rating
+            : null,
 
         visited_at:
           now,
@@ -1725,7 +1766,7 @@ export async function POST(
 
     const flowCompleted =
       completedStops ===
-      totalStops
+        totalStops
 
     const {
       error:
