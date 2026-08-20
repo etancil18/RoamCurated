@@ -29,6 +29,11 @@ type PassportStats = {
   eventCheckins: number
 }
 
+type CompetitionPassportStats = {
+  competitionsParticipated: number
+  competitionWins: number
+}
+
 type PassportSnapshot = {
   xp: number
   level: number
@@ -55,6 +60,32 @@ type ProfilePublicStatsRow = {
     | number
     | string
     | null
+}
+
+type CompetitionEntryPassportRow = {
+  id: string
+  competition_id: string
+}
+
+type CompetitionParticipationPassportRow = {
+  competition_id: string
+}
+
+type RelayTeamMembershipPassportRow = {
+  team_id: string
+}
+
+type CompetitionRelayEntryPassportRow = {
+  id: string
+  competition_id: string
+  relay_team_id: string
+}
+
+type CompetitionWinnerPassportRow = {
+  id: string
+  winner_entry_id: string | null
+  relay_winner_entry_id: string | null
+  result_status: string
 }
 
 type ActiveFlow = {
@@ -101,6 +132,12 @@ const EMPTY_STATS: PassportStats = {
   eventXp: 0,
   eventCheckins: 0,
 }
+
+const EMPTY_COMPETITION_STATS:
+  CompetitionPassportStats = {
+    competitionsParticipated: 0,
+    competitionWins: 0,
+  }
 
 const EMPTY_SNAPSHOT: PassportSnapshot = {
   xp: 0,
@@ -159,6 +196,14 @@ export default function RoamPassport() {
   const [stats, setStats] =
     useState<PassportStats>(
       EMPTY_STATS
+    )
+
+  const [
+    competitionStats,
+    setCompetitionStats,
+  ] =
+    useState<CompetitionPassportStats>(
+      EMPTY_COMPETITION_STATS
     )
 
   const [
@@ -226,6 +271,7 @@ export default function RoamPassport() {
           publicStatsResult,
           activeFlowResult,
           reputationResult,
+          competitionStatsResult,
         ] = await Promise.all([
           supabase
             .from(
@@ -272,6 +318,11 @@ export default function RoamPassport() {
             .maybeSingle<ActiveFlow>(),
 
           loadProfileReputation(),
+
+          loadCompetitionPassportStats({
+            supabase,
+            userId,
+          }),
         ])
 
         if (
@@ -447,6 +498,10 @@ export default function RoamPassport() {
             EMPTY_SNAPSHOT
           )
         }
+
+        setCompetitionStats(
+          competitionStatsResult
+        )
 
         setReputation(
           reputationResult.reputation
@@ -802,6 +857,30 @@ export default function RoamPassport() {
               stats.savedProperties
             }
           />
+
+          {competitionStats
+            .competitionsParticipated >
+          0 ? (
+            <StatCard
+              label="Competitions"
+              value={
+                competitionStats
+                  .competitionsParticipated
+              }
+            />
+          ) : null}
+
+          {competitionStats
+            .competitionWins >
+          0 ? (
+            <StatCard
+              label="Competition wins"
+              value={
+                competitionStats
+                  .competitionWins
+              }
+            />
+          ) : null}
         </div>
       </section>
 
@@ -858,6 +937,444 @@ export default function RoamPassport() {
       </section>
     </div>
   )
+}
+
+/* =========================================================
+ * Competition Passport loading
+ * ======================================================= */
+
+async function loadCompetitionPassportStats({
+  supabase,
+  userId,
+}: {
+  supabase:
+    ReturnType<
+      typeof supabaseBrowser
+    >
+  userId: string
+}): Promise<CompetitionPassportStats> {
+  try {
+    const [
+      directEntriesResult,
+      participationsResult,
+      relayMembershipsResult,
+    ] =
+      await Promise.all([
+        supabase
+          .from(
+            'competition_entries'
+          )
+          .select(`
+            id,
+            competition_id
+          `)
+          .eq(
+            'user_id',
+            userId
+          ),
+
+        supabase
+          .from(
+            'competition_participations'
+          )
+          .select(`
+            competition_id
+          `)
+          .eq(
+            'user_id',
+            userId
+          ),
+
+        supabase
+          .from(
+            'roam_relay_team_members'
+          )
+          .select(`
+            team_id
+          `)
+          .eq(
+            'user_id',
+            userId
+          )
+          .eq(
+            'member_status',
+            'joined'
+          ),
+      ])
+
+
+    if (
+      directEntriesResult.error
+    ) {
+      console.error(
+        '[RoamPassport] Failed to load competition entries:',
+        directEntriesResult.error
+      )
+    }
+
+
+    if (
+      participationsResult.error
+    ) {
+      console.error(
+        '[RoamPassport] Failed to load competition participations:',
+        participationsResult.error
+      )
+    }
+
+
+    if (
+      relayMembershipsResult.error
+    ) {
+      console.error(
+        '[RoamPassport] Failed to load Relay competition memberships:',
+        relayMembershipsResult.error
+      )
+    }
+
+
+    const directEntries =
+      (
+        directEntriesResult.data ??
+        []
+      ) as CompetitionEntryPassportRow[]
+
+
+    const participations =
+      (
+        participationsResult.data ??
+        []
+      ) as CompetitionParticipationPassportRow[]
+
+
+    const relayMemberships =
+      (
+        relayMembershipsResult.data ??
+        []
+      ) as RelayTeamMembershipPassportRow[]
+
+
+    const competitionIds =
+      new Set<string>()
+
+
+    for (
+      const entry of directEntries
+    ) {
+      if (
+        typeof entry.competition_id ===
+          'string' &&
+        entry.competition_id
+          .trim()
+          .length >
+          0
+      ) {
+        competitionIds.add(
+          entry.competition_id
+        )
+      }
+    }
+
+
+    for (
+      const participation of
+        participations
+    ) {
+      if (
+        typeof participation.competition_id ===
+          'string' &&
+        participation.competition_id
+          .trim()
+          .length >
+          0
+      ) {
+        competitionIds.add(
+          participation.competition_id
+        )
+      }
+    }
+
+
+    const relayTeamIds =
+      Array.from(
+        new Set(
+          relayMemberships
+            .map(
+              (
+                membership
+              ) =>
+                membership.team_id
+                  ?.trim()
+            )
+            .filter(
+              (
+                teamId
+              ): teamId is string =>
+                typeof teamId ===
+                  'string' &&
+                teamId.length >
+                  0
+            )
+        )
+      )
+
+
+    let relayEntries:
+      CompetitionRelayEntryPassportRow[] =
+        []
+
+
+    if (
+      relayTeamIds.length >
+      0
+    ) {
+      const relayEntriesResult =
+        await supabase
+          .from(
+            'competition_relay_entries'
+          )
+          .select(`
+            id,
+            competition_id,
+            relay_team_id
+          `)
+          .in(
+            'relay_team_id',
+            relayTeamIds
+          )
+
+
+      if (
+        relayEntriesResult.error
+      ) {
+        console.error(
+          '[RoamPassport] Failed to load Relay competition entries:',
+          relayEntriesResult.error
+        )
+      }
+
+
+      relayEntries =
+        (
+          relayEntriesResult.data ??
+          []
+        ) as CompetitionRelayEntryPassportRow[]
+    }
+
+
+    for (
+      const relayEntry of
+        relayEntries
+    ) {
+      if (
+        typeof relayEntry.competition_id ===
+          'string' &&
+        relayEntry.competition_id
+          .trim()
+          .length >
+          0
+      ) {
+        competitionIds.add(
+          relayEntry.competition_id
+        )
+      }
+    }
+
+
+    const directEntryIds =
+      Array.from(
+        new Set(
+          directEntries
+            .map(
+              (
+                entry
+              ) =>
+                entry.id
+                  ?.trim()
+            )
+            .filter(
+              (
+                entryId
+              ): entryId is string =>
+                typeof entryId ===
+                  'string' &&
+                entryId.length >
+                  0
+            )
+        )
+      )
+
+
+    const relayEntryIds =
+      Array.from(
+        new Set(
+          relayEntries
+            .map(
+              (
+                entry
+              ) =>
+                entry.id
+                  ?.trim()
+            )
+            .filter(
+              (
+                entryId
+              ): entryId is string =>
+                typeof entryId ===
+                  'string' &&
+                entryId.length >
+                  0
+            )
+        )
+      )
+
+
+    const wonCompetitionIds =
+      new Set<string>()
+
+
+    if (
+      directEntryIds.length >
+      0
+    ) {
+      const directWinsResult =
+        await supabase
+          .from(
+            'competitions'
+          )
+          .select(`
+            id,
+            winner_entry_id,
+            relay_winner_entry_id,
+            result_status
+          `)
+          .eq(
+            'result_status',
+            'winner'
+          )
+          .in(
+            'winner_entry_id',
+            directEntryIds
+          )
+
+
+      if (
+        directWinsResult.error
+      ) {
+        console.error(
+          '[RoamPassport] Failed to load direct competition wins:',
+          directWinsResult.error
+        )
+      }
+
+
+      const directWins =
+        (
+          directWinsResult.data ??
+          []
+        ) as CompetitionWinnerPassportRow[]
+
+
+      for (
+        const competition of
+          directWins
+      ) {
+        if (
+          typeof competition.id ===
+            'string' &&
+          competition.id
+            .trim()
+            .length >
+            0
+        ) {
+          wonCompetitionIds.add(
+            competition.id
+          )
+        }
+      }
+    }
+
+
+    if (
+      relayEntryIds.length >
+      0
+    ) {
+      const relayWinsResult =
+        await supabase
+          .from(
+            'competitions'
+          )
+          .select(`
+            id,
+            winner_entry_id,
+            relay_winner_entry_id,
+            result_status
+          `)
+          .eq(
+            'result_status',
+            'winner'
+          )
+          .in(
+            'relay_winner_entry_id',
+            relayEntryIds
+          )
+
+
+      if (
+        relayWinsResult.error
+      ) {
+        console.error(
+          '[RoamPassport] Failed to load Relay competition wins:',
+          relayWinsResult.error
+        )
+      }
+
+
+      const relayWins =
+        (
+          relayWinsResult.data ??
+          []
+        ) as CompetitionWinnerPassportRow[]
+
+
+      for (
+        const competition of
+          relayWins
+      ) {
+        if (
+          typeof competition.id ===
+            'string' &&
+          competition.id
+            .trim()
+            .length >
+            0
+        ) {
+          wonCompetitionIds.add(
+            competition.id
+          )
+        }
+      }
+    }
+
+
+    return {
+      competitionsParticipated:
+        competitionIds.size,
+
+      competitionWins:
+        wonCompetitionIds.size,
+    }
+  } catch (error) {
+    console.error(
+      '[RoamPassport] Unexpected competition Passport stats failure:',
+      error
+    )
+
+
+    return {
+      ...EMPTY_COMPETITION_STATS,
+    }
+  }
 }
 
 /* =========================================================

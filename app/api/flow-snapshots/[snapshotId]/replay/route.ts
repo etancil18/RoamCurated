@@ -382,7 +382,10 @@ export async function POST(
         snapshot.id,
 
       source_creator_user_id:
-        snapshot.user_id,
+        snapshot.source_type ===
+        'roam_relay'
+          ? null
+          : snapshot.user_id,
 
       venue_ids:
         venueIds,
@@ -603,7 +606,7 @@ function normalizeUuid(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -623,7 +626,7 @@ function normalizeNullableText(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }

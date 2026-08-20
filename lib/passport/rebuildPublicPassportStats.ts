@@ -29,6 +29,7 @@ type CrawlRsvpRow = {
 type CompletedFlowSessionRow = {
   id?: string | null
   venue_ids?: unknown
+  source?: string | null
 }
 
 type VenueVisitRow = {
@@ -44,6 +45,10 @@ type EventXpRow = {
   xp_amount?: number | string | null
 }
 
+type CompetitionXpAwardRow = {
+  xp_amount?: number | string | null
+}
+
 type CrawlEventRow = {
   id?: string | null
   venue_ids?: unknown
@@ -53,6 +58,10 @@ type CreatorReplayAttributionTotalsRow = {
   creator_user_id?: string | null
   replayed_flow_stops?: number | string | null
   completed_replayed_flows?: number | string | null
+}
+
+type CompletedRelayParticipantSlotRow = {
+  team_id?: string | null
 }
 
 function normalizeCount(
@@ -260,6 +269,12 @@ export async function rebuildPublicPassportStats(
     venueVisitsResult,
     crawlProgressResult,
     eventXpResult,
+    competitionWinXpResult,
+    competitionAttributedStopsResult,
+    completedCompetitionAttributedFlowsResult,
+    relayParticipantStopsResult,
+    relayAttributedStopsResult,
+    completedAttributedRelaysResult,
     eventCheckinsResult,
     creatorReplayAttributionResult,
   ] = await Promise.all([
@@ -304,7 +319,7 @@ export async function rebuildPublicPassportStats(
         'active_flow_sessions'
       )
       .select(
-        'id, venue_ids'
+        'id, venue_ids, source'
       )
       .eq(
         'user_id',
@@ -345,6 +360,143 @@ export async function rebuildPublicPassportStats(
       .eq(
         'user_id',
         normalizedUserId
+      ),
+
+    supabase
+      .from(
+        'competition_xp_awards'
+      )
+      .select('xp_amount')
+      .eq(
+        'user_id',
+        normalizedUserId
+      )
+      .eq(
+        'source_type',
+        'competition_win'
+      ),
+
+    supabase
+      .from(
+        'competition_entry_attribution_events'
+      )
+      .select('id', {
+        count: 'exact',
+        head: true,
+      })
+      .eq(
+        'competitor_user_id',
+        normalizedUserId
+      )
+      .eq(
+        'event_type',
+        'verified_stop'
+      ),
+
+    supabase
+      .from(
+        'competition_entry_attribution_events'
+      )
+      .select('id', {
+        count: 'exact',
+        head: true,
+      })
+      .eq(
+        'competitor_user_id',
+        normalizedUserId
+      )
+      .eq(
+        'event_type',
+        'flow_completed'
+      ),
+
+    /**
+     * Relay participant execution:
+     *
+     * A canonical completed Relay team slot assigned to this user
+     * represents one personally completed Relay leg.
+     *
+     * geo_verified = true ensures Relay participant Passport XP is
+     * backed by the same canonical physical verification required
+     * by Relay execution.
+     *
+     * team_id is retained so completed team participation can be
+     * derived without counting mere invitations or unused roster
+     * membership.
+     */
+    supabase
+      .from(
+        'roam_relay_team_slots'
+      )
+      .select(
+        'team_id'
+      )
+      .eq(
+        'assigned_user_id',
+        normalizedUserId
+      )
+      .eq(
+        'status',
+        'completed'
+      )
+      .eq(
+        'geo_verified',
+        true
+      ),
+
+    /**
+     * Relay contributor attribution:
+     *
+     * Counts come directly from the append-only canonical
+     * roam_relay_downstream_attribution_events ledger.
+     *
+     * A verified_stop event means another explorer physically
+     * verified a Relay stop authored by this contributor.
+     *
+     * Explorer execution XP remains completely separate.
+     */
+    supabase
+      .from(
+        'roam_relay_downstream_attribution_events'
+      )
+      .select('id', {
+        count: 'exact',
+        head: true,
+      })
+      .eq(
+        'contributor_user_id',
+        normalizedUserId
+      )
+      .eq(
+        'event_type',
+        'verified_stop'
+      ),
+
+    /**
+     * Collaborative Relay completion attribution:
+     *
+     * A relay_completed event means another explorer
+     * canonically completed the Relay containing this
+     * contributor's authored stop.
+     *
+     * Ledger uniqueness owns deduplication. XP economics remain
+     * in score.ts.
+     */
+    supabase
+      .from(
+        'roam_relay_downstream_attribution_events'
+      )
+      .select('id', {
+        count: 'exact',
+        head: true,
+      })
+      .eq(
+        'contributor_user_id',
+        normalizedUserId
+      )
+      .eq(
+        'event_type',
+        'relay_completed'
       ),
 
     supabase
@@ -419,6 +571,36 @@ export async function rebuildPublicPassportStats(
   )
 
   throwIfQueryFailed(
+    'competition_xp_awards',
+    competitionWinXpResult.error
+  )
+
+  throwIfQueryFailed(
+    'competition_entry_attribution_events verified_stop',
+    competitionAttributedStopsResult.error
+  )
+
+  throwIfQueryFailed(
+    'competition_entry_attribution_events flow_completed',
+    completedCompetitionAttributedFlowsResult.error
+  )
+
+  throwIfQueryFailed(
+    'roam_relay_team_slots participant completion',
+    relayParticipantStopsResult.error
+  )
+
+  throwIfQueryFailed(
+    'roam_relay_downstream_attribution_events verified_stop',
+    relayAttributedStopsResult.error
+  )
+
+  throwIfQueryFailed(
+    'roam_relay_downstream_attribution_events relay_completed',
+    completedAttributedRelaysResult.error
+  )
+
+  throwIfQueryFailed(
     'event_checkins',
     eventCheckinsResult.error
   )
@@ -434,11 +616,31 @@ export async function rebuildPublicPassportStats(
       []
     ) as CrawlRsvpRow[]
 
+  /**
+   * Relay legs create standard one-stop Active Flow sessions.
+   *
+   * Those sessions remain the canonical physical execution
+   * machinery, but Relay participant XP is scored separately
+   * through completedRelayParticipantStops and
+   * completedRelayTeamParticipations.
+   *
+   * Excluding Relay-owned sessions here prevents the same Relay
+   * execution from also receiving ordinary completed Flow and
+   * completed Flow-stop XP.
+   */
   const completedFlows =
     (
-      completedFlowsResult.data ??
-      []
-    ) as CompletedFlowSessionRow[]
+      (
+        completedFlowsResult.data ??
+        []
+      ) as CompletedFlowSessionRow[]
+    ).filter(
+      (
+        session
+      ) =>
+        session.source !==
+        'roam_relay_team_slot'
+    )
 
   const venueVisitRows =
     (
@@ -457,6 +659,18 @@ export async function rebuildPublicPassportStats(
       eventXpResult.data ??
       []
     ) as EventXpRow[]
+
+  const competitionWinXpRows =
+    (
+      competitionWinXpResult.data ??
+      []
+    ) as CompetitionXpAwardRow[]
+
+  const completedRelayParticipantSlots =
+    (
+      relayParticipantStopsResult.data ??
+      []
+    ) as CompletedRelayParticipantSlotRow[]
 
   const creatorReplayAttribution =
     (
@@ -580,6 +794,169 @@ export async function rebuildPublicPassportStats(
       0
     )
 
+  const competitionWinXp =
+    competitionWinXpRows.reduce(
+      (
+        total,
+        row
+      ) =>
+        total +
+        normalizeXpValue(
+          row.xp_amount
+        ),
+      0
+    )
+
+  /**
+   * Duel competition contender attribution:
+   *
+   * Counts come directly from the append-only canonical
+   * competition_entry_attribution_events ledger.
+   *
+   * The ledger is responsible for:
+   *
+   * - canonical competition-entry provenance;
+   * - verified real-world stop evidence;
+   * - self-attribution prevention;
+   * - duplicate stop prevention;
+   * - duplicate completion prevention.
+   *
+   * score.ts owns the XP economics:
+   *
+   * - attributed competition stop: 10 XP
+   * - completed attributed competition Flow: 50 XP
+   */
+  const competitionAttributedStops =
+    normalizeCount(
+      competitionAttributedStopsResult.count ??
+        0
+    )
+
+  const completedCompetitionAttributedFlows =
+    normalizeCount(
+      completedCompetitionAttributedFlowsResult.count ??
+        0
+    )
+
+  /**
+   * Relay participant execution:
+   *
+   * Each qualifying row is one canonical, geo-verified Relay leg
+   * personally completed by this user.
+   *
+   * score.ts owns the participant-leg XP economics.
+   */
+  const completedRelayParticipantStops =
+    normalizeCount(
+      completedRelayParticipantSlots.length
+    )
+
+  /**
+   * Collective Relay team completion:
+   *
+   * A user receives collective completion credit only for Relay
+   * teams where they personally own a canonical completed,
+   * geo-verified team slot.
+   *
+   * This deliberately avoids counting invitations, unused
+   * memberships, or unrelated Relay teams.
+   */
+  const completedRelayParticipantTeamIds = [
+    ...new Set(
+      completedRelayParticipantSlots
+        .map(
+          (
+            slot
+          ) =>
+            slot.team_id
+        )
+        .filter(
+          (
+            teamId
+          ): teamId is string =>
+            typeof teamId ===
+              'string' &&
+            teamId.trim()
+              .length > 0
+        )
+        .map(
+          (
+            teamId
+          ) =>
+            teamId.trim()
+        )
+    ),
+  ]
+
+  let completedRelayTeamParticipations =
+    0
+
+  if (
+    completedRelayParticipantTeamIds.length >
+    0
+  ) {
+    const completedRelayTeamsResult =
+      await supabase
+        .from(
+          'roam_relay_teams'
+        )
+        .select(
+          'id',
+          {
+            count: 'exact',
+            head: true,
+          }
+        )
+        .in(
+          'id',
+          completedRelayParticipantTeamIds
+        )
+        .eq(
+          'status',
+          'completed'
+        )
+
+    throwIfQueryFailed(
+      'roam_relay_teams completed participant teams',
+      completedRelayTeamsResult.error
+    )
+
+    completedRelayTeamParticipations =
+      normalizeCount(
+        completedRelayTeamsResult.count ??
+          0
+      )
+  }
+
+  /**
+   * Relay contributor attribution:
+   *
+   * Counts come directly from the append-only canonical
+   * roam_relay_downstream_attribution_events ledger.
+   *
+   * The ledger owns:
+   *
+   * - exact Relay artifact provenance;
+   * - exact per-stop contributor authorship;
+   * - canonical geo-verified downstream execution evidence;
+   * - self-attribution prevention;
+   * - duplicate stop attribution prevention;
+   * - duplicate collaborative completion prevention.
+   *
+   * score.ts owns Relay contributor XP economics.
+   */
+  const relayAttributedStops =
+    normalizeCount(
+      relayAttributedStopsResult.count ??
+        0
+    )
+
+  const completedAttributedRelays =
+    normalizeCount(
+      completedAttributedRelaysResult.count ??
+        0
+    )
+
   const eventCheckins =
     normalizeCount(
       eventCheckinsResult.count ??
@@ -620,8 +997,8 @@ export async function rebuildPublicPassportStats(
           (
             crawlId
           ): crawlId is string =>
-            typeof crawlId ===
-              'string' &&
+              typeof crawlId ===
+                'string' &&
             crawlId.trim()
               .length > 0
         )
@@ -747,6 +1124,16 @@ export async function rebuildPublicPassportStats(
     venueVisits,
     eventXp,
     eventCheckins,
+
+    competitionAttributedStops,
+    completedCompetitionAttributedFlows,
+    competitionWinXp,
+
+    completedRelayParticipantStops,
+    completedRelayTeamParticipations,
+
+    relayAttributedStops,
+    completedAttributedRelays,
   }
 
   const snapshot =
@@ -802,6 +1189,26 @@ export async function rebuildPublicPassportStats(
 
           event_checkins:
             stats.eventCheckins ??
+            0,
+
+          competition_attributed_stops:
+            stats.competitionAttributedStops ??
+            0,
+
+          completed_competition_attributed_flows:
+            stats.completedCompetitionAttributedFlows ??
+            0,
+
+          competition_win_xp:
+            stats.competitionWinXp ??
+            0,
+
+          relay_attributed_stops:
+            stats.relayAttributedStops ??
+            0,
+
+          completed_attributed_relays:
+            stats.completedAttributedRelays ??
             0,
 
           passport_xp:

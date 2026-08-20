@@ -77,7 +77,7 @@ export default function Navbar() {
   }
 
   return (
-   <nav className="fixed top-0 left-0 right-0 z-[5000] h-16 border-b border-gray-200 bg-white/95 px-4 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 sm:px-6">
+    <nav className="fixed top-0 left-0 right-0 z-[5000] h-16 border-b border-gray-200 bg-white/95 px-4 shadow-sm backdrop-blur dark:border-zinc-700 dark:bg-zinc-950/95 sm:px-6">
       <div className="flex h-full items-center justify-between">
         <Link
           href="/"
@@ -103,7 +103,9 @@ export default function Navbar() {
           >
             <span>Menu</span>
             <svg
-              className={`h-4 w-4 transition-transform ${menuOpen ? 'rotate-180' : ''}`}
+              className={`h-4 w-4 transition-transform ${
+                menuOpen ? 'rotate-180' : ''
+              }`}
               viewBox="0 0 20 20"
               fill="currentColor"
               aria-hidden="true"
@@ -124,48 +126,62 @@ export default function Navbar() {
               <div className="py-2">
                 {user ? (
                   <>
-                  <Link
-                    href="/how-it-works"
-                    onClick={() => handleNavClick('how-it-works')}
-                    className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
-                  >
-                    How It Works
-                  </Link>
-                  <Link
+                    <Link
+                      href="/how-it-works"
+                      onClick={() => handleNavClick('how-it-works')}
+                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                    >
+                      How It Works
+                    </Link>
+
+                    <Link
                       href="/"
                       onClick={() => handleNavClick('maps')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Maps
                     </Link>
-                   <Link
+
+                    <Link
+                      href="/competitions"
+                      onClick={() => handleNavClick('competitions')}
+                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                    >
+                      Competitions
+                    </Link>
+
+                    <Link
                       href="/events"
                       onClick={() => handleNavClick('events')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Events
-                   </Link>
-                   <Link
+                    </Link>
+
+                    <Link
                       href="/sponsor-crawl"
                       onClick={() => handleNavClick('sponsor-crawl')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Host a Flow
                     </Link>
-                   <Link
+
+                    <Link
                       href="/hosts"
                       onClick={() => handleNavClick('hosts')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Build a Guide
                     </Link>
+
                     <Link
                       href="/discover"
                       onClick={() => handleNavClick('discover')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
-                      Discover
+                      Find Explorers
                     </Link>
+
                     <Link
                       href="/profile"
                       onClick={() => handleNavClick('profile')}
@@ -173,6 +189,7 @@ export default function Navbar() {
                     >
                       Profile
                     </Link>
+
                     {canSeeAdmin && (
                       <Link
                         href="/venue-admin"

@@ -10,6 +10,9 @@ import {
 import {
   createPortal,
 } from 'react-dom'
+import {
+  useRouter,
+} from 'next/navigation'
 
 import FlowRouteSticker from '@/app/flow/[session_id]/components/FlowRouteSticker'
 import StickerComposer from '@/components/flows/StickerComposer'
@@ -172,6 +175,9 @@ export default function VisitHistorySection({
   initialTotalVisits,
   className = '',
 }: Props) {
+  const router =
+    useRouter()
+
   const transparentStickerRef =
     useRef<HTMLDivElement>(null)
 
@@ -542,6 +548,45 @@ export default function VisitHistorySection({
       }
     )
   }
+
+  /**
+   * Competition submission starts with explicit competition
+   * selection.
+   *
+   * The browser carries only the canonical Visit History day.
+   * The competition submissions API later re-fetches that user's
+   * venue_visits for the day and remains authoritative for route
+   * ownership and eligibility.
+   */
+  const submitVisitDayToCompetition =
+    (
+      day: VisitDayGroup
+    ) => {
+      const verifiedVenueIds =
+        getVerifiedCompetitionVenueIds(
+          day
+        )
+
+      if (
+        verifiedVenueIds.length <
+        3
+      ) {
+        return
+      }
+
+      const params =
+        new URLSearchParams({
+          submit_source:
+            'visit_history',
+
+          visit_date:
+            day.date,
+        })
+
+      router.push(
+        `/competitions?${params.toString()}`
+      )
+    }
 
   const openDaySticker =
     async ({
@@ -1579,6 +1624,11 @@ export default function VisitHistorySection({
                                       day,
                                     })
                                   }
+                                  onSubmitToCompetition={() =>
+                                    submitVisitDayToCompetition(
+                                      day
+                                    )
+                                  }
                                 />
                               )
                             )}
@@ -2064,16 +2114,27 @@ function VisitDayCard({
   stickerLoading,
   exporting,
   onCreateSticker,
+  onSubmitToCompetition,
 }: {
   city: string
   day: VisitDayGroup
   stickerLoading: boolean
   exporting: boolean
   onCreateSticker: () => void
+  onSubmitToCompetition: () => void
 }) {
   const disabled =
     stickerLoading ||
     exporting
+
+  const verifiedCompetitionVenueIds =
+    getVerifiedCompetitionVenueIds(
+      day
+    )
+
+  const competitionEligible =
+    verifiedCompetitionVenueIds.length >=
+    3
 
   return (
     <section className="rounded-[1.5rem] bg-white/[0.025] p-4 ring-1 ring-white/[0.055]">
@@ -2094,26 +2155,40 @@ function VisitDayCard({
           </p>
         </div>
 
-        {day.canCreateSticker ? (
-          <button
-            type="button"
-            onClick={
-              onCreateSticker
-            }
-            disabled={
-              disabled
-            }
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-full bg-cyan-300/[0.08] px-4 py-2 text-xs font-bold text-cyan-200 ring-1 ring-cyan-300/15 transition hover:bg-cyan-300/[0.13] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-          >
-            {stickerLoading
-              ? 'Building route…'
-              : 'Make route sticker'}
-          </button>
-        ) : (
-          <p className="max-w-[180px] text-xs leading-5 text-zinc-600">
-            Visit two mapped places in one day to unlock a route sticker.
-          </p>
-        )}
+        <div className="flex w-full flex-col gap-2 sm:w-auto">
+          {day.canCreateSticker ? (
+            <button
+              type="button"
+              onClick={
+                onCreateSticker
+              }
+              disabled={
+                disabled
+              }
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-full bg-cyan-300/[0.08] px-4 py-2 text-xs font-bold text-cyan-200 ring-1 ring-cyan-300/15 transition hover:bg-cyan-300/[0.13] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+            >
+              {stickerLoading
+                ? 'Building route…'
+                : 'Make route sticker'}
+            </button>
+          ) : (
+            <p className="max-w-[180px] text-xs leading-5 text-zinc-600">
+              Visit two mapped places in one day to unlock a route sticker.
+            </p>
+          )}
+
+          {competitionEligible ? (
+            <button
+              type="button"
+              onClick={
+                onSubmitToCompetition
+              }
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-full bg-indigo-300/[0.08] px-4 py-2 text-xs font-bold text-indigo-200 ring-1 ring-indigo-300/15 transition hover:bg-indigo-300/[0.13] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 sm:w-auto"
+            >
+              Submit this route to a competition
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <ol className="relative mt-5 space-y-3">
@@ -2971,6 +3046,71 @@ function hasValidVisitCoordinate(
     ) <=
       180
   )
+}
+
+/**
+ * Competition eligibility is based on distinct geo-verified
+ * visited venues, not raw visit-row count.
+ *
+ * Order follows the day's visit chronology so the UI is evaluating
+ * the same conceptual route the user actually completed.
+ */
+function getVerifiedCompetitionVenueIds(
+  day: VisitDayGroup
+): string[] {
+  const orderedVerifiedVisits =
+    [...day.visits]
+      .filter(
+        (
+          visit
+        ) =>
+          visit.geoVerified &&
+          Boolean(
+            visit.venueId
+          )
+      )
+      .sort(
+        (
+          a,
+          b
+        ) =>
+          new Date(
+            a.visitedAt
+          ).getTime() -
+          new Date(
+            b.visitedAt
+          ).getTime()
+      )
+
+  const seen =
+    new Set<string>()
+
+  const venueIds:
+    string[] =
+    []
+
+  for (
+    const visit of
+      orderedVerifiedVisits
+  ) {
+    if (
+      seen.has(
+        visit.venueId
+      )
+    ) {
+      continue
+    }
+
+    seen.add(
+      visit.venueId
+    )
+
+    venueIds.push(
+      visit.venueId
+    )
+  }
+
+  return venueIds
 }
 
 function formatRoamDayLabel(

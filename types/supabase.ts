@@ -163,6 +163,2261 @@ export type Database = {
         }
         Relationships: []
       }
+      competition_entries: {
+        Row: {
+          approved_at: string | null
+          competition_id: string
+          contender_slot: number
+          created_at: string
+          disqualified_at: string | null
+          id: string
+          source_flow_session_id: string | null
+          source_type: string
+          source_visit_date: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+          venue_ids: string[]
+          withdrawn_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          competition_id: string
+          contender_slot: number
+          created_at?: string
+          disqualified_at?: string | null
+          id?: string
+          source_flow_session_id?: string | null
+          source_type: string
+          source_visit_date?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+          venue_ids: string[]
+          withdrawn_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          competition_id?: string
+          contender_slot?: number
+          created_at?: string
+          disqualified_at?: string | null
+          id?: string
+          source_flow_session_id?: string | null
+          source_type?: string
+          source_visit_date?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+          venue_ids?: string[]
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_entries_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_entries_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_entry_attribution_events: {
+        Row: {
+          competition_entry_id: string
+          competition_id: string
+          competitor_user_id: string
+          created_at: string
+          event_type: string
+          explorer_user_id: string
+          flow_session_id: string
+          id: string
+          occurred_at: string
+          stop_index: number | null
+          venue_id: string | null
+        }
+        Insert: {
+          competition_entry_id: string
+          competition_id: string
+          competitor_user_id: string
+          created_at?: string
+          event_type: string
+          explorer_user_id: string
+          flow_session_id: string
+          id?: string
+          occurred_at?: string
+          stop_index?: number | null
+          venue_id?: string | null
+        }
+        Update: {
+          competition_entry_id?: string
+          competition_id?: string
+          competitor_user_id?: string
+          created_at?: string
+          event_type?: string
+          explorer_user_id?: string
+          flow_session_id?: string
+          id?: string
+          occurred_at?: string
+          stop_index?: number | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_entry_attribution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_entry_attribution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_entry_attribution_events_entry_fk"
+            columns: ["competition_id", "competition_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["competition_id", "id"]
+          },
+          {
+            foreignKeyName: "competition_entry_attribution_events_flow_bridge_fk"
+            columns: ["flow_session_id"]
+            isOneToOne: false
+            referencedRelation: "competition_flow_sessions"
+            referencedColumns: ["flow_session_id"]
+          },
+        ]
+      }
+      competition_entry_ratings: {
+        Row: {
+          competition_id: string
+          created_at: string
+          entry_id: string
+          id: string
+          overall_rating: number
+          participation_id: string
+          updated_at: string
+          user_id: string
+          would_repeat: boolean | null
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          entry_id: string
+          id?: string
+          overall_rating: number
+          participation_id: string
+          updated_at?: string
+          user_id: string
+          would_repeat?: boolean | null
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          entry_id?: string
+          id?: string
+          overall_rating?: number
+          participation_id?: string
+          updated_at?: string
+          user_id?: string
+          would_repeat?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_entry_ratings_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_entry_ratings_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_entry_ratings_participation_fkey"
+            columns: [
+              "competition_id",
+              "entry_id",
+              "user_id",
+              "participation_id",
+            ]
+            isOneToOne: false
+            referencedRelation: "competition_participations"
+            referencedColumns: [
+              "competition_id",
+              "competition_entry_id",
+              "user_id",
+              "id",
+            ]
+          },
+        ]
+      }
+      competition_entry_score_snapshots: {
+        Row: {
+          algorithm_version: string
+          average_rating: number | null
+          calculated_at: string
+          comparative_score: number | null
+          competition_id: string
+          completed_participant_count: number
+          completion_rate: number | null
+          completion_score: number | null
+          confidence_score: number
+          created_at: string
+          cross_completer_count: number
+          entry_id: string
+          experience_score: number | null
+          final_score: number
+          head_to_head_eligible_count: number
+          head_to_head_preference_count: number
+          head_to_head_preference_rate: number | null
+          id: string
+          participation_count: number
+          qualified_participant_count: number
+          rating_count: number
+          repeat_score: number | null
+          replay_count: number | null
+          replay_rate: number | null
+          save_count: number | null
+          save_rate: number | null
+          snapshot_type: string
+          would_repeat_count: number
+          would_repeat_rate: number | null
+          would_repeat_response_count: number
+        }
+        Insert: {
+          algorithm_version: string
+          average_rating?: number | null
+          calculated_at?: string
+          comparative_score?: number | null
+          competition_id: string
+          completed_participant_count?: number
+          completion_rate?: number | null
+          completion_score?: number | null
+          confidence_score?: number
+          created_at?: string
+          cross_completer_count?: number
+          entry_id: string
+          experience_score?: number | null
+          final_score: number
+          head_to_head_eligible_count?: number
+          head_to_head_preference_count?: number
+          head_to_head_preference_rate?: number | null
+          id?: string
+          participation_count?: number
+          qualified_participant_count?: number
+          rating_count?: number
+          repeat_score?: number | null
+          replay_count?: number | null
+          replay_rate?: number | null
+          save_count?: number | null
+          save_rate?: number | null
+          snapshot_type?: string
+          would_repeat_count?: number
+          would_repeat_rate?: number | null
+          would_repeat_response_count?: number
+        }
+        Update: {
+          algorithm_version?: string
+          average_rating?: number | null
+          calculated_at?: string
+          comparative_score?: number | null
+          competition_id?: string
+          completed_participant_count?: number
+          completion_rate?: number | null
+          completion_score?: number | null
+          confidence_score?: number
+          created_at?: string
+          cross_completer_count?: number
+          entry_id?: string
+          experience_score?: number | null
+          final_score?: number
+          head_to_head_eligible_count?: number
+          head_to_head_preference_count?: number
+          head_to_head_preference_rate?: number | null
+          id?: string
+          participation_count?: number
+          qualified_participant_count?: number
+          rating_count?: number
+          repeat_score?: number | null
+          replay_count?: number | null
+          replay_rate?: number | null
+          save_count?: number | null
+          save_rate?: number | null
+          snapshot_type?: string
+          would_repeat_count?: number
+          would_repeat_rate?: number | null
+          would_repeat_response_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_score_snapshots_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_score_snapshots_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_score_snapshots_entry_competition_fkey"
+            columns: ["competition_id", "entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["competition_id", "id"]
+          },
+        ]
+      }
+      competition_flow_sessions: {
+        Row: {
+          competition_entry_id: string
+          competition_id: string
+          created_at: string
+          flow_session_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          competition_entry_id: string
+          competition_id: string
+          created_at?: string
+          flow_session_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          competition_entry_id?: string
+          competition_id?: string
+          created_at?: string
+          flow_session_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_flow_sessions_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_flow_sessions_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_flow_sessions_entry_competition_fkey"
+            columns: ["competition_id", "competition_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["competition_id", "id"]
+          },
+          {
+            foreignKeyName: "competition_flow_sessions_flow_user_fkey"
+            columns: ["flow_session_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      competition_head_to_head_preferences: {
+        Row: {
+          competition_id: string
+          created_at: string
+          id: string
+          preferred_entry_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          id?: string
+          preferred_entry_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          id?: string
+          preferred_entry_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_h2h_preferences_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_h2h_preferences_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_h2h_preferences_entry_competition_fkey"
+            columns: ["competition_id", "preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["competition_id", "id"]
+          },
+        ]
+      }
+      competition_participations: {
+        Row: {
+          competition_entry_id: string
+          competition_id: string
+          completed_at: string | null
+          completion_ratio: number | null
+          created_at: string
+          flow_session_id: string | null
+          id: string
+          qualified: boolean
+          started_at: string
+          total_stop_count: number
+          updated_at: string
+          user_id: string
+          verified_stop_count: number
+        }
+        Insert: {
+          competition_entry_id: string
+          competition_id: string
+          completed_at?: string | null
+          completion_ratio?: number | null
+          created_at?: string
+          flow_session_id?: string | null
+          id?: string
+          qualified?: boolean
+          started_at?: string
+          total_stop_count: number
+          updated_at?: string
+          user_id: string
+          verified_stop_count?: number
+        }
+        Update: {
+          competition_entry_id?: string
+          competition_id?: string
+          completed_at?: string | null
+          completion_ratio?: number | null
+          created_at?: string
+          flow_session_id?: string | null
+          id?: string
+          qualified?: boolean
+          started_at?: string
+          total_stop_count?: number
+          updated_at?: string
+          user_id?: string
+          verified_stop_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_participations_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_participations_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_participations_entry_competition_fkey"
+            columns: ["competition_id", "competition_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["competition_id", "id"]
+          },
+          {
+            foreignKeyName: "competition_participations_flow_user_fkey"
+            columns: ["flow_session_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      competition_relay_entries: {
+        Row: {
+          competition_id: string
+          contender_slot: number
+          created_at: string
+          id: string
+          relay_artifact_id: string | null
+          relay_team_id: string
+          scoring_eligible_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          competition_id: string
+          contender_slot: number
+          created_at?: string
+          id?: string
+          relay_artifact_id?: string | null
+          relay_team_id: string
+          scoring_eligible_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          competition_id?: string
+          contender_slot?: number
+          created_at?: string
+          id?: string
+          relay_artifact_id?: string | null
+          relay_team_id?: string
+          scoring_eligible_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_relay_team_fk"
+            columns: ["relay_team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_relay_team_fk"
+            columns: ["relay_team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_relay_team_fk"
+            columns: ["relay_team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_relay_entry_ratings: {
+        Row: {
+          competition_id: string
+          competition_relay_entry_id: string
+          created_at: string
+          id: string
+          rating: number
+          replay_user_id: string
+        }
+        Insert: {
+          competition_id: string
+          competition_relay_entry_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          replay_user_id: string
+        }
+        Update: {
+          competition_id?: string
+          competition_relay_entry_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          replay_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entry_ratings_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entry_ratings_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+        ]
+      }
+      competition_relay_entry_score_snapshots: {
+        Row: {
+          average_rating: number | null
+          comparative_confidence: number
+          competition_id: string
+          competition_relay_entry_id: string
+          contender_slot: number
+          created_at: string
+          cross_completer_count: number
+          evidence_score: number
+          execution_confidence: number
+          final_score: number
+          head_to_head_losses: number
+          head_to_head_preference_rate: number | null
+          head_to_head_sample_count: number
+          head_to_head_score: number
+          head_to_head_weight: number
+          head_to_head_wins: number
+          id: string
+          overall_confidence: number
+          qualified_completion_count: number
+          qualified_completion_score: number
+          qualified_completion_weight: number
+          qualified_starter_count: number
+          rating_confidence: number
+          rating_count: number
+          rating_score: number
+          rating_weight: number
+          relay_artifact_id: string
+          route_completion_rate: number | null
+          route_completion_rate_score: number
+          route_completion_rate_weight: number
+          snapshot_at: string
+        }
+        Insert: {
+          average_rating?: number | null
+          comparative_confidence: number
+          competition_id: string
+          competition_relay_entry_id: string
+          contender_slot: number
+          created_at?: string
+          cross_completer_count: number
+          evidence_score: number
+          execution_confidence: number
+          final_score: number
+          head_to_head_losses: number
+          head_to_head_preference_rate?: number | null
+          head_to_head_sample_count: number
+          head_to_head_score: number
+          head_to_head_weight: number
+          head_to_head_wins: number
+          id?: string
+          overall_confidence: number
+          qualified_completion_count: number
+          qualified_completion_score: number
+          qualified_completion_weight: number
+          qualified_starter_count: number
+          rating_confidence: number
+          rating_count: number
+          rating_score: number
+          rating_weight: number
+          relay_artifact_id: string
+          route_completion_rate?: number | null
+          route_completion_rate_score: number
+          route_completion_rate_weight: number
+          snapshot_at?: string
+        }
+        Update: {
+          average_rating?: number | null
+          comparative_confidence?: number
+          competition_id?: string
+          competition_relay_entry_id?: string
+          contender_slot?: number
+          created_at?: string
+          cross_completer_count?: number
+          evidence_score?: number
+          execution_confidence?: number
+          final_score?: number
+          head_to_head_losses?: number
+          head_to_head_preference_rate?: number | null
+          head_to_head_sample_count?: number
+          head_to_head_score?: number
+          head_to_head_weight?: number
+          head_to_head_wins?: number
+          id?: string
+          overall_confidence?: number
+          qualified_completion_count?: number
+          qualified_completion_score?: number
+          qualified_completion_weight?: number
+          qualified_starter_count?: number
+          rating_confidence?: number
+          rating_count?: number
+          rating_score?: number
+          rating_weight?: number
+          relay_artifact_id?: string
+          route_completion_rate?: number | null
+          route_completion_rate_score?: number
+          route_completion_rate_weight?: number
+          snapshot_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_score_snapshots_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_score_snapshots_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: true
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+        ]
+      }
+      competition_relay_execution_events: {
+        Row: {
+          competition_id: string
+          competition_relay_entry_id: string
+          created_at: string
+          event_type: string
+          id: string
+          occurred_at: string
+          relay_artifact_id: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string
+          stop_index: number | null
+          venue_id: string | null
+        }
+        Insert: {
+          competition_id: string
+          competition_relay_entry_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          occurred_at: string
+          relay_artifact_id: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string
+          stop_index?: number | null
+          venue_id?: string | null
+        }
+        Update: {
+          competition_id?: string
+          competition_relay_entry_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          relay_artifact_id?: string
+          replay_user_id?: string
+          session_id?: string
+          snapshot_id?: string
+          stop_index?: number | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_execution_events_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_session_fk"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_snapshot_fk"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_venue_fk"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_venue_fk"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_relay_head_to_head_preferences: {
+        Row: {
+          competition_id: string
+          created_at: string
+          entry_a_id: string
+          entry_b_id: string
+          id: string
+          preferred_entry_id: string
+          voter_user_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          entry_a_id: string
+          entry_b_id: string
+          id?: string
+          preferred_entry_id: string
+          voter_user_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          entry_a_id?: string
+          entry_b_id?: string
+          id?: string
+          preferred_entry_id?: string
+          voter_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_h2h_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_a_fk"
+            columns: ["entry_a_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_entry_b_fk"
+            columns: ["entry_b_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_h2h_preferred_fk"
+            columns: ["preferred_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+        ]
+      }
+      competition_relay_replay_attribution_conflicts: {
+        Row: {
+          candidate_count: number
+          details: Json
+          first_observed_at: string
+          id: string
+          last_observed_at: string
+          reason: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string | null
+        }
+        Insert: {
+          candidate_count?: number
+          details?: Json
+          first_observed_at?: string
+          id?: string
+          last_observed_at?: string
+          reason: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id?: string | null
+        }
+        Update: {
+          candidate_count?: number
+          details?: Json
+          first_observed_at?: string
+          id?: string
+          last_observed_at?: string
+          reason?: string
+          replay_user_id?: string
+          session_id?: string
+          snapshot_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_replay_conflicts_session_fk"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_conflicts_snapshot_fk"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_relay_replay_sessions: {
+        Row: {
+          attributed_at: string
+          competition_id: string
+          competition_relay_entry_id: string
+          created_at: string
+          id: string
+          relay_artifact_id: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string
+        }
+        Insert: {
+          attributed_at?: string
+          competition_id: string
+          competition_relay_entry_id: string
+          created_at?: string
+          id?: string
+          relay_artifact_id: string
+          replay_user_id: string
+          session_id: string
+          snapshot_id: string
+        }
+        Update: {
+          attributed_at?: string
+          competition_id?: string
+          competition_relay_entry_id?: string
+          created_at?: string
+          id?: string
+          relay_artifact_id?: string
+          replay_user_id?: string
+          session_id?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_replay_sessions_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_session_fk"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_snapshot_fk"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_relay_scoring_configs: {
+        Row: {
+          competition_id: string
+          created_at: string
+          head_to_head_weight: number
+          qualified_completion_weight: number
+          rating_max: number
+          rating_min: number
+          rating_weight: number
+          route_completion_rate_weight: number
+          updated_at: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          head_to_head_weight?: number
+          qualified_completion_weight?: number
+          rating_max?: number
+          rating_min?: number
+          rating_weight?: number
+          route_completion_rate_weight?: number
+          updated_at?: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          head_to_head_weight?: number
+          qualified_completion_weight?: number
+          rating_max?: number
+          rating_min?: number
+          rating_weight?: number
+          route_completion_rate_weight?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_scoring_configs_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: true
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_scoring_configs_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: true
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_results: {
+        Row: {
+          algorithm_version: string | null
+          competition_id: string
+          created_at: string
+          final_evidence_snapshot_id: string | null
+          id: string
+          result_status: string
+          settled_at: string
+          settled_by: string | null
+          updated_at: string
+          winner_entry_id: string | null
+          xp_award_status: string
+          xp_awarded_at: string | null
+        }
+        Insert: {
+          algorithm_version?: string | null
+          competition_id: string
+          created_at?: string
+          final_evidence_snapshot_id?: string | null
+          id?: string
+          result_status: string
+          settled_at?: string
+          settled_by?: string | null
+          updated_at?: string
+          winner_entry_id?: string | null
+          xp_award_status: string
+          xp_awarded_at?: string | null
+        }
+        Update: {
+          algorithm_version?: string | null
+          competition_id?: string
+          created_at?: string
+          final_evidence_snapshot_id?: string | null
+          id?: string
+          result_status?: string
+          settled_at?: string
+          settled_by?: string | null
+          updated_at?: string
+          winner_entry_id?: string | null
+          xp_award_status?: string
+          xp_awarded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_results_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_results_competition_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_results_final_evidence_fkey"
+            columns: [
+              "competition_id",
+              "winner_entry_id",
+              "final_evidence_snapshot_id",
+            ]
+            isOneToOne: false
+            referencedRelation: "competition_entry_score_snapshots"
+            referencedColumns: ["competition_id", "entry_id", "id"]
+          },
+          {
+            foreignKeyName: "competition_results_winner_competition_fkey"
+            columns: ["competition_id", "winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["competition_id", "id"]
+          },
+        ]
+      }
+      competition_submissions: {
+        Row: {
+          competition_entry_id: string | null
+          competition_id: string
+          created_at: string
+          flow_session_id: string | null
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          route_city: string | null
+          route_completed_at: string | null
+          route_started_at: string | null
+          route_title: string | null
+          status: string
+          submission_source: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+          venue_ids: string[]
+          verified_venue_count: number
+          visit_date: string | null
+        }
+        Insert: {
+          competition_entry_id?: string | null
+          competition_id: string
+          created_at?: string
+          flow_session_id?: string | null
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          route_city?: string | null
+          route_completed_at?: string | null
+          route_started_at?: string | null
+          route_title?: string | null
+          status?: string
+          submission_source: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+          venue_ids: string[]
+          verified_venue_count: number
+          visit_date?: string | null
+        }
+        Update: {
+          competition_entry_id?: string | null
+          competition_id?: string
+          created_at?: string
+          flow_session_id?: string | null
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          route_city?: string | null
+          route_completed_at?: string | null
+          route_started_at?: string | null
+          route_title?: string | null
+          status?: string
+          submission_source?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+          venue_ids?: string[]
+          verified_venue_count?: number
+          visit_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_submissions_competition_entry_id_fkey"
+            columns: ["competition_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_submissions_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_submissions_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_xp_awards: {
+        Row: {
+          awarded_at: string
+          competition_id: string
+          created_at: string
+          id: string
+          source_type: string
+          user_id: string
+          winner_entry_id: string
+          xp_amount: number
+        }
+        Insert: {
+          awarded_at?: string
+          competition_id: string
+          created_at?: string
+          id?: string
+          source_type?: string
+          user_id: string
+          winner_entry_id: string
+          xp_amount: number
+        }
+        Update: {
+          awarded_at?: string
+          competition_id?: string
+          created_at?: string
+          id?: string
+          source_type?: string
+          user_id?: string
+          winner_entry_id?: string
+          xp_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_xp_awards_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_xp_awards_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_xp_awards_entry_competition_fk"
+            columns: ["competition_id", "winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["competition_id", "id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          anonymous_entries: boolean
+          category: string | null
+          city: string | null
+          competition_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          max_entries: number
+          minimum_cross_completers: number
+          minimum_qualified_participants: number
+          relay_entry_mode: string | null
+          relay_id: string | null
+          relay_reward_mode: string | null
+          relay_winner_entry_id: string | null
+          result_status: string
+          starts_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          winner_entry_id: string | null
+          xp_reward: number
+        }
+        Insert: {
+          anonymous_entries?: boolean
+          category?: string | null
+          city?: string | null
+          competition_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          max_entries?: number
+          minimum_cross_completers?: number
+          minimum_qualified_participants?: number
+          relay_entry_mode?: string | null
+          relay_id?: string | null
+          relay_reward_mode?: string | null
+          relay_winner_entry_id?: string | null
+          result_status?: string
+          starts_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          winner_entry_id?: string | null
+          xp_reward?: number
+        }
+        Update: {
+          anonymous_entries?: boolean
+          category?: string | null
+          city?: string | null
+          competition_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          max_entries?: number
+          minimum_cross_completers?: number
+          minimum_qualified_participants?: number
+          relay_entry_mode?: string | null
+          relay_id?: string | null
+          relay_reward_mode?: string | null
+          relay_winner_entry_id?: string | null
+          result_status?: string
+          starts_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          winner_entry_id?: string | null
+          xp_reward?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competitions_relay_id_fk"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_winner_entry_id_fkey"
+            columns: ["winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crawl_events: {
         Row: {
           city: string | null
@@ -2244,6 +4499,7 @@ export type Database = {
       }
       profile_public_stats: {
         Row: {
+          competition_win_xp: number
           completed_flow_stops: number
           completed_flows: number
           completed_hosted_flows: number
@@ -2264,6 +4520,7 @@ export type Database = {
           venue_visits: number
         }
         Insert: {
+          competition_win_xp?: number
           completed_flow_stops?: number
           completed_flows?: number
           completed_hosted_flows?: number
@@ -2284,6 +4541,7 @@ export type Database = {
           venue_visits?: number
         }
         Update: {
+          competition_win_xp?: number
           completed_flow_stops?: number
           completed_flows?: number
           completed_hosted_flows?: number
@@ -2827,6 +5085,682 @@ export type Database = {
           minimum_venues_for_status?: number
           plural_label?: string
           sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      roam_relay_artifact_slots: {
+        Row: {
+          artifact_id: string
+          checked_in_at: string
+          completed_at: string
+          contributor_user_id: string
+          created_at: string
+          flow_session_id: string
+          id: string
+          relay_slot_id: string
+          slot_index: number
+          team_slot_id: string
+          venue_id: string
+        }
+        Insert: {
+          artifact_id: string
+          checked_in_at: string
+          completed_at: string
+          contributor_user_id: string
+          created_at?: string
+          flow_session_id: string
+          id?: string
+          relay_slot_id: string
+          slot_index: number
+          team_slot_id: string
+          venue_id: string
+        }
+        Update: {
+          artifact_id?: string
+          checked_in_at?: string
+          completed_at?: string
+          contributor_user_id?: string
+          created_at?: string
+          flow_session_id?: string
+          id?: string
+          relay_slot_id?: string
+          slot_index?: number
+          team_slot_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_artifact_slots_artifact_fk"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifact_slots_artifact_fk"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifact_slots_flow_session_fk"
+            columns: ["flow_session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifact_slots_relay_slot_fk"
+            columns: ["relay_slot_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifact_slots_team_slot_fk"
+            columns: ["team_slot_id"]
+            isOneToOne: true
+            referencedRelation: "roam_relay_team_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_artifacts: {
+        Row: {
+          city: string
+          completed_at: string
+          contributor_user_ids: string[]
+          created_at: string
+          id: string
+          public_flow_snapshot_id: string | null
+          relay_id: string
+          team_id: string
+          theme: string | null
+          title: string
+          venue_ids: string[]
+        }
+        Insert: {
+          city: string
+          completed_at: string
+          contributor_user_ids: string[]
+          created_at?: string
+          id?: string
+          public_flow_snapshot_id?: string | null
+          relay_id: string
+          team_id: string
+          theme?: string | null
+          title: string
+          venue_ids: string[]
+        }
+        Update: {
+          city?: string
+          completed_at?: string
+          contributor_user_ids?: string[]
+          created_at?: string
+          id?: string
+          public_flow_snapshot_id?: string | null
+          relay_id?: string
+          team_id?: string
+          theme?: string | null
+          title?: string
+          venue_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_artifacts_relay_fk"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifacts_team_fk"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifacts_team_fk"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifacts_team_fk"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_attribution_events: {
+        Row: {
+          contributor_user_id: string
+          created_at: string
+          event_type: string
+          flow_session_id: string
+          id: string
+          occurred_at: string
+          relay_id: string
+          relay_slot_id: string
+          team_id: string
+          team_slot_id: string
+          venue_id: string
+        }
+        Insert: {
+          contributor_user_id: string
+          created_at?: string
+          event_type: string
+          flow_session_id: string
+          id?: string
+          occurred_at: string
+          relay_id: string
+          relay_slot_id: string
+          team_id: string
+          team_slot_id: string
+          venue_id: string
+        }
+        Update: {
+          contributor_user_id?: string
+          created_at?: string
+          event_type?: string
+          flow_session_id?: string
+          id?: string
+          occurred_at?: string
+          relay_id?: string
+          relay_slot_id?: string
+          team_id?: string
+          team_slot_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_attribution_events_flow_session_fk"
+            columns: ["flow_session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_attribution_events_relay_fk"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_attribution_events_relay_slot_fk"
+            columns: ["relay_slot_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_attribution_events_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_attribution_events_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_attribution_events_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_attribution_events_team_slot_fk"
+            columns: ["team_slot_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_team_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_downstream_attribution_events: {
+        Row: {
+          artifact_slot_id: string
+          contributor_user_id: string
+          created_at: string
+          event_type: string
+          id: string
+          occurred_at: string
+          relay_artifact_id: string
+          relay_id: string
+          replay_session_id: string
+          replay_user_id: string
+          source_progress_id: string | null
+          source_snapshot_id: string
+          stop_index: number | null
+          team_id: string
+          venue_id: string | null
+        }
+        Insert: {
+          artifact_slot_id: string
+          contributor_user_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          occurred_at: string
+          relay_artifact_id: string
+          relay_id: string
+          replay_session_id: string
+          replay_user_id: string
+          source_progress_id?: string | null
+          source_snapshot_id: string
+          stop_index?: number | null
+          team_id: string
+          venue_id?: string | null
+        }
+        Update: {
+          artifact_slot_id?: string
+          contributor_user_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          occurred_at?: string
+          relay_artifact_id?: string
+          relay_id?: string
+          replay_session_id?: string
+          replay_user_id?: string
+          source_progress_id?: string | null
+          source_snapshot_id?: string
+          stop_index?: number | null
+          team_id?: string
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_event_source_progress_id_fkey"
+            columns: ["source_progress_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_progress"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_event_source_snapshot_id_fkey"
+            columns: ["source_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_artifact_slot_id_fkey"
+            columns: ["artifact_slot_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_relay_artifact_id_fkey"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_relay_artifact_id_fkey"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_relay_id_fkey"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_replay_session_id_fkey"
+            columns: ["replay_session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_slots: {
+        Row: {
+          category_constraint: string | null
+          created_at: string
+          eligible_venue_ids: string[] | null
+          exact_venue_id: string | null
+          id: string
+          label: string
+          prompt: string | null
+          relay_id: string
+          required_geo_verified: boolean
+          selection_mode: string
+          slot_index: number
+          updated_at: string
+        }
+        Insert: {
+          category_constraint?: string | null
+          created_at?: string
+          eligible_venue_ids?: string[] | null
+          exact_venue_id?: string | null
+          id?: string
+          label: string
+          prompt?: string | null
+          relay_id: string
+          required_geo_verified?: boolean
+          selection_mode: string
+          slot_index: number
+          updated_at?: string
+        }
+        Update: {
+          category_constraint?: string | null
+          created_at?: string
+          eligible_venue_ids?: string[] | null
+          exact_venue_id?: string | null
+          id?: string
+          label?: string
+          prompt?: string | null
+          relay_id?: string
+          required_geo_verified?: boolean
+          selection_mode?: string
+          slot_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_slots_relay_fk"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_team_members: {
+        Row: {
+          created_at: string
+          id: string
+          joined_at: string | null
+          left_at: string | null
+          member_status: string
+          team_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          member_status?: string
+          team_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          member_status?: string
+          team_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_team_members_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_team_members_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_team_members_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_team_slots: {
+        Row: {
+          assigned_user_id: string | null
+          checked_in_at: string | null
+          completed_at: string | null
+          created_at: string
+          flow_session_id: string | null
+          geo_verified: boolean
+          id: string
+          relay_slot_id: string
+          slot_index: number
+          status: string
+          team_id: string
+          updated_at: string
+          venue_id: string | null
+        }
+        Insert: {
+          assigned_user_id?: string | null
+          checked_in_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          flow_session_id?: string | null
+          geo_verified?: boolean
+          id?: string
+          relay_slot_id: string
+          slot_index: number
+          status?: string
+          team_id: string
+          updated_at?: string
+          venue_id?: string | null
+        }
+        Update: {
+          assigned_user_id?: string | null
+          checked_in_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          flow_session_id?: string | null
+          geo_verified?: boolean
+          id?: string
+          relay_slot_id?: string
+          slot_index?: number
+          status?: string
+          team_id?: string
+          updated_at?: string
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_team_slots_flow_session_fk"
+            columns: ["flow_session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_team_slots_relay_slot_fk"
+            columns: ["relay_slot_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_team_slots_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_team_slots_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_team_slots_team_fk"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_teams: {
+        Row: {
+          captain_user_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          opted_in_at: string | null
+          relay_id: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          captain_user_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          opted_in_at?: string | null
+          relay_id: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          captain_user_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          opted_in_at?: string | null
+          relay_id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_teams_relay_fk"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relays: {
+        Row: {
+          city: string
+          created_at: string
+          created_by: string
+          description: string | null
+          ends_at: string | null
+          execution_mode: string
+          id: string
+          max_team_size: number
+          maximum_team_size: number
+          min_team_size: number
+          minimum_team_size: number
+          partner_campaign_id: string | null
+          starts_at: string | null
+          status: string
+          theme: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          ends_at?: string | null
+          execution_mode?: string
+          id?: string
+          max_team_size?: number
+          maximum_team_size?: number
+          min_team_size?: number
+          minimum_team_size?: number
+          partner_campaign_id?: string | null
+          starts_at?: string | null
+          status?: string
+          theme?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends_at?: string | null
+          execution_mode?: string
+          id?: string
+          max_team_size?: number
+          maximum_team_size?: number
+          min_team_size?: number
+          minimum_team_size?: number
+          partner_campaign_id?: string | null
+          starts_at?: string | null
+          status?: string
+          theme?: string | null
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -4093,7 +7027,7 @@ export type Database = {
           geo_verified: boolean
           id: string
           location_accuracy_meters: number | null
-          rating: number
+          rating: number | null
           updated_at: string
           user_id: string
           user_lat: number | null
@@ -4110,7 +7044,7 @@ export type Database = {
           geo_verified?: boolean
           id?: string
           location_accuracy_meters?: number | null
-          rating: number
+          rating?: number | null
           updated_at?: string
           user_id: string
           user_lat?: number | null
@@ -4127,7 +7061,7 @@ export type Database = {
           geo_verified?: boolean
           id?: string
           location_accuracy_meters?: number | null
-          rating?: number
+          rating?: number | null
           updated_at?: string
           user_id?: string
           user_lat?: number | null
@@ -4341,6 +7275,1299 @@ export type Database = {
       }
     }
     Views: {
+      competition_relay_confidence: {
+        Row: {
+          comparative_confidence: number | null
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          cross_completer_count: number | null
+          execution_confidence: number | null
+          overall_confidence: number | null
+          qualified_completion_count: number | null
+          rating_confidence: number | null
+          rating_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_cross_completer_counts: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          cross_completer_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_cross_completers: {
+        Row: {
+          competition_id: string | null
+          completed_competition_relay_entry_ids: string[] | null
+          completed_contender_count: number | null
+          replay_user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_execution_funnel_audit: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          contender_slot: number | null
+          first_full_route_completion_at: string | null
+          full_route_completer_count: number | null
+          latest_full_route_completion_at: string | null
+          qualified_starter_count: number | null
+          relay_artifact_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_full_route_completer_counts: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          contender_slot: number | null
+          first_full_route_completion_at: string | null
+          full_route_completer_count: number | null
+          latest_full_route_completion_at: string | null
+          relay_artifact_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_full_route_completers: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          completed_session_count: number | null
+          first_full_completion_at: string | null
+          latest_full_completion_at: string | null
+          relay_artifact_id: string | null
+          replay_user_id: string | null
+          snapshot_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_execution_events_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_snapshot_fk"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_relay_head_to_head_aggregates: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          head_to_head_losses: number | null
+          head_to_head_preference_rate: number | null
+          head_to_head_sample_count: number | null
+          head_to_head_wins: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_live_scores: {
+        Row: {
+          average_rating: number | null
+          comparative_confidence: number | null
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          contender_slot: number | null
+          cross_completer_count: number | null
+          evidence_score: number | null
+          execution_confidence: number | null
+          final_score: number | null
+          head_to_head_losses: number | null
+          head_to_head_preference_rate: number | null
+          head_to_head_sample_count: number | null
+          head_to_head_score: number | null
+          head_to_head_weight: number | null
+          head_to_head_wins: number | null
+          overall_confidence: number | null
+          qualified_completion_count: number | null
+          qualified_completion_score: number | null
+          qualified_completion_weight: number | null
+          rating_confidence: number | null
+          rating_count: number | null
+          rating_score: number | null
+          rating_weight: number | null
+          relay_artifact_id: string | null
+          route_completion_rate: number | null
+          route_completion_rate_score: number | null
+          route_completion_rate_weight: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_qualified_starter_audit: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          contender_slot: number | null
+          first_qualified_starter_at: string | null
+          latest_qualified_starter_at: string | null
+          qualified_starter_count: number | null
+          relay_artifact_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_qualified_starter_counts: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          contender_slot: number | null
+          first_qualified_starter_at: string | null
+          latest_qualified_starter_at: string | null
+          qualified_starter_count: number | null
+          relay_artifact_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_qualified_starters: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          first_qualified_at: string | null
+          qualifying_session_count: number | null
+          relay_artifact_id: string | null
+          replay_user_id: string | null
+          snapshot_id: string | null
+          verified_stop_event_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_execution_events_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_snapshot_fk"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_relay_rating_aggregates: {
+        Row: {
+          average_rating: number | null
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          rating_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_route_completion_rate_audit: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          contender_slot: number | null
+          first_full_route_completion_at: string | null
+          first_qualified_starter_at: string | null
+          full_route_completer_count: number | null
+          latest_full_route_completion_at: string | null
+          latest_qualified_starter_at: string | null
+          qualified_starter_count: number | null
+          relay_artifact_id: string | null
+          route_completion_rate: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_route_completion_rate_states: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          completion_rate_state: string | null
+          contender_slot: number | null
+          full_route_completer_count: number | null
+          qualified_starter_count: number | null
+          relay_artifact_id: string | null
+          route_completion_rate: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_route_completion_rates: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          contender_slot: number | null
+          first_full_route_completion_at: string | null
+          first_qualified_starter_at: string | null
+          full_route_completer_count: number | null
+          latest_full_route_completion_at: string | null
+          latest_qualified_starter_at: string | null
+          qualified_starter_count: number | null
+          relay_artifact_id: string | null
+          route_completion_rate: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_scoring_components: {
+        Row: {
+          average_rating: number | null
+          comparative_confidence: number | null
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          contender_slot: number | null
+          cross_completer_count: number | null
+          execution_confidence: number | null
+          head_to_head_losses: number | null
+          head_to_head_preference_rate: number | null
+          head_to_head_sample_count: number | null
+          head_to_head_score: number | null
+          head_to_head_weight: number | null
+          head_to_head_wins: number | null
+          overall_confidence: number | null
+          qualified_completion_count: number | null
+          qualified_completion_score: number | null
+          qualified_completion_weight: number | null
+          rating_confidence: number | null
+          rating_count: number | null
+          rating_score: number | null
+          rating_weight: number | null
+          relay_artifact_id: string | null
+          route_completion_rate: number | null
+          route_completion_rate_score: number | null
+          route_completion_rate_weight: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+        ]
+      }
+      competition_relay_scoring_entries: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          competition_relay_id: string | null
+          contender_slot: number | null
+          public_flow_snapshot_id: string | null
+          relay_artifact_id: string | null
+          relay_completed_at: string | null
+          relay_entry_mode: string | null
+          relay_team_id: string | null
+          scoring_eligible_at: string | null
+          venue_ids: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_relay_team_fk"
+            columns: ["relay_team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_relay_team_fk"
+            columns: ["relay_team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_relay_team_fk"
+            columns: ["relay_team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_id_fk"
+            columns: ["competition_relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_relay_verified_execution_evidence: {
+        Row: {
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          created_at: string | null
+          event_type: string | null
+          id: string | null
+          occurred_at: string | null
+          relay_artifact_id: string | null
+          replay_user_id: string | null
+          session_id: string | null
+          snapshot_id: string | null
+          stop_index: number | null
+          venue_id: string | null
+        }
+        Insert: {
+          competition_id?: string | null
+          competition_relay_entry_id?: string | null
+          created_at?: string | null
+          event_type?: string | null
+          id?: string | null
+          occurred_at?: string | null
+          relay_artifact_id?: string | null
+          replay_user_id?: string | null
+          session_id?: string | null
+          snapshot_id?: string | null
+          stop_index?: number | null
+          venue_id?: string | null
+        }
+        Update: {
+          competition_id?: string | null
+          competition_relay_entry_id?: string | null
+          created_at?: string | null
+          event_type?: string | null
+          id?: string | null
+          occurred_at?: string | null
+          relay_artifact_id?: string | null
+          replay_user_id?: string | null
+          session_id?: string | null
+          snapshot_id?: string | null
+          stop_index?: number | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_execution_events_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_session_fk"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_snapshot_fk"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_venue_fk"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_execution_events_venue_fk"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_relay_verified_replay_sessions: {
+        Row: {
+          attributed_at: string | null
+          competition_id: string | null
+          competition_relay_entry_id: string | null
+          relay_artifact_id: string | null
+          replay_user_id: string | null
+          route_completed: boolean | null
+          session_id: string | null
+          snapshot_id: string | null
+          verified_stop_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_replay_sessions_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_entry_fk"
+            columns: ["competition_relay_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_session_fk"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_relay_replay_sessions_snapshot_fk"
+            columns: ["snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_replay_attribution_totals: {
         Row: {
           completed_replayed_flows: number | null
@@ -4394,6 +8621,329 @@ export type Database = {
           type?: string | null
         }
         Relationships: []
+      }
+      roam_relay_artifact_authorship: {
+        Row: {
+          artifact_completed_at: string | null
+          artifact_id: string | null
+          artifact_title: string | null
+          checked_in_at: string | null
+          city: string | null
+          contributor_user_id: string | null
+          flow_session_id: string | null
+          public_flow_snapshot_id: string | null
+          relay_id: string | null
+          relay_slot_id: string | null
+          slot_completed_at: string | null
+          slot_index: number | null
+          slot_label: string | null
+          slot_prompt: string | null
+          team_id: string | null
+          venue_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_artifact_slots_flow_session_fk"
+            columns: ["flow_session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifact_slots_relay_slot_fk"
+            columns: ["relay_slot_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifacts_relay_fk"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifacts_team_fk"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifacts_team_fk"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_artifacts_team_fk"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_downstream_attribution_audit: {
+        Row: {
+          artifact_slot_id: string | null
+          contributor_user_id: string | null
+          first_attributed_at: string | null
+          latest_attributed_at: string | null
+          relay_artifact_id: string | null
+          relay_completed_event_count: number | null
+          relay_id: string | null
+          team_id: string | null
+          unique_relay_completers: number | null
+          unique_verified_stop_executors: number | null
+          verified_stop_event_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_artifact_slot_id_fkey"
+            columns: ["artifact_slot_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_relay_artifact_id_fkey"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_relay_artifact_id_fkey"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_relay_id_fkey"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_reconciliation_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_team_transaction_audit"
+            referencedColumns: ["team_id"]
+          },
+          {
+            foreignKeyName: "roam_relay_downstream_attribution_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_integrity_violations: {
+        Row: {
+          details: Json | null
+          team_id: string | null
+          team_slot_id: string | null
+          user_id: string | null
+          violation_type: string | null
+        }
+        Relationships: []
+      }
+      roam_relay_reconciliation_audit: {
+        Row: {
+          active_slot_count: number | null
+          completed_slot_count: number | null
+          contains_skipped_slot: boolean | null
+          locked_slot_count: number | null
+          reconciliation_state: string | null
+          relay_id: string | null
+          team_id: string | null
+          team_status: string | null
+          total_slot_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_teams_relay_fk"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_team_transaction_audit: {
+        Row: {
+          active_slot_count: number | null
+          assigned_slot_count: number | null
+          captain_user_id: string | null
+          completed_slot_count: number | null
+          distinct_assigned_user_count: number | null
+          invited_member_count: number | null
+          joined_member_count: number | null
+          relay_id: string | null
+          slot_count: number | null
+          team_id: string | null
+          team_status: string | null
+          transaction_state: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_relay_teams_relay_fk"
+            columns: ["relay_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_relay_winner_xp_audit: {
+        Row: {
+          awarded_winner_count: number | null
+          canonical_winner_count: number | null
+          competition_id: string | null
+          competition_status: string | null
+          relay_artifact_id: string | null
+          relay_reward_mode: string | null
+          relay_winner_entry_id: string | null
+          result_status: string | null
+          reward_state: string | null
+          total_awarded_xp: number | null
+          xp_reward: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifact_authorship"
+            referencedColumns: ["artifact_id"]
+          },
+          {
+            foreignKeyName: "competition_relay_entries_artifact_fk"
+            columns: ["relay_artifact_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_artifacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_confidence"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_cross_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_execution_funnel_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_full_route_completer_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_head_to_head_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_live_scores"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_qualified_starter_counts"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_rating_aggregates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_audit"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rate_states"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_route_completion_rates"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_components"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+          {
+            foreignKeyName: "competitions_relay_winner_entry_id_fkey"
+            columns: ["relay_winner_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_relay_scoring_entries"
+            referencedColumns: ["competition_relay_entry_id"]
+          },
+        ]
       }
       venue_rsvps_view: {
         Row: {
@@ -4550,7 +9100,106 @@ export type Database = {
             }
             Returns: string
           }
+      admin_create_roam_relay: {
+        Args: { p_definition: Json; p_slots: Json }
+        Returns: string
+      }
+      admin_save_roam_relay: {
+        Args: { p_definition: Json; p_relay_id: string; p_slots: Json }
+        Returns: string
+      }
       anonymize_profile: { Args: { target_user: string }; Returns: undefined }
+      assign_roam_relay_team_slot: {
+        Args: { p_relay_slot_id: string; p_team_id: string; p_user_id: string }
+        Returns: {
+          assigned_user_id: string
+          changed: boolean
+          relay_slot_id: string
+          slot_index: number
+          slot_status: string
+          team_id: string
+          team_slot_id: string
+        }[]
+      }
+      assign_roam_relay_team_slots: {
+        Args: { p_assignments: Json; p_team_id: string }
+        Returns: undefined
+      }
+      award_roam_relay_competition_winner_xp: {
+        Args: { p_competition_id: string }
+        Returns: {
+          awarded: boolean
+          competition_id: string
+          relay_winner_entry_id: string
+          reward_mode: string
+          winner_user_id: string
+          xp_amount: number
+        }[]
+      }
+      can_read_roam_relay_team_members: {
+        Args: { p_team_id: string }
+        Returns: boolean
+      }
+      competition_allows_identity_reveal: {
+        Args: { p_competition_id: string }
+        Returns: boolean
+      }
+      complete_roam_relay_slot: {
+        Args: {
+          p_flow_session_id: string
+          p_team_slot_id: string
+          p_venue_id: string
+        }
+        Returns: {
+          assigned_user_id: string
+          checked_in_at: string
+          completed_at: string
+          flow_session_id: string
+          geo_verified: boolean
+          relay_id: string
+          relay_slot_id: string
+          slot_index: number
+          slot_status: string
+          team_id: string
+          team_slot_id: string
+          venue_id: string
+        }[]
+      }
+      create_roam_relay_definition: {
+        Args: {
+          p_city?: string
+          p_description?: string
+          p_ends_at?: string
+          p_max_team_size?: number
+          p_min_team_size?: number
+          p_reward_mode?: string
+          p_starts_at?: string
+          p_theme?: string
+          p_title: string
+          p_visibility?: string
+          p_xp_reward?: number
+        }
+        Returns: string
+      }
+      create_roam_relay_team: {
+        Args: { p_relay_id: string }
+        Returns: {
+          captain_user_id: string
+          created: boolean
+          relay_id: string
+          team_id: string
+          team_status: string
+        }[]
+      }
+      decline_roam_relay_team_invitation: {
+        Args: { p_team_id: string }
+        Returns: {
+          changed: boolean
+          member_status: string
+          team_id: string
+          user_id: string
+        }[]
+      }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
@@ -4585,6 +9234,17 @@ export type Database = {
       earth: { Args: never; Returns: number }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      finalize_roam_relay_team: {
+        Args: { p_team_id: string }
+        Returns: {
+          active_slot_count: number
+          completed_slot_count: number
+          fully_completed: boolean
+          team_id: string
+          team_status: string
+          total_slot_count: number
+        }[]
+      }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
         Args: { geom1: unknown; geom2: unknown }
@@ -4783,8 +9443,78 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_public_roam_relay_competition_contributors: {
+        Args: { p_competition_id: string }
+        Returns: {
+          checked_in_at: string
+          competition_relay_entry_id: string
+          completed_at: string
+          contender_slot: number
+          contributor_user_id: string
+          slot_index: number
+          slot_label: string
+          team_label: string
+          venue_id: string
+        }[]
+      }
+      get_public_roam_relay_competition_entries: {
+        Args: { p_competition_id: string }
+        Returns: {
+          competition_relay_entry_id: string
+          contender_slot: number
+          entry_status: string
+          identities_revealed: boolean
+          relay_completed_at: string
+          replayable_snapshot_id: string
+          route_state: Json
+          team_label: string
+          team_status: string
+        }[]
+      }
       gettransactionid: { Args: never; Returns: unknown }
+      initialize_roam_relay_team_slots: {
+        Args: { p_team_id: string }
+        Returns: {
+          assigned_user_id: string | null
+          checked_in_at: string | null
+          completed_at: string | null
+          created_at: string
+          flow_session_id: string | null
+          geo_verified: boolean
+          id: string
+          relay_slot_id: string
+          slot_index: number
+          status: string
+          team_id: string
+          updated_at: string
+          venue_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "roam_relay_team_slots"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      invite_roam_relay_team_member: {
+        Args: { p_team_id: string; p_user_id: string }
+        Returns: {
+          created: boolean
+          invited_user_id: string
+          member_status: string
+          team_id: string
+        }[]
+      }
       join_crawl: { Args: { input_crawl_id: string }; Returns: undefined }
+      join_roam_relay_team: {
+        Args: { p_team_id: string }
+        Returns: {
+          joined: boolean
+          member_status: string
+          team_id: string
+          user_id: string
+        }[]
+      }
       leave_crawl: { Args: { crawl_id: string }; Returns: undefined }
       list_public_crawls: {
         Args: { city: string; end_date: string; start_date: string }
@@ -4800,6 +9530,14 @@ export type Database = {
         }[]
       }
       longtransactionsenabled: { Args: never; Returns: boolean }
+      materialize_roam_relay_artifact: {
+        Args: { p_team_id: string }
+        Returns: {
+          artifact_id: string
+          created: boolean
+          public_flow_snapshot_id: string
+        }[]
+      }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }
@@ -4840,7 +9578,42 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      publish_roam_relay: { Args: { p_relay_id: string }; Returns: string }
       rebuild_venue_reputation_categories: { Args: never; Returns: number }
+      reconcile_competition_relay_replay_evidence: {
+        Args: { p_replay_user_id: string; p_session_id: string }
+        Returns: undefined
+      }
+      reconcile_roam_relay_downstream_attribution: {
+        Args: { p_session_id: string }
+        Returns: {
+          inserted_relay_completed_events: number
+          inserted_verified_stop_events: number
+        }[]
+      }
+      reconcile_roam_relay_team: {
+        Args: { p_team_id: string }
+        Returns: {
+          active_slot_count: number
+          completed_slot_count: number
+          repaired: boolean
+          team_id: string
+          team_status: string
+          total_slot_count: number
+        }[]
+      }
+      reconcile_roam_relay_team_slot: {
+        Args: { p_team_slot_id: string }
+        Returns: {
+          canonical_evidence_found: boolean
+          repaired: boolean
+          slot_index: number
+          slot_status: string
+          team_id: string
+          team_slot_id: string
+          team_status: string
+        }[]
+      }
       record_creator_replay_completion: {
         Args: { p_session_id: string }
         Returns: {
@@ -4871,7 +9644,113 @@ export type Database = {
         Args: { target_event_id: string }
         Returns: Json
       }
+      relay_authoring_is_venue_admin: { Args: never; Returns: boolean }
+      remove_roam_relay_team_member: {
+        Args: { p_team_id: string; p_user_id: string }
+        Returns: undefined
+      }
       roam_city_timezone: { Args: { city_value: string }; Returns: string }
+      roam_relay_flow_snapshot_identity_embargoed: {
+        Args: { p_snapshot_id: string }
+        Returns: boolean
+      }
+      roam_relay_team_identity_embargoed: {
+        Args: { p_team_id: string }
+        Returns: boolean
+      }
+      roam_relay_valid_venue_id_array: {
+        Args: { p_values: string[] }
+        Returns: boolean
+      }
+      roam_relay_venue_matches_category: {
+        Args: { p_category_constraint: string; p_venue_id: string }
+        Returns: boolean
+      }
+      save_roam_relay_template: {
+        Args: { p_relay_id: string; p_slots: Json }
+        Returns: string
+      }
+      set_roam_relay_competition_winner_and_award_xp: {
+        Args: { p_competition_id: string; p_relay_winner_entry_id: string }
+        Returns: {
+          awarded: boolean
+          competition_id: string
+          relay_winner_entry_id: string
+          reward_mode: string
+          winner_user_id: string
+          xp_amount: number
+        }[]
+      }
+      set_roam_relay_team_ready: {
+        Args: { p_team_id: string }
+        Returns: {
+          changed: boolean
+          joined_member_count: number
+          relay_id: string
+          slot_count: number
+          team_id: string
+          team_status: string
+        }[]
+      }
+      settle_competition_from_snapshots: {
+        Args: {
+          p_algorithm_version: string
+          p_competition_id: string
+          p_result_status: string
+          p_settled_by: string
+          p_snapshot_ids: string[]
+          p_winner_entry_id: string
+        }
+        Returns: {
+          competition_id: string
+          result_status: string
+          settled_at: string
+          winner_entry_id: string
+          winner_user_id: string
+        }[]
+      }
+      snapshot_roam_relay_competition_scores: {
+        Args: { p_competition_id: string }
+        Returns: {
+          average_rating: number | null
+          comparative_confidence: number
+          competition_id: string
+          competition_relay_entry_id: string
+          contender_slot: number
+          created_at: string
+          cross_completer_count: number
+          evidence_score: number
+          execution_confidence: number
+          final_score: number
+          head_to_head_losses: number
+          head_to_head_preference_rate: number | null
+          head_to_head_sample_count: number
+          head_to_head_score: number
+          head_to_head_weight: number
+          head_to_head_wins: number
+          id: string
+          overall_confidence: number
+          qualified_completion_count: number
+          qualified_completion_score: number
+          qualified_completion_weight: number
+          qualified_starter_count: number
+          rating_confidence: number
+          rating_count: number
+          rating_score: number
+          rating_weight: number
+          relay_artifact_id: string
+          route_completion_rate: number | null
+          route_completion_rate_score: number
+          route_completion_rate_weight: number
+          snapshot_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "competition_relay_entry_score_snapshots"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown
@@ -5453,11 +10332,84 @@ export type Database = {
         Args: { geom: unknown; move: number; wrap: number }
         Returns: unknown
       }
+      start_competition_entry_flow: {
+        Args: { p_competition_entry_id: string; p_competition_id: string }
+        Returns: {
+          competition_entry_id: string
+          competition_id: string
+          created: boolean
+          flow_city: string
+          flow_completed_at: string
+          flow_session_id: string
+          flow_started_at: string
+          flow_status: string
+          flow_title: string
+          flow_venue_ids: string[]
+          participation_completed_at: string
+          participation_id: string
+          participation_started_at: string
+          qualified: boolean
+          total_stop_count: number
+          user_id: string
+          verified_stop_count: number
+        }[]
+      }
+      start_roam_relay_slot_flow: {
+        Args: { p_team_slot_id: string; p_venue_id: string }
+        Returns: {
+          assigned_user_id: string
+          competition_safe_team_slot_id: string
+          created: boolean
+          flow_city: string
+          flow_session_id: string
+          flow_source: string
+          flow_source_id: string
+          flow_started_at: string
+          flow_status: string
+          flow_title: string
+          flow_venue_ids: string[]
+          relay_id: string
+          relay_slot_id: string
+          slot_index: number
+          team_id: string
+        }[]
+      }
+      start_roam_relay_team: {
+        Args: { p_team_id: string }
+        Returns: {
+          active_relay_slot_id: string
+          active_slot_index: number
+          active_team_slot_id: string
+          assigned_user_id: string
+          opted_in_at: string
+          relay_id: string
+          started_at: string
+          team_id: string
+          team_status: string
+        }[]
+      }
       sync_venue_reputation_categories: {
         Args: { target_venue_id: string }
         Returns: undefined
       }
       unlockrows: { Args: { "": string }; Returns: number }
+      update_roam_relay_definition: {
+        Args: {
+          p_city: string
+          p_description: string
+          p_ends_at: string
+          p_max_team_size: number
+          p_min_team_size: number
+          p_relay_id: string
+          p_reward_mode: string
+          p_starts_at: string
+          p_theme: string
+          p_title: string
+          p_visibility: string
+          p_xp_reward: number
+        }
+        Returns: string
+      }
       updategeometrysrid: {
         Args: {
           catalogn_name: string
@@ -5467,6 +10419,34 @@ export type Database = {
           table_name: string
         }
         Returns: string
+      }
+      validate_competition_relay_execution_funnel: {
+        Args: { p_competition_relay_entry_id: string }
+        Returns: boolean
+      }
+      validate_competition_relay_full_completers_are_starters: {
+        Args: { p_competition_relay_entry_id: string }
+        Returns: boolean
+      }
+      validate_competition_relay_full_route_completer_count: {
+        Args: { p_competition_relay_entry_id: string }
+        Returns: boolean
+      }
+      validate_competition_relay_qualified_starter_count: {
+        Args: { p_competition_relay_entry_id: string }
+        Returns: boolean
+      }
+      validate_competition_relay_route_completion_rate: {
+        Args: { p_competition_relay_entry_id: string }
+        Returns: boolean
+      }
+      validate_competition_relay_route_completion_rates: {
+        Args: { p_competition_id: string }
+        Returns: boolean
+      }
+      validate_completed_roam_relay_artifact_authorship: {
+        Args: { p_artifact_id: string }
+        Returns: boolean
       }
     }
     Enums: {

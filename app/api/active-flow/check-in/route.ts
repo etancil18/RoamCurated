@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 import { createServerClient } from '@/lib/supabase/server'
 
@@ -40,6 +41,19 @@ type CreatorReplayStopAttributionRow = {
   occurred_at: string | null
 }
 
+type CompetitionFlowBridgeRow = {
+  competition_id: string
+  competition_entry_id: string
+  flow_session_id: string
+  user_id: string
+}
+
+type CompetitionParticipationProgressRow = {
+  id: string
+  verified_stop_count: number
+  total_stop_count: number
+}
+
 const BASE_CHECK_IN_RADIUS_METERS = 125
 const FLEXIBLE_RADIUS_METERS = 75
 const MAX_REASONABLE_ACCURACY_METERS = 250
@@ -55,6 +69,343 @@ async function refreshPublicPassportStats(
     console.error(
       '[active-flow/check-in] Failed to rebuild public Passport stats:',
       error
+    )
+  }
+}
+
+/**
+ * Competition participation synchronization:
+ *
+ * Active Flow progress remains the canonical raw evidence.
+ *
+ * When the Active Flow belongs to a competition entry through
+ * competition_flow_sessions, recompute the number of distinct
+ * geo-verified route venues and increase the linked
+ * competition_participations.verified_stop_count.
+ *
+ * This operation deliberately:
+ *
+ *   - detects competition context through the bridge
+ *   - counts only geo_verified Active Flow progress
+ *   - counts only venues belonging to this Flow's canonical route
+ *   - deduplicates venue IDs
+ *   - never decreases verified_stop_count
+ *   - does not calculate qualification here
+ *   - does not alter a successful physical check-in if downstream
+ *     competition synchronization temporarily fails
+ *
+ * A service-role client is required because competition
+ * participation state is trusted-server writable rather than
+ * browser writable.
+ */
+async function syncCompetitionParticipationVerifiedProgress({
+  sessionId,
+  userId,
+  routeVenueIds,
+}: {
+  sessionId: string
+  userId: string
+  routeVenueIds: string[]
+}) {
+  try {
+    const supabaseUrl =
+      process.env.NEXT_PUBLIC_SUPABASE_URL
+
+    const serviceRoleKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (
+      !supabaseUrl ||
+      !serviceRoleKey
+    ) {
+      console.error(
+        '[active-flow/check-in] Competition participation sync unavailable: missing Supabase service-role configuration.'
+      )
+
+      return
+    }
+
+    const serviceSupabase =
+      createClient(
+        supabaseUrl,
+        serviceRoleKey,
+        {
+          auth: {
+            autoRefreshToken:
+              false,
+
+            persistSession:
+              false,
+          },
+        }
+      )
+
+    const {
+      data: bridge,
+      error: bridgeError,
+    } = await serviceSupabase
+      .from(
+        'competition_flow_sessions'
+      )
+      .select(
+        `
+          competition_id,
+          competition_entry_id,
+          flow_session_id,
+          user_id
+        `
+      )
+      .eq(
+        'flow_session_id',
+        sessionId
+      )
+      .eq(
+        'user_id',
+        userId
+      )
+      .maybeSingle<CompetitionFlowBridgeRow>()
+
+    if (bridgeError) {
+      console.error(
+        '[active-flow/check-in] Competition Flow bridge lookup failed:',
+        {
+          sessionId,
+          userId,
+          error:
+            bridgeError,
+        }
+      )
+
+      return
+    }
+
+    if (!bridge) {
+      return
+    }
+
+    const {
+      data: participation,
+      error: participationError,
+    } = await serviceSupabase
+      .from(
+        'competition_participations'
+      )
+      .select(
+        `
+          id,
+          verified_stop_count,
+          total_stop_count
+        `
+      )
+      .eq(
+        'competition_id',
+        bridge.competition_id
+      )
+      .eq(
+        'competition_entry_id',
+        bridge.competition_entry_id
+      )
+      .eq(
+        'flow_session_id',
+        sessionId
+      )
+      .eq(
+        'user_id',
+        userId
+      )
+      .maybeSingle<CompetitionParticipationProgressRow>()
+
+    if (participationError) {
+      console.error(
+        '[active-flow/check-in] Competition participation lookup failed:',
+        {
+          sessionId,
+          userId,
+          competitionId:
+            bridge.competition_id,
+          competitionEntryId:
+            bridge.competition_entry_id,
+          error:
+            participationError,
+        }
+      )
+
+      return
+    }
+
+    if (!participation) {
+      console.error(
+        '[active-flow/check-in] Competition Flow bridge exists without linked participation:',
+        {
+          sessionId,
+          userId,
+          competitionId:
+            bridge.competition_id,
+          competitionEntryId:
+            bridge.competition_entry_id,
+        }
+      )
+
+      return
+    }
+
+    const canonicalRouteVenueIds =
+      new Set(
+        routeVenueIds.filter(
+          (
+            routeVenueId
+          ): routeVenueId is string =>
+            typeof routeVenueId ===
+              'string' &&
+            routeVenueId.length >
+              0
+        )
+      )
+
+    const {
+      data: verifiedProgressRows,
+      error: verifiedProgressError,
+    } = await serviceSupabase
+      .from(
+        'active_flow_progress'
+      )
+      .select(
+        'venue_id'
+      )
+      .eq(
+        'session_id',
+        sessionId
+      )
+      .eq(
+        'user_id',
+        userId
+      )
+      .eq(
+        'geo_verified',
+        true
+      )
+
+    if (verifiedProgressError) {
+      console.error(
+        '[active-flow/check-in] Competition verified progress lookup failed:',
+        {
+          sessionId,
+          userId,
+          competitionId:
+            bridge.competition_id,
+          competitionEntryId:
+            bridge.competition_entry_id,
+          error:
+            verifiedProgressError,
+        }
+      )
+
+      return
+    }
+
+    const verifiedVenueIds =
+      new Set(
+        (
+          verifiedProgressRows ??
+          []
+        )
+          .map(
+            (
+              row
+            ) =>
+              row.venue_id
+          )
+          .filter(
+            (
+              progressVenueId
+            ): progressVenueId is string =>
+              typeof progressVenueId ===
+                'string' &&
+              canonicalRouteVenueIds.has(
+                progressVenueId
+              )
+          )
+      )
+
+    const canonicalVerifiedStopCount =
+      Math.min(
+        verifiedVenueIds.size,
+        participation.total_stop_count
+      )
+
+    /**
+     * The database already rejects regression, but avoid issuing
+     * an unnecessary UPDATE when there is no increase.
+     */
+    if (
+      canonicalVerifiedStopCount <=
+      participation.verified_stop_count
+    ) {
+      return
+    }
+
+    const {
+      error: updateError,
+    } = await serviceSupabase
+      .from(
+        'competition_participations'
+      )
+      .update({
+        verified_stop_count:
+          canonicalVerifiedStopCount,
+
+        updated_at:
+          new Date()
+            .toISOString(),
+      })
+      .eq(
+        'id',
+        participation.id
+      )
+      .eq(
+        'competition_id',
+        bridge.competition_id
+      )
+      .eq(
+        'competition_entry_id',
+        bridge.competition_entry_id
+      )
+      .eq(
+        'flow_session_id',
+        sessionId
+      )
+      .eq(
+        'user_id',
+        userId
+      )
+
+    if (updateError) {
+      console.error(
+        '[active-flow/check-in] Competition participation verified-stop sync failed:',
+        {
+          sessionId,
+          userId,
+          competitionId:
+            bridge.competition_id,
+          competitionEntryId:
+            bridge.competition_entry_id,
+          participationId:
+            participation.id,
+          verifiedStopCount:
+            canonicalVerifiedStopCount,
+          error:
+            updateError,
+        }
+      )
+    }
+  } catch (error) {
+    console.error(
+      '[active-flow/check-in] Unexpected competition participation sync failure:',
+      {
+        sessionId,
+        userId,
+        error,
+      }
     )
   }
 }
@@ -933,6 +1284,28 @@ export async function POST(
       }
 
       /**
+       * Competition participation progress repair / idempotency.
+       *
+       * If this existing verified progress belongs to a
+       * competition-linked Flow, re-run synchronization so a
+       * previously missed participation update can repair itself.
+       */
+      if (
+        existingProgress.geo_verified ===
+        true
+      ) {
+        await syncCompetitionParticipationVerifiedProgress({
+          sessionId,
+
+          userId:
+            user.id,
+
+          routeVenueIds:
+            venueIds,
+        })
+      }
+
+      /**
        * Replay attribution repair / idempotency:
        *
        * Even though this stop already has canonical progress,
@@ -1385,6 +1758,26 @@ export async function POST(
         sessionProgressUpdateError
       )
     }
+
+    /**
+     * Competition participation synchronization:
+     *
+     * The physical check-in has now been canonically persisted as
+     * geo-verified Active Flow progress.
+     *
+     * If this Flow is connected to a competition entry through
+     * competition_flow_sessions, synchronize the linked
+     * competition_participations verified-stop aggregate.
+     */
+    await syncCompetitionParticipationVerifiedProgress({
+      sessionId,
+
+      userId:
+        user.id,
+
+      routeVenueIds:
+        venueIds,
+    })
 
     /**
      * Creator replay attribution:

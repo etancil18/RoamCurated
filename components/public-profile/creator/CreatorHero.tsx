@@ -25,6 +25,28 @@ import type {
  * Public component contract
  * ======================================================= */
 
+export type CreatorCompetitionWinStat = {
+  /**
+   * Stable competition identifier.
+   */
+  competitionId: string
+
+  /**
+   * Public competition label shown in the hero.
+   *
+   * Example:
+   *   Taste Duel
+   */
+  competitionLabel: string
+
+  /**
+   * Number of settled wins for this creator in this competition.
+   *
+   * Values <= 0 are intentionally not rendered.
+   */
+  wins: number
+}
+
 export type CreatorHeroProps = {
   /**
    * Creator's public-facing display name.
@@ -99,6 +121,17 @@ export type CreatorHeroProps = {
   passportLevel?: number | null
 
   /**
+   * Settled competition win aggregates for this creator.
+   *
+   * Only competition-specific stats with at least one win are
+   * rendered in the hero.
+   *
+   * Do not pass losses, participation counts, scores, or reputation
+   * data here.
+   */
+  competitionWins?: readonly CreatorCompetitionWinStat[]
+
+  /**
    * Maximum number of social links rendered in the hero.
    *
    * Remaining links can be rendered in a dedicated social-links
@@ -130,6 +163,7 @@ export default function CreatorHero({
   followersCount = 0,
   followingCount = 0,
   passportLevel = null,
+  competitionWins = [],
   socialLinkLimit = 4,
   className = '',
 }: CreatorHeroProps) {
@@ -173,6 +207,11 @@ export default function CreatorHero({
       : normalizePublicCount(
           passportLevel
         )
+
+  const normalizedCompetitionWins =
+    normalizeCompetitionWins(
+      competitionWins
+    )
 
   const visibleSocialLinks =
     normalizeSocialLinks({
@@ -240,6 +279,9 @@ export default function CreatorHero({
           }
           passportLevel={
             normalizedPassportLevel
+          }
+          competitionWins={
+            normalizedCompetitionWins
           }
         />
 
@@ -456,10 +498,12 @@ function CreatorProfileMetrics({
   followersCount,
   followingCount,
   passportLevel,
+  competitionWins,
 }: {
   followersCount: number
   followingCount: number
   passportLevel: number | null
+  competitionWins: CreatorCompetitionWinStat[]
 }) {
   return (
     <dl
@@ -483,6 +527,23 @@ function CreatorProfileMetrics({
           emphasized
         />
       ) : null}
+
+      {competitionWins.map(
+        (
+          competition
+        ) => (
+          <CreatorProfileMetric
+            key={
+              competition.competitionId
+            }
+            label={`${competition.competitionLabel} wins`}
+            value={
+              competition.wins
+            }
+            emphasized
+          />
+        )
+      )}
     </dl>
   )
 }
@@ -768,6 +829,95 @@ function CreatorSocialIcon({
 /* =========================================================
  * Normalization
  * ======================================================= */
+
+function normalizeCompetitionWins(
+  wins: readonly CreatorCompetitionWinStat[]
+): CreatorCompetitionWinStat[] {
+  const byCompetitionId =
+    new Map<
+      string,
+      CreatorCompetitionWinStat
+    >()
+
+  for (const stat of wins) {
+    if (!stat) {
+      continue
+    }
+
+    const competitionId =
+      normalizeNullableText(
+        stat.competitionId
+      )
+
+    const competitionLabel =
+      normalizeNullableText(
+        stat.competitionLabel
+      )
+
+    const winCount =
+      normalizePublicCount(
+        stat.wins
+      )
+
+    /**
+     * Public creator hero rule:
+     *
+     * Competition statistics are visible only when this creator has
+     * at least one settled win for that specific competition.
+     */
+    if (
+      !competitionId ||
+      !competitionLabel ||
+      winCount < 1
+    ) {
+      continue
+    }
+
+    byCompetitionId.set(
+      competitionId,
+      {
+        competitionId,
+        competitionLabel,
+        wins: winCount,
+      }
+    )
+  }
+
+  return [
+    ...byCompetitionId.values(),
+  ].sort(
+    (
+      first,
+      second
+    ) => {
+      if (
+        second.wins !==
+        first.wins
+      ) {
+        return (
+          second.wins -
+          first.wins
+        )
+      }
+
+      const labelOrder =
+        first.competitionLabel.localeCompare(
+          second.competitionLabel
+        )
+
+      if (
+        labelOrder !==
+        0
+      ) {
+        return labelOrder
+      }
+
+      return first.competitionId.localeCompare(
+        second.competitionId
+      )
+    }
+  )
+}
 
 function normalizeSocialLinks({
   links,

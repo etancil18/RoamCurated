@@ -13,6 +13,7 @@ type RouteContext = {
 }
 
 type VenueCheckInBody = {
+  rating?: unknown
   user_lat?: number
   user_lon?: number
   location_accuracy_meters?: number | null
@@ -39,6 +40,15 @@ async function refreshPublicPassportStats(userId: string) {
       error
     )
   }
+}
+
+function isValidRating(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 5
+  )
 }
 
 function isValidLatitude(value: unknown): value is number {
@@ -245,6 +255,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const body = (await req.json().catch(() => ({}))) as VenueCheckInBody
 
+  const rating = body.rating
   const userLat = body.user_lat
   const userLon = body.user_lon
 
@@ -329,6 +340,71 @@ export async function POST(req: NextRequest, context: RouteContext) {
 
   const alreadyVisited = Boolean(existingVisit)
 
+  const ratingWasProvided =
+    rating !== undefined &&
+    rating !== null
+
+  if (
+    ratingWasProvided &&
+    !isValidRating(rating)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'Rating must be an integer between 1 and 5',
+      },
+      { status: 400 }
+    )
+  }
+
+  if (
+    !alreadyVisited &&
+    !isValidRating(rating)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'Rating must be an integer between 1 and 5 for your first check-in.',
+      },
+      { status: 400 }
+    )
+  }
+
+  let existingRating: number | null =
+    existingVisit?.rating ??
+    null
+
+  if (alreadyVisited) {
+    const {
+      data: latestRatedVisit,
+      error: latestRatedVisitError,
+    } = await supabase
+      .from('venue_visits')
+      .select('rating')
+      .eq('user_id', user.id)
+      .eq('venue_id', venueId)
+      .not('rating', 'is', null)
+      .order('visited_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (latestRatedVisitError) {
+      console.error(
+        '[venue-profile/check-in] Existing rating lookup failed:',
+        latestRatedVisitError
+      )
+
+      return NextResponse.json(
+        { error: 'Could not verify venue rating.' },
+        { status: 500 }
+      )
+    }
+
+    existingRating =
+      latestRatedVisit?.rating ??
+      null
+  }
+
   /*
    * Prevent more than one successful check-in for the same venue-local day.
    *
@@ -389,8 +465,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
   /*
    * Every eligible check-in now creates a new historical visit row.
    *
-   * Ratings are intentionally omitted so repeat visits cannot overwrite the
-   * user's existing venue rating.
+   * Ratings are optional on repeat visits so a later check-in does not
+   * overwrite or duplicate the user's existing venue rating.
    */
   const {
     data: visit,
@@ -400,6 +476,10 @@ export async function POST(req: NextRequest, context: RouteContext) {
     .insert({
       user_id: user.id,
       venue_id: venueId,
+      rating:
+        isValidRating(rating)
+          ? rating
+          : null,
       visited_at: now,
       visit_date: visitDate,
       user_lat: userLat,
@@ -582,8 +662,8 @@ export async function POST(req: NextRequest, context: RouteContext) {
       !alreadyVisited,
     visit,
     rating:
-      existingVisit?.rating ??
-      null,
+      visit.rating ??
+      existingRating,
     xpEarned,
     geoVerified: true,
     proofSource:

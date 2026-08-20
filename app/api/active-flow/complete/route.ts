@@ -3,6 +3,10 @@ import { createServerClient } from '@/lib/supabase/server'
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 
+import {
+  safelyReconcileCompetitionParticipation,
+} from '@/lib/competitions/participation'
+
 type CompleteActiveFlowBody = {
   session_id?: string
 }
@@ -15,6 +19,24 @@ type CreatorReplayCompletionAttributionRow = {
   snapshot_id: string
   session_id: string
   occurred_at: string | null
+}
+
+type CompetitionSubmissionCandidate = {
+  submissionSource: 'active_flow'
+  flowSessionId: string
+
+  venueIds: string[]
+
+  routeTitle: string | null
+  routeCity: string | null
+
+  routeStartedAt: string | null
+  routeCompletedAt: string | null
+
+  verifiedVenueCount: number
+  totalVenueCount: number
+
+  eligibleForCompetitionSubmission: boolean
 }
 
 function getCompletionBonus(
@@ -55,6 +77,63 @@ function getBadgeUnlocked(
   }
 
   return 'Flow Finisher'
+}
+
+function buildCompetitionSubmissionCandidate({
+  sessionId,
+  venueIds,
+  title,
+  city,
+  startedAt,
+  completedAt,
+  verifiedVenueCount,
+}: {
+  sessionId: string
+  venueIds: string[]
+  title: string | null | undefined
+  city: string | null | undefined
+  startedAt: string | null | undefined
+  completedAt: string | null | undefined
+  verifiedVenueCount: number
+}): CompetitionSubmissionCandidate {
+  return {
+    submissionSource:
+      'active_flow',
+
+    flowSessionId:
+      sessionId,
+
+    venueIds,
+
+    routeTitle:
+      title ?? null,
+
+    routeCity:
+      city ?? null,
+
+    routeStartedAt:
+      startedAt ?? null,
+
+    routeCompletedAt:
+      completedAt ?? null,
+
+    verifiedVenueCount,
+
+    totalVenueCount:
+      venueIds.length,
+
+    /**
+     * Competition submissions require at least 3 venues.
+     *
+     * This is informational only.
+     * The competition submission API remains responsible for
+     * authoritative validation before creating a submission.
+     */
+    eligibleForCompetitionSubmission:
+      venueIds.length >= 3 &&
+      verifiedVenueCount >= 3 &&
+      Boolean(completedAt),
+  }
 }
 
 async function refreshPublicPassportStats(
@@ -233,7 +312,7 @@ export async function POST(
         'active_flow_sessions'
       )
       .select(
-        'id, user_id, venue_ids, status, completed_at, source, source_id, title, city, metadata, completed_stops'
+        'id, user_id, venue_ids, status, started_at, completed_at, source, source_id, title, city, metadata, completed_stops'
       )
       .eq(
         'id',
@@ -281,6 +360,27 @@ export async function POST(
       'completed'
     ) {
       /**
+       * Competition participation repair / idempotency:
+       *
+       * A previously completed competition-linked Flow may have
+       * missed participation finalization because of an older
+       * application version or a transient downstream failure.
+       *
+       * The canonical reconciliation helper resolves the bridge,
+       * derives verified evidence, applies competition
+       * qualification, and finalizes the linked participation.
+       *
+       * Ordinary non-competition Active Flows are a no-op.
+       */
+      await safelyReconcileCompetitionParticipation({
+        flowSessionId:
+          sessionId,
+
+        userId:
+          user.id,
+      })
+
+      /**
        * Replay attribution repair / idempotency:
        *
        * A previously completed replay may have missed creator
@@ -299,11 +399,50 @@ export async function POST(
             session.source,
         })
 
+      const completedVenueIds =
+        Array.isArray(
+          session.venue_ids
+        )
+          ? session.venue_ids.filter(
+              Boolean
+            )
+          : []
+
+      const verifiedVenueCount =
+        typeof session.completed_stops ===
+          'number'
+          ? session.completed_stops
+          : completedVenueIds.length
+
+      const competitionSubmissionCandidate =
+        buildCompetitionSubmissionCandidate({
+          sessionId,
+
+          venueIds:
+            completedVenueIds,
+
+          title:
+            session.title,
+
+          city:
+            session.city,
+
+          startedAt:
+            session.started_at,
+
+          completedAt:
+            session.completed_at,
+
+          verifiedVenueCount,
+        })
+
       return NextResponse.json(
         {
           session,
           message:
             'Flow already completed.',
+
+          competitionSubmissionCandidate,
 
           replayAttribution:
             replayAttribution
@@ -535,6 +674,33 @@ export async function POST(
     }
 
     /**
+     * Competition participation finalization:
+     *
+     * The Active Flow is now canonically completed.
+     *
+     * If this session is linked through competition_flow_sessions,
+     * the canonical competition reconciliation helper:
+     *
+     *   - derives verified stops from canonical evidence
+     *   - applies qualification
+     *   - marks the linked participation qualified when warranted
+     *   - sets participation.completed_at
+     *
+     * Ordinary non-competition Active Flows are a no-op.
+     *
+     * Reconciliation is deliberately best-effort relative to the
+     * already-successful physical Flow completion. The completed
+     * retry path above provides an idempotent repair mechanism.
+     */
+    await safelyReconcileCompetitionParticipation({
+      flowSessionId:
+        sessionId,
+
+      userId:
+        user.id,
+    })
+
+    /**
      * Creator replay attribution:
      *
      * The replay session is now canonically completed.
@@ -572,6 +738,27 @@ export async function POST(
       }
     )
 
+    const competitionSubmissionCandidate =
+      buildCompetitionSubmissionCandidate({
+        sessionId,
+
+        venueIds,
+
+        title:
+          session.title,
+
+        city:
+          session.city,
+
+        startedAt:
+          session.started_at,
+
+        completedAt,
+
+        verifiedVenueCount:
+          completedStops,
+      })
+
     return NextResponse.json(
       {
         session:
@@ -593,6 +780,8 @@ export async function POST(
         sourceId:
           session.source_id ??
           null,
+
+        competitionSubmissionCandidate,
 
         replayAttribution:
           replayAttribution

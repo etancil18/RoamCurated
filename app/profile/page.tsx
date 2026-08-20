@@ -13,6 +13,9 @@ import SavedProperties from "./SavedProperties"
 import RoamPassport from "./RoamPassport"
 import FavoritesSection from "./FavoritesSection"
 
+import RelayInvitationsPanel, {
+  type RelayInvitation,
+} from "@/components/profile/RelayInvitationsPanel"
 import VisitHistorySection from "@/components/profile/VisitHistorySection"
 import ProfileSnapshotLibrary, {
   type ProfileSnapshot,
@@ -57,6 +60,31 @@ type ProfileCreatorRow = {
   username: string | null
   creator_mode_enabled: boolean | null
   creator_headline: string | null
+}
+
+type RelayInvitationMembershipRow = {
+  id: string
+  team_id: string
+  created_at: string
+}
+
+type RelayInvitationTeamRow = {
+  id: string
+  relay_id: string
+  status: string
+}
+
+type RelayInvitationRelayRow = {
+  id: string
+  title: string
+  city: string | null
+  theme: string | null
+  min_team_size: number
+  max_team_size: number
+}
+
+type RelayInvitationJoinedMemberRow = {
+  team_id: string
 }
 
 type OwnerReputationDetail = {
@@ -194,6 +222,14 @@ export default function UserProfilePage() {
     >(null)
 
   const [
+    relayInvitations,
+    setRelayInvitations,
+  ] =
+    useState<
+      RelayInvitation[]
+    >([])
+
+  const [
     snapshots,
     setSnapshots,
   ] =
@@ -298,6 +334,7 @@ export default function UserProfilePage() {
         profileResult,
         snapshotsResult,
         reputationResult,
+        relayInvitationMembershipsResult,
       ] =
         await Promise.all([
           supabase
@@ -363,10 +400,373 @@ export default function UserProfilePage() {
               },
             }
           ),
+
+          supabase
+            .from(
+              "roam_relay_team_members"
+            )
+            .select(`
+              id,
+              team_id,
+              created_at
+            `)
+            .eq(
+              "user_id",
+              user.id
+            )
+            .eq(
+              "member_status",
+              "invited"
+            )
+            .order(
+              "created_at",
+              {
+                ascending:
+                  false,
+              }
+            ),
         ])
 
       if (cancelled) {
         return
+      }
+
+      if (
+        relayInvitationMembershipsResult.error
+      ) {
+        console.error(
+          "[profile/page] Failed to load Relay invitations:",
+          relayInvitationMembershipsResult.error
+        )
+
+        setRelayInvitations(
+          []
+        )
+      } else {
+        const invitationMemberships =
+          (
+            relayInvitationMembershipsResult.data ??
+            []
+          ) as RelayInvitationMembershipRow[]
+
+
+        if (
+          invitationMemberships.length ===
+          0
+        ) {
+          setRelayInvitations(
+            []
+          )
+        } else {
+          const teamIds =
+            Array.from(
+              new Set(
+                invitationMemberships.map(
+                  (
+                    membership
+                  ) =>
+                    membership.team_id
+                )
+              )
+            )
+
+
+          const [
+            teamsResult,
+            joinedMembersResult,
+          ] =
+            await Promise.all([
+              supabase
+                .from(
+                  "roam_relay_teams"
+                )
+                .select(`
+                  id,
+                  relay_id,
+                  status
+                `)
+                .in(
+                  "id",
+                  teamIds
+                )
+                .in(
+                  "status",
+                  [
+                    "forming",
+                    "ready",
+                    "active",
+                  ]
+                ),
+
+              supabase
+                .from(
+                  "roam_relay_team_members"
+                )
+                .select(`
+                  team_id
+                `)
+                .in(
+                  "team_id",
+                  teamIds
+                )
+                .eq(
+                  "member_status",
+                  "joined"
+                ),
+            ])
+
+
+          if (cancelled) {
+            return
+          }
+
+
+          if (
+            teamsResult.error
+          ) {
+            console.error(
+              "[profile/page] Failed to load Relay invitation teams:",
+              teamsResult.error
+            )
+
+            setRelayInvitations(
+              []
+            )
+          } else {
+            const invitationTeams =
+              (
+                teamsResult.data ??
+                []
+              ) as RelayInvitationTeamRow[]
+
+
+            const relayIds =
+              Array.from(
+                new Set(
+                  invitationTeams.map(
+                    (
+                      team
+                    ) =>
+                      team.relay_id
+                  )
+                )
+              )
+
+
+            if (
+              relayIds.length ===
+              0
+            ) {
+              setRelayInvitations(
+                []
+              )
+            } else {
+              const relaysResult =
+                await supabase
+                  .from(
+                    "roam_relays"
+                  )
+                  .select(`
+                    id,
+                    title,
+                    city,
+                    theme,
+                    min_team_size,
+                    max_team_size
+                  `)
+                  .in(
+                    "id",
+                    relayIds
+                  )
+
+
+              if (cancelled) {
+                return
+              }
+
+
+              if (
+                relaysResult.error
+              ) {
+                console.error(
+                  "[profile/page] Failed to load Relay invitation definitions:",
+                  relaysResult.error
+                )
+
+                setRelayInvitations(
+                  []
+                )
+              } else {
+                if (
+                  joinedMembersResult.error
+                ) {
+                  console.error(
+                    "[profile/page] Failed to load Relay invitation joined-member counts:",
+                    joinedMembersResult.error
+                  )
+                }
+
+
+                const invitationRelays =
+                  (
+                    relaysResult.data ??
+                    []
+                  ) as RelayInvitationRelayRow[]
+
+
+                const joinedMembers =
+                  (
+                    joinedMembersResult.data ??
+                    []
+                  ) as RelayInvitationJoinedMemberRow[]
+
+
+                const teamById =
+                  new Map(
+                    invitationTeams.map(
+                      (
+                        team
+                      ) => [
+                        team.id,
+                        team,
+                      ]
+                    )
+                  )
+
+
+                const relayById =
+                  new Map(
+                    invitationRelays.map(
+                      (
+                        relay
+                      ) => [
+                        relay.id,
+                        relay,
+                      ]
+                    )
+                  )
+
+
+                const joinedCountByTeamId =
+                  new Map<
+                    string,
+                    number
+                  >()
+
+
+                joinedMembers.forEach(
+                  (
+                    member
+                  ) => {
+                    joinedCountByTeamId.set(
+                      member.team_id,
+                      (
+                        joinedCountByTeamId.get(
+                          member.team_id
+                        ) ??
+                        0
+                      ) +
+                        1
+                    )
+                  }
+                )
+
+
+                const normalizedRelayInvitations =
+                  invitationMemberships.flatMap(
+                    (
+                      membership
+                    ): RelayInvitation[] => {
+                      const team =
+                        teamById.get(
+                          membership.team_id
+                        )
+
+
+                      if (
+                        !team
+                      ) {
+                        return []
+                      }
+
+
+                      const relay =
+                        relayById.get(
+                          team.relay_id
+                        )
+
+
+                      if (
+                        !relay
+                      ) {
+                        return []
+                      }
+
+
+                      return [
+                        {
+                          membershipId:
+                            membership.id,
+
+                          teamId:
+                            team.id,
+
+                          relayId:
+                            relay.id,
+
+                          relayTitle:
+                            relay.title,
+
+                          relayCity:
+                            relay.city,
+
+                          relayTheme:
+                            relay.theme,
+
+                          teamStatus:
+                            team.status,
+
+                          minimumTeamSize:
+                            relay.min_team_size,
+
+                          maximumTeamSize:
+                            relay.max_team_size,
+
+                          joinedMemberCount:
+                            joinedCountByTeamId.get(
+                              team.id
+                            ) ??
+                            0,
+
+                          invitedAt:
+                            membership.created_at,
+                        },
+                      ]
+                    }
+                  )
+
+
+                setRelayInvitations(
+                  normalizedRelayInvitations
+                )
+
+
+                if (
+                  normalizedRelayInvitations.length >
+                  0
+                ) {
+                  safeLogEvent(
+                    "profile_relay_invitations_loaded",
+                    {
+                      invitation_count:
+                        normalizedRelayInvitations.length,
+                    }
+                  )
+                }
+              }
+            }
+          }
+        }
       }
 
       if (
@@ -595,6 +995,151 @@ export default function UserProfilePage() {
     }
   }, [])
 
+
+  async function acceptRelayInvitation(
+    teamId:
+      string
+  ) {
+    const supabase =
+      supabaseBrowser()
+
+
+    const result =
+      await (
+        supabase.rpc as any
+      )(
+        "join_roam_relay_team",
+        {
+          p_team_id:
+            teamId,
+        }
+      )
+
+
+    if (
+      result.error
+    ) {
+      const details =
+        [
+          result.error.message,
+          result.error.code
+            ? `code=${result.error.code}`
+            : null,
+          result.error.details
+            ? `details=${result.error.details}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" | ")
+
+
+      throw new Error(
+        `[profile/page] join_roam_relay_team failed: ${details}`
+      )
+    }
+
+
+    setRelayInvitations(
+      (
+        currentInvitations
+      ) =>
+        currentInvitations.filter(
+          (
+            invitation
+          ) =>
+            invitation.teamId !==
+            teamId
+        )
+    )
+
+
+    safeLogEvent(
+      "profile_relay_invitation_accepted",
+      {
+        team_id:
+          teamId,
+      }
+    )
+
+
+    return {
+      teamId,
+    }
+  }
+
+
+  async function declineRelayInvitation(
+    teamId:
+      string
+  ) {
+    const supabase =
+      supabaseBrowser()
+
+
+    const result =
+      await (
+        supabase.rpc as any
+      )(
+        "decline_roam_relay_team_invitation",
+        {
+          p_team_id:
+            teamId,
+        }
+      )
+
+
+    if (
+      result.error
+    ) {
+      const details =
+        [
+          result.error.message,
+          result.error.code
+            ? `code=${result.error.code}`
+            : null,
+          result.error.details
+            ? `details=${result.error.details}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" | ")
+
+
+      throw new Error(
+        `[profile/page] decline_roam_relay_team_invitation failed: ${details}`
+      )
+    }
+
+
+    setRelayInvitations(
+      (
+        currentInvitations
+      ) =>
+        currentInvitations.filter(
+          (
+            invitation
+          ) =>
+            invitation.teamId !==
+            teamId
+        )
+    )
+
+
+    safeLogEvent(
+      "profile_relay_invitation_declined",
+      {
+        team_id:
+          teamId,
+      }
+    )
+
+
+    return {
+      teamId,
+    }
+  }
+
+
   const navigationItems:
     ProfileNavigationItem[] = [
       {
@@ -652,6 +1197,23 @@ export default function UserProfilePage() {
             username
           }
         />
+
+        {relayInvitations.length >
+        0 ? (
+          <div className="mt-5">
+            <RelayInvitationsPanel
+              invitations={
+                relayInvitations
+              }
+              onAccept={
+                acceptRelayInvitation
+              }
+              onDecline={
+                declineRelayInvitation
+              }
+            />
+          </div>
+        ) : null}
 
         <div className="mt-7">
           <ProfileNavigation

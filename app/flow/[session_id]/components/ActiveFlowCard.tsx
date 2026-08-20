@@ -385,6 +385,20 @@ export default function ActiveFlowCard({
     completedStops ===
       totalStops
 
+  /**
+   * Competition submission eligibility hint.
+   *
+   * Competition routes require at least 3 stops.
+   *
+   * This is deliberately UI-only. The competition submission API
+   * re-fetches the Active Flow and independently validates ownership,
+   * completion, route size, and canonical progress evidence.
+   */
+  const competitionSubmissionEligible =
+    flowCompleted &&
+    totalStops >= 3 &&
+    completedStops >= 3
+
   const orderedVenues =
     useMemo(
       () => {
@@ -941,6 +955,59 @@ export default function ActiveFlowCard({
       }
     }
 
+  /**
+   * Sends the user into competition selection.
+   *
+   * This action deliberately does NOT create a competition
+   * submission. The user must choose the competition first.
+   *
+   * The receiving competitions surface gets only the canonical
+   * source identity required to later call:
+   *
+   * POST /api/competitions/submissions
+   */
+  const handleSubmitToCompetition =
+    () => {
+      if (
+        !competitionSubmissionEligible
+      ) {
+        return
+      }
+
+      safeLogEvent(
+        'active_flow_competition_submission_clicked',
+        {
+          session_id:
+            session.id,
+
+          city:
+            session.city,
+
+          source:
+            session.source,
+
+          completed_stop_count:
+            completedStops,
+
+          total_stop_count:
+            totalStops,
+        }
+      )
+
+      const params =
+        new URLSearchParams({
+          submit_source:
+            'active_flow',
+
+          flow_session_id:
+            session.id,
+        })
+
+      router.push(
+        `/competitions?${params.toString()}`
+      )
+    }
+
   const handleCancelFlow =
     async () => {
       if (
@@ -1118,8 +1185,6 @@ export default function ActiveFlowCard({
                 </span>
               </div>
             </div>
-
-            
           </div>
 
           <div>
@@ -1231,6 +1296,19 @@ export default function ActiveFlowCard({
           ) : null}
         </CardContent>
       </Card>
+
+      {competitionSubmissionEligible ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={
+            handleSubmitToCompetition
+          }
+          className="min-h-12 w-full rounded-full border-indigo-300/20 bg-indigo-300/[0.06] font-black text-indigo-100 shadow-none transition hover:border-indigo-300/30 hover:bg-indigo-300/[0.1] hover:text-white"
+        >
+          Submit this Roam to a competition
+        </Button>
+      ) : null}
 
       {(flowCompleted ||
         flowCancelled) &&

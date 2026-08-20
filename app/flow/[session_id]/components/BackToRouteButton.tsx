@@ -1,15 +1,62 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import {
+  useRouter,
+  useSearchParams,
+} from 'next/navigation'
+
 
 export default function BackToRouteButton() {
-  const router = useRouter()
+  const router =
+    useRouter()
+
+  const searchParams =
+    useSearchParams()
+
+
+  const returnTo =
+    getSafeReturnTo(
+      searchParams?.get(
+        'return_to'
+      ) ??
+      null
+    )
+
+
+  const returnLabel =
+    getReturnLabel(
+      searchParams?.get(
+        'return_label'
+      ) ??
+      null
+    )
+
+
+  function handleBack() {
+    if (
+      returnTo
+    ) {
+      router.push(
+        returnTo
+      )
+
+      return
+    }
+
+
+    router.back()
+  }
+
 
   return (
     <button
       type="button"
-      onClick={() => router.back()}
-      aria-label="Back to map"
+      onClick={
+        handleBack
+      }
+      aria-label={
+        returnLabel
+      }
       className="
         inline-flex items-center gap-2
         rounded-xl
@@ -38,7 +85,57 @@ export default function BackToRouteButton() {
         />
       </svg>
 
-      <span>Back to Map</span>
+      <span>
+        {
+          returnLabel
+        }
+      </span>
     </button>
   )
+}
+
+
+function getSafeReturnTo(
+  value:
+    string | null
+): string | null {
+  if (
+    !value ||
+    !value.startsWith(
+      '/'
+    ) ||
+    value.startsWith(
+      '//'
+    )
+  ) {
+    return null
+  }
+
+
+  return value
+}
+
+
+function getReturnLabel(
+  value:
+    string | null
+): string {
+  if (
+    !value
+  ) {
+    return 'Back'
+  }
+
+
+  const normalized =
+    value
+      .trim()
+      .slice(
+        0,
+        60
+      )
+
+
+  return normalized ||
+    'Back'
 }
