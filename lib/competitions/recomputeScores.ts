@@ -16,9 +16,30 @@ import {
   COMPETITION_SCORING_ALGORITHM_VERSION,
 } from './scoring'
 
+import {
+  loadVenueParticipationEvidence,
+  type VenueParticipationEntryEvidence,
+} from './venueParticipationEvidence'
+
+import {
+  scoreVenueParticipationEntryV1,
+  VENUE_PARTICIPATION_SCORING_ALGORITHM_VERSION,
+  type VenueParticipationScoringAlgorithmVersion,
+  type VenueParticipationScoringEvidence,
+  type VenueParticipationScoringResult,
+} from './venueParticipationScoring'
+
 // ============================================================
 // PUBLIC CONTRACT
 // ============================================================
+
+export type CompetitionRecomputeAlgorithmVersion =
+  | CompetitionScoringAlgorithmVersion
+  | VenueParticipationScoringAlgorithmVersion
+
+export type RecomputedCompetitionScoringResult =
+  | CompetitionEntryScoringResult
+  | VenueParticipationScoringResult
 
 export interface RecomputeCompetitionScoresInput {
   competitionId: string
@@ -38,9 +59,22 @@ export interface RecomputeCompetitionScoresInput {
   snapshotType: string
 
   /**
-   * Defaults to the current canonical scoring algorithm.
+   * Optional explicit algorithm version.
+   *
+   * When omitted, the canonical algorithm is selected from the
+   * Taste Duel execution mode:
+   *
+   *   itinerary
+   *     -> taste_duel_v1
+   *
+   *   venue_participation
+   *     -> taste_duel_venue_participation_v1
+   *
+   * A caller may never force an algorithm belonging to a different
+   * execution mode.
    */
-  algorithmVersion?: CompetitionScoringAlgorithmVersion
+  algorithmVersion?:
+    CompetitionRecomputeAlgorithmVersion
 
   /**
    * Optional trusted service client for reuse/tests.
@@ -52,7 +86,8 @@ export interface RecomputedCompetitionEntryScore {
   entryId: string
   contenderSlot: number
 
-  result: CompetitionEntryScoringResult
+  result:
+    RecomputedCompetitionScoringResult
 
   snapshotId: string
   snapshotType: string
@@ -63,7 +98,7 @@ export interface RecomputeCompetitionScoresResult {
   competitionId: string
 
   algorithmVersion:
-    CompetitionScoringAlgorithmVersion
+    CompetitionRecomputeAlgorithmVersion
 
   snapshotType: string
   calculatedAt: string
@@ -80,6 +115,14 @@ export interface RecomputeCompetitionScoresResult {
 
 type CompetitionRow = {
   id: string
+
+  competition_type: string
+
+  taste_duel_execution_mode:
+    | 'itinerary'
+    | 'venue_participation'
+    | null
+
   status: string
 }
 
@@ -138,6 +181,22 @@ type CompetitionScoreSnapshotRow = {
 }
 
 // ============================================================
+// INTERNAL RECOMPUTATION CONTRACT
+// ============================================================
+
+type RecomputeModeInput = {
+  competitionId: string
+
+  snapshotType: string
+
+  algorithmVersion?:
+    CompetitionRecomputeAlgorithmVersion
+
+  serviceSupabase:
+    SupabaseClient
+}
+
+// ============================================================
 // CONSTANTS
 // ============================================================
 
@@ -148,18 +207,41 @@ const SCORABLE_COMPETITION_STATUSES =
     'completed',
   ])
 
+const TASTE_DUEL_COMPETITION_TYPE =
+  'taste_duel' as const
+
+const TASTE_DUEL_EXECUTION_MODE = {
+  ITINERARY:
+    'itinerary',
+
+  VENUE_PARTICIPATION:
+    'venue_participation',
+} as const
+
 const MIN_RATING = 1
 const MAX_RATING = 5
 
 // ============================================================
-// MAIN RECOMPUTATION
+// MAIN RECOMPUTATION / MODE DISPATCH
 // ============================================================
 
+/**
+ * Canonical score recomputation entry point.
+ *
+ * This function deliberately owns only:
+ *
+ *   - public input validation
+ *   - competition loading
+ *   - scoreable-status validation
+ *   - execution-mode dispatch
+ *
+ * Mode-specific evidence loading, scoring, and snapshot persistence
+ * belong entirely inside their respective recomputation functions.
+ */
 export async function recomputeCompetitionScores({
   competitionId,
   snapshotType,
-  algorithmVersion =
-    COMPETITION_SCORING_ALGORITHM_VERSION.V1,
+  algorithmVersion,
   serviceSupabase,
 }: RecomputeCompetitionScoresInput): Promise<RecomputeCompetitionScoresResult> {
   if (
@@ -206,6 +288,8 @@ export async function recomputeCompetitionScores({
     )
     .select(`
       id,
+      competition_type,
+      taste_duel_execution_mode,
       status
     `)
     .eq(
@@ -245,6 +329,124 @@ export async function recomputeCompetitionScores({
   }
 
   // ==========================================================
+  // TASTE DUEL EXECUTION-MODE DISPATCH
+  // ==========================================================
+  //
+  // This boundary exists before any mode-specific evidence table
+  // is queried.
+  //
+  // itinerary:
+  //
+  //   competition_participations
+  //   competition_entry_ratings
+  //   competition_head_to_head_preferences
+  //
+  // venue_participation:
+  //
+  //   competition_venue_participation_events
+  //   venue_visits
+  //
+  // Never mix those evidence systems.
+  // ==========================================================
+
+  if (
+    competition.competition_type ===
+      TASTE_DUEL_COMPETITION_TYPE
+  ) {
+    switch (
+      competition.taste_duel_execution_mode
+    ) {
+      case TASTE_DUEL_EXECUTION_MODE.ITINERARY:
+        return recomputeItineraryCompetitionScores({
+          competitionId,
+
+          snapshotType:
+            normalizedSnapshotType,
+
+          algorithmVersion,
+
+          serviceSupabase:
+            supabase,
+        })
+
+      case TASTE_DUEL_EXECUTION_MODE.VENUE_PARTICIPATION:
+        return recomputeVenueParticipationCompetitionScores({
+          competitionId,
+
+          snapshotType:
+            normalizedSnapshotType,
+
+          algorithmVersion,
+
+          serviceSupabase:
+            supabase,
+        })
+
+      default:
+        throw new CompetitionScoreRecomputeError(
+          'INVALID_TASTE_DUEL_EXECUTION_MODE',
+          `Taste Duel has invalid execution mode "${String(
+            competition.taste_duel_execution_mode
+          )}".`
+        )
+    }
+  }
+
+  /**
+   * Preserve the pre-existing behavior for any non-Taste-Duel
+   * caller reaching this service.
+   *
+   * No unrelated competition-type semantics are changed by this
+   * execution-mode refactor.
+   */
+  return recomputeItineraryCompetitionScores({
+    competitionId,
+
+    snapshotType:
+      normalizedSnapshotType,
+
+    algorithmVersion,
+
+    serviceSupabase:
+      supabase,
+  })
+}
+
+// ============================================================
+// ITINERARY RECOMPUTATION
+// ============================================================
+//
+// ITINERARY MODE ONLY.
+//
+// Canonical evidence:
+//
+//   competition_participations
+//   competition_entry_ratings
+//   competition_head_to_head_preferences
+//
+// Canonical scoring:
+//
+//   scoring.ts
+//
+// Venue-participation evidence must never be introduced here.
+// ============================================================
+
+async function recomputeItineraryCompetitionScores({
+  competitionId,
+  snapshotType,
+  algorithmVersion,
+  serviceSupabase,
+}: RecomputeModeInput): Promise<RecomputeCompetitionScoresResult> {
+  // ==========================================================
+  // ITINERARY ALGORITHM
+  // ==========================================================
+
+  const itineraryAlgorithmVersion =
+    resolveItineraryAlgorithmVersion(
+      algorithmVersion
+    )
+
+  // ==========================================================
   // APPROVED ENTRIES
   // ==========================================================
 
@@ -253,7 +455,7 @@ export async function recomputeCompetitionScores({
       entryData,
     error:
       entryError,
-  } = await supabase
+  } = await serviceSupabase
     .from(
       'competition_entries'
     )
@@ -329,6 +531,8 @@ export async function recomputeCompetitionScores({
   // ==========================================================
 
   /**
+   * ITINERARY MODE ONLY.
+   *
    * We intentionally load all participation, not only qualified
    * participation.
    *
@@ -347,7 +551,7 @@ export async function recomputeCompetitionScores({
       participationData,
     error:
       participationError,
-  } = await supabase
+  } = await serviceSupabase
     .from(
       'competition_participations'
     )
@@ -388,13 +592,26 @@ export async function recomputeCompetitionScores({
   // ==========================================================
   // RATINGS
   // ==========================================================
+  //
+  // ITINERARY MODE ONLY.
+  //
+  // Canonical itinerary rating source:
+  //
+  //   competition_entry_ratings
+  //
+  // Venue-participation rating evidence comes from:
+  //
+  //   competition_venue_participation_events.venue_visit_id
+  //                         ↓
+  //                 venue_visits.rating
+  // ==========================================================
 
   const {
     data:
       ratingData,
     error:
       ratingError,
-  } = await supabase
+  } = await serviceSupabase
     .from(
       'competition_entry_ratings'
     )
@@ -433,13 +650,16 @@ export async function recomputeCompetitionScores({
   // ==========================================================
   // HEAD-TO-HEAD PREFERENCES
   // ==========================================================
+  //
+  // ITINERARY MODE ONLY.
+  // ==========================================================
 
   const {
     data:
       preferenceData,
     error:
       preferenceError,
-  } = await supabase
+  } = await serviceSupabase
     .from(
       'competition_head_to_head_preferences'
     )
@@ -605,7 +825,7 @@ export async function recomputeCompetitionScores({
         const result =
           scoreCompetitionEntry(
             evidence,
-            algorithmVersion
+            itineraryAlgorithmVersion
           )
 
         return {
@@ -651,7 +871,7 @@ export async function recomputeCompetitionScores({
           scored.entry.id,
 
         snapshot_type:
-          normalizedSnapshotType,
+          snapshotType,
 
         calculated_at:
           calculatedAt,
@@ -670,15 +890,13 @@ export async function recomputeCompetitionScores({
    *   no UPDATE
    *   no DELETE
    *   no upsert
-   *
-   * A failed insert does not partially replace previous snapshots.
    */
   const {
     data:
       snapshotData,
     error:
       snapshotError,
-  } = await supabase
+  } = await serviceSupabase
     .from(
       'competition_entry_score_snapshots'
     )
@@ -712,7 +930,7 @@ export async function recomputeCompetitionScores({
 
   if (
     savedSnapshots.length !==
-    scoredEntries.length
+      scoredEntries.length
   ) {
     throw new CompetitionScoreRecomputeError(
       'SNAPSHOT_COUNT_MISMATCH',
@@ -739,10 +957,10 @@ export async function recomputeCompetitionScores({
   return {
     competitionId,
 
-    algorithmVersion,
+    algorithmVersion:
+      itineraryAlgorithmVersion,
 
-    snapshotType:
-      normalizedSnapshotType,
+    snapshotType,
 
     calculatedAt,
 
@@ -794,7 +1012,556 @@ export async function recomputeCompetitionScores({
 }
 
 // ============================================================
+// VENUE-PARTICIPATION RECOMPUTATION
+// ============================================================
+//
+// VENUE-PARTICIPATION MODE ONLY.
+//
+// This branch deliberately does not query:
+//
+//   competition_participations
+//   competition_entry_ratings
+//   competition_head_to_head_preferences
+//
+// Canonical evidence is owned by:
+//
+//   venueParticipationEvidence.ts
+//
+// Canonical scoring is owned by:
+//
+//   venueParticipationScoring.ts
+//
+// The shared snapshot table preserves semantic boundaries:
+//
+// Shared concepts:
+//
+//   rating_count
+//   average_rating
+//   experience_score
+//   confidence_score
+//   final_score
+//
+// Venue-participation-specific concepts:
+//
+//   unique_venue_participant_count
+//   unique_venue_visitor_count
+//   weighted_participation
+//   visited_venue_count
+//   venue_count
+//   venue_breadth_rate
+//   participation_confidence
+//   rating_confidence
+//   depth_confidence
+//
+// Itinerary-only concepts remain explicitly:
+//
+//   0
+//   or
+//   NULL
+//
+// and are never repurposed for venue participation.
+// ============================================================
+
+async function recomputeVenueParticipationCompetitionScores({
+  competitionId,
+  snapshotType,
+  algorithmVersion,
+  serviceSupabase,
+}: RecomputeModeInput): Promise<RecomputeCompetitionScoresResult> {
+  const venueAlgorithmVersion =
+    resolveVenueParticipationAlgorithmVersion(
+      algorithmVersion
+    )
+
+  // ==========================================================
+  // CANONICAL VENUE-PARTICIPATION EVIDENCE
+  // ==========================================================
+
+  const evidence =
+    await loadVenueParticipationEvidence({
+      competitionId,
+
+      serviceSupabase,
+    })
+
+  // ==========================================================
+  // SCORE EACH SIDE
+  // ==========================================================
+
+  const scoredEntries =
+    evidence.entries.map(
+      (
+        entry
+      ) => {
+        const scoringEvidence =
+          toVenueParticipationScoringEvidence(
+            entry
+          )
+
+        const result =
+          scoreVenueParticipationEntryV1(
+            scoringEvidence
+          )
+
+        if (
+          result.algorithmVersion !==
+            venueAlgorithmVersion
+        ) {
+          throw new CompetitionScoreRecomputeError(
+            'ALGORITHM_VERSION_MISMATCH',
+            [
+              'Venue-participation scorer returned algorithm',
+              `"${result.algorithmVersion}" but recomputation`,
+              `expected "${venueAlgorithmVersion}".`,
+            ].join(' ')
+          )
+        }
+
+        return {
+          entry,
+          result,
+        }
+      }
+    )
+
+  // ==========================================================
+  // SNAPSHOT TIMESTAMP
+  // ==========================================================
+
+  const calculatedAt =
+    new Date()
+      .toISOString()
+
+  // ==========================================================
+  // VENUE-PARTICIPATION SNAPSHOT BRIDGE
+  // ==========================================================
+
+  const snapshotInserts =
+    scoredEntries.map(
+      (
+        scored
+      ) => ({
+        // ------------------------------------------------------
+        // Snapshot identity / lifecycle
+        // ------------------------------------------------------
+
+        competition_id:
+          competitionId,
+
+        entry_id:
+          scored.entry
+            .competitionEntryId,
+
+        snapshot_type:
+          snapshotType,
+
+        calculated_at:
+          calculatedAt,
+
+        algorithm_version:
+          scored.result
+            .algorithmVersion,
+
+        // ------------------------------------------------------
+        // Itinerary-only participation semantics
+        // ------------------------------------------------------
+
+        participation_count:
+          0,
+
+        completed_participant_count:
+          0,
+
+        qualified_participant_count:
+          0,
+
+        cross_completer_count:
+          0,
+
+        completion_rate:
+          null,
+
+        // ------------------------------------------------------
+        // Shared rating semantics
+        // ------------------------------------------------------
+
+        rating_count:
+          scored.result
+            .ratingCount,
+
+        average_rating:
+          scored.result
+            .averageRating,
+
+        // ------------------------------------------------------
+        // Itinerary-only would-repeat semantics
+        // ------------------------------------------------------
+
+        would_repeat_response_count:
+          0,
+
+        would_repeat_count:
+          0,
+
+        would_repeat_rate:
+          null,
+
+        // ------------------------------------------------------
+        // Itinerary-only comparative semantics
+        // ------------------------------------------------------
+
+        head_to_head_preference_count:
+          0,
+
+        head_to_head_eligible_count:
+          0,
+
+        head_to_head_preference_rate:
+          null,
+
+        // ------------------------------------------------------
+        // Future generic metrics remain unused
+        // ------------------------------------------------------
+
+        replay_count:
+          null,
+
+        replay_rate:
+          null,
+
+        save_count:
+          null,
+
+        save_rate:
+          null,
+
+        // ------------------------------------------------------
+        // Score components
+        // ------------------------------------------------------
+
+        completion_score:
+          null,
+
+        experience_score:
+          scored.result
+            .ratingScore,
+
+        repeat_score:
+          null,
+
+        comparative_score:
+          null,
+
+        // ------------------------------------------------------
+        // Official aggregate score
+        // ------------------------------------------------------
+
+        confidence_score:
+          scored.result
+            .confidenceScore,
+
+        final_score:
+          scored.result
+            .finalScore,
+
+        // ------------------------------------------------------
+        // Venue-participation canonical evidence
+        // ------------------------------------------------------
+
+        unique_venue_participant_count:
+          scored.result
+            .uniqueParticipantCount,
+
+        unique_venue_visitor_count:
+          scored.result
+            .uniqueVenueVisitorCount,
+
+        weighted_participation:
+          scored.result
+            .weightedParticipation,
+
+        visited_venue_count:
+          scored.result
+            .visitedVenueCount,
+
+        venue_count:
+          scored.result
+            .venueCount,
+
+        venue_breadth_rate:
+          scored.result
+            .breadthRate,
+
+        // ------------------------------------------------------
+        // Venue-participation confidence audit
+        // ------------------------------------------------------
+
+        participation_confidence:
+          scored.result
+            .participantConfidence,
+
+        rating_confidence:
+          scored.result
+            .ratingConfidence,
+
+        depth_confidence:
+          scored.result
+            .depthConfidence,
+      })
+    )
+
+  // ==========================================================
+  // APPEND-ONLY SNAPSHOT INSERT
+  // ==========================================================
+
+  const {
+    data:
+      snapshotData,
+    error:
+      snapshotError,
+  } = await serviceSupabase
+    .from(
+      'competition_entry_score_snapshots'
+    )
+    .insert(
+      snapshotInserts
+    )
+    .select(`
+      id,
+      competition_id,
+      entry_id,
+      snapshot_type,
+      calculated_at,
+      algorithm_version
+    `)
+
+  if (
+    snapshotError
+  ) {
+    throw new CompetitionScoreRecomputeError(
+      'SNAPSHOT_INSERT_FAILED',
+      'Could not persist venue-participation score snapshots.',
+      snapshotError
+    )
+  }
+
+  const savedSnapshots =
+    (
+      snapshotData ??
+      []
+    ) as CompetitionScoreSnapshotRow[]
+
+  if (
+    savedSnapshots.length !==
+      scoredEntries.length
+  ) {
+    throw new CompetitionScoreRecomputeError(
+      'SNAPSHOT_COUNT_MISMATCH',
+      `Expected ${scoredEntries.length} venue-participation score snapshots but received ${savedSnapshots.length}.`
+    )
+  }
+
+  const snapshotByEntryId =
+    new Map(
+      savedSnapshots.map(
+        (
+          snapshot
+        ) => [
+          snapshot.entry_id,
+          snapshot,
+        ]
+      )
+    )
+
+  // ==========================================================
+  // RESPONSE
+  // ==========================================================
+
+  return {
+    competitionId,
+
+    algorithmVersion:
+      venueAlgorithmVersion,
+
+    snapshotType,
+
+    calculatedAt,
+
+    entryCount:
+      scoredEntries.length,
+
+    entries:
+      scoredEntries.map(
+        (
+          scored
+        ) => {
+          const snapshot =
+            snapshotByEntryId.get(
+              scored.entry
+                .competitionEntryId
+            )
+
+          if (
+            !snapshot
+          ) {
+            throw new CompetitionScoreRecomputeError(
+              'SNAPSHOT_ENTRY_MISMATCH',
+              `No persisted venue-participation score snapshot was returned for entry "${scored.entry.competitionEntryId}".`
+            )
+          }
+
+          if (
+            snapshot.algorithm_version !==
+              scored.result
+                .algorithmVersion
+          ) {
+            throw new CompetitionScoreRecomputeError(
+              'SNAPSHOT_ALGORITHM_MISMATCH',
+              [
+                'Persisted venue-participation snapshot',
+                `"${snapshot.id}" returned algorithm`,
+                `"${snapshot.algorithm_version}" instead of`,
+                `"${scored.result.algorithmVersion}".`,
+              ].join(' ')
+            )
+          }
+
+          return {
+            entryId:
+              scored.entry
+                .competitionEntryId,
+
+            contenderSlot:
+              scored.entry
+                .contenderSlot,
+
+            result:
+              scored.result,
+
+            snapshotId:
+              snapshot.id,
+
+            snapshotType:
+              snapshot.snapshot_type,
+
+            calculatedAt:
+              snapshot.calculated_at,
+          }
+        }
+      ),
+  }
+}
+
+// ============================================================
+// VENUE-PARTICIPATION EVIDENCE ADAPTER
+// ============================================================
+
+function toVenueParticipationScoringEvidence(
+  evidence:
+    VenueParticipationEntryEvidence
+): VenueParticipationScoringEvidence {
+  return {
+    uniqueParticipantCount:
+      evidence.uniqueParticipantCount,
+
+    uniqueVenueVisitorCount:
+      evidence.uniqueVenueVisitorCount,
+
+    weightedParticipation:
+      evidence.weightedParticipation,
+
+    ratingCount:
+      evidence.ratingCount,
+
+    averageRating:
+      evidence.averageRating,
+
+    venueCount:
+      evidence.venueCount,
+
+    visitedVenueCount:
+      evidence.visitedVenueCount,
+
+    breadthRate:
+      evidence.breadthRate,
+  }
+}
+
+// ============================================================
+// EXECUTION-MODE ALGORITHM RESOLUTION
+// ============================================================
+
+function resolveItineraryAlgorithmVersion(
+  requestedVersion?:
+    CompetitionRecomputeAlgorithmVersion
+): CompetitionScoringAlgorithmVersion {
+  if (
+    requestedVersion ===
+      undefined
+  ) {
+    return (
+      COMPETITION_SCORING_ALGORITHM_VERSION
+        .V1
+    )
+  }
+
+  if (
+    requestedVersion !==
+      COMPETITION_SCORING_ALGORITHM_VERSION
+        .V1
+  ) {
+    throw new CompetitionScoreRecomputeError(
+      'ALGORITHM_EXECUTION_MODE_MISMATCH',
+      [
+        `Algorithm "${requestedVersion}" cannot score`,
+        'an itinerary Taste Duel.',
+      ].join(' ')
+    )
+  }
+
+  return requestedVersion
+}
+
+function resolveVenueParticipationAlgorithmVersion(
+  requestedVersion?:
+    CompetitionRecomputeAlgorithmVersion
+): VenueParticipationScoringAlgorithmVersion {
+  if (
+    requestedVersion ===
+      undefined
+  ) {
+    return (
+      VENUE_PARTICIPATION_SCORING_ALGORITHM_VERSION
+    )
+  }
+
+  if (
+    requestedVersion !==
+      VENUE_PARTICIPATION_SCORING_ALGORITHM_VERSION
+  ) {
+    throw new CompetitionScoreRecomputeError(
+      'ALGORITHM_EXECUTION_MODE_MISMATCH',
+      [
+        `Algorithm "${requestedVersion}" cannot score`,
+        'a venue-participation Taste Duel.',
+      ].join(' ')
+    )
+  }
+
+  return requestedVersion
+}
+
+// ============================================================
 // EVIDENCE BUILDER
+// ============================================================
+//
+// ITINERARY MODE ONLY.
+//
+// Venue-participation evidence is built by:
+//
+//   lib/competitions/venueParticipationEvidence.ts
+//
+// Do not extend this adapter with venue-participation semantics.
 // ============================================================
 
 function buildEntryScoringEvidence({
@@ -1235,7 +2002,7 @@ function average(
 ): number {
   if (
     values.length ===
-    0
+      0
   ) {
     throw new CompetitionScoreRecomputeError(
       'EMPTY_AVERAGE',
@@ -1369,6 +2136,9 @@ export class CompetitionScoreRecomputeError extends Error {
     | 'COMPETITION_LOOKUP_FAILED'
     | 'COMPETITION_NOT_FOUND'
     | 'COMPETITION_NOT_SCORABLE'
+    | 'INVALID_TASTE_DUEL_EXECUTION_MODE'
+    | 'ALGORITHM_EXECUTION_MODE_MISMATCH'
+    | 'ALGORITHM_VERSION_MISMATCH'
     | 'ENTRY_LOOKUP_FAILED'
     | 'INVALID_ENTRY_COUNT'
     | 'INVALID_ENTRY_ID'
@@ -1381,6 +2151,7 @@ export class CompetitionScoreRecomputeError extends Error {
     | 'SNAPSHOT_INSERT_FAILED'
     | 'SNAPSHOT_COUNT_MISMATCH'
     | 'SNAPSHOT_ENTRY_MISMATCH'
+    | 'SNAPSHOT_ALGORITHM_MISMATCH'
     | 'EMPTY_AVERAGE'
     | 'SUPABASE_URL_MISSING'
     | 'SERVICE_ROLE_KEY_MISSING'

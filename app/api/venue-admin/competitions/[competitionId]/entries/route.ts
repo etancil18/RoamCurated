@@ -30,6 +30,14 @@ type RouteContext = {
 type CreateEntryBody = {
   submission_id?: unknown
   contender_slot?: unknown
+
+  /**
+   * VENUE-PARTICIPATION MODE ONLY.
+   *
+   * Curated sides are authored directly from canonical venue IDs
+   * and do not originate from competition_submissions.
+   */
+  venue_ids?: unknown
 }
 
 type CompetitionStatus =
@@ -40,8 +48,18 @@ type CompetitionStatus =
   | 'completed'
   | 'cancelled'
 
+type TasteDuelExecutionMode =
+  | 'itinerary'
+  | 'venue_participation'
+
 type CompetitionRow = {
   id: string
+
+  competition_type: string
+
+  taste_duel_execution_mode:
+    TasteDuelExecutionMode | null
+
   status: CompetitionStatus
   max_entries: number
 }
@@ -61,6 +79,10 @@ type SubmissionRow = {
   status: string
   submitted_at: string
   competition_entry_id: string | null
+}
+
+type VenueRow = {
+  id: string
 }
 
 // ============================================================
@@ -155,6 +177,17 @@ export async function POST(
           () => ({})
         )) as CreateEntryBody
 
+    /**
+     * Do not require submission_id before loading the competition.
+     *
+     * itinerary:
+     *
+     *   submission_id + contender_slot
+     *
+     * venue_participation:
+     *
+     *   contender_slot + venue_ids
+     */
     const submissionId =
       typeof body.submission_id ===
         'string'
@@ -162,23 +195,6 @@ export async function POST(
             .trim()
             .toLowerCase()
         : ''
-
-    if (
-      !submissionId ||
-      !isValidUuid(
-        submissionId
-      )
-    ) {
-      return noStoreJson(
-        {
-          error:
-            'Invalid or missing submission_id.',
-        },
-        {
-          status: 400,
-        }
-      )
-    }
 
     const contenderSlot =
       body.contender_slot
@@ -221,9 +237,13 @@ export async function POST(
       .from(
         'competitions'
       )
-      .select(
-        'id, status, max_entries'
-      )
+      .select(`
+        id,
+        competition_type,
+        taste_duel_execution_mode,
+        status,
+        max_entries
+      `)
       .eq(
         'id',
         normalizedCompetitionId
@@ -239,7 +259,9 @@ export async function POST(
           competitionId:
             normalizedCompetitionId,
 
-          submissionId,
+          submissionId:
+            submissionId ||
+            null,
 
           adminUserId:
             auth.user.id,
@@ -305,6 +327,91 @@ export async function POST(
         {
           error:
             `Contender slot ${contenderSlot} is outside this competition's ${competition.max_entries}-entry limit.`,
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    // ========================================================
+    // TASTE DUEL EXECUTION-MODE DISPATCH
+    // ========================================================
+    //
+    // itinerary:
+    //
+    //   preserve the existing approved-submission promotion path
+    //   below exactly.
+    //
+    // venue_participation:
+    //
+    //   create an admin-curated side directly from venue IDs.
+    //
+    //   No:
+    //
+    //     competition_submission
+    //     user owner
+    //     Active Flow provenance
+    //     Visit History provenance
+    //
+    // ========================================================
+
+    if (
+      competition.competition_type ===
+        'taste_duel' &&
+      competition.taste_duel_execution_mode ===
+        'venue_participation'
+    ) {
+      return createVenueParticipationEntry({
+        serviceSupabase,
+
+        competitionId:
+          normalizedCompetitionId,
+
+        contenderSlot,
+
+        venueIdsValue:
+          body.venue_ids,
+
+        adminUserId:
+          auth.user.id,
+
+        adminEmail:
+          auth.user.email,
+      })
+    }
+
+    if (
+      competition.competition_type !==
+        'taste_duel' ||
+      competition.taste_duel_execution_mode !==
+        'itinerary'
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'Competition does not support this contender creation path.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    // ========================================================
+    // ITINERARY SUBMISSION CONTRACT
+    // ========================================================
+
+    if (
+      !submissionId ||
+      !isValidUuid(
+        submissionId
+      )
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'Invalid or missing submission_id.',
         },
         {
           status: 400,
@@ -1070,6 +1177,515 @@ export async function POST(
 }
 
 // ============================================================
+// VENUE-PARTICIPATION ENTRY CREATION
+// ============================================================
+//
+// VENUE-PARTICIPATION MODE ONLY.
+//
+// Curated sides are configuration, not user submissions.
+//
+// Therefore an official side deliberately has:
+//
+//   user_id                = NULL
+//   source_type            = NULL
+//   source_flow_session_id = NULL
+//   source_visit_date      = NULL
+//
+// while:
+//
+//   venue_ids
+//
+// contains the canonical configured venues belonging to that side.
+//
+// Database triggers remain the final authority for:
+//
+//   - execution-mode semantics
+//   - contender-slot limits
+//   - duplicate venues within one side
+//   - venue exclusivity across sibling sides
+// ============================================================
+
+async function createVenueParticipationEntry({
+  serviceSupabase,
+  competitionId,
+  contenderSlot,
+  venueIdsValue,
+  adminUserId,
+  adminEmail,
+}: {
+  serviceSupabase:
+    ReturnType<
+      typeof createCompetitionServiceClient
+    >
+
+  competitionId:
+    string
+
+  contenderSlot:
+    number
+
+  venueIdsValue:
+    unknown
+
+  adminUserId:
+    string
+
+  adminEmail:
+    string
+}) {
+  // ==========================================================
+  // NORMALIZE VENUE IDS
+  // ==========================================================
+
+  const venueIds =
+    normalizeVenueIds(
+      venueIdsValue
+    )
+
+  if (
+    !venueIds ||
+    venueIds.length ===
+      0
+  ) {
+    return noStoreJson(
+      {
+        error:
+          'venue_ids must contain at least one valid venue ID.',
+      },
+      {
+        status: 400,
+      }
+    )
+  }
+
+  const uniqueVenueIds =
+    [
+      ...new Set(
+        venueIds
+      ),
+    ]
+
+  if (
+    uniqueVenueIds.length !==
+      venueIds.length
+  ) {
+    return noStoreJson(
+      {
+        error:
+          'venue_ids cannot contain duplicate venues.',
+      },
+      {
+        status: 400,
+      }
+    )
+  }
+
+  // ==========================================================
+  // VALIDATE SLOT AVAILABILITY
+  // ==========================================================
+
+  const {
+    data:
+      occupiedSlotEntry,
+    error:
+      occupiedSlotError,
+  } = await serviceSupabase
+    .from(
+      'competition_entries'
+    )
+    .select(
+      'id, status'
+    )
+    .eq(
+      'competition_id',
+      competitionId
+    )
+    .eq(
+      'contender_slot',
+      contenderSlot
+    )
+    .in(
+      'status',
+      [
+        'pending',
+        'approved',
+      ]
+    )
+    .maybeSingle()
+
+  if (
+    occupiedSlotError
+  ) {
+    console.error(
+      '[venue-admin/competitions/[competitionId]/entries] Venue-participation slot validation failed:',
+      {
+        competitionId,
+
+        contenderSlot,
+
+        adminUserId,
+
+        adminEmail,
+
+        error:
+          occupiedSlotError,
+      }
+    )
+
+    return noStoreJson(
+      {
+        error:
+          'Could not validate contender slot.',
+      },
+      {
+        status: 500,
+      }
+    )
+  }
+
+  if (
+    occupiedSlotEntry
+  ) {
+    return noStoreJson(
+      {
+        error:
+          `Contender slot ${contenderSlot} is already occupied.`,
+      },
+      {
+        status: 409,
+      }
+    )
+  }
+
+  // ==========================================================
+  // VERIFY CANONICAL VENUES EXIST
+  // ==========================================================
+
+  const {
+    data:
+      venueData,
+    error:
+      venueError,
+  } = await serviceSupabase
+    .from(
+      'venues'
+    )
+    .select(
+      'id'
+    )
+    .in(
+      'id',
+      venueIds
+    )
+
+  if (
+    venueError
+  ) {
+    console.error(
+      '[venue-admin/competitions/[competitionId]/entries] Venue-participation venue validation failed:',
+      {
+        competitionId,
+
+        contenderSlot,
+
+        venueIds,
+
+        adminUserId,
+
+        adminEmail,
+
+        error:
+          venueError,
+      }
+    )
+
+    return noStoreJson(
+      {
+        error:
+          'Could not validate competition venues.',
+      },
+      {
+        status: 500,
+      }
+    )
+  }
+
+  const existingVenueIds =
+    new Set(
+      (
+        venueData ??
+        []
+      )
+        .map(
+          (
+            row
+          ) =>
+            (
+              row as VenueRow
+            ).id
+        )
+        .filter(
+          (
+            venueId
+          ): venueId is string =>
+            typeof venueId ===
+              'string' &&
+            venueId.length >
+              0
+        )
+    )
+
+  const missingVenueIds =
+    venueIds.filter(
+      (
+        venueId
+      ) =>
+        !existingVenueIds.has(
+          venueId
+        )
+    )
+
+  if (
+    missingVenueIds.length >
+      0
+  ) {
+    return noStoreJson(
+      {
+        error:
+          'One or more venue_ids do not reference canonical venues.',
+
+        invalidVenueIds:
+          missingVenueIds,
+      },
+      {
+        status: 400,
+      }
+    )
+  }
+
+  // ==========================================================
+  // CREATE CURATED OFFICIAL ENTRY
+  // ==========================================================
+
+  const now =
+    new Date()
+      .toISOString()
+
+  const {
+    data:
+      entry,
+    error:
+      insertError,
+  } = await serviceSupabase
+    .from(
+      'competition_entries'
+    )
+    .insert({
+      competition_id:
+        competitionId,
+
+      /**
+       * Curated venue-participation sides do not have entrant
+       * ownership.
+       */
+      user_id:
+        null,
+
+      contender_slot:
+        contenderSlot,
+
+      /**
+       * Venue-participation sides do not originate from itinerary
+       * evidence.
+       */
+      source_type:
+        null,
+
+      source_flow_session_id:
+        null,
+
+      source_visit_date:
+        null,
+
+      venue_ids:
+        venueIds,
+
+      /**
+       * Admin-curated sides become official immediately.
+       */
+      status:
+        'approved',
+
+      submitted_at:
+        now,
+
+      approved_at:
+        now,
+
+      withdrawn_at:
+        null,
+
+      disqualified_at:
+        null,
+
+      updated_at:
+        now,
+    })
+    .select(
+      ENTRY_SELECT
+    )
+    .single()
+
+  if (
+    insertError ||
+    !entry
+  ) {
+    const errorCode =
+      getPostgresErrorCode(
+        insertError
+      )
+
+    const errorMessage =
+      getPostgresErrorMessage(
+        insertError
+      )
+
+    if (
+      errorCode ===
+        '23505'
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'This contender slot is already assigned to an official entry.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    if (
+      errorMessage?.includes(
+        'VENUE_PARTICIPATION_VENUE_ALREADY_ASSIGNED_TO_ANOTHER_ENTRY'
+      )
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'One or more selected venues are already assigned to another active contender.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    if (
+      errorMessage?.includes(
+        'VENUE_PARTICIPATION_ENTRY_CONTAINS_DUPLICATE_VENUES'
+      )
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'venue_ids cannot contain duplicate venues.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    if (
+      errorCode ===
+        '23514' ||
+      errorCode ===
+        'P0001'
+    ) {
+      console.warn(
+        '[venue-admin/competitions/[competitionId]/entries] Venue-participation entry rejected by database invariant:',
+        {
+          competitionId,
+
+          contenderSlot,
+
+          venueIds,
+
+          adminUserId,
+
+          error:
+            insertError,
+        }
+      )
+
+      return noStoreJson(
+        {
+          error:
+            'This curated contender does not satisfy the competition entry rules.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    console.error(
+      '[venue-admin/competitions/[competitionId]/entries] Venue-participation entry insert failed:',
+      {
+        competitionId,
+
+        contenderSlot,
+
+        venueIds,
+
+        adminUserId,
+
+        adminEmail,
+
+        error:
+          insertError,
+      }
+    )
+
+    return noStoreJson(
+      {
+        error:
+          'Could not create curated competition entry.',
+      },
+      {
+        status: 500,
+      }
+    )
+  }
+
+  // ==========================================================
+  // SUCCESS
+  // ==========================================================
+
+  return noStoreJson(
+    {
+      entry,
+
+      /**
+       * There is intentionally no competition_submission for a
+       * curated venue-participation side.
+       */
+      submission:
+        null,
+
+      message:
+        `Curated Contender ${contenderSlotLabel(
+          contenderSlot
+        )} created.`,
+    },
+    {
+      status: 201,
+    }
+  )
+}
+
+// ============================================================
 // ADMIN AUTH
 // ============================================================
 
@@ -1248,6 +1864,50 @@ function isValidUuid(
   )
 }
 
+function normalizeVenueIds(
+  value: unknown
+): string[] | null {
+  if (
+    !Array.isArray(
+      value
+    )
+  ) {
+    return null
+  }
+
+  const venueIds:
+    string[] =
+    []
+
+  for (
+    const venueId
+    of value
+  ) {
+    if (
+      typeof venueId !==
+        'string'
+    ) {
+      return null
+    }
+
+    const normalizedVenueId =
+      venueId.trim()
+
+    if (
+      normalizedVenueId.length ===
+        0
+    ) {
+      return null
+    }
+
+    venueIds.push(
+      normalizedVenueId
+    )
+  }
+
+  return venueIds
+}
+
 function getPostgresErrorCode(
   error: unknown
 ): string | null {
@@ -1265,6 +1925,28 @@ function getPostgresErrorCode(
       'string'
   ) {
     return error.code
+  }
+
+  return null
+}
+
+function getPostgresErrorMessage(
+  error: unknown
+): string | null {
+  if (
+    !error ||
+    typeof error !==
+      'object'
+  ) {
+    return null
+  }
+
+  if (
+    'message' in error &&
+    typeof error.message ===
+      'string'
+  ) {
+    return error.message
   }
 
   return null

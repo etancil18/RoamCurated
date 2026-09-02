@@ -20,6 +20,7 @@ type CreateCompetitionBody = {
   category?: unknown
 
   competition_type?: unknown
+  taste_duel_execution_mode?: unknown
 
   status?: unknown
 
@@ -49,6 +50,12 @@ const ALLOWED_COMPETITION_TYPES = new Set([
   'taste_duel',
 ])
 
+const ALLOWED_TASTE_DUEL_EXECUTION_MODES =
+  new Set([
+    'itinerary',
+    'venue_participation',
+  ])
+
 // ============================================================
 // GET
 // ============================================================
@@ -75,6 +82,7 @@ export async function GET() {
       .select(`
         id,
         competition_type,
+        taste_duel_execution_mode,
         title,
         description,
         city,
@@ -214,6 +222,39 @@ export async function POST(
         {
           error:
             'Invalid competition_type.',
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    // ========================================================
+    // TASTE DUEL EXECUTION MODE
+    // ========================================================
+    //
+    // Preserve existing creation behavior:
+    //
+    //   omitted -> itinerary
+    //
+    // Venue participation must be selected explicitly.
+    // ========================================================
+
+    const tasteDuelExecutionMode =
+      readOptionalString(
+        body.taste_duel_execution_mode
+      ) ??
+      'itinerary'
+
+    if (
+      !ALLOWED_TASTE_DUEL_EXECUTION_MODES.has(
+        tasteDuelExecutionMode
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Invalid taste_duel_execution_mode.',
         },
         {
           status: 400,
@@ -412,6 +453,9 @@ export async function POST(
         competition_type:
           competitionType,
 
+        taste_duel_execution_mode:
+          tasteDuelExecutionMode,
+
         title,
 
         description,
@@ -449,6 +493,7 @@ export async function POST(
       .select(`
         id,
         competition_type,
+        taste_duel_execution_mode,
         title,
         description,
         city,
@@ -673,7 +718,7 @@ function readRequiredString(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -703,7 +748,7 @@ function readOptionalString(
 
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -733,7 +778,7 @@ function readOptionalDateTime(
 
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }

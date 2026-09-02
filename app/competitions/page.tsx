@@ -31,9 +31,18 @@ type CompetitionResultStatus =
   | 'insufficient_evidence'
   | 'void'
 
+type TasteDuelExecutionMode =
+  | 'itinerary'
+  | 'venue_participation'
+  | null
+
 type CompetitionRow = {
   id: string
   competition_type: string
+
+  taste_duel_execution_mode:
+    TasteDuelExecutionMode
+
   title: string
   description: string | null
   city: string | null
@@ -144,6 +153,7 @@ export default async function CompetitionsPage({
     .select(`
       id,
       competition_type,
+      taste_duel_execution_mode,
       title,
       description,
       city,
@@ -581,12 +591,12 @@ export default async function CompetitionsPage({
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
-                Explore anonymous
-                contender routes,
-                complete them in the
-                city, and help decide
-                which taste holds up
-                in the real world.
+                Explore competing
+                tastes in the city,
+                participate in the
+                real world, and help
+                decide which contender
+                holds up.
               </p>
             </div>
 
@@ -675,7 +685,7 @@ export default async function CompetitionsPage({
               <CompetitionSection
                 eyebrow="Happening now"
                 title="Live duels"
-                description="Routes are anonymous while the competition is live. Explore the contenders without follower counts, creator reputation, or identity shaping the result."
+                description="Explore the contenders and participate through the competition's real-world format. Live presentation stays focused on the experience rather than outside reputation."
                 competitions={
                   liveCompetitions
                 }
@@ -714,7 +724,7 @@ export default async function CompetitionsPage({
               <CompetitionSection
                 eyebrow="Decision time"
                 title="Scoring"
-                description="Participation has closed. Evidence and contender scores are being resolved before identities are revealed."
+                description="Participation has closed. Evidence and contender scores are being resolved before the result is finalized."
                 competitions={
                   scoringCompetitions
                 }
@@ -732,7 +742,7 @@ export default async function CompetitionsPage({
               <CompetitionSection
                 eyebrow="Archive"
                 title="Settled"
-                description="Finished competitions, resolved outcomes, and the routes that survived real-world exploration."
+                description="Finished competitions, resolved outcomes, and the contenders that survived real-world exploration."
                 competitions={
                   completedCompetitions
                     .slice(
@@ -951,6 +961,11 @@ function CompetitionCard({
       competition.ends_at
     )
 
+  const executionModeLabel =
+    getExecutionModeLabel(
+      competition
+    )
+
   return (
     <article
       className={[
@@ -990,6 +1005,12 @@ function CompetitionCard({
                 competition.competition_type
               )}
             </span>
+
+            {executionModeLabel ? (
+              <span className="rounded-full bg-cyan-300/[0.035] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-100/60 ring-1 ring-cyan-300/10">
+                {executionModeLabel}
+              </span>
+            ) : null}
           </div>
 
           {competition.xp_reward >
@@ -1022,10 +1043,9 @@ function CompetitionCard({
           </p>
         ) : (
           <p className="mt-3 text-sm leading-6 text-zinc-600">
-            Anonymous routes.
-            Verified exploration.
-            Taste decided in the
-            city.
+            {getCompetitionFallbackDescription(
+              competition
+            )}
           </p>
         )}
 
@@ -1106,8 +1126,18 @@ function CompetitionAction({
   submissionIntent: SubmissionIntent | null
   signedIn: boolean
 }) {
+  /**
+   * Submission flows belong only to itinerary-mode Taste Duels.
+   *
+   * Venue-participation Taste Duels accumulate participation from
+   * qualifying physical venue visits and must never expose the
+   * route-submission action.
+   */
   if (
     submissionIntent &&
+    isItineraryTasteDuel(
+      competition
+    ) &&
     (
       competition.status ===
         'live' ||
@@ -1217,14 +1247,14 @@ function SubmissionIntentBanner({
 
           <h2 className="mt-3 text-xl font-black tracking-[-0.03em] text-white">
             {isActiveFlow
-              ? 'Choose a competition for this completed Roam.'
-              : 'Choose a competition for this Visit History route.'}
+              ? 'Choose an itinerary competition for this completed Roam.'
+              : 'Choose an itinerary competition for this Visit History route.'}
           </h2>
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
             {signedIn
-              ? 'Your source stays attached while you choose. Final eligibility is revalidated by the competition submission API before anything enters moderation.'
-              : 'Your route is ready, but you must be signed in before it can be submitted for moderation.'}
+              ? 'Your source stays attached while you choose. Venue-participation Duels do not accept route submissions; participation there is recorded from qualifying venue visits.'
+              : 'Your route is ready, but you must be signed in before it can be submitted to an eligible itinerary competition.'}
           </p>
         </div>
 
@@ -1331,9 +1361,7 @@ function EmptyLiveState() {
         <p className="mt-3 text-sm leading-6 text-zinc-500">
           Upcoming competitions
           will appear here before
-          they open. Once live,
-          contender identity stays
-          hidden until settlement.
+          they open.
         </p>
       </div>
     </section>
@@ -1735,6 +1763,14 @@ function getCompetitionFooter(
     competition.status ===
     'live'
   ) {
+    if (
+      isVenueParticipationTasteDuel(
+        competition
+      )
+    ) {
+      return 'Qualifying venue visits contribute participation automatically.'
+    }
+
     return competition.anonymous_entries
       ? 'Contender identities reveal after settlement.'
       : 'Competition is currently open.'
@@ -1744,6 +1780,14 @@ function getCompetitionFooter(
     competition.status ===
     'scheduled'
   ) {
+    if (
+      isVenueParticipationTasteDuel(
+        competition
+      )
+    ) {
+      return 'Venue participation begins when the competition opens.'
+    }
+
     return 'Competition has not opened yet.'
   }
 
@@ -1756,6 +1800,74 @@ function getCompetitionFooter(
 
   return formatResultStatus(
     competition.result_status
+  )
+}
+
+function getCompetitionFallbackDescription(
+  competition: CompetitionRow
+): string {
+  if (
+    isVenueParticipationTasteDuel(
+      competition
+    )
+  ) {
+    return 'Visit qualifying contender venues. Verified participation and canonical venue ratings determine the result.'
+  }
+
+  return 'Anonymous routes. Verified exploration. Taste decided in the city.'
+}
+
+function getExecutionModeLabel(
+  competition: CompetitionRow
+): string | null {
+  if (
+    competition.competition_type !==
+      'taste_duel'
+  ) {
+    return null
+  }
+
+  switch (
+    competition.taste_duel_execution_mode
+  ) {
+    case 'venue_participation':
+      return 'Venue participation'
+
+    case 'itinerary':
+      return 'Itinerary'
+
+    default:
+      return null
+  }
+}
+
+function isItineraryTasteDuel(
+  competition: Pick<
+    CompetitionRow,
+    | 'competition_type'
+    | 'taste_duel_execution_mode'
+  >
+): boolean {
+  return (
+    competition.competition_type ===
+      'taste_duel' &&
+    competition.taste_duel_execution_mode ===
+      'itinerary'
+  )
+}
+
+function isVenueParticipationTasteDuel(
+  competition: Pick<
+    CompetitionRow,
+    | 'competition_type'
+    | 'taste_duel_execution_mode'
+  >
+): boolean {
+  return (
+    competition.competition_type ===
+      'taste_duel' &&
+    competition.taste_duel_execution_mode ===
+      'venue_participation'
   )
 }
 

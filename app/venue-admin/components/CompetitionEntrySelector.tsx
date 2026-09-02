@@ -46,11 +46,17 @@ export interface CompetitionEntrySelectorProps {
    * Optional externally supplied approved submissions.
    *
    * If omitted, the component loads eligible submissions itself.
+   *
+   * ITINERARY MODE ONLY.
    */
   approvedSubmissions?: CompetitionSubmission[]
 
   /**
-   * Called after a submission is promoted successfully.
+   * Called after an itinerary submission is promoted successfully.
+   *
+   * Venue-participation entries have no canonical submission, so
+   * that mode updates local entry state and uses
+   * onRefreshRequested instead.
    */
   onEntryCreated?: (
     entry: CompetitionEntry,
@@ -81,6 +87,23 @@ type PromoteSubmissionResponse = {
 }
 
 
+type CreateVenueParticipationEntryResponse = {
+  entry: CompetitionEntry
+}
+
+
+type VenueSearchResult = {
+  id: string
+  name: string
+  city: string | null
+}
+
+
+type VenueSearchResponse = {
+  venues: VenueSearchResult[]
+}
+
+
 // ============================================================
 // CONSTANTS
 // ============================================================
@@ -94,6 +117,18 @@ const SLOT_VALUES = [
 
 type ContenderSlot =
   (typeof SLOT_VALUES)[number]
+
+
+const VENUE_SEARCH_MINIMUM_LENGTH =
+  2
+
+
+const VENUE_SEARCH_LIMIT =
+  20
+
+
+const VENUE_SEARCH_DEBOUNCE_MS =
+  250
 
 
 // ============================================================
@@ -140,6 +175,13 @@ export default function CompetitionEntrySelector({
   ] = useState<ContenderSlot | ''>('')
 
   const [
+    selectedVenues,
+    setSelectedVenues,
+  ] = useState<VenueSearchResult[]>(
+    [],
+  )
+
+  const [
     loading,
     setLoading,
   ] = useState(true)
@@ -147,6 +189,11 @@ export default function CompetitionEntrySelector({
   const [
     promoting,
     setPromoting,
+  ] = useState(false)
+
+  const [
+    creatingVenueEntry,
+    setCreatingVenueEntry,
   ] = useState(false)
 
   const [
@@ -335,36 +382,22 @@ export default function CompetitionEntrySelector({
             || suppliedEntries
               === undefined
 
-          const shouldLoadSubmissions =
-            suppliedApprovedSubmissions
-              === undefined
+
+          const detailResponse =
+            shouldLoadDetail
+              ? await request<CompetitionDetailResponse>(
+                  `/api/venue-admin/competitions/${encodeURIComponent(
+                    competitionId,
+                  )}`,
+                )
+              : null
 
 
-          const [
-            detailResponse,
-            submissionsResponse,
-          ] =
-            await Promise.all([
-              shouldLoadDetail
-                ? request<CompetitionDetailResponse>(
-                    `/api/venue-admin/competitions/${encodeURIComponent(
-                      competitionId,
-                    )}`,
-                  )
-                : Promise.resolve(
-                    null,
-                  ),
-
-              shouldLoadSubmissions
-                ? request<SubmissionQueueResponse>(
-                    `/api/venue-admin/competitions/submissions?competitionId=${encodeURIComponent(
-                      competitionId,
-                    )}&status=approved&limit=100&offset=0`,
-                  )
-                : Promise.resolve(
-                    null,
-                  ),
-            ])
+          const resolvedCompetition =
+            suppliedCompetition
+            ?? detailResponse
+              ?.competition
+            ?? null
 
 
           if (detailResponse) {
@@ -377,6 +410,47 @@ export default function CompetitionEntrySelector({
               ?? [],
             )
           }
+
+
+          /**
+           * Submission infrastructure belongs exclusively to
+           * itinerary Taste Duels.
+           *
+           * Venue-participation contenders are curated directly
+           * and must not load or depend on approved submissions.
+           */
+          if (
+            resolvedCompetition
+              ?.taste_duel_execution_mode
+            === 'venue_participation'
+          ) {
+            setSubmissions(
+              [],
+            )
+
+            setSelectedSubmissionId(
+              '',
+            )
+          }
+
+
+          const shouldLoadSubmissions =
+            suppliedApprovedSubmissions
+              === undefined
+            &&
+            resolvedCompetition
+              ?.taste_duel_execution_mode
+              === 'itinerary'
+
+
+          const submissionsResponse =
+            shouldLoadSubmissions
+              ? await request<SubmissionQueueResponse>(
+                  `/api/venue-admin/competitions/submissions?competitionId=${encodeURIComponent(
+                    competitionId,
+                  )}&status=approved&limit=100&offset=0`,
+                )
+              : null
 
 
           if (submissionsResponse) {
@@ -419,6 +493,20 @@ export default function CompetitionEntrySelector({
 
 
   // ==========================================================
+  // EXECUTION MODE
+  // ==========================================================
+
+  const isVenueParticipationMode =
+    competition
+      ?.competition_type
+      === 'taste_duel'
+    &&
+    competition
+      .taste_duel_execution_mode
+      === 'venue_participation'
+
+
+  // ==========================================================
   // DERIVED ROSTER STATE
   // ==========================================================
 
@@ -451,6 +539,21 @@ export default function CompetitionEntrySelector({
               entry.contender_slot,
               entry,
             ],
+          ),
+        ),
+      [
+        activeEntries,
+      ],
+    )
+
+
+  const reservedVenueIds =
+    useMemo(
+      () =>
+        new Set(
+          activeEntries.flatMap(
+            (entry) =>
+              entry.venue_ids,
           ),
         ),
       [
@@ -520,19 +623,22 @@ export default function CompetitionEntrySelector({
   const eligibleSubmissions =
     useMemo(
       () =>
-        submissions.filter(
-          (submission) =>
-            submission.status
-              === 'approved'
-            &&
-            submission.competition_entry_id
-              === null
-            &&
-            !promotedSubmissionIds.has(
-              submission.id,
+        isVenueParticipationMode
+          ? []
+          : submissions.filter(
+              (submission) =>
+                submission.status
+                  === 'approved'
+              &&
+              submission.competition_entry_id
+                === null
+              &&
+              !promotedSubmissionIds.has(
+                submission.id,
+              ),
             ),
-        ),
       [
+        isVenueParticipationMode,
         promotedSubmissionIds,
         submissions,
       ],
@@ -551,6 +657,19 @@ export default function CompetitionEntrySelector({
       [
         eligibleSubmissions,
         selectedSubmissionId,
+      ],
+    )
+
+
+  const selectedVenueIds =
+    useMemo(
+      () =>
+        selectedVenues.map(
+          (venue) =>
+            venue.id,
+        ),
+      [
+        selectedVenues,
       ],
     )
 
@@ -578,6 +697,21 @@ export default function CompetitionEntrySelector({
   useEffect(
     () => {
       if (
+        isVenueParticipationMode
+      ) {
+        if (
+          selectedSubmissionId
+        ) {
+          setSelectedSubmissionId(
+            '',
+          )
+        }
+
+        return
+      }
+
+
+      if (
         selectedSubmissionId
         &&
         eligibleSubmissions.some(
@@ -596,6 +730,7 @@ export default function CompetitionEntrySelector({
     },
     [
       eligibleSubmissions,
+      isVenueParticipationMode,
       selectedSubmissionId,
     ],
   )
@@ -626,13 +761,24 @@ export default function CompetitionEntrySelector({
 
 
   // ==========================================================
-  // PROMOTION
+  // ITINERARY PROMOTION
   // ==========================================================
 
   async function promoteSelectedSubmission() {
     if (!competition) {
       setError(
         'Competition could not be loaded.',
+      )
+
+      return
+    }
+
+
+    if (
+      isVenueParticipationMode
+    ) {
+      setError(
+        'Venue-participation contenders are curated directly and cannot be created from submissions.',
       )
 
       return
@@ -792,6 +938,194 @@ export default function CompetitionEntrySelector({
 
 
   // ==========================================================
+  // VENUE-PARTICIPATION ENTRY CREATION
+  // ==========================================================
+
+  async function createVenueParticipationEntry() {
+    if (!competition) {
+      setError(
+        'Competition could not be loaded.',
+      )
+
+      return
+    }
+
+
+    if (
+      !isVenueParticipationMode
+    ) {
+      setError(
+        'Curated venue entries are available only for venue-participation Taste Duels.',
+      )
+
+      return
+    }
+
+
+    if (
+      configurationLocked
+    ) {
+      setError(
+        'Completed or cancelled competitions cannot accept new entries.',
+      )
+
+      return
+    }
+
+
+    if (
+      rosterFull
+    ) {
+      setError(
+        'All contender slots are already filled.',
+      )
+
+      return
+    }
+
+
+    if (!selectedSlot) {
+      setError(
+        'Select an available contender slot.',
+      )
+
+      return
+    }
+
+
+    if (
+      !availableSlots.includes(
+        selectedSlot,
+      )
+    ) {
+      setError(
+        'That contender slot is no longer available.',
+      )
+
+      return
+    }
+
+
+    if (
+      selectedVenueIds.length ===
+      0
+    ) {
+      setError(
+        'Select at least one venue.',
+      )
+
+      return
+    }
+
+
+    if (
+      hasDuplicateValues(
+        selectedVenueIds,
+      )
+    ) {
+      setError(
+        'A venue may appear only once within a contender.',
+      )
+
+      return
+    }
+
+
+    if (
+      selectedVenueIds.some(
+        (venueId) =>
+          reservedVenueIds.has(
+            venueId,
+          ),
+      )
+    ) {
+      setError(
+        'One or more selected venues are already assigned to another active contender.',
+      )
+
+      return
+    }
+
+
+    setCreatingVenueEntry(true)
+    setError(null)
+    setNotice(null)
+
+
+    try {
+      const data =
+        await request<CreateVenueParticipationEntryResponse>(
+          `/api/venue-admin/competitions/${encodeURIComponent(
+            competitionId,
+          )}/entries`,
+          {
+            method: 'POST',
+
+            body:
+              JSON.stringify({
+                contender_slot:
+                  selectedSlot,
+
+                venue_ids:
+                  selectedVenueIds,
+              }),
+          },
+        )
+
+
+      setEntries(
+        (current) => {
+          const exists =
+            current.some(
+              (entry) =>
+                entry.id
+                === data.entry.id,
+            )
+
+          if (exists) {
+            return current.map(
+              (entry) =>
+                entry.id
+                  === data.entry.id
+                  ? data.entry
+                  : entry,
+            )
+          }
+
+          return [
+            ...current,
+            data.entry,
+          ]
+        },
+      )
+
+
+      setSelectedVenues(
+        [],
+      )
+
+
+      setNotice(
+        `Curated venues assigned to Contender ${contenderSlotLabel(
+          data.entry.contender_slot,
+        )}.`,
+      )
+
+
+      onRefreshRequested?.()
+    } catch (createError) {
+      setError(
+        getErrorMessage(
+          createError,
+        ),
+      )
+    } finally {
+      setCreatingVenueEntry(false)
+    }
+  }
+
+
+  // ==========================================================
   // RENDER
   // ==========================================================
 
@@ -809,8 +1143,9 @@ export default function CompetitionEntrySelector({
             </h2>
 
             <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
-              Promote approved user submissions into the competition&apos;s
-              official 2–4 contender roster.
+              {isVenueParticipationMode
+                ? 'Build each contender from curated venues. Venue-participation sides are not owned by a user and are not promoted from route submissions.'
+                : 'Promote approved user submissions into the competition\u2019s official 2\u20134 contender roster.'}
             </p>
           </div>
 
@@ -858,167 +1193,1101 @@ export default function CompetitionEntrySelector({
           />
 
 
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5 sm:p-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h3 className="font-semibold text-white">
-                  Promote approved submission
-                </h3>
-
-                <p className="mt-1 text-sm leading-5 text-neutral-500">
-                  Approval confirms route eligibility. Promotion assigns one
-                  of the final contender slots.
-                </p>
-              </div>
-
-              <div className="text-xs text-neutral-500">
-                {activeEntries.length}/{maxEntries} filled
-              </div>
-            </div>
-
-
-            {configurationLocked ? (
-              <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-sm text-neutral-500">
-                This competition is {humanize(competition.status)} and its
-                contender roster is locked.
-              </div>
-            ) : rosterFull ? (
-              <div className="mt-5 rounded-xl border border-emerald-900/60 bg-emerald-950/20 p-4 text-sm text-emerald-200">
-                All {maxEntries} contender slots are filled.
-              </div>
-            ) : eligibleSubmissions.length === 0 ? (
-              <div className="mt-5 rounded-xl border border-dashed border-neutral-800 p-6 text-center text-sm text-neutral-600">
-                No approved, unassigned submissions are currently available.
-              </div>
-            ) : (
-              <div className="mt-5 space-y-5">
-                <AdminField
-                  label="Approved submission"
-                >
-                  <select
-                    value={
-                      selectedSubmissionId
-                    }
-                    onChange={(event) =>
-                      setSelectedSubmissionId(
-                        event.target.value,
-                      )
-                    }
-                    disabled={promoting}
-                    className={
-                      ADMIN_INPUT_CLASS
-                    }
-                  >
-                    {eligibleSubmissions.map(
-                      (submission) => (
-                        <option
-                          key={
-                            submission.id
-                          }
-                          value={
-                            submission.id
-                          }
-                        >
-                          {submissionLabel(
-                            submission,
-                          )}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </AdminField>
-
-
-                {selectedSubmission && (
-                  <SubmissionPreview
-                    submission={
-                      selectedSubmission
-                    }
-                  />
-                )}
-
-
-                <AdminField
-                  label="Contender slot"
-                >
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {competitionSlots.map(
-                      (slot) => {
-                        const occupied =
-                          activeEntryBySlot.has(
-                            slot,
-                          )
-
-                        const selected =
-                          selectedSlot
-                          === slot
-
-                        return (
-                          <button
-                            key={slot}
-                            type="button"
-                            disabled={
-                              occupied
-                              || promoting
-                            }
-                            onClick={() =>
-                              setSelectedSlot(
-                                slot,
-                              )
-                            }
-                            className={[
-                              'min-h-11 rounded-lg border text-sm font-semibold transition disabled:cursor-not-allowed',
-
-                              occupied
-                                ? 'border-neutral-900 bg-neutral-950 text-neutral-700'
-                                : selected
-                                  ? 'border-white bg-white text-black'
-                                  : 'border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800',
-                            ].join(' ')}
-                          >
-                            {occupied
-                              ? `${contenderSlotLabel(
-                                  slot,
-                                )} · Filled`
-                              : `Contender ${contenderSlotLabel(
-                                  slot,
-                                )}`}
-                          </button>
-                        )
-                      },
-                    )}
-                  </div>
-                </AdminField>
-
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    void promoteSelectedSubmission()
-                  }
-                  disabled={
-                    promoting
-                    || !selectedSubmission
-                    || !selectedSlot
-                  }
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-white px-4 text-sm font-semibold text-black transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {promoting
-                    ? 'Promoting…'
-                    : `Make Contender ${
-                        selectedSlot
-                          ? contenderSlotLabel(
-                              selectedSlot,
-                            )
-                          : ''
-                      }`}
-                </button>
-              </div>
-            )}
-          </div>
+          {isVenueParticipationMode ? (
+            <VenueParticipationEntryCreator
+              competition={competition}
+              slots={competitionSlots}
+              entriesBySlot={activeEntryBySlot}
+              activeEntryCount={
+                activeEntries.length
+              }
+              maxEntries={
+                maxEntries
+              }
+              rosterFull={
+                rosterFull
+              }
+              configurationLocked={
+                configurationLocked
+              }
+              selectedSlot={
+                selectedSlot
+              }
+              setSelectedSlot={
+                setSelectedSlot
+              }
+              selectedVenues={
+                selectedVenues
+              }
+              setSelectedVenues={
+                setSelectedVenues
+              }
+              reservedVenueIds={
+                reservedVenueIds
+              }
+              creating={
+                creatingVenueEntry
+              }
+              onCreate={() =>
+                void createVenueParticipationEntry()
+              }
+            />
+          ) : (
+            <ItineraryEntryPromoter
+              competition={competition}
+              slots={competitionSlots}
+              entriesBySlot={activeEntryBySlot}
+              activeEntryCount={
+                activeEntries.length
+              }
+              maxEntries={
+                maxEntries
+              }
+              rosterFull={
+                rosterFull
+              }
+              configurationLocked={
+                configurationLocked
+              }
+              eligibleSubmissions={
+                eligibleSubmissions
+              }
+              selectedSubmissionId={
+                selectedSubmissionId
+              }
+              setSelectedSubmissionId={
+                setSelectedSubmissionId
+              }
+              selectedSubmission={
+                selectedSubmission
+              }
+              selectedSlot={
+                selectedSlot
+              }
+              setSelectedSlot={
+                setSelectedSlot
+              }
+              promoting={
+                promoting
+              }
+              onPromote={() =>
+                void promoteSelectedSubmission()
+              }
+            />
+          )}
         </>
       )}
     </section>
+  )
+}
+
+
+// ============================================================
+// ITINERARY ENTRY PROMOTION UI
+// ============================================================
+
+function ItineraryEntryPromoter({
+  competition,
+  slots,
+  entriesBySlot,
+  activeEntryCount,
+  maxEntries,
+  rosterFull,
+  configurationLocked,
+  eligibleSubmissions,
+  selectedSubmissionId,
+  setSelectedSubmissionId,
+  selectedSubmission,
+  selectedSlot,
+  setSelectedSlot,
+  promoting,
+  onPromote,
+}: {
+  competition: Competition
+
+  slots: readonly ContenderSlot[]
+
+  entriesBySlot: Map<
+    ContenderSlot,
+    CompetitionEntry
+  >
+
+  activeEntryCount: number
+
+  maxEntries: 2 | 3 | 4
+
+  rosterFull: boolean
+
+  configurationLocked: boolean
+
+  eligibleSubmissions:
+    CompetitionSubmission[]
+
+  selectedSubmissionId: string
+
+  setSelectedSubmissionId: (
+    value: string,
+  ) => void
+
+  selectedSubmission:
+    CompetitionSubmission | null
+
+  selectedSlot:
+    ContenderSlot | ''
+
+  setSelectedSlot: (
+    value: ContenderSlot,
+  ) => void
+
+  promoting: boolean
+
+  onPromote: () => void
+}) {
+  return (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5 sm:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h3 className="font-semibold text-white">
+            Promote approved submission
+          </h3>
+
+          <p className="mt-1 text-sm leading-5 text-neutral-500">
+            Approval confirms route eligibility. Promotion assigns one
+            of the final contender slots.
+          </p>
+        </div>
+
+        <div className="text-xs text-neutral-500">
+          {activeEntryCount}/{maxEntries} filled
+        </div>
+      </div>
+
+
+      {configurationLocked ? (
+        <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-sm text-neutral-500">
+          This competition is {humanize(competition.status)} and its
+          contender roster is locked.
+        </div>
+      ) : rosterFull ? (
+        <div className="mt-5 rounded-xl border border-emerald-900/60 bg-emerald-950/20 p-4 text-sm text-emerald-200">
+          All {maxEntries} contender slots are filled.
+        </div>
+      ) : eligibleSubmissions.length === 0 ? (
+        <div className="mt-5 rounded-xl border border-dashed border-neutral-800 p-6 text-center text-sm text-neutral-600">
+          No approved, unassigned submissions are currently available.
+        </div>
+      ) : (
+        <div className="mt-5 space-y-5">
+          <AdminField
+            label="Approved submission"
+          >
+            <select
+              value={
+                selectedSubmissionId
+              }
+              onChange={(event) =>
+                setSelectedSubmissionId(
+                  event.target.value,
+                )
+              }
+              disabled={promoting}
+              className={
+                ADMIN_INPUT_CLASS
+              }
+            >
+              {eligibleSubmissions.map(
+                (submission) => (
+                  <option
+                    key={
+                      submission.id
+                    }
+                    value={
+                      submission.id
+                    }
+                  >
+                    {submissionLabel(
+                      submission,
+                    )}
+                  </option>
+                ),
+              )}
+            </select>
+          </AdminField>
+
+
+          {selectedSubmission && (
+            <SubmissionPreview
+              submission={
+                selectedSubmission
+              }
+            />
+          )}
+
+
+          <ContenderSlotPicker
+            slots={
+              slots
+            }
+            entriesBySlot={
+              entriesBySlot
+            }
+            selectedSlot={
+              selectedSlot
+            }
+            disabled={
+              promoting
+            }
+            onSelect={
+              setSelectedSlot
+            }
+          />
+
+
+          <button
+            type="button"
+            onClick={
+              onPromote
+            }
+            disabled={
+              promoting
+              || !selectedSubmission
+              || !selectedSlot
+            }
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-white px-4 text-sm font-semibold text-black transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {promoting
+              ? 'Promoting…'
+              : `Make Contender ${
+                  selectedSlot
+                    ? contenderSlotLabel(
+                        selectedSlot,
+                      )
+                    : ''
+                }`}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+// ============================================================
+// VENUE-PARTICIPATION ENTRY CREATION UI
+// ============================================================
+
+function VenueParticipationEntryCreator({
+  competition,
+  slots,
+  entriesBySlot,
+  activeEntryCount,
+  maxEntries,
+  rosterFull,
+  configurationLocked,
+  selectedSlot,
+  setSelectedSlot,
+  selectedVenues,
+  setSelectedVenues,
+  reservedVenueIds,
+  creating,
+  onCreate,
+}: {
+  competition: Competition
+
+  slots: readonly ContenderSlot[]
+
+  entriesBySlot: Map<
+    ContenderSlot,
+    CompetitionEntry
+  >
+
+  activeEntryCount: number
+
+  maxEntries: 2 | 3 | 4
+
+  rosterFull: boolean
+
+  configurationLocked: boolean
+
+  selectedSlot:
+    ContenderSlot | ''
+
+  setSelectedSlot: (
+    value: ContenderSlot,
+  ) => void
+
+  selectedVenues:
+    VenueSearchResult[]
+
+  setSelectedVenues:
+    React.Dispatch<
+      React.SetStateAction<
+        VenueSearchResult[]
+      >
+    >
+
+  reservedVenueIds:
+    ReadonlySet<string>
+
+  creating: boolean
+
+  onCreate: () => void
+}) {
+  return (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5 sm:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h3 className="font-semibold text-white">
+            Curate venue contender
+          </h3>
+
+          <p className="mt-1 max-w-2xl text-sm leading-5 text-neutral-500">
+            Assign one or more venues directly to a contender side.
+            This does not create a user-owned route and does not use
+            competition submissions.
+          </p>
+        </div>
+
+        <div className="text-xs text-neutral-500">
+          {activeEntryCount}/{maxEntries} filled
+        </div>
+      </div>
+
+
+      {configurationLocked ? (
+        <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-sm text-neutral-500">
+          This competition is {humanize(competition.status)} and its
+          contender roster is locked.
+        </div>
+      ) : rosterFull ? (
+        <div className="mt-5 rounded-xl border border-emerald-900/60 bg-emerald-950/20 p-4 text-sm text-emerald-200">
+          All {maxEntries} contender slots are filled.
+        </div>
+      ) : (
+        <div className="mt-5 space-y-5">
+          <ContenderSlotPicker
+            slots={
+              slots
+            }
+            entriesBySlot={
+              entriesBySlot
+            }
+            selectedSlot={
+              selectedSlot
+            }
+            disabled={
+              creating
+            }
+            onSelect={
+              setSelectedSlot
+            }
+          />
+
+
+          <VenueSearchPicker
+            selectedVenues={
+              selectedVenues
+            }
+            setSelectedVenues={
+              setSelectedVenues
+            }
+            reservedVenueIds={
+              reservedVenueIds
+            }
+            disabled={
+              creating
+            }
+          />
+
+
+          {selectedVenues.length >
+          0 ? (
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+                  Curated venues
+                </p>
+
+                <span className="text-xs text-neutral-600">
+                  {selectedVenues.length}{' '}
+                  {selectedVenues.length ===
+                  1
+                    ? 'venue'
+                    : 'venues'}
+                </span>
+              </div>
+
+
+              <div className="mt-3 space-y-2">
+                {selectedVenues.map(
+                  (
+                    venue,
+                    index,
+                  ) => (
+                    <div
+                      key={
+                        venue.id
+                      }
+                      className="flex items-center justify-between gap-4 rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-neutral-200">
+                          {index +
+                            1}.{' '}
+                          {
+                            venue.name
+                          }
+                        </p>
+
+                        <p className="mt-0.5 truncate text-xs text-neutral-600">
+                          {
+                            venue.city ??
+                            'City unavailable'
+                          }
+                        </p>
+                      </div>
+
+
+                      <button
+                        type="button"
+                        disabled={
+                          creating
+                        }
+                        onClick={() =>
+                          setSelectedVenues(
+                            (current) =>
+                              current.filter(
+                                (candidate) =>
+                                  candidate.id
+                                  !== venue.id,
+                              ),
+                          )
+                        }
+                        className="shrink-0 rounded-lg border border-neutral-800 bg-neutral-900 px-2.5 py-1.5 text-xs font-medium text-neutral-400 transition hover:bg-neutral-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+          ) : null}
+
+
+          <button
+            type="button"
+            onClick={
+              onCreate
+            }
+            disabled={
+              creating
+              || !selectedSlot
+              || selectedVenues.length
+                === 0
+            }
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-white px-4 text-sm font-semibold text-black transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {creating
+              ? 'Creating…'
+              : `Create Contender ${
+                  selectedSlot
+                    ? contenderSlotLabel(
+                        selectedSlot,
+                      )
+                    : ''
+                }`}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+// ============================================================
+// VENUE SEARCH PICKER
+// ============================================================
+
+function VenueSearchPicker({
+  selectedVenues,
+  setSelectedVenues,
+  reservedVenueIds,
+  disabled,
+}: {
+  selectedVenues:
+    VenueSearchResult[]
+
+  setSelectedVenues:
+    React.Dispatch<
+      React.SetStateAction<
+        VenueSearchResult[]
+      >
+    >
+
+  reservedVenueIds:
+    ReadonlySet<string>
+
+  disabled:
+    boolean
+}) {
+  const [
+    query,
+    setQuery,
+  ] = useState('')
+
+  const [
+    results,
+    setResults,
+  ] = useState<
+    VenueSearchResult[]
+  >([])
+
+  const [
+    searching,
+    setSearching,
+  ] = useState(false)
+
+  const [
+    searchError,
+    setSearchError,
+  ] = useState<string | null>(
+    null,
+  )
+
+
+  const normalizedQuery =
+    query.trim()
+
+
+  const selectedVenueIds =
+    useMemo(
+      () =>
+        new Set(
+          selectedVenues.map(
+            (venue) =>
+              venue.id,
+          ),
+        ),
+      [
+        selectedVenues,
+      ],
+    )
+
+
+  useEffect(
+    () => {
+      if (
+        normalizedQuery.length <
+        VENUE_SEARCH_MINIMUM_LENGTH
+      ) {
+        setResults(
+          [],
+        )
+
+        setSearching(
+          false,
+        )
+
+        setSearchError(
+          null,
+        )
+
+        return
+      }
+
+
+      const controller =
+        new AbortController()
+
+
+      const timer =
+        window.setTimeout(
+          async () => {
+            setSearching(
+              true,
+            )
+
+            setSearchError(
+              null,
+            )
+
+
+            try {
+              const params =
+                new URLSearchParams()
+
+              params.set(
+                'q',
+                normalizedQuery,
+              )
+
+              params.set(
+                'limit',
+                String(
+                  VENUE_SEARCH_LIMIT,
+                ),
+              )
+
+
+              const response =
+                await fetch(
+                  `/api/venue-admin/venues/search?${params.toString()}`,
+                  {
+                    method:
+                      'GET',
+
+                    cache:
+                      'no-store',
+
+                    signal:
+                      controller.signal,
+                  },
+                )
+
+
+              const payload =
+                await response
+                  .json()
+                  .catch(
+                    () =>
+                      null,
+                  ) as
+                    | VenueSearchResponse
+                    | {
+                        error?: string
+                        message?: string
+                      }
+                    | null
+
+
+              if (
+                !response.ok
+              ) {
+                let message =
+                  `Venue search failed with status ${response.status}.`
+
+
+                if (
+                  payload
+                  &&
+                  typeof payload ===
+                    'object'
+                ) {
+                  if (
+                    'error' in payload
+                    &&
+                    typeof payload.error ===
+                      'string'
+                  ) {
+                    message =
+                      payload.error
+                  } else if (
+                    'message' in payload
+                    &&
+                    typeof payload.message ===
+                      'string'
+                  ) {
+                    message =
+                      payload.message
+                  }
+                }
+
+
+                throw new Error(
+                  message,
+                )
+              }
+
+
+              const venues =
+                payload
+                &&
+                typeof payload ===
+                  'object'
+                &&
+                'venues' in payload
+                &&
+                Array.isArray(
+                  payload.venues,
+                )
+                  ? payload.venues
+                      .map(
+                        normalizeVenueSearchResult,
+                      )
+                      .filter(
+                        (
+                          venue,
+                        ): venue is VenueSearchResult =>
+                          venue !==
+                          null,
+                      )
+                  : []
+
+
+              setResults(
+                venues,
+              )
+            } catch (error) {
+              if (
+                error instanceof
+                  DOMException
+                &&
+                error.name ===
+                  'AbortError'
+              ) {
+                return
+              }
+
+
+              setResults(
+                [],
+              )
+
+              setSearchError(
+                getErrorMessage(
+                  error,
+                ),
+              )
+            } finally {
+              if (
+                !controller
+                  .signal
+                  .aborted
+              ) {
+                setSearching(
+                  false,
+                )
+              }
+            }
+          },
+          VENUE_SEARCH_DEBOUNCE_MS,
+        )
+
+
+      return () => {
+        window.clearTimeout(
+          timer,
+        )
+
+        controller.abort()
+      }
+    },
+    [
+      normalizedQuery,
+    ],
+  )
+
+
+  function selectVenue(
+    venue:
+      VenueSearchResult,
+  ) {
+    if (
+      reservedVenueIds.has(
+        venue.id,
+      )
+    ) {
+      return
+    }
+
+
+    setSelectedVenues(
+      (current) => {
+        if (
+          current.some(
+            (candidate) =>
+              candidate.id ===
+              venue.id,
+          )
+        ) {
+          return current
+        }
+
+
+        return [
+          ...current,
+          venue,
+        ]
+      },
+    )
+
+
+    setQuery(
+      '',
+    )
+
+    setResults(
+      [],
+    )
+
+    setSearchError(
+      null,
+    )
+  }
+
+
+  return (
+    <div className="space-y-2">
+      <label className="block space-y-2">
+        <span className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+          Search venues
+        </span>
+
+
+        <div className="relative">
+          <input
+            type="search"
+            value={
+              query
+            }
+            onChange={(event) =>
+              setQuery(
+                event.target.value,
+              )
+            }
+            disabled={
+              disabled
+            }
+            autoComplete="off"
+            placeholder="Search by venue name…"
+            className={
+              ADMIN_INPUT_CLASS
+            }
+          />
+
+
+          {searching ? (
+            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-neutral-600">
+              Searching…
+            </span>
+          ) : null}
+        </div>
+      </label>
+
+
+      <p className="text-xs leading-5 text-neutral-600">
+        Search the venue catalog by name and add one or more venues
+        to this contender. Venues already assigned to another active
+        contender cannot be selected.
+      </p>
+
+
+      {searchError ? (
+        <div className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-2.5 text-xs text-red-200">
+          {searchError}
+        </div>
+      ) : null}
+
+
+      {normalizedQuery.length >
+        0 &&
+      normalizedQuery.length <
+        VENUE_SEARCH_MINIMUM_LENGTH ? (
+        <p className="text-xs text-neutral-600">
+          Type at least{' '}
+          {
+            VENUE_SEARCH_MINIMUM_LENGTH
+          }{' '}
+          characters to search.
+        </p>
+      ) : null}
+
+
+      {normalizedQuery.length >=
+        VENUE_SEARCH_MINIMUM_LENGTH &&
+      !searching &&
+      !searchError &&
+      results.length ===
+        0 ? (
+        <div className="rounded-lg border border-dashed border-neutral-800 px-3 py-4 text-center text-xs text-neutral-600">
+          No venues found.
+        </div>
+      ) : null}
+
+
+      {results.length >
+      0 ? (
+        <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60">
+          {results.map(
+            (
+              venue,
+              index,
+            ) => {
+              const reserved =
+                reservedVenueIds.has(
+                  venue.id,
+                )
+
+              const selected =
+                selectedVenueIds.has(
+                  venue.id,
+                )
+
+              const unavailable =
+                reserved ||
+                selected
+
+
+              return (
+                <button
+                  key={
+                    venue.id
+                  }
+                  type="button"
+                  disabled={
+                    disabled ||
+                    unavailable
+                  }
+                  onClick={() =>
+                    selectVenue(
+                      venue,
+                    )
+                  }
+                  className={[
+                    'flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition disabled:cursor-not-allowed',
+
+                    index >
+                    0
+                      ? 'border-t border-neutral-800'
+                      : '',
+
+                    unavailable
+                      ? 'bg-neutral-950/40 opacity-55'
+                      : 'hover:bg-neutral-800/80',
+                  ].join(
+                    ' ',
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">
+                      {
+                        venue.name
+                      }
+                    </p>
+
+                    <p className="mt-0.5 truncate text-xs text-neutral-500">
+                      {
+                        venue.city ??
+                        'City unavailable'
+                      }
+                    </p>
+                  </div>
+
+
+                  <span
+                    className={[
+                      'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium',
+
+                      reserved
+                        ? 'bg-red-500/10 text-red-300'
+                        : selected
+                          ? 'bg-violet-500/10 text-violet-200'
+                          : 'bg-neutral-800 text-neutral-300',
+                    ].join(
+                      ' ',
+                    )}
+                  >
+                    {reserved
+                      ? 'Already assigned'
+                      : selected
+                        ? 'Selected'
+                        : 'Add'}
+                  </span>
+                </button>
+              )
+            },
+          )}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+
+// ============================================================
+// CONTENDER SLOT PICKER
+// ============================================================
+
+function ContenderSlotPicker({
+  slots,
+  entriesBySlot,
+  selectedSlot,
+  disabled,
+  onSelect,
+}: {
+  slots:
+    readonly ContenderSlot[]
+
+  entriesBySlot:
+    Map<
+      ContenderSlot,
+      CompetitionEntry
+    >
+
+  selectedSlot:
+    ContenderSlot | ''
+
+  disabled:
+    boolean
+
+  onSelect:
+    (
+      slot: ContenderSlot,
+    ) => void
+}) {
+  return (
+    <AdminField
+      label="Contender slot"
+    >
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {slots.map(
+          (slot) => {
+            const occupied =
+              entriesBySlot.has(
+                slot,
+              )
+
+            const selected =
+              selectedSlot
+              === slot
+
+            return (
+              <button
+                key={slot}
+                type="button"
+                disabled={
+                  occupied
+                  || disabled
+                }
+                onClick={() =>
+                  onSelect(
+                    slot,
+                  )
+                }
+                className={[
+                  'min-h-11 rounded-lg border text-sm font-semibold transition disabled:cursor-not-allowed',
+
+                  occupied
+                    ? 'border-neutral-900 bg-neutral-950 text-neutral-700'
+                    : selected
+                      ? 'border-white bg-white text-black'
+                      : 'border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800',
+                ].join(' ')}
+              >
+                {occupied
+                  ? `${contenderSlotLabel(
+                      slot,
+                    )} · Filled`
+                  : `Contender ${contenderSlotLabel(
+                      slot,
+                    )}`}
+              </button>
+            )
+          },
+        )}
+      </div>
+    </AdminField>
   )
 }
 
@@ -1039,6 +2308,16 @@ function CompetitionRoster({
     CompetitionEntry
   >
 }) {
+  const venueParticipationMode =
+    competition
+      .competition_type
+      === 'taste_duel'
+    &&
+    competition
+      .taste_duel_execution_mode
+      === 'venue_participation'
+
+
   return (
     <div className="space-y-4 rounded-2xl border border-neutral-800 bg-neutral-950 p-5 sm:p-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -1083,18 +2362,52 @@ function CompetitionRoster({
                   <>
                     <p className="mt-3 text-sm font-medium text-white">
                       {entry.venue_ids.length}{' '}
-                      stops
+                      {venueParticipationMode
+                        ? entry.venue_ids.length ===
+                          1
+                          ? 'venue'
+                          : 'venues'
+                        : entry.venue_ids.length ===
+                            1
+                          ? 'stop'
+                          : 'stops'}
                     </p>
 
                     <p className="mt-1 text-xs text-neutral-500">
-                      {humanize(
-                        entry.source_type,
-                      )}
+                      {venueParticipationMode
+                        ? 'Curated venue side'
+                        : entry.source_type
+                          ? humanize(
+                              entry.source_type,
+                            )
+                          : 'Unknown source'}
                       {' · '}
                       {humanize(
                         entry.status,
                       )}
                     </p>
+
+
+                    {venueParticipationMode ? (
+                      <div className="mt-3 space-y-1.5">
+                        {entry.venue_ids.map(
+                          (
+                            venueId,
+                            index,
+                          ) => (
+                            <p
+                              key={`${entry.id}:${venueId}:${index}`}
+                              className="break-all font-mono text-[11px] text-neutral-600"
+                            >
+                              {index +
+                                1}.{' '}
+                              {venueId}
+                            </p>
+                          ),
+                        )}
+                      </div>
+                    ) : null}
+
 
                     <p className="mt-3 break-all font-mono text-[11px] text-neutral-700">
                       {entry.id}
@@ -1385,6 +2698,82 @@ function submissionLabel(
   ]
     .filter(Boolean)
     .join(' · ')
+}
+
+
+function normalizeVenueSearchResult(
+  value: unknown,
+): VenueSearchResult | null {
+  if (
+    !value
+    ||
+    typeof value !==
+      'object'
+  ) {
+    return null
+  }
+
+
+  const row =
+    value as Record<
+      string,
+      unknown
+    >
+
+
+  if (
+    typeof row.id !==
+      'string'
+    ||
+    row.id.trim().length ===
+      0
+  ) {
+    return null
+  }
+
+
+  const name =
+    typeof row.name ===
+      'string'
+      ? row.name.trim()
+      : ''
+
+
+  if (
+    !name
+  ) {
+    return null
+  }
+
+
+  return {
+    id:
+      row.id,
+
+    name,
+
+    city:
+      typeof row.city ===
+        'string'
+        &&
+        row.city.trim()
+          .length >
+          0
+        ? row.city.trim()
+        : null,
+  }
+}
+
+
+function hasDuplicateValues(
+  values: readonly string[],
+): boolean {
+  return (
+    new Set(
+      values,
+    ).size
+    !== values.length
+  )
 }
 
 

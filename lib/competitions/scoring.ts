@@ -3,6 +3,7 @@
 import "server-only";
 
 import {
+  COMPETITION_ALGORITHM_VERSION,
   COMPETITION_SCORE_MAX,
   COMPETITION_SCORE_MIN,
   DEFAULT_COMPETITION_ALGORITHM_VERSION,
@@ -56,7 +57,28 @@ import {
 // ============================================================
 
 export const COMPETITION_SCORING_ALGORITHM_VERSION = {
-  V1: DEFAULT_COMPETITION_ALGORITHM_VERSION,
+  /**
+   * Existing itinerary Taste Duel scoring.
+   *
+   * Behavior is immutable.
+   */
+  V1:
+    DEFAULT_COMPETITION_ALGORITHM_VERSION,
+
+  /**
+   * Reserved canonical identifier for venue-participation scoring.
+   *
+   * IMPORTANT:
+   *
+   * This file does NOT implement this algorithm.
+   *
+   * Registering it here allows trusted orchestration code to share
+   * one canonical algorithm-version type without accidentally
+   * routing venue-participation evidence through taste_duel_v1.
+   */
+  VENUE_PARTICIPATION_V1:
+    COMPETITION_ALGORITHM_VERSION
+      .TASTE_DUEL_VENUE_PARTICIPATION_V1,
 } as const;
 
 export type CompetitionScoringAlgorithmVersion =
@@ -394,6 +416,7 @@ export class CompetitionScoringError extends Error {
     | "INVALID_RATING"
     | "MISSING_RATING_AVERAGE"
     | "UNEXPECTED_RATING_AVERAGE"
+    | "ALGORITHM_REQUIRES_VENUE_PARTICIPATION_SCORER"
     | "INVALID_ALGORITHM_VERSION";
 
   constructor(
@@ -1337,10 +1360,24 @@ function scoreCompetitionEntryV1(
 // ============================================================
 
 /**
- * Canonical scoring entry point.
+ * Canonical scoring entry point for the existing itinerary Taste
+ * Duel evidence contract.
  *
- * All callers should use this function rather than calling a
- * version-specific implementation directly.
+ * IMPORTANT:
+ *
+ * The venue-participation algorithm identifier is deliberately
+ * recognized here but cannot execute through this function.
+ *
+ * Venue-participation has a fundamentally different evidence
+ * contract:
+ *
+ *   - no route completion
+ *   - no competition_entry_ratings
+ *   - no would-repeat signal
+ *   - no explicit head-to-head preference
+ *
+ * Routing that mode through scoreCompetitionEntryV1() would attach
+ * the wrong semantics to an immutable algorithm version.
  */
 export function scoreCompetitionEntry(
   evidence: CompetitionEntryScoringEvidence,
@@ -1351,6 +1388,13 @@ export function scoreCompetitionEntry(
     case COMPETITION_SCORING_ALGORITHM_VERSION.V1:
       return scoreCompetitionEntryV1(
         evidence,
+      );
+
+    case COMPETITION_SCORING_ALGORITHM_VERSION
+      .VENUE_PARTICIPATION_V1:
+      throw new CompetitionScoringError(
+        "ALGORITHM_REQUIRES_VENUE_PARTICIPATION_SCORER",
+        `Scoring algorithm "${COMPETITION_SCORING_ALGORITHM_VERSION.VENUE_PARTICIPATION_V1}" requires the dedicated venue-participation scoring path.`,
       );
 
     default:
@@ -1368,6 +1412,11 @@ export function scoreCompetitionEntry(
 // ALGORITHM VERSION GUARD
 // ============================================================
 
+/**
+ * Returns true for every registered Taste Duel scoring algorithm,
+ * including algorithms whose evidence contract is intentionally
+ * implemented by a separate scorer.
+ */
 export function isCompetitionScoringAlgorithmVersion(
   value: string,
 ): value is CompetitionScoringAlgorithmVersion {

@@ -72,12 +72,20 @@ type CompetitionResultStatus =
   | 'void'
 
 
+type TasteDuelExecutionMode =
+  | 'itinerary'
+  | 'venue_participation'
+
+
 type CompetitionRow = {
   id:
     string
 
   competition_type:
     string
+
+  taste_duel_execution_mode:
+    TasteDuelExecutionMode | null
 
   relay_id:
     string | null
@@ -305,6 +313,7 @@ export default async function CompetitionDetailPage({
       .select(`
         id,
         competition_type,
+        taste_duel_execution_mode,
         relay_id,
         title,
         description,
@@ -839,21 +848,18 @@ export default async function CompetitionDetailPage({
             <SectionHeading
               eyebrow={
                 competition.status ===
-                'completed'
+                  'completed'
                   ? 'Results'
-                  : 'Routes'
+                  : isVenueParticipationTasteDuel(
+                      competition
+                    )
+                    ? 'Matchup'
+                    : 'Routes'
               }
               title={
-                competition.status ===
-                'live'
-                  ? 'Choose a route to explore'
-                  : competition.status ===
-                      'scheduled'
-                    ? 'Routes in this competition'
-                    : competition.status ===
-                        'scoring'
-                      ? 'Results are being reviewed'
-                      : 'Competition results'
+                getContenderSectionTitle(
+                  competition
+                )
               }
               description={
                 getContenderSectionDescription(
@@ -866,7 +872,11 @@ export default async function CompetitionDetailPage({
             {entriesError ? (
               <div className="mt-6 rounded-[1.75rem] bg-white/[0.025] p-6 ring-1 ring-white/[0.07]">
                 <p className="text-sm text-zinc-500">
-                  Contender routes could not be loaded right now.
+                  {isVenueParticipationTasteDuel(
+                    competition
+                  )
+                    ? 'The competing venues could not be loaded right now.'
+                    : 'The competing routes could not be loaded right now.'}
                 </p>
               </div>
             ) : contenders.length >
@@ -897,8 +907,8 @@ export default async function CompetitionDetailPage({
               </div>
             ) : (
               <EmptyContenders
-                status={
-                  competition.status
+                competition={
+                  competition
                 }
               />
             )}
@@ -994,10 +1004,6 @@ function RelayCompetitionDetail({
           </Link>
         </div>
 
-
-        {/* ====================================================
-         * HERO
-         * ==================================================== */}
 
         <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.06] via-white/[0.028] to-indigo-400/[0.035] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.07] sm:p-8">
           <div
@@ -1110,10 +1116,6 @@ function RelayCompetitionDetail({
         </header>
 
 
-        {/* ====================================================
-         * BRIEF + ELIGIBILITY
-         * ==================================================== */}
-
         <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <section className="rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
             <div className="flex items-center gap-2">
@@ -1176,9 +1178,6 @@ function RelayCompetitionDetail({
           />
         </div>
 
-        {/* ====================================================
-         * SLOT SEQUENCE
-         * ==================================================== */}
 
         <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -1215,10 +1214,6 @@ function RelayCompetitionDetail({
         </section>
 
 
-        {/* ====================================================
-         * REWARD
-         * ==================================================== */}
-
         {rewardPolicy ? (
           <section className="mt-8 rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-amber-300/[0.02] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07] sm:p-6">
             <div className="mb-5">
@@ -1250,10 +1245,6 @@ function RelayCompetitionDetail({
           </section>
         ) : null}
 
-
-        {/* ====================================================
-         * INTEGRITY NOTE
-         * ==================================================== */}
 
         <footer className="mt-8 border-t border-white/[0.06] pt-6">
           <p className="max-w-3xl text-xs leading-6 text-zinc-700">
@@ -1478,6 +1469,7 @@ function RelayEligibilityCard({
     </aside>
   )
 }
+
 
 // ============================================================
 // RELAY PRESENTATION
@@ -1722,6 +1714,11 @@ function CompetitionHero({
       competition
     )
 
+  const venueParticipation =
+    isVenueParticipationTasteDuel(
+      competition
+    )
+
 
   return (
     <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.06] via-white/[0.028] to-indigo-400/[0.035] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.07] sm:p-8">
@@ -1803,6 +1800,12 @@ function CompetitionHero({
               competition.description
             }
           </p>
+        ) : venueParticipation ? (
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
+            Pick a side, visit one of its venues, check in while
+            you&apos;re there, and rate your experience. Every real
+            visit helps decide which side wins.
+          </p>
         ) : (
           <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
             Try the competing routes for yourself. Your real-world
@@ -1874,9 +1877,15 @@ function ContenderCard({
   signedIn:
     boolean
 }) {
+  const venueParticipation =
+    isVenueParticipationTasteDuel(
+      competition
+    )
+
   const canStart =
     competition.status ===
-    'live'
+      'live' &&
+    !venueParticipation
 
 
   return (
@@ -1914,7 +1923,9 @@ function ContenderCard({
               <span className="h-px w-5 bg-cyan-300/60" />
 
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
-                Route{' '}
+                {venueParticipation
+                  ? 'Side'
+                  : 'Route'}{' '}
                 {
                   contender.slot
                 }
@@ -1933,7 +1944,15 @@ function ContenderCard({
             {
               contender.venueIds.length
             }{' '}
-            stops
+            {venueParticipation
+              ? contender.venueIds.length ===
+                  1
+                ? 'venue'
+                : 'venues'
+              : contender.venueIds.length ===
+                  1
+                ? 'stop'
+                : 'stops'}
           </div>
         </div>
 
@@ -1946,28 +1965,58 @@ function ContenderCard({
             ) => (
               <li
                 key={`${contender.id}:${index}:${venue.id}`}
-                className="flex items-center gap-3 rounded-[1.1rem] bg-black/20 px-4 py-3 ring-1 ring-white/[0.055]"
+                className="rounded-[1.1rem] bg-black/20 px-4 py-3 ring-1 ring-white/[0.055]"
               >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.025] text-[10px] font-bold text-zinc-600 ring-1 ring-white/[0.07]">
-                  {index +
-                    1}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/[0.025] text-[10px] font-bold text-zinc-600 ring-1 ring-white/[0.07]">
+                    {index +
+                      1}
+                  </span>
 
 
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-bold text-zinc-300">
-                    {
-                      venue.name
-                    }
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/venue-profile/${encodeURIComponent(
+                        venue.id
+                      )}`}
+                      className="block truncate text-sm font-bold text-zinc-200 underline decoration-white/15 underline-offset-4 transition hover:text-cyan-200 hover:decoration-cyan-300/50 focus-visible:outline-none focus-visible:text-cyan-200"
+                    >
+                      {
+                        venue.name
+                      }
+                    </Link>
+
+
+                    {venue.city ? (
+                      <div className="mt-0.5 truncate text-[11px] text-zinc-700">
+                        {
+                          venue.city
+                        }
+                      </div>
+                    ) : null}
                   </div>
 
 
-                  {venue.city ? (
-                    <div className="mt-0.5 truncate text-[11px] text-zinc-700">
-                      {
-                        venue.city
-                      }
-                    </div>
+                  {venueParticipation &&
+                  competition.status ===
+                    'live' ? (
+                    signedIn ? (
+                      <Link
+                        href={`/venue-profile/${encodeURIComponent(
+                          venue.id
+                        )}`}
+                        className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full bg-cyan-300/[0.07] px-3 text-[11px] font-bold text-cyan-100 ring-1 ring-cyan-300/15 transition hover:bg-cyan-300/[0.12] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/50"
+                      >
+                        Check in &amp; rate
+                      </Link>
+                    ) : (
+                      <Link
+                        href="/login"
+                        className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full bg-white/[0.04] px-3 text-[11px] font-bold text-zinc-300 ring-1 ring-white/[0.08] transition hover:bg-white/[0.07] hover:text-white"
+                      >
+                        Sign in
+                      </Link>
+                    )
                   ) : null}
                 </div>
               </li>
@@ -1977,7 +2026,15 @@ function ContenderCard({
 
 
         <div className="mt-6 border-t border-white/[0.06] pt-5">
-          {canStart ? (
+          {venueParticipation &&
+          competition.status ===
+            'live' ? (
+            <div className="rounded-[1rem] bg-cyan-300/[0.035] px-4 py-3 text-center text-xs font-bold leading-5 text-cyan-100/70 ring-1 ring-cyan-300/10">
+              Choose a venue, check in when you&apos;re there, and rate
+              your experience. Your visit helps this side in the
+              competition.
+            </div>
+          ) : canStart ? (
             signedIn ? (
               <StartCompetitionEntryButton
                 competitionId={
@@ -1999,16 +2056,22 @@ function ContenderCard({
           ) : competition.status ===
             'scheduled' ? (
             <div className="text-center text-xs font-bold text-zinc-600">
-              You can start this route when the competition goes live.
+              {venueParticipation
+                ? 'Check-ins and ratings open when the competition goes live.'
+                : 'You can start this route when the competition goes live.'}
             </div>
           ) : competition.status ===
             'scoring' ? (
             <div className="text-center text-xs font-bold text-violet-200/55">
-              Exploring is closed while the results are being reviewed.
+              {venueParticipation
+                ? 'Check-ins are closed while the final result is being worked out.'
+                : 'Exploring is closed while the results are being reviewed.'}
             </div>
           ) : contender.isWinner ? (
             <div className="text-center text-xs font-black text-amber-100/75">
-              Winning route
+              {venueParticipation
+                ? 'Winning side'
+                : 'Winning route'}
             </div>
           ) : (
             <div className="text-center text-xs font-bold text-zinc-600">
@@ -2036,6 +2099,12 @@ function CompetitionFacts({
   contenderCount:
     number
 }) {
+  const venueParticipation =
+    isVenueParticipationTasteDuel(
+      competition
+    )
+
+
   return (
     <section className="rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07]">
       <div className="flex items-center gap-2">
@@ -2076,7 +2145,11 @@ function CompetitionFacts({
         />
 
         <Fact
-          label="Routes"
+          label={
+            venueParticipation
+              ? 'Sides'
+              : 'Routes'
+          }
           value={`${contenderCount}/${competition.max_entries}`}
         />
 
@@ -2107,12 +2180,19 @@ function CompetitionFacts({
   )
 }
 
+
 function FairnessCard({
   competition,
 }: {
   competition:
     CompetitionRow
 }) {
+  const venueParticipation =
+    isVenueParticipationTasteDuel(
+      competition
+    )
+
+
   return (
     <section className="rounded-[1.75rem] bg-gradient-to-br from-white/[0.045] via-white/[0.025] to-indigo-400/[0.018] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.07]">
       <div className="flex items-center gap-2">
@@ -2125,26 +2205,52 @@ function FairnessCard({
 
 
       <div className="mt-4 space-y-4 text-sm leading-6 text-zinc-500">
-        <p>
-          Routes are judged by real-world visits and check-ins, not by
-          follower count or audience size.
-        </p>
+        {venueParticipation ? (
+          <>
+            <p>
+              Visit a listed venue, check in while you&apos;re there,
+              and rate your experience. Real visits help decide which
+              side wins.
+            </p>
 
 
-        {competition.anonymous_entries &&
-        competition.status !==
-          'completed' ? (
-          <p>
-            Who created each route stays hidden while the competition
-            is active.
-          </p>
-        ) : null}
+            <p>
+              The competition works best when lots of different people
+              try different venues. Repeating the same visit over and
+              over does not carry the same weight as broader
+              participation.
+            </p>
 
 
-        <p>
-          A route only counts once enough of its stops have been
-          completed and verified.
-        </p>
+            <p>
+              Ratings matter, but so does how each side performs across
+              its different venues.
+            </p>
+          </>
+        ) : (
+          <>
+            <p>
+              Routes are judged by real-world visits and check-ins, not by
+              follower count or audience size.
+            </p>
+
+
+            {competition.anonymous_entries &&
+            competition.status !==
+              'completed' ? (
+              <p>
+                Who created each route stays hidden while the competition
+                is active.
+              </p>
+            ) : null}
+
+
+            <p>
+              A route only counts once enough of its stops have been
+              completed and verified.
+            </p>
+          </>
+        )}
       </div>
     </section>
   )
@@ -2230,18 +2336,28 @@ function HeroChip({
 
 
 function EmptyContenders({
-  status,
+  competition,
 }: {
-  status:
-    CompetitionStatus
+  competition:
+    CompetitionRow
 }) {
+  const venueParticipation =
+    isVenueParticipationTasteDuel(
+      competition
+    )
+
+
   return (
     <div className="mt-6 rounded-[1.75rem] bg-white/[0.025] p-8 text-center ring-1 ring-white/[0.07]">
       <p className="text-sm font-bold text-zinc-500">
-        {status ===
+        {competition.status ===
         'scheduled'
-          ? 'Routes have not been published yet.'
-          : 'No routes are available right now.'}
+          ? venueParticipation
+            ? 'The competing venues have not been announced yet.'
+            : 'Routes have not been published yet.'
+          : venueParticipation
+            ? 'There are no competing venues to show right now.'
+            : 'No routes are available right now.'}
       </p>
     </div>
   )
@@ -2721,6 +2837,23 @@ function slugify(
 // PRESENTATION
 // ============================================================
 
+function isVenueParticipationTasteDuel(
+  competition:
+    Pick<
+      CompetitionRow,
+      | 'competition_type'
+      | 'taste_duel_execution_mode'
+    >
+): boolean {
+  return (
+    competition.competition_type ===
+      'taste_duel' &&
+    competition.taste_duel_execution_mode ===
+      'venue_participation'
+  )
+}
+
+
 function getContenderLabel(
   slot:
     number
@@ -2746,29 +2879,86 @@ function getContenderLabel(
 }
 
 
-function getContenderSectionDescription(
+function getContenderSectionTitle(
   competition:
     CompetitionRow
 ): string {
+  const venueParticipation =
+    isVenueParticipationTasteDuel(
+      competition
+    )
+
+
   switch (
     competition.status
   ) {
     case 'live':
+      return venueParticipation
+        ? 'Pick a side and visit a venue'
+        : 'Choose a route to explore'
+
+    case 'scheduled':
+      return venueParticipation
+        ? 'Meet the competing sides'
+        : 'Routes in this competition'
+
+    case 'scoring':
+      return 'Results are being reviewed'
+
+    case 'completed':
+      return 'Competition results'
+
+    default:
+      return venueParticipation
+        ? 'The matchup'
+        : 'Competition routes'
+  }
+}
+
+
+function getContenderSectionDescription(
+  competition:
+    CompetitionRow
+): string {
+  const venueParticipation =
+    isVenueParticipationTasteDuel(
+      competition
+    )
+
+
+  switch (
+    competition.status
+  ) {
+    case 'live':
+      if (
+        venueParticipation
+      ) {
+        return 'Choose any venue from either side. Check in while you are there and rate your experience. Your real visit helps decide the winner.'
+      }
+
       return competition.anonymous_entries
         ? 'Who created each route stays hidden for now. Choose the route that looks best to you.'
         : 'Choose a route and experience it for yourself in the city.'
 
     case 'scheduled':
-      return 'Take a look at the routes before the competition begins.'
+      return venueParticipation
+        ? 'See the venues going head-to-head before the competition begins.'
+        : 'Take a look at the routes before the competition begins.'
 
     case 'scoring':
-      return 'New attempts are closed while the results are being reviewed.'
+      return venueParticipation
+        ? 'Check-ins are closed while the final result is being worked out.'
+        : 'New attempts are closed while the results are being reviewed.'
 
     case 'completed':
-      return 'The competition is over. The winning route is marked below.'
+      return venueParticipation
+        ? 'The competition is over. The winning side is marked below.'
+        : 'The competition is over. The winning route is marked below.'
 
     default:
-      return 'Explore the routes in this competition.'
+      return venueParticipation
+        ? 'See the venues competing against each other.'
+        : 'Explore the routes in this competition.'
   }
 }
 
@@ -2875,7 +3065,7 @@ function formatResultStatus(
       return 'Tie'
 
     case 'insufficient_evidence':
-      return 'Not enough completed visits'
+      return 'Not enough visits'
 
     case 'void':
       return 'No result'

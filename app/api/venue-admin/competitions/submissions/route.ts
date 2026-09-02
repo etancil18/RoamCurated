@@ -21,29 +21,35 @@ const ALLOWED_ADMIN_EMAILS = new Set([
 // TYPES
 // ============================================================
 
-type RouteContext = {
-  params: Promise<{
-    competitionId: string
-    submissionId: string
-  }>
-}
-
-type UpdateSubmissionBody = {
-  status?: unknown
-  rejection_reason?: unknown
-}
-
 type SubmissionStatus =
   | 'pending'
   | 'approved'
   | 'rejected'
 
+type CompetitionExecutionMode =
+  | 'itinerary'
+  | 'venue_participation'
+
+type CompetitionRow = {
+  id: string
+  competition_type: string
+  taste_duel_execution_mode:
+    CompetitionExecutionMode | null
+}
+
 // ============================================================
 // CONSTANTS
 // ============================================================
 
-const ALLOWED_MODERATION_STATUSES =
+const DEFAULT_LIMIT =
+  50
+
+const MAX_LIMIT =
+  100
+
+const ALLOWED_SUBMISSION_STATUSES =
   new Set<SubmissionStatus>([
+    'pending',
     'approved',
     'rejected',
   ])
@@ -72,14 +78,24 @@ const SUBMISSION_SELECT = `
 `
 
 // ============================================================
-// PATCH
-// PATCH /api/venue-admin/competitions/
-//   [competitionId]/submissions/[submissionId]
+// GET
+// GET /api/venue-admin/competitions/submissions
+//
+// Supported query parameters:
+//
+//   competitionId=<uuid>
+//   status=pending|approved|rejected
+//   limit=1..100
+//   offset=0+
+//
+// competitionId is intentionally required.
+//
+// Venue-participation Taste Duels do not use submissions and
+// therefore return a successful empty collection.
 // ============================================================
 
-export async function PATCH(
-  request: Request,
-  context: RouteContext
+export async function GET(
+  request: Request
 ) {
   try {
     const auth =
@@ -89,31 +105,39 @@ export async function PATCH(
       return auth.response
     }
 
-    const {
-      competitionId,
-      submissionId,
-    } = await context.params
+    const url =
+      new URL(
+        request.url
+      )
 
-    const normalizedCompetitionId =
-      competitionId
+    // ========================================================
+    // COMPETITION ID
+    // ========================================================
+
+    const rawCompetitionId =
+      url.searchParams.get(
+        'competitionId'
+      ) ??
+      url.searchParams.get(
+        'competition_id'
+      )
+
+    const competitionId =
+      rawCompetitionId
         ?.trim()
-        .toLowerCase()
-
-    const normalizedSubmissionId =
-      submissionId
-        ?.trim()
-        .toLowerCase()
+        .toLowerCase() ??
+      ''
 
     if (
-      !normalizedCompetitionId ||
+      !competitionId ||
       !isValidUuid(
-        normalizedCompetitionId
+        competitionId
       )
     ) {
       return noStoreJson(
         {
           error:
-            'Invalid competition ID.',
+            'A valid competitionId is required.',
         },
         {
           status: 400,
@@ -121,78 +145,127 @@ export async function PATCH(
       )
     }
 
-    if (
-      !normalizedSubmissionId ||
-      !isValidUuid(
-        normalizedSubmissionId
-      )
-    ) {
-      return noStoreJson(
-        {
-          error:
-            'Invalid submission ID.',
-        },
-        {
-          status: 400,
-        }
-      )
-    }
+    // ========================================================
+    // STATUS FILTER
+    // ========================================================
 
-    const body =
-      (await request
-        .json()
-        .catch(
-          () => ({})
-        )) as UpdateSubmissionBody
-
-    const requestedStatus =
-      typeof body.status ===
-        'string'
-        ? body.status
-            .trim()
-            .toLowerCase()
-        : null
-
-    if (
-      !requestedStatus ||
-      !ALLOWED_MODERATION_STATUSES.has(
-        requestedStatus as
-          SubmissionStatus
+    const rawStatus =
+      url.searchParams.get(
+        'status'
       )
-    ) {
-      return noStoreJson(
-        {
-          error:
-            'status must be approved or rejected.',
-        },
-        {
-          status: 400,
-        }
-      )
-    }
 
     const status =
-      requestedStatus as
-        Exclude<
-          SubmissionStatus,
-          'pending'
-        >
+      rawStatus
+        ?.trim()
+        .toLowerCase() ??
+      null
 
-    const rejectionReason =
-      normalizeOptionalString(
-        body.rejection_reason
+    if (
+      status !==
+        null &&
+      status !==
+        '' &&
+      !ALLOWED_SUBMISSION_STATUSES.has(
+        status as SubmissionStatus
       )
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'status must be pending, approved, or rejected.',
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    const normalizedStatus =
+      status &&
+      ALLOWED_SUBMISSION_STATUSES.has(
+        status as SubmissionStatus
+      )
+        ? status as SubmissionStatus
+        : null
+
+    // ========================================================
+    // PAGINATION
+    // ========================================================
+
+    const limit =
+      readIntegerQueryParameter({
+        value:
+          url.searchParams.get(
+            'limit'
+          ),
+
+        fallback:
+          DEFAULT_LIMIT,
+
+        minimum:
+          1,
+
+        maximum:
+          MAX_LIMIT,
+      })
+
+    if (
+      limit ===
+      null
+    ) {
+      return noStoreJson(
+        {
+          error:
+            `limit must be an integer between 1 and ${MAX_LIMIT}.`,
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    const offset =
+      readIntegerQueryParameter({
+        value:
+          url.searchParams.get(
+            'offset'
+          ),
+
+        fallback:
+          0,
+
+        minimum:
+          0,
+
+        maximum:
+          Number.MAX_SAFE_INTEGER,
+      })
+
+    if (
+      offset ===
+      null
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'offset must be a non-negative integer.',
+        },
+        {
+          status: 400,
+        }
+      )
+    }
 
     const serviceSupabase =
       createCompetitionServiceClient()
 
     // ========================================================
-    // VERIFY COMPETITION
+    // VERIFY PARENT COMPETITION + EXECUTION MODE
     // ========================================================
 
     const {
       data:
-        competition,
+        competitionData,
       error:
         competitionError,
     } = await serviceSupabase
@@ -201,13 +274,12 @@ export async function PATCH(
       )
       .select(`
         id,
-        status,
         competition_type,
         taste_duel_execution_mode
       `)
       .eq(
         'id',
-        normalizedCompetitionId
+        competitionId
       )
       .maybeSingle()
 
@@ -215,13 +287,9 @@ export async function PATCH(
       competitionError
     ) {
       console.error(
-        '[venue-admin/competitions/[competitionId]/submissions/[submissionId]] Competition lookup failed:',
+        '[venue-admin/competitions/submissions] Competition lookup failed:',
         {
-          competitionId:
-            normalizedCompetitionId,
-
-          submissionId:
-            normalizedSubmissionId,
+          competitionId,
 
           adminUserId:
             auth.user.id,
@@ -245,7 +313,9 @@ export async function PATCH(
       )
     }
 
-    if (!competition) {
+    if (
+      !competitionData
+    ) {
       return noStoreJson(
         {
           error:
@@ -257,15 +327,23 @@ export async function PATCH(
       )
     }
 
+    const competition =
+      competitionData as
+        CompetitionRow
+
     // ========================================================
     // EXECUTION-MODE CONTRACT
     // ========================================================
     //
-    // Submission moderation belongs exclusively to itinerary
+    // competition_submissions belongs exclusively to itinerary
     // Taste Duels.
     //
-    // Venue-participation contenders are curated directly and
-    // must never depend on competition_submissions.
+    // A collection read for venue-participation mode is harmless
+    // and intentionally resolves to an empty collection rather
+    // than producing a client-visible error.
+    //
+    // Mutation routes remain responsible for rejecting attempts
+    // to moderate/promote submissions for venue participation.
     // ========================================================
 
     if (
@@ -276,120 +354,15 @@ export async function PATCH(
     ) {
       return noStoreJson(
         {
-          error:
-            'Venue-participation competitions do not use competition submissions.',
-        },
-        {
-          status: 409,
-        }
-      )
-    }
+          submissions:
+            [],
 
-    // ========================================================
-    // LOAD SUBMISSION
-    // ========================================================
+          limit,
 
-    const {
-      data:
-        existingSubmission,
-      error:
-        submissionError,
-    } = await serviceSupabase
-      .from(
-        'competition_submissions'
-      )
-      .select(
-        SUBMISSION_SELECT
-      )
-      .eq(
-        'id',
-        normalizedSubmissionId
-      )
-      .eq(
-        'competition_id',
-        normalizedCompetitionId
-      )
-      .maybeSingle()
+          offset,
 
-    if (
-      submissionError
-    ) {
-      console.error(
-        '[venue-admin/competitions/[competitionId]/submissions/[submissionId]] Submission lookup failed:',
-        {
-          competitionId:
-            normalizedCompetitionId,
-
-          submissionId:
-            normalizedSubmissionId,
-
-          adminUserId:
-            auth.user.id,
-
-          adminEmail:
-            auth.user.email,
-
-          error:
-            submissionError,
-        }
-      )
-
-      return noStoreJson(
-        {
-          error:
-            'Could not load competition submission.',
-        },
-        {
-          status: 500,
-        }
-      )
-    }
-
-    if (
-      !existingSubmission
-    ) {
-      return noStoreJson(
-        {
-          error:
-            'Competition submission not found.',
-        },
-        {
-          status: 404,
-        }
-      )
-    }
-
-    // ========================================================
-    // PROTECT PROMOTED SUBMISSIONS
-    // ========================================================
-
-    if (
-      existingSubmission
-        .competition_entry_id
-    ) {
-      return noStoreJson(
-        {
-          error:
-            'This submission has already been promoted to an official competition entry and can no longer be moderated.',
-        },
-        {
-          status: 409,
-        }
-      )
-    }
-
-    // ========================================================
-    // IDEMPOTENT SAME-STATE REQUEST
-    // ========================================================
-
-    if (
-      existingSubmission.status ===
-      status
-    ) {
-      return noStoreJson(
-        {
-          submission:
-            existingSubmission,
+          hasMore:
+            false,
         },
         {
           status: 200,
@@ -397,18 +370,29 @@ export async function PATCH(
       )
     }
 
-    // ========================================================
-    // MODERATION TRANSITION
-    // ========================================================
-
     if (
-      existingSubmission.status !==
-      'pending'
+      competition.competition_type !==
+        'taste_duel'
     ) {
       return noStoreJson(
         {
           error:
-            `Submission cannot move from ${existingSubmission.status} to ${status}.`,
+            'Competition submissions are supported only for Taste Duels.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    if (
+      competition.taste_duel_execution_mode !==
+        'itinerary'
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'Competition has an unsupported Taste Duel execution mode.',
         },
         {
           status: 409,
@@ -417,71 +401,69 @@ export async function PATCH(
     }
 
     // ========================================================
-    // UPDATE
+    // QUERY SUBMISSIONS
+    // ========================================================
+    //
+    // Fetch one extra row so hasMore can be derived without a
+    // second count query.
     // ========================================================
 
-    const reviewedAt =
-      new Date().toISOString()
+    let query =
+      serviceSupabase
+        .from(
+          'competition_submissions'
+        )
+        .select(
+          SUBMISSION_SELECT
+        )
+        .eq(
+          'competition_id',
+          competitionId
+        )
+        .order(
+          'submitted_at',
+          {
+            ascending:
+              false,
+          }
+        )
+        .range(
+          offset,
+          offset +
+            limit
+        )
+
+    if (
+      normalizedStatus
+    ) {
+      query =
+        query.eq(
+          'status',
+          normalizedStatus
+        )
+    }
 
     const {
       data:
-        submission,
+        submissionData,
       error:
-        updateError,
-    } = await serviceSupabase
-      .from(
-        'competition_submissions'
-      )
-      .update({
-        status,
-
-        reviewed_by:
-          auth.user.id,
-
-        reviewed_at:
-          reviewedAt,
-
-        rejection_reason:
-          status ===
-            'rejected'
-            ? rejectionReason
-            : null,
-
-        updated_at:
-          reviewedAt,
-      })
-      .eq(
-        'id',
-        normalizedSubmissionId
-      )
-      .eq(
-        'competition_id',
-        normalizedCompetitionId
-      )
-      .eq(
-        'status',
-        'pending'
-      )
-      .is(
-        'competition_entry_id',
-        null
-      )
-      .select(
-        SUBMISSION_SELECT
-      )
-      .maybeSingle()
+        submissionsError,
+    } = await query
 
     if (
-      updateError
+      submissionsError
     ) {
       console.error(
-        '[venue-admin/competitions/[competitionId]/submissions/[submissionId]] PATCH failed:',
+        '[venue-admin/competitions/submissions] Submission query failed:',
         {
-          competitionId:
-            normalizedCompetitionId,
+          competitionId,
 
-          submissionId:
-            normalizedSubmissionId,
+          status:
+            normalizedStatus,
+
+          limit,
+
+          offset,
 
           adminUserId:
             auth.user.id,
@@ -489,18 +471,15 @@ export async function PATCH(
           adminEmail:
             auth.user.email,
 
-          requestedStatus:
-            status,
-
           error:
-            updateError,
+            submissionsError,
         }
       )
 
       return noStoreJson(
         {
           error:
-            'Could not update competition submission.',
+            'Could not load competition submissions.',
         },
         {
           status: 500,
@@ -508,33 +487,35 @@ export async function PATCH(
       )
     }
 
-    /**
-     * If no row was returned, the submission changed between the
-     * initial lookup and the guarded update.
-     *
-     * Treat this as a conflict rather than overwriting newer state.
-     */
-    if (!submission) {
-      return noStoreJson(
-        {
-          error:
-            'Competition submission changed before moderation could be completed. Refresh and try again.',
-        },
-        {
-          status: 409,
-        }
-      )
-    }
+    const rows =
+      submissionData ??
+      []
+
+    const hasMore =
+      rows.length >
+      limit
+
+    const submissions =
+      hasMore
+        ? rows.slice(
+            0,
+            limit
+          )
+        : rows
+
+    // ========================================================
+    // SUCCESS
+    // ========================================================
 
     return noStoreJson(
       {
-        submission,
+        submissions,
 
-        message:
-          status ===
-            'approved'
-            ? 'Competition submission approved.'
-            : 'Competition submission rejected.',
+        limit,
+
+        offset,
+
+        hasMore,
       },
       {
         status: 200,
@@ -542,14 +523,14 @@ export async function PATCH(
     )
   } catch (error) {
     console.error(
-      '[venue-admin/competitions/[competitionId]/submissions/[submissionId]] PATCH unexpected error:',
+      '[venue-admin/competitions/submissions] GET unexpected error:',
       error
     )
 
     return noStoreJson(
       {
         error:
-          'Unexpected error updating competition submission.',
+          'Unexpected error loading competition submissions.',
       },
       {
         status: 500,
@@ -726,7 +707,62 @@ function noStoreJson(
 }
 
 // ============================================================
-// VALIDATION
+// QUERY VALIDATION
+// ============================================================
+
+function readIntegerQueryParameter({
+  value,
+  fallback,
+  minimum,
+  maximum,
+}: {
+  value: string | null
+  fallback: number
+  minimum: number
+  maximum: number
+}): number | null {
+  if (
+    value ===
+      null ||
+    value.trim() ===
+      ''
+  ) {
+    return fallback
+  }
+
+  const normalized =
+    value.trim()
+
+  if (
+    !/^\d+$/.test(
+      normalized
+    )
+  ) {
+    return null
+  }
+
+  const parsed =
+    Number(
+      normalized
+    )
+
+  if (
+    !Number.isSafeInteger(
+      parsed
+    ) ||
+    parsed <
+      minimum ||
+    parsed >
+      maximum
+  ) {
+    return null
+  }
+
+  return parsed
+}
+
+// ============================================================
+// IDENTIFIERS
 // ============================================================
 
 function isValidUuid(
@@ -735,23 +771,4 @@ function isValidUuid(
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value
   )
-}
-
-function normalizeOptionalString(
-  value: unknown
-): string | null {
-  if (
-    typeof value !==
-    'string'
-  ) {
-    return null
-  }
-
-  const normalized =
-    value.trim()
-
-  return normalized.length >
-    0
-    ? normalized
-    : null
 }

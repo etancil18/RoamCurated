@@ -29,6 +29,8 @@ type RouteContext = {
 
 type UpdateCompetitionBody = {
   status?: unknown
+
+  taste_duel_execution_mode?: unknown
 }
 
 // ============================================================
@@ -38,6 +40,7 @@ type UpdateCompetitionBody = {
 const COMPETITION_SELECT = `
   id,
   competition_type,
+  taste_duel_execution_mode,
   title,
   description,
   city,
@@ -65,6 +68,12 @@ const ALLOWED_STATUSES = new Set([
   'completed',
   'cancelled',
 ])
+
+const ALLOWED_TASTE_DUEL_EXECUTION_MODES =
+  new Set([
+    'itinerary',
+    'venue_participation',
+  ])
 
 // ============================================================
 // GET
@@ -397,7 +406,16 @@ export async function PATCH(
           () => ({})
         )) as UpdateCompetitionBody
 
+    // ========================================================
+    // OPTIONAL STATUS UPDATE
+    // ========================================================
+
+    const hasStatusUpdate =
+      body.status !==
+        undefined
+
     const status =
+      hasStatusUpdate &&
       typeof body.status ===
         'string'
         ? body.status
@@ -406,15 +424,70 @@ export async function PATCH(
         : null
 
     if (
-      !status ||
-      !ALLOWED_STATUSES.has(
-        status
+      hasStatusUpdate &&
+      (
+        !status ||
+        !ALLOWED_STATUSES.has(
+          status
+        )
       )
     ) {
       return noStoreJson(
         {
           error:
             'Invalid status.',
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    // ========================================================
+    // OPTIONAL TASTE DUEL EXECUTION MODE UPDATE
+    // ========================================================
+
+    const hasExecutionModeUpdate =
+      body.taste_duel_execution_mode !==
+        undefined
+
+    const tasteDuelExecutionMode =
+      hasExecutionModeUpdate &&
+      typeof body.taste_duel_execution_mode ===
+        'string'
+        ? body.taste_duel_execution_mode
+            .trim()
+            .toLowerCase()
+        : null
+
+    if (
+      hasExecutionModeUpdate &&
+      (
+        !tasteDuelExecutionMode ||
+        !ALLOWED_TASTE_DUEL_EXECUTION_MODES.has(
+          tasteDuelExecutionMode
+        )
+      )
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'Invalid taste_duel_execution_mode.',
+        },
+        {
+          status: 400,
+        }
+      )
+    }
+
+    if (
+      !hasStatusUpdate &&
+      !hasExecutionModeUpdate
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'No supported competition update was provided.',
         },
         {
           status: 400,
@@ -488,7 +561,12 @@ export async function PATCH(
       )
     }
 
+    // ========================================================
+    // STATUS TRANSITION VALIDATION
+    // ========================================================
+
     if (
+      status &&
       !isAllowedStatusTransition(
         existingCompetition.status,
         status
@@ -505,6 +583,89 @@ export async function PATCH(
       )
     }
 
+    // ========================================================
+    // EXECUTION MODE IMMUTABILITY BOUNDARY
+    // ========================================================
+    //
+    // An execution-mode change alters the competition's evidence,
+    // scoring, recomputation, and settlement semantics.
+    //
+    // Therefore an actual mode change is allowed only while the
+    // competition is still draft.
+    //
+    // Sending the existing value again remains harmless.
+    // ========================================================
+
+    const executionModeIsChanging =
+      tasteDuelExecutionMode !==
+        null &&
+      tasteDuelExecutionMode !==
+        existingCompetition
+          .taste_duel_execution_mode
+
+    if (
+      executionModeIsChanging &&
+      existingCompetition.status !==
+        'draft'
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'taste_duel_execution_mode can only be changed while the competition is in draft status.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    if (
+      executionModeIsChanging &&
+      existingCompetition
+        .competition_type !==
+        'taste_duel'
+    ) {
+      return noStoreJson(
+        {
+          error:
+            'taste_duel_execution_mode can only be changed for Taste Duel competitions.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
+    // ========================================================
+    // UPDATE PAYLOAD
+    // ========================================================
+
+    const updatePayload: {
+      status?: string
+
+      taste_duel_execution_mode?: string
+
+      updated_at: string
+    } = {
+      updated_at:
+        new Date().toISOString(),
+    }
+
+    if (
+      status
+    ) {
+      updatePayload.status =
+        status
+    }
+
+    if (
+      tasteDuelExecutionMode
+    ) {
+      updatePayload
+        .taste_duel_execution_mode =
+        tasteDuelExecutionMode
+    }
+
     const {
       data:
         competition,
@@ -514,11 +675,9 @@ export async function PATCH(
       .from(
         'competitions'
       )
-      .update({
-        status,
-        updated_at:
-          new Date().toISOString(),
-      })
+      .update(
+        updatePayload
+      )
       .eq(
         'id',
         normalizedCompetitionId
@@ -549,6 +708,13 @@ export async function PATCH(
 
           toStatus:
             status,
+
+          fromTasteDuelExecutionMode:
+            existingCompetition
+              .taste_duel_execution_mode,
+
+          toTasteDuelExecutionMode:
+            tasteDuelExecutionMode,
 
           error:
             updateError,

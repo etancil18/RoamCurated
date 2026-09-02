@@ -172,12 +172,12 @@ export type Database = {
           disqualified_at: string | null
           id: string
           source_flow_session_id: string | null
-          source_type: string
+          source_type: string | null
           source_visit_date: string | null
           status: string
           submitted_at: string
           updated_at: string
-          user_id: string
+          user_id: string | null
           venue_ids: string[]
           withdrawn_at: string | null
         }
@@ -189,12 +189,12 @@ export type Database = {
           disqualified_at?: string | null
           id?: string
           source_flow_session_id?: string | null
-          source_type: string
+          source_type?: string | null
           source_visit_date?: string | null
           status?: string
           submitted_at?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           venue_ids: string[]
           withdrawn_at?: string | null
         }
@@ -206,12 +206,12 @@ export type Database = {
           disqualified_at?: string | null
           id?: string
           source_flow_session_id?: string | null
-          source_type?: string
+          source_type?: string | null
           source_visit_date?: string | null
           status?: string
           submitted_at?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           venue_ids?: string[]
           withdrawn_at?: string | null
         }
@@ -384,6 +384,7 @@ export type Database = {
           confidence_score: number
           created_at: string
           cross_completer_count: number
+          depth_confidence: number | null
           entry_id: string
           experience_score: number | null
           final_score: number
@@ -391,8 +392,10 @@ export type Database = {
           head_to_head_preference_count: number
           head_to_head_preference_rate: number | null
           id: string
+          participation_confidence: number | null
           participation_count: number
           qualified_participant_count: number
+          rating_confidence: number | null
           rating_count: number
           repeat_score: number | null
           replay_count: number | null
@@ -400,6 +403,12 @@ export type Database = {
           save_count: number | null
           save_rate: number | null
           snapshot_type: string
+          unique_venue_participant_count: number | null
+          unique_venue_visitor_count: number | null
+          venue_breadth_rate: number | null
+          venue_count: number | null
+          visited_venue_count: number | null
+          weighted_participation: number | null
           would_repeat_count: number
           would_repeat_rate: number | null
           would_repeat_response_count: number
@@ -416,6 +425,7 @@ export type Database = {
           confidence_score?: number
           created_at?: string
           cross_completer_count?: number
+          depth_confidence?: number | null
           entry_id: string
           experience_score?: number | null
           final_score: number
@@ -423,8 +433,10 @@ export type Database = {
           head_to_head_preference_count?: number
           head_to_head_preference_rate?: number | null
           id?: string
+          participation_confidence?: number | null
           participation_count?: number
           qualified_participant_count?: number
+          rating_confidence?: number | null
           rating_count?: number
           repeat_score?: number | null
           replay_count?: number | null
@@ -432,6 +444,12 @@ export type Database = {
           save_count?: number | null
           save_rate?: number | null
           snapshot_type?: string
+          unique_venue_participant_count?: number | null
+          unique_venue_visitor_count?: number | null
+          venue_breadth_rate?: number | null
+          venue_count?: number | null
+          visited_venue_count?: number | null
+          weighted_participation?: number | null
           would_repeat_count?: number
           would_repeat_rate?: number | null
           would_repeat_response_count?: number
@@ -448,6 +466,7 @@ export type Database = {
           confidence_score?: number
           created_at?: string
           cross_completer_count?: number
+          depth_confidence?: number | null
           entry_id?: string
           experience_score?: number | null
           final_score?: number
@@ -455,8 +474,10 @@ export type Database = {
           head_to_head_preference_count?: number
           head_to_head_preference_rate?: number | null
           id?: string
+          participation_confidence?: number | null
           participation_count?: number
           qualified_participant_count?: number
+          rating_confidence?: number | null
           rating_count?: number
           repeat_score?: number | null
           replay_count?: number | null
@@ -464,6 +485,12 @@ export type Database = {
           save_count?: number | null
           save_rate?: number | null
           snapshot_type?: string
+          unique_venue_participant_count?: number | null
+          unique_venue_visitor_count?: number | null
+          venue_breadth_rate?: number | null
+          venue_count?: number | null
+          visited_venue_count?: number | null
+          weighted_participation?: number | null
           would_repeat_count?: number
           would_repeat_rate?: number | null
           would_repeat_response_count?: number
@@ -2165,6 +2192,82 @@ export type Database = {
           },
         ]
       }
+      competition_venue_participation_events: {
+        Row: {
+          competition_entry_id: string
+          competition_id: string
+          created_at: string
+          id: string
+          occurred_at: string
+          user_id: string
+          venue_id: string
+          venue_visit_id: string
+        }
+        Insert: {
+          competition_entry_id: string
+          competition_id: string
+          created_at?: string
+          id?: string
+          occurred_at: string
+          user_id: string
+          venue_id: string
+          venue_visit_id: string
+        }
+        Update: {
+          competition_entry_id?: string
+          competition_id?: string
+          created_at?: string
+          id?: string
+          occurred_at?: string
+          user_id?: string
+          venue_id?: string
+          venue_visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_venue_participation_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_competition_fk"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_relay_winner_xp_audit"
+            referencedColumns: ["competition_id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_entry_competition_fk"
+            columns: ["competition_id", "competition_entry_id"]
+            isOneToOne: false
+            referencedRelation: "competition_entries"
+            referencedColumns: ["competition_id", "id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_venue_fk"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_venue_fk"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_venue_visit_fk"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "venue_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competition_xp_awards: {
         Row: {
           awarded_at: string
@@ -2241,6 +2344,7 @@ export type Database = {
           result_status: string
           starts_at: string | null
           status: string
+          taste_duel_execution_mode: string | null
           title: string
           updated_at: string
           winner_entry_id: string | null
@@ -2266,6 +2370,7 @@ export type Database = {
           result_status?: string
           starts_at?: string | null
           status?: string
+          taste_duel_execution_mode?: string | null
           title: string
           updated_at?: string
           winner_entry_id?: string | null
@@ -2291,6 +2396,7 @@ export type Database = {
           result_status?: string
           starts_at?: string | null
           status?: string
+          taste_duel_execution_mode?: string | null
           title?: string
           updated_at?: string
           winner_entry_id?: string | null
@@ -9612,6 +9718,19 @@ export type Database = {
           team_id: string
           team_slot_id: string
           team_status: string
+        }[]
+      }
+      record_competition_venue_visit: {
+        Args: { p_venue_visit_id: string }
+        Returns: {
+          competition_entry_id: string
+          competition_id: string
+          created: boolean
+          event_id: string
+          occurred_at: string
+          user_id: string
+          venue_id: string
+          venue_visit_id: string
         }[]
       }
       record_creator_replay_completion: {

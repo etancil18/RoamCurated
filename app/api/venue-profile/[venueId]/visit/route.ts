@@ -143,6 +143,82 @@ async function refreshPublicPassportStats(
 }
 
 /**
+ * Canonical venue-participation competition attribution.
+ *
+ * A successful geo-verified venue_visits row is the source event.
+ *
+ * The database RPC determines whether that visit belongs to any
+ * currently-live venue-participation Taste Duel, resolves the exact
+ * approved contender from venue membership, and records immutable
+ * competition evidence idempotently.
+ *
+ * Failure here is intentionally non-fatal to the already-successful
+ * canonical venue check-in.
+ */
+async function recordVenueParticipationEvidence(
+  venueVisitId: string
+): Promise<void> {
+  try {
+    const supabaseUrl =
+      process.env.NEXT_PUBLIC_SUPABASE_URL
+
+    const serviceRoleKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (
+      !supabaseUrl ||
+      !serviceRoleKey
+    ) {
+      console.error(
+        '[venue visit][competition] Venue-participation attribution unavailable: missing Supabase service-role configuration.'
+      )
+
+      return
+    }
+
+    const serviceSupabase =
+      createClient(
+        supabaseUrl,
+        serviceRoleKey,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        }
+      )
+
+    const {
+      error,
+    } = await serviceSupabase.rpc(
+      'record_competition_venue_visit',
+      {
+        p_venue_visit_id:
+          venueVisitId,
+      }
+    )
+
+    if (error) {
+      console.error(
+        '[venue visit][competition] Venue-participation attribution failed:',
+        {
+          venueVisitId,
+          error,
+        }
+      )
+    }
+  } catch (error) {
+    console.error(
+      '[venue visit][competition] Unexpected venue-participation attribution failure:',
+      {
+        venueVisitId,
+        error,
+      }
+    )
+  }
+}
+
+/**
  * Legacy Active Flow competition reconciliation.
  *
  * This runs only from the historical Active Flow repair path below,
@@ -1268,7 +1344,7 @@ export async function POST(
     )
   }
 
-const {
+  const {
     data,
     error,
   } = await supabase
@@ -1342,6 +1418,10 @@ const {
       }
     )
   }
+
+  await recordVenueParticipationEvidence(
+    data.id
+  )
 
   await refreshPublicPassportStats(
     user.id,

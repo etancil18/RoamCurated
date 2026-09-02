@@ -15,6 +15,7 @@ import {
 import type {
   Competition,
   CompetitionEntry,
+  CompetitionEntryScoreSnapshot,
   CompetitionParticipation,
   CompetitionResult,
   CompetitionSubmission,
@@ -39,6 +40,7 @@ import type {
  *   - moderation queue
  *   - competition entries
  *   - competition participation
+ *   - competition score snapshots
  *   - competition results
  *
  * SECURITY:
@@ -219,6 +221,7 @@ function cleanOptionalText(
 const COMPETITION_SELECT = `
   id,
   competition_type,
+  taste_duel_execution_mode,
   title,
   description,
   city,
@@ -314,6 +317,75 @@ const COMPETITION_PARTICIPATION_SELECT = `
   completed_at,
   created_at,
   updated_at
+`;
+
+
+/**
+ * Canonical shared score-snapshot projection.
+ *
+ * This table serves both:
+ *
+ *   taste_duel_v1
+ *
+ * and:
+ *
+ *   taste_duel_venue_participation_v1
+ *
+ * The algorithm_version field determines which algorithm-specific
+ * evidence columns are authoritative.
+ *
+ * Do not reinterpret itinerary-only fields for venue participation.
+ */
+const COMPETITION_ENTRY_SCORE_SNAPSHOT_SELECT = `
+  id,
+  competition_id,
+  entry_id,
+  snapshot_type,
+
+  participation_count,
+  completed_participant_count,
+  qualified_participant_count,
+  cross_completer_count,
+  completion_rate,
+
+  rating_count,
+  average_rating,
+
+  would_repeat_response_count,
+  would_repeat_count,
+  would_repeat_rate,
+
+  head_to_head_preference_count,
+  head_to_head_eligible_count,
+  head_to_head_preference_rate,
+
+  replay_count,
+  replay_rate,
+  save_count,
+  save_rate,
+
+  completion_score,
+  experience_score,
+  repeat_score,
+  comparative_score,
+
+  confidence_score,
+  final_score,
+
+  unique_venue_participant_count,
+  unique_venue_visitor_count,
+  weighted_participation,
+  visited_venue_count,
+  venue_count,
+  venue_breadth_rate,
+
+  participation_confidence,
+  rating_confidence,
+  depth_confidence,
+
+  algorithm_version,
+  calculated_at,
+  created_at
 `;
 
 
@@ -1201,6 +1273,11 @@ export interface CompetitionParticipationPage {
 /**
  * Shared trusted participation query.
  *
+ * ITINERARY MODE ONLY.
+ *
+ * Venue-participation evidence is queried through its dedicated
+ * evidence adapter and should not be projected into this contract.
+ *
  * The caller's Supabase client/RLS determines which rows it may
  * actually read.
  */
@@ -1356,6 +1433,8 @@ export async function listUserCompetitionParticipations(
  *
  * competition_participations has a unique
  * (competition_entry_id, user_id) invariant.
+ *
+ * ITINERARY MODE ONLY.
  */
 export async function getCompetitionParticipationForEntry(
   supabase: CompetitionSupabaseClient,
@@ -1444,6 +1523,174 @@ export async function getCompetitionParticipationById(
       ? data as CompetitionParticipation
       : null
   );
+}
+
+
+// ============================================================
+// SCORE SNAPSHOTS — TRUSTED
+// ============================================================
+
+/**
+ * Canonical immutable score-snapshot lookup.
+ *
+ * The returned algorithm_version determines which fields are
+ * authoritative.
+ *
+ * taste_duel_v1:
+ *
+ *   itinerary participation/completion/repeat/comparative fields
+ *   retain their existing semantics.
+ *
+ * taste_duel_venue_participation_v1:
+ *
+ *   venue-participation-specific evidence and confidence fields
+ *   are authoritative.
+ *
+ * Never infer venue-participation meaning from itinerary-only
+ * snapshot columns.
+ */
+export async function getCompetitionEntryScoreSnapshotById(
+  supabase: CompetitionSupabaseClient,
+  snapshotId: UUID,
+): Promise<CompetitionEntryScoreSnapshot | null> {
+  assertNonBlankId(
+    "snapshotId",
+    snapshotId,
+  );
+
+
+  const {
+    data,
+    error,
+  } = await supabase
+    .from(
+      "competition_entry_score_snapshots",
+    )
+    .select(
+      COMPETITION_ENTRY_SCORE_SNAPSHOT_SELECT,
+    )
+    .eq(
+      "id",
+      snapshotId,
+    )
+    .maybeSingle();
+
+
+  if (error) {
+    throwQueryFailure(
+      "get competition entry score snapshot",
+      error,
+    );
+  }
+
+
+  return (
+    data
+      ? data as CompetitionEntryScoreSnapshot
+      : null
+  );
+}
+
+
+// ============================================================
+// FINAL WINNER EVIDENCE SNAPSHOT
+// ============================================================
+
+/**
+ * Resolves the exact immutable score snapshot referenced by a
+ * winner result.
+ *
+ * Tie / insufficient-evidence / void results have no singular
+ * final_evidence_snapshot_id and therefore return null.
+ *
+ * The database foreign key already binds:
+ *
+ *   competition_id
+ *   winner_entry_id
+ *   final_evidence_snapshot_id
+ *
+ * to the same immutable snapshot row.
+ *
+ * This helper additionally checks competition_id defensively so
+ * callers cannot accidentally combine a result and snapshot from
+ * different competitions.
+ */
+export async function getCompetitionFinalEvidenceSnapshot(
+  supabase: CompetitionSupabaseClient,
+  competitionId: UUID,
+): Promise<CompetitionEntryScoreSnapshot | null> {
+  assertNonBlankId(
+    "competitionId",
+    competitionId,
+  );
+
+
+  const result =
+    await getCompetitionResult(
+      supabase,
+      competitionId,
+    );
+
+
+  if (
+    !result
+    || result.result_status !==
+      "winner"
+    || !result.final_evidence_snapshot_id
+  ) {
+    return null;
+  }
+
+
+  const snapshot =
+    await getCompetitionEntryScoreSnapshotById(
+      supabase,
+      result.final_evidence_snapshot_id,
+    );
+
+
+  if (!snapshot) {
+    throw new CompetitionQueryError(
+      "QUERY_FAILED",
+      "Competition winner references a missing final evidence snapshot.",
+    );
+  }
+
+
+  if (
+    snapshot.competition_id !==
+      competitionId
+  ) {
+    throw new CompetitionQueryError(
+      "QUERY_FAILED",
+      "Competition final evidence snapshot belongs to a different competition.",
+    );
+  }
+
+
+  if (
+    snapshot.entry_id !==
+      result.winner_entry_id
+  ) {
+    throw new CompetitionQueryError(
+      "QUERY_FAILED",
+      "Competition final evidence snapshot does not belong to the winner entry.",
+    );
+  }
+
+
+  if (
+    snapshot.algorithm_version !==
+      result.algorithm_version
+  ) {
+    throw new CompetitionQueryError(
+      "QUERY_FAILED",
+      "Competition final evidence snapshot algorithm does not match the settlement result.",
+    );
+  }
+
+
+  return snapshot;
 }
 
 

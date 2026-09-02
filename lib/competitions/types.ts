@@ -43,6 +43,7 @@ export type ISODate = string;
 export type VenueId = string;
 
 
+
 // ============================================================
 // COMPETITION CONSTANTS + UNIONS
 // ============================================================
@@ -53,6 +54,7 @@ export const COMPETITION_TYPES = [
 
 export type CompetitionType =
   (typeof COMPETITION_TYPES)[number];
+
 
 
 export const COMPETITION_STATUSES = [
@@ -68,6 +70,7 @@ export type CompetitionStatus =
   (typeof COMPETITION_STATUSES)[number];
 
 
+
 export const COMPETITION_RESULT_STATUSES = [
   "pending",
   "winner",
@@ -78,6 +81,7 @@ export const COMPETITION_RESULT_STATUSES = [
 
 export type CompetitionResultStatus =
   (typeof COMPETITION_RESULT_STATUSES)[number];
+
 
 
 /**
@@ -96,6 +100,7 @@ export type SettledCompetitionResultStatus =
   (typeof SETTLED_COMPETITION_RESULT_STATUSES)[number];
 
 
+
 export const COMPETITION_ENTRY_STATUSES = [
   "pending",
   "approved",
@@ -107,6 +112,7 @@ export type CompetitionEntryStatus =
   (typeof COMPETITION_ENTRY_STATUSES)[number];
 
 
+
 export const COMPETITION_SOURCE_TYPES = [
   "active_flow",
   "visit_history",
@@ -114,6 +120,7 @@ export const COMPETITION_SOURCE_TYPES = [
 
 export type CompetitionSourceType =
   (typeof COMPETITION_SOURCE_TYPES)[number];
+
 
 
 /**
@@ -126,6 +133,7 @@ export type CompetitionSubmissionSource =
   CompetitionSourceType;
 
 
+
 export const COMPETITION_SUBMISSION_STATUSES = [
   "pending",
   "approved",
@@ -136,13 +144,79 @@ export type CompetitionSubmissionStatus =
   (typeof COMPETITION_SUBMISSION_STATUSES)[number];
 
 
+
+// ============================================================
+// TASTE DUEL EXECUTION MODES
+// ============================================================
+
+/**
+ * Canonical execution-mode discriminator for Taste Duels.
+ *
+ * itinerary:
+ *
+ *   Existing route-completion competition model.
+ *
+ * venue_participation:
+ *
+ *   Curated sides scored from immutable qualifying venue visits
+ *   and canonical venue_visits.rating evidence.
+ *
+ * These modes intentionally have independent evidence and scoring
+ * contracts.
+ */
+export const TASTE_DUEL_EXECUTION_MODES = [
+  "itinerary",
+  "venue_participation",
+] as const;
+
+export type TasteDuelExecutionMode =
+  (typeof TASTE_DUEL_EXECUTION_MODES)[number];
+
+
+
+// ============================================================
+// SCORING ALGORITHM VERSIONS
+// ============================================================
+
+/**
+ * Immutable scoring algorithm identifiers currently supported by
+ * the competition system.
+ *
+ * IMPORTANT:
+ *
+ * Never change the behavioral meaning of an existing identifier.
+ * Introduce a new identifier whenever scoring behavior changes.
+ */
+export const COMPETITION_ALGORITHM_VERSIONS = [
+  "taste_duel_v1",
+  "taste_duel_venue_participation_v1",
+] as const;
+
+export type CompetitionAlgorithmVersion =
+  (typeof COMPETITION_ALGORITHM_VERSIONS)[number];
+
+
+
+/**
+ * Snapshot lifecycle values currently persisted by the platform.
+ *
+ * settlement is the frozen append-only score set supplied to:
+ *
+ *   settle_competition_from_snapshots()
+ *
+ * and may become the winner's:
+ *
+ *   competition_results.final_evidence_snapshot_id
+ */
 export const COMPETITION_SNAPSHOT_TYPES = [
   "live",
   "final",
+  "settlement",
 ] as const;
 
 export type CompetitionSnapshotType =
   (typeof COMPETITION_SNAPSHOT_TYPES)[number];
+
 
 
 export const COMPETITION_XP_AWARD_STATUSES = [
@@ -156,6 +230,7 @@ export type CompetitionXpAwardStatus =
   (typeof COMPETITION_XP_AWARD_STATUSES)[number];
 
 
+
 export const COMPETITION_CONTENDER_SLOTS = [
   1,
   2,
@@ -167,12 +242,14 @@ export type CompetitionContenderSlot =
   (typeof COMPETITION_CONTENDER_SLOTS)[number];
 
 
+
 export type CompetitionOverallRating =
   | 1
   | 2
   | 3
   | 4
   | 5;
+
 
 
 // ============================================================
@@ -186,6 +263,20 @@ export interface Competition {
   id: UUID;
 
   competition_type: CompetitionType;
+
+  /**
+   * Canonical Taste Duel execution model.
+   *
+   * Existing itinerary competitions use:
+   *
+   *   itinerary
+   *
+   * Curated physical venue competitions use:
+   *
+   *   venue_participation
+   */
+  taste_duel_execution_mode:
+    TasteDuelExecutionMode | null;
 
   title: string;
   description: string | null;
@@ -201,8 +292,10 @@ export interface Competition {
   max_entries: number;
 
   /**
-   * V1 defaults to 0.
-   * May be raised by future competition configurations.
+   * Itinerary-mode settlement configuration.
+   *
+   * Venue-participation settlement deliberately does not inherit
+   * this threshold.
    */
   minimum_qualified_participants: number;
 
@@ -228,6 +321,7 @@ export interface Competition {
 }
 
 
+
 /**
  * Trusted/admin creation payload.
  *
@@ -235,6 +329,9 @@ export interface Competition {
  */
 export interface CreateCompetitionInput {
   competition_type?: CompetitionType;
+
+  taste_duel_execution_mode?:
+    TasteDuelExecutionMode | null;
 
   title: string;
   description?: string | null;
@@ -257,6 +354,7 @@ export interface CreateCompetitionInput {
 }
 
 
+
 /**
  * Admin-editable competition configuration.
  *
@@ -268,6 +366,9 @@ export interface UpdateCompetitionInput {
 
   city?: string | null;
   category?: string | null;
+
+  taste_duel_execution_mode?:
+    TasteDuelExecutionMode | null;
 
   status?: CompetitionStatus;
 
@@ -282,6 +383,7 @@ export interface UpdateCompetitionInput {
 }
 
 
+
 // ============================================================
 // COMPETITION ENTRY
 // ============================================================
@@ -289,15 +391,26 @@ export interface UpdateCompetitionInput {
 /**
  * Mirrors public.competition_entries.
  *
- * Identity-bearing table.
+ * Identity-bearing for itinerary contenders.
  *
- * Do not expose raw rows publicly during anonymous live duels.
+ * Venue-participation entries may instead represent curated sides
+ * with no owning user.
+ *
+ * Do not expose raw identity-bearing rows publicly during
+ * anonymous live duels.
  */
 export interface CompetitionEntry {
   id: UUID;
 
   competition_id: UUID;
-  user_id: UUID;
+
+  /**
+   * Itinerary entries are user-owned.
+   *
+   * Curated venue-participation entries intentionally have no
+   * canonical user owner and therefore store null.
+   */
+  user_id: UUID | null;
 
   /**
    * 1 = A
@@ -320,9 +433,12 @@ export interface CompetitionEntry {
   source_visit_date: ISODate | null;
 
   /**
-   * Ordered route snapshot.
+   * Ordered route/configured venue snapshot.
    *
    * Canonical venue IDs are text.
+   *
+   * In venue-participation mode these IDs define the configured
+   * venues belonging to this side.
    */
   venue_ids: VenueId[];
 
@@ -339,15 +455,19 @@ export interface CompetitionEntry {
 }
 
 
+
 /**
  * Trusted/admin entry creation payload.
  *
  * Normally created when an approved submission becomes
  * an official contender.
+ *
+ * Curated venue-participation entries may intentionally use a
+ * null user_id.
  */
 export interface CreateCompetitionEntryInput {
   competition_id: UUID;
-  user_id: UUID;
+  user_id: UUID | null;
 
   contender_slot: CompetitionContenderSlot;
 
@@ -364,6 +484,7 @@ export interface CreateCompetitionEntryInput {
 
   approved_at?: ISODateTime | null;
 }
+
 
 
 // ============================================================
@@ -427,6 +548,7 @@ export interface CompetitionSubmission {
 }
 
 
+
 /**
  * User-facing submission creation payload.
  *
@@ -452,6 +574,7 @@ export interface CreateCompetitionSubmissionInput {
 }
 
 
+
 /**
  * Trusted moderation payload.
  */
@@ -472,6 +595,7 @@ export interface ReviewCompetitionSubmissionInput {
    */
   competition_entry_id?: UUID | null;
 }
+
 
 
 // ============================================================
@@ -499,6 +623,7 @@ export interface CompetitionFlowSession {
 }
 
 
+
 // ============================================================
 // COMPETITION PARTICIPATION
 // ============================================================
@@ -506,8 +631,13 @@ export interface CompetitionFlowSession {
 /**
  * Mirrors public.competition_participations.
  *
- * This is the canonical aggregated competition participation
- * record.
+ * ITINERARY MODE ONLY.
+ *
+ * This is the canonical aggregated itinerary competition
+ * participation record.
+ *
+ * Venue-participation evidence is instead represented by immutable
+ * competition_venue_participation_events joined to venue_visits.
  *
  * Raw venue-level proof remains in Active Flow / visit evidence.
  */
@@ -550,6 +680,7 @@ export interface CompetitionParticipation {
 }
 
 
+
 /**
  * Trusted participation creation payload.
  *
@@ -573,6 +704,7 @@ export interface CreateCompetitionParticipationInput {
 }
 
 
+
 /**
  * Trusted reconciliation update.
  *
@@ -587,6 +719,7 @@ export interface UpdateCompetitionParticipationEvidenceInput {
 }
 
 
+
 // ============================================================
 // COMPETITION ENTRY RATING
 // ============================================================
@@ -594,8 +727,18 @@ export interface UpdateCompetitionParticipationEvidenceInput {
 /**
  * Mirrors public.competition_entry_ratings.
  *
+ * ITINERARY MODE ONLY.
+ *
  * Every rating must be backed by the same user's qualified
  * participation in the same competition entry.
+ *
+ * Venue-participation rating evidence comes directly from:
+ *
+ *   competition_venue_participation_events.venue_visit_id
+ *                           ->
+ *                    venue_visits.rating
+ *
+ * Do not reuse this table for venue-participation scoring.
  */
 export interface CompetitionEntryRating {
   id: UUID;
@@ -622,8 +765,9 @@ export interface CompetitionEntryRating {
 }
 
 
+
 /**
- * User-facing rating payload.
+ * User-facing itinerary rating payload.
  *
  * user_id should generally be derived from the authenticated
  * session server-side rather than trusted from arbitrary input.
@@ -639,10 +783,12 @@ export interface CreateCompetitionEntryRatingInput {
 }
 
 
+
 export interface UpdateCompetitionEntryRatingInput {
   overall_rating?: CompetitionOverallRating;
   would_repeat?: boolean | null;
 }
+
 
 
 // ============================================================
@@ -651,6 +797,8 @@ export interface UpdateCompetitionEntryRatingInput {
 
 /**
  * Mirrors public.competition_head_to_head_preferences.
+ *
+ * ITINERARY MODE ONLY.
  *
  * Only valid once the user has qualified participation in at
  * least two distinct competing entries.
@@ -668,10 +816,12 @@ export interface CompetitionHeadToHeadPreference {
 }
 
 
+
 export interface UpsertCompetitionHeadToHeadPreferenceInput {
   competition_id: UUID;
   preferred_entry_id: UUID;
 }
+
 
 
 // ============================================================
@@ -682,6 +832,13 @@ export interface UpsertCompetitionHeadToHeadPreferenceInput {
  * Mirrors public.competition_entry_score_snapshots.
  *
  * Score snapshots are immutable and append-only.
+ *
+ * The table is intentionally shared by both scoring algorithms:
+ *
+ *   taste_duel_v1
+ *   taste_duel_venue_participation_v1
+ *
+ * Algorithm-specific fields remain semantically isolated.
  */
 export interface CompetitionEntryScoreSnapshot {
   id: UUID;
@@ -692,9 +849,16 @@ export interface CompetitionEntryScoreSnapshot {
   snapshot_type: CompetitionSnapshotType;
 
   // ----------------------------------------------------------
-  // Participation evidence
+  // Itinerary participation evidence
   // ----------------------------------------------------------
 
+  /**
+   * Canonical taste_duel_v1 participation fields.
+   *
+   * Venue-participation snapshots keep these at their explicit
+   * unused compatibility representation rather than assigning
+   * venue-specific meanings to them.
+   */
   participation_count: number;
   completed_participant_count: number;
   qualified_participant_count: number;
@@ -702,22 +866,30 @@ export interface CompetitionEntryScoreSnapshot {
 
   /**
    * 0–1.
+   *
+   * null for venue-participation snapshots.
    */
   completion_rate: number | null;
 
   // ----------------------------------------------------------
-  // Rating evidence
+  // Shared rating evidence
   // ----------------------------------------------------------
 
   rating_count: number;
 
   /**
    * 1–5 when rating_count > 0.
+   *
+   * taste_duel_v1:
+   *   sourced from competition_entry_ratings
+   *
+   * taste_duel_venue_participation_v1:
+   *   sourced from qualifying venue_visits.rating values
    */
   average_rating: number | null;
 
   // ----------------------------------------------------------
-  // Repeat intent
+  // Itinerary repeat intent
   // ----------------------------------------------------------
 
   would_repeat_response_count: number;
@@ -725,11 +897,13 @@ export interface CompetitionEntryScoreSnapshot {
 
   /**
    * 0–1.
+   *
+   * null for venue-participation snapshots.
    */
   would_repeat_rate: number | null;
 
   // ----------------------------------------------------------
-  // Comparative evidence
+  // Itinerary comparative evidence
   // ----------------------------------------------------------
 
   head_to_head_preference_count: number;
@@ -737,6 +911,8 @@ export interface CompetitionEntryScoreSnapshot {
 
   /**
    * 0–1.
+   *
+   * null for venue-participation snapshots.
    */
   head_to_head_preference_rate: number | null;
 
@@ -751,12 +927,36 @@ export interface CompetitionEntryScoreSnapshot {
   save_rate: number | null;
 
   // ----------------------------------------------------------
-  // Component scores — 0–100
+  // Shared / algorithm-specific component scores — 0–100
   // ----------------------------------------------------------
 
+  /**
+   * Itinerary-only.
+   *
+   * null for venue-participation snapshots.
+   */
   completion_score: number | null;
+
+  /**
+   * Rating-quality component.
+   *
+   * For venue-participation V1 this stores the Bayesian-shrunk
+   * canonical rating quality mapped onto 0–100.
+   */
   experience_score: number | null;
+
+  /**
+   * Itinerary-only.
+   *
+   * null for venue-participation snapshots.
+   */
   repeat_score: number | null;
+
+  /**
+   * Itinerary-only.
+   *
+   * null for venue-participation snapshots.
+   */
   comparative_score: number | null;
 
   /**
@@ -769,17 +969,103 @@ export interface CompetitionEntryScoreSnapshot {
    */
   final_score: number;
 
-  algorithm_version: string;
+  // ----------------------------------------------------------
+  // Venue-participation evidence
+  // ----------------------------------------------------------
+
+  /**
+   * Distinct users with at least one qualifying immutable
+   * venue-participation event for this side.
+   *
+   * NULL for itinerary snapshots.
+   */
+  unique_venue_participant_count: number | null;
+
+  /**
+   * Distinct qualifying user + venue pairs for this side.
+   *
+   * NULL for itinerary snapshots.
+   */
+  unique_venue_visitor_count: number | null;
+
+  /**
+   * Sum of diminishing distinct-venue depth contributions across
+   * all users on this side.
+   *
+   * NULL for itinerary snapshots.
+   */
+  weighted_participation: number | null;
+
+  /**
+   * Number of configured venues with at least one qualifying
+   * venue-participation event.
+   *
+   * NULL for itinerary snapshots.
+   */
+  visited_venue_count: number | null;
+
+  /**
+   * Number of configured venues belonging to this side.
+   *
+   * NULL for itinerary snapshots.
+   */
+  venue_count: number | null;
+
+  /**
+   * visited_venue_count / venue_count.
+   *
+   * 0–1.
+   *
+   * Tracked for audit/analytics and deliberately not directly
+   * scored in venue-participation V1.
+   *
+   * NULL for itinerary snapshots.
+   */
+  venue_breadth_rate: number | null;
+
+  // ----------------------------------------------------------
+  // Venue-participation confidence audit
+  // ----------------------------------------------------------
+
+  /**
+   * 0–1 confidence contribution derived from unique participants.
+   *
+   * NULL for itinerary snapshots.
+   */
+  participation_confidence: number | null;
+
+  /**
+   * 0–1 confidence contribution derived from qualifying rating
+   * volume.
+   *
+   * NULL for itinerary snapshots.
+   */
+  rating_confidence: number | null;
+
+  /**
+   * 0–1 confidence contribution derived from diminishing weighted
+   * participation depth.
+   *
+   * NULL for itinerary snapshots.
+   */
+  depth_confidence: number | null;
+
+  algorithm_version: CompetitionAlgorithmVersion;
 
   calculated_at: ISODateTime;
   created_at: ISODateTime;
 }
 
 
+
 /**
  * Trusted scorer insertion payload.
  *
  * Snapshot IDs/timestamps may be database generated.
+ *
+ * Algorithm-specific application code is responsible for
+ * preserving the semantic boundary between itinerary and
+ * venue-participation fields.
  */
 export interface CreateCompetitionEntryScoreSnapshotInput {
   competition_id: UUID;
@@ -820,10 +1106,29 @@ export interface CreateCompetitionEntryScoreSnapshotInput {
 
   final_score: number;
 
-  algorithm_version: string;
+  // ----------------------------------------------------------
+  // Venue-participation evidence
+  // ----------------------------------------------------------
+
+  unique_venue_participant_count?: number | null;
+  unique_venue_visitor_count?: number | null;
+
+  weighted_participation?: number | null;
+
+  visited_venue_count?: number | null;
+  venue_count?: number | null;
+
+  venue_breadth_rate?: number | null;
+
+  participation_confidence?: number | null;
+  rating_confidence?: number | null;
+  depth_confidence?: number | null;
+
+  algorithm_version: CompetitionAlgorithmVersion;
 
   calculated_at?: ISODateTime;
 }
+
 
 
 // ============================================================
@@ -848,7 +1153,7 @@ export interface CompetitionResult {
   winner_entry_id: UUID | null;
 
   /**
-   * Winner outcomes point to the exact immutable final score
+   * Winner outcomes point to the exact immutable settlement score
    * snapshot used as settlement evidence.
    *
    * Non-winner outcomes keep this null.
@@ -859,7 +1164,8 @@ export interface CompetitionResult {
    * Required for winner/tie/insufficient_evidence.
    * May be null for void.
    */
-  algorithm_version: string | null;
+  algorithm_version:
+    CompetitionAlgorithmVersion | null;
 
   settled_at: ISODateTime;
 
@@ -875,6 +1181,7 @@ export interface CompetitionResult {
   created_at: ISODateTime;
   updated_at: ISODateTime;
 }
+
 
 
 // ============================================================
@@ -894,16 +1201,19 @@ export interface CreateWinnerCompetitionResultInput {
   winner_entry_id: UUID;
   final_evidence_snapshot_id: UUID;
 
-  algorithm_version: string;
+  algorithm_version: CompetitionAlgorithmVersion;
 
   settled_at?: ISODateTime;
   settled_by?: UUID | null;
 
-  xp_award_status?: Extract<
-    CompetitionXpAwardStatus,
-    "pending" | "failed"
-  >;
+  xp_award_status?:
+    | Extract<
+        CompetitionXpAwardStatus,
+        "pending" | "failed"
+      >
+    | "not_applicable";
 }
+
 
 
 export interface CreateTieCompetitionResultInput {
@@ -914,13 +1224,14 @@ export interface CreateTieCompetitionResultInput {
   winner_entry_id?: never;
   final_evidence_snapshot_id?: never;
 
-  algorithm_version: string;
+  algorithm_version: CompetitionAlgorithmVersion;
 
   settled_at?: ISODateTime;
   settled_by?: UUID | null;
 
   xp_award_status?: "not_applicable";
 }
+
 
 
 export interface CreateInsufficientEvidenceCompetitionResultInput {
@@ -931,13 +1242,14 @@ export interface CreateInsufficientEvidenceCompetitionResultInput {
   winner_entry_id?: never;
   final_evidence_snapshot_id?: never;
 
-  algorithm_version: string;
+  algorithm_version: CompetitionAlgorithmVersion;
 
   settled_at?: ISODateTime;
   settled_by?: UUID | null;
 
   xp_award_status?: "not_applicable";
 }
+
 
 
 export interface CreateVoidCompetitionResultInput {
@@ -948,7 +1260,8 @@ export interface CreateVoidCompetitionResultInput {
   winner_entry_id?: never;
   final_evidence_snapshot_id?: never;
 
-  algorithm_version?: string | null;
+  algorithm_version?:
+    CompetitionAlgorithmVersion | null;
 
   settled_at?: ISODateTime;
   settled_by?: UUID | null;
@@ -957,11 +1270,13 @@ export interface CreateVoidCompetitionResultInput {
 }
 
 
+
 export type CreateCompetitionResultInput =
   | CreateWinnerCompetitionResultInput
   | CreateTieCompetitionResultInput
   | CreateInsufficientEvidenceCompetitionResultInput
   | CreateVoidCompetitionResultInput;
+
 
 
 // ============================================================
@@ -983,6 +1298,7 @@ export type UpdateCompetitionResultXpInput =
       xp_award_status: "failed";
       xp_awarded_at?: null;
     };
+
 
 
 // ============================================================
@@ -1010,6 +1326,7 @@ export interface PublicCompetitionEntry {
 }
 
 
+
 /**
  * Public competition result after settlement.
  */
@@ -1020,10 +1337,12 @@ export interface PublicCompetitionResult {
 
   winner_entry_id: UUID | null;
 
-  algorithm_version: string | null;
+  algorithm_version:
+    CompetitionAlgorithmVersion | null;
 
   settled_at: ISODateTime;
 }
+
 
 
 // ============================================================
@@ -1036,10 +1355,12 @@ export interface CompetitionWithEntries {
 }
 
 
+
 export interface PublicCompetitionWithEntries {
   competition: Competition;
   entries: PublicCompetitionEntry[];
 }
+
 
 
 export interface CompetitionSubmissionWithEntry {
@@ -1048,18 +1369,22 @@ export interface CompetitionSubmissionWithEntry {
 }
 
 
+
 export interface CompetitionParticipationWithRating {
   participation: CompetitionParticipation;
   rating: CompetitionEntryRating | null;
 }
 
 
+
 export interface CompetitionSettlement {
   competition: Competition;
   result: CompetitionResult;
   winner_entry: CompetitionEntry | null;
-  final_evidence_snapshot: CompetitionEntryScoreSnapshot | null;
+  final_evidence_snapshot:
+    CompetitionEntryScoreSnapshot | null;
 }
+
 
 
 // ============================================================
@@ -1075,6 +1400,7 @@ export function isCompetitionStatus(
 }
 
 
+
 export function isCompetitionEntryStatus(
   value: string,
 ): value is CompetitionEntryStatus {
@@ -1082,6 +1408,7 @@ export function isCompetitionEntryStatus(
     COMPETITION_ENTRY_STATUSES as readonly string[]
   ).includes(value);
 }
+
 
 
 export function isCompetitionSubmissionStatus(
@@ -1093,6 +1420,7 @@ export function isCompetitionSubmissionStatus(
 }
 
 
+
 export function isCompetitionSourceType(
   value: string,
 ): value is CompetitionSourceType {
@@ -1100,6 +1428,7 @@ export function isCompetitionSourceType(
     COMPETITION_SOURCE_TYPES as readonly string[]
   ).includes(value);
 }
+
 
 
 export function isCompetitionOverallRating(
@@ -1113,6 +1442,7 @@ export function isCompetitionOverallRating(
 }
 
 
+
 export function isSettledCompetitionResultStatus(
   value: string,
 ): value is SettledCompetitionResultStatus {
@@ -1120,6 +1450,46 @@ export function isSettledCompetitionResultStatus(
     SETTLED_COMPETITION_RESULT_STATUSES as readonly string[]
   ).includes(value);
 }
+
+
+
+/**
+ * Runtime guard for competitions.taste_duel_execution_mode.
+ */
+export function isTasteDuelExecutionMode(
+  value: string,
+): value is TasteDuelExecutionMode {
+  return (
+    TASTE_DUEL_EXECUTION_MODES as readonly string[]
+  ).includes(value);
+}
+
+
+
+/**
+ * Runtime guard for persisted scoring-algorithm identifiers.
+ */
+export function isCompetitionAlgorithmVersion(
+  value: string,
+): value is CompetitionAlgorithmVersion {
+  return (
+    COMPETITION_ALGORITHM_VERSIONS as readonly string[]
+  ).includes(value);
+}
+
+
+
+/**
+ * Runtime guard for score-snapshot lifecycle values.
+ */
+export function isCompetitionSnapshotType(
+  value: string,
+): value is CompetitionSnapshotType {
+  return (
+    COMPETITION_SNAPSHOT_TYPES as readonly string[]
+  ).includes(value);
+}
+
 
 
 // ============================================================
@@ -1145,6 +1515,7 @@ export function contenderSlotLabel(
 }
 
 
+
 export function isCompetitionActive(
   competition: Pick<Competition, "status">,
 ): boolean {
@@ -1153,6 +1524,7 @@ export function isCompetitionActive(
     || competition.status === "scoring"
   );
 }
+
 
 
 export function isCompetitionSettled(
@@ -1165,13 +1537,58 @@ export function isCompetitionSettled(
 }
 
 
+
+/**
+ * True when a competition uses the original itinerary evidence
+ * and scoring model.
+ */
+export function isItineraryTasteDuel(
+  competition: Pick<
+    Competition,
+    | "competition_type"
+    | "taste_duel_execution_mode"
+  >,
+): boolean {
+  return (
+    competition.competition_type ===
+      "taste_duel"
+    &&
+    competition.taste_duel_execution_mode ===
+      "itinerary"
+  );
+}
+
+
+
+/**
+ * True when a competition uses immutable venue-participation
+ * evidence and venue-derived rating scoring.
+ */
+export function isVenueParticipationTasteDuel(
+  competition: Pick<
+    Competition,
+    | "competition_type"
+    | "taste_duel_execution_mode"
+  >,
+): boolean {
+  return (
+    competition.competition_type ===
+      "taste_duel"
+    &&
+    competition.taste_duel_execution_mode ===
+      "venue_participation"
+  );
+}
+
+
+
 export function hasCompetitionWinner(
   result: CompetitionResult,
 ): result is CompetitionResult & {
   result_status: "winner";
   winner_entry_id: UUID;
   final_evidence_snapshot_id: UUID;
-  algorithm_version: string;
+  algorithm_version: CompetitionAlgorithmVersion;
 } {
   return (
     result.result_status === "winner"

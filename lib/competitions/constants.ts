@@ -317,17 +317,125 @@ export const COMPETITION_SCORE_MAX = 100 as const;
 
 
 // ============================================================
-// ALGORITHM VERSION
+// ALGORITHM VERSIONS
 // ============================================================
 
 /**
- * Default scoring algorithm identifier for v1.
+ * Canonical immutable scoring-algorithm identifiers.
  *
- * Never change the behavior of an existing algorithm version.
- * Introduce a new version string instead.
+ * IMPORTANT:
+ *
+ * An algorithm version is a behavioral contract.
+ *
+ * Once production score snapshots have been persisted under one
+ * of these identifiers, do not change the scoring semantics
+ * represented by that value.
+ *
+ * Any behaviorally different scoring model must receive a new
+ * version identifier.
+ */
+export const COMPETITION_ALGORITHM_VERSION = {
+  /**
+   * Original itinerary-based Taste Duel scoring.
+   *
+   * Evidence model:
+   *
+   *   - competition participation / route completion
+   *   - competition entry rating
+   *   - would-repeat evidence when available
+   *   - explicit head-to-head preference
+   *   - evidence confidence
+   *
+   * This algorithm remains immutable and must never be reused for
+   * venue-participation scoring.
+   */
+  TASTE_DUEL_V1:
+    "taste_duel_v1",
+
+  /**
+   * Original venue-participation Taste Duel scoring.
+   *
+   * Evidence model:
+   *
+   *   - verified physical venue participation
+   *   - unique side participants
+   *   - diminishing same-user multi-venue depth
+   *   - canonical venue_visits ratings
+   *   - capped-linear evidence confidence
+   *
+   * This algorithm intentionally does not imply:
+   *
+   *   - route completion
+   *   - would-repeat
+   *   - explicit head-to-head preference
+   *
+   * V1 remains immutable.
+   */
+  TASTE_DUEL_VENUE_PARTICIPATION_V1:
+    "taste_duel_venue_participation_v1",
+
+  /**
+   * Venue-participation Taste Duel scoring with diminishing-return
+   * evidence confidence.
+   *
+   * Rating-quality semantics remain compatible with venue
+   * participation V1.
+   *
+   * The behavioral change is the confidence response curve:
+   *
+   *   V1:
+   *     capped-linear saturation
+   *
+   *   V2:
+   *     exponential diminishing-return saturation
+   *
+   * This ensures early credible evidence materially increases
+   * confidence while very large evidence volumes receive
+   * progressively smaller marginal confidence gains.
+   *
+   * Breadth remains tracked but unscored.
+   */
+  TASTE_DUEL_VENUE_PARTICIPATION_V2:
+    "taste_duel_venue_participation_v2",
+} as const;
+
+export type CompetitionAlgorithmVersion =
+  (typeof COMPETITION_ALGORITHM_VERSION)[keyof typeof COMPETITION_ALGORITHM_VERSION];
+
+export const COMPETITION_ALGORITHM_VERSIONS = [
+  COMPETITION_ALGORITHM_VERSION.TASTE_DUEL_V1,
+  COMPETITION_ALGORITHM_VERSION.TASTE_DUEL_VENUE_PARTICIPATION_V1,
+  COMPETITION_ALGORITHM_VERSION.TASTE_DUEL_VENUE_PARTICIPATION_V2,
+] as const;
+
+
+/**
+ * Existing default scoring algorithm.
+ *
+ * IMPORTANT:
+ *
+ * Preserve this export and value for compatibility with the
+ * existing itinerary Taste Duel scoring path.
+ *
+ * Do not repoint it to venue-participation scoring.
  */
 export const DEFAULT_COMPETITION_ALGORITHM_VERSION =
-  "taste_duel_v1" as const;
+  COMPETITION_ALGORITHM_VERSION.TASTE_DUEL_V1;
+
+
+/**
+ * Canonical default algorithm for venue-participation Taste Duels.
+ *
+ * IMPORTANT:
+ *
+ * Preserve V1 as the existing default until caller selection and
+ * snapshot/recomputation dispatch explicitly support V2.
+ *
+ * Do not silently repoint this constant merely because a newer
+ * algorithm version exists.
+ */
+export const DEFAULT_VENUE_PARTICIPATION_COMPETITION_ALGORITHM_VERSION =
+  COMPETITION_ALGORITHM_VERSION.TASTE_DUEL_VENUE_PARTICIPATION_V1;
 
 
 // ============================================================
@@ -554,6 +662,26 @@ export function isCompetitionContenderSlot(
 ): value is CompetitionContenderSlot {
   return (
     COMPETITION_CONTENDER_SLOTS as readonly number[]
+  ).includes(value);
+}
+
+
+/**
+ * Runtime guard for persisted/configured scoring algorithm values.
+ *
+ * Useful when reading algorithm identifiers from:
+ *
+ *   - database snapshots
+ *   - settlement input
+ *   - admin/API input
+ *
+ * TypeScript types alone cannot protect those runtime boundaries.
+ */
+export function isCompetitionAlgorithmVersion(
+  value: string,
+): value is CompetitionAlgorithmVersion {
+  return (
+    COMPETITION_ALGORITHM_VERSIONS as readonly string[]
   ).includes(value);
 }
 

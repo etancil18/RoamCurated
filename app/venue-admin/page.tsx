@@ -9,6 +9,7 @@ import EventsAdmin from './eventsadmin'
 import EventJourneysAdmin from './EventJourneysAdmin'
 import PropertyGuidesAdmin from './PropertyGuidesAdmin'
 import SocialGroupsAdmin from './components/SocialGroupsAdmin'
+import CompetitionEntrySelector from './components/CompetitionEntrySelector'
 import type { Database } from '@/types/supabase'
 
 export type VenueSummary = Pick<
@@ -130,9 +131,14 @@ type CompetitionEntryStatus =
   | 'withdrawn'
   | 'disqualified'
 
+type TasteDuelExecutionMode =
+  | 'itinerary'
+  | 'venue_participation'
+
 type AdminCompetition = {
   id: string
   competition_type: 'taste_duel'
+  taste_duel_execution_mode: TasteDuelExecutionMode
   title: string
   description: string | null
   city: string | null
@@ -142,6 +148,7 @@ type AdminCompetition = {
   ends_at: string | null
   max_entries: number
   minimum_qualified_participants: number
+  minimum_cross_completers: number
   winner_entry_id: string | null
   result_status: CompetitionResultStatus
   xp_reward: number
@@ -177,17 +184,30 @@ type AdminCompetitionSubmission = {
 type AdminCompetitionEntry = {
   id: string
   competition_id: string
-  user_id: string
+
+  /**
+   * Itinerary contenders are user-owned.
+   *
+   * Venue-participation contenders are curated sides and therefore
+   * intentionally have no canonical user/source owner.
+   */
+  user_id: string | null
+
   contender_slot: 1 | 2 | 3 | 4
-  source_type: CompetitionSource
+
+  source_type: CompetitionSource | null
   source_flow_session_id: string | null
   source_visit_date: string | null
+
   venue_ids: string[]
+
   status: CompetitionEntryStatus
+
   submitted_at: string
   approved_at: string | null
   withdrawn_at: string | null
   disqualified_at: string | null
+
   created_at: string
   updated_at: string
 }
@@ -202,10 +222,16 @@ type CreateCompetitionForm = {
   title: string
   category: string
   city: string
+
+  executionMode: TasteDuelExecutionMode
+
   maxEntries: 2 | 3 | 4
+
   startsAt: string
   endsAt: string
+
   xpReward: string
+
   anonymousEntries: boolean
 }
 
@@ -213,10 +239,17 @@ const EMPTY_COMPETITION_FORM: CreateCompetitionForm = {
   title: '',
   category: '',
   city: '',
+
+  executionMode:
+    'itinerary',
+
   maxEntries: 2,
+
   startsAt: '',
   endsAt: '',
+
   xpReward: '0',
+
   anonymousEntries: true,
 }
 
@@ -224,6 +257,7 @@ function CompetitionsAdmin() {
   const [competitions, setCompetitions] = useState<AdminCompetition[]>([])
   const [selectedCompetitionId, setSelectedCompetitionId] =
     useState<string>('')
+
   const [detail, setDetail] =
     useState<CompetitionAdminDetail | null>(null)
 
@@ -442,15 +476,30 @@ function CompetitionsAdmin() {
       }>('/api/venue-admin/competitions', {
         method: 'POST',
         body: JSON.stringify({
-          competition_type: 'taste_duel',
+          competition_type:
+            'taste_duel',
+
+          taste_duel_execution_mode:
+            form.executionMode,
+
           title,
           category,
           city,
-          max_entries: form.maxEntries,
-          starts_at: startsAt.toISOString(),
-          ends_at: endsAt.toISOString(),
-          xp_reward: xpReward,
-          anonymous_entries: form.anonymousEntries,
+
+          max_entries:
+            form.maxEntries,
+
+          starts_at:
+            startsAt.toISOString(),
+
+          ends_at:
+            endsAt.toISOString(),
+
+          xp_reward:
+            xpReward,
+
+          anonymous_entries:
+            form.anonymousEntries,
         }),
       })
 
@@ -509,6 +558,25 @@ function CompetitionsAdmin() {
     submission: AdminCompetitionSubmission,
     contenderSlot: 1 | 2 | 3 | 4,
   ) {
+    /**
+     * Submission promotion belongs exclusively to itinerary Taste
+     * Duels.
+     *
+     * Venue-participation contenders are curated directly from
+     * venue IDs and must never inherit user/source submission
+     * ownership.
+     */
+    if (
+      !selectedCompetition ||
+      selectedCompetition.taste_duel_execution_mode !==
+        'itinerary'
+    ) {
+      setError(
+        'Submission promotion is only available for itinerary Taste Duels.',
+      )
+      return
+    }
+
     if (submission.status !== 'approved') {
       setError(
         'Only approved submissions can become competition entries.',
@@ -739,6 +807,83 @@ function CompetitionsAdmin() {
               />
             </AdminField>
           </div>
+
+          <AdminField label="Taste Duel format">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    executionMode:
+                      'itinerary',
+                  }))
+                }
+                className={[
+                  'rounded-xl border p-4 text-left transition',
+
+                  form.executionMode ===
+                  'itinerary'
+                    ? 'border-white bg-white text-black'
+                    : 'border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800',
+                ].join(' ')}
+              >
+                <span className="block text-sm font-semibold">
+                  Itinerary
+                </span>
+
+                <span
+                  className={[
+                    'mt-1 block text-xs leading-5',
+
+                    form.executionMode ===
+                    'itinerary'
+                      ? 'text-neutral-600'
+                      : 'text-neutral-500',
+                  ].join(' ')}
+                >
+                  User-submitted routes become official contenders.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((current) => ({
+                    ...current,
+                    executionMode:
+                      'venue_participation',
+                  }))
+                }
+                className={[
+                  'rounded-xl border p-4 text-left transition',
+
+                  form.executionMode ===
+                  'venue_participation'
+                    ? 'border-white bg-white text-black'
+                    : 'border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800',
+                ].join(' ')}
+              >
+                <span className="block text-sm font-semibold">
+                  Venue participation
+                </span>
+
+                <span
+                  className={[
+                    'mt-1 block text-xs leading-5',
+
+                    form.executionMode ===
+                    'venue_participation'
+                      ? 'text-neutral-600'
+                      : 'text-neutral-500',
+                  ].join(' ')}
+                >
+                  Admin-curated venue sides compete on participation
+                  evidence.
+                </span>
+              </button>
+            </div>
+          </AdminField>
 
           <AdminField label="Competitors">
             <div className="grid grid-cols-3 gap-2">
@@ -986,40 +1131,56 @@ function CompetitionsAdmin() {
 
       {selectedCompetition && detail && (
         <>
-          <CompetitionEntriesPanel
-            competition={selectedCompetition}
-            entries={detail.entries}
-          />
+          {selectedCompetition.taste_duel_execution_mode ===
+          'venue_participation' ? (
+            <CompetitionEntrySelector
+              competitionId={
+                selectedCompetition.id
+              }
+              onRefreshRequested={() => {
+                void loadCompetitionDetail(
+                  selectedCompetition.id,
+                )
+              }}
+            />
+          ) : (
+            <>
+              <CompetitionEntriesPanel
+                competition={selectedCompetition}
+                entries={detail.entries}
+              />
 
-          <CompetitionSubmissionsPanel
-            competition={selectedCompetition}
-            submissions={detail.submissions}
-            entries={detail.entries}
-            approvedSubmissions={approvedSubmissions}
-            availableSlots={availableSlots}
-            actionKey={actionKey}
-            onApprove={(submission) =>
-              void updateSubmission(
-                submission,
-                'approved',
-              )
-            }
-            onReject={(submission) =>
-              void updateSubmission(
-                submission,
-                'rejected',
-              )
-            }
-            onPromote={(
-              submission,
-              contenderSlot,
-            ) =>
-              void promoteSubmissionToEntry(
-                submission,
-                contenderSlot,
-              )
-            }
-          />
+              <CompetitionSubmissionsPanel
+                competition={selectedCompetition}
+                submissions={detail.submissions}
+                entries={detail.entries}
+                approvedSubmissions={approvedSubmissions}
+                availableSlots={availableSlots}
+                actionKey={actionKey}
+                onApprove={(submission) =>
+                  void updateSubmission(
+                    submission,
+                    'approved',
+                  )
+                }
+                onReject={(submission) =>
+                  void updateSubmission(
+                    submission,
+                    'rejected',
+                  )
+                }
+                onPromote={(
+                  submission,
+                  contenderSlot,
+                ) =>
+                  void promoteSubmissionToEntry(
+                    submission,
+                    contenderSlot,
+                  )
+                }
+              />
+            </>
+          )}
         </>
       )}
     </section>
@@ -1063,6 +1224,13 @@ function CompetitionSummaryCard({
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-violet-500/15 px-2.5 py-1 text-xs font-medium text-violet-200">
           {humanizeStatus(competition.status)}
+        </span>
+
+        <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-200">
+          {competition.taste_duel_execution_mode ===
+          'venue_participation'
+            ? 'Venue participation'
+            : 'Itinerary'}
         </span>
 
         <span className="rounded-full bg-neutral-800 px-2.5 py-1 text-xs text-neutral-300">
@@ -1231,7 +1399,12 @@ function CompetitionEntriesPanel({
                   </p>
 
                   <p className="mt-2 text-xs text-neutral-500">
-                    {humanizeStatus(entry.source_type)} ·{' '}
+                    {entry.source_type
+                      ? humanizeStatus(
+                          entry.source_type,
+                        )
+                      : 'Curated'}
+                    {' · '}
                     {humanizeStatus(entry.status)}
                   </p>
                 </>

@@ -1,7 +1,6 @@
 // app/venue-profile/[venueId]/page.tsx
 
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 
 import HeroBanner from '@/components/venue-profile/HeroBanner'
@@ -12,6 +11,8 @@ import VenueVisitButton from '@/components/venue-profile/VenueVisitButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
 import VenuePartnerBadge from '@/components/venue-profile/VenuePartnerBadge'
 
+import BackToRouteButton from '@/app/flow/[session_id]/components/BackToRouteButton'
+
 import {
   VenueProfileData,
   VenueEvent,
@@ -19,43 +20,6 @@ import {
 } from '@/types/venue-profile'
 
 type Params = { venueId: string }
-
-function normalizeCityKey(input?: string | null) {
-  const raw = (input ?? '').trim().toLowerCase()
-
-  const aliases: Record<string, string> = {
-    atl: 'atl',
-    atlanta: 'atl',
-    'atlanta ga': 'atl',
-    nyc: 'nyc',
-    'new york': 'nyc',
-    'new york city': 'nyc',
-    manhattan: 'nyc',
-    la: 'la',
-    'los angeles': 'la',
-    'los-angeles': 'la',
-    hollywood: 'la',
-    'west hollywood': 'la',
-    weho: 'la',
-    venice: 'la',
-    'santa monica': 'la',
-    dtla: 'la',
-    london: 'london',
-    ldn: 'london',
-    'greater london': 'london',
-    shoreditch: 'london',
-    camden: 'london',
-    hackney: 'london',
-    soho: 'london',
-    chelsea: 'london',
-    porto: 'porto',
-    oporto: 'porto',
-    lisbon: 'lisbon',
-    lisboa: 'lisbon',
-  }
-
-  return aliases[raw] ?? raw
-}
 
 function toNumberOrNull(value: unknown) {
   if (typeof value === 'number') {
@@ -165,11 +129,6 @@ export default async function VenueProfilePage({
         : undefined,
   }
 
-  const normalizedCity =
-    normalizeCityKey(
-      venue.city
-    )
-
   const venueLat =
     toNumberOrNull(
       venue.lat
@@ -180,25 +139,6 @@ export default async function VenueProfilePage({
       venue.lon
     )
 
-  const backToMapHref =
-    normalizedCity &&
-    venueLat !== null &&
-    venueLon !== null
-      ? `/?city=${encodeURIComponent(
-          normalizedCity
-        )}&lat=${encodeURIComponent(
-          String(venueLat)
-        )}&lon=${encodeURIComponent(
-          String(venueLon)
-        )}&venueId=${encodeURIComponent(
-          venue.id
-        )}&zoom=16`
-      : normalizedCity
-        ? `/?city=${encodeURIComponent(
-            normalizedCity
-          )}`
-        : '/'
-
   const venueAddress =
     typeof normalizedVenue.address ===
       'string' &&
@@ -208,32 +148,32 @@ export default async function VenueProfilePage({
       : null
 
   const venueMapsQuery =
-  venueAddress ??
-  (
-    [
-      normalizedVenue.name,
-      normalizedVenue.city,
-    ]
-      .filter(
-        (
-          value
-        ): value is string =>
-          typeof value === 'string' &&
-          value.trim().length > 0
-      )
-      .join(', ') ||
+    venueAddress ??
     (
-      venueLat !== null &&
-      venueLon !== null
-        ? `${venueLat},${venueLon}`
-        : normalizedVenue.name
+      [
+        normalizedVenue.name,
+        normalizedVenue.city,
+      ]
+        .filter(
+          (
+            value
+          ): value is string =>
+            typeof value === 'string' &&
+            value.trim().length > 0
+        )
+        .join(', ') ||
+      (
+        venueLat !== null &&
+        venueLon !== null
+          ? `${venueLat},${venueLon}`
+          : normalizedVenue.name
+      )
     )
-  )
 
-const venueMapsHref =
-  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    venueMapsQuery
-  )}`
+  const venueMapsHref =
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      venueMapsQuery
+    )}`
 
   const nowIso =
     new Date().toISOString()
@@ -497,16 +437,7 @@ const venueMapsHref =
 
       <div className="sticky top-16 z-[4500] border-b border-white/10 bg-black/95 backdrop-blur-xl">
         <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6">
-          <Link
-            href={
-              backToMapHref
-            }
-            className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-bold text-cyan-200 shadow-lg transition hover:border-cyan-400/40 hover:bg-white/10 hover:text-white"
-          >
-            ← Back to{' '}
-            {normalizedVenue.city ??
-              'Map'}
-          </Link>
+          <BackToRouteButton />
         </div>
       </div>
 

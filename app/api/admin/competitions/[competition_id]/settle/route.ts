@@ -4,13 +4,28 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 import { createServerClient } from '@/lib/supabase/server'
+
 import {
   recomputeCompetitionScores,
   CompetitionScoreRecomputeError,
+  type RecomputedCompetitionEntryScore,
+  type CompetitionRecomputeAlgorithmVersion,
 } from '@/lib/competitions/recomputeScores'
+
 import {
   rankCompetitionEntryScores,
+  COMPETITION_SCORING_ALGORITHM_VERSION,
+  type CompetitionEntryScoringResult,
 } from '@/lib/competitions/scoring'
+
+import {
+  VENUE_PARTICIPATION_SCORING_ALGORITHM_VERSION,
+  type VenueParticipationScoringResult,
+} from '@/lib/competitions/venueParticipationScoring'
+
+// ============================================================
+// ROUTE CONTRACT
+// ============================================================
 
 type RouteContext = {
   params: Promise<{
@@ -18,14 +33,27 @@ type RouteContext = {
   }>
 }
 
+// ============================================================
+// DATABASE ROWS
+// ============================================================
+
 type CompetitionRow = {
   id: string
+
+  competition_type: string
+
+  taste_duel_execution_mode:
+    | 'itinerary'
+    | 'venue_participation'
+    | null
+
   status: string
 
   minimum_qualified_participants: number
   minimum_cross_completers: number
 
   winner_entry_id: string | null
+
   result_status:
     | 'pending'
     | 'winner'
@@ -36,35 +64,153 @@ type CompetitionRow = {
   anonymous_entries: boolean
 }
 
+// ============================================================
+// SETTLEMENT CONTRACT
+// ============================================================
+
 type SettlementResultStatus =
   | 'winner'
   | 'tie'
   | 'insufficient_evidence'
 
+type SettlementDecisionReason =
+  | 'winner'
+  | 'exact_score_tie'
+  | 'minimum_qualified_participants'
+  | 'minimum_cross_completers'
+  | 'minimum_venue_participants'
+  | 'minimum_venue_ratings'
+  | 'minimum_venue_confidence'
+
 type SettlementDecision = {
   resultStatus: SettlementResultStatus
-  winnerEntryId: string | null
+
+  winnerEntryId:
+    string | null
+
   reason:
-    | 'winner'
-    | 'exact_score_tie'
-    | 'minimum_qualified_participants'
-    | 'minimum_cross_completers'
+    SettlementDecisionReason
 }
 
 type SettlementRpcResponse = {
   competition_id: string
-  result_status: SettlementResultStatus
-  winner_entry_id: string | null
-  settled_at: string
+
+  result_status:
+    SettlementResultStatus
+
+  winner_entry_id:
+    string | null
+
+  settled_at:
+    string
 }
 
-const ALLOWED_ADMIN_EMAILS = new Set([
-  'evantancil@gmail.com',
-  'etancil92@gmail.com',
-  'evantancil@roamcurated.com',
-  'fyejono@gmail.com',
-  'jonathangordon@roamcurated.com',
-])
+// ============================================================
+// MODE-SPECIFIC SETTLEMENT EVIDENCE
+// ============================================================
+
+type ItinerarySettlementEntry = {
+  entryId: string
+
+  finalScore: number
+  confidenceScore: number
+
+  qualifiedParticipantCount: number
+  crossCompleterCount: number
+}
+
+type VenueParticipationSettlementEntry = {
+  entryId: string
+
+  finalScore: number
+  confidenceScore: number
+
+  uniqueParticipantCount: number
+  uniqueVenueVisitorCount: number
+
+  weightedParticipation: number
+
+  ratingCount: number
+  averageRating: number | null
+
+  venueCount: number
+  visitedVenueCount: number
+  breadthRate: number | null
+}
+
+// ============================================================
+// VENUE-PARTICIPATION SETTLEMENT POLICY
+// ============================================================
+
+/**
+ * Official settlement eligibility for:
+ *
+ *   taste_duel_venue_participation_v1
+ *
+ * IMPORTANT:
+ *
+ * These are SETTLEMENT thresholds.
+ *
+ * They are deliberately separate from:
+ *
+ *   minimum_qualified_participants
+ *   minimum_cross_completers
+ *
+ * because those competition fields belong to itinerary semantics.
+ *
+ * Each contender must independently satisfy every threshold before
+ * a venue-participation Taste Duel may declare an official winner
+ * or tie.
+ *
+ * Changing these values changes settlement policy, not scoring
+ * mathematics.
+ */
+const VENUE_PARTICIPATION_SETTLEMENT_MINIMUMS = {
+  /**
+   * Require multiple independent people before declaring an
+   * official result.
+   */
+  uniqueParticipants:
+    3,
+
+  /**
+   * Require enough direct quality observations that settlement is
+   * not driven by one or two ratings.
+   */
+  ratings:
+    3,
+
+  /**
+   * Combined evidence-confidence floor.
+   *
+   * This incorporates:
+   *
+   *   independent participants
+   *   rating volume
+   *   diminishing venue depth
+   *
+   * without converting traffic into quality points.
+   */
+  confidence:
+    0.25,
+} as const
+
+// ============================================================
+// ADMIN ACCESS
+// ============================================================
+
+const ALLOWED_ADMIN_EMAILS =
+  new Set([
+    'evantancil@gmail.com',
+    'etancil92@gmail.com',
+    'evantancil@roamcurated.com',
+    'fyejono@gmail.com',
+    'jonathangordon@roamcurated.com',
+  ])
+
+// ============================================================
+// ROUTE
+// ============================================================
 
 export async function POST(
   _request: Request,
@@ -164,6 +310,8 @@ export async function POST(
       )
       .select(`
         id,
+        competition_type,
+        taste_duel_execution_mode,
         status,
         minimum_qualified_participants,
         minimum_cross_completers,
@@ -184,8 +332,10 @@ export async function POST(
         '[admin/competitions/settle] Competition lookup failed:',
         {
           competitionId,
+
           adminUserId:
             user.id,
+
           error:
             competitionError,
         }
@@ -273,16 +423,20 @@ export async function POST(
     // =========================================================
 
     /**
-     * This is the canonical score recomputation boundary.
+     * Canonical recomputation boundary.
      *
-     * It:
+     * recomputeCompetitionScores() now dispatches by execution
+     * mode before loading evidence:
      *
-     *   - derives evidence from trusted tables
-     *   - calls scoring.ts
-     *   - writes append-only score snapshots
+     *   itinerary
+     *     -> competition_participations
+     *     -> competition_entry_ratings
+     *     -> itinerary scoring
      *
-     * snapshot_type = settlement is the frozen score set used by
-     * this settlement attempt.
+     *   venue_participation
+     *     -> immutable venue participation events
+     *     -> venue_visits
+     *     -> venue-participation scoring
      */
     const recomputed =
       await recomputeCompetitionScores({
@@ -312,36 +466,45 @@ export async function POST(
     }
 
     // =========================================================
+    // VERIFY EXECUTION MODE / ALGORITHM PAIR
+    // =========================================================
+
+    assertSettlementAlgorithmMatchesExecutionMode({
+      competition,
+
+      algorithmVersion:
+        recomputed.algorithmVersion,
+    })
+
+    // =========================================================
     // DERIVE RESULT
+    // =========================================================
+    //
+    // IMPORTANT:
+    //
+    // Settlement policy dispatches by immutable scoring algorithm.
+    //
+    // Itinerary settlement retains its existing evidence rules.
+    //
+    // Venue participation receives independent evidence rules and
+    // never reads:
+    //
+    //   qualifiedParticipantCount
+    //   crossCompleterCount
+    //   completionScore
+    //   repeatScore
+    //   comparativeScore
     // =========================================================
 
     const decision =
       deriveSettlementDecision({
         competition,
 
+        algorithmVersion:
+          recomputed.algorithmVersion,
+
         scoredEntries:
-          recomputed.entries.map(
-            (
-              entry
-            ) => ({
-              entryId:
-                entry.entryId,
-
-              finalScore:
-                entry.result.finalScore,
-
-              confidenceScore:
-                entry.result.confidenceScore,
-
-              qualifiedParticipantCount:
-                entry.result
-                  .qualifiedParticipantCount,
-
-              crossCompleterCount:
-                entry.result
-                  .crossCompleterCount,
-            })
-          ),
+          recomputed.entries,
       })
 
     // =========================================================
@@ -361,10 +524,12 @@ export async function POST(
      *      competition and are snapshot_type='settlement'
      *   4. insert exactly one competition_results record
      *   5. update competitions:
+     *
      *        status='completed'
      *        result_status=<decision>
      *        winner_entry_id=<winner/null>
      *        anonymous_entries=false
+     *
      *   6. commit all-or-nothing
      */
     const snapshotIds =
@@ -419,6 +584,9 @@ export async function POST(
 
           snapshotIds,
 
+          algorithmVersion:
+            recomputed.algorithmVersion,
+
           error:
             settlementError,
         }
@@ -452,6 +620,7 @@ export async function POST(
         '[admin/competitions/settle] Settlement RPC returned invalid payload:',
         {
           competitionId,
+
           settlementData,
         }
       )
@@ -510,30 +679,13 @@ export async function POST(
             recomputed.entries.map(
               (
                 entry
-              ) => ({
-                entryId:
-                  entry.entryId,
+              ) =>
+                serializeSettlementEntry({
+                  algorithmVersion:
+                    recomputed.algorithmVersion,
 
-                contenderSlot:
-                  entry.contenderSlot,
-
-                finalScore:
-                  entry.result.finalScore,
-
-                confidenceScore:
-                  entry.result.confidenceScore,
-
-                qualifiedParticipantCount:
-                  entry.result
-                    .qualifiedParticipantCount,
-
-                crossCompleterCount:
-                  entry.result
-                    .crossCompleterCount,
-
-                snapshotId:
-                  entry.snapshotId,
-              })
+                  entry,
+                })
             ),
         },
       },
@@ -592,10 +744,72 @@ export async function POST(
 }
 
 // ============================================================
-// RESULT DERIVATION
+// SETTLEMENT DISPATCH
 // ============================================================
 
 function deriveSettlementDecision({
+  competition,
+  algorithmVersion,
+  scoredEntries,
+}: {
+  competition: CompetitionRow
+
+  algorithmVersion:
+    CompetitionRecomputeAlgorithmVersion
+
+  scoredEntries:
+    RecomputedCompetitionEntryScore[]
+}): SettlementDecision {
+  switch (
+    algorithmVersion
+  ) {
+    case COMPETITION_SCORING_ALGORITHM_VERSION.V1:
+      return deriveItinerarySettlementDecision({
+        competition,
+
+        scoredEntries:
+          scoredEntries.map(
+            (
+              entry
+            ) =>
+              toItinerarySettlementEntry(
+                entry
+              )
+          ),
+      })
+
+    case VENUE_PARTICIPATION_SCORING_ALGORITHM_VERSION:
+      return deriveVenueParticipationSettlementDecision({
+        scoredEntries:
+          scoredEntries.map(
+            (
+              entry
+            ) =>
+              toVenueParticipationSettlementEntry(
+                entry
+              )
+          ),
+      })
+
+    default:
+      throw new Error(
+        `Unsupported settlement algorithm version: ${String(
+          algorithmVersion
+        )}.`
+      )
+  }
+}
+
+// ============================================================
+// ITINERARY SETTLEMENT
+// ============================================================
+//
+// EXISTING taste_duel_v1 BEHAVIOR.
+//
+// Do not reuse these evidence thresholds for venue participation.
+// ============================================================
+
+function deriveItinerarySettlementDecision({
   competition,
   scoredEntries,
 }: {
@@ -605,13 +819,8 @@ function deriveSettlementDecision({
     | 'minimum_cross_completers'
   >
 
-  scoredEntries: {
-    entryId: string
-    finalScore: number
-    confidenceScore: number
-    qualifiedParticipantCount: number
-    crossCompleterCount: number
-  }[]
+  scoredEntries:
+    ItinerarySettlementEntry[]
 }): SettlementDecision {
   const minimumQualifiedParticipants =
     normalizeThreshold(
@@ -717,15 +926,9 @@ function deriveSettlementDecision({
   }
 
   /**
-   * V1 does not invent a score-margin threshold.
+   * Preserve existing taste_duel_v1 settlement behavior exactly.
    *
-   * An exact finalScore tie settles as a tie.
-   *
-   * Otherwise the canonical scoring rank determines the winner.
-   *
-   * If you later introduce a configurable "close enough = tie"
-   * threshold, add it as explicit competition configuration rather
-   * than burying a magic epsilon in this endpoint.
+   * An exact final-score tie remains a tie.
    */
   if (
     first.finalScore ===
@@ -752,6 +955,526 @@ function deriveSettlementDecision({
 
     reason:
       'winner',
+  }
+}
+
+// ============================================================
+// VENUE-PARTICIPATION SETTLEMENT
+// ============================================================
+
+function deriveVenueParticipationSettlementDecision({
+  scoredEntries,
+}: {
+  scoredEntries:
+    VenueParticipationSettlementEntry[]
+}): SettlementDecision {
+  // ==========================================================
+  // MINIMUM UNIQUE PARTICIPANTS
+  // ==========================================================
+
+  const lacksParticipantMinimum =
+    scoredEntries.some(
+      (
+        entry
+      ) =>
+        entry.uniqueParticipantCount <
+        VENUE_PARTICIPATION_SETTLEMENT_MINIMUMS
+          .uniqueParticipants
+    )
+
+  if (
+    lacksParticipantMinimum
+  ) {
+    return {
+      resultStatus:
+        'insufficient_evidence',
+
+      winnerEntryId:
+        null,
+
+      reason:
+        'minimum_venue_participants',
+    }
+  }
+
+  // ==========================================================
+  // MINIMUM RATINGS
+  // ==========================================================
+
+  const lacksRatingMinimum =
+    scoredEntries.some(
+      (
+        entry
+      ) =>
+        entry.ratingCount <
+        VENUE_PARTICIPATION_SETTLEMENT_MINIMUMS
+          .ratings
+    )
+
+  if (
+    lacksRatingMinimum
+  ) {
+    return {
+      resultStatus:
+        'insufficient_evidence',
+
+      winnerEntryId:
+        null,
+
+      reason:
+        'minimum_venue_ratings',
+    }
+  }
+
+  // ==========================================================
+  // MINIMUM COMBINED CONFIDENCE
+  // ==========================================================
+
+  const lacksConfidenceMinimum =
+    scoredEntries.some(
+      (
+        entry
+      ) =>
+        entry.confidenceScore <
+        VENUE_PARTICIPATION_SETTLEMENT_MINIMUMS
+          .confidence
+    )
+
+  if (
+    lacksConfidenceMinimum
+  ) {
+    return {
+      resultStatus:
+        'insufficient_evidence',
+
+      winnerEntryId:
+        null,
+
+      reason:
+        'minimum_venue_confidence',
+    }
+  }
+
+  // ==========================================================
+  // AUTHORITATIVE RANKING
+  // ==========================================================
+  //
+  // Venue participation does NOT use itinerary ranking evidence.
+  //
+  // Authoritative settlement ordering:
+  //
+  //   1. finalScore DESC
+  //   2. confidenceScore DESC
+  //   3. entryId lexical ASC
+  //
+  // An exact finalScore tie between the top two entries remains an
+  // official tie.
+  //
+  // Confidence therefore produces deterministic ordering/auditing
+  // but does not secretly turn equal official scores into a win.
+  // ==========================================================
+
+  const ranked =
+    rankVenueParticipationSettlementEntries(
+      scoredEntries
+    )
+
+  const first =
+    ranked[0]
+
+  const second =
+    ranked[1]
+
+  if (
+    !first ||
+    !second
+  ) {
+    throw new Error(
+      'Venue-participation settlement ranking requires at least two entries.'
+    )
+  }
+
+  if (
+    first.finalScore ===
+    second.finalScore
+  ) {
+    return {
+      resultStatus:
+        'tie',
+
+      winnerEntryId:
+        null,
+
+      reason:
+        'exact_score_tie',
+    }
+  }
+
+  return {
+    resultStatus:
+      'winner',
+
+    winnerEntryId:
+      first.entryId,
+
+    reason:
+      'winner',
+  }
+}
+
+// ============================================================
+// VENUE-PARTICIPATION RANKING
+// ============================================================
+
+function rankVenueParticipationSettlementEntries(
+  entries:
+    readonly VenueParticipationSettlementEntry[]
+): VenueParticipationSettlementEntry[] {
+  return [
+    ...entries,
+  ].sort(
+    (
+      left,
+      right
+    ) => {
+      if (
+        right.finalScore !==
+        left.finalScore
+      ) {
+        return (
+          right.finalScore -
+          left.finalScore
+        )
+      }
+
+      if (
+        right.confidenceScore !==
+        left.confidenceScore
+      ) {
+        return (
+          right.confidenceScore -
+          left.confidenceScore
+        )
+      }
+
+      return left.entryId.localeCompare(
+        right.entryId
+      )
+    }
+  )
+}
+
+// ============================================================
+// MODE-SPECIFIC RESULT ADAPTERS
+// ============================================================
+
+function toItinerarySettlementEntry(
+  entry:
+    RecomputedCompetitionEntryScore
+): ItinerarySettlementEntry {
+  const result =
+    entry.result
+
+  if (
+    !isItineraryScoringResult(
+      result
+    )
+  ) {
+    throw new Error(
+      `Entry "${entry.entryId}" does not contain itinerary scoring evidence.`
+    )
+  }
+
+  return {
+    entryId:
+      entry.entryId,
+
+    finalScore:
+      result.finalScore,
+
+    confidenceScore:
+      result.confidenceScore,
+
+    qualifiedParticipantCount:
+      result.qualifiedParticipantCount,
+
+    crossCompleterCount:
+      result.crossCompleterCount,
+  }
+}
+
+function toVenueParticipationSettlementEntry(
+  entry:
+    RecomputedCompetitionEntryScore
+): VenueParticipationSettlementEntry {
+  const result =
+    entry.result
+
+  if (
+    !isVenueParticipationScoringResult(
+      result
+    )
+  ) {
+    throw new Error(
+      `Entry "${entry.entryId}" does not contain venue-participation scoring evidence.`
+    )
+  }
+
+  return {
+    entryId:
+      entry.entryId,
+
+    finalScore:
+      result.finalScore,
+
+    confidenceScore:
+      result.confidenceScore,
+
+    uniqueParticipantCount:
+      result.uniqueParticipantCount,
+
+    uniqueVenueVisitorCount:
+      result.uniqueVenueVisitorCount,
+
+    weightedParticipation:
+      result.weightedParticipation,
+
+    ratingCount:
+      result.ratingCount,
+
+    averageRating:
+      result.averageRating,
+
+    venueCount:
+      result.venueCount,
+
+    visitedVenueCount:
+      result.visitedVenueCount,
+
+    breadthRate:
+      result.breadthRate,
+  }
+}
+
+// ============================================================
+// RESULT TYPE GUARDS
+// ============================================================
+
+function isItineraryScoringResult(
+  result:
+    CompetitionEntryScoringResult |
+    VenueParticipationScoringResult
+): result is CompetitionEntryScoringResult {
+  return (
+    result.algorithmVersion ===
+      COMPETITION_SCORING_ALGORITHM_VERSION
+        .V1
+  )
+}
+
+function isVenueParticipationScoringResult(
+  result:
+    CompetitionEntryScoringResult |
+    VenueParticipationScoringResult
+): result is VenueParticipationScoringResult {
+  return (
+    result.algorithmVersion ===
+      VENUE_PARTICIPATION_SCORING_ALGORITHM_VERSION
+  )
+}
+
+// ============================================================
+// EXECUTION MODE / ALGORITHM INVARIANT
+// ============================================================
+
+function assertSettlementAlgorithmMatchesExecutionMode({
+  competition,
+  algorithmVersion,
+}: {
+  competition: Pick<
+    CompetitionRow,
+    | 'competition_type'
+    | 'taste_duel_execution_mode'
+  >
+
+  algorithmVersion:
+    CompetitionRecomputeAlgorithmVersion
+}): void {
+  if (
+    competition.competition_type !==
+      'taste_duel'
+  ) {
+    throw new Error(
+      `Unsupported competition type "${competition.competition_type}" for Taste Duel settlement.`
+    )
+  }
+
+  switch (
+    competition.taste_duel_execution_mode
+  ) {
+    case 'itinerary':
+      if (
+        algorithmVersion !==
+          COMPETITION_SCORING_ALGORITHM_VERSION
+            .V1
+      ) {
+        throw new Error(
+          `Itinerary Taste Duel cannot settle algorithm "${algorithmVersion}".`
+        )
+      }
+
+      return
+
+    case 'venue_participation':
+      if (
+        algorithmVersion !==
+          VENUE_PARTICIPATION_SCORING_ALGORITHM_VERSION
+      ) {
+        throw new Error(
+          `Venue-participation Taste Duel cannot settle algorithm "${algorithmVersion}".`
+        )
+      }
+
+      return
+
+    default:
+      throw new Error(
+        `Taste Duel has invalid execution mode "${String(
+          competition.taste_duel_execution_mode
+        )}".`
+      )
+  }
+}
+
+// ============================================================
+// SETTLEMENT RESPONSE SERIALIZATION
+// ============================================================
+//
+// Avoid exposing fabricated itinerary evidence for venue mode.
+// ============================================================
+
+function serializeSettlementEntry({
+  algorithmVersion,
+  entry,
+}: {
+  algorithmVersion:
+    CompetitionRecomputeAlgorithmVersion
+
+  entry:
+    RecomputedCompetitionEntryScore
+}) {
+  switch (
+    algorithmVersion
+  ) {
+    case COMPETITION_SCORING_ALGORITHM_VERSION.V1: {
+      const result =
+        entry.result
+
+      if (
+        !isItineraryScoringResult(
+          result
+        )
+      ) {
+        throw new Error(
+          `Entry "${entry.entryId}" contains the wrong scoring result for itinerary settlement.`
+        )
+      }
+
+      return {
+        entryId:
+          entry.entryId,
+
+        contenderSlot:
+          entry.contenderSlot,
+
+        finalScore:
+          result.finalScore,
+
+        confidenceScore:
+          result.confidenceScore,
+
+        qualifiedParticipantCount:
+          result.qualifiedParticipantCount,
+
+        crossCompleterCount:
+          result.crossCompleterCount,
+
+        snapshotId:
+          entry.snapshotId,
+      }
+    }
+
+    case VENUE_PARTICIPATION_SCORING_ALGORITHM_VERSION: {
+      const result =
+        entry.result
+
+      if (
+        !isVenueParticipationScoringResult(
+          result
+        )
+      ) {
+        throw new Error(
+          `Entry "${entry.entryId}" contains the wrong scoring result for venue-participation settlement.`
+        )
+      }
+
+      return {
+        entryId:
+          entry.entryId,
+
+        contenderSlot:
+          entry.contenderSlot,
+
+        finalScore:
+          result.finalScore,
+
+        confidenceScore:
+          result.confidenceScore,
+
+        uniqueParticipantCount:
+          result.uniqueParticipantCount,
+
+        uniqueVenueVisitorCount:
+          result.uniqueVenueVisitorCount,
+
+        weightedParticipation:
+          result.weightedParticipation,
+
+        ratingCount:
+          result.ratingCount,
+
+        averageRating:
+          result.averageRating,
+
+        venueCount:
+          result.venueCount,
+
+        visitedVenueCount:
+          result.visitedVenueCount,
+
+        breadthRate:
+          result.breadthRate,
+
+        participantConfidence:
+          result.participantConfidence,
+
+        ratingConfidence:
+          result.ratingConfidence,
+
+        depthConfidence:
+          result.depthConfidence,
+
+        snapshotId:
+          entry.snapshotId,
+      }
+    }
+
+    default:
+      throw new Error(
+        `Unsupported settlement algorithm version: ${String(
+          algorithmVersion
+        )}.`
+      )
   }
 }
 
@@ -837,7 +1560,9 @@ function readSettlementRpcResponse(
 function readResultStatus(
   value: unknown
 ): SettlementResultStatus | null {
-  switch (value) {
+  switch (
+    value
+  ) {
     case 'winner':
     case 'tie':
     case 'insufficient_evidence':
@@ -915,6 +1640,12 @@ function getSettlementRpcStatus(
 
 // ============================================================
 // CONFIG NORMALIZATION
+// ============================================================
+//
+// ITINERARY SETTLEMENT ONLY.
+//
+// Venue-participation settlement deliberately does not read these
+// thresholds.
 // ============================================================
 
 function normalizeThreshold(

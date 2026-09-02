@@ -59,6 +59,10 @@ import {
   getRouteFitOptions,
   getVenueFocusOptions,
 } from '@/lib/maps/viewport'
+import {
+  CARTO_DARK_BASEMAP_URL,
+  CARTO_BASEMAP_ATTRIBUTION,
+} from '@/lib/maps/basemaps'
 
 import type {
   CitySlug,
@@ -2170,8 +2174,8 @@ export default function MapCanvas({
         />
 
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution="&copy; CartoDB"
+          url={CARTO_DARK_BASEMAP_URL}
+          attribution={CARTO_BASEMAP_ATTRIBUTION}
         />
 
         <MapEffectController

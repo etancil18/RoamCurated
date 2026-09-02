@@ -35,10 +35,17 @@ type CompetitionManagerMode =
   | 'create'
   | 'configure'
 
+type TasteDuelExecutionMode =
+  | 'itinerary'
+  | 'venue_participation'
+
 type CompetitionFormState = {
   title: string
   category: string
   city: string
+
+  executionMode:
+    TasteDuelExecutionMode
 
   maxEntries: 2 | 3 | 4
 
@@ -109,6 +116,9 @@ const EMPTY_FORM: CompetitionFormState = {
   title: '',
   category: '',
   city: '',
+
+  executionMode:
+    'itinerary',
 
   maxEntries:
     DEFAULT_COMPETITION_MAX_ENTRIES,
@@ -223,6 +233,23 @@ export default function CompetitionManager({
           selectedCompetition.status
           === COMPETITION_STATUS.CANCELLED
         )
+      : false
+
+
+  /**
+   * Execution mode defines the evidence model and scoring
+   * algorithm family.
+   *
+   * Once a competition leaves draft, changing modes could
+   * reinterpret already-authored contender/evidence state.
+   *
+   * The server/database remain authoritative, but the admin UI
+   * mirrors that boundary.
+   */
+  const executionModeLocked =
+    selectedCompetition
+      ? selectedCompetition.status
+        !== COMPETITION_STATUS.DRAFT
       : false
 
 
@@ -522,6 +549,10 @@ export default function CompetitionManager({
                 competition_type:
                   COMPETITION_TYPE.TASTE_DUEL,
 
+                taste_duel_execution_mode:
+                  validated.value
+                    .executionMode,
+
                 title:
                   validated.value.title,
 
@@ -675,6 +706,17 @@ export default function CompetitionManager({
                 anonymous_entries:
                   validated.value
                     .anonymousEntries,
+
+                ...(
+                  selectedCompetition.status
+                  === COMPETITION_STATUS.DRAFT
+                    ? {
+                        taste_duel_execution_mode:
+                          validated.value
+                            .executionMode,
+                      }
+                    : {}
+                ),
               }),
           },
         )
@@ -916,6 +958,7 @@ export default function CompetitionManager({
           form={form}
           setForm={setForm}
           disabled={saving}
+          executionModeLocked={false}
           submitLabel={
             saving
               ? 'Creating…'
@@ -957,6 +1000,9 @@ export default function CompetitionManager({
                 disabled={
                   saving
                   || configurationLocked
+                }
+                executionModeLocked={
+                  executionModeLocked
                 }
                 submitLabel={
                   saving
@@ -1002,6 +1048,7 @@ function CompetitionForm({
   form,
   setForm,
   disabled,
+  executionModeLocked,
   submitLabel,
   onSubmit,
 }: {
@@ -1017,6 +1064,9 @@ function CompetitionForm({
     >
 
   disabled: boolean
+
+  executionModeLocked:
+    boolean
 
   submitLabel: string
 
@@ -1120,6 +1170,116 @@ function CompetitionForm({
           />
         </AdminField>
       </div>
+
+
+      <AdminField
+        label="Taste Duel mode"
+        description={
+          executionModeLocked
+            ? 'Execution mode is frozen once the competition leaves draft.'
+            : 'Choose whether contenders are submitted itineraries or curated venue groups scored from venue participation.'
+        }
+        required
+      >
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            disabled={
+              disabled
+              || executionModeLocked
+            }
+            onClick={() =>
+              setForm(
+                (current) => ({
+                  ...current,
+
+                  executionMode:
+                    'itinerary',
+                }),
+              )
+            }
+            className={[
+              'rounded-xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-50',
+
+              form.executionMode ===
+                'itinerary'
+                ? 'border-white bg-white text-black'
+                : 'border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800',
+            ].join(
+              ' ',
+            )}
+          >
+            <span className="block text-sm font-semibold">
+              Itinerary
+            </span>
+
+            <span
+              className={[
+                'mt-1 block text-xs leading-5',
+
+                form.executionMode ===
+                  'itinerary'
+                  ? 'text-neutral-600'
+                  : 'text-neutral-500',
+              ].join(
+                ' ',
+              )}
+            >
+              User-submitted routes with completion, qualification,
+              ratings, and comparative evidence.
+            </span>
+          </button>
+
+
+          <button
+            type="button"
+            disabled={
+              disabled
+              || executionModeLocked
+            }
+            onClick={() =>
+              setForm(
+                (current) => ({
+                  ...current,
+
+                  executionMode:
+                    'venue_participation',
+                }),
+              )
+            }
+            className={[
+              'rounded-xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-50',
+
+              form.executionMode ===
+                'venue_participation'
+                ? 'border-white bg-white text-black'
+                : 'border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800',
+            ].join(
+              ' ',
+            )}
+          >
+            <span className="block text-sm font-semibold">
+              Venue participation
+            </span>
+
+            <span
+              className={[
+                'mt-1 block text-xs leading-5',
+
+                form.executionMode ===
+                  'venue_participation'
+                  ? 'text-neutral-600'
+                  : 'text-neutral-500',
+              ].join(
+                ' ',
+              )}
+            >
+              Curated venue sides scored from canonical venue visits
+              and participation evidence.
+            </span>
+          </button>
+        </div>
+      </AdminField>
 
 
       <AdminField
@@ -1391,6 +1551,15 @@ function CompetitionSummary({
         </StatusChip>
 
         <StatusChip>
+          {formatExecutionMode(
+            normalizeExecutionMode(
+              competition
+                .taste_duel_execution_mode,
+            ),
+          )}
+        </StatusChip>
+
+        <StatusChip>
           {
             competition.max_entries
           }{' '}
@@ -1507,9 +1676,11 @@ function CompetitionLifecycleControls({
     === COMPETITION_STATUS.LIVE
 
   const canCancel =
-  competition.status !== COMPETITION_STATUS.COMPLETED
-  &&
-  competition.status !== COMPETITION_STATUS.CANCELLED
+    competition.status !==
+      COMPETITION_STATUS.COMPLETED
+    &&
+    competition.status !==
+      COMPETITION_STATUS.CANCELLED
 
 
   return (
@@ -1831,6 +2002,9 @@ type ValidCompetitionForm = {
   category: string
   city: string
 
+  executionMode:
+    TasteDuelExecutionMode
+
   maxEntries: 2 | 3 | 4
 
   startsAt: string
@@ -1889,6 +2063,21 @@ function validateCompetitionForm(
       ok: false,
       error:
         'Competition city is required.',
+    }
+  }
+
+
+  if (
+    form.executionMode !==
+      'itinerary'
+    &&
+    form.executionMode !==
+      'venue_participation'
+  ) {
+    return {
+      ok: false,
+      error:
+        'A valid Taste Duel execution mode is required.',
     }
   }
 
@@ -1993,6 +2182,9 @@ function validateCompetitionForm(
       category,
       city,
 
+      executionMode:
+        form.executionMode,
+
       maxEntries:
         form.maxEntries,
 
@@ -2032,6 +2224,12 @@ function competitionToForm(
       competition.city
       ?? '',
 
+    executionMode:
+      normalizeExecutionMode(
+        competition
+          .taste_duel_execution_mode,
+      ),
+
     maxEntries:
       normalizeMaxEntries(
         competition.max_entries,
@@ -2055,6 +2253,21 @@ function competitionToForm(
     anonymousEntries:
       competition.anonymous_entries,
   }
+}
+
+
+function normalizeExecutionMode(
+  value:
+    string | null | undefined,
+): TasteDuelExecutionMode {
+  if (
+    value ===
+      'venue_participation'
+  ) {
+    return 'venue_participation'
+  }
+
+  return 'itinerary'
 }
 
 
@@ -2149,6 +2362,23 @@ function formatDate(
 // ============================================================
 // TEXT HELPERS
 // ============================================================
+
+function formatExecutionMode(
+  value:
+    TasteDuelExecutionMode,
+): string {
+  switch (
+    value
+  ) {
+    case 'venue_participation':
+      return 'Venue participation'
+
+    case 'itinerary':
+    default:
+      return 'Itinerary'
+  }
+}
+
 
 function humanizeStatus(
   value: string,

@@ -16,6 +16,10 @@ import type {
   Map as LeafletMap,
   Marker as LeafletMarker,
 } from 'leaflet'
+import {
+  CARTO_DARK_BASEMAP_URL,
+  CARTO_BASEMAP_ATTRIBUTION,
+} from '@/lib/maps/basemaps'
 import { DateTime } from 'luxon'
 
 import { UserLocationMarker } from '@/components/maps/map-dynamic-wrapper'
@@ -365,8 +369,8 @@ export default function PropertyMap({
         />
 
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution="&copy; CartoDB"
+          url={CARTO_DARK_BASEMAP_URL}
+          attribution={CARTO_BASEMAP_ATTRIBUTION}
         />
 
         {/* Property marker */}
