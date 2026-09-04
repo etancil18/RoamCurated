@@ -16,6 +16,11 @@ import {
   useMap,
 } from "react-leaflet"
 
+import {
+  CARTO_DARK_BASEMAP_URL,
+  CARTO_BASEMAP_ATTRIBUTION,
+} from '@/lib/maps/basemaps'
+
 import RouteControl from "@/components/RouteControl"
 import { Button } from "@/components/ui/button"
 import { logEvent } from "@/lib/logEvent"
@@ -1053,8 +1058,8 @@ export default function OutingMap({
           scrollWheelZoom={true}
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution="&copy; CartoDB"
+            url={CARTO_DARK_BASEMAP_URL}
+            attribution={CARTO_BASEMAP_ATTRIBUTION}
           />
 
           {anchorVenue ? (
