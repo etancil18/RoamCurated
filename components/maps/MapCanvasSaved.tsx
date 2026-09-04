@@ -20,7 +20,10 @@ import type {
   DivIcon,
   Map as LeafletMap,
 } from 'leaflet'
-
+import {
+  CARTO_DARK_BASEMAP_URL,
+  CARTO_BASEMAP_ATTRIBUTION,
+} from '@/lib/maps/basemaps'
 import type { Venue } from '@/types/venue'
 import { logEvent } from '@/lib/logEvent'
 import { getRouteStopRole } from '@/lib/maps/markerScoring'
@@ -562,8 +565,8 @@ export default function MapCanvasSaved({
         />
 
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+          url={CARTO_DARK_BASEMAP_URL}
+          attribution={CARTO_BASEMAP_ATTRIBUTION}
         />
 
         {polyline.length >

@@ -11,6 +11,10 @@ import {
 } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import {
+  CARTO_DARK_BASEMAP_URL,
+  CARTO_BASEMAP_ATTRIBUTION,
+} from '@/lib/maps/basemaps'
 import type { SponsorVenue } from '@/types/sponsor'
 
 type Props = {
@@ -135,7 +139,10 @@ export default function SponsorMapPreview({
         scrollWheelZoom={false}
         style={{ height: '100%', width: '100%' }}
       >
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+        <TileLayer
+          url={CARTO_DARK_BASEMAP_URL}
+          attribution={CARTO_BASEMAP_ATTRIBUTION}
+        />
         <FitBounds />
         <Polyline positions={path} color={routeColor} weight={4} />
 
