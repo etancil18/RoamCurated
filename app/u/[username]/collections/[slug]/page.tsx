@@ -6,6 +6,14 @@ import {
   notFound,
 } from 'next/navigation'
 
+import CollectionCarousel, {
+  type CollectionCarouselMedia,
+} from '@/components/profile/creator/collections/CollectionCarousel'
+
+import {
+  CREATOR_COLLECTION_MEDIA_BUCKET,
+} from '@/lib/creator/collectionMedia'
+
 import {
   createServerClient,
 } from '@/lib/supabase/server'
@@ -63,6 +71,25 @@ type CreatorCollectionRow = {
   updated_at: string
 }
 
+type CreatorCollectionMediaRow = {
+  id: string
+  collection_id: string
+  user_id: string
+  media_type:
+    | 'image'
+    | 'video'
+  storage_path: string
+  poster_path: string | null
+  caption: string | null
+  alt_text: string | null
+  width: number | null
+  height: number | null
+  duration_seconds: number | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
 type CreatorCollectionVenueRow = {
   id: string
   collection_id: string
@@ -112,6 +139,8 @@ type PublicCollectionPageData = {
   profile: ProfileRow
   collection:
     CreatorCollectionRow
+  media:
+    CollectionCarouselMedia[]
   items:
     PublicCollectionItem[]
 }
@@ -177,6 +206,14 @@ export async function generateMetadata({
     data.collection.description ??
     `Explore ${data.collection.title}, a public collection curated by ${creatorName}.`
 
+  const socialImageUrl =
+    getCollectionCoverImageUrl({
+      media: data.media,
+      legacyCoverImageUrl:
+        data.collection
+          .cover_image_url,
+    })
+
   return {
     title: `${data.collection.title} | ${creatorName} | Roam`,
 
@@ -202,13 +239,11 @@ export async function generateMetadata({
       type: 'article',
 
       images:
-        data.collection
-          .cover_image_url
+        socialImageUrl
           ? [
               {
                 url:
-                  data.collection
-                    .cover_image_url,
+                  socialImageUrl,
                 alt:
                   data.collection
                     .title,
@@ -219,8 +254,7 @@ export async function generateMetadata({
 
     twitter: {
       card:
-        data.collection
-          .cover_image_url
+        socialImageUrl
           ? 'summary_large_image'
           : 'summary',
 
@@ -231,11 +265,9 @@ export async function generateMetadata({
         description.slice(0, 200),
 
       images:
-        data.collection
-          .cover_image_url
+        socialImageUrl
           ? [
-              data.collection
-                .cover_image_url,
+              socialImageUrl,
             ]
           : undefined,
     },
@@ -283,6 +315,7 @@ export default async function PublicCreatorCollectionPage({
   const {
     profile,
     collection,
+    media,
     items,
   } = data
 
@@ -302,6 +335,13 @@ export default async function PublicCreatorCollectionPage({
   const collectionDescription =
     collection.description ??
     `A public collection curated by ${creatorName}.`
+
+  const heroImageUrl =
+    getCollectionCoverImageUrl({
+      media,
+      legacyCoverImageUrl:
+        collection.cover_image_url,
+    })
 
   return (
     <main className="min-h-screen w-full overflow-x-clip bg-black px-4 pb-16 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6">
@@ -332,7 +372,20 @@ export default async function PublicCreatorCollectionPage({
           description={
             collectionDescription
           }
+          heroImageUrl={
+            heroImageUrl
+          }
         />
+
+        {media.length > 0 ? (
+          <CollectionCarousel
+            media={media}
+            collectionTitle={
+              collection.title
+            }
+            className="mt-6"
+          />
+        ) : null}
 
         <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
           <PublicCollectionItems
@@ -388,12 +441,7 @@ function CollectionNavigation({
         ← {creatorName}
       </Link>
 
-      <Link
-        href={collectionsHref}
-        className="inline-flex items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-indigo-400/40 hover:text-white"
-      >
-        All Collections
-      </Link>
+      
     </nav>
   )
 }
@@ -408,6 +456,7 @@ function CollectionHero({
   creatorName,
   profileHref,
   description,
+  heroImageUrl,
 }: {
   profile: ProfileRow
   collection:
@@ -415,14 +464,15 @@ function CollectionHero({
   creatorName: string
   profileHref: string
   description: string
+  heroImageUrl: string | null
 }) {
   return (
     <section className="relative mt-6 min-w-0 overflow-hidden rounded-[2rem] border border-neutral-800 bg-neutral-950">
       <div className="relative min-h-[280px] overflow-hidden sm:min-h-[360px]">
-        {collection.cover_image_url ? (
+        {heroImageUrl ? (
           <img
             src={
-              collection.cover_image_url
+              heroImageUrl
             }
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
@@ -955,10 +1005,20 @@ async function loadPublicCollection({
     return null
   }
 
+  const media =
+    await loadPublicCollectionMedia({
+      supabase,
+      collectionId:
+        collection.id,
+      userId:
+        profile.id,
+    })
+
   if (!includeItems) {
     return {
       profile,
       collection,
+      media,
       items: [],
     }
   }
@@ -1003,6 +1063,7 @@ async function loadPublicCollection({
     return {
       profile,
       collection,
+      media,
       items: [],
     }
   }
@@ -1021,6 +1082,7 @@ async function loadPublicCollection({
     return {
       profile,
       collection,
+      media,
       items: [],
     }
   }
@@ -1073,6 +1135,7 @@ async function loadPublicCollection({
     return {
       profile,
       collection,
+      media,
       items: [],
     }
   }
@@ -1085,6 +1148,7 @@ async function loadPublicCollection({
   return {
     profile,
     collection,
+    media,
 
     items:
       buildPublicVenueItems({
@@ -1094,6 +1158,196 @@ async function loadPublicCollection({
         venues,
       }),
   }
+}
+
+/* =========================================================
+ * Public collection media
+ * ======================================================= */
+
+async function loadPublicCollectionMedia({
+  supabase,
+  collectionId,
+  userId,
+}: {
+  supabase:
+    Awaited<
+      ReturnType<
+        typeof createServerClient
+      >
+    >
+  collectionId: string
+  userId: string
+}): Promise<
+  CollectionCarouselMedia[]
+> {
+  const mediaResult =
+    await supabase
+      .from(
+        'creator_collection_media'
+      )
+      .select(`
+        id,
+        collection_id,
+        user_id,
+        media_type,
+        storage_path,
+        poster_path,
+        caption,
+        alt_text,
+        width,
+        height,
+        duration_seconds,
+        sort_order,
+        created_at,
+        updated_at
+      `)
+      .eq(
+        'collection_id',
+        collectionId
+      )
+      .eq(
+        'user_id',
+        userId
+      )
+      .order(
+        'sort_order',
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        'created_at',
+        {
+          ascending: true,
+        }
+      )
+
+  if (mediaResult.error) {
+    console.error(
+      '[public creator collection] Collection-media query failed:',
+      mediaResult.error
+    )
+
+    return []
+  }
+
+  const rows =
+    normalizeCollectionMediaRows({
+      value:
+        mediaResult.data,
+      collectionId,
+      userId,
+    })
+
+  return rows
+    .map(
+      (
+        row
+      ): CollectionCarouselMedia | null => {
+        const url =
+          getPublicCollectionMediaUrl({
+            supabase,
+            storagePath:
+              row.storage_path,
+          })
+
+        if (!url) {
+          return null
+        }
+
+        const posterUrl =
+          row.poster_path
+            ? getPublicCollectionMediaUrl({
+                supabase,
+                storagePath:
+                  row.poster_path,
+              })
+            : null
+
+        return {
+          id:
+            row.id,
+
+          mediaType:
+            row.media_type,
+
+          url,
+
+          posterUrl,
+
+          caption:
+            row.caption,
+
+          altText:
+            row.alt_text,
+
+          width:
+            row.width,
+
+          height:
+            row.height,
+
+          durationSeconds:
+            row.duration_seconds,
+        }
+      }
+    )
+    .filter(
+      (
+        item
+      ): item is CollectionCarouselMedia =>
+        item !== null
+    )
+}
+
+function getPublicCollectionMediaUrl({
+  supabase,
+  storagePath,
+}: {
+  supabase:
+    Awaited<
+      ReturnType<
+        typeof createServerClient
+      >
+    >
+  storagePath: string
+}): string | null {
+  const {
+    data,
+  } =
+    supabase.storage
+      .from(
+        CREATOR_COLLECTION_MEDIA_BUCKET
+      )
+      .getPublicUrl(
+        storagePath
+      )
+
+  return normalizePublicUrl(
+    data.publicUrl
+  )
+}
+
+function getCollectionCoverImageUrl({
+  media,
+  legacyCoverImageUrl,
+}: {
+  media:
+    CollectionCarouselMedia[]
+  legacyCoverImageUrl:
+    string | null
+}): string | null {
+  const firstImage =
+    media.find(
+      (item) =>
+        item.mediaType ===
+        'image'
+    )
+
+  return (
+    firstImage?.url ??
+    legacyCoverImageUrl
+  )
 }
 
 /* =========================================================
@@ -1256,6 +1510,170 @@ function normalizeCollectionRow({
     created_at: createdAt,
     updated_at: updatedAt,
   }
+}
+
+function normalizeCollectionMediaRows({
+  value,
+  collectionId,
+  userId,
+}: {
+  value: unknown
+  collectionId: string
+  userId: string
+}): CreatorCollectionMediaRow[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const rows =
+    value
+      .map(
+        (
+          row
+        ): CreatorCollectionMediaRow | null => {
+          if (!isRecord(row)) {
+            return null
+          }
+
+          const id =
+            normalizeIdentifier(
+              row.id
+            )
+
+          const rowCollectionId =
+            normalizeIdentifier(
+              row.collection_id
+            )
+
+          const rowUserId =
+            normalizeIdentifier(
+              row.user_id
+            )
+
+          const storagePath =
+            normalizeStoragePath(
+              row.storage_path
+            )
+
+          const createdAt =
+            normalizeIsoDate(
+              row.created_at
+            )
+
+          const updatedAt =
+            normalizeIsoDate(
+              row.updated_at
+            )
+
+          const mediaType =
+            row.media_type ===
+              'image' ||
+            row.media_type ===
+              'video'
+              ? row.media_type
+              : null
+
+          if (
+            !id ||
+            rowCollectionId !==
+              collectionId ||
+            rowUserId !==
+              userId ||
+            !mediaType ||
+            !storagePath ||
+            !createdAt ||
+            !updatedAt
+          ) {
+            return null
+          }
+
+          return {
+            id,
+
+            collection_id:
+              rowCollectionId,
+
+            user_id:
+              rowUserId,
+
+            media_type:
+              mediaType,
+
+            storage_path:
+              storagePath,
+
+            poster_path:
+              normalizeStoragePath(
+                row.poster_path
+              ),
+
+            caption:
+              normalizeOptionalText(
+                row.caption,
+                1_000
+              ),
+
+            alt_text:
+              normalizeOptionalText(
+                row.alt_text,
+                500
+              ),
+
+            width:
+              normalizePositiveInteger(
+                row.width
+              ),
+
+            height:
+              normalizePositiveInteger(
+                row.height
+              ),
+
+            duration_seconds:
+              normalizeNonNegativeNumber(
+                row.duration_seconds
+              ),
+
+            sort_order:
+              normalizeSortOrder(
+                row.sort_order
+              ),
+
+            created_at:
+              createdAt,
+
+            updated_at:
+              updatedAt,
+          }
+        }
+      )
+      .filter(
+        (
+          row
+        ): row is CreatorCollectionMediaRow =>
+          row !== null
+      )
+
+  const byId =
+    new Map<
+      string,
+      CreatorCollectionMediaRow
+    >()
+
+  for (const row of rows) {
+    if (!byId.has(row.id)) {
+      byId.set(
+        row.id,
+        row
+      )
+    }
+  }
+
+  return [
+    ...byId.values(),
+  ].sort(
+    compareCollectionMediaRows
+  )
 }
 
 function normalizeCollectionVenueRows({
@@ -1518,6 +1936,41 @@ function buildPublicVenueItems({
         item !== null
     )
     .sort(compareCollectionItems)
+}
+
+function compareCollectionMediaRows(
+  first:
+    CreatorCollectionMediaRow,
+  second:
+    CreatorCollectionMediaRow
+): number {
+  if (
+    first.sort_order !==
+    second.sort_order
+  ) {
+    return (
+      first.sort_order -
+      second.sort_order
+    )
+  }
+
+  const createdComparison =
+    Date.parse(
+      first.created_at
+    ) -
+    Date.parse(
+      second.created_at
+    )
+
+  if (
+    createdComparison !== 0
+  ) {
+    return createdComparison
+  }
+
+  return first.id.localeCompare(
+    second.id
+  )
 }
 
 function compareCollectionVenueRows(
@@ -1799,6 +2252,78 @@ function normalizeSortOrder(
     0,
     Math.trunc(value)
   )
+}
+
+function normalizePositiveInteger(
+  value: unknown
+): number | null {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value)
+  ) {
+    return null
+  }
+
+  const normalized =
+    Math.trunc(value)
+
+  return normalized > 0
+    ? normalized
+    : null
+}
+
+function normalizeNonNegativeNumber(
+  value: unknown
+): number | null {
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    value < 0
+  ) {
+    return null
+  }
+
+  return value
+}
+
+function normalizeStoragePath(
+  value: unknown
+): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const normalized =
+    value.trim()
+
+  if (
+    !normalized ||
+    normalized.length > 2_048 ||
+    normalized.startsWith('/') ||
+    normalized.endsWith('/') ||
+    normalized.includes('\\') ||
+    normalized.includes('?') ||
+    normalized.includes('#') ||
+    /[\r\n]/.test(normalized)
+  ) {
+    return null
+  }
+
+  const segments =
+    normalized.split('/')
+
+  if (
+    segments.some(
+      (segment) =>
+        !segment ||
+        segment === '.' ||
+        segment === '..'
+    )
+  ) {
+    return null
+  }
+
+  return normalized
 }
 
 function normalizeIsoDate(

@@ -924,6 +924,8 @@ export const creatorCollectionRowSchema = z
       creatorCollectionDescriptionSchema,
     cover_image_url:
       creatorCollectionCoverImageUrlSchema,
+    cover_media_id:
+      optionalCreatorUuidSchema,
     city:
       creatorCollectionCitySchema,
     category:

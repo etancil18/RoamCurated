@@ -116,9 +116,9 @@ type PublicCreatorReputationResult =
 type CreatorProfileSectionId =
   | 'overview'
   | 'places'
-  | 'reputation'
   | 'guides'
   | 'moments'
+  | 'reputation'
   | 'taste'
 
 type CreatorProfileNavigationItem = {
@@ -576,13 +576,6 @@ export default async function PublicUserProfilePage({
               creatorMap !== null,
           },
           {
-            id: 'reputation',
-            label: 'Reputation',
-            visible:
-              creatorReputation !==
-              null,
-          },
-          {
             id: 'guides',
             label: 'Guides',
             visible:
@@ -593,6 +586,13 @@ export default async function PublicUserProfilePage({
             label: 'Moments',
             visible:
               snapshots.length > 0,
+          },
+          {
+            id: 'reputation',
+            label: 'Reputation',
+            visible:
+              creatorReputation !==
+              null,
           },
           {
             id: 'taste',
@@ -909,56 +909,6 @@ export default async function PublicUserProfilePage({
                   </div>
                 </section>
               ) : null}
-
-              {creatorReputation ? (
-                <section
-                  id="reputation"
-                  aria-labelledby="creator-earned-reputation-heading"
-                  className="scroll-mt-32 space-y-6 pt-6"
-                >
-                  <ProfileSectionHeading
-                    id="creator-earned-reputation-heading"
-                    eyebrow="What they know"
-                    title="Reputation earned through real activity"
-                    description="Category credibility built from relevant verified visits and completed Roam activity—not follower count."
-                  />
-
-                  <CreatorReputationSection
-                    reputation={
-                      creatorReputation
-                    }
-                  />
-                </section>
-              ) : null}
-
-              {creatorBundle
-                .collaborationTags
-                .length > 0 ? (
-                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-transparent p-5 shadow-[0_24px_80px_rgba(0,0,0,0.18)] ring-1 ring-white/[0.065] sm:p-6">
-                  <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-indigo-400/[0.06] blur-3xl" />
-
-                  <div className="relative z-10 mb-5">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">
-                      Open to
-                    </p>
-
-                    <h3 className="mt-2 text-xl font-black tracking-tight text-white">
-                      Make something together
-                    </h3>
-
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                      The collaborations, projects, and experiences this creator is open to exploring.
-                    </p>
-                  </div>
-
-                  <CreatorCollaborationTags
-                    tags={
-                      creatorBundle
-                        .collaborationTags
-                    }
-                  />
-                </div>
-              ) : null}
             </section>
 
             {hasFeaturedCollections ? (
@@ -1042,6 +992,56 @@ export default async function PublicUserProfilePage({
                   </div>
                 </div>
               </section>
+            ) : null}
+
+            {creatorReputation ? (
+              <section
+                id="reputation"
+                aria-labelledby="creator-earned-reputation-heading"
+                className="scroll-mt-32 space-y-6"
+              >
+                <ProfileSectionHeading
+                  id="creator-earned-reputation-heading"
+                  eyebrow="What they know"
+                  title="Reputation earned through real activity"
+                  description="Category credibility built from relevant verified visits and completed Roam activity—not follower count."
+                />
+
+                <CreatorReputationSection
+                  reputation={
+                    creatorReputation
+                  }
+                />
+              </section>
+            ) : null}
+
+            {creatorBundle
+              .collaborationTags
+              .length > 0 ? (
+              <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-transparent p-5 shadow-[0_24px_80px_rgba(0,0,0,0.18)] ring-1 ring-white/[0.065] sm:p-6">
+                <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-indigo-400/[0.06] blur-3xl" />
+
+                <div className="relative z-10 mb-5">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">
+                    Open to
+                  </p>
+
+                  <h3 className="mt-2 text-xl font-black tracking-tight text-white">
+                    Make something together
+                  </h3>
+
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
+                    The collaborations, projects, and experiences this creator is open to exploring.
+                  </p>
+                </div>
+
+                <CreatorCollaborationTags
+                  tags={
+                    creatorBundle
+                      .collaborationTags
+                  }
+                />
+              </div>
             ) : null}
 
             {hasTasteProfile ? (

@@ -1,6 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import {
+  CREATOR_COLLECTION_MEDIA_BUCKET,
+} from './collectionMedia'
+
+import {
   collaborationTagSchema,
   creatorCollectionRowSchema,
   creatorProfileRowSchema,
@@ -204,6 +208,7 @@ export async function getPublicCreatorProfile({
         slug,
         description,
         cover_image_url,
+        cover_media_id,
         city,
         category,
         visibility,
@@ -289,11 +294,28 @@ export async function getPublicCreatorProfile({
       selectedTagsResult.data
     )
 
-  const featuredCollections =
-    parsePublicCollections({
+  const collections =
+    parseFeaturedCollections({
       value: collectionsResult.data,
       expectedUserId: normalizedUserId,
     })
+
+  const collectionCoverUrls =
+    await loadPublicCollectionCoverUrls({
+      supabase,
+      collections,
+      expectedUserId: normalizedUserId,
+    })
+
+  const featuredCollections =
+    collections.map((collection) =>
+      toPublicCollection(
+        collection,
+        collectionCoverUrls.get(
+          collection.id
+        ) ?? null
+      )
+    )
 
   return {
     profile,
@@ -624,13 +646,13 @@ function compareCollaborationTags(
  * Public collection parsing
  * ======================================================= */
 
-function parsePublicCollections({
+function parseFeaturedCollections({
   value,
   expectedUserId,
 }: {
   value: unknown
   expectedUserId: string
-}): PublicCreatorCollection[] {
+}): CreatorCollection[] {
   if (value === null || value === undefined) {
     return []
   }
@@ -699,9 +721,7 @@ function parsePublicCollections({
 
   return deduplicateCollections(
     parsedCollections
-  )
-    .sort(compareCollections)
-    .map(toPublicCollection)
+  ).sort(compareCollections)
 }
 
 function deduplicateCollections(
@@ -750,7 +770,8 @@ function compareCollections(
 }
 
 function toPublicCollection(
-  collection: CreatorCollection
+  collection: CreatorCollection,
+  coverMediaUrl: string | null
 ): PublicCreatorCollection {
   return {
     id: collection.id,
@@ -759,6 +780,7 @@ function toPublicCollection(
     description: collection.description,
     cover_image_url:
       collection.cover_image_url,
+    cover_media_url: coverMediaUrl,
     city: collection.city,
     category: collection.category,
     featured: collection.featured,
@@ -766,6 +788,344 @@ function toPublicCollection(
     created_at: collection.created_at,
     updated_at: collection.updated_at,
   }
+}
+
+/* =========================================================
+ * Public collection cover media
+ * ======================================================= */
+
+type PublicCollectionCoverMediaRow = {
+  id: string
+  collection_id: string
+  user_id: string
+  storage_path: string
+  media_type: 'image'
+  sort_order: number
+  created_at: string
+}
+
+async function loadPublicCollectionCoverUrls({
+  supabase,
+  collections,
+  expectedUserId,
+}: {
+  supabase: SupabaseClient
+  collections: CreatorCollection[]
+  expectedUserId: string
+}): Promise<Map<string, string>> {
+  if (collections.length === 0) {
+    return new Map()
+  }
+
+  const collectionIds = collections.map(
+    (collection) => collection.id
+  )
+
+  const mediaResult = await supabase
+    .from('creator_collection_media')
+    .select(`
+      id,
+      collection_id,
+      user_id,
+      storage_path,
+      media_type,
+      sort_order,
+      created_at
+    `)
+    .eq('user_id', expectedUserId)
+    .eq('media_type', 'image')
+    .in('collection_id', collectionIds)
+    .order('sort_order', {
+      ascending: true,
+    })
+    .order('created_at', {
+      ascending: true,
+    })
+
+  if (mediaResult.error) {
+    throwQueryError({
+      code: 'COLLECTIONS_QUERY_FAILED',
+      operation:
+        'public creator collection cover media',
+      error: mediaResult.error,
+      userId: expectedUserId,
+    })
+  }
+
+  const media = parsePublicCollectionCoverMedia({
+    value: mediaResult.data,
+    collectionIds: new Set(collectionIds),
+    expectedUserId,
+  })
+
+  const mediaByCollectionId = new Map<
+    string,
+    PublicCollectionCoverMediaRow[]
+  >()
+
+  for (const item of media) {
+    const collectionMedia =
+      mediaByCollectionId.get(
+        item.collection_id
+      ) ?? []
+
+    collectionMedia.push(item)
+
+    mediaByCollectionId.set(
+      item.collection_id,
+      collectionMedia
+    )
+  }
+
+  for (const collectionMedia of mediaByCollectionId.values()) {
+    collectionMedia.sort(
+      compareCollectionCoverMedia
+    )
+  }
+
+  const coverUrls = new Map<string, string>()
+
+  for (const collection of collections) {
+    const collectionMedia =
+      mediaByCollectionId.get(
+        collection.id
+      ) ?? []
+
+    const explicitCover =
+      collection.cover_media_id
+        ? collectionMedia.find(
+            (item) =>
+              item.id ===
+              collection.cover_media_id
+          ) ?? null
+        : null
+
+    const resolvedCover =
+      explicitCover ??
+      collectionMedia[0] ??
+      null
+
+    if (!resolvedCover) {
+      continue
+    }
+
+    const {
+      data: publicUrlData,
+    } = supabase.storage
+      .from(
+        CREATOR_COLLECTION_MEDIA_BUCKET
+      )
+      .getPublicUrl(
+        resolvedCover.storage_path
+      )
+
+    const publicUrl =
+      normalizePublicStorageUrl(
+        publicUrlData.publicUrl
+      )
+
+    if (publicUrl) {
+      coverUrls.set(
+        collection.id,
+        publicUrl
+      )
+    }
+  }
+
+  return coverUrls
+}
+
+function parsePublicCollectionCoverMedia({
+  value,
+  collectionIds,
+  expectedUserId,
+}: {
+  value: unknown
+  collectionIds: Set<string>
+  expectedUserId: string
+}): PublicCollectionCoverMediaRow[] {
+  if (value === null || value === undefined) {
+    return []
+  }
+
+  if (!Array.isArray(value)) {
+    throwInvalidDatabaseData({
+      entity: 'creator_collection_media',
+      value,
+    })
+  }
+
+  return value.map(
+    (
+      row,
+      index
+    ): PublicCollectionCoverMediaRow => {
+      if (!isRecord(row)) {
+        throwInvalidDatabaseData({
+          entity:
+            `creator_collection_media[${index}]`,
+          value: row,
+        })
+      }
+
+      const id = readRequiredString({
+        value: row.id,
+        entity:
+          `creator_collection_media[${index}].id`,
+      })
+
+      const collectionId =
+        readRequiredString({
+          value: row.collection_id,
+          entity:
+            `creator_collection_media[${index}].collection_id`,
+        })
+
+      const userId =
+        readRequiredString({
+          value: row.user_id,
+          entity:
+            `creator_collection_media[${index}].user_id`,
+        })
+
+      const storagePath =
+        readRequiredString({
+          value: row.storage_path,
+          entity:
+            `creator_collection_media[${index}].storage_path`,
+        })
+
+      const createdAt =
+        readRequiredString({
+          value: row.created_at,
+          entity:
+            `creator_collection_media[${index}].created_at`,
+        })
+
+      if (userId !== expectedUserId) {
+        throwInvalidDatabaseData({
+          entity:
+            `creator_collection_media[${index}].user_id`,
+          value: userId,
+          expectedValue: expectedUserId,
+        })
+      }
+
+      if (!collectionIds.has(collectionId)) {
+        throwInvalidDatabaseData({
+          entity:
+            `creator_collection_media[${index}].collection_id`,
+          value: collectionId,
+          expectedValue:
+            'one of the requested featured collection identifiers',
+        })
+      }
+
+      if (row.media_type !== 'image') {
+        throwInvalidDatabaseData({
+          entity:
+            `creator_collection_media[${index}].media_type`,
+          value: row.media_type,
+          expectedValue: 'image',
+        })
+      }
+
+      if (
+        typeof row.sort_order !== 'number' ||
+        !Number.isInteger(row.sort_order) ||
+        row.sort_order < 0
+      ) {
+        throwInvalidDatabaseData({
+          entity:
+            `creator_collection_media[${index}].sort_order`,
+          value: row.sort_order,
+          expectedValue:
+            'a non-negative integer',
+        })
+      }
+
+      return {
+        id,
+        collection_id: collectionId,
+        user_id: userId,
+        storage_path: storagePath,
+        media_type: 'image',
+        sort_order: row.sort_order,
+        created_at: createdAt,
+      }
+    }
+  )
+}
+
+function compareCollectionCoverMedia(
+  first: PublicCollectionCoverMediaRow,
+  second: PublicCollectionCoverMediaRow
+): number {
+  if (
+    first.sort_order !==
+    second.sort_order
+  ) {
+    return (
+      first.sort_order -
+      second.sort_order
+    )
+  }
+
+  const createdAtComparison =
+    compareIsoDatesAscending(
+      first.created_at,
+      second.created_at
+    )
+
+  if (createdAtComparison !== 0) {
+    return createdAtComparison
+  }
+
+  return first.id.localeCompare(second.id)
+}
+
+function normalizePublicStorageUrl(
+  value: unknown
+): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const trimmed = value.trim()
+
+  return trimmed.length > 0
+    ? trimmed
+    : null
+}
+
+function readRequiredString({
+  value,
+  entity,
+}: {
+  value: unknown
+  entity: string
+}): string {
+  if (typeof value !== 'string') {
+    throwInvalidDatabaseData({
+      entity,
+      value,
+      expectedValue:
+        'a non-empty string',
+    })
+  }
+
+  const normalized = value.trim()
+
+  if (!normalized) {
+    throwInvalidDatabaseData({
+      entity,
+      value,
+      expectedValue:
+        'a non-empty string',
+    })
+  }
+
+  return normalized
 }
 
 /* =========================================================

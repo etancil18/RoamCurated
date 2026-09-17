@@ -14,6 +14,7 @@ import CollectionItemList, {
   type CollectionItemListItem,
 } from '@/components/profile/creator/collections/CollectionItemList'
 import CollectionItemPicker from '@/components/profile/creator/collections/CollectionItemPicker'
+import CollectionMediaManager from '@/components/profile/creator/collections/CollectionMediaManager'
 
 import {
   addCreatorCollectionItemsAction,
@@ -27,6 +28,9 @@ import {
   type CollectionActionFailure,
 } from '../actions'
 
+import type {
+  CreatorCollectionMediaRecord,
+} from '@/lib/creator/collectionMedia'
 import {
   createServerClient,
 } from '@/lib/supabase/server'
@@ -82,6 +86,9 @@ type CreatorCollectionRow = {
   cover_image_url:
     | string
     | null
+  cover_media_id:
+    | string
+    | null
   city: string | null
   category: string | null
   visibility:
@@ -118,6 +125,8 @@ type CollectionPageData = {
   profile: ProfileRow
   collection:
     CreatorCollectionRow
+  media:
+    CreatorCollectionMediaRecord[]
   selectedVenues:
     CollectionItemListItem[]
 }
@@ -178,10 +187,11 @@ export default async function CreatorCollectionPage({
   }
 
   const {
-  profile,
-  collection,
-  selectedVenues,
-} = pageData.data
+    profile,
+    collection,
+    media,
+    selectedVenues,
+  } = pageData.data
 
   const feedback =
     normalizeActionFeedback({
@@ -272,17 +282,29 @@ export default async function CreatorCollectionPage({
             }
           />
 
+          <CollectionMediaManager
+            collectionId={
+              collection.id
+            }
+            initialMedia={
+              media
+            }
+            initialCoverMediaId={
+              collection.cover_media_id
+            }
+          />
+
           <CollectionVenueManager
             collection={
-                collection
+              collection
             }
             selectedVenues={
-                selectedVenues
+              selectedVenues
             }
             existingVenueIds={
-                existingVenueIds
+              existingVenueIds
             }
-            />
+          />
 
           <CollectionPublishingControls
             collection={
@@ -737,27 +759,27 @@ function CollectionEditor({
                 id="collection-city"
                 name="city"
                 defaultValue={
-                    normalizeCityKey(
+                  normalizeCityKey(
                     collection.city
-                    )
+                  )
                 }
                 className={inputClassName}
-                >
+              >
                 <option value="">
-                    Select a city
+                  Select a city
                 </option>
 
                 {SUPPORTED_CITIES.map(
-                    (city) => (
+                  (city) => (
                     <option
-                        key={city.value}
-                        value={city.value}
+                      key={city.value}
+                      value={city.value}
                     >
-                        {city.label}
+                      {city.label}
                     </option>
-                    )
+                  )
                 )}
-            </select>
+              </select>
             </FormField>
 
             <FormField
@@ -1104,11 +1126,11 @@ function CollectionCoverPreview({
 
           {collection.city ? (
             <p className="mt-1 truncate text-xs text-neutral-500">
-                {getCityLabel(
+              {getCityLabel(
                 collection.city
-                ) ?? collection.city}
+              ) ?? collection.city}
             </p>
-            ) : null}
+          ) : null}
         </div>
       </div>
 
@@ -1674,6 +1696,7 @@ async function loadCollectionPageData(
         slug,
         description,
         cover_image_url,
+        cover_media_id,
         city,
         category,
         visibility,
@@ -1737,22 +1760,115 @@ async function loadCollectionPageData(
     }
   }
 
-  const venueLayer =
-    await loadCollectionVenueLayer({
+  const [
+    media,
+    venueLayer,
+  ] = await Promise.all([
+    loadCollectionMediaLayer({
       supabase,
       collection,
       userId: user.id,
-    })
+    }),
+
+    loadCollectionVenueLayer({
+      supabase,
+      collection,
+      userId: user.id,
+    }),
+  ])
 
   return {
     status: 'success',
     data: {
-        profile,
-        collection,
-        selectedVenues:
+      profile,
+      collection,
+      media,
+      selectedVenues:
         venueLayer.selectedVenues,
     },
   }
+}
+
+/* =========================================================
+ * Focused media loader
+ * ======================================================= */
+
+async function loadCollectionMediaLayer({
+  supabase,
+  collection,
+  userId,
+}: {
+  supabase: SupabaseServerClient
+  collection:
+    CreatorCollectionRow
+  userId: string
+}): Promise<
+  CreatorCollectionMediaRecord[]
+> {
+  const mediaResult =
+    await supabase
+      .from(
+        'creator_collection_media'
+      )
+      .select(`
+        id,
+        collection_id,
+        user_id,
+        media_type,
+        storage_path,
+        poster_path,
+        caption,
+        alt_text,
+        width,
+        height,
+        duration_seconds,
+        sort_order,
+        created_at,
+        updated_at
+      `)
+      .eq(
+        'collection_id',
+        collection.id
+      )
+      .eq(
+        'user_id',
+        userId
+      )
+      .order(
+        'sort_order',
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        'created_at',
+        {
+          ascending: true,
+        }
+      )
+
+  if (mediaResult.error) {
+    console.error(
+      '[creator collection page] Collection media query failed:',
+      {
+        userId,
+        collectionId:
+          collection.id,
+        error:
+          mediaResult.error,
+      }
+    )
+
+    throw new Error(
+      'Collection media could not be loaded.'
+    )
+  }
+
+  return normalizeCollectionMediaRows(
+    mediaResult.data,
+    collection.id,
+    userId
+  )
 }
 
 /* =========================================================
@@ -2282,6 +2398,11 @@ function normalizeCollectionRow(
         value.cover_image_url
       ),
 
+    cover_media_id:
+      normalizeUuid(
+        value.cover_media_id
+      ),
+
     city:
       normalizeNullableText(
         value.city
@@ -2308,6 +2429,176 @@ function normalizeCollectionRow(
     updated_at:
       updatedAt,
   }
+}
+
+function normalizeCollectionMediaRows(
+  value: unknown,
+  expectedCollectionId: string,
+  expectedUserId: string
+): CreatorCollectionMediaRecord[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map(
+      (
+        row
+      ): CreatorCollectionMediaRecord | null => {
+        if (!isRecord(row)) {
+          return null
+        }
+
+        const id =
+          normalizeUuid(
+            row.id
+          )
+
+        const collectionId =
+          normalizeUuid(
+            row.collection_id
+          )
+
+        const userId =
+          normalizeUuid(
+            row.user_id
+          )
+
+        const mediaType =
+          row.media_type ===
+            'image' ||
+          row.media_type ===
+            'video'
+            ? row.media_type
+            : null
+
+        const storagePath =
+          normalizeStoragePath(
+            row.storage_path
+          )
+
+        const createdAt =
+          normalizeIsoDate(
+            row.created_at
+          )
+
+        const updatedAt =
+          normalizeIsoDate(
+            row.updated_at
+          )
+
+        if (
+          !id ||
+          collectionId !==
+            expectedCollectionId ||
+          userId !==
+            expectedUserId ||
+          !mediaType ||
+          !storagePath ||
+          !createdAt ||
+          !updatedAt
+        ) {
+          return null
+        }
+
+        return {
+          id,
+
+          collection_id:
+            collectionId,
+
+          user_id:
+            userId,
+
+          media_type:
+            mediaType,
+
+          storage_path:
+            storagePath,
+
+          poster_path:
+            normalizeStoragePath(
+              row.poster_path
+            ),
+
+          caption:
+            normalizeNullableText(
+              row.caption
+            ),
+
+          alt_text:
+            normalizeNullableText(
+              row.alt_text
+            ),
+
+          width:
+            normalizePositiveInteger(
+              row.width
+            ),
+
+          height:
+            normalizePositiveInteger(
+              row.height
+            ),
+
+          duration_seconds:
+            normalizeNonNegativeNumber(
+              row.duration_seconds
+            ),
+
+          sort_order:
+            normalizeNonNegativeInteger(
+              row.sort_order
+            ),
+
+          created_at:
+            createdAt,
+
+          updated_at:
+            updatedAt,
+        }
+      }
+    )
+    .filter(
+      (
+        row
+      ): row is CreatorCollectionMediaRecord =>
+        row !== null
+    )
+    .sort(
+      (
+        first,
+        second
+      ) => {
+        if (
+          first.sort_order !==
+          second.sort_order
+        ) {
+          return (
+            first.sort_order -
+            second.sort_order
+          )
+        }
+
+        const createdComparison =
+          Date.parse(
+            first.created_at
+          ) -
+          Date.parse(
+            second.created_at
+          )
+
+        if (
+          createdComparison !== 0
+        ) {
+          return createdComparison
+        }
+
+        return first.id.localeCompare(
+          second.id
+        )
+      }
+    )
 }
 
 function normalizeCollectionVenueRows(
@@ -2447,32 +2738,32 @@ function normalizeVenueRows(
     }
 
     byId.set(id, {
-    id,
-    name,
+      id,
+      name,
 
-    slug:
+      slug:
         normalizeNullableText(
-        rawRow.slug
+          rawRow.slug
         ),
 
-    city:
+      city:
         normalizeNullableText(
-        rawRow.city
+          rawRow.city
         ),
 
-    category: null,
+      category: null,
 
-    description:
+      description:
         normalizeNullableText(
-        rawRow.description
+          rawRow.description
         ),
 
-    cover_image_url:
+      cover_image_url:
         normalizeNullableText(
-        rawRow.cover_image_url
+          rawRow.cover_image_url
         ),
 
-    created_at: null,
+      created_at: null,
     })
   }
 
@@ -2553,7 +2844,7 @@ function normalizeCollectionId(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -2576,7 +2867,7 @@ function normalizeUuid(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -2624,7 +2915,7 @@ function normalizeRequiredText(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -2642,7 +2933,7 @@ function normalizeNullableText(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -2653,6 +2944,57 @@ function normalizeNullableText(
       .replace(/\s+/g, ' ')
 
   return normalized.length > 0
+    ? normalized
+    : null
+}
+
+function normalizeStoragePath(
+  value: unknown
+): string | null {
+  if (
+    typeof value !==
+      'string'
+  ) {
+    return null
+  }
+
+  const normalized =
+    value.trim()
+
+  if (
+    !normalized ||
+    normalized.startsWith(
+      '/'
+    ) ||
+    normalized.includes(
+      '..'
+    )
+  ) {
+    return null
+  }
+
+  return normalized
+}
+
+function normalizePositiveInteger(
+  value: unknown
+): number | null {
+  if (
+    typeof value !==
+      'number' ||
+    !Number.isFinite(
+      value
+    )
+  ) {
+    return null
+  }
+
+  const normalized =
+    Math.trunc(
+      value
+    )
+
+  return normalized > 0
     ? normalized
     : null
 }
@@ -2674,12 +3016,29 @@ function normalizeNonNegativeInteger(
   )
 }
 
+function normalizeNonNegativeNumber(
+  value: unknown
+): number | null {
+  if (
+    typeof value !==
+      'number' ||
+    !Number.isFinite(
+      value
+    ) ||
+    value < 0
+  ) {
+    return null
+  }
+
+  return value
+}
+
 function normalizeIsoDate(
   value: unknown
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }

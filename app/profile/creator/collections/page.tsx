@@ -429,9 +429,10 @@ function CreateCollectionPanel({
           </h2>
 
           <p className="mt-1 text-xs leading-5 text-neutral-500">
-            Add a curated collection and
-            decide whether it should be
-            private, public, or featured.
+            Create the collection first,
+            then add photos, videos, and
+            venues from its collection
+            manager.
           </p>
         </div>
 
@@ -455,6 +456,20 @@ function CreateCollectionPanel({
           />
 
           <CollectionFields />
+
+          <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.05] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-cyan-300">
+              Photos & videos
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-neutral-500">
+              After creating the collection,
+              open its collection manager to
+              upload carousel media. The
+              first media item becomes the
+              collection cover.
+            </p>
+          </div>
 
           <div className="flex justify-end">
             <button
@@ -497,8 +512,9 @@ function CollectionsList({
 
         <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-neutral-500">
           Create your first collection to
-          organize venues around a clear
-          local theme.
+          organize venues, photos, and
+          videos around a clear local
+          theme.
         </p>
       </section>
     )
@@ -632,7 +648,7 @@ function CollectionEditorCard({
         )}`
       : null
 
-  const manageVenuesHref =
+  const manageCollectionHref =
     `/profile/creator/collections/${encodeURIComponent(
       collection.id
     )}`
@@ -712,10 +728,10 @@ function CollectionEditorCard({
           />
 
           <Link
-            href={manageVenuesHref}
+            href={manageCollectionHref}
             className="inline-flex items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/[0.06] px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/10 hover:text-white"
           >
-            Manage venues →
+            Manage collection →
           </Link>
 
           {publicHref ? (
@@ -748,9 +764,42 @@ function CollectionEditorCard({
             }
           />
 
+          <input
+            type="hidden"
+            name="cover_image_url"
+            value={
+              collection.cover_image_url ??
+              ''
+            }
+          />
+
           <CollectionFields
             collection={collection}
           />
+
+          <div className="rounded-2xl border border-neutral-800 bg-black/25 px-4 py-3">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">
+                  Photos & videos
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-neutral-500">
+                  Upload and reorder carousel
+                  media from the collection
+                  manager. The first item is
+                  used as the cover.
+                </p>
+              </div>
+
+              <Link
+                href={manageCollectionHref}
+                className="inline-flex shrink-0 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/[0.05] px-4 py-2 text-xs font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/10 hover:text-white"
+              >
+                Manage media →
+              </Link>
+            </div>
+          </div>
 
           <div className="flex flex-wrap gap-2">
             <button
@@ -761,7 +810,7 @@ function CollectionEditorCard({
             </button>
 
             <Link
-              href={manageVenuesHref}
+              href={manageCollectionHref}
               className="inline-flex items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/[0.05] px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/10 hover:text-white"
             >
               {venueCount > 0
@@ -871,33 +920,33 @@ function CollectionFields({
         >
           <select
             id={
-                collection
+              collection
                 ? `${collection.id}-city`
                 : 'new-collection-city'
             }
             name="city"
             defaultValue={
-                normalizeCityKey(
+              normalizeCityKey(
                 collection?.city
-                )
+              )
             }
             className={inputClassName}
-            >
+          >
             <option value="">
-                Select a city
+              Select a city
             </option>
 
             {SUPPORTED_CITIES.map(
-                (city) => (
+              (city) => (
                 <option
-                    key={city.value}
-                    value={city.value}
+                  key={city.value}
+                  value={city.value}
                 >
-                    {city.label}
+                  {city.label}
                 </option>
-                )
+              )
             )}
-            </select>
+          </select>
         </FormField>
 
         <FormField
@@ -927,35 +976,6 @@ function CollectionFields({
           />
         </FormField>
       </div>
-
-      <FormField
-        id={
-          collection
-            ? `${collection.id}-cover`
-            : 'new-collection-cover'
-        }
-        label="Cover image URL"
-        name="cover_image_url"
-        description="Use a public http:// or https:// image URL."
-      >
-        <input
-          id={
-            collection
-              ? `${collection.id}-cover`
-              : 'new-collection-cover'
-          }
-          name="cover_image_url"
-          type="url"
-          inputMode="url"
-          maxLength={2048}
-          defaultValue={
-            collection?.cover_image_url ??
-            ''
-          }
-          placeholder="https://example.com/cover.jpg"
-          className={inputClassName}
-        />
-      </FormField>
 
       <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-neutral-800 bg-black/30 p-3">
@@ -1319,9 +1339,7 @@ async function createCollectionFormAction(
         ),
 
       cover_image_url:
-        formData.get(
-          'cover_image_url'
-        ),
+        null,
 
       city:
         formData.get('city'),

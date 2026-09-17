@@ -217,6 +217,7 @@ export type CreatorCollection = {
   slug: string
   description: string | null
   cover_image_url: string | null
+  cover_media_id: string | null
   city: string | null
   category: string | null
   visibility: CreatorCollectionVisibility
@@ -292,7 +293,9 @@ export type PublicCreatorCollection = Pick<
   | 'sort_order'
   | 'created_at'
   | 'updated_at'
->
+> & {
+  cover_media_url: string | null
+}
 
 export type PublicCreatorCollectionWithItems =
   PublicCreatorCollection & {

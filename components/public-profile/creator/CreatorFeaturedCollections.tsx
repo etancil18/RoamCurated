@@ -2,7 +2,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   ArrowRight,
-  FolderHeart,
   ImageIcon,
   MapPin,
   Sparkles,
@@ -36,44 +35,11 @@ export type CreatorFeaturedCollectionsProps = {
     readonly PublicCreatorCollection[]
 
   /**
-   * Optional section title.
-   */
-  title?: string
-
-  /**
-   * Optional supporting copy.
-   */
-  description?: string
-
-  /**
    * Maximum number of featured collections rendered.
    *
    * Defaults to six and is capped at twelve.
    */
   limit?: number
-
-  /**
-   * Controls whether the section heading is rendered.
-   *
-   * Disable this when nesting the grid inside another panel that
-   * already provides a heading.
-   */
-  showHeading?: boolean
-
-  /**
-   * Controls whether a link to the creator's full collections
-   * index is displayed.
-   */
-  showViewAll?: boolean
-
-  /**
-   * Optional override for the collections-index route.
-   *
-   * Defaults to:
-   *
-   *   /u/[username]/collections
-   */
-  viewAllHref?: string | null
 
   /**
    * Optional wrapper classes.
@@ -88,13 +54,7 @@ export type CreatorFeaturedCollectionsProps = {
 export default function CreatorFeaturedCollections({
   username,
   collections,
-  title = 'Featured collections',
-  description =
-    'Curated places, routes, and local recommendations that reflect this creator’s point of view.',
   limit = 6,
-  showHeading = true,
-  showViewAll = true,
-  viewAllHref,
   className = '',
 }: CreatorFeaturedCollectionsProps) {
   const normalizedUsername =
@@ -116,22 +76,8 @@ export default function CreatorFeaturedCollections({
     return null
   }
 
-  const resolvedViewAllHref =
-    normalizeInternalHref(viewAllHref) ??
-    buildCreatorCollectionsHref(
-      normalizedUsername
-    )
-
-  const headingId =
-    'creator-featured-collections-title'
-
   return (
     <section
-      aria-labelledby={
-        showHeading
-          ? headingId
-          : undefined
-      }
       className={[
         'w-full min-w-0 rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/70 p-4 text-white shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-5',
         className,
@@ -139,30 +85,31 @@ export default function CreatorFeaturedCollections({
         .filter(Boolean)
         .join(' ')}
     >
-      {showHeading ? (
-        <FeaturedCollectionsHeading
-          id={headingId}
-          title={title}
-          description={description}
-          collectionCount={
-            normalizedCollections.length
-          }
-          viewAllHref={
-            showViewAll
-              ? resolvedViewAllHref
-              : null
-          }
-        />
-      ) : null}
+      <div className="flex justify-end">
+        <span
+          aria-label={`${normalizedCollections.length} featured ${
+            normalizedCollections.length === 1
+              ? 'collection'
+              : 'collections'
+          }`}
+          className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-black/30 px-3 py-1.5 text-xs font-semibold text-neutral-400"
+        >
+          <Sparkles
+            aria-hidden="true"
+            className="h-3.5 w-3.5 text-indigo-400"
+          />
+
+          {normalizedCollections.length.toLocaleString()}
+        </span>
+      </div>
 
       <ul
         aria-label="Featured creator collections"
         className={[
-          'grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2',
+          'mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2',
           normalizedCollections.length >= 3
             ? 'lg:grid-cols-3'
             : '',
-          showHeading ? 'mt-5' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -183,111 +130,7 @@ export default function CreatorFeaturedCollections({
           )
         )}
       </ul>
-
-      {!showHeading &&
-      showViewAll &&
-      resolvedViewAllHref ? (
-        <div className="mt-5">
-          <ViewAllCollectionsLink
-            href={resolvedViewAllHref}
-          />
-        </div>
-      ) : null}
     </section>
-  )
-}
-
-/* =========================================================
- * Heading
- * ======================================================= */
-
-function FeaturedCollectionsHeading({
-  id,
-  title,
-  description,
-  collectionCount,
-  viewAllHref,
-}: {
-  id: string
-  title: string
-  description: string
-  collectionCount: number
-  viewAllHref: string | null
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-300">
-            <FolderHeart
-              aria-hidden="true"
-              className="h-4 w-4"
-            />
-          </span>
-
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-400">
-            Curated by creator
-          </p>
-        </div>
-
-        <h2
-          id={id}
-          className="mt-3 break-words text-xl font-semibold tracking-tight text-white"
-        >
-          {title}
-        </h2>
-
-        {description ? (
-          <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-neutral-400">
-            {description}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <span
-          aria-label={`${collectionCount} featured ${
-            collectionCount === 1
-              ? 'collection'
-              : 'collections'
-          }`}
-          className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-black/30 px-3 py-1.5 text-xs font-semibold text-neutral-400"
-        >
-          <Sparkles
-            aria-hidden="true"
-            className="h-3.5 w-3.5 text-indigo-400"
-          />
-
-          {collectionCount.toLocaleString()}
-        </span>
-
-        {viewAllHref ? (
-          <ViewAllCollectionsLink
-            href={viewAllHref}
-          />
-        ) : null}
-      </div>
-    </div>
-  )
-}
-
-function ViewAllCollectionsLink({
-  href,
-}: {
-  href: string
-}) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex items-center justify-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold text-indigo-200 transition hover:border-indigo-400/60 hover:bg-indigo-500/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-    >
-      View all
-
-      <ArrowRight
-        aria-hidden="true"
-        className="h-3.5 w-3.5"
-      />
-    </Link>
   )
 }
 
@@ -388,13 +231,15 @@ function CollectionCover({
   collection:
     NormalizedPublicCreatorCollection
 }) {
+  const coverUrl =
+    collection.cover_media_url ??
+    collection.cover_image_url
+
   return (
     <div className="relative aspect-[4/3] w-full min-w-0 overflow-hidden border-b border-neutral-800 bg-neutral-900">
-      {collection.cover_image_url ? (
+      {coverUrl ? (
         <Image
-          src={
-            collection.cover_image_url
-          }
+          src={coverUrl}
           alt=""
           fill
           unoptimized
@@ -466,7 +311,19 @@ type NormalizedPublicCreatorCollection = {
   title: string
   slug: string
   description: string | null
+
+  /**
+   * Resolved first-media cover from creator_collection_media.
+   *
+   * This takes precedence over the legacy cover_image_url.
+   */
+  cover_media_url: string | null
+
+  /**
+   * Legacy fallback retained during the media migration.
+   */
   cover_image_url: string | null
+
   city: string | null
   category: string | null
   featured: true
@@ -635,6 +492,11 @@ function normalizeFeaturedCollection(
         1000
       ),
 
+    cover_media_url:
+      normalizePublicImageUrl(
+        value.cover_media_url
+      ),
+
     cover_image_url:
       normalizePublicImageUrl(
         value.cover_image_url
@@ -728,36 +590,6 @@ function buildCreatorCollectionHref({
   )}/collections/${encodeURIComponent(
     slug
   )}`
-}
-
-function buildCreatorCollectionsHref(
-  username: string
-): string {
-  return `/u/${encodeURIComponent(
-    username
-  )}/collections`
-}
-
-function normalizeInternalHref(
-  value: string | null | undefined
-): string | null {
-  if (typeof value !== 'string') {
-    return null
-  }
-
-  const normalized = value.trim()
-
-  if (
-    !normalized ||
-    !normalized.startsWith('/') ||
-    normalized.startsWith('//') ||
-    normalized.includes('\\') ||
-    /[\r\n]/.test(normalized)
-  ) {
-    return null
-  }
-
-  return normalized
 }
 
 /* =========================================================
