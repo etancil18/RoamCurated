@@ -10,6 +10,7 @@ import {
   formatVenueTypeLabel,
   normalizeVenueTypes,
 } from './venueTypeNormalization'
+import type { RouteStopOrigin } from '@/types/route'
 
 export type ExplainRouteVenue = {
   id?: string | null
@@ -38,6 +39,7 @@ export type ExplainedRouteStop = {
   distanceMetersFromPrevious?: number | null
   score?: number | null
   reasons?: VenueScoreReason[]
+  origin?: RouteStopOrigin
 }
 
 export type ExplainRouteParams = {
@@ -46,6 +48,8 @@ export type ExplainRouteParams = {
   startedAt?: Date | string | null
   travelMode?: 'walking' | 'cycling' | 'driving'
   city?: string | null
+  collectionTitle?: string | null
+  collectionCreatorName?: string | null
 }
 
 export type RouteExplanation = {
@@ -62,6 +66,8 @@ export type RouteStopExplanation = {
   arrivalLabel: string | null
   explanation: string
   reasonLabels: string[]
+  origin?: RouteStopOrigin
+  provenanceLabel?: string | null
 }
 
 export function explainRoute({
@@ -70,6 +76,8 @@ export function explainRoute({
   startedAt = null,
   travelMode = 'walking',
   city = null,
+  collectionTitle = null,
+  collectionCreatorName = null,
 }: ExplainRouteParams): RouteExplanation {
   const routeStops = stops.filter((stop) => stop?.venue)
 
@@ -77,6 +85,7 @@ export function explainRoute({
     anchorVenue,
     stops: routeStops,
     city,
+    collectionTitle,
   })
 
   const summary = buildSummary({
@@ -84,6 +93,8 @@ export function explainRoute({
     stops: routeStops,
     startedAt,
     travelMode,
+    collectionTitle,
+    collectionCreatorName,
   })
 
   const stopExplanations = routeStops.map((stop, index) =>
@@ -92,12 +103,15 @@ export function explainRoute({
       index,
       anchorVenue,
       previousStop: index > 0 ? routeStops[index - 1] : null,
+      collectionCreatorName,
     })
   )
 
   const bullets = buildRouteBullets({
     stops: routeStops,
     travelMode,
+    collectionTitle,
+    collectionCreatorName,
   })
 
   return {
@@ -113,11 +127,13 @@ export function explainRouteStop({
   index,
   anchorVenue,
   previousStop = null,
+  collectionCreatorName = null,
 }: {
   stop: ExplainedRouteStop
   index: number
   anchorVenue: ExplainRouteVenue
   previousStop?: ExplainedRouteStop | null
+  collectionCreatorName?: string | null
 }): RouteStopExplanation {
   const venueName = stop.venue.name ?? `Stop ${index + 1}`
   const stageLabel = stop.stage?.label ?? null
@@ -140,11 +156,22 @@ export function explainRouteStop({
       : `after ${previousName}`
 
   const bestReason = pickBestReason(stop.reasons ?? [])
+  const provenanceLabel = buildProvenanceLabel({
+    origin: stop.origin,
+    collectionCreatorName,
+  })
 
   const explanation = [
     `${venueName} was selected because ${stagePhrase}`,
     movementPhrase,
     bestReason ? `with an extra boost because ${bestReason.toLowerCase()}` : null,
+    stop.origin === 'collection'
+      ? collectionCreatorName
+        ? `and comes directly from ${collectionCreatorName}'s Collection`
+        : 'and comes directly from the Collection'
+      : stop.origin === 'roam_fill'
+        ? 'and was added by Roam to complete the Flow'
+        : null,
   ]
     .filter(Boolean)
     .join(', ')
@@ -157,6 +184,8 @@ export function explainRouteStop({
     arrivalLabel,
     explanation,
     reasonLabels,
+    ...(stop.origin ? { origin: stop.origin } : {}),
+    ...(provenanceLabel ? { provenanceLabel } : {}),
   }
 }
 
@@ -164,14 +193,24 @@ export function buildHeadline({
   anchorVenue,
   stops,
   city,
+  collectionTitle = null,
 }: {
   anchorVenue: ExplainRouteVenue
   stops: ExplainedRouteStop[]
   city?: string | null
+  collectionTitle?: string | null
 }) {
   const anchorName = anchorVenue.name ?? 'your starting point'
   const stopCount = stops.length
   const cityLabel = city ?? anchorVenue.city ?? null
+
+  if (collectionTitle && cityLabel) {
+    return `${stopCount}-stop Flow from ${collectionTitle} in ${cityLabel}`
+  }
+
+  if (collectionTitle) {
+    return `${stopCount}-stop Flow from ${collectionTitle}`
+  }
 
   if (cityLabel) {
     return `${stopCount}-stop route from ${anchorName} in ${cityLabel}`
@@ -185,11 +224,15 @@ export function buildSummary({
   stops,
   startedAt,
   travelMode,
+  collectionTitle = null,
+  collectionCreatorName = null,
 }: {
   anchorVenue: ExplainRouteVenue
   stops: ExplainedRouteStop[]
   startedAt?: Date | string | null
   travelMode: 'walking' | 'cycling' | 'driving'
+  collectionTitle?: string | null
+  collectionCreatorName?: string | null
 }) {
   const anchorName = anchorVenue.name ?? 'your selected venue'
   const startLabel = startedAt ? ` around ${formatTime(startedAt)}` : ''
@@ -202,15 +245,27 @@ export function buildSummary({
       ? `moves through ${formatList(stageLabels as string[])}`
       : 'builds a contextual sequence of nearby stops'
 
+  if (collectionTitle) {
+    const collectionLabel = collectionCreatorName
+      ? `${collectionCreatorName}'s ${collectionTitle} Collection`
+      : `the ${collectionTitle} Collection`
+
+    return `Starting from ${anchorName}${startLabel}, Roam builds from ${collectionLabel} and ${routeShape}, filling contextual gaps when needed while using ${travelMode} distance, timing, venue type, and open-hour fit to keep the Flow coherent.`
+  }
+
   return `Starting from ${anchorName}${startLabel}, Roam ${routeShape}, using ${travelMode} distance, timing, venue type, and open-hour fit to keep the plan coherent.`
 }
 
 export function buildRouteBullets({
   stops,
   travelMode,
+  collectionTitle = null,
+  collectionCreatorName = null,
 }: {
   stops: ExplainedRouteStop[]
   travelMode: 'walking' | 'cycling' | 'driving'
+  collectionTitle?: string | null
+  collectionCreatorName?: string | null
 }) {
   const totalTravelMinutes = stops.reduce((sum, stop) => {
     return sum + (typeof stop.travelMinutesFromPrevious === 'number' ? stop.travelMinutesFromPrevious : 0)
@@ -232,7 +287,27 @@ export function buildRouteBullets({
     )
   ).slice(0, 5)
 
+  const collectionStopCount = stops.filter(
+    (stop) => stop.origin === 'collection'
+  ).length
+
+  const roamFillStopCount = stops.filter(
+    (stop) => stop.origin === 'roam_fill'
+  ).length
+
+  const collectionSourceLabel = collectionTitle
+    ? collectionCreatorName
+      ? `${collectionCreatorName}'s ${collectionTitle}`
+      : collectionTitle
+    : null
+
   return [
+    collectionSourceLabel && collectionStopCount > 0
+      ? `From ${collectionSourceLabel}: ${formatStopCount(collectionStopCount)}`
+      : null,
+    collectionTitle && roamFillStopCount > 0
+      ? `Added by Roam to complete the Flow: ${formatStopCount(roamFillStopCount)}`
+      : null,
     stageLabels.length > 0
       ? `Route rhythm: ${formatList(stageLabels)}`
       : null,
@@ -246,6 +321,30 @@ export function buildRouteBullets({
       ? `Venue mix: ${formatList(venueTypes)}`
       : null,
   ].filter((item): item is string => Boolean(item))
+}
+
+function buildProvenanceLabel({
+  origin,
+  collectionCreatorName,
+}: {
+  origin?: RouteStopOrigin
+  collectionCreatorName?: string | null
+}) {
+  if (origin === 'collection') {
+    return collectionCreatorName
+      ? `From ${collectionCreatorName}'s Collection`
+      : 'From the Collection'
+  }
+
+  if (origin === 'roam_fill') {
+    return 'Added by Roam to complete the Flow'
+  }
+
+  return null
+}
+
+function formatStopCount(count: number) {
+  return `${count} ${count === 1 ? 'stop' : 'stops'}`
 }
 
 function buildReasonLabels(reasons: VenueScoreReason[]) {

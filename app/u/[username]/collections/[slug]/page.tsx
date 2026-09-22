@@ -1,29 +1,25 @@
-import type {
-  Metadata,
-} from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import {
-  notFound,
-} from 'next/navigation'
+import { notFound } from 'next/navigation'
 
 import CollectionCarousel, {
   type CollectionCarouselMedia,
 } from '@/components/profile/creator/collections/CollectionCarousel'
+import CollectionFlowCallToAction from '@/components/public-profile/creator/CollectionFlowCallToAction'
+import CollectionShareButton from '@/components/public-profile/creator/CollectionShareButton'
 
 import {
   CREATOR_COLLECTION_MEDIA_BUCKET,
+  type CreatorCollectionMediaRecord,
 } from '@/lib/creator/collectionMedia'
+import type { PublicCollectionShareData } from '@/lib/creator/collectionShare'
+import { resolveCollectionCover } from '@/lib/creator/resolveCollectionCover'
 
-import {
-  createServerClient,
-} from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 
-import {
-  getCityLabel,
-} from '@/lib/cities/normalizeCity'
+import { getCityLabel } from '@/lib/cities/normalizeCity'
 
-export const dynamic =
-  'force-dynamic'
+export const dynamic = 'force-dynamic'
 
 /* =========================================================
  * Page contracts
@@ -58,6 +54,9 @@ type CreatorCollectionRow = {
   slug: string
   description: string | null
   cover_image_url:
+    | string
+    | null
+  cover_media_id:
     | string
     | null
   city: string | null
@@ -141,8 +140,11 @@ type PublicCollectionPageData = {
     CreatorCollectionRow
   media:
     CollectionCarouselMedia[]
+  mediaRecords:
+    CreatorCollectionMediaRecord[]
   items:
     PublicCollectionItem[]
+  supabaseUrl: string
 }
 
 /* =========================================================
@@ -206,27 +208,26 @@ export async function generateMetadata({
     data.collection.description ??
     `Explore ${data.collection.title}, a public collection curated by ${creatorName}.`
 
-  const socialImageUrl =
-    getCollectionCoverImageUrl({
-      media: data.media,
-      legacyCoverImageUrl:
-        data.collection
-          .cover_image_url,
-    })
+  const collectionPath =
+    `/u/${encodeURIComponent(
+      normalizedUsername
+    )}/collections/${encodeURIComponent(
+      normalizedSlug
+    )}`
+
+  const socialImagePath =
+    `${collectionPath}/opengraph-image`
 
   return {
-    title: `${data.collection.title} | ${creatorName} | Roam`,
+    title:
+      `${data.collection.title} | ${creatorName} | Roam`,
 
     description:
       description.slice(0, 160),
 
     alternates: {
       canonical:
-        `/u/${encodeURIComponent(
-          normalizedUsername
-        )}/collections/${encodeURIComponent(
-          normalizedSlug
-        )}`,
+        collectionPath,
     },
 
     openGraph: {
@@ -238,25 +239,21 @@ export async function generateMetadata({
 
       type: 'article',
 
-      images:
-        socialImageUrl
-          ? [
-              {
-                url:
-                  socialImageUrl,
-                alt:
-                  data.collection
-                    .title,
-              },
-            ]
-          : undefined,
+      images: [
+        {
+          url:
+            socialImagePath,
+          width: 1200,
+          height: 630,
+          alt:
+            `${data.collection.title} — curated by ${creatorName}`,
+        },
+      ],
     },
 
     twitter: {
       card:
-        socialImageUrl
-          ? 'summary_large_image'
-          : 'summary',
+        'summary_large_image',
 
       title:
         data.collection.title,
@@ -264,12 +261,9 @@ export async function generateMetadata({
       description:
         description.slice(0, 200),
 
-      images:
-        socialImageUrl
-          ? [
-              socialImageUrl,
-            ]
-          : undefined,
+      images: [
+        socialImagePath,
+      ],
     },
   }
 }
@@ -316,8 +310,45 @@ export default async function PublicCreatorCollectionPage({
     profile,
     collection,
     media,
+    mediaRecords,
     items,
+    supabaseUrl,
   } = data
+
+  const experiencedVenueIds =
+    await loadViewerExperiencedVenueIds({
+      venueIds:
+        items
+          .filter(
+            (item) =>
+              item.item_type ===
+                'venue' &&
+              item.item_id !== null
+          )
+          .map(
+            (item) =>
+              item.item_id as string
+          ),
+    })
+
+  const experiencedCount =
+    experiencedVenueIds
+      ? items.reduce(
+          (
+            count,
+            item
+          ) =>
+            item.item_type ===
+              'venue' &&
+            item.item_id &&
+            experiencedVenueIds.has(
+              item.item_id
+            )
+              ? count + 1
+              : count,
+          0
+        )
+      : null
 
   const creatorName =
     profile.full_name ??
@@ -337,11 +368,40 @@ export default async function PublicCreatorCollectionPage({
     `A public collection curated by ${creatorName}.`
 
   const heroImageUrl =
-    getCollectionCoverImageUrl({
-      media,
-      legacyCoverImageUrl:
+    resolveCollectionCover({
+      supabaseUrl,
+      coverMediaId:
+        collection.cover_media_id,
+      coverImageUrl:
         collection.cover_image_url,
+      media:
+        mediaRecords,
     })
+
+  const shareData:
+    PublicCollectionShareData = {
+      collectionId:
+        collection.id,
+      title:
+        collection.title,
+      slug:
+        collection.slug,
+      description:
+        collection.description,
+      city:
+        collection.city,
+      venueCount:
+        items.length,
+      coverImageUrl:
+        heroImageUrl,
+      creator: {
+        username:
+          profile.username ??
+          normalizedUsername,
+        displayName:
+          profile.full_name,
+      },
+    }
 
   return (
     <main className="min-h-screen w-full overflow-x-clip bg-black px-4 pb-16 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6">
@@ -375,6 +435,9 @@ export default async function PublicCreatorCollectionPage({
           heroImageUrl={
             heroImageUrl
           }
+          shareData={
+            shareData
+          }
         />
 
         {media.length > 0 ? (
@@ -387,11 +450,23 @@ export default async function PublicCreatorCollectionPage({
           />
         ) : null}
 
+        <CollectionFlowCallToAction
+          collectionId={
+            collection.id
+          }
+        />
+
         <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
           <PublicCollectionItems
             items={items}
             collectionTitle={
               collection.title
+            }
+            experiencedVenueIds={
+              experiencedVenueIds
+            }
+            experiencedCount={
+              experiencedCount
             }
           />
 
@@ -440,8 +515,6 @@ function CollectionNavigation({
       >
         ← {creatorName}
       </Link>
-
-      
     </nav>
   )
 }
@@ -457,6 +530,7 @@ function CollectionHero({
   profileHref,
   description,
   heroImageUrl,
+  shareData,
 }: {
   profile: ProfileRow
   collection:
@@ -465,6 +539,8 @@ function CollectionHero({
   profileHref: string
   description: string
   heroImageUrl: string | null
+  shareData:
+    PublicCollectionShareData
 }) {
   return (
     <section className="relative mt-6 min-w-0 overflow-hidden rounded-[2rem] border border-neutral-800 bg-neutral-950">
@@ -500,7 +576,7 @@ function CollectionHero({
             {collection.city ? (
               <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-200 backdrop-blur-md">
                 {getCityLabel(
-                collection.city
+                  collection.city
                 ) ?? collection.city}
               </span>
             ) : null}
@@ -514,36 +590,44 @@ function CollectionHero({
             {description}
           </p>
 
-          <Link
-            href={profileHref}
-            className="mt-5 inline-flex w-fit min-w-0 items-center gap-3 rounded-full border border-white/15 bg-black/45 py-2 pl-2 pr-4 backdrop-blur-md transition hover:border-cyan-400/40 hover:bg-black/65"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-neutral-900 text-sm">
-              {profile.avatar_url ? (
-                <img
-                  src={
-                    profile.avatar_url
-                  }
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span aria-hidden="true">
-                  🧭
+          <div className="mt-5 flex min-w-0 flex-wrap items-center gap-3">
+            <Link
+              href={profileHref}
+              className="inline-flex w-fit min-w-0 items-center gap-3 rounded-full border border-white/15 bg-black/45 py-2 pl-2 pr-4 backdrop-blur-md transition hover:border-cyan-400/40 hover:bg-black/65"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-neutral-900 text-sm">
+                {profile.avatar_url ? (
+                  <img
+                    src={
+                      profile.avatar_url
+                    }
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span aria-hidden="true">
+                    🧭
+                  </span>
+                )}
+              </span>
+
+              <span className="min-w-0">
+                <span className="block truncate text-xs text-neutral-400">
+                  Curated by
                 </span>
-              )}
-            </span>
 
-            <span className="min-w-0">
-              <span className="block truncate text-xs text-neutral-400">
-                Curated by
+                <span className="block truncate text-sm font-semibold text-white">
+                  {creatorName}
+                </span>
               </span>
+            </Link>
 
-              <span className="block truncate text-sm font-semibold text-white">
-                {creatorName}
-              </span>
-            </span>
-          </Link>
+            <CollectionShareButton
+              data={
+                shareData
+              }
+            />
+          </div>
         </div>
       </div>
     </section>
@@ -557,10 +641,16 @@ function CollectionHero({
 function PublicCollectionItems({
   items,
   collectionTitle,
+  experiencedVenueIds,
+  experiencedCount,
 }: {
   items:
     PublicCollectionItem[]
   collectionTitle: string
+  experiencedVenueIds:
+    Set<string> | null
+  experiencedCount:
+    number | null
 }) {
   return (
     <section
@@ -579,6 +669,22 @@ function PublicCollectionItems({
           >
             Places and recommendations
           </h2>
+
+          {experiencedCount !== null ? (
+            <p className="mt-2 text-sm font-medium text-neutral-400">
+              You&apos;ve experienced{' '}
+              <span className="text-white">
+                {experiencedCount.toLocaleString()}
+              </span>{' '}
+              of{' '}
+              <span className="text-white">
+                {items.length.toLocaleString()}
+              </span>{' '}
+              {items.length === 1
+                ? 'place'
+                : 'places'}
+            </p>
+          ) : null}
         </div>
 
         <p className="shrink-0 text-xs text-neutral-600">
@@ -620,6 +726,18 @@ function PublicCollectionItems({
                   position={
                     index + 1
                   }
+                  experienced={
+                    item.item_type ===
+                      'venue' &&
+                    item.item_id !==
+                      null &&
+                    experiencedVenueIds !==
+                      null
+                      ? experiencedVenueIds.has(
+                          item.item_id
+                        )
+                      : null
+                  }
                 />
               </li>
             )
@@ -633,10 +751,13 @@ function PublicCollectionItems({
 function PublicCollectionItemCard({
   item,
   position,
+  experienced,
 }: {
   item:
     PublicCollectionItem
   position: number
+  experienced:
+    boolean | null
 }) {
   const internalHref =
     normalizeInternalHref(
@@ -685,9 +806,37 @@ function PublicCollectionItemCard({
         </div>
 
         <div className="flex min-w-0 flex-col justify-center p-4 sm:p-5">
-          <h3 className="break-words text-lg font-semibold text-white">
-            {item.title}
-          </h3>
+          <div className="flex min-w-0 items-start gap-3">
+            <h3 className="min-w-0 flex-1 break-words text-lg font-semibold text-white">
+              {item.title}
+            </h3>
+
+            {experienced !== null ? (
+              <span
+                aria-label={
+                  experienced
+                    ? 'Experienced'
+                    : 'Not yet experienced'
+                }
+                title={
+                  experienced
+                    ? 'Experienced'
+                    : 'Not yet experienced'
+                }
+                className={
+                  experienced
+                    ? 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/15 text-sm font-semibold text-emerald-300'
+                    : 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-neutral-700 bg-black/30 text-sm font-semibold text-neutral-600'
+                }
+              >
+                <span aria-hidden="true">
+                  {experienced
+                    ? '✓'
+                    : '○'}
+                </span>
+              </span>
+            ) : null}
+          </div>
 
           {item.subtitle ? (
             <p className="mt-1 break-words text-xs font-medium text-neutral-400">
@@ -906,6 +1055,28 @@ async function loadPublicCollection({
   const supabase =
     await createServerClient()
 
+  const supabaseUrl =
+    normalizePublicUrl(
+      supabase.storage
+        .from(
+          CREATOR_COLLECTION_MEDIA_BUCKET
+        )
+        .getPublicUrl('')
+        .data.publicUrl
+        .replace(
+          /\/storage\/v1\/object\/public\/creator-collection-media\/?$/,
+          ''
+        )
+    )
+
+  if (!supabaseUrl) {
+    console.error(
+      '[public creator collection] Could not resolve Supabase project URL.'
+    )
+
+    return null
+  }
+
   const profileResult =
     await supabase
       .from('profiles')
@@ -960,6 +1131,7 @@ async function loadPublicCollection({
         slug,
         description,
         cover_image_url,
+        cover_media_id,
         city,
         category,
         visibility,
@@ -1005,7 +1177,7 @@ async function loadPublicCollection({
     return null
   }
 
-  const media =
+  const collectionMedia =
     await loadPublicCollectionMedia({
       supabase,
       collectionId:
@@ -1014,12 +1186,19 @@ async function loadPublicCollection({
         profile.id,
     })
 
+  const {
+    media,
+    mediaRecords,
+  } = collectionMedia
+
   if (!includeItems) {
     return {
       profile,
       collection,
       media,
+      mediaRecords,
       items: [],
+      supabaseUrl,
     }
   }
 
@@ -1064,7 +1243,9 @@ async function loadPublicCollection({
       profile,
       collection,
       media,
+      mediaRecords,
       items: [],
+      supabaseUrl,
     }
   }
 
@@ -1083,7 +1264,9 @@ async function loadPublicCollection({
       profile,
       collection,
       media,
+      mediaRecords,
       items: [],
+      supabaseUrl,
     }
   }
 
@@ -1136,7 +1319,9 @@ async function loadPublicCollection({
       profile,
       collection,
       media,
+      mediaRecords,
       items: [],
+      supabaseUrl,
     }
   }
 
@@ -1149,7 +1334,7 @@ async function loadPublicCollection({
     profile,
     collection,
     media,
-
+    mediaRecords,
     items:
       buildPublicVenueItems({
         collection,
@@ -1157,7 +1342,108 @@ async function loadPublicCollection({
           collectionVenues,
         venues,
       }),
+    supabaseUrl,
   }
+}
+
+async function loadViewerExperiencedVenueIds({
+  venueIds,
+}: {
+  venueIds: string[]
+}): Promise<Set<string> | null> {
+  const uniqueVenueIds = [
+    ...new Set(
+      venueIds
+        .map(
+          (venueId) =>
+            normalizeIdentifier(
+              venueId
+            )
+        )
+        .filter(
+          (
+            venueId
+          ): venueId is string =>
+            venueId !== null
+        )
+    ),
+  ]
+
+  const supabase =
+    await createServerClient()
+
+  const {
+    data: {
+      user,
+    },
+    error:
+      userError,
+  } =
+    await supabase.auth.getUser()
+
+  if (
+    userError ||
+    !user
+  ) {
+    return null
+  }
+
+  if (
+    uniqueVenueIds.length === 0
+  ) {
+    return new Set()
+  }
+
+  const visitsResult =
+    await supabase
+      .from('venue_visits')
+      .select('venue_id')
+      .eq(
+        'user_id',
+        user.id
+      )
+      .eq(
+        'geo_verified',
+        true
+      )
+      .in(
+        'venue_id',
+        uniqueVenueIds
+      )
+
+  if (visitsResult.error) {
+    console.error(
+      '[public creator collection] Verified venue-history query failed:',
+      visitsResult.error
+    )
+
+    return null
+  }
+
+  const experiencedVenueIds =
+    new Set<string>()
+
+  for (
+    const visit of
+    visitsResult.data ?? []
+  ) {
+    if (!isRecord(visit)) {
+      continue
+    }
+
+    const venueId =
+      normalizeIdentifier(
+        visit.venue_id
+      )
+
+    if (venueId) {
+      experiencedVenueIds.add(
+        venueId
+      )
+    }
+  }
+
+  return experiencedVenueIds
 }
 
 /* =========================================================
@@ -1177,9 +1463,10 @@ async function loadPublicCollectionMedia({
     >
   collectionId: string
   userId: string
-}): Promise<
-  CollectionCarouselMedia[]
-> {
+}): Promise<{
+  media: CollectionCarouselMedia[]
+  mediaRecords: CreatorCollectionMediaRecord[]
+}> {
   const mediaResult =
     await supabase
       .from(
@@ -1228,7 +1515,10 @@ async function loadPublicCollectionMedia({
       mediaResult.error
     )
 
-    return []
+    return {
+      media: [],
+      mediaRecords: [],
+    }
   }
 
   const rows =
@@ -1239,65 +1529,71 @@ async function loadPublicCollectionMedia({
       userId,
     })
 
-  return rows
-    .map(
-      (
-        row
-      ): CollectionCarouselMedia | null => {
-        const url =
-          getPublicCollectionMediaUrl({
-            supabase,
-            storagePath:
-              row.storage_path,
-          })
+  const media =
+    rows
+      .map(
+        (
+          row
+        ): CollectionCarouselMedia | null => {
+          const url =
+            getPublicCollectionMediaUrl({
+              supabase,
+              storagePath:
+                row.storage_path,
+            })
 
-        if (!url) {
-          return null
+          if (!url) {
+            return null
+          }
+
+          const posterUrl =
+            row.poster_path
+              ? getPublicCollectionMediaUrl({
+                  supabase,
+                  storagePath:
+                    row.poster_path,
+                })
+              : null
+
+          return {
+            id:
+              row.id,
+
+            mediaType:
+              row.media_type,
+
+            url,
+
+            posterUrl,
+
+            caption:
+              row.caption,
+
+            altText:
+              row.alt_text,
+
+            width:
+              row.width,
+
+            height:
+              row.height,
+
+            durationSeconds:
+              row.duration_seconds,
+          }
         }
+      )
+      .filter(
+        (
+          item
+        ): item is CollectionCarouselMedia =>
+          item !== null
+      )
 
-        const posterUrl =
-          row.poster_path
-            ? getPublicCollectionMediaUrl({
-                supabase,
-                storagePath:
-                  row.poster_path,
-              })
-            : null
-
-        return {
-          id:
-            row.id,
-
-          mediaType:
-            row.media_type,
-
-          url,
-
-          posterUrl,
-
-          caption:
-            row.caption,
-
-          altText:
-            row.alt_text,
-
-          width:
-            row.width,
-
-          height:
-            row.height,
-
-          durationSeconds:
-            row.duration_seconds,
-        }
-      }
-    )
-    .filter(
-      (
-        item
-      ): item is CollectionCarouselMedia =>
-        item !== null
-    )
+  return {
+    media,
+    mediaRecords: rows,
+  }
 }
 
 function getPublicCollectionMediaUrl({
@@ -1325,28 +1621,6 @@ function getPublicCollectionMediaUrl({
 
   return normalizePublicUrl(
     data.publicUrl
-  )
-}
-
-function getCollectionCoverImageUrl({
-  media,
-  legacyCoverImageUrl,
-}: {
-  media:
-    CollectionCarouselMedia[]
-  legacyCoverImageUrl:
-    string | null
-}): string | null {
-  const firstImage =
-    media.find(
-      (item) =>
-        item.mediaType ===
-        'image'
-    )
-
-  return (
-    firstImage?.url ??
-    legacyCoverImageUrl
   )
 }
 
@@ -1483,6 +1757,11 @@ function normalizeCollectionRow({
     cover_image_url:
       normalizePublicUrl(
         value.cover_image_url
+      ),
+
+    cover_media_id:
+      normalizeIdentifier(
+        value.cover_media_id
       ),
 
     city:

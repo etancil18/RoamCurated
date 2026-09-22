@@ -72,6 +72,7 @@ export type BuildRouteContextParams = {
   maxStops?: number
   preferredVibes?: string[]
   preferredTags?: string[]
+  timezone?: string | null
 }
 
 const DEFAULT_MAX_STOPS = 5
@@ -106,18 +107,18 @@ export function buildRouteContext({
   maxStops = DEFAULT_MAX_STOPS,
   preferredVibes = [],
   preferredTags = [],
+  timezone = null,
 }: BuildRouteContextParams): RouteContext {
   const safePlannedStartAt = coerceDate(plannedStartAt ?? new Date())
-  const localHour = getLocalHour(safePlannedStartAt)
-  const weekdayKey = getLocalDayKey(safePlannedStartAt)
-  const dayKind = getDayKindFromWeekday(
-    safePlannedStartAt.getDay() === 0 ? 7 : safePlannedStartAt.getDay()
-  )
+  const localHour = getLocalHour(safePlannedStartAt, timezone)
+  const weekdayKey = getLocalDayKey(safePlannedStartAt, timezone)
+  const dayKind = getDayKindFromWeekday(dayKeyToIsoWeekday(weekdayKey))
   const anchorTypes = normalizeVenueTypes(anchorVenue)
 
   const startingStageResult = inferStartingStageDetailed({
     anchorVenue,
     plannedStartAt: safePlannedStartAt,
+    timezone,
   })
 
   const startingStage = startingStageResult.stage
@@ -155,15 +156,18 @@ export function buildRouteContext({
 export function inferStartingStage({
   anchorTypes,
   plannedStartAt,
+  timezone = null,
 }: {
   anchorTypes: NormalizedVenueType[]
   plannedStartAt: Date | string
+  timezone?: string | null
 }): RouteStage {
   return inferStartingStageDetailed({
     anchorVenue: {
       types: anchorTypes,
     },
     plannedStartAt,
+    timezone,
   }).stage
 }
 
@@ -208,6 +212,27 @@ export function getContextSummary(context: RouteContext): string {
     `with ${context.travelMode} travel`,
     `using a ${context.tightness} route radius`,
   ].join(' ')
+}
+
+function dayKeyToIsoWeekday(
+  dayKey: 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'
+): number {
+  switch (dayKey) {
+    case 'mon':
+      return 1
+    case 'tue':
+      return 2
+    case 'wed':
+      return 3
+    case 'thu':
+      return 4
+    case 'fri':
+      return 5
+    case 'sat':
+      return 6
+    case 'sun':
+      return 7
+  }
 }
 
 function sanitizeMaxStops(value: number) {

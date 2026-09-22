@@ -39,7 +39,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     types: ['coffee', 'cafe', 'café', 'bakery', 'tea', 'juice_bar', 'smoothie'],
     preferredStartHour: 7,
     preferredEndHour: 11,
-    dwellMinutes: 35,
+    dwellMinutes: 40,
     intensity: 'low',
   },
   {
@@ -51,7 +51,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     types: ['fitness', 'yoga', 'pilates', 'spa', 'wellness', 'walk', 'nature', 'park', 'garden'],
     preferredStartHour: 7,
     preferredEndHour: 12,
-    dwellMinutes: 60,
+    dwellMinutes: 75,
     intensity: 'medium',
   },
   {
@@ -63,7 +63,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     types: ['breakfast', 'brunch', 'bakery', 'cafe', 'café', 'restaurant', 'bistro', 'market', 'food_court'],
     preferredStartHour: 8,
     preferredEndHour: 14,
-    dwellMinutes: 75,
+    dwellMinutes: 90,
     intensity: 'medium',
   },
   {
@@ -90,7 +90,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     ],
     preferredStartHour: 10,
     preferredEndHour: 16,
-    dwellMinutes: 50,
+    dwellMinutes: 60,
     intensity: 'low',
   },
   {
@@ -102,7 +102,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     types: ['lifestyle', 'showroom', 'random_gem', 'market', 'workspace', 'bookstore', 'bookshop', 'gallery'],
     preferredStartHour: 11,
     preferredEndHour: 18,
-    dwellMinutes: 45,
+    dwellMinutes: 60,
     intensity: 'low',
   },
   {
@@ -114,7 +114,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     types: ['lunch', 'restaurant', 'bistro', 'bistrot', 'cafe', 'café', 'bakery', 'market', 'food_court'],
     preferredStartHour: 11,
     preferredEndHour: 15,
-    dwellMinutes: 75,
+    dwellMinutes: 90,
     intensity: 'medium',
   },
   {
@@ -149,7 +149,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     ],
     preferredStartHour: 12,
     preferredEndHour: 18,
-    dwellMinutes: 55,
+    dwellMinutes: 75,
     intensity: 'medium',
   },
   {
@@ -175,7 +175,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     ],
     preferredStartHour: 16,
     preferredEndHour: 20,
-    dwellMinutes: 60,
+    dwellMinutes: 105,
     intensity: 'medium',
   },
   {
@@ -187,7 +187,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     types: ['dinner', 'restaurant', 'bistro', 'bistrot'],
     preferredStartHour: 17,
     preferredEndHour: 22,
-    dwellMinutes: 90,
+    dwellMinutes: 120,
     intensity: 'medium',
   },
   {
@@ -224,7 +224,7 @@ export const ROUTE_STAGES: RouteStage[] = [
     ],
     preferredStartHour: 19,
     preferredEndHour: 2,
-    dwellMinutes: 75,
+    dwellMinutes: 120,
     intensity: 'high',
   },
 ]

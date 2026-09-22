@@ -11,7 +11,11 @@ import {
   type NormalizedVenueType,
   normalizeVenueTypes,
 } from './venueTypeNormalization'
-import { coerceDate } from './arrivalTime'
+import {
+  coerceDate,
+  getLocalDayKey,
+  getLocalHour,
+} from './arrivalTime'
 
 export type InferStartingStageVenue = {
   id?: string | null
@@ -34,13 +38,16 @@ export type InferStartingStageResult = {
 export function inferStartingStage({
   anchorVenue,
   plannedStartAt = new Date(),
+  timezone = null,
 }: {
   anchorVenue: InferStartingStageVenue
   plannedStartAt?: Date | string | null
+  timezone?: string | null
 }): InferStartingStageResult {
   const date = coerceDate(plannedStartAt ?? new Date())
-  const hour = date.getHours()
-  const dayKind = getDayKindFromWeekday(date.getDay() === 0 ? 7 : date.getDay())
+  const hour = getLocalHour(date, timezone)
+  const dayKey = getLocalDayKey(date, timezone)
+  const dayKind = getDayKindFromWeekday(dayKeyToIsoWeekday(dayKey))
   const anchorTypes = normalizeVenueTypes(anchorVenue)
 
   if (anchorTypes.length === 0) {
@@ -109,6 +116,7 @@ export function inferStartingStage({
 export function inferStartingStageOnly(params: {
   anchorVenue: InferStartingStageVenue
   plannedStartAt?: Date | string | null
+  timezone?: string | null
 }): RouteStage {
   return inferStartingStage(params).stage
 }
@@ -178,4 +186,25 @@ function normalizeKey(value: string) {
     .replace(/[–—-]/g, '-')
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
+}
+
+function dayKeyToIsoWeekday(
+  dayKey: 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'
+): number {
+  switch (dayKey) {
+    case 'mon':
+      return 1
+    case 'tue':
+      return 2
+    case 'wed':
+      return 3
+    case 'thu':
+      return 4
+    case 'fri':
+      return 5
+    case 'sat':
+      return 6
+    case 'sun':
+      return 7
+  }
 }

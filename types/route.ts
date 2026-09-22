@@ -6,12 +6,14 @@ import type { OpenConfidence, VenueScoreReason } from '@/lib/routes/scoreVenue'
 import type { PersonalizationReason } from '@/lib/routes/personalization'
 
 export type RouteTravelMode = 'walking' | 'cycling' | 'driving'
+
 export type RouteTightness = 'tight' | 'medium' | 'loose'
 
 export type RouteGenerationSource =
   | 'map_marker'
   | 'property_guide'
   | 'venue_profile'
+  | 'creator_collection'
   | 'active_flow'
   | 'planned_outing'
   | 'api'
@@ -37,6 +39,10 @@ export type RouteRetryExploration =
   | 'low'
   | 'medium'
   | 'high'
+
+export type RouteStopOrigin =
+  | 'collection'
+  | 'roam_fill'
 
 export type RouteVenue = {
   id: string
@@ -77,6 +83,9 @@ export type RouteContext = {
   startingStageId: RouteStageId
   candidateStageIds: RouteStageId[]
   source: RouteGenerationSource
+  collectionId?: string | null
+  collectionCreatorUserId?: string | null
+  collectionTitle?: string | null
   retryOfRouteId?: string | null
   retryCount?: number
   variationSeed?: string | null
@@ -125,6 +134,7 @@ export type RouteStop = {
   candidateTypes: NormalizedVenueType[]
   reasons: VenueScoreReason[]
   personalizationReasons?: PersonalizationReason[]
+  origin?: RouteStopOrigin
 }
 
 export type RouteExplanationStop = {
@@ -182,6 +192,9 @@ export type RouteGenerationDebug = {
       topVenueName?: string | null
     }>
   }>
+  collectionCandidateCount?: number
+  collectionSelectedCount?: number
+  roamFillSelectedCount?: number
   warnings?: string[]
 }
 

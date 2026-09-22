@@ -2,7 +2,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 import {
   CREATOR_COLLECTION_MEDIA_BUCKET,
+  type CreatorCollectionMediaRecord,
 } from './collectionMedia'
+
+import {
+  resolveCollectionCover,
+} from './resolveCollectionCover'
 
 import {
   collaborationTagSchema,
@@ -877,11 +882,10 @@ async function loadPublicCollectionCoverUrls({
     )
   }
 
-  for (const collectionMedia of mediaByCollectionId.values()) {
-    collectionMedia.sort(
-      compareCollectionCoverMedia
-    )
-  }
+  const supabaseUrl =
+    getSupabaseProjectUrl({
+      supabase,
+    })
 
   const coverUrls = new Map<string, string>()
 
@@ -891,43 +895,22 @@ async function loadPublicCollectionCoverUrls({
         collection.id
       ) ?? []
 
-    const explicitCover =
-      collection.cover_media_id
-        ? collectionMedia.find(
-            (item) =>
-              item.id ===
-              collection.cover_media_id
-          ) ?? null
-        : null
+    const coverUrl =
+      resolveCollectionCover({
+        supabaseUrl,
+        coverMediaId:
+          collection.cover_media_id,
+        coverImageUrl: null,
+        media:
+          collectionMedia.map(
+            toCreatorCollectionMediaRecord
+          ),
+      })
 
-    const resolvedCover =
-      explicitCover ??
-      collectionMedia[0] ??
-      null
-
-    if (!resolvedCover) {
-      continue
-    }
-
-    const {
-      data: publicUrlData,
-    } = supabase.storage
-      .from(
-        CREATOR_COLLECTION_MEDIA_BUCKET
-      )
-      .getPublicUrl(
-        resolvedCover.storage_path
-      )
-
-    const publicUrl =
-      normalizePublicStorageUrl(
-        publicUrlData.publicUrl
-      )
-
-    if (publicUrl) {
+    if (coverUrl) {
       coverUrls.set(
         collection.id,
-        publicUrl
+        coverUrl
       )
     }
   }
@@ -1057,31 +1040,67 @@ function parsePublicCollectionCoverMedia({
   )
 }
 
-function compareCollectionCoverMedia(
-  first: PublicCollectionCoverMediaRow,
-  second: PublicCollectionCoverMediaRow
-): number {
-  if (
-    first.sort_order !==
-    second.sort_order
-  ) {
-    return (
-      first.sort_order -
-      second.sort_order
+function toCreatorCollectionMediaRecord(
+  media: PublicCollectionCoverMediaRow
+): CreatorCollectionMediaRecord {
+  return {
+    id: media.id,
+    collection_id: media.collection_id,
+    user_id: media.user_id,
+    media_type: media.media_type,
+    storage_path: media.storage_path,
+    poster_path: null,
+    caption: null,
+    alt_text: null,
+    width: null,
+    height: null,
+    duration_seconds: null,
+    sort_order: media.sort_order,
+    created_at: media.created_at,
+    updated_at: media.created_at,
+  }
+}
+
+function getSupabaseProjectUrl({
+  supabase,
+}: {
+  supabase: SupabaseClient
+}): string {
+  const sentinelStoragePath =
+    '__roam_public_url_base__'
+
+  const {
+    data,
+  } = supabase.storage
+    .from(
+      CREATOR_COLLECTION_MEDIA_BUCKET
     )
+    .getPublicUrl(
+      sentinelStoragePath
+    )
+
+  const publicUrl =
+    normalizePublicStorageUrl(
+      data.publicUrl
+    )
+
+  if (!publicUrl) {
+    return ''
   }
 
-  const createdAtComparison =
-    compareIsoDatesAscending(
-      first.created_at,
-      second.created_at
-    )
+  const encodedSuffix =
+    `/storage/v1/object/public/${CREATOR_COLLECTION_MEDIA_BUCKET}/${encodeURIComponent(
+      sentinelStoragePath
+    )}`
 
-  if (createdAtComparison !== 0) {
-    return createdAtComparison
+  if (!publicUrl.endsWith(encodedSuffix)) {
+    return ''
   }
 
-  return first.id.localeCompare(second.id)
+  return publicUrl.slice(
+    0,
+    -encodedSuffix.length
+  )
 }
 
 function normalizePublicStorageUrl(
