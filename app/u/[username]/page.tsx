@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import CreatorAuthorityCard from '@/components/public-profile/creator/CreatorAuthorityCard'
 import CreatorCollaborationTags from '@/components/public-profile/creator/CreatorCollaborationTags'
 import CreatorExplorationMapDynamic from '@/components/public-profile/creator/CreatorExplorationMapDynamic'
 import CreatorFeaturedCollections from '@/components/public-profile/creator/CreatorFeaturedCollections'
@@ -10,9 +9,6 @@ import FollowButton from '@/components/profile/FollowButton'
 import ShareProfileButton from '@/components/profile/ShareProfileButton'
 import PublicRoamCard from '@/components/public-profile/PublicRoamCard'
 
-import {
-  buildCreatorAuthority,
-} from '@/lib/creator/buildCreatorAuthority'
 import {
   getPublicCreatorProfile,
   PublicCreatorProfileLoadError,
@@ -26,7 +22,6 @@ import {
 import { createServerClient } from '@/lib/supabase/server'
 
 import type {
-  CreatorAuthorityStats,
   PublicCreatorBundle,
 } from '@/lib/creator/types'
 
@@ -74,6 +69,8 @@ type ProfilePublicStatsRow = {
   passport_level: number
   passport_progress: number
   passport_progress_percent: number
+  followers_count: number
+  following_count: number
   updated_at: string
 }
 
@@ -114,7 +111,6 @@ type PublicCreatorReputationResult =
   >
 
 type CreatorProfileSectionId =
-  | 'overview'
   | 'places'
   | 'guides'
   | 'moments'
@@ -235,32 +231,7 @@ export default async function PublicUserProfilePage({
         })
       : Promise.resolve(null)
 
-  const publicCreatorCollectionCountPromise =
-    creatorModeRequested
-      ? supabase
-          .from(
-            'creator_collections'
-          )
-          .select('id', {
-            count: 'exact',
-            head: true,
-          })
-          .eq(
-            'user_id',
-            profile.id
-          )
-          .eq(
-            'visibility',
-            'public'
-          )
-      : Promise.resolve({
-          count: 0,
-          error: null,
-        })
-
   const [
-    followersResult,
-    followingResult,
     existingFollowResult,
     publicStatsResult,
     socialGroupsResult,
@@ -268,30 +239,7 @@ export default async function PublicUserProfilePage({
     creatorBundle,
     creatorMap,
     creatorReputationResult,
-    publicCreatorCollectionCountResult,
   ] = await Promise.all([
-    supabase
-      .from('user_follows')
-      .select('id', {
-        count: 'exact',
-        head: true,
-      })
-      .eq(
-        'following_id',
-        profile.id
-      ),
-
-    supabase
-      .from('user_follows')
-      .select('id', {
-        count: 'exact',
-        head: true,
-      })
-      .eq(
-        'follower_id',
-        profile.id
-      ),
-
     user && !isOwnProfile
       ? supabase
           .from('user_follows')
@@ -330,6 +278,8 @@ export default async function PublicUserProfilePage({
         passport_level,
         passport_progress,
         passport_progress_percent,
+        followers_count,
+        following_count,
         updated_at
       `)
       .eq(
@@ -407,23 +357,7 @@ export default async function PublicUserProfilePage({
     creatorMapPromise,
 
     creatorReputationPromise,
-
-    publicCreatorCollectionCountPromise,
   ])
-
-  if (followersResult.error) {
-    console.error(
-      '[public profile] Failed to load follower count:',
-      followersResult.error
-    )
-  }
-
-  if (followingResult.error) {
-    console.error(
-      '[public profile] Failed to load following count:',
-      followingResult.error
-    )
-  }
 
   if (existingFollowResult.error) {
     console.error(
@@ -453,26 +387,17 @@ export default async function PublicUserProfilePage({
     )
   }
 
-  if (
-    publicCreatorCollectionCountResult.error
-  ) {
-    console.error(
-      '[public profile] Failed to load public creator collection count:',
-      publicCreatorCollectionCountResult.error
-    )
-  }
-
-  const followersCount =
-    followersResult.count ?? 0
-
-  const followingCount =
-    followingResult.count ?? 0
-
   const existingFollow =
     existingFollowResult.data
 
   const publicStats =
     publicStatsResult.data
+
+  const followersCount =
+    publicStats?.followers_count ?? 0
+
+  const followingCount =
+    publicStats?.following_count ?? 0
 
   const socialGroupsCount =
     socialGroupsResult.count ?? 0
@@ -513,29 +438,6 @@ export default async function PublicUserProfilePage({
     profile.username ??
     'Roam Creator'
 
-  const creatorAuthority:
-    | CreatorAuthorityStats
-    | null = isCreator
-    ? buildCreatorAuthority({
-        primaryCity:
-          creatorBundle.profile
-            .primary_city,
-
-        verifiedVisitCount:
-          venueVisitsCount,
-
-        completedFlowCount:
-          completedFlowsCount,
-
-        publicSnapshotCount:
-          snapshots.length,
-
-        publicCollectionCount:
-          publicCreatorCollectionCountResult.count ??
-          0,
-      })
-    : null
-
   const creatorReputation =
     creatorReputationResult?.found === true
       ? creatorReputationResult.reputation
@@ -564,11 +466,6 @@ export default async function PublicUserProfilePage({
     CreatorProfileNavigationItem[] =
     isCreator
       ? [
-          {
-            id: 'overview',
-            label: 'Overview',
-            visible: true,
-          },
           {
             id: 'places',
             label: 'Places',
@@ -698,6 +595,9 @@ export default async function PublicUserProfilePage({
                   profile.show_xp !== false
                     ? passportLevel
                     : null
+                }
+                placesExploredCount={
+                  venueVisitsCount
                 }
               />
             </div>
@@ -861,55 +761,36 @@ export default async function PublicUserProfilePage({
 
         {isCreator ? (
           <div className="mt-10 space-y-20 sm:mt-14 sm:space-y-24">
-            <section
-              id="overview"
-              aria-labelledby="creator-overview-title"
-              className="scroll-mt-32 space-y-6"
-            >
-              <ProfileSectionHeading
-                id="creator-overview-title"
-                eyebrow="Point of view"
-                title={`How ${creatorDisplayName} sees the city`}
-                description="A look at the places they know, the experiences they complete, and the perspective they are building through real-world activity."
-              />
+            {creatorMap ? (
+              <section
+                id="places"
+                aria-labelledby="creator-exploration-map-title"
+                className="scroll-mt-32 space-y-6"
+              >
+                <ProfileSectionHeading
+                  id="creator-exploration-map-title"
+                  eyebrow="Their footprint"
+                  title={`Places ${creatorDisplayName} actually knows`}
+                  description="Geo-verified places this creator has visited and chosen to make part of their public city story."
+                />
 
-              <CreatorAuthorityCard
-                authority={
-                  creatorAuthority
-                }
-              />
-
-              {creatorMap ? (
-                <section
-                  id="places"
-                  aria-labelledby="creator-exploration-map-title"
-                  className="scroll-mt-32 space-y-6 pt-6"
-                >
-                  <ProfileSectionHeading
-                    id="creator-exploration-map-title"
-                    eyebrow="Their footprint"
-                    title={`Places ${creatorDisplayName} actually knows`}
-                    description="Geo-verified places this creator has visited and chosen to make part of their public city story."
+                <div className="overflow-hidden rounded-[2rem] bg-white/[0.025] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
+                  <CreatorExplorationMapDynamic
+                    map={creatorMap}
+                    creatorName={
+                      creatorDisplayName
+                    }
+                    primaryCity={
+                      creatorBundle.profile
+                        .primary_city
+                    }
+                    scrollWheelZoom={
+                      false
+                    }
                   />
-
-                  <div className="overflow-hidden rounded-[2rem] bg-white/[0.025] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
-                    <CreatorExplorationMapDynamic
-                      map={creatorMap}
-                      creatorName={
-                        creatorDisplayName
-                      }
-                      primaryCity={
-                        creatorBundle.profile
-                          .primary_city
-                      }
-                      scrollWheelZoom={
-                        false
-                      }
-                    />
-                  </div>
-                </section>
-              ) : null}
-            </section>
+                </div>
+              </section>
+            ) : null}
 
             {hasFeaturedCollections ? (
               <section
@@ -2719,7 +2600,7 @@ function nullableString(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }

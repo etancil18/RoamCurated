@@ -22,6 +22,7 @@ export type RoamAuthSheetProps = {
   title?: string
   description?: string
   submitLabel?: string
+  postAuthPath?: string
   children?: ReactNode
   dismissible?: boolean
 }
@@ -42,6 +43,7 @@ export default function RoamAuthSheet({
   title = 'Continue with Roam',
   description = 'Sign in or create your Roam account to continue.',
   submitLabel = 'Continue',
+  postAuthPath,
   children,
   dismissible = true,
 }: RoamAuthSheetProps) {
@@ -397,10 +399,23 @@ export default function RoamAuthSheet({
                   submitLabel={
                     submitLabel
                   }
+                  postAuthPath={
+                    postAuthPath
+                  }
                   onAuthenticated={
                     handleAuthenticated
                   }
                 />
+
+                <p className="mt-4 text-center text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                  No Roam account
+                  yet? Just enter
+                  your email and a
+                  password above.
+                  We&apos;ll create
+                  your account if
+                  you&apos;re new.
+                </p>
               </div>
             </div>
 

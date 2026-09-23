@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useState,
 } from 'react'
 import {
@@ -37,6 +38,9 @@ type RequestState =
 
 const GENERATE_COLLECTION_FLOW_ENDPOINT =
   '/api/generate-from-collection'
+
+const COLLECTION_FLOW_RESUME_PARAM =
+  'roamResumeCollectionFlow'
 
 export default function CollectionFlowCallToAction({
   collectionId,
@@ -196,6 +200,40 @@ export default function CollectionFlowCallToAction({
       router,
     ])
 
+  useEffect(() => {
+    const url =
+      new URL(
+        window.location.href
+      )
+
+    const resumeCollectionId =
+      url.searchParams.get(
+        COLLECTION_FLOW_RESUME_PARAM
+      )
+
+    if (
+      resumeCollectionId !==
+      collectionId
+    ) {
+      return
+    }
+
+    url.searchParams.delete(
+      COLLECTION_FLOW_RESUME_PARAM
+    )
+
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname}${url.search}${url.hash}`
+    )
+
+    void generateCollectionFlow()
+  }, [
+    collectionId,
+    generateCollectionFlow,
+  ])
+
   const handleBuildFlow =
     useCallback(async () => {
       if (isGenerating) {
@@ -218,6 +256,11 @@ export default function CollectionFlowCallToAction({
     }, [
       generateCollectionFlow,
     ])
+
+  const googlePostAuthPath =
+    getCollectionFlowOAuthReturnPath(
+      collectionId
+    )
 
   const rootClassName = [
     'mt-6 min-w-0',
@@ -344,6 +387,9 @@ export default function CollectionFlowCallToAction({
         title="Continue with Roam"
         description="Sign in or create your Roam account to build a personalized Flow from this Collection."
         submitLabel="Continue to your Flow"
+        postAuthPath={
+          googlePostAuthPath
+        }
       />
     </>
   )
@@ -448,6 +494,29 @@ async function readGenerateCollectionFlowResponse(
   } catch {
     return null
   }
+}
+
+function getCollectionFlowOAuthReturnPath(
+  collectionId: string
+): string {
+  if (
+    typeof window ===
+    'undefined'
+  ) {
+    return '/welcome'
+  }
+
+  const url =
+    new URL(
+      window.location.href
+    )
+
+  url.searchParams.set(
+    COLLECTION_FLOW_RESUME_PARAM,
+    collectionId
+  )
+
+  return `${url.pathname}${url.search}${url.hash}`
 }
 
 function normalizeInternalRedirect(

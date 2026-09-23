@@ -49,6 +49,10 @@ export default function RoamAuthForm({
   const [loading, setLoading] =
     useState(false)
   const [
+    googleLoading,
+    setGoogleLoading,
+  ] = useState(false)
+  const [
     resetLoading,
     setResetLoading,
   ] = useState(false)
@@ -83,6 +87,70 @@ export default function RoamAuthForm({
     .filter(Boolean)
     .join(' ')
 
+  async function handleGoogleAuth() {
+    if (
+      loading ||
+      googleLoading ||
+      resetLoading
+    ) {
+      return
+    }
+
+    setError('')
+    setSuccessMessage('')
+    setGoogleLoading(true)
+
+    try {
+      const origin =
+        window.location.origin
+
+      const safePostAuthPath =
+        normalizeInternalPath(
+          postAuthPath
+        ) ?? '/welcome'
+
+      const callbackUrl =
+        new URL(
+          '/auth/callback',
+          origin
+        )
+
+      callbackUrl.searchParams.set(
+        'next',
+        safePostAuthPath
+      )
+
+      const {
+        error: googleAuthError,
+      } =
+        await supabase.auth
+          .signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo:
+                callbackUrl.toString(),
+            },
+          })
+
+      if (googleAuthError) {
+        setError(
+          googleAuthError.message
+        )
+        setGoogleLoading(false)
+      }
+    } catch (googleAuthError) {
+      console.error(
+        '[roam auth form] Google authentication failed:',
+        googleAuthError
+      )
+
+      setError(
+        'Something went wrong while connecting to Google. Please try again.'
+      )
+      setGoogleLoading(false)
+    }
+  }
+
   async function handleAuth(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -90,6 +158,7 @@ export default function RoamAuthForm({
 
     if (
       loading ||
+      googleLoading ||
       resetLoading
     ) {
       return
@@ -230,6 +299,7 @@ export default function RoamAuthForm({
   async function handleForgotPassword() {
     if (
       loading ||
+      googleLoading ||
       resetLoading
     ) {
       return
@@ -356,6 +426,7 @@ export default function RoamAuthForm({
 
   const busy =
     loading ||
+    googleLoading ||
     resetLoading
 
   return (
@@ -383,6 +454,52 @@ export default function RoamAuthForm({
         <p className="mx-auto max-w-sm text-sm leading-6 text-zinc-600 dark:text-zinc-400">
           {description}
         </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={
+          handleGoogleAuth
+        }
+        disabled={busy}
+        className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm font-semibold text-zinc-900 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:hover:bg-zinc-800"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-5 w-5 shrink-0"
+        >
+          <path
+            fill="#4285F4"
+            d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z"
+          />
+          <path
+            fill="#34A853"
+            d="M12 22c2.7 0 4.97-.9 6.62-2.36l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"
+          />
+          <path
+            fill="#FBBC05"
+            d="M6.39 13.93A6.02 6.02 0 0 1 6.08 12c0-.67.12-1.32.31-1.93V7.45H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.55l3.35-2.62Z"
+          />
+          <path
+            fill="#EA4335"
+            d="M12 5.94c1.47 0 2.79.51 3.83 1.5l2.87-2.88A9.62 9.62 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35 2.62C7.18 7.7 9.39 5.94 12 5.94Z"
+          />
+        </svg>
+
+        {googleLoading
+          ? 'Connecting to Google...'
+          : 'Continue with Google'}
+      </button>
+
+      <div className="my-5 flex items-center gap-3">
+        <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
+
+        <span className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+          or
+        </span>
+
+        <div className="h-px flex-1 bg-zinc-200 dark:bg-zinc-800" />
       </div>
 
       <form

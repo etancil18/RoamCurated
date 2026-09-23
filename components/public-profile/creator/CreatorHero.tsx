@@ -121,6 +121,12 @@ export type CreatorHeroProps = {
   passportLevel?: number | null
 
   /**
+   * Public number of distinct places this creator has explored
+   * through geo-verified Roam activity.
+   */
+  placesExploredCount?: number
+
+  /**
    * Settled competition win aggregates for this creator.
    *
    * Only competition-specific stats with at least one win are
@@ -163,6 +169,7 @@ export default function CreatorHero({
   followersCount = 0,
   followingCount = 0,
   passportLevel = null,
+  placesExploredCount = 0,
   competitionWins = [],
   socialLinkLimit = 4,
   className = '',
@@ -207,6 +214,11 @@ export default function CreatorHero({
       : normalizePublicCount(
           passportLevel
         )
+
+  const normalizedPlacesExploredCount =
+    normalizePublicCount(
+      placesExploredCount
+    )
 
   const normalizedCompetitionWins =
     normalizeCompetitionWins(
@@ -279,6 +291,9 @@ export default function CreatorHero({
           }
           passportLevel={
             normalizedPassportLevel
+          }
+          placesExploredCount={
+            normalizedPlacesExploredCount
           }
           competitionWins={
             normalizedCompetitionWins
@@ -498,11 +513,13 @@ function CreatorProfileMetrics({
   followersCount,
   followingCount,
   passportLevel,
+  placesExploredCount,
   competitionWins,
 }: {
   followersCount: number
   followingCount: number
   passportLevel: number | null
+  placesExploredCount: number
   competitionWins: CreatorCompetitionWinStat[]
 }) {
   return (
@@ -527,6 +544,12 @@ function CreatorProfileMetrics({
           emphasized
         />
       ) : null}
+
+      <CreatorProfileMetric
+        label="Places explored"
+        value={placesExploredCount}
+        emphasized
+      />
 
       {competitionWins.map(
         (
