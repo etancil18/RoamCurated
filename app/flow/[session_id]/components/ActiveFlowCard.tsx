@@ -46,8 +46,14 @@ type ProgressRow = {
   session_id: string
   user_id: string
   venue_id: string
-  stop_index: number
+  stop_index: number | null
   checked_in_at: string
+}
+
+type ActiveFlowRuntimeStopIdentity = {
+  venueId: string
+  position: number | null
+  kind: 'base' | 'detour'
 }
 
 type GeoLocationPayload = {
@@ -59,13 +65,14 @@ type GeoLocationPayload = {
 
 type PendingRatingCheckIn = {
   venueId: string
-  stopIndex: number
+  stopIndex: number | null
 }
 
 type Props = {
   session: ActiveFlowSession
   venues: Venue[]
   progress: ProgressRow[]
+  runtimeStops: ActiveFlowRuntimeStopIdentity[]
 }
 
 function safeLogEvent(
@@ -305,6 +312,7 @@ export default function ActiveFlowCard({
   session,
   venues,
   progress,
+  runtimeStops,
 }: Props) {
   const router =
     useRouter()
@@ -344,6 +352,14 @@ export default function ActiveFlowCard({
     setCancelling,
   ] =
     useState(false)
+
+  const [
+    cancellingDetourVenueId,
+    setCancellingDetourVenueId,
+  ] =
+    useState<
+      string | null
+    >(null)
 
   const [
     localProgress,
@@ -676,7 +692,7 @@ export default function ActiveFlowCard({
   const handleCheckIn =
     async (
       venueId: string,
-      stopIndex: number,
+      stopIndex: number | null,
       rating?: number
     ) => {
       if (
@@ -731,8 +747,12 @@ export default function ActiveFlowCard({
                   venue_id:
                     venueId,
 
-                  stop_index:
-                    stopIndex,
+                  ...(stopIndex !== null
+                    ? {
+                        stop_index:
+                          stopIndex,
+                      }
+                    : {}),
 
                   rating,
 
@@ -1057,6 +1077,189 @@ export default function ActiveFlowCard({
       } finally {
         setCompleting(
           false
+        )
+      }
+    }
+
+  const handleCancelDetour =
+    async (
+      venueId: string
+    ) => {
+      if (
+        flowCompleted ||
+        flowCancelled ||
+        cancellingDetourVenueId
+      ) {
+        return
+      }
+
+      const runtimeStop =
+        runtimeStops.find(
+          (stop) =>
+            stop.venueId ===
+            venueId
+        )
+
+      if (
+        !runtimeStop ||
+        runtimeStop.kind !==
+          'detour' ||
+        runtimeStop.position !==
+          null ||
+        checkedVenueIds.has(
+          venueId
+        )
+      ) {
+        return
+      }
+
+      safeLogEvent(
+        'active_flow_detour_cancel_clicked',
+        {
+          session_id:
+            session.id,
+
+          venue_id:
+            venueId,
+
+          city:
+            session.city,
+        }
+      )
+
+      const confirmed =
+        window.confirm(
+          'Remove this detour from your route? Your original route will stay intact.'
+        )
+
+      if (!confirmed) {
+        safeLogEvent(
+          'active_flow_detour_cancel_aborted',
+          {
+            session_id:
+              session.id,
+
+            venue_id:
+              venueId,
+
+            city:
+              session.city,
+          }
+        )
+
+        return
+      }
+
+      setCancellingDetourVenueId(
+        venueId
+      )
+
+      try {
+        const res =
+          await fetch(
+            '/api/active-flow/detours/cancel',
+            {
+              method:
+                'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              body:
+                JSON.stringify({
+                  session_id:
+                    session.id,
+
+                  venue_id:
+                    venueId,
+                }),
+            }
+          )
+
+        const json =
+          await res.json()
+
+        if (!res.ok) {
+          safeLogEvent(
+            'active_flow_detour_cancel_error',
+            {
+              session_id:
+                session.id,
+
+              venue_id:
+                venueId,
+
+              city:
+                session.city,
+
+              status:
+                res.status,
+
+              message:
+                typeof json?.error ===
+                'string'
+                  ? json.error
+                  : 'Cancellation rejected',
+            }
+          )
+
+          alert(
+            json?.error ??
+              'Could not remove detour.'
+          )
+
+          return
+        }
+
+        safeLogEvent(
+          'active_flow_detour_cancelled',
+          {
+            session_id:
+              session.id,
+
+            venue_id:
+              venueId,
+
+            city:
+              session.city,
+          }
+        )
+
+        router.refresh()
+      } catch (err) {
+        safeLogEvent(
+          'active_flow_detour_cancel_error',
+          {
+            session_id:
+              session.id,
+
+            venue_id:
+              venueId,
+
+            city:
+              session.city,
+
+            message:
+              err instanceof
+              Error
+                ? err.message
+                : 'Unexpected error',
+          }
+        )
+
+        console.error(
+          '[ActiveFlowCard] Detour cancellation failed:',
+          err
+        )
+
+        alert(
+          'Unexpected error removing detour.'
+        )
+      } finally {
+        setCancellingDetourVenueId(
+          null
         )
       }
     }
@@ -1524,10 +1727,87 @@ export default function ActiveFlowCard({
                 venue,
                 index
               ) => {
+                /*
+                 * 016D.4 runtime identity bridge:
+                 *
+                 * Execution order and persistent stop identity are separate.
+                 *
+                 * Base stop:
+                 *   position != null
+                 *   → position is the legacy stop_index compatibility identity.
+                 *
+                 * Detour:
+                 *   position = null
+                 *   → stop_index must not be fabricated from execution order.
+                 *
+                 * The server still resolves the authoritative flow_stop_id from
+                 * the canonical runtime route. The browser never supplies it.
+                 */
+                const runtimeStop =
+                  runtimeStops.find(
+                    (stop) =>
+                      stop.venueId ===
+                      venue.id
+                  )
+
+                if (!runtimeStop) {
+                  throw new Error(
+                    `Missing runtime stop identity for venue ${venue.id}`
+                  )
+                }
+
+                if (
+                  runtimeStop.kind ===
+                    'base' &&
+                  runtimeStop.position ===
+                    null
+                ) {
+                  throw new Error(
+                    `Base runtime stop is missing position for venue ${venue.id}`
+                  )
+                }
+
+                if (
+                  runtimeStop.kind ===
+                    'detour' &&
+                  runtimeStop.position !==
+                    null
+                ) {
+                  throw new Error(
+                    `Detour runtime stop unexpectedly has base position for venue ${venue.id}`
+                  )
+                }
+
+                const stopIndex =
+                  runtimeStop.position
+
                 const checked =
                   checkedVenueIds.has(
                     venue.id
                   )
+
+                /*
+                 * 016H.5 — user-approved Detour cancellation presentation.
+                 *
+                 * This is UI eligibility only. The browser does not own
+                 * lifecycle authority or persistent runtime-stop identity.
+                 *
+                 * The cancellation API reloads the canonical runtime route,
+                 * derives the exact immutable Detour flow_stop_id server-side,
+                 * and delegates the atomic lifecycle transition to 016H.3.
+                 */
+                const canCancelDetour =
+                  runtimeStop.kind ===
+                    'detour' &&
+                  runtimeStop.position ===
+                    null &&
+                  !checked &&
+                  !flowCompleted &&
+                  !flowCancelled
+
+                const detourCancelling =
+                  cancellingDetourVenueId ===
+                  venue.id
 
                 const isCurrent =
                   currentVenue?.id ===
@@ -1660,7 +1940,7 @@ export default function ActiveFlowCard({
                                         venue.name,
 
                                       stop_index:
-                                        index,
+                                        stopIndex,
 
                                       city:
                                         session.city,
@@ -1751,7 +2031,7 @@ export default function ActiveFlowCard({
                             onClick={() =>
                               handleCheckIn(
                                 venue.id,
-                                index
+                                stopIndex
                               )
                             }
                             className={[
@@ -1770,6 +2050,38 @@ export default function ActiveFlowCard({
                           </Button>
                         )}
                       </div>
+
+                      {canCancelDetour ? (
+                        <div className="mt-3 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void handleCancelDetour(
+                                venue.id
+                              )
+                            }}
+                            disabled={
+                              detourCancelling ||
+                              cancellingDetourVenueId !==
+                                null
+                            }
+                            className={[
+                              'inline-flex min-h-9 items-center justify-center rounded-full px-3 py-2',
+                              'text-[10px] font-black uppercase tracking-[0.12em] transition',
+                              'ring-1 ring-white/10',
+                              detourCancelling
+                                ? 'cursor-wait bg-white/[0.03] text-zinc-600'
+                                : 'bg-white/[0.04] text-zinc-400 hover:bg-white/[0.07] hover:text-white',
+                            ].join(
+                              ' '
+                            )}
+                          >
+                            {detourCancelling
+                              ? 'Removing…'
+                              : 'Remove detour'}
+                          </button>
+                        </div>
+                      ) : null}
 
                       <div className="mt-4">
                         <VenueBookingButtons
@@ -1853,7 +2165,7 @@ export default function ActiveFlowCard({
                                 session.id,
 
                               stop_index:
-                                index,
+                                stopIndex,
 
                               travel_mode:
                                 session.travel_mode,

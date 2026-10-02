@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 
 import { createServerClient } from '@/lib/supabase/server'
 
+import { loadActiveFlowRuntimeRoute } from '@/lib/active-flow/runtimeRoute.server'
+
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
@@ -607,13 +609,27 @@ export async function POST(
       )
     }
 
+    /**
+     * 016D — Runtime stop identity.
+     *
+     * stop_index remains accepted as a compatibility hint for
+     * base-route stops and is still required by fixed snapshot
+     * replay attribution.
+     *
+     * Detour stops deliberately have no base-route position, so
+     * they must be allowed to check in without stop_index.
+     */
     if (
-      typeof stopIndex !==
-        'number' ||
-      !Number.isInteger(
-        stopIndex
-      ) ||
-      stopIndex < 0
+      stopIndex !==
+        undefined &&
+      (
+        typeof stopIndex !==
+          'number' ||
+        !Number.isInteger(
+          stopIndex
+        ) ||
+        stopIndex < 0
+      )
     ) {
       return NextResponse.json(
         {
@@ -735,24 +751,122 @@ export async function POST(
       )
     }
 
+    /**
+     * 016D — Canonical runtime route authority.
+     *
+     * Runtime execution order is resolved centrally from:
+     *
+     *   active_flow_stops
+     *   + active_flow_detours
+     *   + active_flow_progress
+     *
+     * Base-route position remains an immutable compatibility
+     * namespace for historical stop_index identity. Detours have
+     * position = NULL and are identified exclusively by their
+     * immutable flow_stop_id.
+     *
+     * The browser therefore does not establish canonical stop
+     * identity. venue_id selects the executable runtime stop and,
+     * when supplied for a base stop, stop_index must agree with
+     * that stop's immutable base position.
+     */
+    let runtimeRoute
+
+    try {
+      runtimeRoute =
+        await loadActiveFlowRuntimeRoute({
+          sessionId,
+          userId:
+            user.id,
+          supabase,
+        })
+    } catch (error) {
+      console.error(
+        '[active-flow/check-in] Canonical runtime route fetch failed:',
+        {
+          sessionId,
+          venueId,
+          stopIndex,
+          error,
+        }
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Could not verify this flow route.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
     const venueIds =
-      Array.isArray(
-        session.venue_ids
+      runtimeRoute.map(
+        (
+          stop
+        ) =>
+          stop.venueId
       )
-        ? session.venue_ids.filter(
-            Boolean
-          )
-        : []
+
+    const matchingRuntimeStops =
+      runtimeRoute.filter(
+        (
+          stop
+        ) =>
+          stop.venueId ===
+          venueId
+      )
 
     if (
-      !venueIds.includes(
-        venueId
+      matchingRuntimeStops.length !==
+      1
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            matchingRuntimeStops.length >
+            1
+              ? 'Venue matches more than one executable stop in this flow.'
+              : 'Venue does not match an executable stop in this flow.',
+        },
+        {
+          status:
+            400,
+        }
+      )
+    }
+
+    const runtimeStop =
+      matchingRuntimeStops[0]
+
+    /**
+     * Base stops preserve legacy positional identity.
+     *
+     * If the client supplied stop_index, it must match the
+     * immutable base position. A Detour has no base position and
+     * therefore never accepts stop_index as its identity.
+     */
+    if (
+      runtimeStop.kind ===
+        'base' &&
+      (
+        runtimeStop.position ===
+          null ||
+        (
+          stopIndex !==
+            undefined &&
+          stopIndex !==
+            runtimeStop.position
+        )
       )
     ) {
       return NextResponse.json(
         {
           error:
-            'Venue is not part of this flow.',
+            'Stop index does not match an executable venue in this flow.',
         },
         {
           status:
@@ -762,14 +876,15 @@ export async function POST(
     }
 
     if (
-      venueIds[
-        stopIndex
-      ] !== venueId
+      runtimeStop.kind ===
+        'detour' &&
+      stopIndex !==
+        undefined
     ) {
       return NextResponse.json(
         {
           error:
-            'Stop index does not match this venue.',
+            'Detour stops must be identified by their canonical runtime stop.',
         },
         {
           status:
@@ -778,7 +893,62 @@ export async function POST(
       )
     }
 
-    const {
+    /**
+     * Going forward, every new progress row carries flow_stop_id.
+     *
+     * Base stops additionally retain stop_index = position for
+     * historical/fixed-flow compatibility.
+     *
+     * Detours write stop_index = NULL so they can never enter the
+     * legacy positional identity namespace.
+     */
+    const canonicalProgressStopIndex =
+      runtimeStop.kind ===
+        'base'
+        ? runtimeStop.position
+        : null
+
+    if (
+      runtimeStop.kind ===
+        'base' &&
+      canonicalProgressStopIndex ===
+        null
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Could not resolve canonical base stop identity.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    /**
+     * Snapshot replay flows are fixed-policy flows and retain
+     * canonical positional attribution.
+     */
+    if (
+      session.source ===
+        'flow_snapshot' &&
+      canonicalProgressStopIndex ===
+        null
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Snapshot replay stop is missing canonical positional identity.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    const { 
       data: venue,
       error: venueError,
     } = await supabase
@@ -1169,69 +1339,72 @@ export async function POST(
           true
       }
 
-      const {
-        data: progressRows,
-        error: progressError,
-      } = await supabase
-        .from(
-          'active_flow_progress'
-        )
-        .select(
-          'venue_id'
-        )
-        .eq(
-          'session_id',
-          sessionId
-        )
-        .eq(
-          'user_id',
-          user.id
-        )
+      /**
+ * 016I.2 — Canonical adaptive completion projection.
+ *
+ * The runtime route loaded before check-in cannot be reused here:
+ * its completion flags were projected before this request's
+ * progress mutation.
+ *
+ * Reload the canonical runtime route after progress has persisted
+ * so completion is derived from immutable runtime-stop identity:
+ *
+ *   - exact flow_stop_id for current progress
+ *   - historical stop_index -> base position fallback
+ *   - Detours only through exact flow_stop_id
+ *   - replaced/removed stops excluded from executable completion
+ *   - canceled Detours excluded from executable completion
+ *
+ * active_flow_sessions.completed_stops remains a derived cache.
+ * venue_id cardinality is no longer Active Flow completion
+ * authority.
+ */
+let refreshedRuntimeRoute
 
-      if (progressError) {
-        console.error(
-          '[active-flow/check-in] Progress refresh failed:',
-          progressError
-        )
+try {
+  refreshedRuntimeRoute =
+    await loadActiveFlowRuntimeRoute({
+      sessionId,
+      userId:
+        user.id,
+      supabase,
+    })
+} catch (error) {
+  console.error(
+    '[active-flow/check-in] Canonical runtime progress refresh failed:',
+    {
+      sessionId,
+      error,
+    }
+  )
 
-        return NextResponse.json(
-          {
-            error:
-              'Check-in saved, but progress could not be refreshed.',
-          },
-          {
-            status:
-              500,
-          }
-        )
-      }
+  return NextResponse.json(
+    {
+      error:
+        'Check-in saved, but progress could not be refreshed.',
+    },
+    {
+      status:
+        500,
+    }
+  )
+}
 
-      const completedVenueIds =
-        new Set(
-          (
-            progressRows ??
-            []
-          )
-            .map(
-              (
-                row
-              ) =>
-                row.venue_id
-            )
-            .filter(
-              Boolean
-            )
-        )
+const completedStops =
+  refreshedRuntimeRoute.filter(
+    (
+      stop
+    ) =>
+      stop.completed
+  ).length
 
-      const completedStops =
-        completedVenueIds.size
+const totalStops =
+  refreshedRuntimeRoute.length
 
-      const totalStops =
-        venueIds.length
-
-      const flowCompleted =
-        completedStops ===
-        totalStops
+const flowCompleted =
+  totalStops > 0 &&
+  completedStops ===
+    totalStops
 
       const {
         error:
@@ -1298,38 +1471,58 @@ export async function POST(
        * event to be repaired.
        */
       const replayAttribution =
-        await recordCreatorReplayStopAttribution({
-          supabase,
-          sessionId,
-          stopIndex,
-          source:
-            session.source,
-        })
+        canonicalProgressStopIndex !==
+          null
+          ? await recordCreatorReplayStopAttribution({
+              supabase,
+              sessionId,
+              stopIndex:
+                canonicalProgressStopIndex,
+              source:
+                session.source,
+            })
+          : null
 
       /**
-       * A pure retry has not created new canonical evidence and
-       * therefore does not need another Passport/reputation
-       * rebuild. A repaired missing venue visit does.
-       */
-      if (repairedVenueVisit) {
-        await refreshPublicPassportStats(
-          user.id
-        )
+ * A pure retry has not created new canonical evidence for the
+ * replaying user and therefore does not need another
+ * Passport/reputation rebuild unless a missing venue visit was
+ * repaired.
+ *
+ * Replay creator attribution is different: the idempotent RPC
+ * above may have repaired previously missing creator credit, so
+ * always give the attributed creator's Passport an opportunity
+ * to reconcile from canonical replay evidence.
+ */
+if (repairedVenueVisit) {
+  await refreshPublicPassportStats(
+    user.id
+  )
 
-        await safelyRefreshCreatorReputation(
-          user.id,
-          {
-            mutation:
-              'active_flow_check_in',
+  await safelyRefreshCreatorReputation(
+    user.id,
+    {
+      mutation:
+        'active_flow_check_in',
 
-            rankingRefreshMode:
-              'affected',
+      rankingRefreshMode:
+        'affected',
 
-            calculatedAt:
-              now,
-          }
-        )
-      }
+      calculatedAt:
+        now,
+    }
+  )
+}
+
+if (
+  replayAttribution?.creator_user_id &&
+  replayAttribution.creator_user_id !==
+    user.id
+) {
+  await refreshPublicPassportStats(
+    replayAttribution.creator_user_id
+  )
+}
 
       return NextResponse.json(
         {
@@ -1538,6 +1731,9 @@ export async function POST(
       )
       .upsert(
         {
+          flow_stop_id:
+            runtimeStop.id,
+
           session_id:
             sessionId,
 
@@ -1548,7 +1744,7 @@ export async function POST(
             venueId,
 
           stop_index:
-            stopIndex,
+            canonicalProgressStopIndex,
 
           checked_in_at:
             now,
@@ -1704,69 +1900,72 @@ export async function POST(
       )
     }
 
-    const {
-      data: progressRows,
-      error: progressError,
-    } = await supabase
-      .from(
-        'active_flow_progress'
-      )
-      .select(
-        'venue_id'
-      )
-      .eq(
-        'session_id',
-        sessionId
-      )
-      .eq(
-        'user_id',
-        user.id
-      )
+    /**
+ * 016I.2 — Canonical adaptive completion projection.
+ *
+ * The runtime route loaded before check-in cannot be reused here:
+ * its completion flags were projected before this request's
+ * progress mutation.
+ *
+ * Reload the canonical runtime route after progress has persisted
+ * so completion is derived from immutable runtime-stop identity:
+ *
+ *   - exact flow_stop_id for current progress
+ *   - historical stop_index -> base position fallback
+ *   - Detours only through exact flow_stop_id
+ *   - replaced/removed stops excluded from executable completion
+ *   - canceled Detours excluded from executable completion
+ *
+ * active_flow_sessions.completed_stops remains a derived cache.
+ * venue_id cardinality is no longer Active Flow completion
+ * authority.
+ */
+let refreshedRuntimeRoute
 
-    if (progressError) {
-      console.error(
-        '[active-flow/check-in] Progress refresh failed:',
-        progressError
-      )
-
-      return NextResponse.json(
-        {
-          error:
-            'Check-in saved, but progress could not be refreshed.',
-        },
-        {
-          status:
-            500,
-        }
-      )
+try {
+  refreshedRuntimeRoute =
+    await loadActiveFlowRuntimeRoute({
+      sessionId,
+      userId:
+        user.id,
+      supabase,
+    })
+} catch (error) {
+  console.error(
+    '[active-flow/check-in] Canonical runtime progress refresh failed:',
+    {
+      sessionId,
+      error,
     }
+  )
 
-    const completedVenueIds =
-      new Set(
-        (
-          progressRows ??
-          []
-        )
-          .map(
-            (
-              row
-            ) =>
-              row.venue_id
-          )
-          .filter(
-            Boolean
-          )
-      )
+  return NextResponse.json(
+    {
+      error:
+        'Check-in saved, but progress could not be refreshed.',
+    },
+    {
+      status:
+        500,
+    }
+  )
+}
 
-    const completedStops =
-      completedVenueIds.size
+const completedStops =
+  refreshedRuntimeRoute.filter(
+    (
+      stop
+    ) =>
+      stop.completed
+  ).length
 
-    const totalStops =
-      venueIds.length
+const totalStops =
+  refreshedRuntimeRoute.length
 
-    const flowCompleted =
-      completedStops ===
-        totalStops
+const flowCompleted =
+  totalStops > 0 &&
+  completedStops ===
+    totalStops
 
     const {
       error:
@@ -1834,22 +2033,49 @@ export async function POST(
      * physical check-in.
      */
     const replayAttribution =
-      await recordCreatorReplayStopAttribution({
-        supabase,
-        sessionId,
-        stopIndex,
-        source:
-          session.source,
-      })
+      canonicalProgressStopIndex !==
+        null
+        ? await recordCreatorReplayStopAttribution({
+            supabase,
+            sessionId,
+            stopIndex:
+              canonicalProgressStopIndex,
+            source:
+              session.source,
+          })
+        : null
 
     await refreshPublicPassportStats(
-      user.id
-    )
+  user.id
+)
 
-    /**
-     * Refresh creator reputation only after the canonical
-     * verified venue visit and active-flow progress writes have
-     * succeeded.
+/**
+ * Replay attribution awards Passport XP to the original Flow
+ * creator, not only to the user executing the replay.
+ *
+ * Reconcile the creator's public Passport immediately after the
+ * canonical replay attribution RPC has had the opportunity to
+ * record lifetime-idempotent creator credit.
+ *
+ * Passport rebuilding remains best-effort through
+ * refreshPublicPassportStats(), so a secondary materialization
+ * failure can never invalidate the user's successful physical
+ * check-in.
+ */
+if (
+  replayAttribution?.creator_user_id &&
+  replayAttribution.creator_user_id !==
+    user.id
+) {
+  await refreshPublicPassportStats(
+    replayAttribution.creator_user_id
+  )
+}
+
+/**
+ * Refresh creator reputation only after the canonical
+ * verified venue visit and active-flow progress writes have
+ * succeeded.
      *
      * The safe refresh boundary records failures without
      * invalidating the completed user check-in.

@@ -8,6 +8,68 @@ import FollowButton from '@/components/profile/FollowButton'
  * Public contracts
  * ======================================================= */
 
+export type DiscoverReputationStanding = {
+  categoryId: string
+  categoryLabel: string
+
+  scope:
+    | 'global'
+    | 'city'
+
+  cityKey: string | null
+
+  reputationLevel:
+    | 'unranked'
+    | 'emerging'
+    | 'established'
+    | 'expert'
+    | 'elite'
+
+  reputationScore: number
+
+  verifiedVenueCount: number
+  weightedVenueCount: number
+
+  rank: number
+  eligibleCreatorCount: number
+
+  topPercent: number
+
+  rankLabel: string
+}
+
+export type DiscoverReputationSummary = {
+  highestLevel:
+    | 'unranked'
+    | 'emerging'
+    | 'established'
+    | 'expert'
+    | 'elite'
+    | null
+
+  strongestCategory:
+    DiscoverReputationStanding | null
+
+  strongestGlobal:
+    DiscoverReputationStanding | null
+
+  strongestLocal:
+    DiscoverReputationStanding | null
+}
+
+export type DiscoverRecommendationContext = {
+  sharedInterests: string[]
+  sharedVibes: string[]
+  sharesHomeNeighborhood: boolean
+
+  primaryReason:
+    | 'shared_interest'
+    | 'shared_vibe'
+    | 'same_neighborhood'
+    | 'reputation'
+    | null
+}
+
 export type DiscoverUser = {
   id: string
   username: string | null
@@ -21,11 +83,25 @@ export type DiscoverUser = {
   is_following?: boolean | null
 
   /**
-   * Optional discovery context.
+   * Canonical discovery reputation context returned by the
+   * discover API.
+   */
+  reputation?:
+    DiscoverReputationSummary | null
+
+  /**
+   * Canonical contextual recommendation explanation returned by
+   * the discover API for suggested-user results.
+   */
+  recommendation?:
+    DiscoverRecommendationContext | null
+
+  /**
+   * Optional legacy discovery context.
    *
-   * These fields allow the discover API to add a lightweight
-   * reputation signal without turning Suggested Roamers into a
-   * competitive leaderboard.
+   * These fields remain supported so existing callers can add a
+   * lightweight reputation signal without turning Suggested
+   * Roamers into a competitive leaderboard.
    */
   reputation_label?: string | null
   reputation_category_label?: string | null
@@ -36,6 +112,12 @@ export type DiscoverUser = {
 type UserResultCardProps = {
   user: DiscoverUser
   currentUserId?: string | null
+
+  /**
+   * Recommendation explanations are opt-in so direct-search
+   * results and other existing card consumers remain unchanged.
+   */
+  showRecommendationReason?: boolean
 }
 
 /* =========================================================
@@ -45,6 +127,7 @@ type UserResultCardProps = {
 export default function UserResultCard({
   user,
   currentUserId = null,
+  showRecommendationReason = false,
 }: UserResultCardProps) {
   const isOwnProfile =
     currentUserId ===
@@ -88,6 +171,13 @@ export default function UserResultCard({
     buildReputationSignal(
       user
     )
+
+  const recommendationSignal =
+    showRecommendationReason
+      ? buildRecommendationSignal(
+          user
+        )
+      : null
 
   const followerCount =
     normalizeNonNegativeInteger(
@@ -147,6 +237,21 @@ export default function UserResultCard({
                     </span>
                   </p>
                 ) : null}
+
+                {recommendationSignal ? (
+                  <p className="mt-2 flex max-w-full items-center gap-1.5 text-[11px] font-medium text-neutral-400">
+                    <span
+                      aria-hidden="true"
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400"
+                    />
+
+                    <span className="truncate">
+                      {
+                        recommendationSignal
+                      }
+                    </span>
+                  </p>
+                ) : null}
               </div>
 
               <div className="hidden shrink-0 sm:block">
@@ -165,13 +270,7 @@ export default function UserResultCard({
               <p className="mt-3 line-clamp-2 break-words text-sm leading-6 text-neutral-400">
                 {bio}
               </p>
-            ) : (
-              <p className="mt-3 text-sm leading-6 text-neutral-600">
-                Discover their city
-                activity, interests,
-                and public Roam profile.
-              </p>
-            )}
+            ) : null}
 
             {discoverySignals.length >
             0 ? (
@@ -600,6 +699,92 @@ function DiscoverySignal({
 }
 
 /* =========================================================
+ * Recommendation context
+ * ======================================================= */
+
+function buildRecommendationSignal(
+  user:
+    DiscoverUser
+): string | null {
+  const recommendation =
+    user.recommendation
+
+  if (
+    !recommendation
+  ) {
+    return null
+  }
+
+  if (
+    recommendation.primaryReason ===
+    'shared_interest'
+  ) {
+    const sharedInterest =
+      normalizeStringArray(
+        recommendation.sharedInterests
+      )[0] ??
+      null
+
+    return sharedInterest
+      ? `Shared interest · ${formatSignalLabel(
+          sharedInterest
+        )}`
+      : null
+  }
+
+  if (
+    recommendation.primaryReason ===
+    'shared_vibe'
+  ) {
+    const sharedVibe =
+      normalizeStringArray(
+        recommendation.sharedVibes
+      )[0] ??
+      null
+
+    return sharedVibe
+      ? `Shared vibe · ${formatSignalLabel(
+          sharedVibe
+        )}`
+      : null
+  }
+
+  if (
+    recommendation.primaryReason ===
+      'same_neighborhood' &&
+    recommendation.sharesHomeNeighborhood
+  ) {
+    return 'Same neighborhood'
+  }
+
+  if (
+    recommendation.primaryReason ===
+    'reputation'
+  ) {
+    const canonicalStanding =
+      user.reputation
+        ?.strongestLocal ??
+      user.reputation
+        ?.strongestCategory ??
+      user.reputation
+        ?.strongestGlobal ??
+      null
+
+    const categoryLabel =
+      normalizeNullableText(
+        canonicalStanding
+          ?.categoryLabel
+      )
+
+    return categoryLabel
+      ? `Strong reputation · ${categoryLabel}`
+      : null
+  }
+
+  return null
+}
+
+/* =========================================================
  * Reputation context
  * ======================================================= */
 
@@ -607,6 +792,82 @@ function buildReputationSignal(
   user:
     DiscoverUser
 ): string | null {
+  const canonicalStanding =
+    user.reputation
+      ?.strongestLocal ??
+    user.reputation
+      ?.strongestCategory ??
+    user.reputation
+      ?.strongestGlobal ??
+    null
+
+  if (
+    canonicalStanding
+  ) {
+    const categoryLabel =
+      normalizeNullableText(
+        canonicalStanding
+          .categoryLabel
+      )
+
+    if (
+      categoryLabel
+    ) {
+      const scopeLabel =
+        canonicalStanding.scope ===
+          'city'
+          ? normalizeNullableText(
+              canonicalStanding
+                .cityKey
+            )
+          : 'Global'
+
+      const topPercent =
+  normalizePercentage(
+    canonicalStanding
+      .topPercent
+  )
+
+if (
+  topPercent !==
+    null
+) {
+  return [
+    `Top ${formatPercent(
+      topPercent
+    )}%`,
+    scopeLabel
+      ? formatSignalLabel(
+          scopeLabel
+        )
+      : null,
+    categoryLabel,
+  ]
+    .filter(
+      Boolean
+    )
+    .join(
+      ' · '
+    )
+}
+
+      return [
+        scopeLabel
+          ? formatSignalLabel(
+              scopeLabel
+            )
+          : null,
+        categoryLabel,
+      ]
+        .filter(
+          Boolean
+        )
+        .join(
+          ' · '
+        )
+    }
+  }
+
   const explicitLabel =
     normalizeNullableText(
       user.reputation_label
@@ -683,7 +944,7 @@ function normalizeNullableText(
 ): string | null {
   if (
     typeof value !==
-      'string'
+    'string'
   ) {
     return null
   }

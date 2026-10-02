@@ -110,7 +110,7 @@ export default function SuggestedRoamers() {
                 ?.details ??
               payload
                 ?.error ??
-              'Failed to load suggested Roamers'
+              'Failed to load people to discover'
             )
           }
 
@@ -149,7 +149,7 @@ export default function SuggestedRoamers() {
             error instanceof
               Error
               ? error.message
-              : 'Failed to load suggested Roamers'
+              : 'Failed to load people to discover'
           )
         } finally {
           if (
@@ -174,7 +174,7 @@ export default function SuggestedRoamers() {
 
   return (
     <section
-      aria-label="Suggested Roamers"
+      aria-label="People to discover"
       className="w-full min-w-0"
     >
       {!loading &&
@@ -234,6 +234,7 @@ export default function SuggestedRoamers() {
                 currentUserId={
                   currentUserId
                 }
+                showRecommendationReason
               />
             )
           )}
@@ -258,7 +259,7 @@ function SuggestedRoamersError({
       className="rounded-[1.4rem] bg-red-400/[0.055] px-4 py-3.5 ring-1 ring-red-400/15"
     >
       <p className="text-sm font-black tracking-tight text-red-200">
-        Suggestions are unavailable
+        People are unavailable
       </p>
 
       <p className="mt-1 break-words text-xs leading-5 text-red-200/55">
@@ -291,14 +292,13 @@ function EmptySuggestedRoamers() {
         </div>
 
         <p className="mt-3 text-sm font-black tracking-tight text-white">
-          Your orbit is still forming
+          No people to discover yet
         </p>
 
         <p className="mx-auto mt-1.5 max-w-md text-xs leading-5 text-zinc-600">
-          New people will show up here
-          as more Roamers explore,
-          connect, and build their city
-          footprint.
+          New Roamers will appear here
+          as more people join and build
+          their public Roam profiles.
         </p>
       </div>
     </div>
@@ -312,7 +312,7 @@ function EmptySuggestedRoamers() {
 function SuggestedRoamersSkeleton() {
   return (
     <div
-      aria-label="Loading suggested Roamers"
+      aria-label="Loading people to discover"
       className="space-y-3"
     >
       {[

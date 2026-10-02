@@ -15,17 +15,27 @@ export function useFavoriteToggle() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug: venue.slug,
-          venueData: {
+          venue_id: venue.id,
+          data: {
             name: venue.name,
-            lat: venue.lat,
-            lon: venue.lon,
+            lat: Number(venue.lat),
+            lon: Number(venue.lon),
             instagram_handle: venue.instagram_handle ?? null,
             type: venue.type,
             image_url: venue.cover ?? null,
-            vibe_tags: venue.tags ? venue.tags.split(',').map((t) => t.trim()) : [],
-            price_tier: venue.price ? parseInt(venue.price) : undefined,
+            vibe_tags: Array.isArray(venue.tags)
+              ? venue.tags
+              : venue.tags
+                ? venue.tags.split(',').map((t) => t.trim())
+                : [],
+            price_tier:
+              typeof venue.price === 'number'
+                ? venue.price
+                : typeof venue.price === 'string'
+                  ? parseInt(venue.price.replace(/\$/g, ''), 10) || undefined
+                  : undefined,
+            city: venue.city ?? undefined,
           },
-          city: venue.city ?? null,
         }),
       })
 

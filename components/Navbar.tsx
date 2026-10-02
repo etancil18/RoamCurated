@@ -126,12 +126,13 @@ export default function Navbar() {
               <div className="py-2">
                 {user ? (
                   <>
+
                     <Link
-                      href="/how-it-works"
-                      onClick={() => handleNavClick('how-it-works')}
+                      href="/profile"
+                      onClick={() => handleNavClick('profile')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
-                      How It Works
+                      Profile
                     </Link>
 
                     <Link
@@ -139,15 +140,15 @@ export default function Navbar() {
                       onClick={() => handleNavClick('maps')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
-                      Maps
+                      Map
                     </Link>
 
                     <Link
-                      href="/competitions"
-                      onClick={() => handleNavClick('competitions')}
+                      href="/discover"
+                      onClick={() => handleNavClick('discover')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
-                      Competitions
+                      Find Explorers
                     </Link>
 
                     <Link
@@ -163,31 +164,15 @@ export default function Navbar() {
                       onClick={() => handleNavClick('sponsor-crawl')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
-                      Host a Flow
+                      Group Flow
                     </Link>
 
                     <Link
-                      href="/hosts"
-                      onClick={() => handleNavClick('hosts')}
+                      href="/how-it-works"
+                      onClick={() => handleNavClick('how-it-works')}
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
-                      Build a Guide
-                    </Link>
-
-                    <Link
-                      href="/discover"
-                      onClick={() => handleNavClick('discover')}
-                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
-                    >
-                      Find Explorers
-                    </Link>
-
-                    <Link
-                      href="/profile"
-                      onClick={() => handleNavClick('profile')}
-                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
-                    >
-                      Profile
+                      How It Works
                     </Link>
 
                     {canSeeAdmin && (

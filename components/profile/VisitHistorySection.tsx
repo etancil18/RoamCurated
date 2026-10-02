@@ -385,26 +385,6 @@ export default function VisitHistorySection({
                   0
                 )
           )
-
-          setExpandedCities(
-            (
-              current
-            ) => {
-              if (
-                current.size >
-                  0 ||
-                nextCities.length ===
-                  0
-              ) {
-                return current
-              }
-
-              return new Set([
-                nextCities[0]
-                  .city,
-              ])
-            }
-          )
         } catch (err) {
           console.error(
             '[VisitHistorySection] Failed to load visit history:',
@@ -493,18 +473,6 @@ export default function VisitHistorySection({
 
   useEffect(() => {
     if (initialCities) {
-      if (
-        initialCities.length >
-        0
-      ) {
-        setExpandedCities(
-          new Set([
-            initialCities[0]
-              .city,
-          ])
-        )
-      }
-
       void loadQualifyingRoams()
 
       return
@@ -1439,27 +1407,9 @@ export default function VisitHistorySection({
         <div className="pointer-events-none absolute right-[-5rem] top-[-6rem] h-52 w-52 rounded-full bg-cyan-400/[0.07] blur-[90px]" />
 
         <div className="relative z-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="h-px w-5 bg-cyan-300/70" />
-
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
-                  Where you have been
-                </p>
-              </div>
-
-              <h2 className="mt-3 text-2xl font-black tracking-[-0.035em] text-white sm:text-[1.75rem]">
-                Your city history
-              </h2>
-
-              <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-500">
-                {summary}
-              </p>
-            </div>
-
-            {!loading &&
-            error ? (
+          {!loading &&
+          error ? (
+            <div className="flex justify-end">
               <button
                 type="button"
                 onClick={() =>
@@ -1469,8 +1419,8 @@ export default function VisitHistorySection({
               >
                 Try again
               </button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
           {!loading &&
           qualifyingRoams.length >

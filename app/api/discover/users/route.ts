@@ -1,6 +1,36 @@
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import {
+  REPUTATION_LEVEL_RANK,
+} from '@/lib/reputation/discovery-primitives'
+
+import {
+  buildPublicReputationClaim,
+  REPUTATION_POLICY_VERSION,
+} from '@/lib/reputation/policy'
+
+import {
+  SUPPORTED_CITIES,
+  isSupportedCityKey,
+  normalizeCityKey,
+} from '@/lib/cities/normalizeCity'
+
+import {
+  rankReputationCandidates,
+  type ReputationRankingCandidate,
+} from '@/lib/reputation/rebuildReputationRankings'
+
+import {
+  isReputationCategoryId,
+  isReputationLevel,
+  isReputationScope,
+  type ReputationCategoryId,
+  type ReputationLevel,
+  type ReputationScope,
+  type UserCategoryReputation,
+  type UserReputationRank,
+} from '@/lib/reputation/types'
 
 type ProfileRow = {
   id: string
@@ -15,22 +45,35 @@ type ProfileRow = {
   created_at?: string | null
 }
 
-type ReputationScope =
-  | 'global'
-  | 'city'
+type RecommendationViewerProfile = {
+  home_neighborhood: string | null
+  preferred_vibes: string[] | null
+  interest_categories: string[] | null
+}
 
-type ReputationLevel =
-  | 'unranked'
-  | 'emerging'
-  | 'established'
-  | 'expert'
-  | 'elite'
+type RecommendationViewerContext = {
+  homeNeighborhood: string | null
+  preferredVibes: Set<string>
+  interestCategories: Set<string>
+}
+
+type DiscoverRecommendationPrimaryReason =
+  | 'shared_interest'
+  | 'shared_vibe'
+  | 'same_neighborhood'
+  | 'reputation'
+
+export type DiscoverRecommendationContext = {
+  sharedInterests: string[]
+  sharedVibes: string[]
+  sharesHomeNeighborhood: boolean
+  primaryReason:
+    DiscoverRecommendationPrimaryReason | null
+}
 
 type ReputationCategoryRow = {
   id: string
   label: string | null
-  minimum_venues_for_ranking:
-    number | string | null
   is_active: boolean | null
 }
 
@@ -44,10 +87,33 @@ type CreatorReputationStatsRow = {
     number | string | null
   verified_venue_count:
     number | string | null
-  weighted_venue_count:
+    weighted_venue_count:
     number | string | null
+
+  city_count:
+    number | string | null
+
+  public_collection_count:
+    number | string | null
+
+  curated_venue_count:
+    number | string | null
+
+  public_snapshot_count:
+    number | string | null
+
+  completed_flow_count:
+    number | string | null
+
+  recency_score:
+    number | string | null
+
+  quality_score:
+    number | string | null
+
   policy_version:
     number | string | null
+
   calculated_at: string | null
 }
 
@@ -79,13 +145,6 @@ export type DiscoverReputationStanding = {
   topPercent: number
 
   rankLabel: string
-
-  /**
-   * Small comparison groups are still returned, but marked
-   * provisional so the UI can avoid presenting them as mature
-   * platform-wide authority claims.
-   */
-  isProvisional: boolean
 }
 
 export type DiscoverReputationSummary = {
@@ -118,17 +177,27 @@ type DiscoverUser =
      */
     reputation:
       DiscoverReputationSummary | null
+
+    /**
+     * Grounded explanation for suggested-user discovery.
+     *
+     * This is populated only for suggested results and is derived
+     * from the same viewer/candidate signals used by recommendation
+     * ranking. Direct-search results do not receive recommendation
+     * semantics.
+     */
+    recommendation:
+      DiscoverRecommendationContext | null
   }
 
 type NormalizedReputationCategory = {
   id: string
   label: string
-  minimumVenuesForRanking: number
 }
 
 type NormalizedReputationRow = {
   userId: string
-  categoryId: string
+  categoryId: ReputationCategoryId
   scope: ReputationScope
   cityKey: string | null
 
@@ -137,6 +206,13 @@ type NormalizedReputationRow = {
 
   verifiedVenueCount: number
   weightedVenueCount: number
+  cityCount: number
+  publicCollectionCount: number
+  curatedVenueCount: number
+  publicSnapshotCount: number
+  completedFlowCount: number
+  recencyScore: number
+  qualityScore: number
 
   policyVersion: number
   calculatedAt: string | null
@@ -149,31 +225,13 @@ type RankedReputationRow =
     eligibleCreatorCount: number
     topPercent: number
     rankLabel: string
-    isProvisional: boolean
   }
 
-const REPUTATION_LEVEL_RANK = {
-  unranked:
-    0,
+const DISCOVER_RESULT_LIMIT =
+  12
 
-  emerging:
-    1,
-
-  established:
-    2,
-
-  expert:
-    3,
-
-  elite:
-    4,
-} as const satisfies Record<
-  ReputationLevel,
-  number
->
-
-const MINIMUM_STABLE_RANKING_POPULATION =
-  10
+const SUGGESTED_CANDIDATE_LIMIT =
+  100
 
 export async function GET(
   req: Request
@@ -238,6 +296,55 @@ export async function GET(
       )
     }
 
+    let recommendationViewerContext:
+      RecommendationViewerContext | null =
+      null
+
+    if (
+      suggested &&
+      user
+    ) {
+      const {
+        data:
+          viewerProfileRaw,
+
+        error:
+          viewerProfileError,
+      } =
+        await supabase
+          .from(
+            'profiles'
+          )
+          .select(`
+            home_neighborhood,
+            preferred_vibes,
+            interest_categories
+          `)
+          .eq(
+            'id',
+            user.id
+          )
+          .maybeSingle<
+            RecommendationViewerProfile
+          >()
+
+      if (
+        viewerProfileError
+      ) {
+        console.error(
+          'Discover recommendation viewer-profile lookup error:',
+          viewerProfileError
+        )
+      } else if (
+        viewerProfileRaw
+      ) {
+        recommendationViewerContext =
+          buildRecommendationViewerContext(
+            viewerProfileRaw
+          )
+      }
+    }
+
     let profilesQuery =
       supabase
         .from(
@@ -265,7 +372,9 @@ export async function GET(
           null
         )
         .limit(
-          12
+          suggested
+            ? SUGGESTED_CANDIDATE_LIMIT
+            : DISCOVER_RESULT_LIMIT
         )
 
     if (query) {
@@ -407,7 +516,6 @@ export async function GET(
           .select(`
             id,
             label,
-            minimum_venues_for_ranking,
             is_active
           `)
           .eq(
@@ -434,6 +542,13 @@ export async function GET(
             reputation_score,
             verified_venue_count,
             weighted_venue_count,
+            city_count,
+            public_collection_count,
+            curated_venue_count,
+            public_snapshot_count,
+            completed_flow_count,
+            recency_score,
+            quality_score,
             policy_version,
             calculated_at
           `)
@@ -560,22 +675,14 @@ export async function GET(
           : reputationRowsResult.data
       )
 
-    const latestPolicyVersion =
-      determineLatestPolicyVersion(
-        normalizedReputationRows
-      )
-
     const currentPolicyRows =
-      latestPolicyVersion ===
-      null
-        ? []
-        : normalizedReputationRows.filter(
-            (
-              row
-            ) =>
-              row.policyVersion ===
-              latestPolicyVersion
-          )
+      normalizedReputationRows.filter(
+        (
+          row
+        ) =>
+          row.policyVersion ===
+          REPUTATION_POLICY_VERSION
+      )
 
     const rankedReputationRows =
       rankEligibleReputationRows({
@@ -603,26 +710,40 @@ export async function GET(
         .map(
           (
             profile
-          ) => ({
-            ...profile,
-
-            followers_count:
-              followerCountByProfileId.get(
-                profile.id
-              ) ??
-              0,
-
-            is_following:
-              followingIds.has(
-                profile.id
-              ),
-
-            reputation:
+          ) => {
+            const reputation =
               reputationByUserId.get(
                 profile.id
               ) ??
-              null,
-          })
+              null
+
+            return {
+              ...profile,
+
+              followers_count:
+                followerCountByProfileId.get(
+                  profile.id
+                ) ??
+                0,
+
+              is_following:
+                followingIds.has(
+                  profile.id
+                ),
+
+              reputation,
+
+              recommendation:
+                suggested
+                  ? buildDiscoverRecommendationContext({
+                      profile,
+                      viewerContext:
+                        recommendationViewerContext,
+                      reputation,
+                    })
+                  : null,
+            }
+          }
         )
         .sort(
           (
@@ -632,28 +753,18 @@ export async function GET(
             if (
               suggested
             ) {
-              const reputationDifference =
-                compareReputationSummaries(
-                  first.reputation,
-                  second.reputation
+              const recommendationDifference =
+                compareSuggestedUsers(
+                  first,
+                  second,
+                  recommendationViewerContext
                 )
 
               if (
-                reputationDifference !==
+                recommendationDifference !==
                 0
               ) {
-                return reputationDifference
-              }
-
-              const followerDelta =
-                second.followers_count -
-                first.followers_count
-
-              if (
-                followerDelta !==
-                0
-              ) {
-                return followerDelta
+                return recommendationDifference
               }
             }
 
@@ -672,6 +783,10 @@ export async function GET(
               }
             )
           }
+        )
+        .slice(
+          0,
+          DISCOVER_RESULT_LIMIT
         )
 
     return NextResponse.json(
@@ -712,6 +827,397 @@ export async function GET(
       }
     )
   }
+}
+
+/* =========================================================
+ * Suggested-user recommendation context
+ * ======================================================= */
+
+function buildRecommendationViewerContext(
+  profile:
+    RecommendationViewerProfile
+): RecommendationViewerContext {
+  return {
+    homeNeighborhood:
+      normalizeRecommendationValue(
+        profile.home_neighborhood
+      ),
+
+    preferredVibes:
+      normalizeRecommendationValues(
+        profile.preferred_vibes
+      ),
+
+    interestCategories:
+      normalizeRecommendationValues(
+        profile.interest_categories
+      ),
+  }
+}
+
+function buildDiscoverRecommendationContext({
+  profile,
+  viewerContext,
+  reputation,
+}: {
+  profile:
+    ProfileRow
+
+  viewerContext:
+    RecommendationViewerContext | null
+
+  reputation:
+    DiscoverReputationSummary | null
+}): DiscoverRecommendationContext {
+  const sharedInterests =
+    viewerContext
+      ? findRecommendationOverlapValues(
+          viewerContext.interestCategories,
+          profile.interest_categories
+        )
+      : []
+
+  const sharedVibes =
+    viewerContext
+      ? findRecommendationOverlapValues(
+          viewerContext.preferredVibes,
+          profile.preferred_vibes
+        )
+      : []
+
+  const sharesHomeNeighborhood =
+    viewerContext
+      ? sharesRecommendationHomeNeighborhood(
+          viewerContext.homeNeighborhood,
+          profile.home_neighborhood
+        )
+      : false
+
+  let primaryReason:
+    DiscoverRecommendationPrimaryReason | null =
+    null
+
+  if (
+    sharedInterests.length >
+    0
+  ) {
+    primaryReason =
+      'shared_interest'
+  } else if (
+    sharedVibes.length >
+    0
+  ) {
+    primaryReason =
+      'shared_vibe'
+  } else if (
+    sharesHomeNeighborhood
+  ) {
+    primaryReason =
+      'same_neighborhood'
+  } else if (
+    reputation
+  ) {
+    primaryReason =
+      'reputation'
+  }
+
+  return {
+    sharedInterests,
+
+    sharedVibes,
+
+    sharesHomeNeighborhood,
+
+    primaryReason,
+  }
+}
+
+function findRecommendationOverlapValues(
+  viewerValues:
+    Set<string>,
+  candidateValues:
+    string[] | null
+): string[] {
+  if (
+    viewerValues.size ===
+      0 ||
+    !Array.isArray(
+      candidateValues
+    )
+  ) {
+    return []
+  }
+
+  const matchedValues:
+    string[] =
+    []
+
+  const seenNormalizedValues =
+    new Set<string>()
+
+  for (
+    const candidateValue of
+      candidateValues
+  ) {
+    const normalized =
+      normalizeRecommendationValue(
+        candidateValue
+      )
+
+    if (
+      !normalized ||
+      seenNormalizedValues.has(
+        normalized
+      ) ||
+      !viewerValues.has(
+        normalized
+      )
+    ) {
+      continue
+    }
+
+    const displayValue =
+      normalizeRequiredText(
+        candidateValue
+      )
+
+    if (
+      !displayValue
+    ) {
+      continue
+    }
+
+    seenNormalizedValues.add(
+      normalized
+    )
+
+    matchedValues.push(
+      displayValue
+    )
+  }
+
+  return matchedValues
+}
+
+function compareSuggestedUsers(
+  first:
+    DiscoverUser,
+  second:
+    DiscoverUser,
+  viewerContext:
+    RecommendationViewerContext | null
+): number {
+  if (
+    viewerContext
+  ) {
+    const firstSharedInterestCount =
+      countRecommendationOverlap(
+        viewerContext.interestCategories,
+        first.interest_categories
+      )
+
+    const secondSharedInterestCount =
+      countRecommendationOverlap(
+        viewerContext.interestCategories,
+        second.interest_categories
+      )
+
+    if (
+      firstSharedInterestCount !==
+      secondSharedInterestCount
+    ) {
+      return (
+        secondSharedInterestCount -
+        firstSharedInterestCount
+      )
+    }
+
+    const firstSharedVibeCount =
+      countRecommendationOverlap(
+        viewerContext.preferredVibes,
+        first.preferred_vibes
+      )
+
+    const secondSharedVibeCount =
+      countRecommendationOverlap(
+        viewerContext.preferredVibes,
+        second.preferred_vibes
+      )
+
+    if (
+      firstSharedVibeCount !==
+      secondSharedVibeCount
+    ) {
+      return (
+        secondSharedVibeCount -
+        firstSharedVibeCount
+      )
+    }
+
+    const firstSharesHomeNeighborhood =
+      sharesRecommendationHomeNeighborhood(
+        viewerContext.homeNeighborhood,
+        first.home_neighborhood
+      )
+
+    const secondSharesHomeNeighborhood =
+      sharesRecommendationHomeNeighborhood(
+        viewerContext.homeNeighborhood,
+        second.home_neighborhood
+      )
+
+    if (
+      firstSharesHomeNeighborhood !==
+      secondSharesHomeNeighborhood
+    ) {
+      return firstSharesHomeNeighborhood
+        ? -1
+        : 1
+    }
+  }
+
+  const reputationDifference =
+    compareReputationSummaries(
+      first.reputation,
+      second.reputation
+    )
+
+  if (
+    reputationDifference !==
+    0
+  ) {
+    return reputationDifference
+  }
+
+  const followerDelta =
+    second.followers_count -
+    first.followers_count
+
+  if (
+    followerDelta !==
+    0
+  ) {
+    return followerDelta
+  }
+
+  return 0
+}
+
+function countRecommendationOverlap(
+  viewerValues:
+    Set<string>,
+  candidateValues:
+    string[] | null
+): number {
+  if (
+    viewerValues.size ===
+      0 ||
+    !Array.isArray(
+      candidateValues
+    )
+  ) {
+    return 0
+  }
+
+  const candidateSet =
+    normalizeRecommendationValues(
+      candidateValues
+    )
+
+  let overlapCount =
+    0
+
+  for (
+    const value of
+      candidateSet
+  ) {
+    if (
+      viewerValues.has(
+        value
+      )
+    ) {
+      overlapCount +=
+        1
+    }
+  }
+
+  return overlapCount
+}
+
+function sharesRecommendationHomeNeighborhood(
+  viewerHomeNeighborhood:
+    string | null,
+  candidateHomeNeighborhood:
+    string | null
+): boolean {
+  if (
+    !viewerHomeNeighborhood
+  ) {
+    return false
+  }
+
+  const normalizedCandidateHomeNeighborhood =
+    normalizeRecommendationValue(
+      candidateHomeNeighborhood
+    )
+
+  return (
+    normalizedCandidateHomeNeighborhood !==
+      null &&
+    normalizedCandidateHomeNeighborhood ===
+      viewerHomeNeighborhood
+  )
+}
+
+function normalizeRecommendationValues(
+  values:
+    string[] | null
+): Set<string> {
+  const normalizedValues =
+    new Set<string>()
+
+  if (
+    !Array.isArray(
+      values
+    )
+  ) {
+    return normalizedValues
+  }
+
+  for (
+    const value of
+      values
+  ) {
+    const normalized =
+      normalizeRecommendationValue(
+        value
+      )
+
+    if (
+      normalized
+    ) {
+      normalizedValues.add(
+        normalized
+      )
+    }
+  }
+
+  return normalizedValues
+}
+
+function normalizeRecommendationValue(
+  value: unknown
+): string | null {
+  const normalized =
+    normalizeRequiredText(
+      value
+    )
+
+  return normalized
+    ? normalized.toLocaleLowerCase(
+        'en-US'
+      )
+    : null
 }
 
 /* =========================================================
@@ -787,12 +1293,6 @@ function normalizeReputationCategories(
         id,
 
         label,
-
-        minimumVenuesForRanking:
-          normalizePositiveInteger(
-            category.minimum_venues_for_ranking
-          ) ??
-          5,
       }
     )
   }
@@ -847,37 +1347,49 @@ function normalizeReputationRows(
       )
 
     const scope =
-      normalizeReputationScope(
-        row.scope
-      )
+  isReputationScope(
+    row.scope
+  )
+    ? row.scope
+    : null
 
-    const reputationLevel =
-      normalizeReputationLevel(
-        row.reputation_level
-      )
+const reputationLevel =
+  isReputationLevel(
+    row.reputation_level
+  )
+    ? row.reputation_level
+    : null
 
-    const policyVersion =
-      normalizePositiveInteger(
-        row.policy_version
-      )
+const policyVersion =
+  normalizePositiveInteger(
+    row.policy_version
+  )
 
-    if (
-      !userId ||
-      !categoryId ||
-      !scope ||
-      !reputationLevel ||
-      policyVersion ===
-        null
-    ) {
-      continue
-    }
+        if (
+          !userId ||
+          !isReputationCategoryId(
+            categoryId
+          ) ||
+          !scope ||
+          !reputationLevel ||
+          policyVersion ===
+            null
+        ) {
+          continue
+        }
+
+    const normalizedCityKey =
+      normalizeCityKey(
+        row.city_key
+      )
 
     const cityKey =
       scope ===
-      'city'
-        ? normalizeRequiredText(
-            row.city_key
-          )
+        'city' &&
+      isSupportedCityKey(
+        normalizedCityKey
+      )
+        ? normalizedCityKey
         : null
 
     if (
@@ -909,47 +1421,56 @@ function normalizeReputationRows(
           row.verified_venue_count
         ),
 
-      weightedVenueCount:
-        normalizeNonNegativeNumber(
-          row.weighted_venue_count
-        ),
+          weightedVenueCount:
+      normalizeNonNegativeNumber(
+        row.weighted_venue_count
+      ),
 
-      policyVersion,
+    cityCount:
+      normalizeNonNegativeInteger(
+        row.city_count
+      ),
 
-      calculatedAt:
-        normalizeIsoTimestamp(
-          row.calculated_at
-        ),
+    publicCollectionCount:
+      normalizeNonNegativeInteger(
+        row.public_collection_count
+      ),
+
+    curatedVenueCount:
+      normalizeNonNegativeInteger(
+        row.curated_venue_count
+      ),
+
+    publicSnapshotCount:
+      normalizeNonNegativeInteger(
+        row.public_snapshot_count
+      ),
+
+    completedFlowCount:
+      normalizeNonNegativeInteger(
+        row.completed_flow_count
+      ),
+
+    recencyScore:
+      normalizeNonNegativeNumber(
+        row.recency_score
+      ),
+
+    qualityScore:
+      normalizeNonNegativeNumber(
+        row.quality_score
+      ),
+
+    policyVersion,
+
+    calculatedAt:
+      normalizeIsoTimestamp(
+        row.calculated_at
+      ),
     })
   }
 
   return rows
-}
-
-function determineLatestPolicyVersion(
-  rows:
-    NormalizedReputationRow[]
-): number | null {
-  let latest:
-    number | null =
-    null
-
-  for (
-    const row of
-      rows
-  ) {
-    if (
-      latest ===
-        null ||
-      row.policyVersion >
-        latest
-    ) {
-      latest =
-        row.policyVersion
-    }
-  }
-
-  return latest
 }
 
 /* =========================================================
@@ -969,33 +1490,14 @@ function rankEligibleReputationRows({
       NormalizedReputationCategory
     >
 }): RankedReputationRow[] {
-  const eligibleRows =
-    rows.filter(
-      (
-        row
-      ) => {
-        const category =
-          categoriesById.get(
-            row.categoryId
-          )
-
-        if (
-          !category ||
-          row.reputationLevel ===
-            'unranked'
-        ) {
-          return false
-        }
-
-        return (
-          row.verifiedVenueCount >=
-            category.minimumVenuesForRanking &&
-          row.weightedVenueCount >=
-            4
-        )
-      }
-    )
-
+  /**
+   * Discover owns construction of category/scope/city/policy
+   * populations.
+   *
+   * Canonical reputation eligibility, ordering, ordinal rank,
+   * and percentile calculation are delegated to
+   * rankReputationCandidates().
+   */
   const populations =
     new Map<
       string,
@@ -1004,7 +1506,7 @@ function rankEligibleReputationRows({
 
   for (
     const row of
-      eligibleRows
+      rows
   ) {
     const populationKey =
       buildReputationPopulationKey(
@@ -1032,55 +1534,131 @@ function rankEligibleReputationRows({
     []
 
   for (
-    const population of
+    const populationRows of
       populations.values()
   ) {
-    const sortedPopulation =
-      population
-        .slice()
-        .sort(
-          compareReputationRows
+    const calculatedAt =
+      populationRows.reduce<
+        string | null
+      >(
+        (
+          latest,
+          row
+        ) => {
+          if (
+            !row.calculatedAt
+          ) {
+            return latest
+          }
+
+          if (
+            !latest ||
+            row.calculatedAt >
+              latest
+          ) {
+            return row.calculatedAt
+          }
+
+          return latest
+        },
+        null
+      ) ??
+      new Date(
+        0
+      ).toISOString()
+
+    const candidates:
+      ReputationRankingCandidate[] =
+      populationRows.map(
+        (
+          row
+        ) => ({
+          userId:
+            row.userId,
+
+          categoryId:
+            row.categoryId,
+
+          scope:
+            row.scope,
+
+          cityKey:
+            row.cityKey,
+
+          verifiedVenueCount:
+            row.verifiedVenueCount,
+
+          weightedVenueCount:
+            row.weightedVenueCount,
+
+          cityCount:
+            row.cityCount,
+
+          publicCollectionCount:
+            row.publicCollectionCount,
+
+          curatedVenueCount:
+            row.curatedVenueCount,
+
+          publicSnapshotCount:
+            row.publicSnapshotCount,
+
+          completedFlowCount:
+            row.completedFlowCount,
+
+          recencyScore:
+            row.recencyScore,
+
+          qualityScore:
+            row.qualityScore,
+
+          reputationScore:
+            row.reputationScore,
+
+          reputationLevel:
+            row.reputationLevel,
+
+          policyVersion:
+            row.policyVersion,
+
+          calculatedAt:
+            row.calculatedAt,
+        })
+      )
+
+    const {
+      rankings,
+    } =
+      rankReputationCandidates({
+        candidates,
+
+        calculatedAt,
+      })
+
+    const rowsByUserId =
+      new Map(
+        populationRows.map(
+          (
+            row
+          ) => [
+            row.userId,
+            row,
+          ] as const
         )
-
-    const eligibleCreatorCount =
-      sortedPopulation.length
-
-    let previousRow:
-      NormalizedReputationRow | null =
-      null
-
-    let previousRank =
-      0
+      )
 
     for (
-      let index =
-        0;
-      index <
-      sortedPopulation.length;
-      index +=
-        1
+      const ranking of
+        rankings
     ) {
       const row =
-        sortedPopulation[
-          index
-        ]
-
-      const rank =
-        previousRow &&
-        reputationRowsAreTied(
-          previousRow,
-          row
+        rowsByUserId.get(
+          ranking.userId
         )
-          ? previousRank
-          : index +
-            1
 
-      const topPercent =
-        calculateTopPercent({
-          rank,
-
-          eligibleCreatorCount,
-        })
+      if (!row) {
+        continue
+      }
 
       const category =
         categoriesById.get(
@@ -1093,40 +1671,108 @@ function rankEligibleReputationRows({
           row.categoryId
         )
 
-      rankedRows.push({
-        ...row,
+      const reputation:
+  UserCategoryReputation = {
+  userId:
+    row.userId,
 
-        categoryLabel,
+  categoryId:
+    row.categoryId,
 
-        rank,
+  scope:
+    row.scope,
 
-        eligibleCreatorCount,
+  cityKey:
+    row.cityKey,
 
-        topPercent,
+  score:
+    row.reputationScore,
 
-        rankLabel:
-          buildReputationRankLabel({
-            row,
+  level:
+    row.reputationLevel,
 
-            categoryLabel,
+  components: {
+    verifiedVenueCount:
+      row.verifiedVenueCount,
 
-            rank,
+    weightedVenueCount:
+      row.weightedVenueCount,
 
-            eligibleCreatorCount,
+    cityCount:
+      row.cityCount,
 
-            topPercent,
-          }),
+    publicCollectionCount:
+      row.publicCollectionCount,
 
-        isProvisional:
-          eligibleCreatorCount <
-          MINIMUM_STABLE_RANKING_POPULATION,
-      })
+    curatedVenueCount:
+      row.curatedVenueCount,
 
-      previousRow =
-        row
+    publicSnapshotCount:
+      row.publicSnapshotCount,
 
-      previousRank =
-        rank
+    completedFlowCount:
+      row.completedFlowCount,
+
+    recencyScore:
+      row.recencyScore,
+
+    qualityScore:
+      row.qualityScore,
+  },
+
+  latestEvidenceAt:
+    null,
+
+  calculatedAt:
+    row.calculatedAt ??
+    calculatedAt,
+}
+
+const publicClaim =
+  buildPublicReputationClaim({
+    reputation,
+
+    ranking,
+
+    categoryLabel,
+
+    cityLabel:
+      row.scope ===
+        'city' &&
+      row.cityKey
+        ? formatIdentifier(
+            row.cityKey
+          )
+        : null,
+  })
+
+if (
+  !publicClaim ||
+  publicClaim.rank ===
+    null ||
+  publicClaim.percentile ===
+    null
+) {
+  continue
+}
+
+rankedRows.push({
+  ...row,
+
+  categoryLabel,
+
+  rank:
+    publicClaim.rank,
+
+  eligibleCreatorCount:
+    publicClaim.eligibleUserCount,
+
+  topPercent:
+    publicClaim.percentile,
+
+  rankLabel:
+    publicClaim.label,
+})
     }
   }
 
@@ -1151,146 +1797,6 @@ function buildReputationPopulationKey(
     row.policyVersion.toString(),
   ].join(
     ':'
-  )
-}
-
-function compareReputationRows(
-  first:
-    NormalizedReputationRow,
-  second:
-    NormalizedReputationRow
-): number {
-  if (
-    first.reputationScore !==
-    second.reputationScore
-  ) {
-    return (
-      second.reputationScore -
-      first.reputationScore
-    )
-  }
-
-  if (
-    first.verifiedVenueCount !==
-    second.verifiedVenueCount
-  ) {
-    return (
-      second.verifiedVenueCount -
-      first.verifiedVenueCount
-    )
-  }
-
-  if (
-    first.weightedVenueCount !==
-    second.weightedVenueCount
-  ) {
-    return (
-      second.weightedVenueCount -
-      first.weightedVenueCount
-    )
-  }
-
-  return first.userId.localeCompare(
-    second.userId
-  )
-}
-
-function reputationRowsAreTied(
-  first:
-    NormalizedReputationRow,
-  second:
-    NormalizedReputationRow
-): boolean {
-  return (
-    first.reputationScore ===
-      second.reputationScore &&
-    first.verifiedVenueCount ===
-      second.verifiedVenueCount &&
-    first.weightedVenueCount ===
-      second.weightedVenueCount
-  )
-}
-
-function calculateTopPercent({
-  rank,
-  eligibleCreatorCount,
-}: {
-  rank:
-    number
-
-  eligibleCreatorCount:
-    number
-}): number {
-  if (
-    eligibleCreatorCount <=
-    0
-  ) {
-    return 100
-  }
-
-  return roundToPrecision(
-    Math.min(
-      100,
-      Math.max(
-        0,
-        (
-          rank /
-          eligibleCreatorCount
-        ) *
-          100
-      )
-    ),
-    2
-  )
-}
-
-function buildReputationRankLabel({
-  row,
-  categoryLabel,
-  rank,
-  eligibleCreatorCount,
-  topPercent,
-}: {
-  row:
-    NormalizedReputationRow
-
-  categoryLabel:
-    string
-
-  rank:
-    number
-
-  eligibleCreatorCount:
-    number
-
-  topPercent:
-    number
-}): string {
-  const scopeLabel =
-    row.scope ===
-      'city' &&
-    row.cityKey
-      ? formatIdentifier(
-          row.cityKey
-        )
-      : 'Global'
-
-  return [
-    `Top ${formatPercent(
-      topPercent
-    )}%`,
-
-    scopeLabel,
-
-    categoryLabel,
-
-    `#${rank.toLocaleString(
-      'en-US'
-    )} of ${eligibleCreatorCount.toLocaleString(
-      'en-US'
-    )}`,
-  ].join(
-    ' · '
   )
 }
 
@@ -1536,9 +2042,6 @@ function toPublicReputationStanding(
 
     rankLabel:
       row.rankLabel,
-
-    isProvisional:
-      row.isProvisional,
   }
 }
 
@@ -1657,42 +2160,6 @@ function escapeIlike(
 /* =========================================================
  * Primitive normalization
  * ======================================================= */
-
-function normalizeReputationScope(
-  value: unknown
-): ReputationScope | null {
-  if (
-    value ===
-      'global' ||
-    value ===
-      'city'
-  ) {
-    return value
-  }
-
-  return null
-}
-
-function normalizeReputationLevel(
-  value: unknown
-): ReputationLevel | null {
-  if (
-    value ===
-      'unranked' ||
-    value ===
-      'emerging' ||
-    value ===
-      'established' ||
-    value ===
-      'expert' ||
-    value ===
-      'elite'
-  ) {
-    return value
-  }
-
-  return null
-}
 
 function normalizeRequiredText(
   value: unknown
@@ -1840,66 +2307,6 @@ function normalizeIsoTimestamp(
   return new Date(
     timestamp
   ).toISOString()
-}
-
-function roundToPrecision(
-  value:
-    number,
-  decimalPlaces:
-    number
-): number {
-  if (
-    !Number.isFinite(
-      value
-    )
-  ) {
-    return 0
-  }
-
-  const normalizedDecimalPlaces =
-    Math.min(
-      8,
-      Math.max(
-        0,
-        Math.trunc(
-          decimalPlaces
-        )
-      )
-    )
-
-  const factor =
-    10 **
-    normalizedDecimalPlaces
-
-  return (
-    Math.round(
-      (
-        value +
-        Number.EPSILON
-      ) *
-        factor
-    ) /
-    factor
-  )
-}
-
-function formatPercent(
-  value:
-    number
-): string {
-  return value.toLocaleString(
-    'en-US',
-    {
-      minimumFractionDigits:
-        0,
-
-      maximumFractionDigits:
-        value <
-        1
-          ? 1
-          : 0,
-    }
-  )
 }
 
 function formatIdentifier(

@@ -232,85 +232,65 @@ export default async function CreatorSettingsPage() {
           }
         />
 
-        <div className="mt-5">
-          <CreatorSettingsNavigation />
-        </div>
-
-        <div className="mt-7 space-y-10 sm:mt-8 sm:space-y-14">
+        <div className="mt-7 space-y-8 sm:mt-9 sm:space-y-10">
           <section
             id="creator-overview"
             aria-labelledby="creator-overview-title"
-            className="scroll-mt-28"
           >
-            <SectionHeading
+            <h2
               id="creator-overview-title"
-              eyebrow="At a glance"
-              title="What people can see"
-              description="A quick check of what is ready, what is public, and what still needs attention."
-            />
+              className="sr-only"
+            >
+              Creator profile overview
+            </h2>
 
-            <div className="mt-4">
-              <CreatorModeStatusCard
-                creatorModeEnabled={
-                  creatorModeEnabled
-                }
-                showPublicExplorationMap={
-                  showPublicExplorationMap
-                }
-                username={
-                  baseProfile.username
-                }
-                hasCreatorProfile={
-                  creatorProfile !==
-                  null
-                }
-                publicSocialLinkCount={
-                  publicSocialLinkCount
-                }
-                collaborationTagCount={
-                  selectedTagIds.length
-                }
-                reputationFound={
-                  reputationResult.found
-                }
-              />
-            </div>
+            <CreatorModeStatusCard
+              creatorModeEnabled={
+                creatorModeEnabled
+              }
+              showPublicExplorationMap={
+                showPublicExplorationMap
+              }
+              username={
+                baseProfile.username
+              }
+              hasCreatorProfile={
+                creatorProfile !==
+                null
+              }
+              publicSocialLinkCount={
+                publicSocialLinkCount
+              }
+              collaborationTagCount={
+                selectedTagIds.length
+              }
+              reputationFound={
+                reputationResult.found
+              }
+            />
           </section>
 
           <section
             id="creator-profile"
             aria-labelledby="creator-settings-form-title"
-            className="scroll-mt-28"
           >
             <SectionHeading
               id="creator-settings-form-title"
-              eyebrow="Your public identity"
-              title="Shape your creator profile"
-              description="Choose how you introduce yourself, where people can find you, and the kinds of collaborations you welcome."
+              title="Profile details"
+              description="Control what people see and how they can connect with you."
             />
 
             <div className="mt-4 w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/80 shadow-2xl shadow-black/30 backdrop-blur-xl sm:rounded-[2rem]">
-              <div className="border-b border-neutral-800/80 px-4 py-4 sm:px-6 sm:py-5">
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">
-                      Profile details
-                    </p>
+              <div className="flex min-w-0 items-center justify-between gap-3 border-b border-neutral-800/80 px-4 py-3.5 sm:px-6 sm:py-4">
+                <p className="text-xs font-medium text-neutral-500">
+                  Your public creator settings
+                </p>
 
-                    <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500">
-                      Add only what helps
-                      someone understand your
-                      taste, reach, and
-                      availability.
-                    </p>
-                  </div>
-
-                  <CreatorModeBadge
-                    enabled={
-                      creatorModeEnabled
-                    }
-                  />
-                </div>
+                <CreatorModeBadge
+                  enabled={
+                    creatorModeEnabled
+                  }
+                />
               </div>
 
               <div className="w-full min-w-0 p-3 sm:p-6">
@@ -326,13 +306,11 @@ export default async function CreatorSettingsPage() {
           <section
             id="creator-knowledge"
             aria-labelledby="creator-knowledge-title"
-            className="scroll-mt-28"
           >
             <SectionHeading
               id="creator-knowledge-title"
-              eyebrow="Your point of view"
-              title="Manage your creator knowledge"
-              description="Review and update the answers that capture your recommendations, routines, local expertise, and personal taste."
+              title="Creator knowledge"
+              description="Keep your recommendations, routines, local expertise, and personal taste current."
             />
 
             <div className="mt-4">
@@ -347,13 +325,11 @@ export default async function CreatorSettingsPage() {
           <section
             id="creator-collections"
             aria-labelledby="creator-collections-title"
-            className="scroll-mt-28"
           >
             <SectionHeading
               id="creator-collections-title"
-              eyebrow="Your recommendations"
-              title="Curate what you know"
-              description="Turn your favorite places and Roam experiences into useful, shareable collections."
+              title="Collections"
+              description="Turn the places and experiences you love into guides people can save."
             />
 
             <div className="mt-4">
@@ -368,7 +344,6 @@ export default async function CreatorSettingsPage() {
           <section
             id="creator-tips"
             aria-labelledby="creator-tips-title"
-            className="scroll-mt-28"
           >
             <CreatorModeGuidance />
           </section>
@@ -408,14 +383,13 @@ function CreatorSettingsHeader({
           </p>
 
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Build your creator identity
+            Your creator profile
           </h1>
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-400">
-            Make it easy for people to
-            understand your taste,
-            discover your collections,
-            and connect with you.
+            Manage how you show up, what
+            you recommend, and how people
+            can connect with you.
           </p>
 
           <div className="mt-4 flex min-w-0 flex-wrap items-center gap-2">
@@ -431,20 +405,15 @@ function CreatorSettingsHeader({
               }
             />
           </div>
-
-          <p className="mt-3 text-xs leading-5 text-neutral-600">
-            Saved changes appear on
-            your public profile.
-          </p>
         </div>
 
         <nav
           aria-label="Creator settings actions"
-          className="grid w-full shrink-0 grid-cols-1 gap-2 xs:grid-cols-2 sm:flex sm:w-auto sm:flex-wrap"
+          className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap"
         >
           <Link
             href="/profile"
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2.5 text-sm font-medium text-neutral-300 transition hover:border-neutral-600 hover:bg-neutral-900 hover:text-white"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2.5 text-sm font-medium text-neutral-300 transition hover:border-neutral-600 hover:bg-neutral-900 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           >
             <span
               aria-hidden="true"
@@ -453,7 +422,7 @@ function CreatorSettingsHeader({
               ←
             </span>
 
-            Profile
+            My Account
           </Link>
 
           {publicProfileHref ? (
@@ -461,9 +430,9 @@ function CreatorSettingsHeader({
               href={
                 publicProfileHref
               }
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:text-white"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
-              Preview profile
+              View Profile
 
               <span
                 aria-hidden="true"
@@ -479,85 +448,12 @@ function CreatorSettingsHeader({
   )
 }
 
-/* =========================================================
- * Page navigation
- * ======================================================= */
-
-function CreatorSettingsNavigation() {
-  const items = [
-    {
-      id:
-        'creator-overview',
-
-      label:
-        'Overview',
-    },
-    {
-      id:
-        'creator-profile',
-
-      label:
-        'Profile',
-    },
-    {
-      id:
-        'creator-knowledge',
-
-      label:
-        'Knowledge',
-    },
-    {
-      id:
-        'creator-collections',
-
-      label:
-        'Collections',
-    },
-    {
-      id:
-        'creator-tips',
-
-      label:
-        'Tips',
-    },
-  ] as const
-
-  return (
-    <nav
-      aria-label="Creator settings sections"
-      className="sticky top-[calc(4rem+env(safe-area-inset-top)+0.5rem)] z-30 -mx-4 border-y border-neutral-800/80 bg-black/85 px-4 py-3 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border"
-    >
-      <div className="flex min-w-0 gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {items.map(
-          (
-            item
-          ) => (
-            <a
-              key={
-                item.id
-              }
-              href={`#${item.id}`}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border border-neutral-800 bg-neutral-950 px-4 py-2 text-xs font-semibold text-neutral-400 transition hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-            >
-              {item.label}
-            </a>
-          )
-        )}
-      </div>
-    </nav>
-  )
-}
-
 function SectionHeading({
   id,
-  eyebrow,
   title,
   description,
 }: {
   id:
-    string
-
-  eyebrow:
     string
 
   title:
@@ -568,18 +464,14 @@ function SectionHeading({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400">
-        {eyebrow}
-      </p>
-
       <h2
         id={id}
-        className="mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl"
+        className="text-xl font-semibold tracking-tight text-white sm:text-2xl"
       >
         {title}
       </h2>
 
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
+      <p className="mt-1.5 max-w-2xl text-sm leading-6 text-neutral-400">
         {description}
       </p>
     </div>
@@ -724,8 +616,8 @@ function CreatorModeStatusCard({
 
       detail:
         hasCreatorProfile
-          ? 'Profile details added'
-          : 'Introduce yourself',
+          ? 'Complete'
+          : 'Add your story',
     },
     {
       label:
@@ -738,10 +630,10 @@ function CreatorModeStatusCard({
       detail:
         publicSocialLinkCount ===
         1
-          ? '1 link visible'
+          ? '1 visible'
           : `${publicSocialLinkCount.toLocaleString(
               'en-US'
-            )} links visible`,
+            )} visible`,
     },
     {
       label:
@@ -754,10 +646,10 @@ function CreatorModeStatusCard({
       detail:
         collaborationTagCount ===
         1
-          ? '1 interest selected'
+          ? '1 selected'
           : `${collaborationTagCount.toLocaleString(
               'en-US'
-            )} interests selected`,
+            )} selected`,
     },
     {
       label:
@@ -768,7 +660,7 @@ function CreatorModeStatusCard({
 
       detail:
         reputationFound
-          ? 'Earned activity found'
+          ? 'Activity found'
           : 'Still building',
     },
   ]
@@ -781,15 +673,6 @@ function CreatorModeStatusCard({
         check.complete
     ).length
 
-  const progressPercent =
-    Math.round(
-      (
-        completedCount /
-        checks.length
-      ) *
-        100
-    )
-
   return (
     <section className="relative w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-gradient-to-br from-neutral-950 via-neutral-950 to-black p-4 sm:p-5">
       <div
@@ -797,52 +680,38 @@ function CreatorModeStatusCard({
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"
       />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="relative z-10 flex min-w-0 items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">
             Profile readiness
           </p>
 
-          <h3 className="mt-2 text-lg font-semibold text-white">
+          <h3 className="mt-1.5 text-lg font-semibold text-white">
             {creatorModeEnabled
               ? 'Your creator profile is live'
-              : 'Your creator profile is not public yet'}
+              : 'Get your creator profile ready'}
           </h3>
 
-          <p className="mt-1 max-w-xl text-sm leading-6 text-neutral-400">
+          <p className="mt-1 max-w-xl text-xs leading-5 text-neutral-500 sm:text-sm sm:leading-6">
             {creatorModeEnabled
-              ? 'Keep the essentials current so visitors immediately understand who you are and what you create.'
-              : 'Finish the details that matter, then turn Creator Mode on when you are ready to be discovered.'}
+              ? 'Keep the essentials current so people immediately understand your point of view.'
+              : 'Complete the essentials, then turn Creator Mode on when you are ready to be discovered.'}
           </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-neutral-800 bg-black/40 px-4 py-3">
-          <div className="min-w-0">
-            <p className="text-xl font-semibold leading-none text-white">
-              {completedCount}/
-              {checks.length}
-            </p>
+        <div className="shrink-0 rounded-xl border border-neutral-800 bg-black/40 px-3 py-2 text-right">
+          <p className="text-lg font-semibold leading-none text-white">
+            {completedCount}/
+            {checks.length}
+          </p>
 
-            <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
-              Ready
-            </p>
-          </div>
-
-          <div
-            className="relative h-10 w-10 shrink-0 rounded-full"
-            style={{
-              background: `conic-gradient(rgb(34 211 238) ${progressPercent}%, rgb(38 38 38) ${progressPercent}% 100%)`,
-            }}
-            aria-label={`${progressPercent}% ready`}
-          >
-            <div className="absolute inset-[4px] flex items-center justify-center rounded-full bg-black text-[9px] font-semibold text-neutral-300">
-              {progressPercent}%
-            </div>
-          </div>
+          <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+            Ready
+          </p>
         </div>
       </div>
 
-      <div className="relative z-10 mt-5 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="relative z-10 mt-4 divide-y divide-neutral-800/80 rounded-2xl border border-neutral-800 bg-black/25">
         {checks.map(
           (
             check
@@ -851,12 +720,12 @@ function CreatorModeStatusCard({
               key={
                 check.label
               }
-              className="flex min-w-0 items-center gap-3 rounded-2xl border border-neutral-800 bg-black/25 px-3 py-3"
+              className="flex min-w-0 items-center gap-3 px-3 py-2.5 sm:px-4"
             >
               <span
                 aria-hidden="true"
                 className={[
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
 
                   check.complete
                     ? 'bg-emerald-500/15 text-emerald-300'
@@ -870,15 +739,13 @@ function CreatorModeStatusCard({
                   : '·'}
               </span>
 
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-neutral-200">
-                  {check.label}
-                </p>
+              <p className="min-w-0 flex-1 truncate text-sm font-medium text-neutral-300">
+                {check.label}
+              </p>
 
-                <p className="mt-0.5 truncate text-[11px] text-neutral-500">
-                  {check.detail}
-                </p>
-              </div>
+              <p className="max-w-[45%] shrink-0 truncate text-right text-xs text-neutral-500">
+                {check.detail}
+              </p>
             </div>
           )
         )}
@@ -913,7 +780,7 @@ function ExplorationMapStatus({
   return (
     <div
       className={[
-        'relative z-10 mt-4 flex min-w-0 items-start gap-3 rounded-2xl border p-3',
+        'relative z-10 mt-3 flex min-w-0 items-center gap-3 rounded-2xl border px-3 py-2.5 sm:px-4',
 
         isPublic
           ? 'border-indigo-500/25 bg-indigo-500/[0.07]'
@@ -925,7 +792,7 @@ function ExplorationMapStatus({
       <span
         aria-hidden="true"
         className={[
-          'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-base',
+          'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border text-sm',
 
           isPublic
             ? 'border-indigo-500/30 bg-indigo-500/15 text-indigo-200'
@@ -937,37 +804,35 @@ function ExplorationMapStatus({
         🗺️
       </span>
 
-      <div className="min-w-0">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <p className="text-sm font-medium text-neutral-200">
-            Exploration map
-          </p>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-neutral-300">
+          Exploration map
+        </p>
 
-          <span
-            className={[
-              'rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em]',
-
-              isPublic
-                ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200'
-                : 'border-neutral-700 bg-neutral-900 text-neutral-500',
-            ].join(
-              ' '
-            )}
-          >
-            {isPublic
-              ? 'Visible'
-              : 'Hidden'}
-          </span>
-        </div>
-
-        <p className="mt-1 text-xs leading-5 text-neutral-500">
+        <p className="mt-0.5 text-[11px] leading-4 text-neutral-500">
           {isPublic
-            ? 'Eligible places you explored can appear on your public creator profile.'
+            ? 'Eligible places you explore can appear on your public profile.'
             : creatorModeEnabled
-              ? 'Your explored places stay private until you choose to show the map.'
-              : 'The map remains private while your creator profile is off.'}
+              ? 'Your explored places stay private until you choose to show them.'
+              : 'Your map stays private while Creator Mode is off.'}
         </p>
       </div>
+
+      <span
+        className={[
+          'shrink-0 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em]',
+
+          isPublic
+            ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200'
+            : 'border-neutral-700 bg-neutral-900 text-neutral-500',
+        ].join(
+          ' '
+        )}
+      >
+        {isPublic
+          ? 'Visible'
+          : 'Hidden'}
+      </span>
     </div>
   )
 }
@@ -984,9 +849,9 @@ function CreatorCollectionsCard({
 }) {
   return (
     <section className="relative w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.08] via-neutral-950 to-black p-4 sm:p-5">
-      <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-indigo-500/25 bg-indigo-500/10 text-lg">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-indigo-500/25 bg-indigo-500/10 text-base">
             ✦
           </div>
 
@@ -998,16 +863,15 @@ function CreatorCollectionsCard({
           <p className="mt-1 max-w-xl text-sm leading-6 text-neutral-400">
             Group your favorite venues,
             properties, flows, and
-            snapshots into guides that
-            show your point of view.
+            snapshots into useful,
+            shareable guides.
           </p>
 
           {!creatorModeEnabled ? (
-            <p className="mt-3 max-w-xl text-xs leading-5 text-amber-300/80">
-              You can prepare collections
-              now. They will not appear
-              publicly until Creator Mode
-              is active.
+            <p className="mt-2 max-w-xl text-xs leading-5 text-amber-300/80">
+              You can build now. Your
+              collections will stay private
+              until Creator Mode is active.
             </p>
           ) : null}
         </div>
@@ -1017,7 +881,7 @@ function CreatorCollectionsCard({
             CREATOR_ROUTES
               .collections
           }
-          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-5 py-2.5 text-sm font-semibold text-indigo-200 transition hover:border-indigo-400/60 hover:bg-indigo-500/20 hover:text-white sm:w-auto"
+          className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-5 py-2.5 text-sm font-semibold text-indigo-200 transition hover:border-indigo-400/60 hover:bg-indigo-500/20 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 sm:w-auto"
         >
           Manage collections
 
@@ -1040,7 +904,7 @@ function CreatorCollectionsCard({
 function CreatorModeGuidance() {
   return (
     <details className="group w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/80 bg-neutral-950/60">
-      <summary className="flex min-h-[88px] cursor-pointer list-none items-center justify-between gap-4 p-4 outline-none transition hover:bg-white/[0.02] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-400 sm:p-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-[76px] cursor-pointer list-none items-center justify-between gap-4 p-4 outline-none transition hover:bg-white/[0.02] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-400 sm:p-5 [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-neutral-500">
             Quick tips
@@ -1050,14 +914,13 @@ function CreatorModeGuidance() {
             id="creator-tips-title"
             className="mt-1 text-lg font-semibold text-white"
           >
-            Make your profile feel worth
-            following
+            Build a stronger profile
           </h2>
 
           <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500">
-            Three simple ways to make
-            your creator identity clearer
-            and more credible.
+            Three ways to make your
+            creator identity clearer and
+            more useful.
           </p>
         </div>
 

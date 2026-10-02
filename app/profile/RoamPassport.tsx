@@ -41,25 +41,10 @@ type PassportSnapshot = {
   progressPercent: number
 }
 
-type ProfilePublicStatsRow = {
-  hosted_crawls: number | null
-  joined_crawls: number | null
-  past_crawls: number | null
-  saved_properties: number | null
-  completed_flows: number | null
-  completed_flow_stops: number | null
-  hosted_flow_stops: number | null
-  completed_hosted_flows: number | null
-  venue_visits: number | null
-  event_xp: number | null
-  event_checkins: number | null
-  passport_xp: number | null
-  passport_level: number | null
-  passport_progress: number | null
-  passport_progress_percent:
-    | number
-    | string
-    | null
+type PassportApiResponse = {
+  stats?: PassportStats
+  snapshot?: PassportSnapshot
+  error?: string
 }
 
 type CompetitionEntryPassportRow = {
@@ -267,38 +252,16 @@ export default function RoamPassport() {
           return
         }
 
+        const passportPromise =
+          loadCanonicalPassport()
+
         const [
-          publicStatsResult,
+          passportResult,
           activeFlowResult,
           reputationResult,
           competitionStatsResult,
         ] = await Promise.all([
-          supabase
-            .from(
-              'profile_public_stats'
-            )
-            .select(`
-              hosted_crawls,
-              joined_crawls,
-              past_crawls,
-              saved_properties,
-              completed_flows,
-              completed_flow_stops,
-              hosted_flow_stops,
-              completed_hosted_flows,
-              venue_visits,
-              event_xp,
-              event_checkins,
-              passport_xp,
-              passport_level,
-              passport_progress,
-              passport_progress_percent
-            `)
-            .eq(
-              'user_id',
-              userId
-            )
-            .maybeSingle<ProfilePublicStatsRow>(),
+          passportPromise,
 
           supabase
             .from(
@@ -326,15 +289,6 @@ export default function RoamPassport() {
         ])
 
         if (
-          publicStatsResult.error
-        ) {
-          console.error(
-            '[RoamPassport] Failed to load canonical Passport stats:',
-            publicStatsResult.error
-          )
-        }
-
-        if (
           activeFlowResult.error
         ) {
           console.error(
@@ -342,9 +296,6 @@ export default function RoamPassport() {
             activeFlowResult.error
           )
         }
-
-        const publicStats =
-          publicStatsResult.data
 
         const activeFlowData =
           activeFlowResult.data
@@ -392,103 +343,17 @@ export default function RoamPassport() {
           return
         }
 
-        if (publicStats) {
-          setStats({
-            hostedCrawls:
-              normalizeCount(
-                publicStats
-                  .hosted_crawls
-              ),
+        if (
+          passportResult.stats &&
+          passportResult.snapshot
+        ) {
+          setStats(
+            passportResult.stats
+          )
 
-            joinedCrawls:
-              normalizeCount(
-                publicStats
-                  .joined_crawls
-              ),
-
-            pastCrawls:
-              normalizeCount(
-                publicStats
-                  .past_crawls
-              ),
-
-            savedProperties:
-              normalizeCount(
-                publicStats
-                  .saved_properties
-              ),
-
-            completedFlows:
-              normalizeCount(
-                publicStats
-                  .completed_flows
-              ),
-
-            completedFlowStops:
-              normalizeCount(
-                publicStats
-                  .completed_flow_stops
-              ),
-
-            hostedFlowStops:
-              normalizeCount(
-                publicStats
-                  .hosted_flow_stops
-              ),
-
-            completedHostedFlows:
-              normalizeCount(
-                publicStats
-                  .completed_hosted_flows
-              ),
-
-            venueVisits:
-              normalizeCount(
-                publicStats
-                  .venue_visits
-              ),
-
-            eventXp:
-              normalizeCount(
-                publicStats
-                  .event_xp
-              ),
-
-            eventCheckins:
-              normalizeCount(
-                publicStats
-                  .event_checkins
-              ),
-          })
-
-          setPassportSnapshot({
-            xp:
-              normalizeCount(
-                publicStats
-                  .passport_xp
-              ),
-
-            level:
-              Math.max(
-                1,
-                normalizeCount(
-                  publicStats
-                    .passport_level
-                )
-              ),
-
-            progressToNextLevel:
-              normalizeProgress(
-                publicStats
-                  .passport_progress
-              ),
-
-            progressPercent:
-              normalizePercent(
-                publicStats
-                  .passport_progress_percent
-              ),
-          })
+          setPassportSnapshot(
+            passportResult.snapshot
+          )
         } else {
           setStats(
             EMPTY_STATS
@@ -937,6 +802,76 @@ export default function RoamPassport() {
       </section>
     </div>
   )
+}
+
+async function loadCanonicalPassport(): Promise<{
+  stats: PassportStats | null
+  snapshot: PassportSnapshot | null
+}> {
+  try {
+    const response =
+      await fetch(
+        '/api/profile/passport',
+        {
+          method: 'GET',
+          credentials:
+            'same-origin',
+          cache: 'no-store',
+          headers: {
+            Accept:
+              'application/json',
+          },
+        }
+      )
+
+    const payload =
+      (await response
+        .json()
+        .catch(
+          () => null
+        )) as PassportApiResponse | null
+
+    if (
+      !response.ok ||
+      !payload?.stats ||
+      !payload?.snapshot
+    ) {
+      console.error(
+        '[RoamPassport] Passport request failed:',
+        {
+          status:
+            response.status,
+
+          error:
+            payload?.error ??
+            'Passport response was incomplete.',
+        }
+      )
+
+      return {
+        stats: null,
+        snapshot: null,
+      }
+    }
+
+    return {
+      stats:
+        payload.stats,
+
+      snapshot:
+        payload.snapshot,
+    }
+  } catch (error) {
+    console.error(
+      '[RoamPassport] Unexpected Passport request failure:',
+      error
+    )
+
+    return {
+      stats: null,
+      snapshot: null,
+    }
+  }
 }
 
 /* =========================================================

@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+import { getSupabaseAdmin } from '@/lib/supabase/admin-runtime'
 import type { Database } from '@/types/supabase'
 
 type EventRow = Database['public']['Tables']['events']['Row']
 
+type DiscoverableCommunityEvent = {
+  event_id: string
+  occurrence_id: string
+  confidence_band: string
+}
+
 export async function GET(req: Request) {
   const supabase = await supabaseServerApi()
+  const supabaseAdmin = getSupabaseAdmin()
   const url = new URL(req.url)
 
   const city = url.searchParams.get('city')?.toLowerCase() || null
@@ -29,8 +37,56 @@ export async function GET(req: Request) {
   }
 
   if (!city || !from || !to) {
-    console.warn('⚠️ Missing filters in /api/events:', { city, from, to })
+    console.warn('⚠️ Missing filters in /api/events:', {
+      city,
+      from,
+      to,
+    })
   }
+
+  /**
+   * Community Signals discovery authority.
+   *
+   * 010C owns occurrence-level discovery eligibility.
+   * 012B projects the canonical community event IDs whose
+   * occurrences currently satisfy that policy.
+   *
+   * This route intentionally does not reproduce confidence,
+   * correction, resolution, or temporal trust rules.
+   */
+  const {
+    data: discoverableCommunityRows,
+    error: discoverableCommunityError,
+  } = await supabaseAdmin.rpc(
+    'get_discoverable_community_event_ids',
+    {
+      p_as_of: new Date().toISOString(),
+    }
+  )
+
+  if (discoverableCommunityError) {
+    console.error(
+      '❌ Error fetching discoverable community events:',
+      discoverableCommunityError
+    )
+
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch events',
+        details: discoverableCommunityError.message,
+      },
+      { status: 500 }
+    )
+  }
+
+  const discoverableCommunityEvents =
+    (discoverableCommunityRows ??
+      []) as DiscoverableCommunityEvent[]
+
+  const discoverableCommunityEventIds =
+    discoverableCommunityEvents.map(
+      (row) => row.event_id
+    )
 
   let query = supabase
     .from('events')
@@ -72,13 +128,36 @@ export async function GET(req: Request) {
     )
     .not('venue', 'is', null)
 
+  /**
+   * Ordinary events retain their existing discovery behavior.
+   *
+   * Canonical Community Signals events are allowed through only
+   * when 012B says their resolved occurrence is discoverable.
+   *
+   * Important:
+   * source_type is the discriminator used here because
+   * `community_signal` is the frozen canonical Community Signals
+   * source type.
+   */
+  if (discoverableCommunityEventIds.length > 0) {
+    const eligibleIds = discoverableCommunityEventIds.join(',')
+
+    query = query.or(
+      `source_type.neq.community_signal,and(source_type.eq.community_signal,id.in.(${eligibleIds}))`
+    )
+  } else {
+    query = query.neq('source_type', 'community_signal')
+  }
+
   const activeParam = onlyActive?.toLowerCase()
   const isActive = activeParam !== 'false' && activeParam !== '0'
+
   if (isActive) {
     query = query.eq('is_active', true)
   }
 
-  // Keep current/future events visible, including overnight events that started before `from`.
+  // Keep current/future events visible, including overnight events
+  // that started before `from`.
   const nowIso = new Date().toISOString()
 
   if (to) {
@@ -86,33 +165,49 @@ export async function GET(req: Request) {
   }
 
   if (from) {
-    query = query.or(`starts_at.gte.${from},ends_at.gte.${nowIso}`)
+    query = query.or(
+      `starts_at.gte.${from},ends_at.gte.${nowIso}`
+    )
   } else {
-    query = query.or(`ends_at.gte.${nowIso},ends_at.is.null`)
+    query = query.or(
+      `ends_at.gte.${nowIso},ends_at.is.null`
+    )
   }
 
-  if (city) query = query.filter('venues.city', 'eq', city)
+  if (city) {
+    query = query.filter('venues.city', 'eq', city)
+  }
 
   if (tags) {
-    const tagList = tags.split(',').map((t) => t.trim())
+    const tagList = tags
+      .split(',')
+      .map((t) => t.trim())
+
     query = query.overlaps('tags', tagList)
   }
 
-  query = query.order('starts_at', { ascending: true }).range(offset, offset + limit - 1)
+  query = query
+    .order('starts_at', { ascending: true })
+    .range(offset, offset + limit - 1)
 
   const { data, error } = await query
 
   if (error) {
     console.error('❌ Error fetching events:', error)
+
     return NextResponse.json(
-      { error: 'Failed to fetch events', details: error.message },
+      {
+        error: 'Failed to fetch events',
+        details: error.message,
+      },
       { status: 500 }
     )
   }
 
   const eventsWithCounts = (data ?? []).map((event) => ({
     ...event,
-    interest_count: event.event_interests?.[0]?.count ?? 0,
+    interest_count:
+      event.event_interests?.[0]?.count ?? 0,
   }))
 
   if (process.env.NODE_ENV !== 'production') {

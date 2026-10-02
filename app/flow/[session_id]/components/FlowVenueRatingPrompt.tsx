@@ -14,7 +14,7 @@ type Venue = {
 
 type ProgressRow = {
   venue_id: string
-  stop_index: number
+  stop_index: number | null
   checked_in_at: string
 }
 

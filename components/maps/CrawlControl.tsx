@@ -249,7 +249,7 @@ export default function CrawlControl({
             }}
             className="rounded-full border border-white/15 bg-black/80 px-3 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm"
           >
-            Show Panel
+            Flow Dashboard
           </button>
         </div>
 

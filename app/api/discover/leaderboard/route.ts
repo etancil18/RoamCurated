@@ -18,20 +18,32 @@ import {
   normalizeCityKey,
 } from '@/lib/cities/normalizeCity'
 
+import {
+  buildPublicReputationClaim,
+  REPUTATION_POLICY_VERSION,
+} from '@/lib/reputation/policy'
+
+import {
+  rankReputationCandidates,
+  type ReputationRankingCandidate,
+} from '@/lib/reputation/rebuildReputationRankings'
+
+import {
+  isReputationCategoryId,
+  isReputationLevel,
+  isReputationScope,
+  type ReputationCategoryId,
+  type ReputationLevel,
+  type ReputationScope,
+  type UserCategoryReputation,
+} from '@/lib/reputation/types'
+
 /* =========================================================
  * Contracts
  * ======================================================= */
 
 type LeaderboardScope =
-  | 'global'
-  | 'city'
-
-type ReputationLevel =
-  | 'unranked'
-  | 'emerging'
-  | 'established'
-  | 'expert'
-  | 'elite'
+  ReputationScope
 
 type ProfileRow = {
   id: string
@@ -56,7 +68,14 @@ type ReputationStatsRow = {
   reputation_score: number | string | null
   verified_venue_count: number | string | null
   weighted_venue_count: number | string | null
+  city_count: number | string | null
+  public_collection_count: number | string | null
+  curated_venue_count: number | string | null
+  public_snapshot_count: number | string | null
   completed_flow_count: number | string | null
+  recency_score: number | string | null
+  quality_score: number | string | null
+  calculated_at: string | null
   policy_version: number | string | null
 }
 
@@ -64,8 +83,6 @@ type ReputationCategoryRow = {
   id: string
   label: string | null
   plural_label: string | null
-  minimum_venues_for_status: number | string | null
-  minimum_venues_for_ranking: number | string | null
   is_active: boolean | null
   sort_order: number | string | null
 }
@@ -74,21 +91,26 @@ type NormalizedReputationCategory = {
   id: string
   label: string
   shortLabel: string
-  minimumVenuesForStatus: number
-  minimumVenuesForRanking: number
   sortOrder: number
 }
 
 type NormalizedReputationRow = {
   userId: string
-  categoryId: string
+  categoryId: ReputationCategoryId
   scope: LeaderboardScope
   cityKey: string | null
   reputationLevel: ReputationLevel
   reputationScore: number
   verifiedVenueCount: number
   weightedVenueCount: number
+  cityCount: number
+  publicCollectionCount: number
+  curatedVenueCount: number
+  publicSnapshotCount: number
   completedFlowCount: number
+  recencyScore: number
+  qualityScore: number
+  calculatedAt: string | null
   policyVersion: number
 }
 
@@ -642,7 +664,14 @@ export async function GET(
             reputation_score,
             verified_venue_count,
             weighted_venue_count,
+            city_count,
+            public_collection_count,
+            curated_venue_count,
+            public_snapshot_count,
             completed_flow_count,
+            recency_score,
+            quality_score,
+            calculated_at,
             policy_version
           `)
           .in(
@@ -661,8 +690,6 @@ export async function GET(
             id,
             label,
             plural_label,
-            minimum_venues_for_status,
-            minimum_venues_for_ranking,
             is_active,
             sort_order
           `)
@@ -1177,21 +1204,16 @@ export async function GET(
       )
 
     const latestPolicyVersion =
-      determineLatestPolicyVersion(
-        reputationRows
-      )
+      REPUTATION_POLICY_VERSION
 
-        const latestReputationRows =
-      latestPolicyVersion ===
-      null
-        ? []
-        : reputationRows.filter(
-            (
-              row
-            ) =>
-              row.policyVersion ===
-              latestPolicyVersion
-          )
+    const latestReputationRows =
+      reputationRows.filter(
+        (
+          row
+        ) =>
+          row.policyVersion ===
+          REPUTATION_POLICY_VERSION
+      )
 
     /**
      * When a city leaderboard is selected, only users with
@@ -1785,18 +1807,6 @@ function normalizeReputationCategories(
           label
         ),
 
-      minimumVenuesForStatus:
-        normalizePositiveInteger(
-          row.minimum_venues_for_status
-        ) ??
-        1,
-
-      minimumVenuesForRanking:
-        normalizePositiveInteger(
-          row.minimum_venues_for_ranking
-        ) ??
-        1,
-
       sortOrder:
         normalizeNonNegativeInteger(
           row.sort_order
@@ -1873,23 +1883,29 @@ function normalizeReputationRows(
       )
 
     const scope =
-      normalizeScope(
-        row.scope
-      )
+  isReputationScope(
+    row.scope
+  )
+    ? row.scope
+    : null
 
-    const reputationLevel =
-      normalizeReputationLevel(
-        row.reputation_level
-      )
+const reputationLevel =
+  isReputationLevel(
+    row.reputation_level
+  )
+    ? row.reputation_level
+    : null
 
-    const policyVersion =
-      normalizePositiveInteger(
-        row.policy_version
-      )
+const policyVersion =
+  normalizePositiveInteger(
+    row.policy_version
+  )
 
     if (
       !userId ||
-      !categoryId ||
+      !isReputationCategoryId(
+        categoryId
+      ) ||
       !scope ||
       !reputationLevel ||
       policyVersion ===
@@ -1941,47 +1957,56 @@ function normalizeReputationRows(
           row.verified_venue_count
         ),
 
-      weightedVenueCount:
-        normalizeNonNegativeNumber(
-          row.weighted_venue_count
-        ),
+          weightedVenueCount:
+      normalizeNonNegativeNumber(
+        row.weighted_venue_count
+      ),
 
-      completedFlowCount:
-        normalizeNonNegativeInteger(
-          row.completed_flow_count
-        ),
+    cityCount:
+      normalizeNonNegativeInteger(
+        row.city_count
+      ),
 
-      policyVersion,
+    publicCollectionCount:
+      normalizeNonNegativeInteger(
+        row.public_collection_count
+      ),
+
+    curatedVenueCount:
+      normalizeNonNegativeInteger(
+        row.curated_venue_count
+      ),
+
+    publicSnapshotCount:
+      normalizeNonNegativeInteger(
+        row.public_snapshot_count
+      ),
+
+    completedFlowCount:
+      normalizeNonNegativeInteger(
+        row.completed_flow_count
+      ),
+
+    recencyScore:
+      normalizeNonNegativeNumber(
+        row.recency_score
+      ),
+
+    qualityScore:
+      normalizeNonNegativeNumber(
+        row.quality_score
+      ),
+
+    calculatedAt:
+      normalizeNullableText(
+        row.calculated_at
+      ),
+
+    policyVersion,
     })
   }
 
   return rows
-}
-
-function determineLatestPolicyVersion(
-  rows:
-    NormalizedReputationRow[]
-): number | null {
-  let latest:
-    number | null =
-    null
-
-  for (
-    const row of
-      rows
-  ) {
-    if (
-      latest ===
-        null ||
-      row.policyVersion >
-        latest
-    ) {
-      latest =
-        row.policyVersion
-    }
-  }
-
-  return latest
 }
 
 /* =========================================================
@@ -2005,7 +2030,15 @@ function buildReputationRankings({
   filters:
     LeaderboardFilters
 }): RankedReputationRow[] {
-  const qualifyingRows =
+  /**
+   * Discover owns selection of the requested ranking
+   * population.
+   *
+   * Canonical reputation eligibility, ordering, ordinal
+   * ranking, and percentile calculation are delegated to
+   * rankReputationCandidates().
+   */
+  const filteredRows =
     rows.filter(
       (
         row
@@ -2034,28 +2067,7 @@ function buildReputationRankings({
           return false
         }
 
-        if (
-          row.reputationLevel ===
-          'unranked'
-        ) {
-          return false
-        }
-
-        const category =
-          categoriesById.get(
-            row.categoryId
-          )
-
-        if (!category) {
-          return false
-        }
-
-        return (
-          row.verifiedVenueCount >=
-            category.minimumVenuesForRanking &&
-          row.weightedVenueCount >=
-            4
-        )
+        return true
       }
     )
 
@@ -2067,7 +2079,7 @@ function buildReputationRankings({
 
   for (
     const row of
-      qualifyingRows
+      filteredRows
   ) {
     const key =
       buildRankingPopulationKey(
@@ -2098,36 +2110,128 @@ function buildReputationRankings({
     const populationRows of
       groupedRows.values()
   ) {
-    const sortedRows =
-      populationRows
-        .slice()
-        .sort(
-          compareReputationRows
-        )
+    const calculatedAt =
+      populationRows.reduce<
+        string | null
+      >(
+        (
+          latest,
+          row
+        ) => {
+          if (
+            !row.calculatedAt
+          ) {
+            return latest
+          }
 
-    const population =
-      sortedRows.length
+          if (
+            !latest ||
+            row.calculatedAt >
+              latest
+          ) {
+            return row.calculatedAt
+          }
+
+          return latest
+        },
+        null
+      ) ??
+      new Date(
+        0
+      ).toISOString()
+
+    const candidates:
+      ReputationRankingCandidate[] =
+      populationRows.map(
+        (
+          row
+        ) => ({
+          userId:
+            row.userId,
+
+          categoryId:
+            row.categoryId,
+
+          scope:
+            row.scope,
+
+          cityKey:
+            row.cityKey,
+
+          verifiedVenueCount:
+            row.verifiedVenueCount,
+
+          weightedVenueCount:
+            row.weightedVenueCount,
+
+          cityCount:
+            row.cityCount,
+
+          publicCollectionCount:
+            row.publicCollectionCount,
+
+          curatedVenueCount:
+            row.curatedVenueCount,
+
+          publicSnapshotCount:
+            row.publicSnapshotCount,
+
+          completedFlowCount:
+            row.completedFlowCount,
+
+          recencyScore:
+            row.recencyScore,
+
+          qualityScore:
+            row.qualityScore,
+
+          reputationScore:
+            row.reputationScore,
+
+          reputationLevel:
+            row.reputationLevel,
+
+          policyVersion:
+            row.policyVersion,
+
+          calculatedAt:
+            row.calculatedAt,
+        })
+      )
+
+    const {
+      rankings,
+    } =
+      rankReputationCandidates({
+        candidates,
+
+        calculatedAt,
+      })
+
+    const rowsByUserId =
+      new Map(
+        populationRows.map(
+          (
+            row
+          ) => [
+            row.userId,
+            row,
+          ] as const
+        )
+      )
 
     for (
-      let index =
-        0;
-      index <
-      sortedRows.length;
-      index +=
-        1
+      const ranking of
+        rankings
     ) {
       const row =
-        sortedRows[
-          index
-        ]
+        rowsByUserId.get(
+          ranking.userId
+        )
 
-      const rank =
-        calculateCompetitionRank({
-          rows:
-            sortedRows,
-
-          index,
-        })
+      if (!row) {
+        continue
+      }
 
       const category =
         categoriesById.get(
@@ -2138,73 +2242,141 @@ function buildReputationRankings({
         continue
       }
 
-      const topPercent =
-        calculateTopPercent({
-          rank,
+      const reputation:
+  UserCategoryReputation = {
+  userId:
+    row.userId,
 
-          population,
-        })
+  categoryId:
+    row.categoryId,
 
-      const percentileStanding =
-        calculatePercentileStanding({
-          rank,
+  scope:
+    row.scope,
 
-          population,
-        })
+  cityKey:
+    row.cityKey,
 
-      rankedRows.push({
-        userId:
-          row.userId,
+  score:
+    row.reputationScore,
 
-        categoryId:
-          row.categoryId,
+  level:
+    row.reputationLevel,
 
-        categoryLabel:
-          category.label,
+  components: {
+    verifiedVenueCount:
+      row.verifiedVenueCount,
 
-        categoryShortLabel:
-          category.shortLabel,
+    weightedVenueCount:
+      row.weightedVenueCount,
 
-        scope:
-          row.scope,
+    cityCount:
+      row.cityCount,
 
-        cityKey:
-          row.cityKey,
+    publicCollectionCount:
+      row.publicCollectionCount,
 
-        reputationLevel:
-          row.reputationLevel,
+    curatedVenueCount:
+      row.curatedVenueCount,
 
-        reputationScore:
-          row.reputationScore,
+    publicSnapshotCount:
+      row.publicSnapshotCount,
 
-        verifiedVenueCount:
-          row.verifiedVenueCount,
+    completedFlowCount:
+      row.completedFlowCount,
 
-        weightedVenueCount:
-          row.weightedVenueCount,
+    recencyScore:
+      row.recencyScore,
 
-        completedFlowCount:
-          row.completedFlowCount,
+    qualityScore:
+      row.qualityScore,
+  },
 
-        reputationRank:
-          rank,
+  latestEvidenceAt:
+    null,
 
-        eligibleCreatorCount:
-          population,
+  calculatedAt:
+    row.calculatedAt ??
+    calculatedAt,
+}
 
-        topPercent,
+const publicClaim =
+  buildPublicReputationClaim({
+    reputation,
 
-        percentileStanding,
+    ranking,
 
-        rankLabel:
-          buildReputationRankLabel({
-            rank,
+    categoryLabel:
+      category.label,
 
-            population,
+    cityLabel:
+      row.scope ===
+        'city' &&
+      row.cityKey
+        ? formatIdentifier(
+            row.cityKey
+          )
+        : null,
+  })
 
-            topPercent,
-          }),
-      })
+if (
+  !publicClaim ||
+  publicClaim.rank ===
+    null ||
+  publicClaim.percentile ===
+    null
+) {
+  continue
+}
+
+rankedRows.push({
+  userId:
+    row.userId,
+
+  categoryId:
+    row.categoryId,
+
+  categoryLabel:
+    category.label,
+
+  categoryShortLabel:
+    category.shortLabel,
+
+  scope:
+    row.scope,
+
+  cityKey:
+    row.cityKey,
+
+  reputationLevel:
+    row.reputationLevel,
+
+  reputationScore:
+    row.reputationScore,
+
+  verifiedVenueCount:
+    row.verifiedVenueCount,
+
+  weightedVenueCount:
+    row.weightedVenueCount,
+
+  completedFlowCount:
+    row.completedFlowCount,
+
+  reputationRank:
+    publicClaim.rank,
+
+  eligibleCreatorCount:
+    publicClaim.eligibleUserCount,
+
+  topPercent:
+    publicClaim.percentile,
+
+  percentileStanding:
+    ranking.percentile,
+
+  rankLabel:
+    publicClaim.label,
+})
     }
   }
 
@@ -2260,226 +2432,6 @@ function buildRankingPopulationKey(
   ].join(
     ':'
   )
-}
-
-function compareReputationRows(
-  first:
-    NormalizedReputationRow,
-  second:
-    NormalizedReputationRow
-): number {
-  if (
-    first.reputationScore !==
-    second.reputationScore
-  ) {
-    return (
-      second.reputationScore -
-      first.reputationScore
-    )
-  }
-
-  if (
-    first.verifiedVenueCount !==
-    second.verifiedVenueCount
-  ) {
-    return (
-      second.verifiedVenueCount -
-      first.verifiedVenueCount
-    )
-  }
-
-  if (
-    first.weightedVenueCount !==
-    second.weightedVenueCount
-  ) {
-    return (
-      second.weightedVenueCount -
-      first.weightedVenueCount
-    )
-  }
-
-  if (
-    first.completedFlowCount !==
-    second.completedFlowCount
-  ) {
-    return (
-      second.completedFlowCount -
-      first.completedFlowCount
-    )
-  }
-
-  return first.userId.localeCompare(
-    second.userId
-  )
-}
-
-function calculateCompetitionRank({
-  rows,
-  index,
-}: {
-  rows:
-    NormalizedReputationRow[]
-
-  index:
-    number
-}): number {
-  if (
-    index <=
-    0
-  ) {
-    return 1
-  }
-
-  const current =
-    rows[
-      index
-    ]
-
-  const previous =
-    rows[
-      index -
-      1
-    ]
-
-  if (
-    haveEquivalentReputationStanding(
-      current,
-      previous
-    )
-  ) {
-    return calculateCompetitionRank({
-      rows,
-
-      index:
-        index -
-        1,
-    })
-  }
-
-  return index +
-    1
-}
-
-function haveEquivalentReputationStanding(
-  first:
-    NormalizedReputationRow,
-  second:
-    NormalizedReputationRow
-): boolean {
-  return (
-    first.reputationScore ===
-      second.reputationScore &&
-    first.verifiedVenueCount ===
-      second.verifiedVenueCount &&
-    first.weightedVenueCount ===
-      second.weightedVenueCount &&
-    first.completedFlowCount ===
-      second.completedFlowCount
-  )
-}
-
-function calculateTopPercent({
-  rank,
-  population,
-}: {
-  rank:
-    number
-
-  population:
-    number
-}): number {
-  if (
-    population <=
-    0
-  ) {
-    return 100
-  }
-
-  return roundToPrecision(
-    Math.min(
-      100,
-      Math.max(
-        0,
-        (
-          rank /
-          population
-        ) *
-          100
-      )
-    ),
-    2
-  )
-}
-
-function calculatePercentileStanding({
-  rank,
-  population,
-}: {
-  rank:
-    number
-
-  population:
-    number
-}): number {
-  if (
-    population <=
-    1
-  ) {
-    return 0
-  }
-
-  const usersBelow =
-    Math.max(
-      0,
-      population -
-        rank
-    )
-
-  return roundToPrecision(
-    (
-      usersBelow /
-      population
-    ) *
-      100,
-    2
-  )
-}
-
-function buildReputationRankLabel({
-  rank,
-  population,
-  topPercent,
-}: {
-  rank:
-    number
-
-  population:
-    number
-
-  topPercent:
-    number
-}): string {
-  if (
-    population <=
-    0
-  ) {
-    return 'No comparison available'
-  }
-
-  if (
-    population ===
-    1
-  ) {
-    return '#1 of 1'
-  }
-
-  return `Top ${formatPercent(
-    topPercent
-  )}% · #${rank.toLocaleString(
-    'en-US'
-  )} of ${population.toLocaleString(
-    'en-US'
-  )}`
 }
 
 /* =========================================================
@@ -2613,42 +2565,6 @@ function compareLeaderboardUsers({
 /* =========================================================
  * Primitive helpers
  * ======================================================= */
-
-function normalizeScope(
-  value: unknown
-): LeaderboardScope | null {
-  if (
-    value ===
-      'global' ||
-    value ===
-      'city'
-  ) {
-    return value
-  }
-
-  return null
-}
-
-function normalizeReputationLevel(
-  value: unknown
-): ReputationLevel | null {
-  if (
-    value ===
-      'unranked' ||
-    value ===
-      'emerging' ||
-    value ===
-      'established' ||
-    value ===
-      'expert' ||
-    value ===
-      'elite'
-  ) {
-    return value
-  }
-
-  return null
-}
 
 function normalizeIdentifier(
   value: unknown
@@ -2834,60 +2750,6 @@ function formatIdentifier(
       ) =>
         character.toUpperCase()
     )
-}
-
-function formatPercent(
-  value: number
-): string {
-  return value.toLocaleString(
-    'en-US',
-    {
-      maximumFractionDigits:
-        value <
-        1
-          ? 1
-          : 0,
-    }
-  )
-}
-
-function roundToPrecision(
-  value: number,
-  decimalPlaces: number
-): number {
-  if (
-    !Number.isFinite(
-      value
-    )
-  ) {
-    return 0
-  }
-
-  const safeDecimalPlaces =
-    Math.min(
-      8,
-      Math.max(
-        0,
-        Math.trunc(
-          decimalPlaces
-        )
-      )
-    )
-
-  const factor =
-    10 **
-    safeDecimalPlaces
-
-  return (
-    Math.round(
-      (
-        value +
-        Number.EPSILON
-      ) *
-        factor
-    ) /
-    factor
-  )
 }
 
 function isRecord(

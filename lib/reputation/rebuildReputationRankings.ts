@@ -227,7 +227,7 @@ type ExistingPopulationRow = {
  * Internal normalized contracts
  * ======================================================= */
 
-type NormalizedCreatorReputationRow = {
+export type ReputationRankingCandidate = {
   userId: string
   categoryId: ReputationCategoryId
   scope: ReputationScope
@@ -249,6 +249,17 @@ type NormalizedCreatorReputationRow = {
   policyVersion: number
   calculatedAt: string | null
 }
+
+export type RankReputationCandidatesResult = {
+  eligibleCandidates:
+    ReputationRankingCandidate[]
+
+  rankings:
+    UserReputationRank[]
+}
+
+type NormalizedCreatorReputationRow =
+  ReputationRankingCandidate
 
 type RankingPopulationAccumulator = {
   categoryId: ReputationCategoryId
@@ -476,6 +487,125 @@ export async function rebuildReputationRankings(
  * Population calculation
  * ======================================================= */
 
+export function rankReputationCandidates({
+  candidates,
+  calculatedAt,
+}: {
+  candidates:
+    readonly ReputationRankingCandidate[]
+
+  calculatedAt:
+    string
+}): RankReputationCandidatesResult {
+  const eligibleCandidates =
+    candidates
+      .filter(
+        (
+          candidate
+        ) =>
+          isEligibleForLeaderboard({
+            categoryId:
+              candidate.categoryId,
+
+            scope:
+              candidate.scope,
+
+            cityKey:
+              candidate.cityKey,
+
+            components: {
+              verifiedVenueCount:
+                candidate.verifiedVenueCount,
+
+              weightedVenueCount:
+                candidate.weightedVenueCount,
+
+              cityCount:
+                candidate.cityCount,
+
+              publicCollectionCount:
+                candidate.publicCollectionCount,
+
+              curatedVenueCount:
+                candidate.curatedVenueCount,
+
+              publicSnapshotCount:
+                candidate.publicSnapshotCount,
+
+              completedFlowCount:
+                candidate.completedFlowCount,
+
+              recencyScore:
+                candidate.recencyScore,
+
+              qualityScore:
+                candidate.qualityScore,
+            },
+          })
+      )
+      .sort(
+        compareEligibleRows
+      )
+
+  const eligibleUserCount =
+    eligibleCandidates.length
+
+  const rankings =
+    eligibleCandidates.map(
+      (
+        candidate,
+        index
+      ): UserReputationRank => {
+        const rank =
+          index +
+          1
+
+        return {
+          userId:
+            candidate.userId,
+
+          categoryId:
+            candidate.categoryId,
+
+          scope:
+            candidate.scope,
+
+          cityKey:
+            candidate.scope ===
+            'city'
+              ? candidate.cityKey
+              : null,
+
+          rank,
+
+          eligibleUserCount,
+
+          percentile:
+            calculatePercentileStanding({
+              rank,
+              eligibleUserCount,
+            }),
+
+          score:
+            roundToPrecision(
+              candidate.reputationScore,
+              4
+            ),
+
+          level:
+            candidate.reputationLevel,
+
+          calculatedAt,
+        }
+      }
+    )
+
+  return {
+    eligibleCandidates,
+    rankings,
+  }
+}
+
 function buildRankingPopulation({
   accumulator,
   policyVersion,
@@ -501,108 +631,21 @@ function buildRankingPopulation({
       accumulator.rows
     )
 
-  const eligibleRows =
-    rows
-      .filter(
-        (
-          row
-        ) =>
-          isEligibleForLeaderboard({
-            categoryId:
-              row.categoryId,
+        const {
+  eligibleCandidates:
+    eligibleRows,
+  rankings,
+} =
+  rankReputationCandidates({
+    candidates:
+      rows,
 
-            scope:
-              row.scope,
+    calculatedAt,
+  })
 
-            cityKey:
-              row.cityKey,
-
-            components: {
-              verifiedVenueCount:
-                row.verifiedVenueCount,
-
-              weightedVenueCount:
-                row.weightedVenueCount,
-
-              cityCount:
-                row.cityCount,
-
-              publicCollectionCount:
-                row.publicCollectionCount,
-
-              curatedVenueCount:
-                row.curatedVenueCount,
-
-              publicSnapshotCount:
-                row.publicSnapshotCount,
-
-              completedFlowCount:
-                row.completedFlowCount,
-
-              recencyScore:
-                row.recencyScore,
-
-              qualityScore:
-                row.qualityScore,
-            },
-          })
-      )
-      .sort(
-        compareEligibleRows
-      )
-
-  const eligibleUserCount =
-    eligibleRows.length
-
-  const rankings =
-    eligibleRows.map(
-      (
-        row,
-        index
-      ): UserReputationRank => {
-        const rank =
-          index + 1
-
-        return {
-          userId:
-            row.userId,
-
-          categoryId:
-            row.categoryId,
-
-          scope:
-            row.scope,
-
-          cityKey:
-            row.scope ===
-            'city'
-              ? row.cityKey
-              : null,
-
-          rank,
-
-          eligibleUserCount,
-
-          percentile:
-            calculatePercentileStanding({
-              rank,
-              eligibleUserCount,
-            }),
-
-          score:
-            roundToPrecision(
-              row.reputationScore,
-              4
-            ),
-
-          level:
-            row.reputationLevel,
-
-          calculatedAt,
-        }
-      }
-    )
-
+const eligibleUserCount =
+  eligibleRows.length
+  
   const levelCounts =
     countLevels(
       rows
@@ -1592,9 +1635,9 @@ function deduplicatePopulationUsers(
  */
 function compareEligibleRows(
   first:
-    NormalizedCreatorReputationRow,
+    ReputationRankingCandidate,
   second:
-    NormalizedCreatorReputationRow
+    ReputationRankingCandidate
 ): number {
   return (
     second.reputationScore -

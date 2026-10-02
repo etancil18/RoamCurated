@@ -184,6 +184,86 @@ export default function CreatorModeForm({
       CREATOR_FIELD_LIMITS.socialLinksPerCreator &&
     availableSocialPlatforms.length > 0
 
+  const hasUnsavedChanges = useMemo(() => {
+    const initialSocialLinks =
+      settings.socialLinks.map(
+        (link, index) => ({
+          id: link.id,
+          platform: link.platform,
+          url: link.url,
+          handle: link.handle,
+          sort_order: index,
+          is_public: link.is_public,
+        })
+      )
+
+    const currentSocialLinks =
+      normalizeSocialLinkOrder(
+        socialLinks
+      ).map(
+        ({
+          clientId: _clientId,
+          ...link
+        }) => link
+      )
+
+    const initialTagIds = [
+      ...settings.selectedTagIds,
+    ].sort((a, b) => a - b)
+
+    const currentTagIds = [
+      ...selectedCollaborationTagIds,
+    ].sort((a, b) => a - b)
+
+    return (
+      creatorModeEnabled !==
+        (settings.baseProfile
+          .creator_mode_enabled === true) ||
+      showPublicExplorationMap !==
+        (settings.baseProfile
+          .show_public_exploration_map === true) ||
+      creatorHeadline !==
+        (settings.baseProfile.creator_headline ??
+          '') ||
+      creatorBio !==
+        (creatorProfile?.creator_bio ?? '') ||
+      primaryCity !==
+        (creatorProfile?.primary_city ?? '') ||
+      availableForTravel !==
+        (creatorProfile?.available_for_travel ??
+          CREATOR_MODE_DEFAULTS.availableForTravel) ||
+      acceptingCollaborations !==
+        (creatorProfile
+          ?.accepting_collaborations ??
+          CREATOR_MODE_DEFAULTS
+            .acceptingCollaborations) ||
+      publicEmail !==
+        (creatorProfile?.public_email ?? '') ||
+      JSON.stringify(currentSocialLinks) !==
+        JSON.stringify(initialSocialLinks) ||
+      JSON.stringify(currentTagIds) !==
+        JSON.stringify(initialTagIds)
+    )
+  }, [
+    acceptingCollaborations,
+    availableForTravel,
+    creatorBio,
+    creatorHeadline,
+    creatorModeEnabled,
+    creatorProfile,
+    primaryCity,
+    publicEmail,
+    selectedCollaborationTagIds,
+    settings.baseProfile.creator_headline,
+    settings.baseProfile.creator_mode_enabled,
+    settings.baseProfile
+      .show_public_exploration_map,
+    settings.selectedTagIds,
+    settings.socialLinks,
+    showPublicExplorationMap,
+    socialLinks,
+  ])
+
   function clearResult() {
     if (result) {
       setResult(null)
@@ -448,7 +528,7 @@ export default function CreatorModeForm({
     <>
       <form
         onSubmit={handleSubmit}
-        className="w-full min-w-0 space-y-6"
+        className="w-full min-w-0 space-y-0"
         noValidate
       >
         <CreatorModeToggleSection
@@ -461,23 +541,6 @@ export default function CreatorModeForm({
             fieldErrors,
             'creatorModeEnabled'
           )}
-        />
-
-        <PublicExplorationMapSection
-          enabled={
-            showPublicExplorationMap
-          }
-          creatorModeEnabled={
-            creatorModeEnabled
-          }
-          disabled={isPending}
-          error={getFirstFieldError(
-            fieldErrors,
-            'showPublicExplorationMap'
-          )}
-          onChange={
-            updatePublicExplorationMap
-          }
         />
 
         <CreatorIdentitySection
@@ -508,6 +571,23 @@ export default function CreatorModeForm({
           onInteraction={clearResult}
         />
 
+        <CreatorCollaborationTagsSection
+          tagsByCategory={
+            collaborationTagsByCategory
+          }
+          selectedTagIds={
+            selectedTagIdSet
+          }
+          disabled={isPending}
+          error={getFirstFieldError(
+            fieldErrors,
+            'collaborationTagIds'
+          )}
+          onToggle={
+            toggleCollaborationTag
+          }
+        />
+
         <CreatorSocialLinksSection
           links={socialLinks}
           availablePlatforms={
@@ -530,20 +610,20 @@ export default function CreatorModeForm({
           onUpdate={updateSocialLink}
         />
 
-        <CreatorCollaborationTagsSection
-          tagsByCategory={
-            collaborationTagsByCategory
+        <PublicExplorationMapSection
+          enabled={
+            showPublicExplorationMap
           }
-          selectedTagIds={
-            selectedTagIdSet
+          creatorModeEnabled={
+            creatorModeEnabled
           }
           disabled={isPending}
           error={getFirstFieldError(
             fieldErrors,
-            'collaborationTagIds'
+            'showPublicExplorationMap'
           )}
-          onToggle={
-            toggleCollaborationTag
+          onChange={
+            updatePublicExplorationMap
           }
         />
 
@@ -570,43 +650,78 @@ export default function CreatorModeForm({
           result={result}
         />
 
-        <div className="sticky bottom-3 z-20 rounded-2xl border border-neutral-800 bg-neutral-950/95 p-3 shadow-2xl shadow-black/60 backdrop-blur-xl sm:flex sm:items-center sm:justify-between sm:gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-white">
-              Save Creator Mode settings
-            </p>
+        <div className="sticky bottom-0 z-20 -mx-1 mt-6 border-t border-neutral-800/80 bg-neutral-950/95 px-1 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:bottom-3 sm:mx-0 sm:rounded-2xl sm:border sm:p-3 sm:shadow-2xl sm:shadow-black/60">
+          <div className="sm:flex sm:items-center sm:justify-between sm:gap-4">
+            <div className="min-w-0">
+              <p
+                aria-live="polite"
+                className={[
+                  'text-sm font-medium',
+                  isPending
+                    ? 'text-cyan-200'
+                    : result?.success
+                      ? 'text-emerald-300'
+                      : hasUnsavedChanges
+                        ? 'text-amber-200'
+                        : 'text-neutral-300',
+                ].join(' ')}
+              >
+                {isPending
+                  ? 'Saving changes…'
+                  : result?.success
+                    ? 'Changes saved'
+                    : hasUnsavedChanges
+                      ? 'Unsaved changes'
+                      : 'Everything is up to date'}
+              </p>
 
-            <p className="mt-0.5 text-xs leading-5 text-neutral-500">
-              Public changes appear after the
-              save completes.
-            </p>
+              <p className="mt-0.5 text-xs leading-5 text-neutral-500">
+                {hasUnsavedChanges
+                  ? 'Your changes are not public until you save.'
+                  : 'Creator Mode changes are published when saving completes.'}
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={
+                isPending ||
+                (!hasUnsavedChanges &&
+                  !result?.success)
+              }
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50 sm:mt-0 sm:w-auto"
+            >
+              {isPending ? (
+                <>
+                  <Loader2
+                    aria-hidden="true"
+                    className="h-4 w-4 animate-spin"
+                  />
+
+                  Saving…
+                </>
+              ) : result?.success &&
+                !hasUnsavedChanges ? (
+                <>
+                  <Check
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                  />
+
+                  Saved
+                </>
+              ) : (
+                <>
+                  <Check
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                  />
+
+                  Save changes
+                </>
+              )}
+            </button>
           </div>
-
-          <button
-            type="submit"
-            disabled={isPending}
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-0 sm:w-auto"
-          >
-            {isPending ? (
-              <>
-                <Loader2
-                  aria-hidden="true"
-                  className="h-4 w-4 animate-spin"
-                />
-
-                Saving…
-              </>
-            ) : (
-              <>
-                <Check
-                  aria-hidden="true"
-                  className="h-4 w-4"
-                />
-
-                Save Creator Mode
-              </>
-            )}
-          </button>
         </div>
       </form>
 
@@ -643,27 +758,43 @@ function CreatorModeToggleSection({
   return (
     <section
       aria-labelledby="creator-mode-toggle-title"
-      className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-black/25 p-4 sm:p-5"
+      className="w-full min-w-0 border-b border-neutral-800/80 pb-6"
     >
-      <div className="flex min-w-0 items-start justify-between gap-4">
+      <div className="flex min-w-0 items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
-            Visibility
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3
+              id="creator-mode-toggle-title"
+              className="text-base font-semibold text-white"
+            >
+              Creator Mode
+            </h3>
 
-          <h3
-            id="creator-mode-toggle-title"
-            className="mt-2 text-base font-semibold text-white"
-          >
-            Enable Creator Mode
-          </h3>
+            <span
+              className={[
+                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]',
+                enabled
+                  ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300'
+                  : 'border-neutral-700 bg-neutral-900 text-neutral-500',
+              ].join(' ')}
+            >
+              <span
+                aria-hidden="true"
+                className={[
+                  'h-1.5 w-1.5 rounded-full',
+                  enabled
+                    ? 'bg-emerald-400'
+                    : 'bg-neutral-600',
+                ].join(' ')}
+              />
+
+              {enabled ? 'Live' : 'Hidden'}
+            </span>
+          </div>
 
           <p className="mt-1 max-w-xl text-sm leading-6 text-neutral-400">
-            When enabled, your creator identity,
-            public social links, collaboration
-            tags, local footprint, and featured
-            collections can appear on your public
-            Roam profile.
+            Show your creator profile publicly on
+            Roam.
           </p>
         </div>
 
@@ -681,7 +812,7 @@ function CreatorModeToggleSection({
             onChange(!enabled)
           }
           className={[
-            'relative mt-1 h-7 w-12 shrink-0 rounded-full border transition disabled:cursor-not-allowed disabled:opacity-60',
+            'relative h-7 w-12 shrink-0 rounded-full border transition disabled:cursor-not-allowed disabled:opacity-60',
             enabled
               ? 'border-cyan-300 bg-cyan-400'
               : 'border-neutral-700 bg-neutral-900',
@@ -697,29 +828,6 @@ function CreatorModeToggleSection({
             ].join(' ')}
           />
         </button>
-      </div>
-
-      <div
-        className={[
-          'mt-4 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
-          enabled
-            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-            : 'border-neutral-700 bg-neutral-900 text-neutral-500',
-        ].join(' ')}
-      >
-        <span
-          aria-hidden="true"
-          className={[
-            'h-2 w-2 rounded-full',
-            enabled
-              ? 'bg-emerald-400'
-              : 'bg-neutral-600',
-          ].join(' ')}
-        />
-
-        {enabled
-          ? 'Creator Mode will be public after saving'
-          : 'Creator Mode is hidden'}
       </div>
 
       <FieldError message={error} />
@@ -751,13 +859,7 @@ function PublicExplorationMapSection({
   return (
     <section
       aria-labelledby="public-exploration-map-title"
-      className={[
-        'w-full min-w-0 rounded-2xl border p-4 transition sm:p-5',
-        enabled &&
-        creatorModeEnabled
-          ? 'border-indigo-500/30 bg-indigo-500/[0.07]'
-          : 'border-neutral-800 bg-black/25',
-      ].join(' ')}
+      className="w-full min-w-0 border-t border-neutral-800/80 py-6"
     >
       <div className="flex min-w-0 items-start justify-between gap-4">
         <div className="flex min-w-0 items-start gap-3">
@@ -779,19 +881,33 @@ function PublicExplorationMapSection({
               Exploration map
             </p>
 
-            <h3
-              id="public-exploration-map-title"
-              className="mt-2 text-base font-semibold text-white"
-            >
-              Show my public exploration map
-            </h3>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h3
+                id="public-exploration-map-title"
+                className="text-base font-semibold text-white"
+              >
+                Public exploration map
+              </h3>
+
+              <span
+                className={[
+                  'rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]',
+                  enabled &&
+                  creatorModeEnabled
+                    ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200'
+                    : 'border-neutral-700 bg-neutral-950 text-neutral-500',
+                ].join(' ')}
+              >
+                {enabled &&
+                creatorModeEnabled
+                  ? 'Public'
+                  : 'Private'}
+              </span>
+            </div>
 
             <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
-              Publish an interactive map of venues
-              connected to your verified Roam
-              activity. Visitors will be able to
-              explore the places represented by the
-              public map.
+              Show eligible places you've explored
+              on your public creator profile.
             </p>
           </div>
         </div>
@@ -843,10 +959,9 @@ function PublicExplorationMapSection({
         </p>
 
         <p className="mt-1 text-xs leading-5 text-amber-200/70">
-          This setting is off by default. Turning
-          it on authorizes Roam to display
-          eligible venue activity on your public
-          creator profile. Your raw location
+          Turning this on authorizes Roam to
+          display eligible venue activity on your
+          public creator profile. Your raw location
           coordinates, check-in distance, device
           location accuracy, and private visit
           records are not displayed.
@@ -855,23 +970,10 @@ function PublicExplorationMapSection({
 
       {!creatorModeEnabled ? (
         <p className="mt-3 text-xs leading-5 text-neutral-600">
-          Enable Creator Mode before publishing
-          an exploration map.
+          Turn on Creator Mode before making your
+          exploration map public.
         </p>
-      ) : (
-        <div
-          className={[
-            'mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
-            enabled
-              ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200'
-              : 'border-neutral-700 bg-neutral-950 text-neutral-500',
-          ].join(' ')}
-        >
-          {enabled
-            ? 'Map will be public after saving'
-            : 'Map remains private'}
-        </div>
-      )}
+      ) : null}
 
       <FieldError message={error} />
     </section>
@@ -930,21 +1032,21 @@ function CreatorIdentitySection({
   return (
     <section
       aria-labelledby="creator-identity-title"
-      className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-black/25 p-4 sm:p-5"
+      className="w-full min-w-0 border-b border-neutral-800/80 py-6"
     >
       <SectionHeading
-        eyebrow="Identity"
-        title="How collaborators see you"
-        description="Use a clear headline and bio that describe your niche, location, and creative value."
+        eyebrow="About you"
+        title="Your creator profile"
+        description="Tell people what you explore, recommend, or create."
         id="creator-identity-title"
       />
 
       <div className="mt-5 space-y-5">
         <TextField
           id="creator-headline"
-          label="Creator headline"
+          label="Headline"
           value={creatorHeadline}
-          placeholder="Chicago food and hospitality creator"
+          placeholder="What are you known for?"
           maxLength={
             CREATOR_FIELD_LIMITS.headline
           }
@@ -962,9 +1064,9 @@ function CreatorIdentitySection({
 
         <TextAreaField
           id="creator-bio"
-          label="Creator bio"
+          label="Bio"
           value={creatorBio}
-          placeholder="I create short-form content for restaurants, hotels, and local experiences."
+          placeholder="Tell people what you explore, recommend, or create."
           maxLength={CREATOR_FIELD_LIMITS.bio}
           rows={5}
           disabled={disabled}
@@ -983,7 +1085,7 @@ function CreatorIdentitySection({
             id="creator-primary-city"
             label="Primary city"
             value={primaryCity}
-            placeholder="Chicago"
+            placeholder="Where are you based?"
             maxLength={
               CREATOR_FIELD_LIMITS.primaryCity
             }
@@ -1003,9 +1105,9 @@ function CreatorIdentitySection({
             type="email"
             inputMode="email"
             autoComplete="email"
-            label="Public contact email"
+            label="Public email"
             value={publicEmail}
-            placeholder="hello@example.com"
+            placeholder="Where can people reach you?"
             maxLength={
               CREATOR_FIELD_LIMITS.publicEmail
             }
@@ -1022,12 +1124,12 @@ function CreatorIdentitySection({
           />
         </div>
 
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+        <div className="divide-y divide-neutral-800/80 rounded-2xl border border-neutral-800 bg-neutral-950/40">
           <BooleanPreferenceCard
             checked={acceptingCollaborations}
             disabled={disabled}
-            title="Accepting collaborations"
-            description="Show visitors that you are open to brand and venue opportunities."
+            title="Open to collaborations"
+            description="Let brands and creators know you're available."
             error={getFirstFieldError(
               errors,
               'acceptingCollaborations'
@@ -1044,7 +1146,7 @@ function CreatorIdentitySection({
             checked={availableForTravel}
             disabled={disabled}
             title="Available for travel"
-            description="Signal that you may accept opportunities outside your primary city."
+            description="Show that you're open to opportunities outside your primary city."
             error={getFirstFieldError(
               errors,
               'availableForTravel'
@@ -1099,13 +1201,13 @@ function CreatorSocialLinksSection({
   return (
     <section
       aria-labelledby="creator-social-links-title"
-      className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-black/25 p-4 sm:p-5"
+      className="w-full min-w-0 border-b border-neutral-800/80 py-6"
     >
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <SectionHeading
-          eyebrow="Social presence"
-          title="Public social links"
-          description="Connect the platforms where brands and collaborators can review your work."
+          eyebrow="Social links"
+          title="Show people your work"
+          description="Add the platforms where people can find and review your content."
           id="creator-social-links-title"
         />
 
@@ -1113,14 +1215,14 @@ function CreatorSocialLinksSection({
           type="button"
           disabled={disabled || !canAdd}
           onClick={onAdd}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition hover:border-cyan-400/60 hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus
             aria-hidden="true"
             className="h-4 w-4"
           />
 
-          Add Social Link
+          Add social link
         </button>
       </div>
 
@@ -1232,7 +1334,7 @@ function SocialLinkEditor({
   ]
 
   return (
-    <article className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-neutral-950/70 p-3 sm:p-4">
+    <article className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-neutral-950/55 p-3 sm:p-4">
       <div className="flex min-w-0 items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <GripVertical
@@ -1266,7 +1368,7 @@ function SocialLinkEditor({
               disabled || index === 0
             }
             onClick={() => onMove('up')}
-            className="rounded-lg border border-neutral-800 px-2 py-1 text-xs text-neutral-400 transition hover:border-neutral-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-800 text-xs text-neutral-400 transition hover:border-neutral-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
           >
             ↑
           </button>
@@ -1279,7 +1381,7 @@ function SocialLinkEditor({
               index === totalLinks - 1
             }
             onClick={() => onMove('down')}
-            className="rounded-lg border border-neutral-800 px-2 py-1 text-xs text-neutral-400 transition hover:border-neutral-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-800 text-xs text-neutral-400 transition hover:border-neutral-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
           >
             ↓
           </button>
@@ -1289,7 +1391,7 @@ function SocialLinkEditor({
             aria-label={`Remove ${definition.label}`}
             disabled={disabled}
             onClick={onRemove}
-            className="rounded-lg border border-red-900/50 bg-red-950/20 p-1.5 text-red-300 transition hover:bg-red-950/40 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-900/50 bg-red-950/20 text-red-300 transition hover:bg-red-950/40 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2
               aria-hidden="true"
@@ -1314,7 +1416,7 @@ function SocialLinkEditor({
                   .value as CreatorSocialPlatform
               )
             }
-            className="mt-2 w-full min-w-0 rounded-xl border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-neutral-800 bg-black px-3 py-2.5 text-base text-white outline-none transition focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
           >
             {platformOptions.map(
               (platform) => (
@@ -1355,7 +1457,7 @@ function SocialLinkEditor({
                     event.target.value,
                 })
               }
-              className="mt-2 w-full min-w-0 rounded-xl border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-neutral-800 bg-black px-3 py-2.5 text-base text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
             />
           </label>
         ) : (
@@ -1383,7 +1485,7 @@ function SocialLinkEditor({
                 url: event.target.value,
               })
             }
-            className="w-full min-w-0 rounded-xl border border-neutral-800 bg-black py-2.5 pl-3 pr-10 text-sm text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-11 w-full min-w-0 rounded-xl border border-neutral-800 bg-black py-2.5 pl-3 pr-10 text-base text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
           />
 
           {link.url.trim() ? (
@@ -1392,7 +1494,7 @@ function SocialLinkEditor({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Open ${definition.label} URL`}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 transition hover:text-cyan-300"
+              className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center text-neutral-500 transition hover:text-cyan-300"
             >
               <ExternalLink
                 aria-hidden="true"
@@ -1403,7 +1505,35 @@ function SocialLinkEditor({
         </div>
       </label>
 
-      <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-neutral-800 bg-black/40 p-3">
+      <label className="mt-4 flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-xl border border-neutral-800 bg-black/40 px-3 py-3">
+        <span className="flex min-w-0 items-center gap-3">
+          {link.is_public ? (
+            <Eye
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-emerald-400"
+            />
+          ) : (
+            <EyeOff
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-neutral-500"
+            />
+          )}
+
+          <span className="min-w-0">
+            <span className="block text-sm font-medium text-neutral-200">
+              {link.is_public
+                ? 'Public'
+                : 'Hidden'}
+            </span>
+
+            <span className="mt-0.5 block text-xs leading-5 text-neutral-500">
+              {link.is_public
+                ? 'This link appears on your public creator profile.'
+                : 'This link stays saved but is not shown publicly.'}
+            </span>
+          </span>
+        </span>
+
         <input
           type="checkbox"
           checked={link.is_public}
@@ -1414,32 +1544,8 @@ function SocialLinkEditor({
                 event.target.checked,
             })
           }
-          className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-400"
+          className="h-4 w-4 shrink-0 accent-cyan-400"
         />
-
-        <span className="min-w-0">
-          <span className="flex items-center gap-2 text-sm font-medium text-neutral-200">
-            {link.is_public ? (
-              <Eye
-                aria-hidden="true"
-                className="h-4 w-4 text-emerald-400"
-              />
-            ) : (
-              <EyeOff
-                aria-hidden="true"
-                className="h-4 w-4 text-neutral-500"
-              />
-            )}
-
-            Show publicly
-          </span>
-
-          <span className="mt-1 block text-xs leading-5 text-neutral-500">
-            Hidden links remain saved but do
-            not appear on your public creator
-            profile.
-          </span>
-        </span>
       </label>
     </article>
   )
@@ -1476,12 +1582,12 @@ function CreatorCollaborationTagsSection({
   return (
     <section
       aria-labelledby="creator-collaboration-tags-title"
-      className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-black/25 p-4 sm:p-5"
+      className="w-full min-w-0 border-b border-neutral-800/80 py-6"
     >
       <SectionHeading
-        eyebrow="Available for"
-        title="Collaboration preferences"
-        description="Choose the campaign types, deliverables, and industries that match your actual work."
+        eyebrow="Opportunities"
+        title="What are you open to?"
+        description="Choose the collaboration types that match your work."
         id="creator-collaboration-tags-title"
       />
 
@@ -1533,7 +1639,7 @@ function CreatorCollaborationTagsSection({
                           onToggle(tag.id)
                         }
                         className={[
-                          'inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40',
+                          'inline-flex min-h-10 items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40',
                           selected
                             ? 'border-cyan-400 bg-cyan-400 text-black'
                             : 'border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-cyan-500/40 hover:text-cyan-200',
@@ -1610,7 +1716,7 @@ function CreatorModeRequirements({
     <section
       aria-label="Creator Mode requirements"
       className={[
-        'rounded-2xl border p-4',
+        'mt-6 rounded-2xl border p-4',
         allComplete
           ? 'border-emerald-500/25 bg-emerald-500/10'
           : 'border-amber-500/25 bg-amber-500/10',
@@ -1775,7 +1881,7 @@ function TextField({
           onChange(event.target.value)
         }
         className={[
-          'mt-2 w-full min-w-0 rounded-xl border bg-black px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-60',
+          'mt-2 min-h-11 w-full min-w-0 rounded-xl border bg-black px-3 py-2.5 text-base text-white outline-none transition placeholder:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm',
           error
             ? 'border-red-500/70 focus:border-red-400'
             : 'border-neutral-800 focus:border-cyan-500',
@@ -1855,7 +1961,7 @@ function TextAreaField({
           onChange(event.target.value)
         }
         className={[
-          'mt-2 w-full min-w-0 resize-y rounded-xl border bg-black px-3 py-2.5 text-sm leading-6 text-white outline-none transition placeholder:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-60',
+          'mt-2 w-full min-w-0 resize-y rounded-xl border bg-black px-3 py-2.5 text-base leading-6 text-white outline-none transition placeholder:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm',
           error
             ? 'border-red-500/70 focus:border-red-400'
             : 'border-neutral-800 focus:border-cyan-500',
@@ -1887,27 +1993,44 @@ function BooleanPreferenceCard({
 }) {
   return (
     <div className="min-w-0">
-      <label className="flex h-full cursor-pointer items-start gap-3 rounded-2xl border border-neutral-800 bg-neutral-950/70 p-4">
-        <input
-          type="checkbox"
-          checked={checked}
-          disabled={disabled}
-          onChange={(event) =>
-            onChange(event.target.checked)
-          }
-          className="mt-0.5 h-4 w-4 shrink-0 accent-cyan-400"
-        />
-
-        <span className="min-w-0">
-          <span className="block text-sm font-semibold text-white">
+      <div className="flex min-h-[68px] items-center justify-between gap-4 px-4 py-3.5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white">
             {title}
-          </span>
+          </p>
 
-          <span className="mt-1 block text-xs leading-5 text-neutral-500">
+          <p className="mt-1 text-xs leading-5 text-neutral-500">
             {description}
-          </span>
-        </span>
-      </label>
+          </p>
+        </div>
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          aria-label={title}
+          disabled={disabled}
+          onClick={() =>
+            onChange(!checked)
+          }
+          className={[
+            'relative h-7 w-12 shrink-0 rounded-full border transition disabled:cursor-not-allowed disabled:opacity-60',
+            checked
+              ? 'border-cyan-300 bg-cyan-400'
+              : 'border-neutral-700 bg-neutral-900',
+          ].join(' ')}
+        >
+          <span
+            aria-hidden="true"
+            className={[
+              'absolute top-1 h-5 w-5 rounded-full shadow transition',
+              checked
+                ? 'left-6 bg-black'
+                : 'left-1 bg-neutral-500',
+            ].join(' ')}
+          />
+        </button>
+      </div>
 
       <FieldError message={error} />
     </div>
@@ -1979,16 +2102,14 @@ function FormResultMessage({
       <div
         role="status"
         aria-live="polite"
-        className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3"
+        className="mt-6 flex items-center gap-2 text-sm font-medium text-emerald-300"
       >
-        <p className="text-sm font-semibold text-emerald-200">
-          Creator Mode settings saved
-        </p>
+        <Check
+          aria-hidden="true"
+          className="h-4 w-4 shrink-0"
+        />
 
-        <p className="mt-1 text-xs leading-5 text-emerald-300/80">
-          Your creator profile has been
-          updated successfully.
-        </p>
+        Changes saved
       </div>
     )
   }
@@ -1996,10 +2117,10 @@ function FormResultMessage({
   return (
     <div
       role="alert"
-      className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3"
+      className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3"
     >
       <p className="text-sm font-semibold text-red-200">
-        Creator Mode could not be saved
+        Some changes couldn't be saved
       </p>
 
       <p className="mt-1 text-xs leading-5 text-red-300/80">
@@ -2061,7 +2182,7 @@ function DisableCreatorModeDialog({
             type="button"
             disabled={disabled}
             onClick={onCancel}
-            className="rounded-full border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-neutral-500 hover:text-white disabled:opacity-50"
+            className="min-h-11 rounded-full border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-300 transition hover:border-neutral-500 hover:text-white disabled:opacity-50"
           >
             Keep Enabled
           </button>
@@ -2070,7 +2191,7 @@ function DisableCreatorModeDialog({
             type="button"
             disabled={disabled}
             onClick={onConfirm}
-            className="rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-400 disabled:opacity-50"
+            className="min-h-11 rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-400 disabled:opacity-50"
           >
             Disable Creator Mode
           </button>

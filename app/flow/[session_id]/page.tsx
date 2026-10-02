@@ -3,9 +3,11 @@
 import { notFound, redirect } from 'next/navigation'
 
 import FlowRouteLauncher from '@/components/flows/FlowRouteLauncher'
+import { loadActiveFlowRuntimeRoute } from '@/lib/active-flow/runtimeRoute.server'
 import { createServerClient } from '@/lib/supabase/server'
 
 import ActiveFlowCard from './components/ActiveFlowCard'
+import ActiveFlowOpportunitySurface from './components/ActiveFlowOpportunitySurface'
 import BackToRouteButton from './components/BackToRouteButton'
 import FlowMap from './components/FlowMap'
 
@@ -135,9 +137,22 @@ type NormalizedFlowProgressRow = Omit<
   user_id: string
 
   venue_id: string
-  stop_index: number
+  stop_index: number | null
 
   checked_in_at: string
+}
+
+/**
+ * 016D.4 runtime identity bridge.
+ *
+ * The page already owns the canonical runtime route. Preserve only the
+ * identity metadata ActiveFlowCard needs to distinguish immutable base-route
+ * position from inserted Detour execution order.
+ */
+type ActiveFlowRuntimeStopIdentity = {
+  venueId: string
+  position: number | null
+  kind: 'base' | 'detour'
 }
 
 // -----------------------------------------------------------------------------
@@ -275,7 +290,7 @@ function normalizeProgressRows({
                 0,
                 Math.floor(row.stop_index)
               )
-            : index
+            : null
 
         const checkedInAt =
           typeof row.checked_in_at === 'string'
@@ -307,52 +322,6 @@ function normalizeProgressRows({
       ): row is NormalizedFlowProgressRow =>
         row != null
     )
-}
-
-function isCompletedProgressRow(
-  row:
-    | ActiveFlowProgressRow
-    | NormalizedFlowProgressRow
-): boolean {
-  const normalizedStatus =
-    typeof row.status === 'string'
-      ? row.status.trim().toLowerCase()
-      : null
-
-  if (
-    normalizedStatus === 'completed' ||
-    normalizedStatus === 'complete' ||
-    normalizedStatus === 'visited' ||
-    normalizedStatus === 'checked_in'
-  ) {
-    return true
-  }
-
-  if (
-    typeof row.completed_at === 'string' &&
-    row.completed_at.trim().length > 0
-  ) {
-    return true
-  }
-
-  if (
-    typeof row.checked_in_at === 'string' &&
-    row.checked_in_at.trim().length > 0
-  ) {
-    return true
-  }
-
-  /*
-   * Backward compatibility:
-   *
-   * Older active_flow_progress rows may represent completion merely through
-   * their existence and may not have status or completion timestamps
-   * populated.
-   */
-  return (
-    row.status == null &&
-    row.completed_at == null
-  )
 }
 
 // -----------------------------------------------------------------------------
@@ -424,9 +393,62 @@ export default async function ActiveFlowPage({
     notFound()
   }
 
+  /*
+   * 016C — canonical runtime route:
+   *
+   * Runtime ordering and completion identity are resolved centrally from
+   * active_flow_stops + active_flow_detours + active_flow_progress.
+   *
+   * position remains immutable base-route identity and is never treated here
+   * as execution order. Detours may therefore participate in the rendered
+   * route with position=NULL while executionIndex supplies canonical order.
+   */
+  let runtimeStops
+
+  try {
+    runtimeStops =
+      await loadActiveFlowRuntimeRoute({
+        sessionId:
+          session.id,
+        userId:
+          user.id,
+        supabase,
+      })
+  } catch (error) {
+    console.error(
+      '[flow/page] Runtime route fetch error:',
+      error
+    )
+
+    notFound()
+  }
+
   const venueIds =
     normalizeVenueIds(
-      session.venue_ids
+      runtimeStops.map(
+        (stop) =>
+          stop.venueId
+      )
+    )
+
+  /*
+   * 016D.4 — preserve canonical runtime identity for check-in presentation.
+   *
+   * position remains immutable base-route identity.
+   * Detours intentionally carry position=NULL.
+   */
+  const runtimeStopIdentities: ActiveFlowRuntimeStopIdentity[] =
+    runtimeStops.map(
+      (stop) => ({
+        venueId:
+          stop.venueId,
+
+        position:
+          stop.position,
+
+        kind:
+          stop.kind,
+      })
     )
 
   /*
@@ -521,7 +543,7 @@ export default async function ActiveFlowPage({
     )
 
   /*
-   * Venue order must always follow active_flow_sessions.venue_ids.
+   * Venue order must always follow the canonical executable runtime-stop route.
    *
    * Database `.in(...)` results are not guaranteed to preserve input order.
    */
@@ -582,6 +604,11 @@ export default async function ActiveFlowPage({
       []
     )
 
+  /*
+   * Keep the raw progress read for the existing ActiveFlowCard component
+   * contract. Runtime ordering/completion authority above does not depend on
+   * this second representation.
+   */
   const {
     data: progressData,
     error: progressError,
@@ -629,35 +656,31 @@ export default async function ActiveFlowPage({
         user.id,
     })
 
+  /*
+   * 016C — completion/current-stop presentation derives from the same canonical
+   * runtime route used for execution ordering.
+   *
+   * This preserves flow_stop_id-first completion plus historical
+   * stop_index↔position fallback without reimplementing either rule here.
+   */
   const completedVenueIds =
     uniqueStrings(
-      progress
+      runtimeStops
         .filter(
-          isCompletedProgressRow
+          (stop) =>
+            stop.completed
         )
         .map(
-          (row) =>
-            row.venue_id
+          (stop) =>
+            stop.venueId
         )
-        .filter(
-          (venueId): venueId is string =>
-            typeof venueId === 'string' &&
-            venueId.trim().length > 0
-        )
-    )
-
-  const completedVenueIdSet =
-    new Set(
-      completedVenueIds
     )
 
   const currentVenueId =
-    venueIds.find(
-      (venueId) =>
-        !completedVenueIdSet.has(
-          venueId
-        )
-    ) ?? null
+    runtimeStops.find(
+      (stop) =>
+        !stop.completed
+    )?.venueId ?? null
 
   const travelMode =
     normalizeTravelMode(
@@ -667,6 +690,9 @@ export default async function ActiveFlowPage({
   /*
    * Explicit normalization guarantees that the page boundary satisfies the
    * ActiveFlowCard session contract without weakening child component types.
+   *
+   * venue_ids is projected from the canonical executable runtime route rather
+   * than mutating the legacy active_flow_sessions.venue_ids column.
    */
   const normalizedSession = {
     ...session,
@@ -736,8 +762,6 @@ export default async function ActiveFlowPage({
           </span>
         </div>
 
-        
-
         <div className="mt-7">
           <ActiveFlowCard
             session={
@@ -749,8 +773,17 @@ export default async function ActiveFlowPage({
             progress={
               progress
             }
+            runtimeStops={
+              runtimeStopIdentities
+            }
           />
         </div>
+
+        <ActiveFlowOpportunitySurface
+          sessionId={
+            session.id
+          }
+        />
 
         <section
           aria-labelledby="active-flow-route-title"
@@ -819,8 +852,6 @@ export default async function ActiveFlowPage({
             />
           </div>
         </section>
-
-        
       </div>
     </main>
   )

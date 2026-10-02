@@ -658,6 +658,59 @@ export default function RoamLeaderboard() {
       'city' &&
     !selectedCityKey
 
+  const reputationLeaders =
+    useMemo(
+      () =>
+        users.filter(
+          (
+            user
+          ) =>
+            normalizePositiveInteger(
+              user.reputation_rank
+            ) !==
+            null
+        ),
+      [
+        users,
+      ]
+    )
+
+  const buildingReputationUsers =
+    useMemo(
+      () =>
+        users.filter(
+          (
+            user
+          ) =>
+            normalizePositiveInteger(
+              user.reputation_rank
+            ) ===
+            null
+        ),
+      [
+        users,
+      ]
+    )
+
+  const currentUser =
+    useMemo(
+      () =>
+        currentUserId
+          ? users.find(
+              (
+                user
+              ) =>
+                user.id ===
+                currentUserId
+            ) ??
+            null
+          : null,
+      [
+        users,
+        currentUserId,
+      ]
+    )
+
   return (
     <section className="relative overflow-hidden rounded-[2rem] border border-neutral-800 bg-neutral-950 p-4 sm:p-6">
       <div
@@ -680,9 +733,12 @@ export default function RoamLeaderboard() {
               See how Roamers compare
               globally or within cities
               that are live on Roam.
-              Everyone stays discoverable,
-              while qualifying reputation
-              leaders rise to the top.
+              Qualifying reputation
+              leaders are ranked by earned
+              category credibility, while
+              other active Roamers can
+              keep building toward
+              eligibility.
             </p>
 
             {eligiblePopulation !==
@@ -766,257 +822,442 @@ export default function RoamLeaderboard() {
           </p>
         ) : null}
 
-        <div className="mt-5 space-y-2.5">
-          {loading ? (
+        {loading ? (
+          <div className="mt-5">
             <LeaderboardSkeleton />
-          ) : null}
+          </div>
+        ) : null}
 
-          {!loading &&
-          isCitySelectionMissing &&
-          !error ? (
+        {!loading &&
+        isCitySelectionMissing &&
+        !error ? (
+          <div className="mt-5">
             <EmptyLeaderboardState
               message="Choose a city to see its Roam leaderboard."
             />
-          ) : null}
+          </div>
+        ) : null}
 
-          {!loading &&
-          !isCitySelectionMissing &&
-          users.length ===
-            0 &&
-          !error ? (
+        {!loading &&
+        !isCitySelectionMissing &&
+        users.length ===
+          0 &&
+        !error ? (
+          <div className="mt-5">
             <EmptyLeaderboardState
               message="No Roamers are available here yet. Check another category or city."
             />
-          ) : null}
+          </div>
+        ) : null}
 
-          {!loading &&
-            !isCitySelectionMissing &&
-            users.map(
-              (
-                user
-              ) => {
-                const isOwnProfile =
-                  currentUserId ===
-                  user.id
+        {!loading &&
+        !isCitySelectionMissing &&
+        users.length >
+          0 &&
+        !error ? (
+          <div className="mt-6 space-y-8">
+            {currentUser ? (
+              <div>
+                <LeaderboardGroupHeading
+                  eyebrow="Your standing"
+                  title={`Your ${selectedCategoryLabel} reputation`}
+                  description={
+                    normalizePositiveInteger(
+                      currentUser.reputation_rank
+                    ) !==
+                    null
+                      ? `See where you stand among eligible ${selectedCategoryLabel.toLowerCase()} explorers in this area.`
+                      : `You’re visible here, but you’re still building toward an eligible ${selectedCategoryLabel.toLowerCase()} reputation rank.`
+                  }
+                />
 
-                const username =
-                  user.username ??
-                  ''
-
-                const profileHref =
-                  username
-                    ? `/u/${encodeURIComponent(
-                        username
-                      )}`
-                    : '#'
-
-                const reputationSummary =
-                  buildReputationSummary({
-                    user,
-
-                    fallbackCategoryLabel:
-                      selectedCategoryLabel,
-
-                    fallbackScope:
-                      selectedScope,
-
-                    fallbackGeographyLabel:
-                      selectedGeographyLabel,
-                  })
-
-                const supportingMetrics =
-                  buildSupportingMetrics(
-                    user
-                  )
-
-                return (
-                  <article
-                    key={
-                      user.id
+                <div className="mt-3">
+                  <LeaderboardUserCard
+                    user={
+                      currentUser
                     }
-                    aria-label={`${user.full_name ?? user.username ?? 'Roam User'} leaderboard position`}
-                    className={[
-                      'group min-w-0 rounded-2xl border bg-black/70 p-3 transition sm:p-4',
+                    currentUserId={
+                      currentUserId
+                    }
+                    selectedCategoryLabel={
+                      selectedCategoryLabel
+                    }
+                    selectedScope={
+                      selectedScope
+                    }
+                    selectedGeographyLabel={
+                      selectedGeographyLabel
+                    }
+                    showReputationRank={
+                      normalizePositiveInteger(
+                        currentUser.reputation_rank
+                      ) !==
+                      null
+                    }
+                  />
+                </div>
+              </div>
+            ) : null}
 
-                      isOwnProfile
-                        ? 'border-cyan-500/35 ring-1 ring-cyan-500/10'
-                        : 'border-neutral-800 hover:border-amber-400/35 hover:bg-black',
-                    ].join(
-                      ' '
-                    )}
-                  >
-                    <div className="grid min-w-0 grid-cols-[auto_auto_minmax(0,1fr)] gap-3 sm:grid-cols-[44px_56px_minmax(0,1fr)_auto] sm:items-center sm:gap-4">
-                      <div
-                        className={[
-                          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-sm font-bold sm:h-11 sm:w-11',
+            {reputationLeaders.length >
+            0 ? (
+              <div>
+                <LeaderboardGroupHeading
+                  eyebrow="Leaders"
+                  title={`${selectedCategoryLabel} reputation leaders`}
+                  description={`Eligible Roamers ranked by earned ${selectedCategoryLabel.toLowerCase()} reputation in the selected area.`}
+                />
 
-                          isOwnProfile
-                            ? 'border-cyan-400/30 bg-cyan-400/[0.08] text-cyan-200'
-                            : 'border-amber-400/20 bg-amber-400/[0.08] text-amber-300',
-                        ].join(
-                          ' '
-                        )}
-                      >
-                        #{user.rank}
-                      </div>
-
-                      <Link
-                        href={
-                          profileHref
+                <div className="mt-3 space-y-2.5">
+                  {reputationLeaders.map(
+                    (
+                      user
+                    ) => (
+                      <LeaderboardUserCard
+                        key={
+                          user.id
                         }
-                        aria-label={`View ${user.full_name ?? user.username ?? 'Roam User'} public profile`}
-                        className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 text-xl transition group-hover:border-neutral-700 sm:h-14 sm:w-14 sm:text-2xl"
-                      >
-                        {user.avatar_url ? (
-                          <img
-                            src={
-                              user.avatar_url
-                            }
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span
-                            aria-hidden="true"
-                          >
-                            🧭
-                          </span>
-                        )}
-                      </Link>
+                        user={
+                          user
+                        }
+                        currentUserId={
+                          currentUserId
+                        }
+                        selectedCategoryLabel={
+                          selectedCategoryLabel
+                        }
+                        selectedScope={
+                          selectedScope
+                        }
+                        selectedGeographyLabel={
+                          selectedGeographyLabel
+                        }
+                        showReputationRank
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+            ) : null}
 
-                      <div className="min-w-0">
-                        <Link
-                          href={
-                            profileHref
-                          }
-                          className="block min-w-0"
-                        >
-                          <div className="flex min-w-0 items-center gap-2">
-                            <h3 className="truncate text-sm font-semibold text-white transition group-hover:text-amber-200 sm:text-base">
-                              {user.full_name ??
-                                user.username ??
-                                'Roam User'}
-                            </h3>
+            {buildingReputationUsers.length >
+            0 ? (
+              <div>
+                <LeaderboardGroupHeading
+                  eyebrow="Building reputation"
+                  title={`Roamers building ${selectedCategoryLabel} credibility`}
+                  description="These Roamers are discoverable in this area but have not yet qualified for a category reputation rank."
+                />
 
-                            {isOwnProfile ? (
-                              <span className="shrink-0 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-cyan-200">
-                                You
-                              </span>
-                            ) : null}
-                          </div>
-
-                          {user.username ? (
-                            <p className="mt-0.5 truncate text-xs text-neutral-500 sm:text-sm">
-                              @{user.username}
-
-                              {user.home_neighborhood
-                                ? ` · ${user.home_neighborhood}`
-                                : ''}
-                            </p>
-                          ) : null}
-                        </Link>
-
-                        {reputationSummary ? (
-                          <div className="mt-2 min-w-0">
-                            <p className="break-words text-xs font-semibold leading-5 text-cyan-300 sm:text-sm">
-                              {
-                                reputationSummary.primary
-                              }
-                            </p>
-
-                            {reputationSummary.secondary ? (
-                              <p className="mt-0.5 break-words text-[11px] leading-4 text-neutral-500">
-                                {
-                                  reputationSummary.secondary
-                                }
-                              </p>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <div className="mt-2 min-w-0">
-                            <p className="text-xs font-medium leading-5 text-neutral-400">
-                              Building{' '}
-                              {
-                                selectedCategoryLabel
-                              }{' '}
-                              reputation
-                            </p>
-
-                            <p className="mt-0.5 text-[11px] leading-4 text-neutral-600">
-                              Not yet eligible
-                              for a category
-                              percentile.
-                            </p>
-                          </div>
-                        )}
-
-                        {supportingMetrics.length >
-                        0 ? (
-                          <div className="mt-2.5 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-[11px] text-neutral-600">
-                            {supportingMetrics.map(
-                              (
-                                metric
-                              ) => (
-                                <span
-                                  key={
-                                    metric.label
-                                  }
-                                  className="whitespace-nowrap"
-                                >
-                                  <span className="font-medium text-neutral-400">
-                                    {
-                                      metric.value
-                                    }
-                                  </span>{' '}
-                                  {
-                                    metric.label
-                                  }
-                                </span>
-                              )
-                            )}
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div className="col-span-3 mt-1 flex min-w-0 items-center justify-end gap-2 sm:col-span-1 sm:mt-0 sm:justify-start">
-                        {isOwnProfile ? (
-                          <>
-                            
-
-                            <Link
-                              href={
-                                profileHref
-                              }
-                              aria-label={`View ${user.full_name ?? user.username ?? 'your'} public profile`}
-                              className="inline-flex min-h-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-neutral-300 transition hover:border-cyan-400/40 hover:bg-neutral-800 hover:text-white"
-                            >
-                              View profile
-                            </Link>
-                          </>
-                        ) : (
-                          <FollowButton
-                            userId={
-                              user.id
-                            }
-                            initialIsFollowing={
-                              Boolean(
-                                user.is_following
-                              )
-                            }
-                            initialFollowersCount={
-                              user.followers_count
-                            }
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                )
-              }
-            )}
-        </div>
+                <div className="mt-3 space-y-2.5">
+                  {buildingReputationUsers.map(
+                    (
+                      user
+                    ) => (
+                      <LeaderboardUserCard
+                        key={
+                          user.id
+                        }
+                        user={
+                          user
+                        }
+                        currentUserId={
+                          currentUserId
+                        }
+                        selectedCategoryLabel={
+                          selectedCategoryLabel
+                        }
+                        selectedScope={
+                          selectedScope
+                        }
+                        selectedGeographyLabel={
+                          selectedGeographyLabel
+                        }
+                        showReputationRank={
+                          false
+                        }
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </section>
+  )
+}
+
+/* =========================================================
+ * Leaderboard presentation
+ * ======================================================= */
+
+function LeaderboardGroupHeading({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string
+  title: string
+  description: string
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-neutral-600">
+        {eyebrow}
+      </p>
+
+      <h3 className="mt-1.5 text-sm font-bold text-white sm:text-base">
+        {title}
+      </h3>
+
+      <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500">
+        {description}
+      </p>
+    </div>
+  )
+}
+
+function LeaderboardUserCard({
+  user,
+  currentUserId,
+  selectedCategoryLabel,
+  selectedScope,
+  selectedGeographyLabel,
+  showReputationRank,
+}: {
+  user: LeaderboardUser
+  currentUserId: string | null
+  selectedCategoryLabel: string
+  selectedScope: LeaderboardScope
+  selectedGeographyLabel: string
+  showReputationRank: boolean
+}) {
+  const isOwnProfile =
+    currentUserId ===
+    user.id
+
+  const username =
+    user.username ??
+    ''
+
+  const profileHref =
+    username
+      ? `/u/${encodeURIComponent(
+          username
+        )}`
+      : '#'
+
+  const reputationSummary =
+    buildReputationSummary({
+      user,
+
+      fallbackCategoryLabel:
+        selectedCategoryLabel,
+
+      fallbackScope:
+        selectedScope,
+
+      fallbackGeographyLabel:
+        selectedGeographyLabel,
+    })
+
+  const supportingMetrics =
+    buildSupportingMetrics(
+      user
+    )
+
+  const reputationRank =
+    normalizePositiveInteger(
+      user.reputation_rank
+    )
+
+  return (
+    <article
+      aria-label={`${user.full_name ?? user.username ?? 'Roam User'} leaderboard position`}
+      className={[
+        'group min-w-0 rounded-2xl border bg-black/70 p-3 transition sm:p-4',
+
+        isOwnProfile
+          ? 'border-cyan-500/35 ring-1 ring-cyan-500/10'
+          : 'border-neutral-800 hover:border-amber-400/35 hover:bg-black',
+      ].join(
+        ' '
+      )}
+    >
+      <div className="grid min-w-0 grid-cols-[auto_auto_minmax(0,1fr)] gap-3 sm:grid-cols-[44px_56px_minmax(0,1fr)_auto] sm:items-center sm:gap-4">
+        <div
+          className={[
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-sm font-bold sm:h-11 sm:w-11',
+
+            isOwnProfile
+              ? 'border-cyan-400/30 bg-cyan-400/[0.08] text-cyan-200'
+              : showReputationRank &&
+                  reputationRank !==
+                    null
+                ? 'border-amber-400/20 bg-amber-400/[0.08] text-amber-300'
+                : 'border-neutral-800 bg-neutral-900 text-neutral-500',
+          ].join(
+            ' '
+          )}
+        >
+          {showReputationRank &&
+          reputationRank !==
+            null
+            ? `#${reputationRank}`
+            : '—'}
+        </div>
+
+        <Link
+          href={
+            profileHref
+          }
+          aria-label={`View ${user.full_name ?? user.username ?? 'Roam User'} public profile`}
+          className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 text-xl transition group-hover:border-neutral-700 sm:h-14 sm:w-14 sm:text-2xl"
+        >
+          {user.avatar_url ? (
+            <img
+              src={
+                user.avatar_url
+              }
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+            >
+              🧭
+            </span>
+          )}
+        </Link>
+
+        <div className="min-w-0">
+          <Link
+            href={
+              profileHref
+            }
+            className="block min-w-0"
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <h3 className="truncate text-sm font-semibold text-white transition group-hover:text-amber-200 sm:text-base">
+                {user.full_name ??
+                  user.username ??
+                  'Roam User'}
+              </h3>
+
+              {isOwnProfile ? (
+                <span className="shrink-0 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-cyan-200">
+                  You
+                </span>
+              ) : null}
+            </div>
+
+            {user.username ? (
+              <p className="mt-0.5 truncate text-xs text-neutral-500 sm:text-sm">
+                @{user.username}
+
+                {user.home_neighborhood
+                  ? ` · ${user.home_neighborhood}`
+                  : ''}
+              </p>
+            ) : null}
+          </Link>
+
+          {reputationSummary ? (
+            <div className="mt-2 min-w-0">
+              <p className="break-words text-xs font-semibold leading-5 text-cyan-300 sm:text-sm">
+                {
+                  reputationSummary.primary
+                }
+              </p>
+
+              {reputationSummary.secondary ? (
+                <p className="mt-0.5 break-words text-[11px] leading-4 text-neutral-500">
+                  {
+                    reputationSummary.secondary
+                  }
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="mt-2 min-w-0">
+              <p className="text-xs font-medium leading-5 text-neutral-400">
+                Building{' '}
+                {
+                  selectedCategoryLabel
+                }{' '}
+                reputation
+              </p>
+
+              <p className="mt-0.5 text-[11px] leading-4 text-neutral-600">
+                Not yet eligible
+                for a category
+                percentile.
+              </p>
+            </div>
+          )}
+
+          {supportingMetrics.length >
+          0 ? (
+            <div className="mt-2.5 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-[11px] text-neutral-600">
+              {supportingMetrics.map(
+                (
+                  metric
+                ) => (
+                  <span
+                    key={
+                      metric.label
+                    }
+                    className="whitespace-nowrap"
+                  >
+                    <span className="font-medium text-neutral-400">
+                      {
+                        metric.value
+                      }
+                    </span>{' '}
+                    {
+                      metric.label
+                    }
+                  </span>
+                )
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="col-span-3 mt-1 flex min-w-0 items-center justify-end gap-2 sm:col-span-1 sm:mt-0 sm:justify-start">
+          {isOwnProfile ? (
+            <>
+              <Link
+                href={
+                  profileHref
+                }
+                aria-label={`View ${user.full_name ?? user.username ?? 'your'} public profile`}
+                className="inline-flex min-h-10 items-center justify-center rounded-full border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-neutral-300 transition hover:border-cyan-400/40 hover:bg-neutral-800 hover:text-white"
+              >
+                View profile
+              </Link>
+            </>
+          ) : (
+            <FollowButton
+              userId={
+                user.id
+              }
+              initialIsFollowing={
+                Boolean(
+                  user.is_following
+                )
+              }
+              initialFollowersCount={
+                user.followers_count
+              }
+            />
+          )}
+        </div>
+      </div>
+    </article>
   )
 }
 

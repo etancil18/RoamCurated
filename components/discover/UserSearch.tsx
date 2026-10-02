@@ -440,37 +440,36 @@ export default function UserSearch() {
         </div>
       ) : null}
 
-      <div className="mt-5 space-y-3">
-        {(loading ||
-          hasPendingQuery) &&
-        liveQuery.length >=
-          MINIMUM_SEARCH_LENGTH ? (
+      {(loading ||
+        hasPendingQuery) &&
+      liveQuery.length >=
+        MINIMUM_SEARCH_LENGTH ? (
+        <div className="mt-4">
           <SearchLoadingState />
-        ) : null}
+        </div>
+      ) : null}
 
-        {!loading &&
-        !hasPendingQuery &&
-        liveQuery.length <
-          MINIMUM_SEARCH_LENGTH ? (
-          <SearchPromptState />
-        ) : null}
-
-        {!loading &&
-        !hasPendingQuery &&
-        hasSearch &&
-        users.length ===
-          0 &&
-        !error ? (
+      {!loading &&
+      !hasPendingQuery &&
+      hasSearch &&
+      users.length ===
+        0 &&
+      !error ? (
+        <div className="mt-4">
           <SearchEmptyState
             query={
               trimmedQuery
             }
           />
-        ) : null}
+        </div>
+      ) : null}
 
-        {!loading &&
-        !hasPendingQuery &&
-          users.map(
+      {!loading &&
+      !hasPendingQuery &&
+      users.length >
+        0 ? (
+        <div className="mt-4 space-y-3">
+          {users.map(
             (
               user
             ) => (
@@ -487,7 +486,8 @@ export default function UserSearch() {
               />
             )
           )}
-      </div>
+        </div>
+      ) : null}
     </section>
   )
 }
@@ -495,26 +495,6 @@ export default function UserSearch() {
 /* =========================================================
  * Search states
  * ======================================================= */
-
-function SearchPromptState() {
-  return (
-    <div className="flex min-w-0 items-center gap-3 rounded-[1.35rem] bg-white/[0.02] px-4 py-3.5 ring-1 ring-white/[0.045]">
-      <span
-        aria-hidden="true"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-300/[0.06] text-sm text-cyan-200/70 ring-1 ring-cyan-300/10"
-      >
-        ↗
-      </span>
-
-      <p className="min-w-0 text-xs leading-5 text-zinc-600">
-        Search someone you know,
-        a creator you&apos;ve heard
-        about, or a Roamer you met
-        out in the city.
-      </p>
-    </div>
-  )
-}
 
 function SearchEmptyState({
   query,

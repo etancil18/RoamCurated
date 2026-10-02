@@ -14,6 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_flow_detours: {
+        Row: {
+          before_flow_stop_id: string
+          created_at: string
+          flow_stop_id: string
+          id: string
+          session_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          before_flow_stop_id: string
+          created_at?: string
+          flow_stop_id: string
+          id?: string
+          session_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          before_flow_stop_id?: string
+          created_at?: string
+          flow_stop_id?: string
+          id?: string
+          session_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_flow_detours_before_flow_stop_id_fkey"
+            columns: ["before_flow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_flow_detours_flow_stop_id_fkey"
+            columns: ["flow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_flow_detours_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      active_flow_opportunity_dismissals: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_flow_opportunity_dismissals_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_flow_opportunity_dismissals_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       active_flow_progress: {
         Row: {
           check_in_source: string
@@ -21,11 +112,12 @@ export type Database = {
           created_at: string
           device_timestamp: string | null
           distance_meters: number | null
+          flow_stop_id: string | null
           geo_verified: boolean
           id: string
           location_accuracy_meters: number | null
           session_id: string
-          stop_index: number
+          stop_index: number | null
           user_id: string
           user_lat: number | null
           user_lon: number | null
@@ -37,11 +129,12 @@ export type Database = {
           created_at?: string
           device_timestamp?: string | null
           distance_meters?: number | null
+          flow_stop_id?: string | null
           geo_verified?: boolean
           id?: string
           location_accuracy_meters?: number | null
           session_id: string
-          stop_index: number
+          stop_index?: number | null
           user_id: string
           user_lat?: number | null
           user_lon?: number | null
@@ -53,17 +146,25 @@ export type Database = {
           created_at?: string
           device_timestamp?: string | null
           distance_meters?: number | null
+          flow_stop_id?: string | null
           geo_verified?: boolean
           id?: string
           location_accuracy_meters?: number | null
           session_id?: string
-          stop_index?: number
+          stop_index?: number | null
           user_id?: string
           user_lat?: number | null
           user_lon?: number | null
           venue_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "active_flow_progress_flow_stop_id_fkey"
+            columns: ["flow_stop_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_stops"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "active_flow_progress_session_id_fkey"
             columns: ["session_id"]
@@ -132,6 +233,57 @@ export type Database = {
           venue_ids?: string[]
         }
         Relationships: []
+      }
+      active_flow_stops: {
+        Row: {
+          created_at: string
+          id: string
+          origin: string
+          original_stop_id: string | null
+          position: number | null
+          session_id: string
+          status: string
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          origin?: string
+          original_stop_id?: string | null
+          position?: number | null
+          session_id: string
+          status?: string
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          origin?: string
+          original_stop_id?: string | null
+          position?: number | null
+          session_id?: string
+          status?: string
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_flow_stops_original_stop_id_fkey"
+            columns: ["original_stop_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_flow_stops_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "active_flow_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       collaboration_tags: {
         Row: {
@@ -3449,6 +3601,127 @@ export type Database = {
           },
         ]
       }
+      event_confirmations: {
+        Row: {
+          contributor_user_id: string
+          created_at: string
+          distance_meters: number | null
+          evidence_source: string
+          id: string
+          location_accuracy_meters: number | null
+          moderation_status: string
+          observed_at: string
+          occurrence_id: string
+          proximity_verified: boolean
+          updated_at: string
+          user_lat: number | null
+          user_lon: number | null
+        }
+        Insert: {
+          contributor_user_id: string
+          created_at?: string
+          distance_meters?: number | null
+          evidence_source?: string
+          id?: string
+          location_accuracy_meters?: number | null
+          moderation_status?: string
+          observed_at: string
+          occurrence_id: string
+          proximity_verified?: boolean
+          updated_at?: string
+          user_lat?: number | null
+          user_lon?: number | null
+        }
+        Update: {
+          contributor_user_id?: string
+          created_at?: string
+          distance_meters?: number | null
+          evidence_source?: string
+          id?: string
+          location_accuracy_meters?: number | null
+          moderation_status?: string
+          observed_at?: string
+          occurrence_id?: string
+          proximity_verified?: boolean
+          updated_at?: string
+          user_lat?: number | null
+          user_lon?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_confirmations_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "event_occurrences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_corrections: {
+        Row: {
+          claim: Json
+          contributor_user_id: string
+          correction_type: string
+          created_at: string
+          evidence_source: string
+          id: string
+          moderation_status: string
+          note: string | null
+          observed_at: string | null
+          occurrence_id: string
+          review_reason: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          claim?: Json
+          contributor_user_id: string
+          correction_type: string
+          created_at?: string
+          evidence_source?: string
+          id?: string
+          moderation_status?: string
+          note?: string | null
+          observed_at?: string | null
+          occurrence_id: string
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          claim?: Json
+          contributor_user_id?: string
+          correction_type?: string
+          created_at?: string
+          evidence_source?: string
+          id?: string
+          moderation_status?: string
+          note?: string | null
+          observed_at?: string | null
+          occurrence_id?: string
+          review_reason?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_corrections_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "event_occurrences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_discovery_runs: {
         Row: {
           ai_detection_json: Json | null
@@ -3908,6 +4181,260 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_occurrences: {
+        Row: {
+          created_at: string
+          id: string
+          resolution_reason: string | null
+          resolution_status: string
+          resolved_at: string | null
+          resolved_by: string | null
+          resolved_event_id: string | null
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          resolution_reason?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_event_id?: string | null
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          resolution_reason?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_event_id?: string | null
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_occurrences_resolved_event_id_fkey"
+            columns: ["resolved_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_occurrences_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "event_occurrences_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_reports: {
+        Row: {
+          created_at: string
+          distance_meters: number | null
+          event_id: string | null
+          evidence_metadata: Json
+          id: string
+          location_accuracy_meters: number | null
+          moderation_status: string
+          observed_at: string
+          occurrence_id: string | null
+          proximity_verified: boolean
+          report_source: string
+          reported_archetype: string | null
+          reported_description: string | null
+          reported_ends_at: string | null
+          reported_starts_at: string | null
+          reported_tags: string[] | null
+          reported_title: string
+          reporter_user_id: string
+          resolution_reason: string | null
+          resolution_status: string
+          resolved_at: string | null
+          resolved_by: string | null
+          source_url: string | null
+          updated_at: string
+          user_lat: number | null
+          user_lon: number | null
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          distance_meters?: number | null
+          event_id?: string | null
+          evidence_metadata?: Json
+          id?: string
+          location_accuracy_meters?: number | null
+          moderation_status?: string
+          observed_at: string
+          occurrence_id?: string | null
+          proximity_verified?: boolean
+          report_source?: string
+          reported_archetype?: string | null
+          reported_description?: string | null
+          reported_ends_at?: string | null
+          reported_starts_at?: string | null
+          reported_tags?: string[] | null
+          reported_title: string
+          reporter_user_id: string
+          resolution_reason?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_url?: string | null
+          updated_at?: string
+          user_lat?: number | null
+          user_lon?: number | null
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          distance_meters?: number | null
+          event_id?: string | null
+          evidence_metadata?: Json
+          id?: string
+          location_accuracy_meters?: number | null
+          moderation_status?: string
+          observed_at?: string
+          occurrence_id?: string | null
+          proximity_verified?: boolean
+          report_source?: string
+          reported_archetype?: string | null
+          reported_description?: string | null
+          reported_ends_at?: string | null
+          reported_starts_at?: string | null
+          reported_tags?: string[] | null
+          reported_title?: string
+          reporter_user_id?: string
+          resolution_reason?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source_url?: string | null
+          updated_at?: string
+          user_lat?: number | null
+          user_lon?: number | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reports_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reports_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "event_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reports_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "event_reports_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_resolution_actions: {
+        Row: {
+          action: string
+          actor_type: string
+          actor_user_id: string | null
+          created_at: string
+          from_event_id: string | null
+          from_status: string
+          id: string
+          metadata: Json
+          occurrence_id: string
+          reason: string | null
+          report_id: string | null
+          to_event_id: string | null
+          to_status: string
+        }
+        Insert: {
+          action: string
+          actor_type: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_event_id?: string | null
+          from_status: string
+          id?: string
+          metadata?: Json
+          occurrence_id: string
+          reason?: string | null
+          report_id?: string | null
+          to_event_id?: string | null
+          to_status: string
+        }
+        Update: {
+          action?: string
+          actor_type?: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_event_id?: string | null
+          from_status?: string
+          id?: string
+          metadata?: Json
+          occurrence_id?: string
+          reason?: string | null
+          report_id?: string | null
+          to_event_id?: string | null
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_resolution_actions_from_event_id_fkey"
+            columns: ["from_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_resolution_actions_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "event_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_resolution_actions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "event_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_resolution_actions_to_event_id_fkey"
+            columns: ["to_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -4684,13 +5211,17 @@ export type Database = {
       }
       profile_public_stats: {
         Row: {
+          competition_attributed_stops: number
           competition_win_xp: number
+          completed_competition_attributed_flows: number
           completed_flow_stops: number
           completed_flows: number
           completed_hosted_flows: number
           created_at: string
           event_checkins: number
           event_xp: number
+          followers_count: number
+          following_count: number
           hosted_crawls: number
           hosted_flow_stops: number
           joined_crawls: number
@@ -4705,13 +5236,17 @@ export type Database = {
           venue_visits: number
         }
         Insert: {
+          competition_attributed_stops?: number
           competition_win_xp?: number
+          completed_competition_attributed_flows?: number
           completed_flow_stops?: number
           completed_flows?: number
           completed_hosted_flows?: number
           created_at?: string
           event_checkins?: number
           event_xp?: number
+          followers_count?: number
+          following_count?: number
           hosted_crawls?: number
           hosted_flow_stops?: number
           joined_crawls?: number
@@ -4726,13 +5261,17 @@ export type Database = {
           venue_visits?: number
         }
         Update: {
+          competition_attributed_stops?: number
           competition_win_xp?: number
+          completed_competition_attributed_flows?: number
           completed_flow_stops?: number
           completed_flows?: number
           completed_hosted_flows?: number
           created_at?: string
           event_checkins?: number
           event_xp?: number
+          followers_count?: number
+          following_count?: number
           hosted_crawls?: number
           hosted_flow_stops?: number
           joined_crawls?: number
@@ -9310,6 +9849,13 @@ export type Database = {
         Args: { p_assignments: Json; p_team_id: string }
         Returns: undefined
       }
+      attach_event_report_to_occurrence: {
+        Args: { p_occurrence_id: string; p_report_id: string }
+        Returns: {
+          occurrence_id: string
+          report_id: string
+        }[]
+      }
       award_roam_relay_competition_winner_xp: {
         Args: { p_competition_id: string }
         Returns: {
@@ -9325,9 +9871,31 @@ export type Database = {
         Args: { p_team_id: string }
         Returns: boolean
       }
+      cancel_active_flow_detour: {
+        Args: {
+          p_detour_flow_stop_id: string
+          p_session_id: string
+          p_user_id: string
+        }
+        Returns: {
+          before_flow_stop_id: string
+          detour_flow_stop_id: string
+          detour_venue_id: string
+          session_id: string
+        }[]
+      }
       competition_allows_identity_reveal: {
         Args: { p_competition_id: string }
         Returns: boolean
+      }
+      complete_active_flow_session_atomic: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: {
+          completed_at: string
+          completed_stops: number
+          session_id: string
+          total_stops: number
+        }[]
       }
       complete_roam_relay_slot: {
         Args: {
@@ -9348,6 +9916,28 @@ export type Database = {
           team_id: string
           team_slot_id: string
           venue_id: string
+        }[]
+      }
+      create_active_flow_detour_for_community_event: {
+        Args: {
+          p_before_flow_stop_id: string
+          p_event_id: string
+          p_session_id: string
+          p_user_id: string
+        }
+        Returns: {
+          before_flow_stop_id: string
+          detour_flow_stop_id: string
+          detour_venue_id: string
+          event_id: string
+          session_id: string
+        }[]
+      }
+      create_event_occurrence_for_report: {
+        Args: { p_report_id: string }
+        Returns: {
+          occurrence_id: string
+          report_id: string
         }[]
       }
       create_roam_relay_definition: {
@@ -9419,6 +10009,19 @@ export type Database = {
       earth: { Args: never; Returns: number }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
+      establish_event_occurrence_for_report: {
+        Args: {
+          p_limit?: number
+          p_observation_window_minutes?: number
+          p_report_id: string
+          p_time_window_minutes?: number
+        }
+        Returns: {
+          establishment_action: string
+          occurrence_id: string
+          report_id: string
+        }[]
+      }
       finalize_roam_relay_team: {
         Args: { p_team_id: string }
         Returns: {
@@ -9428,6 +10031,26 @@ export type Database = {
           team_id: string
           team_status: string
           total_slot_count: number
+        }[]
+      }
+      find_event_occurrence_candidates: {
+        Args: {
+          p_limit?: number
+          p_observation_window_minutes?: number
+          p_report_id: string
+          p_time_window_minutes?: number
+        }
+        Returns: {
+          candidate_ends_at: string
+          candidate_source: string
+          candidate_starts_at: string
+          candidate_strength: string
+          candidate_title: string
+          occurrence_id: string
+          occurrence_resolution_status: string
+          resolved_event_id: string
+          temporal_basis: string
+          temporal_distance_seconds: number
         }[]
       }
       geometry: { Args: { "": string }; Returns: unknown }
@@ -9547,6 +10170,42 @@ export type Database = {
           title: string
           venue_ids: string[]
           vibe_tags: string[]
+        }[]
+      }
+      get_discoverable_community_event_ids: {
+        Args: { p_as_of?: string }
+        Returns: {
+          confidence_band: string
+          event_id: string
+          occurrence_id: string
+        }[]
+      }
+      get_event_occurrence_confidence: {
+        Args: { p_occurrence_id: string }
+        Returns: {
+          applied_corrections: number
+          confidence_band: string
+          evidence_source_diversity: number
+          occurrence_id: string
+          pending_usable_corrections: number
+          proximity_verified_contributors: number
+          resolution_status: string
+          resolved_event_id: string
+          unique_confirmers: number
+          unique_contributors: number
+          unique_reporters: number
+          usable_evidence_items: number
+        }[]
+      }
+      get_event_occurrence_discovery_eligibility: {
+        Args: { p_as_of?: string; p_occurrence_id: string }
+        Returns: {
+          blocking_correction_count: number
+          confidence_band: string
+          discovery_eligible: boolean
+          eligibility_reason: string
+          occurrence_id: string
+          resolved_event_id: string
         }[]
       }
       get_nearby_crawls: {
@@ -9846,6 +10505,80 @@ export type Database = {
       remove_roam_relay_team_member: {
         Args: { p_team_id: string; p_user_id: string }
         Returns: undefined
+      }
+      resolve_event_occurrence_canonicalize: {
+        Args: {
+          p_actor_type?: string
+          p_actor_user_id?: string
+          p_archetype?: string
+          p_description?: string
+          p_ends_at?: string
+          p_metadata?: Json
+          p_occurrence_id: string
+          p_price_info?: string
+          p_reason?: string
+          p_report_id?: string
+          p_starts_at: string
+          p_tags?: string[]
+          p_ticket_link?: string
+          p_timezone?: string
+          p_title: string
+        }
+        Returns: {
+          canonical_event_id: string
+          occurrence_id: string
+          resolution_action_id: string
+          resolution_status: string
+        }[]
+      }
+      resolve_event_occurrence_match: {
+        Args: {
+          p_actor_type: string
+          p_actor_user_id?: string
+          p_event_id: string
+          p_metadata?: Json
+          p_occurrence_id: string
+          p_reason?: string
+          p_report_id?: string
+        }
+        Returns: {
+          occurrence_id: string
+          resolution_action_id: string
+          resolution_status: string
+          resolved_event_id: string
+        }[]
+      }
+      resolve_event_occurrence_reject: {
+        Args: {
+          p_actor_type: string
+          p_actor_user_id?: string
+          p_metadata?: Json
+          p_occurrence_id: string
+          p_reason?: string
+          p_report_id?: string
+        }
+        Returns: {
+          occurrence_id: string
+          resolution_action_id: string
+          resolution_status: string
+        }[]
+      }
+      resolve_event_occurrence_reopen: {
+        Args: {
+          p_actor_type: string
+          p_actor_user_id?: string
+          p_metadata?: Json
+          p_occurrence_id: string
+          p_reason?: string
+          p_report_id?: string
+        }
+        Returns: {
+          occurrence_id: string
+          previous_event_id: string
+          previous_status: string
+          resolution_action_id: string
+          resolution_status: string
+        }[]
       }
       roam_city_timezone: { Args: { city_value: string }; Returns: string }
       roam_relay_flow_snapshot_identity_embargoed: {
@@ -10584,6 +11317,23 @@ export type Database = {
           started_at: string
           team_id: string
           team_status: string
+        }[]
+      }
+      swap_active_flow_stop_for_community_event: {
+        Args: {
+          p_event_id: string
+          p_session_id: string
+          p_target_flow_stop_id: string
+          p_user_id: string
+        }
+        Returns: {
+          event_id: string
+          replaced_flow_stop_id: string
+          replaced_venue_id: string
+          replacement_flow_stop_id: string
+          replacement_venue_id: string
+          session_id: string
+          stop_position: number
         }[]
       }
       sync_venue_reputation_categories: {

@@ -23,6 +23,7 @@ import {
 import {
   FavoritesButton,
 } from '@/components/FavoritesButton'
+import VenueSignalReporter from '@/components/maps/VenueSignalReporter'
 import {
   coverCandidates,
 } from '@/utils/imageUtils'
@@ -362,6 +363,22 @@ export default function VenuePreviewSheet({
       null
     )
 
+  const [
+    isReportingSignal,
+    setIsReportingSignal,
+  ] =
+    useState(
+      false
+    )
+
+  const [
+    signalReported,
+    setSignalReported,
+  ] =
+    useState(
+      false
+    )
+
   const isCreatorExplorationMap =
     interactionContext ===
     'creator-exploration-map'
@@ -393,55 +410,63 @@ export default function VenuePreviewSheet({
     )
 
   const image =
-  useMemo(
-    () =>
-      venue
-        ? getPrimaryImage(
-            venue,
-            {
-              preferCanonicalCover:
-                isCreatorExplorationMap,
-            }
-          )
-        : {
-            primary:
-              null,
+    useMemo(
+      () =>
+        venue
+          ? getPrimaryImage(
+              venue,
+              {
+                preferCanonicalCover:
+                  isCreatorExplorationMap,
+              }
+            )
+          : {
+              primary:
+                null,
 
-            fallback:
-              null,
-          },
-    [
-      venue,
-      isCreatorExplorationMap,
-    ]
-  )
+              fallback:
+                null,
+            },
+      [
+        venue,
+        isCreatorExplorationMap,
+      ]
+    )
 
   useEffect(
-  () => {
-    setImageSource(
-      image.primary
-    )
+    () => {
+      setImageSource(
+        image.primary
+      )
 
-    setHasUsedImageFallback(
-      false
-    )
+      setHasUsedImageFallback(
+        false
+      )
 
-    setLocalGenerateError(
-      null
-    )
+      setLocalGenerateError(
+        null
+      )
 
-    setLocalGenerating(
-      false
-    )
-  },
-  [
-    venue?.id,
-    venue?.slug,
-    venue?.cover,
-    image.primary,
-    image.fallback,
-  ]
-)
+      setLocalGenerating(
+        false
+      )
+
+      setIsReportingSignal(
+        false
+      )
+
+      setSignalReported(
+        false
+      )
+    },
+    [
+      venue?.id,
+      venue?.slug,
+      venue?.cover,
+      image.primary,
+      image.fallback,
+    ]
+  )
 
   const isOpen =
     useMemo(
@@ -634,349 +659,349 @@ export default function VenuePreviewSheet({
     }
 
   /**
- * Creator Exploration Map previews deliberately expose only:
- *
- * - the Creator explored badge
- * - the canonical venue cover image
- * - the venue name
- * - a link to the canonical venue profile
- *
- * All default venue details and actions remain untouched for
- * every other map context.
- */
-if (
-  isCreatorExplorationMap
-) {
-  return (
-    <div
-      className="
-        pointer-events-none
-        fixed
-        inset-x-0
-        bottom-0
-        z-[1100]
-        flex
-        justify-center
-        px-3
-        pb-[max(0.75rem,env(safe-area-inset-bottom))]
-        md:inset-x-auto
-        md:right-4
-        md:w-[380px]
-        md:px-0
-        md:pb-4
-      "
-    >
-      <section
-        role="dialog"
-        aria-modal="false"
-        aria-labelledby={
-          titleId
-        }
-        aria-describedby={
-          descriptionId
-        }
-        data-roam-map-context={
-          interactionContext
-        }
+   * Creator Exploration Map previews deliberately expose only:
+   *
+   * - the Creator explored badge
+   * - the canonical venue cover image
+   * - the venue name
+   * - a link to the canonical venue profile
+   *
+   * All default venue details and actions remain untouched for
+   * every other map context.
+   */
+  if (
+    isCreatorExplorationMap
+  ) {
+    return (
+      <div
         className="
-          pointer-events-auto
-          relative
-          w-full
-          max-w-lg
-          overflow-hidden
-          rounded-[24px]
-          border
-          border-white/10
-          bg-zinc-950/[0.94]
-          text-white
-          shadow-[0_24px_80px_rgba(0,0,0,0.55)]
-          backdrop-blur-2xl
-          md:max-w-none
+          pointer-events-none
+          fixed
+          inset-x-0
+          bottom-0
+          z-[1100]
+          flex
+          justify-center
+          px-3
+          pb-[max(0.75rem,env(safe-area-inset-bottom))]
+          md:inset-x-auto
+          md:right-4
+          md:w-[380px]
+          md:px-0
+          md:pb-4
         "
       >
-        <h2
-          id={
+        <section
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby={
             titleId
           }
-          className="sr-only"
-        >
-          {venue.name}
-        </h2>
-
-        <p
-          id={
+          aria-describedby={
             descriptionId
           }
-          className="sr-only"
-        >
-          {`${venue.name}, selected from this creator's public exploration map.`}
-        </p>
-
-        <div
-          className="
-            flex
-            justify-center
-            pb-1
-            pt-2
-            md:hidden
-          "
-          aria-hidden="true"
-        >
-          <span className="h-1 w-10 rounded-full bg-white/20" />
-        </div>
-
-        <button
-          type="button"
-          onClick={
-            onClose
+          data-roam-map-context={
+            interactionContext
           }
-          aria-label="Close venue preview"
           className="
-            absolute
-            right-3
-            top-3
-            z-20
-            grid
-            h-9
-            w-9
-            place-items-center
-            rounded-full
+            pointer-events-auto
+            relative
+            w-full
+            max-w-lg
+            overflow-hidden
+            rounded-[24px]
             border
             border-white/10
-            bg-black/55
-            text-lg
-            font-medium
+            bg-zinc-950/[0.94]
             text-white
-            shadow-lg
-            backdrop-blur-md
-            transition
-            hover:bg-black/75
-            focus-visible:outline-none
-            focus-visible:ring-2
-            focus-visible:ring-cyan-300
+            shadow-[0_24px_80px_rgba(0,0,0,0.55)]
+            backdrop-blur-2xl
+            md:max-w-none
           "
         >
-          ×
-        </button>
+          <h2
+            id={
+              titleId
+            }
+            className="sr-only"
+          >
+            {venue.name}
+          </h2>
 
-        {imageSource ? (
-          <div className="relative h-48 w-full overflow-hidden md:h-52">
-            <img
-              src={
-                imageSource
-              }
-              alt=""
-              width={
-                760
-              }
-              height={
-                416
-              }
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-              onError={
-                () => {
-                  if (
-                    image.fallback &&
-                    !hasUsedImageFallback
-                  ) {
-                    setHasUsedImageFallback(
-                      true
-                    )
+          <p
+            id={
+              descriptionId
+            }
+            className="sr-only"
+          >
+            {`${venue.name}, selected from this creator's public exploration map.`}
+          </p>
 
-                    setImageSource(
-                      image.fallback
-                    )
-
-                    return
-                  }
-
-                  setImageSource(
-                    null
-                  )
-                }
-              }
-            />
-
-            <div
-              className="
-                pointer-events-none
-                absolute
-                inset-0
-                bg-gradient-to-t
-                from-zinc-950
-                via-transparent
-                to-black/25
-              "
-            />
-
-            <div
-              className="
-                absolute
-                inset-x-0
-                bottom-0
-                z-10
-                space-y-2
-                px-4
-                pb-4
-                pr-16
-              "
-            >
-              <span
-                className="
-                  inline-flex
-                  rounded-full
-                  border
-                  border-cyan-300/30
-                  bg-zinc-950/85
-                  px-3
-                  py-1.5
-                  text-[11px]
-                  font-bold
-                  text-cyan-200
-                  shadow-lg
-                  backdrop-blur-xl
-                "
-              >
-                Creator explored
-              </span>
-
-              <p
-                aria-hidden="true"
-                className="
-                  line-clamp-2
-                  text-xl
-                  font-black
-                  leading-tight
-                  tracking-tight
-                  text-white
-                  drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]
-                  md:text-2xl
-                "
-              >
-                {venue.name}
-              </p>
-            </div>
-          </div>
-        ) : (
           <div
             className="
-              relative
               flex
-              h-32
-              items-end
-              bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_45%),#09090b]
-              p-4
+              justify-center
+              pb-1
+              pt-2
+              md:hidden
+            "
+            aria-hidden="true"
+          >
+            <span className="h-1 w-10 rounded-full bg-white/20" />
+          </div>
+
+          <button
+            type="button"
+            onClick={
+              onClose
+            }
+            aria-label="Close venue preview"
+            className="
+              absolute
+              right-3
+              top-3
+              z-20
+              grid
+              h-9
+              w-9
+              place-items-center
+              rounded-full
+              border
+              border-white/10
+              bg-black/55
+              text-lg
+              font-medium
+              text-white
+              shadow-lg
+              backdrop-blur-md
+              transition
+              hover:bg-black/75
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-cyan-300
             "
           >
-            <div className="space-y-2 pr-12">
-              <span
-                className="
-                  inline-flex
-                  rounded-full
-                  border
-                  border-cyan-300/30
-                  bg-zinc-950/85
-                  px-3
-                  py-1.5
-                  text-[11px]
-                  font-bold
-                  text-cyan-200
-                  shadow-lg
-                  backdrop-blur-xl
-                "
-              >
-                Creator explored
-              </span>
+            ×
+          </button>
 
-              <p
-                aria-hidden="true"
+          {imageSource ? (
+            <div className="relative h-48 w-full overflow-hidden md:h-52">
+              <img
+                src={
+                  imageSource
+                }
+                alt=""
+                width={
+                  760
+                }
+                height={
+                  416
+                }
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+                onError={
+                  () => {
+                    if (
+                      image.fallback &&
+                      !hasUsedImageFallback
+                    ) {
+                      setHasUsedImageFallback(
+                        true
+                      )
+
+                      setImageSource(
+                        image.fallback
+                      )
+
+                      return
+                    }
+
+                    setImageSource(
+                      null
+                    )
+                  }
+                }
+              />
+
+              <div
                 className="
-                  line-clamp-2
-                  text-xl
-                  font-black
-                  leading-tight
-                  tracking-tight
-                  text-white
-                  md:text-2xl
+                  pointer-events-none
+                  absolute
+                  inset-0
+                  bg-gradient-to-t
+                  from-zinc-950
+                  via-transparent
+                  to-black/25
+                "
+              />
+
+              <div
+                className="
+                  absolute
+                  inset-x-0
+                  bottom-0
+                  z-10
+                  space-y-2
+                  px-4
+                  pb-4
+                  pr-16
                 "
               >
-                {venue.name}
-              </p>
+                <span
+                  className="
+                    inline-flex
+                    rounded-full
+                    border
+                    border-cyan-300/30
+                    bg-zinc-950/85
+                    px-3
+                    py-1.5
+                    text-[11px]
+                    font-bold
+                    text-cyan-200
+                    shadow-lg
+                    backdrop-blur-xl
+                  "
+                >
+                  Creator explored
+                </span>
+
+                <p
+                  aria-hidden="true"
+                  className="
+                    line-clamp-2
+                    text-xl
+                    font-black
+                    leading-tight
+                    tracking-tight
+                    text-white
+                    drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]
+                    md:text-2xl
+                  "
+                >
+                  {venue.name}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
-
-        <div className="p-3">
-          {venue.id ? (
-            <Link
-              href={`/venue-profile/${encodeURIComponent(
-                venue.id
-              )}`}
-              onClick={
-                () =>
-                  onViewVenue?.(
-                    venue
-                  )
-              }
-              className="
-                flex
-                min-h-12
-                w-full
-                items-center
-                justify-center
-                rounded-2xl
-                border
-                border-cyan-300/25
-                bg-cyan-300/10
-                px-4
-                py-3
-                text-center
-                text-sm
-                font-bold
-                text-cyan-100
-                transition
-                hover:border-cyan-300/45
-                hover:bg-cyan-300/15
-                hover:text-white
-                focus-visible:outline-none
-                focus-visible:ring-2
-                focus-visible:ring-cyan-300
-                focus-visible:ring-offset-2
-                focus-visible:ring-offset-zinc-950
-              "
-            >
-              View venue
-            </Link>
           ) : (
             <div
-              aria-disabled="true"
               className="
+                relative
                 flex
-                min-h-12
-                w-full
-                items-center
-                justify-center
-                rounded-2xl
-                border
-                border-white/10
-                bg-white/[0.04]
-                px-4
-                py-3
-                text-sm
-                font-semibold
-                text-zinc-500
+                h-32
+                items-end
+                bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_45%),#09090b]
+                p-4
               "
             >
-              Venue profile unavailable
+              <div className="space-y-2 pr-12">
+                <span
+                  className="
+                    inline-flex
+                    rounded-full
+                    border
+                    border-cyan-300/30
+                    bg-zinc-950/85
+                    px-3
+                    py-1.5
+                    text-[11px]
+                    font-bold
+                    text-cyan-200
+                    shadow-lg
+                    backdrop-blur-xl
+                  "
+                >
+                  Creator explored
+                </span>
+
+                <p
+                  aria-hidden="true"
+                  className="
+                    line-clamp-2
+                    text-xl
+                    font-black
+                    leading-tight
+                    tracking-tight
+                    text-white
+                    md:text-2xl
+                  "
+                >
+                  {venue.name}
+                </p>
+              </div>
             </div>
           )}
-        </div>
-      </section>
-    </div>
-  )
-}
+
+          <div className="p-3">
+            {venue.id ? (
+              <Link
+                href={`/venue-profile/${encodeURIComponent(
+                  venue.id
+                )}`}
+                onClick={
+                  () =>
+                    onViewVenue?.(
+                      venue
+                    )
+                }
+                className="
+                  flex
+                  min-h-12
+                  w-full
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  border
+                  border-cyan-300/25
+                  bg-cyan-300/10
+                  px-4
+                  py-3
+                  text-center
+                  text-sm
+                  font-bold
+                  text-cyan-100
+                  transition
+                  hover:border-cyan-300/45
+                  hover:bg-cyan-300/15
+                  hover:text-white
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-cyan-300
+                  focus-visible:ring-offset-2
+                  focus-visible:ring-offset-zinc-950
+                "
+              >
+                View venue
+              </Link>
+            ) : (
+              <div
+                aria-disabled="true"
+                className="
+                  flex
+                  min-h-12
+                  w-full
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  border
+                  border-white/10
+                  bg-white/[0.04]
+                  px-4
+                  py-3
+                  text-sm
+                  font-semibold
+                  text-zinc-500
+                "
+              >
+                Venue profile unavailable
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -1349,6 +1374,99 @@ if (
                   ? 'Building your Flow…'
                   : 'Build a Flow from here'}
               </button>
+
+              {venue.id && (
+                <>
+                  {isReportingSignal ? (
+                    <VenueSignalReporter
+                      venueId={
+                        venue.id
+                      }
+                      venueName={
+                        venue.name
+                      }
+                      onCancel={
+                        () => {
+                          setIsReportingSignal(
+                            false
+                          )
+                        }
+                      }
+                      onReported={
+                        () => {
+                          setIsReportingSignal(
+                            false
+                          )
+
+                          setSignalReported(
+                            true
+                          )
+                        }
+                      }
+                    />
+                  ) : signalReported ? (
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="
+                        rounded-2xl
+                        border
+                        border-emerald-400/20
+                        bg-emerald-400/10
+                        px-4
+                        py-3
+                        text-sm
+                        font-semibold
+                        leading-5
+                        text-emerald-200
+                      "
+                    >
+                      Thanks — Roam is checking this signal.
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={
+                        () => {
+                          setSignalReported(
+                            false
+                          )
+
+                          setIsReportingSignal(
+                            true
+                          )
+                        }
+                      }
+                      className="
+                        flex
+                        min-h-11
+                        w-full
+                        items-center
+                        justify-center
+                        rounded-2xl
+                        border
+                        border-cyan-300/20
+                        bg-cyan-300/[0.07]
+                        px-4
+                        py-2.5
+                        text-center
+                        text-xs
+                        font-bold
+                        text-cyan-100
+                        transition
+                        hover:border-cyan-300/35
+                        hover:bg-cyan-300/10
+                        hover:text-white
+                        focus-visible:outline-none
+                        focus-visible:ring-2
+                        focus-visible:ring-cyan-300
+                      "
+                    >
+                      What&apos;s happening here?
+                    </button>
+                  )}
+                </>
+              )}
 
               <div className="grid grid-cols-2 gap-2">
                 {venue.id ? (

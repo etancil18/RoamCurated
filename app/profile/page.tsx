@@ -138,8 +138,8 @@ type OwnerReputationResponse = {
 type ProfileSectionId =
   | "passport"
   | "activity"
-  | "saved"
   | "creator"
+  | "saved"
   | "settings"
 
 type ProfileNavigationItem = {
@@ -1158,17 +1158,17 @@ export default function UserProfilePage() {
       },
       {
         id:
+          "creator",
+
+        label:
+          "Creator Studio",
+      },
+      {
+        id:
           "saved",
 
         label:
           "Saved",
-      },
-      {
-        id:
-          "creator",
-
-        label:
-          "Creator",
       },
       {
         id:
@@ -1182,16 +1182,16 @@ export default function UserProfilePage() {
   return (
     <div className="min-h-screen w-full overflow-x-clip bg-[#070809] text-white">
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute left-[-24%] top-[-12%] h-[28rem] w-[28rem] rounded-full bg-cyan-400/[0.08] blur-[120px] sm:left-[-10%]" />
+        <div className="absolute left-[-24%] top-[-12%] h-[28rem] w-[28rem] rounded-full bg-cyan-400/[0.065] blur-[120px] sm:left-[-10%]" />
 
-        <div className="absolute right-[-28%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-500/[0.09] blur-[140px] sm:right-[-12%]" />
+        <div className="absolute right-[-28%] top-[14%] h-[34rem] w-[34rem] rounded-full bg-indigo-500/[0.07] blur-[140px] sm:right-[-12%]" />
 
-        <div className="absolute bottom-[-22%] left-[22%] h-[30rem] w-[30rem] rounded-full bg-fuchsia-500/[0.04] blur-[140px]" />
+        <div className="absolute bottom-[-22%] left-[22%] h-[30rem] w-[30rem] rounded-full bg-fuchsia-500/[0.03] blur-[140px]" />
 
-        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.025] to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-white/[0.02] to-transparent" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 pb-24 pt-[calc(4rem+env(safe-area-inset-top)+1.25rem)] sm:px-6 sm:pb-28">
+      <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 pb-24 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] sm:px-6 sm:pb-28">
         <ProfileHeader
           username={
             username
@@ -1200,7 +1200,7 @@ export default function UserProfilePage() {
 
         {relayInvitations.length >
         0 ? (
-          <div className="mt-5">
+          <div className="mt-4">
             <RelayInvitationsPanel
               invitations={
                 relayInvitations
@@ -1215,7 +1215,7 @@ export default function UserProfilePage() {
           </div>
         ) : null}
 
-        <div className="mt-7">
+        <div className="mt-5 sm:mt-6">
           <ProfileNavigation
             items={
               navigationItems
@@ -1223,7 +1223,7 @@ export default function UserProfilePage() {
           />
         </div>
 
-        <div className="mt-10 space-y-20 sm:mt-14 sm:space-y-24">
+        <div className="mt-8 space-y-14 sm:mt-10 sm:space-y-18">
           <section
             id="passport"
             aria-labelledby="profile-passport-title"
@@ -1231,12 +1231,12 @@ export default function UserProfilePage() {
           >
             <ProfileSectionHeading
               id="profile-passport-title"
-              eyebrow="Your city identity"
+              eyebrow="Your identity"
               title="Your Passport"
-              description="A living record of where you go, what you gravitate toward, and the local knowledge you are building over time."
+              description="Your evolving Roam identity, built from the places you explore and the local knowledge you earn."
             />
 
-            <div className="mt-7 w-full min-w-0 space-y-6">
+            <div className="mt-5 w-full min-w-0 space-y-4">
               <RoamPassport />
 
               {reputationLoading ? (
@@ -1273,16 +1273,16 @@ export default function UserProfilePage() {
           >
             <ProfileSectionHeading
               id="profile-activity-title"
-              eyebrow="Where you have been"
-              title="Your city history"
-              description="Places you discovered, nights you built, and moments worth remembering."
+              eyebrow="Your activity"
+              title="Where you've been"
+              description="Your verified places, memorable routes, and past Roam experiences."
             />
 
-            <div className="mt-7 space-y-5">
+            <div className="mt-5 space-y-3">
               <ProfilePanel
-                eyebrow="Visited"
-                title="Places you know"
-                description="Your verified venue history, built one real-world visit at a time."
+                eyebrow="Explored"
+                title="Places you've experienced"
+                description="Your verified venue history, built from real-world visits."
               >
                 <VisitHistorySection />
               </ProfilePanel>
@@ -1290,7 +1290,7 @@ export default function UserProfilePage() {
               <ProfileDisclosure
                 eyebrow="Memories"
                 title="Flow snapshots"
-                description="The routes, places, and moments you decided were worth keeping."
+                description="Routes and moments you chose to keep."
                 defaultOpen={
                   snapshots.length >
                   0
@@ -1316,41 +1316,10 @@ export default function UserProfilePage() {
               <ProfileDisclosure
                 eyebrow="Flows"
                 title="Your nights and routes"
-                description="Revisit the Flows you created, joined, hosted, or completed."
+                description="Flows you created, joined, hosted, or completed."
               >
                 <UserCrawls />
               </ProfileDisclosure>
-            </div>
-          </section>
-
-          <section
-            id="saved"
-            aria-labelledby="profile-saved-title"
-            className="scroll-mt-32"
-          >
-            <ProfileSectionHeading
-              id="profile-saved-title"
-              eyebrow="Your city shelf"
-              title="Saved for later"
-              description="The places, routes, and guides you do not want to lose when the next plan comes together."
-            />
-
-            <div className="mt-7 grid min-w-0 gap-5 lg:grid-cols-2 lg:items-start">
-              <ProfilePanel
-                eyebrow="Guides"
-                title="Places worth coming back to"
-                description="Neighborhood and destination guides you have kept close."
-              >
-                <SavedProperties />
-              </ProfilePanel>
-
-              <ProfilePanel
-                eyebrow="Library"
-                title="Your saved picks"
-                description="Venues and Flows waiting for the right day, night, or person."
-              >
-                <SavedLibraryShell />
-              </ProfilePanel>
             </div>
           </section>
 
@@ -1361,23 +1330,23 @@ export default function UserProfilePage() {
           >
             <ProfileSectionHeading
               id="profile-creator-title"
-              eyebrow="Your point of view"
-              title="Curate what you know"
-              description="Turn the places and experiences you genuinely understand into a public perspective people can follow."
+              eyebrow="Creator Studio"
+              title="Share what you know"
+              description="Turn your real city knowledge into collections and a public perspective people can follow."
             />
 
-            <div className="mt-7">
+            <div className="mt-5">
               <ProfilePanel
                 eyebrow="Creator"
                 title={
                   creatorModeEnabled
-                    ? "Your perspective is live"
+                    ? "Your creator profile is live"
                     : "Build your public point of view"
                 }
                 description={
                   creatorModeEnabled
-                    ? "Shape the version of your city knowledge that other people discover."
-                    : "When you are ready, turn your existing Roam activity into collections, recommendations, and a public creator identity."
+                    ? "Manage what people discover when they find your Roam profile."
+                    : "Turn your existing Roam activity into collections, recommendations, and a public creator identity."
                 }
               >
                 <CreatorModeEntryCard
@@ -1396,22 +1365,53 @@ export default function UserProfilePage() {
           </section>
 
           <section
+            id="saved"
+            aria-labelledby="profile-saved-title"
+            className="scroll-mt-32"
+          >
+            <ProfileSectionHeading
+              id="profile-saved-title"
+              eyebrow="Your library"
+              title="Saved for later"
+              description="Everything you've kept for another day, night, or plan."
+            />
+
+            <div className="mt-5 grid min-w-0 gap-4 lg:grid-cols-2 lg:items-start">
+              <ProfilePanel
+                eyebrow="Guides"
+                title="Saved guides"
+                description="Neighborhood and destination guides you want to keep close."
+              >
+                <SavedProperties />
+              </ProfilePanel>
+
+              <ProfilePanel
+                eyebrow="Saved"
+                title="Your saved picks"
+                description="Venues and Flows waiting for the right moment."
+              >
+                <SavedLibraryShell />
+              </ProfilePanel>
+            </div>
+          </section>
+
+          <section
             id="settings"
             aria-labelledby="profile-settings-title"
             className="scroll-mt-32"
           >
             <ProfileSectionHeading
               id="profile-settings-title"
-              eyebrow="Your account"
-              title="Make Roam yours"
-              description="Update the profile, preferences, privacy, and taste signals that shape your experience."
+              eyebrow="Account"
+              title="Profile & settings"
+              description="Manage the details and preferences connected to your Roam account."
             />
 
-            <div className="mt-7">
+            <div className="mt-5">
               <ProfileDisclosure
                 eyebrow="Profile"
                 title="Edit your details"
-                description="Update your identity, preferences, and the information connected to your Roam account."
+                description="Update your identity, preferences, and account information."
               >
                 <ProfileForm />
               </ProfileDisclosure>
@@ -1434,34 +1434,33 @@ function ProfileHeader({
     string | null
 }) {
   return (
-    <header className="relative min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.075] via-white/[0.035] to-transparent px-5 py-7 shadow-[0_30px_100px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.07] sm:px-8 sm:py-9">
-      <div className="pointer-events-none absolute right-[-4rem] top-[-6rem] h-56 w-56 rounded-full bg-cyan-400/[0.09] blur-3xl" />
+    <header className="relative min-w-0 overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-white/[0.06] via-white/[0.025] to-transparent px-5 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.24)] ring-1 ring-white/[0.065] sm:px-7 sm:py-7">
+      <div className="pointer-events-none absolute right-[-4rem] top-[-6rem] h-56 w-56 rounded-full bg-cyan-400/[0.07] blur-3xl" />
 
-      <div className="pointer-events-none absolute bottom-[-7rem] left-[28%] h-64 w-64 rounded-full bg-indigo-500/[0.08] blur-3xl" />
+      <div className="pointer-events-none absolute bottom-[-7rem] left-[28%] h-64 w-64 rounded-full bg-indigo-500/[0.055] blur-3xl" />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
+      <div className="relative z-10 flex min-w-0 flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.055] px-3 py-1.5 ring-1 ring-white/[0.07]">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.8)]" />
+          <div className="inline-flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.7)]" />
 
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">
               My Roam
             </p>
           </div>
 
-          <h1 className="mt-5 max-w-3xl text-[2.35rem] font-black leading-[0.96] tracking-[-0.045em] text-white sm:text-5xl">
+          <h1 className="mt-4 max-w-3xl text-[2rem] font-black leading-[0.98] tracking-[-0.045em] text-white sm:text-[2.65rem]">
             Your city,
             according to you.
           </h1>
 
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-[15px] sm:leading-7">
-            Every place you save, visit,
-            revisit, and recommend builds
-            a clearer picture of your taste.
+          <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-500 sm:text-[15px]">
+            The places you explore, save,
+            and recommend shape your Roam.
           </p>
 
           {username ? (
-            <p className="mt-5 text-xs font-semibold text-zinc-500">
+            <p className="mt-3 text-xs font-semibold text-zinc-600">
               @{username}
             </p>
           ) : null}
@@ -1478,7 +1477,7 @@ function ProfileHeader({
                 }
               )
             }
-            className="group inline-flex min-h-12 w-full shrink-0 items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-cyan-200 sm:w-auto"
+            className="group inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-black text-black transition hover:bg-cyan-200 sm:w-auto"
           >
             View public profile
 
@@ -1490,7 +1489,7 @@ function ProfileHeader({
             </span>
           </Link>
         ) : (
-          <div className="w-full rounded-2xl bg-amber-400/[0.07] px-4 py-3 text-xs leading-5 text-amber-100/75 ring-1 ring-amber-300/15 sm:max-w-xs">
+          <div className="w-full rounded-2xl bg-amber-400/[0.06] px-4 py-3 text-xs leading-5 text-amber-100/75 ring-1 ring-amber-300/15 sm:max-w-xs">
             Add a username in Settings
             to make your Roam identity
             shareable.
@@ -1510,9 +1509,9 @@ function ProfileNavigation({
   return (
     <nav
       aria-label="Profile sections"
-      className="sticky top-[calc(4rem+env(safe-area-inset-top)+0.5rem)] z-30 -mx-4 bg-[#070809]/90 px-4 py-2.5 backdrop-blur-2xl sm:mx-0 sm:rounded-full sm:bg-black/55 sm:px-2 sm:ring-1 sm:ring-white/[0.07]"
+      className="sticky top-[calc(4rem+env(safe-area-inset-top)+0.5rem)] z-30 -mx-4 bg-[#070809]/90 px-4 py-2 backdrop-blur-2xl sm:mx-0 sm:rounded-full sm:bg-black/55 sm:px-2 sm:ring-1 sm:ring-white/[0.07]"
     >
-      <div className="flex min-w-0 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex min-w-0 gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map(
           (
             item
@@ -1522,7 +1521,7 @@ function ProfileNavigation({
                 item.id
               }
               href={`#${item.id}`}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full px-4 py-2 text-xs font-bold text-zinc-500 transition hover:bg-white/[0.07] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-full px-3.5 py-2 text-xs font-bold text-zinc-500 transition hover:bg-white/[0.07] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
             >
               {item.label}
             </a>
@@ -1554,21 +1553,21 @@ function ProfileSectionHeading({
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-2">
-        <span className="h-px w-5 bg-cyan-300/70" />
+        <span className="h-px w-4 bg-cyan-300/60" />
 
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300/90">
           {eyebrow}
         </p>
       </div>
 
       <h2
         id={id}
-        className="mt-3 max-w-3xl text-2xl font-black tracking-[-0.03em] text-white sm:text-[2rem]"
+        className="mt-2.5 max-w-3xl text-2xl font-black tracking-[-0.03em] text-white sm:text-[1.85rem]"
       >
         {title}
       </h2>
 
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-[15px] sm:leading-7">
+      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
         {description}
       </p>
     </div>
@@ -1649,29 +1648,27 @@ function OwnerReputationPanel({
   return (
     <section
       aria-labelledby="category-standing-title"
-      className="relative w-full min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.065] via-white/[0.03] to-transparent p-5 shadow-[0_24px_80px_rgba(0,0,0,0.24)] ring-1 ring-white/[0.07] sm:p-6"
+      className="relative w-full min-w-0 overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-transparent p-4 shadow-[0_20px_60px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.06] sm:p-5"
     >
-      <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-cyan-400/[0.07] blur-3xl" />
+      <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-cyan-400/[0.055] blur-3xl" />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="relative z-10 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
             Your strongest lanes
           </p>
 
           <h3
             id="category-standing-title"
-            className="mt-2 text-xl font-black tracking-tight text-white"
+            className="mt-1.5 text-lg font-black tracking-tight text-white"
           >
-            What your city history
-            says you know
+            What your history says you know
           </h3>
 
-          <p className="mt-2 max-w-2xl text-xs leading-5 text-zinc-500 sm:text-sm sm:leading-6">
-            Your standing grows from real
-            Roam activity, verified places,
-            and the categories where your
-            experience keeps showing up.
+          <p className="mt-1.5 max-w-2xl text-xs leading-5 text-zinc-500">
+            Your standing grows from verified
+            places and the categories where
+            your experience keeps showing up.
           </p>
         </div>
 
@@ -1689,7 +1686,7 @@ function OwnerReputationPanel({
       {visibleStandings.length >
       0 ? (
         <>
-          <div className="relative z-10 mt-6 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="relative z-10 mt-4 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {visibleStandings.map(
               (
                 standing
@@ -1704,7 +1701,7 @@ function OwnerReputationPanel({
                     key={
                       standing.key
                     }
-                    className="min-w-0 rounded-[1.5rem] bg-black/30 p-4 ring-1 ring-white/[0.065]"
+                    className="min-w-0 rounded-[1.35rem] bg-black/25 p-4 ring-1 ring-white/[0.055]"
                   >
                     <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -1722,7 +1719,7 @@ function OwnerReputationPanel({
                         </p>
                       </div>
 
-                      <span className="shrink-0 rounded-full bg-white/[0.06] px-2.5 py-1 text-[10px] font-bold text-zinc-400 ring-1 ring-white/[0.07]">
+                      <span className="shrink-0 rounded-full bg-white/[0.05] px-2.5 py-1 text-[10px] font-bold text-zinc-400 ring-1 ring-white/[0.06]">
                         {formatDisplayLabel(
                           standing
                             .reputationLevel
@@ -1732,12 +1729,12 @@ function OwnerReputationPanel({
 
                     <div
                       className={[
-                        "mt-5 rounded-[1.25rem] px-4 py-4",
+                        "mt-4 rounded-[1.1rem] px-3.5 py-3.5",
 
                         display.tone ===
                         "active"
-                          ? "bg-cyan-300/[0.08] ring-1 ring-cyan-300/15"
-                          : "bg-white/[0.025] ring-1 ring-white/[0.055]",
+                          ? "bg-cyan-300/[0.07] ring-1 ring-cyan-300/15"
+                          : "bg-white/[0.02] ring-1 ring-white/[0.05]",
                       ].join(
                         " "
                       )}
@@ -1748,7 +1745,7 @@ function OwnerReputationPanel({
 
                       <p
                         className={[
-                          "mt-1 break-words text-2xl font-black tracking-[-0.035em]",
+                          "mt-1 break-words text-xl font-black tracking-[-0.035em]",
 
                           display.tone ===
                           "active"
@@ -1812,7 +1809,7 @@ function OwnerReputationPanel({
 
           {hiddenStandingCount >
           0 ? (
-            <p className="relative z-10 mt-4 text-xs leading-5 text-zinc-600">
+            <p className="relative z-10 mt-3 text-xs leading-5 text-zinc-600">
               Showing your strongest{" "}
               {visibleStandings.length.toLocaleString(
                 "en-US"
@@ -1826,7 +1823,7 @@ function OwnerReputationPanel({
           ) : null}
         </>
       ) : (
-        <div className="relative z-10 mt-6 rounded-[1.5rem] bg-black/30 p-4 ring-1 ring-white/[0.06]">
+        <div className="relative z-10 mt-4 rounded-[1.35rem] bg-black/25 p-4 ring-1 ring-white/[0.055]">
           <p className="text-sm font-bold text-white">
             Your city identity is still
             taking shape
@@ -1843,7 +1840,7 @@ function OwnerReputationPanel({
       )}
 
       {warning ? (
-        <p className="relative z-10 mt-4 rounded-xl bg-amber-400/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-100/70 ring-1 ring-amber-300/15">
+        <p className="relative z-10 mt-3 rounded-xl bg-amber-400/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-100/70 ring-1 ring-amber-300/15">
           {warning}
         </p>
       ) : null}
@@ -1854,7 +1851,7 @@ function OwnerReputationPanel({
 function ReputationSkeleton() {
   return (
     <section
-      className="w-full min-w-0 rounded-[2rem] bg-white/[0.035] p-5 ring-1 ring-white/[0.07]"
+      className="w-full min-w-0 rounded-[1.75rem] bg-white/[0.03] p-4 ring-1 ring-white/[0.06] sm:p-5"
       aria-label="Loading category standings"
     >
       <div className="animate-pulse">
@@ -1864,7 +1861,7 @@ function ReputationSkeleton() {
 
         <div className="mt-2 h-4 w-96 max-w-full rounded bg-white/[0.045]" />
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
             0,
             1,
@@ -1877,7 +1874,7 @@ function ReputationSkeleton() {
                 key={
                   item
                 }
-                className="h-44 rounded-[1.5rem] bg-black/25 ring-1 ring-white/[0.055]"
+                className="h-40 rounded-[1.35rem] bg-black/25 ring-1 ring-white/[0.055]"
               />
             )
           )}
@@ -1894,12 +1891,12 @@ function ReputationError({
     string
 }) {
   return (
-    <section className="w-full min-w-0 rounded-[2rem] bg-red-950/15 p-5 text-white ring-1 ring-red-500/20">
+    <section className="w-full min-w-0 rounded-[1.75rem] bg-red-950/15 p-4 text-white ring-1 ring-red-500/20 sm:p-5">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-red-400">
         Category standing
       </p>
 
-      <h3 className="mt-2 text-xl font-black text-white">
+      <h3 className="mt-2 text-lg font-black text-white">
         Reputation unavailable
       </h3>
 
@@ -2334,20 +2331,20 @@ function CreatorModeEntryCard({
       : null
 
   return (
-    <div className="w-full min-w-0 space-y-4">
+    <div className="w-full min-w-0 space-y-3">
       <div
         className={[
-          "relative w-full min-w-0 overflow-hidden rounded-[1.5rem] p-5 ring-1",
+          "relative w-full min-w-0 overflow-hidden rounded-[1.35rem] p-4 ring-1 sm:p-5",
 
           enabled
-            ? "bg-emerald-400/[0.055] ring-emerald-300/15"
-            : "bg-black/25 ring-white/[0.06]",
+            ? "bg-emerald-400/[0.05] ring-emerald-300/15"
+            : "bg-black/20 ring-white/[0.055]",
         ].join(
           " "
         )}
       >
         {enabled ? (
-          <div className="pointer-events-none absolute right-[-4rem] top-[-5rem] h-40 w-40 rounded-full bg-emerald-400/[0.08] blur-3xl" />
+          <div className="pointer-events-none absolute right-[-4rem] top-[-5rem] h-40 w-40 rounded-full bg-emerald-400/[0.07] blur-3xl" />
         ) : null}
 
         <div className="relative z-10 flex min-w-0 items-start justify-between gap-3">
@@ -2381,7 +2378,7 @@ function CreatorModeEntryCard({
                 : "Not active"}
             </div>
 
-            <p className="mt-4 break-words text-lg font-black tracking-tight text-white">
+            <p className="mt-3 break-words text-lg font-black tracking-tight text-white">
               {headline ??
                 (
                   enabled
@@ -2390,10 +2387,10 @@ function CreatorModeEntryCard({
                 )}
             </p>
 
-            <p className="mt-2 text-sm leading-6 text-zinc-500">
+            <p className="mt-1.5 text-sm leading-6 text-zinc-500">
               {enabled
-                ? "Your public creator profile brings together your city history, collections, recommendations, collaborations, and reputation."
-                : "Creator Mode turns what you already know into a polished public perspective. Nothing becomes public until you decide it should."}
+                ? "Manage your public profile, collections, recommendations, collaborations, and reputation."
+                : "Creator Mode turns what you already know into a public perspective. Nothing becomes public until you decide it should."}
             </p>
           </div>
         </div>
@@ -2414,7 +2411,7 @@ function CreatorModeEntryCard({
               }
             )
           }
-          className="inline-flex min-h-12 min-w-0 items-center justify-center rounded-full bg-white px-4 py-3 text-center text-sm font-black text-black transition hover:bg-cyan-200"
+          className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-full bg-white px-4 py-2.5 text-center text-sm font-black text-black transition hover:bg-cyan-200"
         >
           {enabled
             ? "Manage creator profile"
@@ -2435,7 +2432,7 @@ function CreatorModeEntryCard({
               }
             )
           }
-          className="inline-flex min-h-12 min-w-0 items-center justify-center rounded-full bg-indigo-400/10 px-4 py-3 text-center text-sm font-bold text-indigo-200 ring-1 ring-indigo-300/15 transition hover:bg-indigo-400/15 hover:text-white"
+          className="inline-flex min-h-11 min-w-0 items-center justify-center rounded-full bg-indigo-400/10 px-4 py-2.5 text-center text-sm font-bold text-indigo-200 ring-1 ring-indigo-300/15 transition hover:bg-indigo-400/15 hover:text-white"
         >
           Your collections
         </Link>
@@ -2455,7 +2452,7 @@ function CreatorModeEntryCard({
               }
             )
           }
-          className="group inline-flex min-h-11 w-full min-w-0 items-center justify-center rounded-full bg-white/[0.035] px-4 py-2.5 text-center text-sm font-semibold text-zinc-400 ring-1 ring-white/[0.07] transition hover:bg-white/[0.065] hover:text-white"
+          className="group inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-full bg-white/[0.03] px-4 py-2 text-center text-sm font-semibold text-zinc-500 ring-1 ring-white/[0.06] transition hover:bg-white/[0.06] hover:text-white"
         >
           See what people see
 
@@ -2494,11 +2491,11 @@ function SavedLibraryShell() {
     <div className="w-full min-w-0 space-y-3">
       <div
         className={[
-          "relative w-full min-w-0 overflow-hidden rounded-[1.5rem] bg-black/20 ring-1 ring-white/[0.055]",
+          "relative w-full min-w-0 overflow-hidden rounded-[1.35rem] bg-black/20 ring-1 ring-white/[0.05]",
 
           expanded
             ? "max-h-none"
-            : "max-h-[420px]",
+            : "max-h-[380px]",
         ].join(
           " "
         )}
@@ -2542,7 +2539,7 @@ function SavedLibraryShell() {
         </div>
 
         {!expanded ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/95 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0b0c0e] via-[#0b0c0e]/95 to-transparent" />
         ) : null}
       </div>
 
@@ -2559,7 +2556,7 @@ function SavedLibraryShell() {
         aria-expanded={
           expanded
         }
-        className="inline-flex min-h-10 w-full items-center justify-center rounded-full bg-white/[0.04] px-4 py-2 text-sm font-bold text-cyan-300 ring-1 ring-white/[0.07] transition hover:bg-cyan-300/10 hover:text-cyan-100 sm:w-auto"
+        className="inline-flex min-h-10 w-full items-center justify-center rounded-full bg-white/[0.035] px-4 py-2 text-sm font-bold text-cyan-300 ring-1 ring-white/[0.06] transition hover:bg-cyan-300/10 hover:text-cyan-100 sm:w-auto"
       >
         {expanded
           ? "Show less"
@@ -2576,7 +2573,7 @@ function SavedLibraryShell() {
 function SnapshotLibrarySkeleton() {
   return (
     <section
-      className="w-full min-w-0 rounded-[1.5rem] bg-black/25 p-4 text-white ring-1 ring-white/[0.055] sm:p-5"
+      className="w-full min-w-0 rounded-[1.35rem] bg-black/25 p-4 text-white ring-1 ring-white/[0.055]"
       aria-label="Loading snapshot library"
     >
       <div className="min-w-0 animate-pulse">
@@ -2586,7 +2583,7 @@ function SnapshotLibrarySkeleton() {
 
         <div className="mt-2 h-4 w-72 max-w-full rounded bg-white/[0.04]" />
 
-        <div className="mt-5 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             0,
             1,
@@ -2599,7 +2596,7 @@ function SnapshotLibrarySkeleton() {
                 key={
                   item
                 }
-                className="min-w-0 overflow-hidden rounded-[1.5rem] bg-black/30 ring-1 ring-white/[0.055]"
+                className="min-w-0 overflow-hidden rounded-[1.35rem] bg-black/30 ring-1 ring-white/[0.055]"
               >
                 <div className="aspect-square bg-white/[0.04]" />
 
@@ -2626,12 +2623,12 @@ function SnapshotLibraryError({
     string
 }) {
   return (
-    <section className="w-full min-w-0 rounded-[1.5rem] bg-red-950/15 p-5 text-white ring-1 ring-red-500/20">
+    <section className="w-full min-w-0 rounded-[1.35rem] bg-red-950/15 p-4 text-white ring-1 ring-red-500/20">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-red-400">
         Flow snapshots
       </p>
 
-      <h3 className="mt-2 text-xl font-black text-white">
+      <h3 className="mt-2 text-lg font-black text-white">
         Snapshot library unavailable
       </h3>
 
@@ -2665,8 +2662,8 @@ function ProfilePanel({
     ReactNode
 }) {
   return (
-    <section className="w-full min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-b from-white/[0.05] to-white/[0.025] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065] sm:p-5">
-      <div className="mb-5 min-w-0">
+    <section className="w-full min-w-0 overflow-hidden rounded-[1.6rem] bg-gradient-to-b from-white/[0.04] to-white/[0.02] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.055] sm:p-5">
+      <div className="mb-4 min-w-0">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
           {eyebrow}
         </p>
@@ -2676,7 +2673,7 @@ function ProfilePanel({
         </h3>
 
         {description ? (
-          <p className="mt-1.5 break-words text-xs leading-5 text-zinc-500">
+          <p className="mt-1 break-words text-xs leading-5 text-zinc-500">
             {description}
           </p>
         ) : null}
@@ -2716,20 +2713,20 @@ function ProfileDisclosure({
       open={
         defaultOpen
       }
-      className="group w-full min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-b from-white/[0.05] to-white/[0.025] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]"
+      className="group w-full min-w-0 overflow-hidden rounded-[1.6rem] bg-gradient-to-b from-white/[0.035] to-white/[0.018] shadow-[0_18px_60px_rgba(0,0,0,0.16)] ring-1 ring-white/[0.055]"
     >
-      <summary className="flex min-h-[92px] cursor-pointer list-none items-center justify-between gap-4 p-4 outline-none transition hover:bg-white/[0.025] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-400 sm:p-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-[78px] cursor-pointer list-none items-center justify-between gap-4 p-4 outline-none transition hover:bg-white/[0.025] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-400 sm:px-5 [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
             {eyebrow}
           </p>
 
-          <h3 className="mt-1.5 break-words text-lg font-black tracking-tight text-white">
+          <h3 className="mt-1 break-words text-base font-black tracking-tight text-white sm:text-lg">
             {title}
           </h3>
 
           {description ? (
-            <p className="mt-1.5 break-words text-xs leading-5 text-zinc-500">
+            <p className="mt-1 break-words text-xs leading-5 text-zinc-500">
               {description}
             </p>
           ) : null}
@@ -2737,13 +2734,13 @@ function ProfileDisclosure({
 
         <span
           aria-hidden="true"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.04] text-lg font-light text-zinc-500 ring-1 ring-white/[0.07] transition group-open:rotate-45 group-open:bg-cyan-300 group-open:text-black group-open:ring-cyan-300"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/[0.035] text-base font-light text-zinc-500 ring-1 ring-white/[0.06] transition group-open:rotate-45 group-open:bg-cyan-300 group-open:text-black group-open:ring-cyan-300"
         >
           +
         </span>
       </summary>
 
-      <div className="border-t border-white/[0.055] p-3 sm:p-5">
+      <div className="border-t border-white/[0.05] p-3 sm:p-4">
         <div className="w-full min-w-0">
           {children}
         </div>

@@ -1203,14 +1203,6 @@ export async function rebuildPublicPassportStats(
             stats.competitionWinXp ??
             0,
 
-          relay_attributed_stops:
-            stats.relayAttributedStops ??
-            0,
-
-          completed_attributed_relays:
-            stats.completedAttributedRelays ??
-            0,
-
           passport_xp:
             snapshot.xp,
 

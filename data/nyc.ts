@@ -3666,51 +3666,6 @@ const nycData = [
     "id": "6a84ed13-9601-4957-b817-4fadc3e85087"
     },
      {
-       "slug": "barano",    "name": "Barano",
-    "vibe": "Sunday Dinner, Italian, Outdoor Seating, View, Spacious, Sunlit, Rustic, Charming, Green, Warm",
-    "type": "dinner",
-        "lat": "40.7105278",
-    "lon": "-73.9679151",
-    "link": "https://www.instagram.com/baranobk/?hl=en",
-    "cover": "img/venues/Barano.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 3:00 PM–10:00 PM",
-    "Monday: Closed",
-    "Tuesday: 5:00 PM–10:00 PM",
-    "Wednesday: 5:00 PM–10:00 PM",
-    "Thursday: 5:00 PM–10:00 PM",
-    "Friday: 5:00 PM–10:00 PM",
-    "Saturday: 3:00 PM–11:00 PM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 15, "close": 22 },
-  "mon": null,
-  "tue": { "open": 17, "close": 22 },
-  "wed": { "open": 17, "close": 22 },
-  "thu": { "open": 17, "close": 22 },
-  "fri": { "open": 17, "close": 22 },
-  "sat": { "open": 15, "close": 23 } },
-    "dayParts": {
-    "mon": "-",
-    "tue": "E",
-    "wed": "E",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E",
-    "sun": "A"
-  },
-  "timeCategory": "afternoon, evening",
-    "energyRamp": 1,
-    "tags": "italian, pasta, trattoria, terrace, scenic, romantic, rustic, dinner, wine, family",
-    "price": "$$",
-    "duration": 1.25,
-    "id": "d8c6e856-830c-47e6-912d-10815a73c5a3"
-    },
-     {
        "slug": "pollyn",    "name": "Pollyn",
     "vibe": "Artistic, Eclectic, Plant-Filled, Creative, Bohemian, Whimsical, Colorful, Inviting, Green, Unique",
     "type": ["garden", "coffee"],
@@ -3754,51 +3709,6 @@ const nycData = [
     "price": "$",
     "duration": 0.5,
     "id": "2f7a7e06-99d2-4836-b6a3-d1c6af83ed62"
-    },
-     {
-       "slug": "fan-fried-rice-bar",    "name": "Fan Fried Rice Bar",
-    "vibe": "Fun, Taiwanese, Creative, Asian, Comfort Food, Projector, Quirky, Bright, Playful, Bold",
-    "type": "dinner",
-        "lat": "40.7126801",
-    "lon": "-73.9607418",
-    "link": "https://www.instagram.com/fanfriedricebar/?hl=en",
-    "cover": "img/venues/Fan Fried Rice Bar.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 4:00 PM–10:00 PM",
-    "Monday: Closed",
-    "Tuesday: 5:00 PM–10:00 PM",
-    "Wednesday: 5:00 PM–10:00 PM",
-    "Thursday: 5:00 PM–10:00 PM",
-    "Friday: 5:00 PM–11:00 PM",
-    "Saturday: 4:00 PM–11:00 PM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 16, "close": 22 },
-  "mon": null,
-  "tue": { "open": 17, "close": 22 },
-  "wed": { "open": 17, "close": 22 },
-  "thu": { "open": 17, "close": 22 },
-  "fri": { "open": 17, "close": 23 },
-  "sat": { "open": 16, "close": 23 } },
-    "dayParts": {
-    "mon": "-",
-    "tue": "E",
-    "wed": "E",
-    "thu": "E",
-    "fri": "E",
-    "sat": "HH",
-    "sun": "HH"
-  },
-  "timeCategory": "happyhour, evening",
-    "energyRamp": 1,
-    "tags": "taiwanese, asian, comfort, streetfood, playful, casual, noodles, rice, creative",
-    "price": "$$",
-    "duration": 1,
-    "id": "95fdb21c-ce7b-4ab4-9289-14da3de2aa67"
     },
      {
        "slug": "casa-magazines",    "name": "Casa Magazines",
@@ -5884,51 +5794,6 @@ const nycData = [
     "price": "$$$",
     "duration": 1.5,
     "id": "a4c3d53f-ceda-4379-a411-e0bf1bb0b582"
-    },
-     {
-       "slug": "the-bar-at-cafe-kitsune",    "name": "The Bar at Café Kitsuné",
-    "vibe": "Chic, Minimalist, Vinyl, Cocktails, Urban, Sleek, Rhythmic, Stylish, Hip",
-    "type": "cocktail",
-        "lat": "40.6866234",
-    "lon": "-73.9851595",
-    "link": "https://www.instagram.com/104bond/?hl=en",
-    "cover": "img/venues/The Bar at Café Kitsuné.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: Closed",
-    "Monday: Closed",
-    "Tuesday: Closed",
-    "Wednesday: Closed",
-    "Thursday: Closed",
-    "Friday: Closed",
-    "Saturday: Closed"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": null,
-  "mon": null,
-  "tue": null,
-  "wed": null,
-  "thu": null,
-  "fri": null,
-  "sat": null },
-    "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "E",
-    "thu": "E",
-    "fri": "L",
-    "sat": "L",
-    "sun": "E"
-  },
-  "timeCategory": "evening, late",
-    "energyRamp": 1,
-    "tags": "minimalist, vinyl, cocktails, chic, curated, sleek, modern, intimate",
-    "price": "$$",
-    "duration": 1.25,
-    "id": "3c92780c-2146-4d81-88e9-b218667bc53f"
     },
      {
        "slug": "public-records",    "name": "Public Records",
@@ -14334,51 +14199,6 @@ const nycData = [
     "id": "f1b31ef2-aa6f-433d-9287-61962ad969b7"
     },
      {
-       "slug": "the-noble-brooklyn",    "name": "The Noble Brooklyn",
-    "vibe": "Cozy, Neighborhood Bar, Wine Bar, Outdoor Seating, Warm, Welcoming, Rustic, Local, Relaxed",
-    "type": "wine bar",
-        "lat": "40.7286204",
-    "lon": "-73.95442",
-    "link": "https://www.instagram.com/thenoblebk/",
-    "cover": "img/venues/The Noble Brooklyn.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 3:00 PM–12:00 AM",
-    "Monday: Closed",
-    "Tuesday: Closed",
-    "Wednesday: 5:00 PM–12:00 AM",
-    "Thursday: 5:00 PM–12:00 AM",
-    "Friday: 5:00 PM–12:00 AM",
-    "Saturday: 3:00 PM–12:00 AM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 15, "close": 24 },
-    "mon": null,
-    "tue": null,
-    "wed": { "open": 17, "close": 24 },
-    "thu": { "open": 17, "close": 24 },
-    "fri": { "open": 17, "close": 24 },
-    "sat": { "open": 15, "close": 24 } },
-    "dayParts": {
-    "mon": "HH",
-    "tue": "HH",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E",
-    "sun": "HH"
-  },
-  "timeCategory": "happyhour, evening",
-    "energyRamp": 2,
-    "tags": "wine, bottles, beer, charcuterie, relaxed, casual, friendly, airy, sipping, evenings",
-    "price": "$$$",
-    "duration": 1.25,
-    "id": "c3739381-3166-468c-9f24-a7eb770c9eb8"
-    },
-     {
        "slug": "sereneco",    "name": "Sereneco",
     "vibe": "Elegant, Bright, Brunch Spot, Outdoor Seating, Cocktails, Airy, Sunny, Refined, Chic, Garden",
     "type": ["brunch", "dinner", "cocktail"],
@@ -15732,51 +15552,6 @@ const nycData = [
     "price": "$",
     "duration": 1.5,
     "id": "39df4103-bc1e-468c-962e-ace5ad48e6de"
-    },
-     {
-       "slug": "umbra",    "name": "Umbra",
-    "vibe": "Dark, Moody, Trendy, Hidden, Underground, Shadows, Chic, Atmosphere, Nocturnal",
-    "type": "speakeasy",
-        "lat": "40.701113",
-    "lon": "-73.9238807",
-    "link": "https://www.instagram.com/umbrabrooklyn/?hl=en",
-    "cover": "img/venues/Umbra.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 6:00 PM–12:00 AM",
-    "Monday: Closed",
-    "Tuesday: Closed",
-    "Wednesday: 6:00 PM–1:00 AM",
-    "Thursday: 6:00 PM–1:00 AM",
-    "Friday: 6:00 PM–1:00 AM",
-    "Saturday: 6:00 PM–1:00 AM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 18, "close": 24 },
-    "mon": null,
-    "tue": null,
-    "wed": { "open": 18, "close": 25 },
-    "thu": { "open": 18, "close": 25 },
-    "fri": { "open": 18, "close": 25 },
-    "sat": { "open": 18, "close": 25 } },
-    "dayParts": {
-    "mon": "–",
-    "tue": "–",
-    "wed": "E",
-    "thu": "E",
-    "fri": "L",
-    "sat": "L",
-    "sun": "E"
-  },
-  "timeCategory": "happyhour, evening, late",
-    "energyRamp": 4,
-    "tags": "moody new cocktail bar",
-    "price": "$$",
-    "duration": 1.5,
-    "id": "727defe5-d179-4ab5-ad8b-c09af937c543"
     },
      {
        "slug": "jupiter-disco",    "name": "Jupiter Disco",
@@ -18663,51 +18438,6 @@ const nycData = [
     "id": "aa7e2243-0356-4fa4-864d-4d669ce68dda"
     },
      {
-       "slug": "forecast",    "name": "forecast",
-    "vibe": "Art Space, Trendy Hangout, Creative Vibes, Industrial Setting, Cool, Relaxed, Lifestyle, Aesthetic, Gallery, Studio, Niche, Visual",
-    "type": "lifestyle",
-        "lat": "40.7264841",
-    "lon": "-73.957893",
-    "link": "https://www.instagram.com/forecast.space/",
-    "cover": "img/venues/forecast.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 12:00 PM–7:00 PM",
-    "Monday: Closed",
-    "Tuesday: Closed",
-    "Wednesday: Closed",
-    "Thursday: 12:00 PM–6:00 PM",
-    "Friday: 12:00 PM–7:00 PM",
-    "Saturday: 12:00 PM–7:00 PM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 12, "close": 19 },
-    "mon": null,
-    "tue": null,
-    "wed": null,
-    "thu": { "open": 12, "close": 18 },
-    "fri": { "open": 12, "close": 19 },
-    "sat": { "open": 12, "close": 19 } },
-    "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "E",
-    "sat": "L",
-    "sun": "E"
-  },
-  "timeCategory": "evening, night",
-    "energyRamp": 4,
-    "tags": "moody, dimly-lit, cool",
-    "price": "$$",
-    "duration": 0.75,
-    "id": "8e68c945-36ad-4ccc-9072-ba9bca162059"
-    },
-     {
        "slug": "yawning-cobra",    "name": "Yawning Cobra",
     "vibe": "Speakeasy, Hidden Bar, Creative Cocktails, Intimate, Moody, Quiet, Lounge, Elegant, Retro",
     "type": "speakeasy",
@@ -19482,97 +19212,6 @@ const nycData = [
     "price": "$$",
     "duration": 1.5,
     "id": "2c4544da-4ef1-4ea0-afd4-d74c942aa1e7"
-    },
-     {
-       "slug": "suono",    "name": "Suono",
-    "vibe": "Live Music, Eclectic, High Energy, Artsy, Neighborhood Gem, Lively, Creative, Nostalgic, Sound, Performance",
-    "type": "music",
-        "lat": "40.686525",
-    "lon": "-73.944402",
-    "link": "https://www.instagram.com/suonobrooklyn/",
-    "cover": "img/venues/Suono.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: Closed",
-    "Monday: Closed",
-    "Tuesday: Closed",
-    "Wednesday: Closed",
-    "Thursday: Closed",
-    "Friday: 9:00 PM–1:00 AM",
-    "Saturday: 9:00 PM–1:00 AM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": null,
-    "mon": null,
-    "tue": null,
-    "wed": null,
-    "thu": null,
-    "fri": { "open": 21, "close": 25 },
-    "sat": { "open": 21, "close": 25 } },
-    "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "-",
-    "thu": "L",
-    "fri": "L",
-    "sat": "L",
-    "sun": "L"
-  },
-  "timeCategory": "late",
-    "energyRamp": 5,
-    "tags": "DJ-driven, niche, underground",
-    "price": "$$",
-    "duration": 1.75,
-    "id": "2a865de0-f9cd-4dd0-bb30-268a3f1b15d4"
-    },
-     {
-       "slug": "bar-camillo",    "name": "Bar Camillo",
-    "vibe": "Cocktail Bar, Trendy, Stylish, Intimate, Chic, Date Night, Aperitivo, Smooth, Contemporary",
-    "type": "cocktail",
-        "lat": "40.6865279",
-    "lon": "-73.9443999",
-    "link": "https://www.instagram.com/barcamillobk/",
-    "cover": "img/venues/Bar Camillo.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 5:00 PM–10:00 PM",
-    "Monday: 5:00 PM–10:00 PM",
-    "Tuesday: 5:00 PM–10:00 PM",
-    "Wednesday: 5:00 PM–10:00 PM",
-    "Thursday: 5:00 PM–10:00 PM",
-    "Friday: 5:00 PM–1:00 AM",
-    "Saturday: 5:00 PM–1:00 AM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {
-    "sun": { "open": 17, "close": 22 },
-    "mon": { "open": 17, "close": 22 },
-    "tue": { "open": 17, "close": 22 },
-    "wed": { "open": 17, "close": 22 },
-    "thu": { "open": 17, "close": 22 },
-    "fri": { "open": 17, "close": 25 },
-    "sat": { "open": 17, "close": 25 } },
-    "dayParts": {
-    "mon": "HH",
-    "tue": "HH",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E",
-    "sun": "MD"
-  },
-  "timeCategory": "happyhour, evening",
-    "energyRamp": 2,
-    "tags": "Italian, relaxed, neighborhood",
-    "price": "$$",
-    "duration": 1.5,
-    "id": "ad5b2a9b-ca42-42e9-b087-e70423c97794"
     },
      {
        "slug": "tadpole",    "name": "Tadpole",
@@ -21465,51 +21104,6 @@ const nycData = [
     "id": "7ea07358-8a65-4e64-8143-54ab4f894c56"
     },
      {
-       "slug": "dae",    "name": "Dae",
-    "vibe": "Cocktails, Homeware, Laid‑back, Neighborhood Spot, Creative, Craft, Artistic, Welcoming, Community, Local",
-    "type": ["cocktail", "lifestyle"],
-        "lat": "40.6785539",
-    "lon": "-73.9958031",
-    "link": "https://www.instagram.com/dae.bk.newyork/?hl=en",
-    "cover": "img/venues/Dae.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 10:00 AM–10:00 PM",
-    "Monday: Closed",
-    "Tuesday: Closed",
-    "Wednesday: 10:00 AM–10:00 PM",
-    "Thursday: 10:00 AM–10:00 PM",
-    "Friday: 10:00 AM–11:00 PM",
-    "Saturday: 10:00 AM–11:00 PM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 10, "close": 22 },
-    "mon": null,
-    "tue": null,
-    "wed": { "open": 10, "close": 22 },
-    "thu": { "open": 10, "close": 22 },
-    "fri": { "open": 10, "close": 23 },
-    "sat": { "open": 10, "close": 23 } },
-    "dayParts": {
-    "mon": "-",
-    "tue": "-",
-    "wed": "HH",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E",
-    "sun": "HH"
-  },
-  "timeCategory": "evening",
-    "energyRamp": 2,
-    "tags": "minimalist, Korean-Japanese, intimate",
-    "price": "$$",
-    "duration": 2.5,
-    "id": "c240f1f3-7502-4c77-8339-11cbb66cd8f5"
-    },
-     {
        "slug": "rude-mouth",    "name": "Rude Mouth",
     "vibe": "Casual, Wine, Backyard Patio, Group, Loud, Fun, Playful, Eclectic, Vibrant",
     "type": ["wine bar", "patio"],
@@ -21643,51 +21237,6 @@ const nycData = [
     "price": "",
     "duration": 0.75,
     "id": "59ea5612-5382-472d-8695-c02908fa4284"
-    },
-     {
-       "slug": "the-last-call",    "name": "THE LAST CALL",
-    "vibe": "Cozy, Casual, Hidden Gem, Lively, Neighborhood Bar, Warm, Friendly, Low‑key, Local",
-    "type": "bar",
-        "lat": "40.7110998",
-    "lon": "-73.9483032",
-    "link": "https://www.instagram.com/thelastcallbrooklyn/?hl=en",
-    "cover": "img/venues/THE LAST CALL.jpg",
-    "openNow": "TRUE",
-    "hours": [
-    "Sunday: 4:00 PM–12:00 AM",
-    "Monday: Closed",
-    "Tuesday: 4:00 PM–12:00 AM",
-    "Wednesday: 4:00 PM–12:00 AM",
-    "Thursday: 4:00 PM–12:00 AM",
-    "Friday: 4:00 PM–12:00 AM",
-    "Saturday: 2:00 PM–12:00 AM"
-    ],
-  "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {"sun": { "open": 16, "close": 24 },
-    "mon": null,
-    "tue": { "open": 16, "close": 24 },
-    "wed": { "open": 16, "close": 24 },
-    "thu": { "open": 16, "close": 24 },
-    "fri": { "open": 16, "close": 24 },
-    "sat": { "open": 14, "close": 24 } },
-    "dayParts": {
-    "mon": "-",
-    "tue": "E",
-    "wed": "E",
-    "thu": "L",
-    "fri": "L",
-    "sat": "L",
-    "sun": "E"
-  },
-  "timeCategory": "late",
-    "energyRamp": 5,
-    "tags": "party bar, loud, end-of-night vibe",
-    "price": "$",
-    "duration": 2,
-    "id": "82f90793-3344-4bfa-b210-07094d7a3287"
     },
      {
        "slug": "double-chicken-please",    "name": "Double Chicken Please",
@@ -23359,52 +22908,6 @@ const nycData = [
     "id": "ed78762d-ac20-41ac-9f93-4cc4e27c38fe"
     },
      {
-       "slug": "kalei-nyc",    "name": "kalei nyc",
-    "vibe": "Artistic, Minimalist, Chic, Contemporary, Floral, Coffee and Craft Cocktails",
-    "type": ["gallery", "coffee"],
-        "lat": 40.7195805,
-    "lon": -73.9939956,
-    "link": "https://www.instagram.com/kalei.nyc/",
-    "cover": "img/venues/kalei nyc.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 11:00 AM–6:00 PM",
-      "Monday: Closed",
-      "Tuesday: 11:00 AM–6:00 PM",
-      "Wednesday: 11:00 AM–6:00 PM",
-      "Thursday: 11:00 AM–6:00 PM",
-      "Friday: 11:00 AM–6:00 PM",
-      "Saturday: 11:00 AM–6:00 PM"
-    ],
-    "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {
-    "sun": { "open": 11, "close": 18 },
-    "mon": null,
-    "tue": { "open": 11, "close": 18 },
-    "wed": { "open": 11, "close": 18 },
-    "thu": { "open": 11, "close": 18 },
-    "fri": { "open": 11, "close": 18 },
-    "sat": { "open": 11, "close": 18 } },
-  "dayParts": {
-    "sun": "MD",
-    "mon": "-",
-    "tue": "MD",
-    "wed": "MD",
-    "thu": "MD",
-    "fri": "MD",
-    "sat": "MD"
-  },
-  "timeCategory": "midday",
-  "energyRamp": 1,
-  "tags": "coffee cocktails, artsy vibe",
-    "price": "$",
-    "duration": 1,
-    "id": "bdc859fb-3634-4b17-9913-86e83cff2a4a"
-    },
-     {
        "slug": "demo",    "name": "Demo",
     "vibe": "Stylish, Trendy, Boutique Bar, Cozy Atmosphere, Exclusive, Craft Cocktails, Hidden Gem",
     "type": ["dinner", "cocktail"],
@@ -24047,52 +23550,6 @@ const nycData = [
     "price": "$",
     "duration": 0.5,
     "id": "c8858969-53e8-40c8-80f1-c5df14b27e37"
-    },
-     {
-       "slug": "rose-marie",    "name": "Rose Marie",
-    "vibe": "Cozy, Intimate, Relaxed, Artistic, Trendy, Modern Design, Chill Vibes",
-    "type": ["cocktail", "dinner"],
-        "lat": 40.7125159,
-    "lon": -73.9490142,
-    "link": "https://www.instagram.com/rosemariebk/",
-    "cover": "img/venues/Rose Marie.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 5:00 PM–12:00 AM",
-      "Monday: 5:00 PM–12:00 AM",
-      "Tuesday: 5:00 PM–12:00 AM",
-      "Wednesday: 5:00 PM–12:00 AM",
-      "Thursday: 5:00 PM–12:00 AM",
-      "Friday: 5:00 PM–12:00 AM",
-      "Saturday: 5:00 PM–12:00 AM"
-    ],
-    "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {
-    "sun": { "open": 17, "close": 24 },
-    "mon": { "open": 17, "close": 24 },
-    "tue": { "open": 17, "close": 24 },
-    "wed": { "open": 17, "close": 24 },
-    "thu": { "open": 17, "close": 24 },
-    "fri": { "open": 17, "close": 24 },
-    "sat": { "open": 17, "close": 24 } },
-  "dayParts": {
-    "sun": "E",
-    "mon": "E",
-    "tue": "E",
-    "wed": "E",
-    "thu": "E",
-    "fri": "E",
-    "sat": "E"
-  },
-  "timeCategory": "evening",
-  "energyRamp": 2,
-  "tags": "intimate, trendy, artistic",
-    "price": "$$",
-    "duration": 1.75,
-    "id": "499526bf-6c65-4506-9298-3afffd160f37"
     },
      {
        "slug": "quick-eternity",    "name": "Quick Eternity",
@@ -25107,52 +24564,6 @@ const nycData = [
     "id": "b44b467c-5147-4e9a-a473-506acaee7267"
     },
      {
-       "slug": "vin-sur-vingt-wine-bar-west-village",    "name": "Vin Sur Vingt Wine Bar - West Village",
-    "vibe": "Wine Lovers, Sophisticated, Cozy, West Village, Intimate, French Vibes, Romantic, Elegant, Low-Light, Local, Boutique",
-    "type": "wine bar",
-    "lat": 40.736338,
-    "lon": -74.001501,
-    "link": "https://www.instagram.com/vinsurvingt_bars/",
-    "cover": "img/venues/Vin Sur Vingt Wine Bar - West Village.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 3:00 PM–12:00 AM",
-      "Monday: 5:00 PM–12:00 AM",
-      "Tuesday: 5:00 PM–12:00 AM",
-      "Wednesday: 5:00 PM–12:00 AM",
-      "Thursday: 5:00 PM–1:00 AM",
-      "Friday: 4:00 PM–2:00 AM",
-      "Saturday: 3:00 PM–2:00 AM"
-    ],
-    "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": {  "sun": { "open": 15, "close": 24 },
-    "mon": { "open": 17, "close": 24 },
-    "tue": { "open": 17, "close": 24 },
-    "wed": { "open": 17, "close": 24 },
-    "thu": { "open": 17, "close": 25 },
-    "fri": { "open": 16, "close": 26 },
-    "sat": { "open": 15, "close": 26 }
-},
-    "dayParts": {
-      "sun": "E",
-      "mon": "E",
-      "tue": "E",
-      "wed": "E",
-      "thu": "L",
-      "fri": "L",
-      "sat": "L"
-    },
-    "timeCategory": "evening, late",
-    "energyRamp": 4,
-    "tags": "wine tastings, French wine bar, cozy West Village",
-    "price": "$$$",
-    "duration": 1.66,
-    "id": "dd96d880-517f-4dd8-ba06-22ccdfaf57c9"
-    },
-     {
        "slug": "arthurs-tavern",    "name": "Arthur's Tavern",
     "vibe": "Classic, Dive Bar, Old-School, Neighborhood Pub, Live Music, Casual, Lively, Nostalgic, Social, Warm, Unpretentious",
     "type": "bar",
@@ -25612,52 +25023,6 @@ const nycData = [
     "price": "$$$",
     "duration": 2,
     "id": "a0725e32-9e3e-4c46-be2d-9c13b427c226"
-    },
-     {
-       "slug": "bascule",    "name": "Bascule",
-    "vibe": "Intimate, Sophisticated, French-Inspired, Hidden Gem, Romantic, Wine, Neighborhood, Soft, Chill, Candlelit",
-    "type": "wine bar",
-    "lat": 40.727163,
-    "lon": -74.000832,
-    "link": "https://www.instagram.com/basculenyc/",
-    "cover": "img/venues/Bascule.jpg",
-    "openNow": true,
-    "hours": [
-      "Sunday: 5:00 PM–12:00 AM",
-      "Monday: 5:00 PM–12:00 AM",
-      "Tuesday: 5:00 PM–12:00 AM",
-      "Wednesday: 5:00 PM–12:00 AM",
-      "Thursday: 5:00 PM–12:00 AM",
-      "Friday: 5:00 PM–12:00 AM",
-      "Saturday: 5:00 PM–12:00 AM"
-    ],
-    "dateEvents": [
-  { "date": "-", "title": "-", "time": "-" },
-  { "date": "-", "title": "-", "time": "-" }
-],
-  "hoursNumeric": { "sun": { "open": 17, "close": 24 },
-    "mon": { "open": 17, "close": 24 },
-    "tue": { "open": 17, "close": 24 },
-    "wed": { "open": 17, "close": 24 },
-    "thu": { "open": 17, "close": 24 },
-    "fri": { "open": 17, "close": 24 },
-    "sat": { "open": 17, "close": 24 }
-},
-    "dayParts": {
-      "sun": "E",
-      "mon": "E",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "evening",
-    "energyRamp": 3,
-    "tags": "French wine, date night, candlelit setting",
-    "price": "$$",
-    "duration": 2,
-    "id": "2ebfcdfe-c65d-4c42-8dd4-54c26763f648"
     },
      {
        "slug": "le-chene",    "name": "Le Chêne",
@@ -29108,53 +28473,6 @@ const nycData = [
     "id": "67840aaa-ccae-4d5c-bf36-e7c881eed05b"
     },
      {
-       "slug": "canary-cafe",    "name": "Canary Cafe",
-    "vibe": "cozy, airy, neighborhood-friendly, artistic, modern café, warm lighting, creative, plant-filled, casual hangout, welcoming",
-    "type": ["coffee", "breakfast"],
-    "lat": "40.7113494",
-    "lon": "-73.961145",
-    "link": "https://www.instagram.com/canarybrooklyn/?hl=en",
-    "cover": "img/venues/Canary Cafe.jpg",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: 8:00 AM–4:00 PM",
-      "Monday: 8:00 AM–4:00 PM",
-      "Tuesday: 8:00 AM–4:00 PM",
-      "Wednesday: 8:00 AM–4:00 PM",
-      "Thursday: 8:00 AM–4:00 PM",
-      "Friday: 8:00 AM–4:00 PM",
-      "Saturday: 8:00 AM–4:00 PM"
-    ],
-    "dateEvents": [
-      { "date": "-", "title": "-", "time": "-" },
-      { "date": "-", "title": "-", "time": "-" }
-    ],
-    "hoursNumeric": {
-      "sun": { "open": 8, "close": 16 },
-      "mon": { "open": 8, "close": 16 },
-      "tue": { "open": 8, "close": 16 },
-      "wed": { "open": 8, "close": 16 },
-      "thu": { "open": 8, "close": 16 },
-      "fri": { "open": 8, "close": 16 },
-      "sat": { "open": 8, "close": 16 }
-    },
-    "dayParts": {
-      "mon": "MD",
-      "tue": "MD",
-      "wed": "MD",
-      "thu": "MD",
-      "fri": "MD",
-      "sat": "MD",
-      "sun": "MD"
-    },
-    "timeCategory": "morning, midday",
-    "energyRamp": 2,
-    "tags": "artsy nook, modern coffeehouse, Brooklyn-friendly, warm vibe, intimate charm",
-    "price": "$",
-    "duration": 0.75,
-    "id": "a11bc7ae-edbb-48e5-b717-449d7d21418b"
-    },
-     {
        "slug": "outer-heaven",    "name": "Outer Heaven",
     "vibe": "underground, edgy, nightlife-heavy, techno-forward, gritty, experimental, youth-driven, late-night energy, immersive, raw",
     "type": "club",
@@ -30942,53 +30260,6 @@ const nycData = [
     "id": "e995cee2-c91e-4035-bc24-bd6ba61f8dea"
     },
      {
-       "slug": "karma-gallery",    "name": "Karma Gallery",
-    "vibe": "trendy, contemporary art, youthful, stylish, curated, experimental, creative, Brooklyn-chic, modern, social art scene",
-    "type": "gallery",
-    "lat": "40.7224564",
-    "lon": "-73.9841125",
-    "link": "https://www.instagram.com/karmakarma9/?hl=en",
-    "cover": "img/venues/Karma Gallery.JPG",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: Closed",
-      "Monday: Closed",
-      "Tuesday: 10:00 AM–6:00 PM",
-      "Wednesday: 10:00 AM–6:00 PM",
-      "Thursday: 10:00 AM–6:00 PM",
-      "Friday: 10:00 AM–6:00 PM",
-      "Saturday: 10:00 AM–6:00 PM"
-    ],
-    "dateEvents": [
-      { "date": "-", "title": "-", "time": "-" },
-      { "date": "-", "title": "-", "time": "-" }
-    ],
-    "hoursNumeric": {
-      "sun": { "open": null, "close": null },
-      "mon": { "open": null, "close": null },
-      "tue": { "open": 10, "close": 18 },
-      "wed": { "open": 10, "close": 18 },
-      "thu": { "open": 10, "close": 18 },
-      "fri": { "open": 10, "close": 18 },
-      "sat": { "open": 10, "close": 18 }
-    },
-    "dayParts": {
-      "mon": "–",
-      "tue": "MD",
-      "wed": "MD",
-      "thu": "MD",
-      "fri": "MD",
-      "sat": "MD",
-      "sun": "–"
-    },
-    "timeCategory": "midday",
-    "energyRamp": 1,
-    "tags": "fashionable, scene-driven, cultural buzz, progressive art, youthful",
-    "price": "$",
-    "duration": 1,
-    "id": "f28ee5a8-21a8-466b-876e-8287c4d37d5c"
-    },
-     {
        "slug": "judd-foundation",    "name": "Judd Foundation",
     "vibe": "minimalist, architectural, design-driven, contemplative, intellectual, art-world landmark, modernist, clean, thoughtful, cultural",
     "type": "gallery",
@@ -32230,50 +31501,6 @@ const nycData = [
     "price": "$",
     "duration": 1.25,
     "id": "df5dc61e-c21b-4631-b749-0fca411e44ef"
-    },
-     {
-       "slug": "rosso-bar",
-    "name": "Rosso",
-    "vibe": "Wine‑Bar, Italian, Cozy, Stylish, Social, Date‑Night, Refined, Urban, Chic, Classic",
-    "type": ["wine bar"],
-    "lat": "40.7264534",
-    "lon": "-73.9839789",
-    "link": "https://www.instagram.com/rossobar.nyc/?hl=en",
-    "cover": "img/venues/Rosso.jpg",
-    "openNow": "TRUE",
-    "hours": {
-      "Sunday": "4:00 PM–10:30 PM",
-      "Monday": "12:00 AM–5:00 PM",
-      "Tuesday": "5:00 PM–10:00 PM",
-      "Wednesday": "5:00 PM–10:00 PM",
-      "Thursday": "5:00 PM–12:00 AM",
-      "Friday": "5:00 PM–12:00 AM",
-      "Saturday": "4:00 PM–12:00 AM"
-    },
-    "hoursNumeric": {
-      "sun": { "open": 16, "close": 22.5 },
-      "mon": { "open": 0, "close": 17 },
-      "tue": { "open": 17, "close": 22 },
-      "wed": { "open": 17, "close": 22 },
-      "thu": { "open": 17, "close": 24 },
-      "fri": { "open": 17, "close": 24 },
-      "sat": { "open": 16, "close": 24 }
-    },
-    "dayParts": {
-      "mon": "MD",
-      "tue": "E",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E",
-      "sun": "MD"
-    },
-    "timeCategory": "midday, evening",
-    "energyRamp": 2,
-    "tags": "Wine‑Cellar, Italian, Romantic, Urban, Chic",
-    "price": "$$",
-    "duration": 1.5,
-    "id": "6aeb7cb0-c39c-48bb-9eb7-7ae476ba5aec"
     },
      {
        "slug": "tera-nyc",
@@ -34388,50 +33615,6 @@ const nycData = [
     "duration": 1.5
   },
   {
-    "slug": "bddw",
-    "name": "BDDW",
-    "id": "fe93f2de-4098-4a3a-9411-a074b66195cc",
-"vibe": "artisanal, refined, raw, natural, designer, bespoke",
-    "type": ["showroom"],
-    "lat": "40.7197983",
-    "lon": "-74.0002934",
-    "link": "https://www.instagram.com/bddw_etc/?hl=en",
-    "cover": "img/venues/BDDW.jpg",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: Closed",
-      "Monday: 10:00 AM–6:00 PM",
-      "Tuesday: 10:00 AM–6:00 PM",
-      "Wednesday: 10:00 AM–6:00 PM",
-      "Thursday: 10:00 AM–6:00 PM",
-      "Friday: 10:00 AM–6:00 PM",
-      "Saturday: 12:00 PM–6:00 PM"
-    ],
-    "hoursNumeric": {
-      "sun": [],
-      "mon": [{ "open": 10, "close": 18 }],
-      "tue": [{ "open": 10, "close": 18 }],
-      "wed": [{ "open": 10, "close": 18 }],
-      "thu": [{ "open": 10, "close": 18 }],
-      "fri": [{ "open": 10, "close": 18 }],
-      "sat": [{ "open": 12, "close": 18 }]
-    },
-    "dayParts": {
-      "sun": "—",
-      "mon": "MD",
-      "tue": "MD",
-      "wed": "MD",
-      "thu": "MD",
-      "fri": "MD",
-      "sat": "MD"
-    },
-    "timeCategory": "midday",
-    "energyRamp": 3,
-    "tags": "showroom, handcrafted, design, furniture, materials, timeless, minimalist, upscale, objects, display, crafted, modern",
-    "price": "$$$",
-    "duration": 1.5
-  },
-  {
     "slug": "golden-ratio",
     "name": "Golden Ratio",
     "id": "da981889-8ca7-402d-afa0-ad5c061ac75c",
@@ -36192,50 +35375,6 @@ const nycData = [
     "duration": 1.5
   },
   {
-    "slug": "chuko",
-    "name": "Chuko",
-    "id": "979f2cfc-43fe-406c-9d94-0e2b51aad74c",
-"vibe": "refined, rich, bold, noodle‑driven, modern, savory",
-    "type": ["dinner"],
-    "lat": "40.6807775",
-    "lon": "-73.9674535",
-    "link": "https://www.instagram.com/chukobk/?hl=en",
-    "cover": "img/venues/Chuko.jpg",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: 5:30 PM–9:00 PM",
-      "Monday: 5:30 PM–9:00 PM",
-      "Tuesday: Closed",
-      "Wednesday: 5:30 PM–9:00 PM",
-      "Thursday: 5:30 PM–9:00 PM",
-      "Friday: 5:30 PM–10:00 PM",
-      "Saturday: 5:30 PM–10:00 PM"
-    ],
-    "hoursNumeric": {
-      "sun": [{ "open": 17.5, "close": 21 }],
-      "mon": [{ "open": 17.5, "close": 21 }],
-      "tue": [],
-      "wed": [{ "open": 17.5, "close": 21 }],
-      "thu": [{ "open": 17.5, "close": 21 }],
-      "fri": [{ "open": 17.5, "close": 22 }],
-      "sat": [{ "open": 17.5, "close": 22 }]
-    },
-    "dayParts": {
-      "sun": "E",
-      "mon": "E",
-      "tue": "—",
-      "wed": "E",
-      "thu": "E",
-      "fri": "E",
-      "sat": "E"
-    },
-    "timeCategory": "evening",
-    "energyRamp": 3,
-    "tags": "dinner, ramen, noodles, broth, soup, casual, savory, evening, japanese, comfort, bowl, cozy",
-    "price": "$$",
-    "duration": 1.5
-  },
-  {
     "slug": "aita",
     "name": "Aita",
     "id": "eb93744f-899d-4fd9-a532-8b2e3ad2c0dc",
@@ -36983,50 +36122,6 @@ const nycData = [
     "duration": 1.5
   },
   {
-    "slug": "legacy-dumbo",
-    "name": "Legacy (Dumbo)",
-    "id": "9a07f15c-121a-4773-9db0-fe7444c04d2c",
-"vibe": "nostalgic, cultural, curated, indie, playful, community",
-    "type": ["lifestyle"],
-    "lat": "40.7030995",
-    "lon": "-73.9840475",
-    "link": "https://www.instagram.com/legacydumbo/?hl=en",
-    "cover": "img/venues/Legacy (Dumbo).jpg",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: 12:00 PM–7:00 PM",
-      "Monday: Closed",
-      "Tuesday: 12:00 PM–7:00 PM",
-      "Wednesday: 12:00 PM–7:00 PM",
-      "Thursday: 12:00 PM–7:00 PM",
-      "Friday: 12:00 PM–7:00 PM",
-      "Saturday: 12:00 PM–7:00 PM"
-    ],
-    "hoursNumeric": {
-      "sun": [{ "open": 12, "close": 19 }],
-      "mon": [],
-      "tue": [{ "open": 12, "close": 19 }],
-      "wed": [{ "open": 12, "close": 19 }],
-      "thu": [{ "open": 12, "close": 19 }],
-      "fri": [{ "open": 12, "close": 19 }],
-      "sat": [{ "open": 12, "close": 19 }]
-    },
-    "dayParts": {
-      "sun": "A",
-      "mon": "",
-      "tue": "A",
-      "wed": "A",
-      "thu": "A",
-      "fri": "A",
-      "sat": "A"
-    },
-    "timeCategory": "afternoon",
-    "energyRamp": 3,
-    "tags": "records, vinyl, store, crate, music, retro, collection, classic, indie, browse, jazz, rock",
-    "price": "$$",
-    "duration": 1.5
-  },
-  {
     "slug": "human-head-records",
     "name": "Human Head Records",
     "id": "7db6ed72-6044-4666-8dee-09d5e7897358",
@@ -37155,50 +36250,6 @@ const nycData = [
     "timeCategory": "afternoon, evening",
     "energyRamp": 3,
     "tags": "brunch, dinner, panlatin, shared, plates, grill, spice, vibrant, social, drinks, menu, evening",
-    "price": "$$",
-    "duration": 1.5
-  },
-  {
-    "slug": "public-display-of-affection",
-    "name": "Public Display of Affection",
-    "id": "be85e9d5-20b4-4fc9-b22b-9085debe3be6",
-"vibe": "playful, bold, lively, communal, eclectic, trendy",
-    "type": ["lunch", "brunch", "dinner"],
-    "lat": "40.6774473",
-    "lon": "-73.9827101",
-    "link": "https://www.instagram.com/pdabrooklyn/?hl=en",
-    "cover": "img/venues/Public Display of Affection .jpg",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: 9:00 AM–10:00 PM",
-      "Monday: 9:00 AM–10:00 PM",
-      "Tuesday: 5:00 PM–10:00 PM",
-      "Wednesday: 5:00 PM–10:00 PM",
-      "Thursday: 9:00 AM–10:00 PM",
-      "Friday: 9:00 AM–10:00 PM",
-      "Saturday: 9:00 AM–10:00 PM"
-    ],
-    "hoursNumeric": {
-      "sun": [{ "open": 9, "close": 22 }],
-      "mon": [{ "open": 9, "close": 22 }],
-      "tue": [{ "open": 17, "close": 22 }],
-      "wed": [{ "open": 17, "close": 22 }],
-      "thu": [{ "open": 9, "close": 22 }],
-      "fri": [{ "open": 9, "close": 22 }],
-      "sat": [{ "open": 9, "close": 22 }]
-    },
-    "dayParts": {
-      "sun": "A",
-      "mon": "A",
-      "tue": "E",
-      "wed": "E",
-      "thu": "A",
-      "fri": "A",
-      "sat": "A"
-    },
-    "timeCategory": "afternoon, evening",
-    "energyRamp": 3,
-    "tags": "lunch, brunch, dinner, pizza, slices, craft, casual, urban, midday, evening, social, shared",
     "price": "$$",
     "duration": 1.5
   },
@@ -38658,50 +37709,6 @@ const nycData = [
 "duration": 1.5
 },
 {
-"slug": "larrys-ca-phe",
-"name": "Larry’s Ca Phe",
-"id": "",
-    "vibe": "laidback, vintage, cordial, warm, textured, easygoing",
-"type": ["coffee", "café"],
-"lat": "40.6653628",
-"lon": "-73.9830408",
-"link": "https://www.instagram.com/larryscaphe/?hl=en",
-"cover": "img/venues/Larry’s Ca Phe.png",
-    "openNow": "TRUE",
-"hours": [
-"Sunday: 8:00 AM–5:00 PM",
-"Monday: 8:00 AM–4:00 PM",
-"Tuesday: 8:00 AM–4:00 PM",
-"Wednesday: 8:00 AM–4:00 PM",
-"Thursday: 8:00 AM–4:00 PM",
-"Friday: 8:00 AM–4:00 PM",
-"Saturday: 8:00 AM–5:00 PM"
-],
-"hoursNumeric": {
-"sun": { "open": 8, "close": 17 },
-"mon": { "open": 8, "close": 16 },
-"tue": { "open": 8, "close": 16 },
-"wed": { "open": 8, "close": 16 },
-"thu": { "open": 8, "close": 16 },
-"fri": { "open": 8, "close": 16 },
-"sat": { "open": 8, "close": 17 }
-},
-"dayParts": {
-"mon": "MD",
-"tue": "MD",
-"wed": "MD",
-"thu": "MD",
-"fri": "MD",
-"sat": "MD",
-"sun": "MD"
-},
-"timeCategory": "morning, midday",
-"energyRamp": 3,
-"tags": "coffee, drip, beans, banhmi, sandwich, sip, casual, roast, tea, brunch, mellow, local",
-"price": "$",
-"duration": 1.5
-},
-{
 "slug": "cafe-zaffri",
 "name": "Cafe Zaffri",
 "id": "ce58d28d-d3b6-4c2f-8563-c339013853b4",
@@ -38918,50 +37925,6 @@ const nycData = [
 "timeCategory": "midday, evening",
 "energyRamp": 3,
 "tags": "sushi, sashimi, bento, rice, seaweed, lunch, dinner, quick, savory, light, chef, umami",
-"price": "$$$",
-"duration": 1.5
-},
-{
-"slug": "barchef-new-york",
-"name": "BarChef New York",
-"id": "10a5fd1e-5b6e-4192-a538-9e2dbe0b86ff",
-    "vibe": "theatrical, inventive, moody, refined, sensory, daring",
-"type": ["cocktail"],
-"lat": "40.7497382",
-"lon": "-73.9851911",
-"link": "https://www.instagram.com/barchefnewyork/?hl=en",
-"cover": "img/venues/BarChef New York.jpg",
-    "openNow": "TRUE",
-"hours": [
-"Sunday: 5:00 PM–1:00 AM",
-"Monday: 5:00 PM–1:00 AM",
-"Tuesday: 5:00 PM–1:00 AM",
-"Wednesday: 5:00 PM–2:00 AM",
-"Thursday: 5:00 PM–2:00 AM",
-"Friday: 5:00 PM–2:00 AM",
-"Saturday: 5:00 PM–2:00 AM"
-],
-"hoursNumeric": {
-"sun": { "open": 17, "close": 25 },
-"mon": { "open": 17, "close": 25 },
-"tue": { "open": 17, "close": 25 },
-"wed": { "open": 17, "close": 26 },
-"thu": { "open": 17, "close": 26 },
-"fri": { "open": 17, "close": 26 },
-"sat": { "open": 17, "close": 26 }
-},
-"dayParts": {
-"mon": "L",
-"tue": "L",
-"wed": "L",
-"thu": "L",
-"fri": "L",
-"sat": "L",
-"sun": "L"
-},
-"timeCategory": "evening, late",
-"energyRamp": 3,
-"tags": "mixology, craft, spirits, aroma, smoke, ice, technique, shake, sip, bar, blend, twist",
 "price": "$$$",
 "duration": 1.5
 },
@@ -39535,50 +38498,6 @@ const nycData = [
 "energyRamp": 3,
 "tags": "cocktail, spirits, ice, toast, mix, bar, sip, blend, mood, night, shaken, glass",
 "price": "$$",
-"duration": 1.5
-},
-{
-"slug": "the-monroe",
-"name": "The Monroe",
-"id": "dc248e72-6dbc-466f-aeb3-c6845d2d0f75",
-    "vibe": "cozy, eclectic, welcoming, warm, evening, local",
-"type": ["café", "bar"],
-"lat": "40.7117889",
-"lon": "-73.9937248",
-"link": "https://www.instagram.com/themonroenyc/?hl=en",
-"cover": "img/venues/The Monroe.jpg",
-    "openNow": "TRUE",
-"hours": [
-"Sunday: 8:00 AM–12:00 AM",
-"Monday: 10:00 AM–12:00 AM",
-"Tuesday: 10:00 AM–12:00 AM",
-"Wednesday: 10:00 AM–12:00 AM",
-"Thursday: 10:00 AM–12:00 AM",
-"Friday: 10:00 AM–12:00 AM",
-"Saturday: 8:00 AM–12:00 AM"
-],
-"hoursNumeric": {
-"sun": { "open": 8, "close": 24 },
-"mon": { "open": 10, "close": 24 },
-"tue": { "open": 10, "close": 24 },
-"wed": { "open": 10, "close": 24 },
-"thu": { "open": 10, "close": 24 },
-"fri": { "open": 10, "close": 24 },
-"sat": { "open": 8, "close": 24 }
-},
-"dayParts": {
-"mon": "E",
-"tue": "E",
-"wed": "E",
-"thu": "E",
-"fri": "E",
-"sat": "E",
-"sun": "E"
-},
-"timeCategory": "midday, evening",
-"energyRamp": 3,
-"tags": "coffee, brunch, beer, wine, toast, sip, local, mixer, chill, relaxed, casual, cafe",
-"price": "$",
 "duration": 1.5
 },
 {

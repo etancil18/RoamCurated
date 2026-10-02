@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
+
 import { createServerClient } from '@/lib/supabase/server'
+import { getSupabaseAdmin } from '@/lib/supabase/admin-runtime'
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
+import { loadActiveFlowRuntimeRoute } from '@/lib/active-flow/runtimeRoute.server'
 
 import {
   safelyReconcileCompetitionParticipation,
@@ -534,6 +537,30 @@ export async function POST(
             session.source,
         })
 
+      /**
+       * Replay creator Passport repair:
+       *
+       * The idempotent attribution RPC above may have repaired
+       * previously missing creator completion credit.
+       *
+       * Reconcile the original creator's Passport from canonical
+       * replay evidence even though the replaying user's Flow was
+       * already completed.
+       *
+       * Passport rebuilding remains best-effort, so a secondary
+       * materialization failure does not affect the canonical
+       * completed Flow or replay attribution.
+       */
+      if (
+        replayAttribution?.creator_user_id &&
+        replayAttribution.creator_user_id !==
+          user.id
+      ) {
+        await refreshPublicPassportStats(
+          replayAttribution.creator_user_id
+        )
+      }
+
       const completedVenueIds =
         Array.isArray(
           session.venue_ids
@@ -649,29 +676,43 @@ export async function POST(
       )
     }
 
-    const {
-      data: progressRows,
-      error: progressError,
-    } = await supabase
-      .from(
-        'active_flow_progress'
-      )
-      .select(
-        'venue_id'
-      )
-      .eq(
-        'session_id',
-        sessionId
-      )
-      .eq(
-        'user_id',
-        user.id
-      )
+    /**
+     * 016I.2B — Canonical adaptive completion authority.
+     *
+     * Completion must be derived from the canonical executable
+     * runtime route rather than legacy session.venue_ids +
+     * venue-level progress reconstruction.
+     *
+     * The runtime loader already owns the frozen completion
+     * identity rules:
+     *
+     *   - exact flow_stop_id is authoritative
+     *   - base stops may use historical stop_index ↔ position
+     *     fallback
+     *   - Detours require exact flow_stop_id evidence
+     *   - removed/replaced stops are excluded
+     *   - canceled Detours are excluded
+     *
+     * session.venue_ids remains untouched for legacy provenance,
+     * Relay behavior, competition semantics, and reward behavior.
+     */
+    let runtimeStops
 
-    if (progressError) {
+    try {
+      runtimeStops =
+        await loadActiveFlowRuntimeRoute({
+          sessionId,
+          userId:
+            user.id,
+          supabase,
+        })
+    } catch (error) {
       console.error(
-        '[active-flow/complete] Progress fetch failed:',
-        progressError
+        '[active-flow/complete] Canonical runtime progress verification failed:',
+        {
+          sessionId,
+          error,
+        }
       )
 
       return NextResponse.json(
@@ -686,35 +727,66 @@ export async function POST(
       )
     }
 
-    const completedVenueIds =
-      new Set(
-        (
-          progressRows ??
-          []
-        )
-          .map(
-            (
-              row
-            ) =>
-              row.venue_id
-          )
-          .filter(
-            Boolean
-          )
+    const totalStops =
+      runtimeStops.length
+
+    const completedStops =
+      runtimeStops.filter(
+        (stop) =>
+          stop.completed
+      ).length
+
+    const incompleteRuntimeStops =
+      runtimeStops.filter(
+        (stop) =>
+          !stop.completed
       )
 
     const missingVenueIds =
-      venueIds.filter(
-        (
-          venueId
-        ) =>
-          !completedVenueIds.has(
-            venueId
-          )
+      incompleteRuntimeStops.map(
+        (stop) =>
+          stop.venueId
       )
 
+    /**
+     * A zero-stop canonical runtime route must never satisfy
+     * completion vacuously.
+     *
+     * Canonical completion requires:
+     *
+     *   totalStops > 0
+     *   &&
+     *   completedStops === totalStops
+     *
+     * Reaching this state for an otherwise valid Active Flow is
+     * therefore treated as an integrity/verification failure and
+     * fails closed.
+     */
     if (
-      missingVenueIds.length >
+      totalStops ===
+      0
+    ) {
+      console.error(
+        '[active-flow/complete] Canonical runtime route is empty:',
+        {
+          sessionId,
+        }
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Could not verify flow progress.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    if (
+      incompleteRuntimeStops.length >
       0
     ) {
       return NextResponse.json(
@@ -722,11 +794,9 @@ export async function POST(
           error:
             'Flow is not complete yet.',
 
-          completedStops:
-            completedVenueIds.size,
+          completedStops,
 
-          totalStops:
-            venueIds.length,
+          totalStops,
 
           missingVenueIds,
         },
@@ -737,12 +807,243 @@ export async function POST(
       )
     }
 
-    const completedAt =
-      new Date()
-        .toISOString()
+    /**
+     * 016I.4C — Atomic adaptive completion authority.
+     *
+     * The canonical TypeScript projection above remains an early
+     * diagnostic/read boundary so incomplete flows can return useful
+     * completedStops / totalStops / missingVenueIds information.
+     *
+     * It is NOT final mutation authority.
+     *
+     * Final completion is re-derived inside the database while
+     * holding the same active_flow_sessions row lock used by
+     * adaptive route mutations.
+     *
+     * This closes:
+     *
+     *   canonical verification
+     *     → concurrent Swap / Detour
+     *     → stale session completion
+     *
+     * The caller supplies identity only. Completion counts and
+     * completed_at are authoritative RPC outputs.
+     */
+    const admin =
+      getSupabaseAdmin()
 
-    const completedStops =
-      completedVenueIds.size
+    const {
+      data: atomicCompletionRows,
+      error: atomicCompletionError,
+    } = await admin.rpc(
+      'complete_active_flow_session_atomic',
+      {
+        p_session_id:
+          sessionId,
+
+        p_user_id:
+          user.id,
+      }
+    )
+
+    if (
+      atomicCompletionError
+    ) {
+      console.error(
+        '[active-flow/complete] Atomic completion rejected:',
+        {
+          sessionId,
+          error:
+            atomicCompletionError,
+        }
+      )
+
+      /**
+       * The early canonical read may have been valid while an
+       * adaptive route mutation committed before this RPC acquired
+       * the session lock.
+       *
+       * Do not run any completion side effects after an atomic
+       * rejection.
+       */
+      return NextResponse.json(
+        {
+          error:
+            'Flow completion could not be verified atomically.',
+        },
+        {
+          status:
+            409,
+        }
+      )
+    }
+
+    const atomicCompletion =
+      Array.isArray(
+        atomicCompletionRows
+      )
+        ? atomicCompletionRows[0]
+        : null
+
+    if (
+      !atomicCompletion
+    ) {
+      console.error(
+        '[active-flow/complete] Atomic completion returned no row:',
+        {
+          sessionId,
+        }
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Could not complete flow.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    if (
+      atomicCompletion.session_id !==
+      sessionId
+    ) {
+      console.error(
+        '[active-flow/complete] Atomic completion identity mismatch:',
+        {
+          sessionId,
+          atomicCompletion,
+        }
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Could not complete flow.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    const authoritativeCompletedStops =
+      Number(
+        atomicCompletion.completed_stops
+      )
+
+    const authoritativeTotalStops =
+      Number(
+        atomicCompletion.total_stops
+      )
+
+    const completedAt =
+      typeof atomicCompletion.completed_at ===
+        'string'
+        ? atomicCompletion.completed_at
+        : null
+
+    if (
+      !Number.isInteger(
+        authoritativeCompletedStops
+      ) ||
+      authoritativeCompletedStops <=
+        0 ||
+      !Number.isInteger(
+        authoritativeTotalStops
+      ) ||
+      authoritativeTotalStops <=
+        0 ||
+      authoritativeCompletedStops !==
+        authoritativeTotalStops ||
+      !completedAt
+    ) {
+      console.error(
+        '[active-flow/complete] Invalid atomic completion result:',
+        {
+          sessionId,
+          atomicCompletion,
+        }
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Could not complete flow.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    /**
+     * Reload the now-completed session rather than reconstructing it
+     * from stale pre-RPC state.
+     */
+    const {
+      data: updatedSession,
+      error: updatedSessionError,
+    } = await admin
+      .from(
+        'active_flow_sessions'
+      )
+      .select(
+        '*'
+      )
+      .eq(
+        'id',
+        sessionId
+      )
+      .eq(
+        'user_id',
+        user.id
+      )
+      .eq(
+        'status',
+        'completed'
+      )
+      .single()
+
+    if (
+      updatedSessionError ||
+      !updatedSession
+    ) {
+      console.error(
+        '[active-flow/complete] Completed session reload failed:',
+        {
+          sessionId,
+          error:
+            updatedSessionError,
+        }
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Flow completed, but the completed session could not be reloaded.',
+        },
+        {
+          status:
+            500,
+        }
+      )
+    }
+
+    /**
+     * From this point forward, downstream completion behavior must
+     * use the atomic primitive's authoritative completion count.
+     */
+    const canonicalCompletedStops =
+      authoritativeCompletedStops
+
+    const canonicalTotalStops =
+      authoritativeTotalStops
 
     const completionBonus =
       getCompletionBonus(
@@ -758,60 +1059,6 @@ export async function POST(
       getBadgeUnlocked(
         session.source
       )
-
-    const {
-      data: updatedSession,
-      error: updateError,
-    } = await supabase
-      .from(
-        'active_flow_sessions'
-      )
-      .update({
-        status:
-          'completed',
-
-        completed_at:
-          completedAt,
-
-        updated_at:
-          completedAt,
-
-        completed_stops:
-          completedStops,
-      } as any)
-      .eq(
-        'id',
-        sessionId
-      )
-      .eq(
-        'user_id',
-        user.id
-      )
-      .select(
-        '*'
-      )
-      .single()
-
-    if (
-      updateError ||
-      !updatedSession
-    ) {
-      console.error(
-        '[active-flow/complete] Completion update failed:',
-        updateError
-      )
-
-      return NextResponse.json(
-        {
-          error:
-            'Could not complete flow.',
-        },
-        {
-          status:
-            500,
-        }
-      )
-    }
 
     /**
      * Relay baton completion:
@@ -883,6 +1130,29 @@ export async function POST(
       user.id
     )
 
+    /**
+     * Replay completion attribution awards Passport XP to the
+     * original Flow creator.
+     *
+     * Reconcile that creator's public Passport immediately after
+     * the canonical replay attribution RPC has had the opportunity
+     * to record lifetime-idempotent completion credit.
+     *
+     * Passport rebuilding remains best-effort through
+     * refreshPublicPassportStats(), so a secondary materialization
+     * failure can never invalidate the replaying user's successful
+     * Flow completion.
+     */
+    if (
+      replayAttribution?.creator_user_id &&
+      replayAttribution.creator_user_id !==
+        user.id
+    ) {
+      await refreshPublicPassportStats(
+        replayAttribution.creator_user_id
+      )
+    }
+
     await safelyRefreshCreatorReputation(
       user.id,
       {
@@ -915,7 +1185,7 @@ export async function POST(
         completedAt,
 
         verifiedVenueCount:
-          completedStops,
+          canonicalCompletedStops,
       })
 
     return NextResponse.json(
@@ -927,10 +1197,11 @@ export async function POST(
 
         badgeUnlocked,
 
-        completedStops,
+        completedStops:
+          canonicalCompletedStops,
 
         totalStops:
-          venueIds.length,
+          canonicalTotalStops,
 
         source:
           session.source ??

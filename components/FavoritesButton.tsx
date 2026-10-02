@@ -1,9 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import {
+  useEffect,
+  useState,
+} from 'react'
 
-import { useUser } from '@/hooks/useUser'
-import type { Venue } from '@/types/venue'
+import {
+  removeFavoriteAction,
+} from '@/app/favorites/actions'
+import {
+  useUser,
+} from '@/hooks/useUser'
+import type {
+  Venue,
+} from '@/types/venue'
 
 type FavoritesButtonProps = {
   venue: Venue
@@ -14,14 +24,30 @@ type FavoritesButtonProps = {
   className?: string
 }
 
+type FavoriteListRow = {
+  venue_id?: string | null
+}
+
+type FavoritesListResponse = {
+  success?: boolean
+  data?: FavoriteListRow[]
+  message?: string
+}
+
 function joinClassNames(
-  ...values: Array<string | false | null | undefined>
+  ...values: Array<
+    string | false | null | undefined
+  >
 ): string {
   return values
     .filter(
-      (value): value is string =>
-        typeof value === 'string' &&
-        value.trim().length > 0
+      (
+        value
+      ): value is string =>
+        typeof value ===
+          'string' &&
+        value.trim().length >
+          0
     )
     .join(' ')
 }
@@ -30,64 +56,268 @@ export function FavoritesButton({
   venue,
   className,
 }: FavoritesButtonProps) {
-  const { user } = useUser()
+  const {
+    user,
+  } = useUser()
 
   const [
-    isFavoriting,
-    setIsFavoriting,
+    isFavorite,
+    setIsFavorite,
   ] = useState(false)
 
+  const [
+    isLoadingFavorite,
+    setIsLoadingFavorite,
+  ] = useState(false)
+
+  const [
+    isUpdatingFavorite,
+    setIsUpdatingFavorite,
+  ] = useState(false)
+
+  const [
+    favoriteError,
+    setFavoriteError,
+  ] = useState<
+    string | null
+  >(null)
+
+  const isLoggedIn =
+    Boolean(user)
+
+  useEffect(
+    () => {
+      let cancelled =
+        false
+
+      async function loadFavoriteState() {
+        if (
+          !user ||
+          !venue?.id
+        ) {
+          setIsFavorite(
+            false
+          )
+
+          setIsLoadingFavorite(
+            false
+          )
+
+          setFavoriteError(
+            null
+          )
+
+          return
+        }
+
+        setIsLoadingFavorite(
+          true
+        )
+
+        setFavoriteError(
+          null
+        )
+
+        try {
+          const response =
+            await fetch(
+              '/api/favorites/list',
+              {
+                method:
+                  'GET',
+                cache:
+                  'no-store',
+              }
+            )
+
+          const result =
+            (await response.json()) as FavoritesListResponse
+
+          if (
+            !response.ok ||
+            !result.success
+          ) {
+            throw new Error(
+              result.message ||
+                'Failed to load favorites'
+            )
+          }
+
+          if (
+            cancelled
+          ) {
+            return
+          }
+
+          const favorites =
+            Array.isArray(
+              result.data
+            )
+              ? result.data
+              : []
+
+          setIsFavorite(
+            favorites.some(
+              (favorite) =>
+                favorite.venue_id ===
+                venue.id
+            )
+          )
+        } catch (
+          error: unknown
+        ) {
+          if (
+            cancelled
+          ) {
+            return
+          }
+
+          console.error(
+            '❌ Failed to load favorite state:',
+            error
+          )
+
+          setIsFavorite(
+            false
+          )
+
+          setFavoriteError(
+            error instanceof
+              Error
+              ? error.message
+              : 'Could not load favorite status.'
+          )
+        } finally {
+          if (
+            !cancelled
+          ) {
+            setIsLoadingFavorite(
+              false
+            )
+          }
+        }
+      }
+
+      void loadFavoriteState()
+
+      return () => {
+        cancelled = true
+      }
+    },
+    [
+      user,
+      venue.id,
+    ]
+  )
+
   async function handleAddToFavorites() {
-    if (!user) {
-      alert('Please log in to add favorites.')
+    if (
+      !user
+    ) {
+      setFavoriteError(
+        'Please log in to add favorites.'
+      )
+
       return
     }
 
-    if (!venue?.id || !venue?.slug) {
+    if (
+      !venue?.id ||
+      !venue?.slug
+    ) {
       console.warn(
         '⚠️ Venue data missing:',
         venue
       )
 
-      alert('Venue data is incomplete.')
+      setFavoriteError(
+        'Venue data is incomplete.'
+      )
+
       return
     }
 
-    setIsFavoriting(true)
+    const previousFavoriteState =
+      isFavorite
+
+    setIsUpdatingFavorite(
+      true
+    )
+
+    setFavoriteError(
+      null
+    )
+
+    setIsFavorite(
+      true
+    )
 
     try {
-      // Build payload expected by /api/favorites/add.
-      // This must continue to match the server-side Zod schema.
+      /**
+       * Build the exact payload expected by
+       * /api/favorites/add.
+       */
       const payload = {
-        slug: venue.slug,
-        venue_id: venue.id,
+        slug:
+          venue.slug,
+
+        venue_id:
+          venue.id,
+
         data: {
-          name: venue.name,
-          lat: Number(venue.lat),
-          lon: Number(venue.lon),
+          name:
+            venue.name,
+
+          lat:
+            Number(
+              venue.lat
+            ),
+
+          lon:
+            Number(
+              venue.lon
+            ),
+
           instagram_handle:
             typeof venue.instagram_handle ===
             'string'
               ? venue.instagram_handle
               : undefined,
-          type: Array.isArray(venue.type)
-            ? venue.type.join(', ')
-            : venue.type ?? undefined,
+
+          type:
+            Array.isArray(
+              venue.type
+            )
+              ? venue.type.join(
+                  ', '
+                )
+              : venue.type ??
+                undefined,
+
           image_url:
             typeof venue.cover ===
             'string'
               ? venue.cover
               : undefined,
+
           vibe_tags:
             typeof venue.vibe ===
             'string'
               ? venue.vibe
-                  .split(',')
-                  .map((value) =>
-                    value.trim()
+                  .split(
+                    ','
                   )
-                  .filter(Boolean)
+                  .map(
+                    (
+                      value
+                    ) =>
+                      value.trim()
+                  )
+                  .filter(
+                    Boolean
+                  )
               : undefined,
+
           price_tier:
             typeof venue.price ===
             'number'
@@ -100,118 +330,252 @@ export function FavoritesButton({
                       ''
                     ),
                     10
-                  ) || undefined
+                  ) ||
+                  undefined
                 : undefined,
+
           city:
             venue.city ??
             undefined,
         },
       }
 
-      console.log(
-        '📦 Sending favorite payload:',
-        payload
-      )
+      const response =
+        await fetch(
+          '/api/favorites/add',
+          {
+            method:
+              'POST',
 
-      const response = await fetch(
-        '/api/favorites/add',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type':
-              'application/json',
-          },
-          body:
-            JSON.stringify(payload),
-        }
-      )
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
 
-      const text =
-        await response.text()
+            body:
+              JSON.stringify(
+                payload
+              ),
+          }
+        )
 
-      console.log(
-        '📨 Server response:',
-        text
-      )
+      const result =
+        await response
+          .json()
+          .catch(
+            () =>
+              null
+          )
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
+        const message =
+          result &&
+          typeof result.message ===
+            'string'
+            ? result.message
+            : 'Could not add this venue to favorites.'
+
         throw new Error(
-          text ||
-            'Unknown server error'
+          message
         )
       }
-
-      alert(
-        `⭐ Added "${venue.name}" to favorites!`
-      )
-    } catch (error: unknown) {
+    } catch (
+      error: unknown
+    ) {
       console.error(
         '❌ Failed to add favorite:',
         error
       )
 
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Unknown error'
+      setIsFavorite(
+        previousFavoriteState
+      )
 
-      alert(
-        `❌ Could not add to favorites: ${message}`
+      setFavoriteError(
+        error instanceof
+          Error
+          ? error.message
+          : 'Could not add this venue to favorites.'
       )
     } finally {
-      setIsFavoriting(false)
+      setIsUpdatingFavorite(
+        false
+      )
     }
   }
 
-  const isLoggedIn =
-    Boolean(user)
+  async function handleRemoveFromFavorites() {
+    if (
+      !user
+    ) {
+      setFavoriteError(
+        'Please log in to manage favorites.'
+      )
+
+      return
+    }
+
+    if (
+      !venue?.id
+    ) {
+      setFavoriteError(
+        'Venue data is incomplete.'
+      )
+
+      return
+    }
+
+    const previousFavoriteState =
+      isFavorite
+
+    setIsUpdatingFavorite(
+      true
+    )
+
+    setFavoriteError(
+      null
+    )
+
+    setIsFavorite(
+      false
+    )
+
+    try {
+      await removeFavoriteAction(
+        venue.id
+      )
+    } catch (
+      error: unknown
+    ) {
+      console.error(
+        '❌ Failed to remove favorite:',
+        error
+      )
+
+      setIsFavorite(
+        previousFavoriteState
+      )
+
+      setFavoriteError(
+        error instanceof
+          Error
+          ? error.message
+          : 'Could not remove this venue from favorites.'
+      )
+    } finally {
+      setIsUpdatingFavorite(
+        false
+      )
+    }
+  }
+
+  const isBusy =
+    isLoadingFavorite ||
+    isUpdatingFavorite
+
+  const buttonLabel =
+    isLoadingFavorite
+      ? 'Checking…'
+      : isUpdatingFavorite
+        ? isFavorite
+          ? 'Saving…'
+          : 'Removing…'
+        : isFavorite
+          ? 'Saved ✓'
+          : isLoggedIn
+            ? 'Add to favorites'
+            : 'Log in to favorite'
 
   return (
-    <button
-      type="button"
-      onClick={
-        handleAddToFavorites
-      }
-      disabled={
-        !isLoggedIn ||
-        isFavoriting
-      }
-      aria-busy={
-        isFavoriting
-      }
+    <div
       className={joinClassNames(
-        `
-          flex
-          min-h-11
-          w-full
-          items-center
-          justify-center
-          rounded-2xl
-          border
-          border-white/10
-          bg-white/[0.055]
-          px-3
-          py-2
-          text-center
-          text-xs
-          font-bold
-          text-zinc-100
-          transition
-          hover:bg-white/10
-          focus-visible:outline-none
-          focus-visible:ring-2
-          focus-visible:ring-cyan-300
-          disabled:cursor-not-allowed
-          disabled:opacity-50
-        `,
+        'w-full',
         className
       )}
     >
-      {isFavoriting
-        ? 'Adding…'
-        : isLoggedIn
-          ? 'Add to favorites'
-          : 'Log in to favorite'}
-    </button>
+      <button
+        type="button"
+        onClick={
+          isFavorite
+            ? () => {
+                void handleRemoveFromFavorites()
+              }
+            : () => {
+                void handleAddToFavorites()
+              }
+        }
+        disabled={
+          !isLoggedIn ||
+          isBusy
+        }
+        aria-busy={
+          isBusy
+        }
+        aria-pressed={
+          isFavorite
+        }
+        className={joinClassNames(
+          `
+            flex
+            min-h-11
+            w-full
+            items-center
+            justify-center
+            rounded-2xl
+            border
+            px-3
+            py-2
+            text-center
+            text-xs
+            font-bold
+            transition
+            focus-visible:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-cyan-300
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+          `,
+          isFavorite
+            ? `
+                border-cyan-300/30
+                bg-cyan-300/10
+                text-cyan-100
+                hover:border-cyan-300/40
+                hover:bg-cyan-300/15
+              `
+            : `
+                border-white/10
+                bg-white/[0.055]
+                text-zinc-100
+                hover:bg-white/10
+              `
+        )}
+      >
+        {
+          buttonLabel
+        }
+      </button>
+
+      {favoriteError && (
+        <p
+          role="alert"
+          aria-live="polite"
+          className="
+            mt-1.5
+            text-center
+            text-[11px]
+            font-medium
+            leading-4
+            text-rose-300
+          "
+        >
+          {
+            favoriteError
+          }
+        </p>
+      )}
+    </div>
   )
 }
