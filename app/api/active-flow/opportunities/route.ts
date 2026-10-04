@@ -13,6 +13,14 @@ import {
 } from '@/lib/active-flow/interventionFeasibility.server'
 
 import {
+  evaluateActiveFlowInterventionSuitability,
+} from '@/lib/active-flow/interventionSuitability'
+
+import {
+  resolveActiveFlowInterventionTargets,
+} from '@/lib/active-flow/interventionTargets'
+
+import {
   recommendActiveFlowIntervention,
 } from '@/lib/active-flow/interventionRecommendation'
 
@@ -97,14 +105,54 @@ export async function GET(
                   opportunity.score != null,
               })
 
+            /**
+             * 022E.4 — Deterministic intervention suitability.
+             *
+             * Suitability is evaluated only when the authoritative
+             * semantic evidence established by the opportunity pipeline
+             * is present.
+             *
+             * Missing semantic evidence deliberately yields no
+             * suitability result here. The recommendation primitive then
+             * preserves frozen 017 feasibility-only behavior through its
+             * optional suitability contract.
+             *
+             * Structural intervention targets remain server-owned and
+             * are resolved from the canonical runtime context.
+             */
+            const suitability =
+              opportunity.candidate.eventSemantics &&
+              opportunity.candidate.contextualFit &&
+              context.semanticContext
+                ? evaluateActiveFlowInterventionSuitability({
+                    event:
+                      opportunity.candidate.eventSemantics,
+
+                    contextualFit:
+                      opportunity.candidate.contextualFit,
+
+                    semanticContext: {
+                      remainingStops:
+                        context.semanticContext.remainingStops,
+                    },
+
+                    targets:
+                      resolveActiveFlowInterventionTargets(
+                        context
+                      ),
+                  })
+                : undefined
+
             const recommendation =
               recommendActiveFlowIntervention(
-                interventions
+                interventions,
+                suitability
               )
 
             return {
               ...opportunity,
               interventions,
+              suitability,
               recommendation,
             }
           }

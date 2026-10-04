@@ -1,9 +1,6 @@
 'use client'
 
 import {
-  FormEvent,
-  useEffect,
-  useRef,
   useState,
 } from 'react'
 
@@ -14,14 +11,140 @@ type Props = {
   onReported: () => void
 }
 
-type EventReportResponse = {
-  report?: {
-    id?: string
-  }
+type SignalIntent =
+  | 'line'
+  | 'pop_up'
+  | 'temporary_closure'
+  | 'dj_set'
+  | 'live_music'
+
+type SignalOption = {
+  intent: SignalIntent
+  label: string
+  description: string
+}
+
+type ApiResponse = {
   error?: string
 }
 
-const MAX_TITLE_LENGTH = 160
+const SIGNAL_OPTIONS: SignalOption[] = [
+  {
+    intent: 'line',
+    label: 'Line',
+    description:
+      'There’s a line here right now.',
+  },
+  {
+    intent: 'pop_up',
+    label: 'Pop-up',
+    description:
+      'A pop-up is happening here.',
+  },
+  {
+    intent: 'temporary_closure',
+    label: 'Temporary closure',
+    description:
+      'This place is temporarily closed.',
+  },
+  {
+    intent: 'dj_set',
+    label: 'DJ set',
+    description:
+      'A DJ is playing here right now.',
+  },
+  {
+    intent: 'live_music',
+    label: 'Live music',
+    description:
+      'Live music is happening here.',
+  },
+]
+
+function getRequestForIntent({
+  intent,
+  venueId,
+}: {
+  intent: SignalIntent
+  venueId: string
+}): {
+  url: string
+  body: Record<string, unknown>
+} {
+  if (intent === 'line') {
+    return {
+      url:
+        '/api/community-signals/place',
+      body: {
+        venue_id:
+          venueId,
+        signal_type:
+          'line',
+        signal_state:
+          'present',
+      },
+    }
+  }
+
+  if (
+    intent ===
+    'temporary_closure'
+  ) {
+    return {
+      url:
+        '/api/community-signals/place',
+      body: {
+        venue_id:
+          venueId,
+        signal_type:
+          'temporary_closure',
+        signal_state:
+          'present',
+      },
+    }
+  }
+
+  if (intent === 'pop_up') {
+    return {
+      url:
+        '/api/event-reports',
+      body: {
+        venue_id:
+          venueId,
+        reported_title:
+          'Pop-up',
+      },
+    }
+  }
+
+  if (intent === 'dj_set') {
+    return {
+      url:
+        '/api/event-reports',
+      body: {
+        venue_id:
+          venueId,
+        reported_title:
+          'DJ set',
+        reported_archetype:
+          'nightlife',
+      },
+    }
+  }
+
+  return {
+    url:
+      '/api/event-reports',
+    body: {
+      venue_id:
+        venueId,
+      reported_title:
+        'Live music',
+      reported_archetype:
+        'music',
+    },
+  }
+}
 
 export default function VenueSignalReporter({
   venueId,
@@ -29,20 +152,12 @@ export default function VenueSignalReporter({
   onCancel,
   onReported,
 }: Props) {
-  const inputRef =
-    useRef<HTMLInputElement | null>(
-      null
-    )
-
   const [
-    reportTitle,
-    setReportTitle,
-  ] = useState('')
-
-  const [
-    isSubmitting,
-    setIsSubmitting,
-  ] = useState(false)
+    submittingIntent,
+    setSubmittingIntent,
+  ] = useState<SignalIntent | null>(
+    null
+  )
 
   const [
     error,
@@ -51,35 +166,29 @@ export default function VenueSignalReporter({
     null
   )
 
-  const trimmedTitle =
-    reportTitle.trim()
+  const isSubmitting =
+    submittingIntent !== null
 
-  const canSubmit =
-    !isSubmitting &&
-    trimmedTitle.length > 0 &&
-    trimmedTitle.length <=
-      MAX_TITLE_LENGTH
-
-  useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
-
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
+  async function handleReport(
+    intent: SignalIntent
   ) {
-    event.preventDefault()
-
-    if (!canSubmit) {
+    if (isSubmitting) {
       return
     }
 
-    setIsSubmitting(true)
+    setSubmittingIntent(intent)
     setError(null)
+
+    const request =
+      getRequestForIntent({
+        intent,
+        venueId,
+      })
 
     try {
       const response =
         await fetch(
-          '/api/event-reports',
+          request.url,
           {
             method: 'POST',
 
@@ -91,24 +200,20 @@ export default function VenueSignalReporter({
             credentials:
               'include',
 
-            body: JSON.stringify({
-              venue_id:
-                venueId,
-
-              reported_title:
-                trimmedTitle,
-            }),
+            body: JSON.stringify(
+              request.body
+            ),
           }
         )
 
       let body:
-        | EventReportResponse
+        | ApiResponse
         | null = null
 
       try {
         body =
           (await response.json()) as
-            EventReportResponse
+            ApiResponse
       } catch {
         body = null
       }
@@ -127,34 +232,39 @@ export default function VenueSignalReporter({
 
         setError(
           body?.error ??
-            'We couldn’t submit your report. Please try again.'
+            'We couldn’t submit your signal. Please try again.'
         )
 
         return
       }
 
       /**
-       * A successful POST means the user's observation was
-       * accepted by Roam.
+       * Success means Roam accepted the user's observation.
        *
-       * It does NOT mean a canonical event was created.
-       * Occurrence establishment, deduplication, resolution,
-       * moderation, and trust remain server-owned.
+       * It does NOT mean:
+       *
+       * - a place-state observation is automatically true
+       * - a canonical event was created
+       * - an event occurrence was canonicalized
+       * - the user visited the venue
+       * - the user participated in an event
+       *
+       * Existing server-owned evidence, trust, deduplication,
+       * moderation, freshness, and resolution semantics remain
+       * authoritative.
        */
-      setReportTitle('')
-
       onReported()
     } catch (submitError) {
       console.error(
-        '[VenueSignalReporter] Failed to submit event report:',
+        '[VenueSignalReporter] Failed to submit community signal:',
         submitError
       )
 
       setError(
-        'We couldn’t submit your report. Check your connection and try again.'
+        'We couldn’t submit your signal. Check your connection and try again.'
       )
     } finally {
-      setIsSubmitting(false)
+      setSubmittingIntent(null)
     }
   }
 
@@ -164,7 +274,6 @@ export default function VenueSignalReporter({
     }
 
     setError(null)
-    setReportTitle('')
     onCancel()
   }
 
@@ -183,191 +292,123 @@ export default function VenueSignalReporter({
         </p>
 
         <p className="mt-1 text-xs leading-5 text-white/60">
-          Share what you&apos;re
+          Tap what you&apos;re
           seeing right now. Roam
           will check it against
-          other signals.
+          other community signals.
         </p>
       </div>
 
-      <form
-        onSubmit={
-          handleSubmit
-        }
-        className="space-y-3"
+      <div
+        className="grid grid-cols-2 gap-2"
+        aria-label="Community signal options"
       >
-        <div>
-          <label
-            htmlFor="venue-signal-report-title"
-            className="sr-only"
-          >
-            What&apos;s
-            happening at{' '}
-            {venueName}?
-          </label>
+        {SIGNAL_OPTIONS.map(
+          option => {
+            const isThisSubmitting =
+              submittingIntent ===
+              option.intent
 
-          <input
-            ref={inputRef}
-            id="venue-signal-report-title"
-            type="text"
-            value={
-              reportTitle
-            }
-            onChange={(
-              event
-            ) => {
-              setReportTitle(
-                event.target
-                  .value
-              )
+            return (
+              <button
+                key={option.intent}
+                type="button"
+                disabled={
+                  isSubmitting
+                }
+                onClick={() => {
+                  void handleReport(
+                    option.intent
+                  )
+                }}
+                aria-label={
+                  option.description
+                }
+                className={`
+                  min-h-[4.5rem]
+                  rounded-xl
+                  border
+                  border-white/10
+                  bg-white/[0.04]
+                  px-3
+                  py-3
+                  text-left
+                  transition
+                  hover:border-white/20
+                  hover:bg-white/[0.08]
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-white/30
+                  disabled:cursor-not-allowed
+                  disabled:opacity-50
+                  ${
+                    option.intent ===
+                    'temporary_closure'
+                      ? 'col-span-2'
+                      : ''
+                  }
+                `}
+              >
+                <span className="block text-sm font-semibold text-white">
+                  {isThisSubmitting
+                    ? 'Reporting…'
+                    : option.label}
+                </span>
 
-              if (error) {
-                setError(
-                  null
-                )
-              }
-            }}
-            maxLength={
-              MAX_TITLE_LENGTH
-            }
-            autoComplete="off"
-            enterKeyHint="send"
-            disabled={
-              isSubmitting
-            }
-            placeholder="e.g. Jazz trio playing"
-            aria-invalid={
-              error
-                ? true
-                : undefined
-            }
-            aria-describedby={
-              error
-                ? 'venue-signal-report-error'
-                : 'venue-signal-report-help'
-            }
-            className="
-              w-full
-              rounded-xl
-              border
-              border-white/15
-              bg-black/20
-              px-3.5
-              py-3
-              text-sm
-              text-white
-              outline-none
-              transition
-              placeholder:text-white/35
-              focus:border-white/35
-              focus:ring-2
-              focus:ring-white/10
-              disabled:cursor-not-allowed
-              disabled:opacity-60
-            "
-          />
+                <span className="mt-1 block text-[11px] leading-4 text-white/45">
+                  {
+                    option.description
+                  }
+                </span>
+              </button>
+            )
+          }
+        )}
+      </div>
 
-          <div className="mt-1.5 flex items-start justify-between gap-3">
-            <p
-              id="venue-signal-report-help"
-              className="text-[11px] leading-4 text-white/45"
-            >
-              Keep it short and
-              specific.
-            </p>
+      {error ? (
+        <p
+          id="venue-signal-report-error"
+          role="alert"
+          className="mt-3 rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs leading-5 text-red-100"
+        >
+          {error}
+        </p>
+      ) : null}
 
-            <span
-              aria-hidden="true"
-              className="shrink-0 text-[11px] tabular-nums text-white/35"
-            >
-              {
-                reportTitle
-                  .length
-              }
-              /
-              {
-                MAX_TITLE_LENGTH
-              }
-            </span>
-          </div>
-        </div>
-
-        {error ? (
-          <p
-            id="venue-signal-report-error"
-            role="alert"
-            className="rounded-xl border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs leading-5 text-red-100"
-          >
-            {error}
-          </p>
-        ) : null}
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={
-              handleCancel
-            }
-            disabled={
-              isSubmitting
-            }
-            className="
-              min-h-11
-              flex-1
-              rounded-xl
-              border
-              border-white/10
-              bg-white/[0.04]
-              px-4
-              py-2.5
-              text-sm
-              font-medium
-              text-white/75
-              transition
-              hover:bg-white/[0.08]
-              hover:text-white
-              focus-visible:outline-none
-              focus-visible:ring-2
-              focus-visible:ring-white/30
-              disabled:cursor-not-allowed
-              disabled:opacity-50
-            "
-          >
-            Cancel
-          </button>
-
-          <button
-            type="submit"
-            disabled={
-              !canSubmit
-            }
-            className="
-              min-h-11
-              flex-[1.4]
-              rounded-xl
-              bg-white
-              px-4
-              py-2.5
-              text-sm
-              font-semibold
-              text-black
-              transition
-              hover:bg-white/90
-              focus-visible:outline-none
-              focus-visible:ring-2
-              focus-visible:ring-white/40
-              focus-visible:ring-offset-2
-              focus-visible:ring-offset-black
-              disabled:cursor-not-allowed
-              disabled:opacity-45
-            "
-          >
-            {isSubmitting
-              ? 'Reporting…'
-              : 'Report it'}
-          </button>
-        </div>
-      </form>
+      <button
+        type="button"
+        onClick={
+          handleCancel
+        }
+        disabled={
+          isSubmitting
+        }
+        className="
+          mt-3
+          min-h-11
+          w-full
+          rounded-xl
+          border
+          border-white/10
+          bg-transparent
+          px-4
+          py-2.5
+          text-sm
+          font-medium
+          text-white/60
+          transition
+          hover:bg-white/[0.05]
+          hover:text-white
+          focus-visible:outline-none
+          focus-visible:ring-2
+          focus-visible:ring-white/30
+          disabled:cursor-not-allowed
+          disabled:opacity-50
+        "
+      >
+        Cancel
+      </button>
     </section>
   )
 }

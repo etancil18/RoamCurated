@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import {
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -24,6 +25,12 @@ import {
   FavoritesButton,
 } from '@/components/FavoritesButton'
 import VenueSignalReporter from '@/components/maps/VenueSignalReporter'
+import type {
+  CommunityPlaceSignalIntelligence,
+} from '@/lib/community-signals/liveIntelligence'
+import {
+  isCommunityEventSignal,
+} from '@/lib/community-signals/presentation'
 import {
   coverCandidates,
 } from '@/utils/imageUtils'
@@ -36,6 +43,10 @@ export type VenuePreviewEvent = {
   title: string
   starts_at: string
   ends_at?: string | null
+  source_type?: string | null
+  occurrence_id?: string
+  confidence_band?: string
+  confirming_contributors?: number
 }
 
 export type VenuePreviewSheetInteractionContext =
@@ -81,11 +92,21 @@ type Props = {
    */
   interactionContext?:
     VenuePreviewSheetInteractionContext
+
+  onRefreshEvents?: () =>
+    void | Promise<void>
 }
 
 type UpcomingEvent = {
   event: VenuePreviewEvent
   startsAt: DateTime
+  endsAt: DateTime | null
+}
+
+type CommunityLiveResponse = {
+  place_signals?:
+    CommunityPlaceSignalIntelligence[]
+  error?: string
 }
 
 function formatListValue(
@@ -320,6 +341,7 @@ export default function VenuePreviewSheet({
   onViewVenue,
   interactionContext =
     'default',
+  onRefreshEvents,
 }: Props) {
   const titleId =
     useId()
@@ -379,9 +401,182 @@ export default function VenuePreviewSheet({
       false
     )
 
+  const [
+    placeSignals,
+    setPlaceSignals,
+  ] =
+    useState<
+      CommunityPlaceSignalIntelligence[]
+    >(
+      []
+    )
+
+  const [
+    confirmingSignalId,
+    setConfirmingSignalId,
+  ] =
+    useState<
+      string | null
+    >(
+      null
+    )
+
+  const [
+    confirmedSignalIds,
+    setConfirmedSignalIds,
+  ] =
+    useState<
+      Set<string>
+    >(
+      () =>
+        new Set<string>()
+    )
+
+  const [
+    confirmationErrorBySignalId,
+    setConfirmationErrorBySignalId,
+  ] =
+    useState<
+      Record<
+        string,
+        string
+      >
+    >(
+      {}
+    )
+
+  const [
+    reportingAbsentSignalId,
+    setReportingAbsentSignalId,
+  ] =
+    useState<
+      string | null
+    >(
+      null
+    )
+
+  const [
+    reportedAbsentSignalIds,
+    setReportedAbsentSignalIds,
+  ] =
+    useState<
+      Set<string>
+    >(
+      () =>
+        new Set<string>()
+    )
+
+  const [
+    absentReportErrorBySignalId,
+    setAbsentReportErrorBySignalId,
+  ] =
+    useState<
+      Record<
+        string,
+        string
+      >
+    >(
+      {}
+    )
+
   const isCreatorExplorationMap =
     interactionContext ===
     'creator-exploration-map'
+
+  const loadPlaceSignals =
+    useCallback(
+      async (
+        signal?:
+          AbortSignal
+      ) => {
+        const venueId =
+          venue?.id
+
+        if (
+          !venueId ||
+          isCreatorExplorationMap
+        ) {
+          setPlaceSignals(
+            []
+          )
+
+          return
+        }
+
+        try {
+          const response =
+            await fetch(
+              `/api/community-signals/live?venue_id=${encodeURIComponent(
+                venueId
+              )}`,
+              {
+                method:
+                  'GET',
+
+                credentials:
+                  'include',
+
+                cache:
+                  'no-store',
+
+                signal,
+              }
+            )
+
+          let body:
+            | CommunityLiveResponse
+            | null = null
+
+          try {
+            body =
+              (await response.json()) as
+                CommunityLiveResponse
+          } catch {
+            body = null
+          }
+
+          if (!response.ok) {
+            throw new Error(
+              body?.error ??
+                'Could not load community signals.'
+            )
+          }
+
+          if (
+            signal?.aborted
+          ) {
+            return
+          }
+
+          setPlaceSignals(
+            Array.isArray(
+              body?.place_signals
+            )
+              ? body.place_signals
+              : []
+          )
+        } catch (error) {
+          if (
+            signal?.aborted
+          ) {
+            return
+          }
+
+          console.error(
+            '[VenuePreviewSheet] Failed to load current place signals:',
+            error
+          )
+
+          setPlaceSignals(
+            []
+          )
+        }
+      },
+      [
+        venue?.id,
+        isCreatorExplorationMap,
+      ]
+    )
 
   const timezone =
     useMemo(
@@ -458,6 +653,30 @@ export default function VenuePreviewSheet({
       setSignalReported(
         false
       )
+
+      setConfirmingSignalId(
+        null
+      )
+
+      setConfirmedSignalIds(
+        new Set<string>()
+      )
+
+      setConfirmationErrorBySignalId(
+        {}
+      )
+
+      setReportingAbsentSignalId(
+        null
+      )
+
+      setReportedAbsentSignalIds(
+        new Set<string>()
+      )
+
+      setAbsentReportErrorBySignalId(
+        {}
+      )
     },
     [
       venue?.id,
@@ -465,6 +684,28 @@ export default function VenuePreviewSheet({
       venue?.cover,
       image.primary,
       image.fallback,
+    ]
+  )
+
+  useEffect(
+    () => {
+      setPlaceSignals(
+        []
+      )
+
+      const controller =
+        new AbortController()
+
+      void loadPlaceSignals(
+        controller.signal
+      )
+
+      return () => {
+        controller.abort()
+      }
+    },
+    [
+      loadPlaceSignals,
     ]
   )
 
@@ -511,14 +752,24 @@ export default function VenuePreviewSheet({
       ]
     )
 
-  const upcomingEvents =
+  const presentPlaceSignals =
+    useMemo(
+      () =>
+        placeSignals.filter(
+          signal =>
+            signal.signalState ===
+            'present'
+        ),
+      [
+        placeSignals,
+      ]
+    )
+
+  const eventItems =
     useMemo<
       UpcomingEvent[]
     >(
       () => {
-        const nowMillis =
-          resolvedNow.toMillis()
-
         return events
           .map(
             (
@@ -545,28 +796,39 @@ export default function VenuePreviewSheet({
                 return null
               }
 
+              const parsedEndsAt =
+                typeof event.ends_at ===
+                  'string'
+                  ? LuxonDateTime
+                      .fromISO(
+                        event.ends_at,
+                        {
+                          setZone:
+                            true,
+                        }
+                      )
+                      .setZone(
+                        timezone
+                      )
+                  : null
+
+              const endsAt =
+                parsedEndsAt?.isValid
+                  ? parsedEndsAt
+                  : null
+
               return {
                 event,
                 startsAt,
+                endsAt,
               }
             }
           )
           .filter(
             (
               item
-            ): item is UpcomingEvent => {
-              if (
-                item ===
-                null
-              ) {
-                return false
-              }
-
-              return (
-                item.startsAt.toMillis() >=
-                nowMillis
-              )
-            }
+            ): item is UpcomingEvent =>
+              item !== null
           )
           .sort(
             (
@@ -576,15 +838,96 @@ export default function VenuePreviewSheet({
               first.startsAt.toMillis() -
               second.startsAt.toMillis()
           )
+      },
+      [
+        events,
+        timezone,
+      ]
+    )
+
+  const upcomingEvents =
+    useMemo(
+      () => {
+        const nowMillis =
+          resolvedNow.toMillis()
+
+        return eventItems
+          .filter(
+            ({
+              event,
+              startsAt,
+            }) =>
+              !isCommunityEventSignal(
+                event
+              ) &&
+              startsAt.toMillis() >=
+                nowMillis
+          )
           .slice(
             0,
             3
           )
       },
       [
-        events,
+        eventItems,
         resolvedNow,
-        timezone,
+      ]
+    )
+
+  const communitySignals =
+    useMemo(
+      () => {
+        const nowMillis =
+          resolvedNow.toMillis()
+
+        return eventItems
+          .filter(
+            ({
+              event,
+              startsAt,
+              endsAt,
+            }) => {
+              if (
+                !isCommunityEventSignal(
+                  event
+                )
+              ) {
+                return false
+              }
+
+              const startsMillis =
+                startsAt.toMillis()
+
+              const endsMillis =
+                endsAt?.toMillis() ??
+                null
+
+              const isUpcoming =
+                startsMillis >
+                nowMillis
+
+              const isHappeningNow =
+                startsMillis <=
+                  nowMillis &&
+                endsMillis !==
+                  null &&
+                endsMillis >
+                  nowMillis
+
+              return (
+                isUpcoming ||
+                isHappeningNow
+              )
+            }
+          )
+          .slice(
+            0,
+            3
+          )
+      },
+      [
+        eventItems,
+        resolvedNow,
       ]
     )
 
@@ -654,6 +997,284 @@ export default function VenuePreviewSheet({
       } finally {
         setLocalGenerating(
           false
+        )
+      }
+    }
+
+  const handleStillHappening =
+    async ({
+      signalId,
+      url,
+      body,
+      refresh,
+    }: {
+      signalId: string
+      url: string
+      body: Record<
+        string,
+        unknown
+      >
+      refresh?:
+        | 'place'
+        | 'events'
+    }) => {
+      if (
+        confirmingSignalId !==
+          null ||
+        confirmedSignalIds.has(
+          signalId
+        )
+      ) {
+        return
+      }
+
+      setConfirmingSignalId(
+        signalId
+      )
+
+      setConfirmationErrorBySignalId(
+        current => {
+          const next = {
+            ...current,
+          }
+
+          delete next[
+            signalId
+          ]
+
+          return next
+        }
+      )
+
+      try {
+        const response =
+          await fetch(
+            url,
+            {
+              method:
+                'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              credentials:
+                'include',
+
+              body:
+                JSON.stringify(
+                  body
+                ),
+            }
+          )
+
+        let responseBody:
+          | {
+              error?: string
+            }
+          | null = null
+
+        try {
+          responseBody =
+            (await response.json()) as {
+              error?: string
+            }
+        } catch {
+          responseBody =
+            null
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            responseBody?.error ??
+              'Could not confirm this signal.'
+          )
+        }
+
+        setConfirmedSignalIds(
+          current => {
+            const next =
+              new Set(
+                current
+              )
+
+            next.add(
+              signalId
+            )
+
+            return next
+          }
+        )
+
+        if (
+          refresh ===
+          'place'
+        ) {
+          await loadPlaceSignals()
+        }
+
+        if (
+          refresh ===
+            'events' &&
+          onRefreshEvents
+        ) {
+          await onRefreshEvents()
+        }
+      } catch (error) {
+        setConfirmationErrorBySignalId(
+          current => ({
+            ...current,
+
+            [signalId]:
+              error instanceof
+              Error
+                ? error.message
+                : 'Could not confirm this signal.',
+          })
+        )
+      } finally {
+        setConfirmingSignalId(
+          null
+        )
+      }
+    }
+
+  const handleNotThere =
+    async ({
+      signalId,
+      url,
+      body,
+      refresh,
+    }: {
+      signalId: string
+      url: string
+      body: Record<
+        string,
+        unknown
+      >
+      refresh?:
+        | 'place'
+        | 'events'
+    }) => {
+      if (
+        reportingAbsentSignalId !==
+          null ||
+        reportedAbsentSignalIds.has(
+          signalId
+        )
+      ) {
+        return
+      }
+
+      setReportingAbsentSignalId(
+        signalId
+      )
+
+      setAbsentReportErrorBySignalId(
+        current => {
+          const next = {
+            ...current,
+          }
+
+          delete next[
+            signalId
+          ]
+
+          return next
+        }
+      )
+
+      try {
+        const response =
+          await fetch(
+            url,
+            {
+              method:
+                'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              credentials:
+                'include',
+
+              body:
+                JSON.stringify(
+                  body
+                ),
+            }
+          )
+
+        let responseBody:
+          | {
+              error?: string
+            }
+          | null = null
+
+        try {
+          responseBody =
+            (await response.json()) as {
+              error?: string
+            }
+        } catch {
+          responseBody =
+            null
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            responseBody?.error ??
+              'Could not report this signal.'
+          )
+        }
+
+        setReportedAbsentSignalIds(
+          current => {
+            const next =
+              new Set(
+                current
+              )
+
+            next.add(
+              signalId
+            )
+
+            return next
+          }
+        )
+
+        if (
+          refresh ===
+          'place'
+        ) {
+          await loadPlaceSignals()
+        }
+
+        if (
+          refresh ===
+            'events' &&
+          onRefreshEvents
+        ) {
+          await onRefreshEvents()
+        }
+      } catch (error) {
+        setAbsentReportErrorBySignalId(
+          current => ({
+            ...current,
+
+            [signalId]:
+              error instanceof
+              Error
+                ? error.message
+                : 'Could not report this signal.',
+          })
+        )
+      } finally {
+        setReportingAbsentSignalId(
+          null
         )
       }
     }
@@ -1202,6 +1823,17 @@ export default function VenuePreviewSheet({
                     Event upcoming
                   </span>
                 )}
+
+                {(
+                  communitySignals.length >
+                    0 ||
+                  presentPlaceSignals.length >
+                    0
+                ) && (
+                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2.5 py-1 text-[11px] font-semibold text-cyan-200">
+                    Community signal
+                  </span>
+                )}
               </div>
 
               <h2
@@ -1322,6 +1954,473 @@ export default function VenuePreviewSheet({
                         </span>
                       </li>
                     )
+                  )}
+                </ul>
+              </div>
+            )}
+
+            {(
+              communitySignals.length >
+                0 ||
+              presentPlaceSignals.length >
+                0
+            ) && (
+              <div
+                className="
+                  rounded-2xl
+                  border
+                  border-cyan-400/15
+                  bg-cyan-400/[0.055]
+                  p-3
+                "
+              >
+                <h3 className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-300/80">
+                  Community signals
+                </h3>
+
+                <ul className="mt-2 space-y-2">
+                  {presentPlaceSignals.map(
+                    signal => {
+                      const label =
+                        signal.signalType ===
+                        'temporary_closure'
+                          ? 'Temporary closure'
+                          : 'Line'
+
+                      const isConfirmed =
+                        confirmedSignalIds.has(
+                          signal.intelligenceId
+                        )
+
+                      return (
+                        <li
+                          key={
+                            signal.intelligenceId
+                          }
+                          className="flex items-start gap-3 text-sm"
+                        >
+                          <div
+                            className="
+                              min-w-[88px]
+                              rounded-lg
+                              bg-cyan-400/10
+                              px-2
+                              py-1
+                              text-center
+                              text-[11px]
+                              font-bold
+                              text-cyan-200
+                            "
+                          >
+                            Current
+                          </div>
+
+                          <div className="min-w-0 pt-0.5">
+                            <div className="font-medium leading-5 text-zinc-200">
+                              {label}
+                            </div>
+
+                            <div className="mt-0.5 text-[11px] font-semibold text-cyan-300/70">
+                              {signal.supportingContributors >= 2
+                                ? `Community · ${signal.supportingContributors} people confirm this`
+                                : 'Community'}
+                            </div>
+
+                            <div className="mt-2">
+                              <div className="flex flex-wrap gap-2">
+                                {isConfirmed ? (
+                                  <div className="text-[11px] font-bold text-emerald-300">
+                                    Thanks — confirmed
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      confirmingSignalId !==
+                                        null ||
+                                      reportingAbsentSignalId !==
+                                        null
+                                    }
+                                    onClick={() => {
+                                      void handleStillHappening({
+                                        signalId:
+                                          signal.intelligenceId,
+
+                                        url:
+                                          '/api/community-signals/place',
+
+                                        body: {
+                                          venue_id:
+                                            signal.venueId,
+
+                                          signal_type:
+                                            signal.signalType,
+
+                                          signal_state:
+                                            'present',
+                                        },
+
+                                        refresh:
+                                          'place',
+                                      })
+                                    }}
+                                    className="
+                                      rounded-lg
+                                      border
+                                      border-cyan-300/20
+                                      bg-cyan-300/[0.07]
+                                      px-2.5
+                                      py-1.5
+                                      text-[11px]
+                                      font-bold
+                                      text-cyan-100
+                                      transition
+                                      hover:border-cyan-300/35
+                                      hover:bg-cyan-300/10
+                                      hover:text-white
+                                      focus-visible:outline-none
+                                      focus-visible:ring-2
+                                      focus-visible:ring-cyan-300
+                                      disabled:cursor-not-allowed
+                                      disabled:opacity-50
+                                    "
+                                  >
+                                    {confirmingSignalId ===
+                                    signal.intelligenceId
+                                      ? 'Confirming…'
+                                      : 'Still happening'}
+                                  </button>
+                                )}
+
+                                {reportedAbsentSignalIds.has(
+                                  signal.intelligenceId
+                                ) ? (
+                                  <div className="text-[11px] font-bold text-emerald-300">
+                                    Thanks — reported
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      confirmingSignalId !==
+                                        null ||
+                                      reportingAbsentSignalId !==
+                                        null
+                                    }
+                                    onClick={() => {
+                                      void handleNotThere({
+                                        signalId:
+                                          signal.intelligenceId,
+
+                                        url:
+                                          '/api/community-signals/place',
+
+                                        body: {
+                                          venue_id:
+                                            signal.venueId,
+
+                                          signal_type:
+                                            signal.signalType,
+
+                                          signal_state:
+                                            'absent',
+                                        },
+
+                                        refresh:
+                                          'place',
+                                      })
+                                    }}
+                                    className="
+                                      rounded-lg
+                                      border
+                                      border-rose-300/20
+                                      bg-rose-300/[0.06]
+                                      px-2.5
+                                      py-1.5
+                                      text-[11px]
+                                      font-bold
+                                      text-rose-100
+                                      transition
+                                      hover:border-rose-300/35
+                                      hover:bg-rose-300/10
+                                      hover:text-white
+                                      focus-visible:outline-none
+                                      focus-visible:ring-2
+                                      focus-visible:ring-rose-300
+                                      disabled:cursor-not-allowed
+                                      disabled:opacity-50
+                                    "
+                                  >
+                                    {reportingAbsentSignalId ===
+                                    signal.intelligenceId
+                                      ? 'Reporting…'
+                                      : 'Not there'}
+                                  </button>
+                                )}
+                              </div>
+
+                              {confirmationErrorBySignalId[
+                                signal.intelligenceId
+                              ] ? (
+                                <p
+                                  role="alert"
+                                  className="mt-1 text-[11px] leading-4 text-rose-300"
+                                >
+                                  {
+                                    confirmationErrorBySignalId[
+                                      signal.intelligenceId
+                                    ]
+                                  }
+                                </p>
+                              ) : null}
+
+                              {absentReportErrorBySignalId[
+                                signal.intelligenceId
+                              ] ? (
+                                <p
+                                  role="alert"
+                                  className="mt-1 text-[11px] leading-4 text-rose-300"
+                                >
+                                  {
+                                    absentReportErrorBySignalId[
+                                      signal.intelligenceId
+                                    ]
+                                  }
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                        </li>
+                      )
+                    }
+                  )}
+
+                  {communitySignals.map(
+                    ({
+                      event,
+                      startsAt,
+                      endsAt,
+                    }) => {
+                      const nowMillis =
+                        resolvedNow.toMillis()
+
+                      const isHappeningNow =
+                        startsAt.toMillis() <=
+                          nowMillis &&
+                        endsAt !==
+                          null &&
+                        endsAt.toMillis() >
+                          nowMillis
+
+                      const signalId =
+                        `event:${event.id}`
+
+                      const occurrenceId =
+                        event.occurrence_id
+
+                      const isConfirmed =
+                        confirmedSignalIds.has(
+                          signalId
+                        )
+
+                      return (
+                        <li
+                          key={
+                            event.id
+                          }
+                          className="flex items-start gap-3 text-sm"
+                        >
+                          <div
+                            className="
+                              min-w-[88px]
+                              rounded-lg
+                              bg-cyan-400/10
+                              px-2
+                              py-1
+                              text-center
+                              text-[11px]
+                              font-bold
+                              text-cyan-200
+                            "
+                          >
+                            {isHappeningNow
+                              ? 'Happening now'
+                              : startsAt.toFormat(
+                                  'MMM d · h:mm a'
+                                )}
+                          </div>
+
+                          <div className="min-w-0 pt-0.5">
+                            <div className="font-medium leading-5 text-zinc-200">
+                              {
+                                event.title
+                              }
+                            </div>
+
+                            <div className="mt-0.5 text-[11px] font-semibold text-cyan-300/70">
+                              {typeof event.confirming_contributors ===
+                                'number' &&
+                              event.confirming_contributors >= 2
+                                ? `Community · ${event.confirming_contributors} people confirm this`
+                                : 'Community'}
+                            </div>
+
+                            <div className="mt-2">
+                              <div className="flex flex-wrap gap-2">
+                                {isConfirmed ? (
+                                  <div className="text-[11px] font-bold text-emerald-300">
+                                    Thanks — confirmed
+                                  </div>
+                                ) : occurrenceId ? (
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      confirmingSignalId !==
+                                        null ||
+                                      reportingAbsentSignalId !==
+                                        null
+                                    }
+                                    onClick={() => {
+                                      void handleStillHappening({
+                                        signalId,
+
+                                        url:
+                                          `/api/event-occurrences/${encodeURIComponent(
+                                            occurrenceId
+                                          )}/confirmations`,
+
+                                        body: {},
+
+                                        refresh:
+                                          'events',
+                                      })
+                                    }}
+                                    className="
+                                      rounded-lg
+                                      border
+                                      border-cyan-300/20
+                                      bg-cyan-300/[0.07]
+                                      px-2.5
+                                      py-1.5
+                                      text-[11px]
+                                      font-bold
+                                      text-cyan-100
+                                      transition
+                                      hover:border-cyan-300/35
+                                      hover:bg-cyan-300/10
+                                      hover:text-white
+                                      focus-visible:outline-none
+                                      focus-visible:ring-2
+                                      focus-visible:ring-cyan-300
+                                      disabled:cursor-not-allowed
+                                      disabled:opacity-50
+                                    "
+                                  >
+                                    {confirmingSignalId ===
+                                    signalId
+                                      ? 'Confirming…'
+                                      : 'Still happening'}
+                                  </button>
+                                ) : null}
+
+                                {reportedAbsentSignalIds.has(
+                                  signalId
+                                ) ? (
+                                  <div className="text-[11px] font-bold text-emerald-300">
+                                    Thanks — reported
+                                  </div>
+                                ) : occurrenceId ? (
+                                  <button
+                                    type="button"
+                                    disabled={
+                                      confirmingSignalId !==
+                                        null ||
+                                      reportingAbsentSignalId !==
+                                        null
+                                    }
+                                    onClick={() => {
+                                      void handleNotThere({
+                                        signalId,
+
+                                        url:
+                                          `/api/event-occurrences/${encodeURIComponent(
+                                            occurrenceId
+                                          )}/corrections`,
+
+                                        body: {
+                                          correction_type:
+                                            'canceled',
+
+                                          claim: {},
+                                        },
+
+                                        refresh:
+                                          'events',
+                                      })
+                                    }}
+                                    className="
+                                      rounded-lg
+                                      border
+                                      border-rose-300/20
+                                      bg-rose-300/[0.06]
+                                      px-2.5
+                                      py-1.5
+                                      text-[11px]
+                                      font-bold
+                                      text-rose-100
+                                      transition
+                                      hover:border-rose-300/35
+                                      hover:bg-rose-300/10
+                                      hover:text-white
+                                      focus-visible:outline-none
+                                      focus-visible:ring-2
+                                      focus-visible:ring-rose-300
+                                      disabled:cursor-not-allowed
+                                      disabled:opacity-50
+                                    "
+                                  >
+                                    {reportingAbsentSignalId ===
+                                    signalId
+                                      ? 'Reporting…'
+                                      : 'Not there'}
+                                  </button>
+                                ) : null}
+                              </div>
+
+                              {confirmationErrorBySignalId[
+                                signalId
+                              ] ? (
+                                <p
+                                  role="alert"
+                                  className="mt-1 text-[11px] leading-4 text-rose-300"
+                                >
+                                  {
+                                    confirmationErrorBySignalId[
+                                      signalId
+                                    ]
+                                  }
+                                </p>
+                              ) : null}
+
+                              {absentReportErrorBySignalId[
+                                signalId
+                              ] ? (
+                                <p
+                                  role="alert"
+                                  className="mt-1 text-[11px] leading-4 text-rose-300"
+                                >
+                                  {
+                                    absentReportErrorBySignalId[
+                                      signalId
+                                    ]
+                                  }
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                        </li>
+                      )
+                    }
                   )}
                 </ul>
               </div>

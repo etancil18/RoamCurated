@@ -23,7 +23,10 @@ export async function GET() {
 
   if (interestError) {
     console.error('❌ Error fetching interested event IDs:', interestError)
-    return NextResponse.json({ error: 'Failed to fetch interested events' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch interested events' },
+      { status: 500 }
+    )
   }
 
   const eventIds = interestData
@@ -36,7 +39,9 @@ export async function GET() {
     return NextResponse.json({ events: [] })
   }
 
-  // Step 2: Fetch full event details with venue info
+  // Step 2: Fetch ordinary Event details with venue info.
+  // Community Signals remain canonical Events internally, but they do not
+  // belong in the ordinary interested-Event presentation population.
   const { data: eventsData, error: eventsError } = await supabase
     .from('events')
     .select(`
@@ -46,6 +51,7 @@ export async function GET() {
       ends_at,
       tags,
       price_info,
+      source_type,
       venue:venues (
         id,
         name,
@@ -57,14 +63,18 @@ export async function GET() {
       )
     `)
     .in('id', eventIds)
+    .or('source_type.is.null,source_type.neq.community_signal')
 
   if (eventsError) {
     console.error('❌ Error fetching full event data:', eventsError)
-    return NextResponse.json({ error: 'Failed to fetch event details' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch event details' },
+      { status: 500 }
+    )
   }
 
   console.log('✅ eventsData returned for interested events:', eventsData)
 
-  // Return events — even if venue is null, so front‑end can inspect
+  // Return ordinary Events — even if venue is null, so front-end can inspect.
   return NextResponse.json({ events: eventsData ?? [] })
 }

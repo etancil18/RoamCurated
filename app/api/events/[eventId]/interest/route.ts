@@ -1,7 +1,7 @@
 // app/api/events/[eventId]/interest/route.ts
 
-import { supabaseServerApi } from "@/lib/supabase/server-api"
-import { NextResponse } from "next/server"
+import { supabaseServerApi } from '@/lib/supabase/server-api'
+import { NextResponse } from 'next/server'
 
 export async function POST(
   req: Request,
@@ -16,25 +16,32 @@ export async function POST(
   } = await supabase.auth.getUser()
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // 🛠 Fetch event to get venue_id and city
+  // Fetch the canonical Event and enforce the ordinary Event-interest boundary.
   const { data: event, error: fetchError } = await supabase
-    .from("events")
-    .select("venue_id, venue:venues(city)")
-    .eq("id", eventId)
+    .from('events')
+    .select('venue_id, source_type, venue:venues(city)')
+    .eq('id', eventId)
     .single()
 
   if (fetchError || !event) {
-    return NextResponse.json({ error: "Event not found" }, { status: 404 })
+    return NextResponse.json({ error: 'Event not found' }, { status: 404 })
+  }
+
+  if (event.source_type === 'community_signal') {
+    return NextResponse.json(
+      { error: 'Community Signals cannot be marked as interested Events' },
+      { status: 409 }
+    )
   }
 
   const venueId = event.venue_id ?? null
   const city = event.venue?.city ?? null
 
   const { error: insertError } = await supabase
-    .from("event_interests")
+    .from('event_interests')
     .insert({
       event_id: eventId,
       user_id: user.id,
@@ -62,14 +69,14 @@ export async function DELETE(
   } = await supabase.auth.getUser()
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const { error } = await supabase
-    .from("event_interests")
+    .from('event_interests')
     .delete()
-    .eq("event_id", eventId)
-    .eq("user_id", user.id)
+    .eq('event_id', eventId)
+    .eq('user_id', user.id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

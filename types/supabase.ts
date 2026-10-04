@@ -315,6 +315,75 @@ export type Database = {
         }
         Relationships: []
       }
+      community_place_signal_observations: {
+        Row: {
+          created_at: string
+          distance_meters: number | null
+          id: string
+          location_accuracy_meters: number | null
+          moderation_status: string
+          observed_at: string
+          proximity_verified: boolean
+          report_source: string
+          reporter_user_id: string
+          signal_state: string
+          signal_type: string
+          updated_at: string
+          user_lat: number | null
+          user_lon: number | null
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          distance_meters?: number | null
+          id?: string
+          location_accuracy_meters?: number | null
+          moderation_status?: string
+          observed_at: string
+          proximity_verified?: boolean
+          report_source?: string
+          reporter_user_id: string
+          signal_state: string
+          signal_type: string
+          updated_at?: string
+          user_lat?: number | null
+          user_lon?: number | null
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          distance_meters?: number | null
+          id?: string
+          location_accuracy_meters?: number | null
+          moderation_status?: string
+          observed_at?: string
+          proximity_verified?: boolean
+          report_source?: string
+          reporter_user_id?: string
+          signal_state?: string
+          signal_type?: string
+          updated_at?: string
+          user_lat?: number | null
+          user_lon?: number | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_place_signal_observations_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "community_place_signal_observations_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competition_entries: {
         Row: {
           approved_at: string | null
@@ -10151,6 +10220,22 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_community_place_signal_evidence: {
+        Args: { p_signal_type: string; p_venue_id: string }
+        Returns: {
+          absent_contributors: number
+          evidence_posture: string
+          latest_absent_at: string
+          latest_observed_at: string
+          latest_present_at: string
+          present_contributors: number
+          proximity_verified_contributors: number
+          signal_type: string
+          unique_contributors: number
+          usable_observations: number
+          venue_id: string
+        }[]
+      }
       get_crawl_with_attendees: {
         Args: { input_crawl_id: string }
         Returns: {
@@ -10170,6 +10255,22 @@ export type Database = {
           title: string
           venue_ids: string[]
           vibe_tags: string[]
+        }[]
+      }
+      get_current_community_place_signal: {
+        Args: { p_as_of?: string; p_signal_type: string; p_venue_id: string }
+        Returns: {
+          current_posture: string
+          current_state: string
+          expires_at: string
+          fresh_contributors: number
+          is_current: boolean
+          latest_observed_at: string
+          opposing_contributors: number
+          proximity_verified_contributors: number
+          signal_type: string
+          supporting_contributors: number
+          venue_id: string
         }[]
       }
       get_discoverable_community_event_ids: {
@@ -11562,7 +11663,6 @@ export const Constants = {
     },
   },
 } as const
-
 
 
 

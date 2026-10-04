@@ -4,9 +4,9 @@ import type { Venue, DateEvent } from "@/types/venue";
 type EventRecord = {
   id: string;
   title: string;
-  start_time: string;
-  end_time: string | null;
-  category: string | null;
+  starts_at: string;
+  ends_at: string | null;
+  source_type: string | null;
   venue_id: string;
   venue: Venue;
 };
@@ -29,16 +29,15 @@ export async function fetchLiveEventsForCity(
       `
       id,
       title,
-      start_time,
-      end_time,
-      category,
+      starts_at,
+      ends_at,
+      source_type,
       venue_id,
-      venue:venue_id (
+      venue:venue_id!inner (
         id,
         name,
         lat,
         lon,
-        link,
         slug,
         vibe,
         type,
@@ -46,19 +45,17 @@ export async function fetchLiveEventsForCity(
         cover,
         instagram_handle,
         city,
-        neighborhood,
-        hoursNumeric,
-        dayParts,
-        timeCategory,
-        energyRamp,
+        timeCategory:time_category,
+        energyRamp:energy_ramp,
         price,
         duration
       )
     `
     )
-    .eq("city", city)
-    .gte("start_time", nowISO)
-    .order("start_time", { ascending: true });
+    .eq("venue.city", city)
+    .or("source_type.is.null,source_type.neq.community_signal")
+    .gte("starts_at", nowISO)
+    .order("starts_at", { ascending: true });
 
   if (error) {
     console.error("❌ Failed to fetch live events:", error);
@@ -79,9 +76,9 @@ export async function fetchLiveEventsForCity(
 
       // Format date/time for UI or downstream use
       const eventDate: DateEvent = {
-        date: rec.start_time,
+        date: rec.starts_at,
         title: rec.title,
-        time: new Date(rec.start_time).toLocaleTimeString([], {
+        time: new Date(rec.starts_at).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
@@ -98,9 +95,9 @@ export async function fetchLiveEventsForCity(
         // Mark event metadata
         liveEvent: true,
         event_id: rec.id,
-        eventCategory: rec.category ?? undefined,
-        starts_at: rec.start_time,
-        ends_at: rec.end_time ?? undefined,
+        eventCategory: undefined,
+        starts_at: rec.starts_at,
+        ends_at: rec.ends_at ?? undefined,
       };
 
       return enriched;

@@ -3,6 +3,23 @@ import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import {
+  evaluateActiveFlowCommunitySignalBoundary,
+} from '@/lib/active-flow/communitySignalBoundary'
+
+import {
+  evaluateActiveFlowContextualFit,
+  type ActiveFlowContextualFitResult,
+} from '@/lib/active-flow/contextualFit'
+
+import {
+  createActiveFlowSemanticRouteStop,
+  createActiveFlowVenueSemantics,
+  type ActiveFlowDeclaredIntent,
+  type ActiveFlowEventSemantics,
+  type ActiveFlowSemanticRouteStop,
+} from '@/lib/active-flow/contextualIntelligence'
+
+import {
   getActiveFlowExecutionPolicy,
   isActiveFlowAdaptiveEligible,
 } from '@/lib/active-flow/executionPolicy'
@@ -10,6 +27,10 @@ import {
 import {
   loadActiveFlowRuntimeRoute,
 } from '@/lib/active-flow/runtimeRoute.server'
+
+import {
+  normalizeEventArchetypeForPlanner,
+} from '@/lib/outings/eventArchetypes'
 
 import { getSupabaseAdmin } from '@/lib/supabase/admin-runtime'
 
@@ -79,6 +100,31 @@ export type ActiveFlowOpportunityCandidate = {
   }
 
   /**
+   * 022C.2 — Optional server-hydrated semantic evidence.
+   *
+   * Optional at the shared type boundary so frozen V1 consumers and
+   * historical fixtures remain valid.
+   *
+   * Production Community Event candidates admitted through this loader
+   * populate it after the frozen 350m boundary passes.
+   */
+  eventSemantics?: ActiveFlowEventSemantics
+
+  /**
+   * 022D.3 — Server-evaluated broad contextual fit.
+   *
+   * Optional at the shared type boundary so frozen V1 consumers and
+   * historical fixtures remain valid.
+   *
+   * Production Community Event candidates admitted through this loader
+   * populate it after the frozen 350m boundary and semantic hydration.
+   *
+   * This result is contextual evidence for opportunity scoring only.
+   * It does not authorize feasibility, recommendation, or mutation.
+   */
+  contextualFit?: ActiveFlowContextualFitResult
+
+  /**
    * True when the event venue already exists among the remaining
    * runtime stops.
    *
@@ -109,6 +155,18 @@ export type ActiveFlowOpportunityContext = {
 
   currentStop: ActiveFlowOpportunityRuntimeStop | null
 
+  /**
+   * 022C.2 — Optional additive semantic context.
+   *
+   * Absence means semantic context was not supplied by the producer.
+   * It must never be interpreted as contextual incompatibility.
+   */
+  semanticContext?: {
+    flowIntent: ActiveFlowDeclaredIntent
+    remainingStops: ActiveFlowSemanticRouteStop[]
+    currentStop: ActiveFlowSemanticRouteStop | null
+  }
+
   candidates: ActiveFlowOpportunityCandidate[]
 }
 
@@ -116,6 +174,10 @@ type ActiveFlowSessionRow = {
   id: string
   user_id: string
   status: string
+  title: string | null
+  theme_id: string | null
+  source: string | null
+  source_id: string | null
   travel_mode: string | null
 }
 
@@ -129,6 +191,9 @@ type EventRow = {
   id: string
   venue_id: string
   title: string | null
+  description: string | null
+  archetype: string | null
+  tags: string[] | null
   starts_at: string | null
   ends_at: string | null
   timezone: string | null
@@ -142,6 +207,10 @@ type VenueRow = {
   name: string | null
   lat: number | null
   lon: number | null
+  type: string[] | null
+  vibe: string[] | null
+  tags: string[] | null
+  time_category: string[] | null
 }
 
 function normalizeTravelMode(
@@ -243,6 +312,7 @@ function isTemporallyActionable({
  * - create event interest
  * - infer attendance
  * - calculate the 013C opportunity score
+ * - make intervention-specific Detour / Swap contextual decisions
  */
 export async function getActiveFlowOpportunityCandidates({
   sessionId,
@@ -302,7 +372,7 @@ export async function getActiveFlowOpportunityCandidates({
   } = await supabase
     .from('active_flow_sessions')
     .select(
-      'id, user_id, status, travel_mode'
+      'id, user_id, status, title, theme_id, source, source_id, travel_mode'
     )
     .eq(
       'id',
@@ -419,8 +489,10 @@ export async function getActiveFlowOpportunityCandidates({
 
   /**
    * 013C scoring requires geometry for the canonical runtime route.
-   * Load venue data for every canonical runtime stop once, while
-   * preserving runtime-stop identity and execution order as authority.
+   *
+   * 022C.2 additionally hydrates semantic venue fields in this same
+   * server-owned read. Runtime-stop identity and canonical execution
+   * ordering remain wholly unchanged.
    */
   const runtimeVenueIds =
     Array.from(
@@ -438,7 +510,7 @@ export async function getActiveFlowOpportunityCandidates({
   } = await supabase
     .from('venues')
     .select(
-      'id, name, lat, lon'
+      'id, name, lat, lon, type, vibe, tags, time_category'
     )
     .in(
       'id',
@@ -553,6 +625,94 @@ export async function getActiveFlowOpportunityCandidates({
     remainingStops[0] ??
     null
 
+  /**
+   * 022C.2 — Additive semantic hydration.
+   *
+   * Semantic route context is derived from the exact same canonical
+   * remaining runtime stops above. It does not reconstruct route
+   * authority and does not alter the frozen runtime-stop public shape.
+   */
+  const flowIntent:
+    ActiveFlowDeclaredIntent = {
+      title:
+        session.title?.trim() ||
+        null,
+
+      themeId:
+        session.theme_id,
+
+      source:
+        session.source,
+
+      sourceId:
+        session.source_id,
+
+      travelMode:
+        normalizeTravelMode(
+          session.travel_mode
+        ),
+    }
+
+  const semanticRemainingStops:
+    ActiveFlowSemanticRouteStop[] =
+    remainingStops.map(
+      (stop) => {
+        const venue =
+          runtimeVenuesById.get(
+            stop.venueId
+          )
+
+        if (!venue) {
+          throw new Error(
+            `Runtime venue ${stop.venueId} was not found.`
+          )
+        }
+
+        return createActiveFlowSemanticRouteStop({
+          flowStopId:
+            stop.id,
+
+          executionIndex:
+            stop.executionIndex,
+
+          kind:
+            stop.kind,
+
+          venue:
+            createActiveFlowVenueSemantics({
+              venueId:
+                venue.id,
+
+              name:
+                venue.name,
+
+              types:
+                venue.type,
+
+              vibes:
+                venue.vibe,
+
+              tags:
+                venue.tags,
+
+              timeCategories:
+                venue.time_category,
+            }),
+        })
+      }
+    )
+
+  const semanticContext = {
+    flowIntent,
+
+    remainingStops:
+      semanticRemainingStops,
+
+    currentStop:
+      semanticRemainingStops[0] ??
+      null,
+  }
+
   const discoveryRows =
     (discoveryResult.data ??
       []) as DiscoverableCommunityEventRow[]
@@ -622,6 +782,8 @@ export async function getActiveFlowOpportunityCandidates({
       remainingStops,
       currentStop,
 
+      semanticContext,
+
       candidates: [],
     }
   }
@@ -632,7 +794,7 @@ export async function getActiveFlowOpportunityCandidates({
   } = await supabase
     .from('events')
     .select(
-      'id, venue_id, title, starts_at, ends_at, timezone, is_active, source, source_type'
+      'id, venue_id, title, description, archetype, tags, starts_at, ends_at, timezone, is_active, source, source_type'
     )
     .in(
       'id',
@@ -757,7 +919,7 @@ export async function getActiveFlowOpportunityCandidates({
     } = await supabase
       .from('venues')
       .select(
-        'id, name, lat, lon'
+        'id, name, lat, lon, type, vibe, tags, time_category'
       )
       .in(
         'id',
@@ -822,6 +984,144 @@ export async function getActiveFlowOpportunityCandidates({
       continue
     }
 
+    /**
+     * 021C — Hard Active Flow Community Signal geographic boundary.
+     *
+     * A trusted Community Signal may influence this Active Flow only
+     * when its venue is within 350 meters of at least one canonical
+     * remaining executable runtime stop.
+     *
+     * This is candidate eligibility, not opportunity scoring.
+     *
+     * Missing geometry fails closed inside the pure 021B boundary.
+     * User GPS, travel mode, base position, and legacy session venue
+     * arrays are deliberately irrelevant.
+     */
+    const boundary =
+      evaluateActiveFlowCommunitySignalBoundary({
+        signalVenue: {
+          lat:
+            venue.lat,
+
+          lon:
+            venue.lon,
+        },
+
+        remainingStops,
+      })
+
+    if (
+      !boundary.eligible
+    ) {
+      continue
+    }
+
+    /**
+     * 022C.2 — Semantic hydration occurs only after the frozen
+     * 350m candidate-admission boundary.
+     *
+     * This evidence is advisory input for the contextual layer.
+     * It does not change eligibility, scoring, feasibility,
+     * recommendation, or mutation authority here.
+     */
+    const candidateVenueSemantics =
+      createActiveFlowVenueSemantics({
+        venueId:
+          venue.id,
+
+        name:
+          venue.name,
+
+        types:
+          venue.type,
+
+        vibes:
+          venue.vibe,
+
+        tags:
+          venue.tags,
+
+        timeCategories:
+          venue.time_category,
+      })
+
+    const eventSemantics:
+      ActiveFlowEventSemantics = {
+        eventId:
+          event.id,
+
+        title,
+
+        description:
+          event.description?.trim() ||
+          null,
+
+        /**
+         * Missing archetype evidence must remain missing.
+         *
+         * normalizeEventArchetypeForPlanner() may normalize unknown
+         * non-null values into the planner's "other" bucket, but a null
+         * database value is not semantic evidence and must not be
+         * manufactured into one.
+         */
+        archetype:
+          event.archetype
+            ? normalizeEventArchetypeForPlanner(
+                event.archetype
+              )
+            : null,
+
+        tags:
+          Array.from(
+            new Set(
+              (event.tags ?? [])
+                .map(
+                  (tag) =>
+                    tag
+                      .trim()
+                      .toLowerCase()
+                )
+                .filter(Boolean)
+            )
+          ).sort(),
+
+        startsAt:
+          event.starts_at,
+
+        endsAt:
+          event.ends_at,
+
+        venue:
+          candidateVenueSemantics,
+      }
+
+    /**
+     * 022D.3 — Broad deterministic contextual fit.
+     *
+     * Ordering is intentional:
+     *
+     * trusted/discoverable event
+     * → temporal candidate eligibility
+     * → 350m Active Flow boundary
+     * → semantic hydration
+     * → contextual fit
+     * → later 013C opportunity scoring
+     *
+     * An incompatible result does not remove the candidate here.
+     * The scorer retains it as a non-actionable diagnostic result with
+     * contextual_mismatch.
+     *
+     * compatible and insufficient_context both continue downstream.
+     */
+    const contextualFit =
+      evaluateActiveFlowContextualFit({
+        event:
+          eventSemantics,
+
+        remainingStops:
+          semanticContext.remainingStops,
+      })
+
     const remainingFlowPosition =
       remainingPositionByVenueId.get(
         event.venue_id
@@ -865,6 +1165,10 @@ export async function getActiveFlowOpportunityCandidates({
         lon:
           venue.lon,
       },
+
+      eventSemantics,
+
+      contextualFit,
 
       venueAlreadyInRemainingFlow:
         remainingFlowPosition != null,
@@ -924,6 +1228,8 @@ export async function getActiveFlowOpportunityCandidates({
     runtimeStops,
     remainingStops,
     currentStop,
+
+    semanticContext,
 
     candidates,
   }

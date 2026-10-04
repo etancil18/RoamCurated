@@ -37,8 +37,8 @@ import type {
  * 012B / 013B
  *   → candidate trust + runtime context
  *
- * 013C
- *   → deterministic opportunity relevance
+ * 022D.3 / 013C
+ *   → deterministic contextual admission + opportunity relevance
  *
  * 014
  *   → user-facing opportunity surfacing
@@ -78,6 +78,7 @@ export const MAX_INCREMENTAL_DISTANCE_METERS_BY_TRAVEL_MODE = {
 export type ActiveFlowOpportunityIneligibleReason =
   | 'expired'
   | 'too_early'
+  | 'contextual_mismatch'
   | 'insufficient_route_context'
   | 'excessive_route_cost'
   | null
@@ -1029,8 +1030,16 @@ function createBreakdown({
  * Hard gates are evaluated before weighted scoring:
  *
  * 1. temporal feasibility
- * 2. route feasibility
- * 3. normalized weighted score
+ * 2. broad contextual compatibility
+ * 3. route feasibility
+ * 4. normalized weighted score
+ *
+ * Contextual fit is additive at the shared candidate boundary:
+ *
+ * - incompatible         → hard rejection
+ * - compatible           → continue
+ * - insufficient_context → continue
+ * - absent               → preserve historical scorer behavior
  *
  * Confidence is intentionally not a score input. A candidate must
  * already have crossed the frozen trust/discovery boundary before it
@@ -1120,6 +1129,71 @@ export function scoreActiveFlowOpportunity({
           temporal.minutesUntilEnd,
 
         directDistanceMeters: null,
+        incrementalDistanceMeters: null,
+
+        routeOriginStopId:
+          context.currentStop?.id ??
+          null,
+
+        routeContinuationStopId: null,
+
+        existingFlowPosition:
+          candidate.remainingFlowPosition,
+
+        maxIncrementalDistanceMeters,
+      },
+    }
+  }
+
+  /**
+   * 022D.3 — Broad contextual compatibility.
+   *
+   * Only affirmative incompatibility is a hard rejection.
+   *
+   * Missing contextual evidence is deliberately permissive:
+   *
+   * - compatible           → continue
+   * - insufficient_context → continue
+   * - absent               → continue for backward compatibility
+   * - incompatible         → reject before route-cost scoring
+   *
+   * This preserves the frozen contextual invariant:
+   *
+   * missing evidence != mismatch
+   */
+  if (
+    candidate.contextualFit?.fit ===
+    'incompatible'
+  ) {
+    return {
+      candidate,
+      actionable: false,
+      ineligibleReason:
+        'contextual_mismatch',
+      score: null,
+
+      breakdown: {
+        /**
+         * Temporal evaluation has already succeeded, so preserve its
+         * valid evidence.
+         */
+        temporalFit:
+          temporal.temporalFit,
+
+        /**
+         * Route-cost evaluation deliberately does not occur after an
+         * affirmative contextual rejection.
+         */
+        routeFit: null,
+
+        minutesUntilStart:
+          temporal.minutesUntilStart,
+
+        minutesUntilEnd:
+          temporal.minutesUntilEnd,
+
+        directDistanceMeters: null,
+
         incrementalDistanceMeters: null,
 
         routeOriginStopId:

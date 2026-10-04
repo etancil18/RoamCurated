@@ -542,7 +542,7 @@ export default function VenueClusterMarker({
               {
                 cluster.liveEventCount
               }{' '}
-              with events
+              with live activity
             </span>
           )}
 

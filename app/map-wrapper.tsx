@@ -11,6 +11,7 @@ import {
 } from 'react'
 
 import { useCityData } from '@/hooks/useCityData'
+import { isCommunityEventSignal } from '@/lib/community-signals/presentation'
 import { ControlPanel } from '@/components/ControlPanel'
 import { useUser } from '@/hooks/useUser'
 import { supabaseBrowser } from '@/lib/supabase/client'
@@ -651,24 +652,34 @@ export default function MapWrapper() {
     ])
 
   const visibleVenues =
-    useMemo(() => {
-      if (
-        !showLiveEventsOnly
-      ) {
-        return filteredVenues
-      }
+  useMemo(() => {
+    if (
+      !showLiveEventsOnly
+    ) {
+      return filteredVenues
+    }
 
-      return filteredVenues.filter(
-        (venue) =>
+    return filteredVenues.filter(
+      (venue) => {
+        const venueEvents =
           eventsByVenueId[
             venue.id
-          ]?.length > 0
-      )
-    }, [
-      filteredVenues,
-      showLiveEventsOnly,
-      eventsByVenueId,
-    ])
+          ] ?? []
+
+        return venueEvents.some(
+          (event) =>
+            !isCommunityEventSignal(
+              event
+            ) &&
+            !!event.starts_at
+        )
+      }
+    )
+  }, [
+    filteredVenues,
+    showLiveEventsOnly,
+    eventsByVenueId,
+  ])
 
   const handleMapClick =
     useCallback(

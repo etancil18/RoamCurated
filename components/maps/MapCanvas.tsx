@@ -664,6 +664,7 @@ export default function MapCanvas({
     allVenues = [],
     venues = [],
     eventsByVenueId = {},
+    refetchEvents,
   } = useCityData(
     selectedCity,
     {
@@ -725,7 +726,28 @@ export default function MapCanvas({
                 `${selectedVenue.id}-${startsAt}-${index}`,
               title,
               starts_at: startsAt,
-              ends_at: null,
+              ends_at:
+              typeof event.ends_at ===
+                'string'
+                ? event.ends_at
+                : null,
+              source_type:
+                typeof event.source_type === 'string'
+                  ? event.source_type
+                  : null,
+              occurrence_id:
+                typeof event.occurrence_id === 'string'
+                  ? event.occurrence_id
+                  : undefined,
+              confidence_band:
+                typeof event.confidence_band === 'string'
+                  ? event.confidence_band
+                  : undefined,
+              confirming_contributors:
+                typeof event.confirming_contributors ===
+                  'number'
+                  ? event.confirming_contributors
+                  : undefined,
             }
 
           return [normalizedEvent]
@@ -2519,6 +2541,9 @@ export default function MapCanvas({
             }
             onGenerateFlow={
               handleGenerateFlowFromPreview
+            }
+            onRefreshEvents={
+              refetchEvents
             }
           />
         </div>

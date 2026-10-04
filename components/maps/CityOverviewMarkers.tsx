@@ -217,10 +217,7 @@ export default function CityOverviewMarkers({
 
                   {liveEventCount > 0 && (
                     <div>
-                      {liveEventCount} live{' '}
-                      {liveEventCount === 1
-                        ? 'event'
-                        : 'events'}
+                      {liveEventCount} with live activity
                     </div>
                   )}
                 </div>

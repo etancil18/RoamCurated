@@ -660,5 +660,864 @@ describe(
         ).toBeNull()
       }
     )
+
+    /**
+     * 022D.3 — Contextual-fit scorer integration.
+     *
+     * These regressions prove contextual fit is a categorical gate,
+     * not another weighted score:
+     *
+     * temporal feasibility
+     * → contextual compatibility
+     * → route feasibility
+     * → weighted score
+     *
+     * Missing or insufficient contextual evidence remains permissive.
+     */
+
+    it(
+      'rejects an affirmatively incompatible opportunity before route scoring',
+      () => {
+        const currentStop =
+          createRuntimeStop({
+            id:
+              'stop-context-current',
+            venueId:
+              'venue-context-current',
+            position: 0,
+            lat: 0,
+            lon: 0,
+          })
+
+        const continuationStop =
+          createRuntimeStop({
+            id:
+              'stop-context-continuation',
+            venueId:
+              'venue-context-continuation',
+            position: 1,
+            lat: 0,
+            lon: 0.01,
+          })
+
+        const candidate:
+          ActiveFlowOpportunityCandidate =
+          {
+            eventId:
+              'event-context-incompatible',
+
+            occurrenceId:
+              'occurrence-context-incompatible',
+
+            confidenceBand:
+              'supported',
+
+            venueId:
+              'venue-context-candidate',
+
+            title:
+              '022D Contextual Mismatch Test',
+
+            startsAt:
+              '2026-09-29T17:30:00.000Z',
+
+            endsAt:
+              '2026-09-29T19:30:00.000Z',
+
+            timezone:
+              'America/New_York',
+
+            venue: {
+              id:
+                'venue-context-candidate',
+              name:
+                'Context Candidate Venue',
+
+              /**
+               * Route geometry is intentionally cheap.
+               *
+               * Without the contextual gate this candidate would
+               * proceed through normal route scoring.
+               */
+              lat: 0,
+              lon: 0.005,
+            },
+
+            contextualFit: {
+              fit:
+                'incompatible',
+
+              reason:
+                'affirmative_semantic_conflict',
+
+              evidence: {
+                alignedVibes: [],
+                alignedTags: [],
+                alignedTypes: [],
+
+                conflictingVibes: [
+                  'silent',
+                ],
+
+                conflictingTags: [],
+
+                routeSemanticStopCount:
+                  2,
+
+                eventHasSemanticEvidence:
+                  true,
+              },
+            },
+
+            venueAlreadyInRemainingFlow:
+              false,
+
+            remainingFlowPosition:
+              null,
+          }
+
+        const context:
+          ActiveFlowOpportunityContext =
+          {
+            sessionId:
+              'session-context-incompatible',
+
+            userId:
+              'user-context-incompatible',
+
+            asOf:
+              AS_OF,
+
+            travelMode:
+              'walking',
+
+            runtimeStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            remainingStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            currentStop,
+
+            candidates: [
+              candidate,
+            ],
+          }
+
+        const result =
+          scoreActiveFlowOpportunity({
+            candidate,
+            context,
+          })
+
+        /**
+         * Temporal evaluation still happens first.
+         *
+         * 90 minutes into the six-hour horizon = 75.
+         */
+        expect(
+          result.breakdown.temporalFit
+        ).toBe(75)
+
+        expect(
+          result.breakdown.minutesUntilStart
+        ).toBe(90)
+
+        expect(
+          result.actionable
+        ).toBe(false)
+
+        expect(
+          result.ineligibleReason
+        ).toBe(
+          'contextual_mismatch'
+        )
+
+        expect(
+          result.score
+        ).toBeNull()
+
+        /**
+         * Context rejected the opportunity before route-cost
+         * evaluation. No route relevance may be manufactured.
+         */
+        expect(
+          result.breakdown.routeFit
+        ).toBeNull()
+
+        expect(
+          result.breakdown
+            .directDistanceMeters
+        ).toBeNull()
+
+        expect(
+          result.breakdown
+            .incrementalDistanceMeters
+        ).toBeNull()
+
+        expect(
+          result.breakdown
+            .routeOriginStopId
+        ).toBe(
+          currentStop.id
+        )
+
+        expect(
+          result.breakdown
+            .routeContinuationStopId
+        ).toBeNull()
+      }
+    )
+
+    it(
+      'preserves temporal rejection precedence over contextual incompatibility',
+      () => {
+        const currentStop =
+          createRuntimeStop({
+            id:
+              'stop-context-expired-current',
+            venueId:
+              'venue-context-expired-current',
+            position: 0,
+            lat: 0,
+            lon: 0,
+          })
+
+        const continuationStop =
+          createRuntimeStop({
+            id:
+              'stop-context-expired-continuation',
+            venueId:
+              'venue-context-expired-continuation',
+            position: 1,
+            lat: 0,
+            lon: 0.01,
+          })
+
+        const candidate:
+          ActiveFlowOpportunityCandidate =
+          {
+            eventId:
+              'event-context-expired',
+
+            occurrenceId:
+              'occurrence-context-expired',
+
+            confidenceBand:
+              'supported',
+
+            venueId:
+              'venue-context-expired-candidate',
+
+            title:
+              '022D Temporal Precedence Test',
+
+            startsAt:
+              '2026-09-29T14:00:00.000Z',
+
+            endsAt:
+              '2026-09-29T15:30:00.000Z',
+
+            timezone:
+              'America/New_York',
+
+            venue: {
+              id:
+                'venue-context-expired-candidate',
+              name:
+                'Expired Context Candidate',
+              lat: 0,
+              lon: 0.005,
+            },
+
+            contextualFit: {
+              fit:
+                'incompatible',
+
+              reason:
+                'affirmative_semantic_conflict',
+
+              evidence: {
+                alignedVibes: [],
+                alignedTags: [],
+                alignedTypes: [],
+                conflictingVibes: [
+                  'silent',
+                ],
+                conflictingTags: [],
+                routeSemanticStopCount:
+                  2,
+                eventHasSemanticEvidence:
+                  true,
+              },
+            },
+
+            venueAlreadyInRemainingFlow:
+              false,
+
+            remainingFlowPosition:
+              null,
+          }
+
+        const context:
+          ActiveFlowOpportunityContext =
+          {
+            sessionId:
+              'session-context-expired',
+
+            userId:
+              'user-context-expired',
+
+            asOf:
+              AS_OF,
+
+            travelMode:
+              'walking',
+
+            runtimeStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            remainingStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            currentStop,
+
+            candidates: [
+              candidate,
+            ],
+          }
+
+        const result =
+          scoreActiveFlowOpportunity({
+            candidate,
+            context,
+          })
+
+        /**
+         * Temporal feasibility is still the earlier hard gate.
+         *
+         * Context must not rewrite an already-expired opportunity
+         * into contextual_mismatch.
+         */
+        expect(
+          result.actionable
+        ).toBe(false)
+
+        expect(
+          result.ineligibleReason
+        ).toBe(
+          'expired'
+        )
+
+        expect(
+          result.score
+        ).toBeNull()
+
+        expect(
+          result.breakdown.routeFit
+        ).toBeNull()
+
+        expect(
+          result.breakdown
+            .directDistanceMeters
+        ).toBeNull()
+
+        expect(
+          result.breakdown
+            .incrementalDistanceMeters
+        ).toBeNull()
+      }
+    )
+
+    it(
+      'gives contextual incompatibility precedence over a route that would otherwise exceed the walking threshold',
+      () => {
+        const currentStop =
+          createRuntimeStop({
+            id:
+              'stop-context-route-current',
+            venueId:
+              'venue-context-route-current',
+            position: 0,
+            lat: 0,
+            lon: 0,
+          })
+
+        const continuationStop =
+          createRuntimeStop({
+            id:
+              'stop-context-route-continuation',
+            venueId:
+              'venue-context-route-continuation',
+            position: 1,
+            lat: 0,
+            lon: 0.01,
+          })
+
+        const candidate:
+          ActiveFlowOpportunityCandidate =
+          {
+            eventId:
+              'event-context-route-expensive',
+
+            occurrenceId:
+              'occurrence-context-route-expensive',
+
+            confidenceBand:
+              'supported',
+
+            venueId:
+              'venue-context-route-expensive',
+
+            title:
+              '022D Context Before Route Test',
+
+            startsAt:
+              '2026-09-29T17:30:00.000Z',
+
+            endsAt:
+              '2026-09-29T19:30:00.000Z',
+
+            timezone:
+              'America/New_York',
+
+            /**
+             * This is the same deliberately excessive geometry used
+             * by the existing 013C route-cost regression.
+             *
+             * If route evaluation ran first, this would produce
+             * excessive_route_cost.
+             */
+            venue: {
+              id:
+                'venue-context-route-expensive',
+              name:
+                'Far Context Candidate',
+              lat: 0.05,
+              lon: 0,
+            },
+
+            contextualFit: {
+              fit:
+                'incompatible',
+
+              reason:
+                'affirmative_semantic_conflict',
+
+              evidence: {
+                alignedVibes: [],
+                alignedTags: [],
+                alignedTypes: [],
+                conflictingVibes: [
+                  'silent',
+                ],
+                conflictingTags: [],
+                routeSemanticStopCount:
+                  2,
+                eventHasSemanticEvidence:
+                  true,
+              },
+            },
+
+            venueAlreadyInRemainingFlow:
+              false,
+
+            remainingFlowPosition:
+              null,
+          }
+
+        const context:
+          ActiveFlowOpportunityContext =
+          {
+            sessionId:
+              'session-context-route-expensive',
+
+            userId:
+              'user-context-route-expensive',
+
+            asOf:
+              AS_OF,
+
+            travelMode:
+              'walking',
+
+            runtimeStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            remainingStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            currentStop,
+
+            candidates: [
+              candidate,
+            ],
+          }
+
+        const result =
+          scoreActiveFlowOpportunity({
+            candidate,
+            context,
+          })
+
+        expect(
+          result.breakdown.temporalFit
+        ).toBe(75)
+
+        /**
+         * 022D.3 must win before route-cost evaluation.
+         */
+        expect(
+          result.actionable
+        ).toBe(false)
+
+        expect(
+          result.ineligibleReason
+        ).toBe(
+          'contextual_mismatch'
+        )
+
+        expect(
+          result.score
+        ).toBeNull()
+
+        expect(
+          result.breakdown.routeFit
+        ).toBeNull()
+
+        expect(
+          result.breakdown
+            .directDistanceMeters
+        ).toBeNull()
+
+        expect(
+          result.breakdown
+            .incrementalDistanceMeters
+        ).toBeNull()
+
+        expect(
+          result.breakdown
+            .maxIncrementalDistanceMeters
+        ).toBe(
+          MAX_INCREMENTAL_DISTANCE_METERS_BY_TRAVEL_MODE
+            .walking
+        )
+      }
+    )
+
+    it(
+      'allows insufficient contextual evidence to continue through the existing route and weighted scoring path',
+      () => {
+        const currentStop =
+          createRuntimeStop({
+            id:
+              'stop-context-insufficient-current',
+            venueId:
+              'venue-context-insufficient-current',
+            position: 0,
+            lat: 0,
+            lon: 0,
+          })
+
+        const continuationStop =
+          createRuntimeStop({
+            id:
+              'stop-context-insufficient-continuation',
+            venueId:
+              'venue-context-insufficient-continuation',
+            position: 1,
+            lat: 0,
+            lon: 0.01,
+          })
+
+        const candidate:
+          ActiveFlowOpportunityCandidate =
+          {
+            eventId:
+              'event-context-insufficient',
+
+            occurrenceId:
+              'occurrence-context-insufficient',
+
+            confidenceBand:
+              'supported',
+
+            venueId:
+              'venue-context-insufficient-candidate',
+
+            title:
+              '022D Insufficient Context Test',
+
+            startsAt:
+              '2026-09-29T17:30:00.000Z',
+
+            endsAt:
+              '2026-09-29T19:30:00.000Z',
+
+            timezone:
+              'America/New_York',
+
+            venue: {
+              id:
+                'venue-context-insufficient-candidate',
+              name:
+                'Insufficient Context Candidate',
+              lat: 0,
+              lon: 0.005,
+            },
+
+            contextualFit: {
+              fit:
+                'insufficient_context',
+
+              reason:
+                'insufficient_semantic_evidence',
+
+              evidence: {
+                alignedVibes: [],
+                alignedTags: [],
+                alignedTypes: [],
+                conflictingVibes: [],
+                conflictingTags: [],
+                routeSemanticStopCount:
+                  0,
+                eventHasSemanticEvidence:
+                  false,
+              },
+            },
+
+            venueAlreadyInRemainingFlow:
+              false,
+
+            remainingFlowPosition:
+              null,
+          }
+
+        const context:
+          ActiveFlowOpportunityContext =
+          {
+            sessionId:
+              'session-context-insufficient',
+
+            userId:
+              'user-context-insufficient',
+
+            asOf:
+              AS_OF,
+
+            travelMode:
+              'walking',
+
+            runtimeStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            remainingStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            currentStop,
+
+            candidates: [
+              candidate,
+            ],
+          }
+
+        const result =
+          scoreActiveFlowOpportunity({
+            candidate,
+            context,
+          })
+
+        /**
+         * Missing evidence is not mismatch.
+         *
+         * The candidate must traverse the exact pre-022D scoring path.
+         */
+        expect(
+          result.actionable
+        ).toBe(true)
+
+        expect(
+          result.ineligibleReason
+        ).toBeNull()
+
+        expect(
+          result.breakdown.temporalFit
+        ).toBe(75)
+
+        expect(
+          result.breakdown.routeFit
+        ).not.toBeNull()
+
+        expect(
+          result.breakdown
+            .directDistanceMeters
+        ).not.toBeNull()
+
+        expect(
+          result.breakdown
+            .incrementalDistanceMeters
+        ).not.toBeNull()
+
+        expect(
+          result.score
+        ).not.toBeNull()
+      }
+    )
+
+    it(
+      'preserves historical 013C behavior when contextual fit is absent',
+      () => {
+        const currentStop =
+          createRuntimeStop({
+            id:
+              'stop-context-absent-current',
+            venueId:
+              'venue-context-absent-current',
+            position: 0,
+            lat: 0,
+            lon: 0,
+          })
+
+        const continuationStop =
+          createRuntimeStop({
+            id:
+              'stop-context-absent-continuation',
+            venueId:
+              'venue-context-absent-continuation',
+            position: 1,
+            lat: 0,
+            lon: 0.01,
+          })
+
+        /**
+         * Deliberately contains no contextualFit field.
+         *
+         * This represents frozen V1 fixtures/consumers and proves the
+         * additive 022D contract does not silently make the new field
+         * mandatory.
+         */
+        const candidate:
+          ActiveFlowOpportunityCandidate =
+          {
+            eventId:
+              'event-context-absent',
+
+            occurrenceId:
+              'occurrence-context-absent',
+
+            confidenceBand:
+              'supported',
+
+            venueId:
+              'venue-context-absent-candidate',
+
+            title:
+              '022D Backward Compatibility Test',
+
+            startsAt:
+              '2026-09-29T17:30:00.000Z',
+
+            endsAt:
+              '2026-09-29T19:30:00.000Z',
+
+            timezone:
+              'America/New_York',
+
+            venue: {
+              id:
+                'venue-context-absent-candidate',
+              name:
+                'Historical Candidate',
+              lat: 0,
+              lon: 0.005,
+            },
+
+            venueAlreadyInRemainingFlow:
+              false,
+
+            remainingFlowPosition:
+              null,
+          }
+
+        const context:
+          ActiveFlowOpportunityContext =
+          {
+            sessionId:
+              'session-context-absent',
+
+            userId:
+              'user-context-absent',
+
+            asOf:
+              AS_OF,
+
+            travelMode:
+              'walking',
+
+            runtimeStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            remainingStops: [
+              currentStop,
+              continuationStop,
+            ],
+
+            currentStop,
+
+            candidates: [
+              candidate,
+            ],
+          }
+
+        const result =
+          scoreActiveFlowOpportunity({
+            candidate,
+            context,
+          })
+
+        expect(
+          result.actionable
+        ).toBe(true)
+
+        expect(
+          result.ineligibleReason
+        ).toBeNull()
+
+        expect(
+          result.breakdown.temporalFit
+        ).toBe(75)
+
+        expect(
+          result.breakdown.routeFit
+        ).not.toBeNull()
+
+        expect(
+          result.breakdown
+            .incrementalDistanceMeters
+        ).not.toBeNull()
+
+        expect(
+          result.score
+        ).not.toBeNull()
+      }
+    )
   }
 )

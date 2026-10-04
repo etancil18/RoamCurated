@@ -1,8 +1,20 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import type { Venue } from '@/types/venue'
-import { normalizeRawVenue } from '@/lib/venues/normalizeVenue'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import type {
+  Venue,
+} from '@/types/venue'
+import {
+  normalizeRawVenue,
+} from '@/lib/venues/normalizeVenue'
+import {
+  isCommunityEventSignal,
+} from '@/lib/community-signals/presentation'
 
 // Import raw city data (not typed yet)
 import atlantaData from '@/data/atlanta'
@@ -13,20 +25,42 @@ import londonData from '@/data/london'
 import losAngelesData from '@/data/losangeles'
 
 // Raw data remains untrusted until normalized
-const RAW_CITY_DATA: Record<string, readonly unknown[]> = {
-  atl: atlantaData,
-  nyc: nycData,
-  porto: portoData,
-  lisbon: lisbonData,
-  london: londonData,
-  la: losAngelesData,
-}
+const RAW_CITY_DATA:
+  Record<
+    string,
+    readonly unknown[]
+  > = {
+    atl:
+      atlantaData,
+
+    nyc:
+      nycData,
+
+    porto:
+      portoData,
+
+    lisbon:
+      lisbonData,
+
+    london:
+      londonData,
+
+    la:
+      losAngelesData,
+  }
 
 type Event = {
   id: string
   starts_at?: string
+  ends_at?: string | null
   title: string
-  venue?: { id: string }
+  source_type?: string | null
+  occurrence_id?: string
+  confidence_band?: string
+  confirming_contributors?: number
+  venue?: {
+    id: string
+  }
 }
 
 type UseCityDataOptions = {
@@ -36,87 +70,249 @@ type UseCityDataOptions = {
 
 export function useCityData(
   city: string | null,
-  options: UseCityDataOptions = {}
+  options:
+    UseCityDataOptions = {}
 ) {
-  const { daysAhead = 7, showLiveEventsOnly = false } = options
-  const safeCity = city ?? ''
+  const {
+    daysAhead = 7,
+    showLiveEventsOnly = false,
+  } = options
 
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
+  const safeCity =
+    city ?? ''
 
-  const venues: Venue[] = useMemo(() => {
-    const raw = RAW_CITY_DATA[safeCity] ?? []
+  const [
+    events,
+    setEvents,
+  ] =
+    useState<
+      Event[]
+    >(
+      []
+    )
 
-    return raw
-      .map((venue) =>
-        normalizeRawVenue(venue, {
-          city: safeCity || undefined,
-        })
-      )
-      .filter((venue): venue is Venue => venue !== null)
-  }, [safeCity])
+  const [
+    loading,
+    setLoading,
+  ] =
+    useState<boolean>(
+      false
+    )
 
-  useEffect(() => {
-    if (!safeCity) return
+  const venues:
+    Venue[] =
+    useMemo(
+      () => {
+        const raw =
+          RAW_CITY_DATA[
+            safeCity
+          ] ?? []
 
-    async function load() {
-      setLoading(true)
+        return raw
+          .map(
+            (
+              venue
+            ) =>
+              normalizeRawVenue(
+                venue,
+                {
+                  city:
+                    safeCity ||
+                    undefined,
+                }
+              )
+          )
+          .filter(
+            (
+              venue
+            ): venue is Venue =>
+              venue !== null
+          )
+      },
+      [
+        safeCity,
+      ]
+    )
 
-      try {
-        const from = new Date()
-        const to = new Date()
-        to.setDate(to.getDate() + daysAhead)
+  const refetchEvents =
+    useCallback(
+      async () => {
+        if (
+          !safeCity
+        ) {
+          setEvents(
+            []
+          )
 
-        const params = new URLSearchParams({
-          city: safeCity,
-          from: from.toISOString(),
-          to: to.toISOString(),
-        })
+          return
+        }
 
-        const res = await fetch(`/api/events?${params.toString()}`)
-        const json = await res.json()
+        setLoading(
+          true
+        )
 
-        setEvents(json.events ?? [])
-      } catch (err) {
-        console.error('[useCityData] Failed to fetch events:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
+        try {
+          const from =
+            new Date()
 
-    load()
-  }, [safeCity, daysAhead])
+          const to =
+            new Date()
 
-  const eventsByVenueId = useMemo(() => {
-    const grouped: Record<string, Event[]> = {}
+          to.setDate(
+            to.getDate() +
+              daysAhead
+          )
 
-    for (const ev of events) {
-      const vId = ev.venue?.id
+          const params =
+            new URLSearchParams({
+              city:
+                safeCity,
 
-      if (!vId) continue
-      if (!grouped[vId]) grouped[vId] = []
+              from:
+                from.toISOString(),
 
-      grouped[vId].push(ev)
-    }
+              to:
+                to.toISOString(),
+            })
 
-    return grouped
-  }, [events])
+          const res =
+            await fetch(
+              `/api/events?${params.toString()}`,
+              {
+                cache:
+                  'no-store',
+              }
+            )
 
-  const visibleVenues = useMemo(() => {
-    if (!showLiveEventsOnly) return venues
+          const json =
+            await res.json()
 
-    return venues.filter((v) => {
-      const evs = eventsByVenueId[v.id] ?? []
+          setEvents(
+            json.events ??
+              []
+          )
+        } catch (
+          err
+        ) {
+          console.error(
+            '[useCityData] Failed to fetch events:',
+            err
+          )
+        } finally {
+          setLoading(
+            false
+          )
+        }
+      },
+      [
+        safeCity,
+        daysAhead,
+      ]
+    )
 
-      return evs.some((ev) => !!ev.starts_at)
-    })
-  }, [venues, eventsByVenueId, showLiveEventsOnly])
+  useEffect(
+    () => {
+      void refetchEvents()
+    },
+    [
+      refetchEvents,
+    ]
+  )
+
+  const eventsByVenueId =
+    useMemo(
+      () => {
+        const grouped:
+          Record<
+            string,
+            Event[]
+          > = {}
+
+        for (
+          const ev of
+            events
+        ) {
+          const vId =
+            ev.venue?.id
+
+          if (!vId) {
+            continue
+          }
+
+          if (
+            !grouped[
+              vId
+            ]
+          ) {
+            grouped[
+              vId
+            ] = []
+          }
+
+          grouped[
+            vId
+          ].push(
+            ev
+          )
+        }
+
+        return grouped
+      },
+      [
+        events,
+      ]
+    )
+
+  const visibleVenues =
+    useMemo(
+      () => {
+        if (
+          !showLiveEventsOnly
+        ) {
+          return venues
+        }
+
+        return venues.filter(
+          (
+            v
+          ) => {
+            const evs =
+              eventsByVenueId[
+                v.id
+              ] ?? []
+
+            return evs.some(
+              (
+                ev
+              ) =>
+                !isCommunityEventSignal(
+                  ev
+                ) &&
+                !!ev.starts_at
+            )
+          }
+        )
+      },
+      [
+        venues,
+        eventsByVenueId,
+        showLiveEventsOnly,
+      ]
+    )
 
   return {
-    venues: visibleVenues,
-    allVenues: venues,
+    venues:
+      visibleVenues,
+
+    allVenues:
+      venues,
+
     events,
+
     eventsByVenueId,
+
     loading,
+
+    refetchEvents,
   }
 }

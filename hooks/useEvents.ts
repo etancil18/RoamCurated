@@ -9,6 +9,7 @@ type Event = {
   price_info: string | null
   description?: string | null
   is_active: boolean
+  source_type?: string | null
   checkin_enabled?: boolean | null
   xp_reward?: number | null
   social_group_id?: string | null

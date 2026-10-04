@@ -8,6 +8,7 @@ import EventCheckInButton from '@/components/events/EventCheckInButton'
 import EventXPBadge from '@/components/events/EventXPBadge'
 import EventSocialGroupBadge from '@/components/events/EventSocialGroupBadge'
 import { logEvent } from '@/lib/logEvent'
+import { isCommunityEventSignal } from '@/lib/community-signals/presentation'
 
 type EventWithTicket = ReturnType<typeof useEvents>['events'][number] & {
   ticket_link?: string | null
@@ -220,6 +221,10 @@ export default function EventsPage() {
   }
 
   const filteredEvents = events.filter((ev) => {
+    if (isCommunityEventSignal(ev)) {
+      return false
+    }
+
     const query = debouncedSearch.toLowerCase()
     return (
       ev.title?.toLowerCase().includes(query) ||

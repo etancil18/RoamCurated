@@ -2,6 +2,7 @@
 
 import { notFound } from 'next/navigation'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+import { isCommunityEventSignal } from '@/lib/community-signals/presentation'
 
 import HeroBanner from '@/components/venue-profile/HeroBanner'
 import SocialLinks from '@/components/venue-profile/SocialLinks'
@@ -266,7 +267,7 @@ export default async function VenueProfilePage({
     await supabase
       .from('events')
       .select(
-        'id, title, description, starts_at, ends_at, tags, ticket_link'
+        'id, title, description, starts_at, ends_at, tags, ticket_link, source_type'
       )
       .eq(
         'venue_id',
@@ -293,10 +294,18 @@ export default async function VenueProfilePage({
       venueId
     )
 
-  const standardEventIds =
+  const ordinaryEvents =
     (
       events ?? []
-    ).map(
+    ).filter(
+      (event) =>
+        !isCommunityEventSignal(
+          event
+        )
+    )
+
+  const standardEventIds =
+    ordinaryEvents.map(
       (event) =>
         event.id
     )
@@ -346,9 +355,7 @@ export default async function VenueProfilePage({
 
   const upcomingEvents:
     VenueEvent[] = [
-    ...(
-      events ?? []
-    )
+    ...ordinaryEvents
       .filter(
         (event) =>
           event.title

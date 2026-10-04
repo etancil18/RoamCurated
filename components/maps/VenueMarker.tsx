@@ -54,6 +54,9 @@ import {
   getVenueIconZIndex,
   resolveVenueIconVisualState,
 } from '@/lib/maps/icons'
+import {
+  isCommunityEventSignal,
+} from '@/lib/community-signals/presentation'
 
 type VenueMarkerInteractionContext =
   | 'default'
@@ -466,6 +469,38 @@ export default function VenueMarker({
       [
         venueEvents,
         nowForCity,
+      ]
+    )
+
+  const upcomingOrdinaryEvents =
+    useMemo(
+      () =>
+        upcomingEvents.filter(
+          (
+            event
+          ) =>
+            !isCommunityEventSignal(
+              event
+            )
+        ),
+      [
+        upcomingEvents,
+      ]
+    )
+
+  const upcomingCommunitySignals =
+    useMemo(
+      () =>
+        upcomingEvents.filter(
+          (
+            event
+          ) =>
+            isCommunityEventSignal(
+              event
+            )
+        ),
+      [
+        upcomingEvents,
       ]
     )
 
@@ -1383,7 +1418,7 @@ export default function VenueMarker({
                   ) : null}
                 </div>
 
-                {upcomingEvents.length >
+                {upcomingOrdinaryEvents.length >
                   0 && (
                   <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-2.5">
                     <strong className="text-xs uppercase tracking-wide text-zinc-500">
@@ -1391,7 +1426,45 @@ export default function VenueMarker({
                     </strong>
 
                     <ul className="mt-2 space-y-1.5 pl-4 text-xs text-zinc-700">
-                      {upcomingEvents.map(
+                      {upcomingOrdinaryEvents.map(
+                        (
+                          ev
+                        ) => (
+                          <li
+                            key={
+                              ev.id
+                            }
+                          >
+                            {LuxonDateTime
+                              .fromISO(
+                                ev.starts_at
+                              )
+                              .setZone(
+                                timezone
+                              )
+                              .toFormat(
+                                'M/d h:mm a'
+                              )}{' '}
+                            —{' '}
+                            {
+                              ev.title
+                            }
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+                {upcomingCommunitySignals.length >
+                  0 && (
+                  <div className="rounded-xl border border-cyan-900/30 bg-cyan-950/10 p-2.5">
+                    <strong className="text-xs uppercase tracking-wide text-cyan-600">
+                      Community Signals
+                    </strong>
+
+                    <ul className="mt-2 space-y-1.5 pl-4 text-xs text-zinc-700">
+                      {upcomingCommunitySignals.map(
                         (
                           ev
                         ) => (

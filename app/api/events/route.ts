@@ -11,6 +11,11 @@ type DiscoverableCommunityEvent = {
   confidence_band: string
 }
 
+type EventOccurrenceConfidenceRow = {
+  occurrence_id: string
+  unique_confirmers: number
+}
+
 export async function GET(req: Request) {
   const supabase = await supabaseServerApi()
   const supabaseAdmin = getSupabaseAdmin()
@@ -88,6 +93,140 @@ export async function GET(req: Request) {
       (row) => row.event_id
     )
 
+  /**
+   * Community Signal presentation identity.
+   *
+   * 012B already owns the authoritative relationship between a
+   * discoverable canonical Community Event and its resolved
+   * occurrence.
+   *
+   * Preserve that relationship for response enrichment only.
+   * This does not create a second occurrence lookup, reproduce
+   * discovery policy, or give the client resolution authority.
+   */
+  const discoverableCommunityEventById =
+    new Map(
+      discoverableCommunityEvents.map(
+        (row) => [
+          row.event_id,
+          row,
+        ]
+      )
+    )
+
+  /**
+   * Community Signal corroboration presentation.
+   *
+   * get_event_occurrence_confidence remains authoritative for
+   * occurrence-level evidence aggregation.
+   *
+   * This route transports only unique_confirmers for presentation.
+   * It does not count confirmation rows, infer confidence, or
+   * reproduce trust rules.
+   */
+  const confirmingContributorsByOccurrenceId =
+    new Map<string, number>()
+
+  const confidenceResults =
+    await Promise.all(
+      discoverableCommunityEvents.map(
+        async (communityEvent) => {
+          const {
+            data,
+            error,
+          } = await supabaseAdmin.rpc(
+            'get_event_occurrence_confidence',
+            {
+              p_occurrence_id:
+                communityEvent.occurrence_id,
+            }
+          )
+
+          if (error) {
+            return {
+              occurrenceId:
+                communityEvent.occurrence_id,
+              confirmingContributors:
+                null,
+              error,
+            }
+          }
+
+          const rows =
+            (data ??
+              []) as EventOccurrenceConfidenceRow[]
+
+          if (
+            rows.length !== 1 ||
+            rows[0].occurrence_id !==
+              communityEvent.occurrence_id ||
+            !Number.isInteger(
+              rows[0].unique_confirmers
+            ) ||
+            rows[0].unique_confirmers < 0
+          ) {
+            return {
+              occurrenceId:
+                communityEvent.occurrence_id,
+              confirmingContributors:
+                null,
+              error:
+                new Error(
+                  'Invalid event occurrence confirmation count.'
+                ),
+            }
+          }
+
+          return {
+            occurrenceId:
+              communityEvent.occurrence_id,
+            confirmingContributors:
+              rows[0].unique_confirmers,
+            error:
+              null,
+          }
+        }
+      )
+    )
+
+  for (
+    const result of
+      confidenceResults
+  ) {
+    if (
+      result.error ||
+      result.confirmingContributors ===
+        null
+    ) {
+      console.error(
+        '❌ Error fetching Community Signal confirmation count:',
+        {
+          occurrence_id:
+            result.occurrenceId,
+          error:
+            result.error,
+        }
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Failed to fetch events',
+          details:
+            'Could not load Community Signal confirmation count.',
+        },
+        {
+          status: 500,
+        }
+      )
+    }
+
+    confirmingContributorsByOccurrenceId.set(
+      result.occurrenceId,
+      result.confirmingContributors
+    )
+  }
+
   let query = supabase
     .from('events')
     .select(
@@ -150,7 +289,9 @@ export async function GET(req: Request) {
   }
 
   const activeParam = onlyActive?.toLowerCase()
-  const isActive = activeParam !== 'false' && activeParam !== '0'
+  const isActive =
+    activeParam !== 'false' &&
+    activeParam !== '0'
 
   if (isActive) {
     query = query.eq('is_active', true)
@@ -158,10 +299,14 @@ export async function GET(req: Request) {
 
   // Keep current/future events visible, including overnight events
   // that started before `from`.
-  const nowIso = new Date().toISOString()
+  const nowIso =
+    new Date().toISOString()
 
   if (to) {
-    query = query.lte('starts_at', to)
+    query = query.lte(
+      'starts_at',
+      to
+    )
   }
 
   if (from) {
@@ -175,73 +320,200 @@ export async function GET(req: Request) {
   }
 
   if (city) {
-    query = query.filter('venues.city', 'eq', city)
-  }
-
-  if (tags) {
-    const tagList = tags
-      .split(',')
-      .map((t) => t.trim())
-
-    query = query.overlaps('tags', tagList)
-  }
-
-  query = query
-    .order('starts_at', { ascending: true })
-    .range(offset, offset + limit - 1)
-
-  const { data, error } = await query
-
-  if (error) {
-    console.error('❌ Error fetching events:', error)
-
-    return NextResponse.json(
-      {
-        error: 'Failed to fetch events',
-        details: error.message,
-      },
-      { status: 500 }
+    query = query.filter(
+      'venues.city',
+      'eq',
+      city
     )
   }
 
-  const eventsWithCounts = (data ?? []).map((event) => ({
-    ...event,
-    interest_count:
-      event.event_interests?.[0]?.count ?? 0,
-  }))
+  if (tags) {
+    const tagList =
+      tags
+        .split(',')
+        .map((t) =>
+          t.trim()
+        )
 
-  if (process.env.NODE_ENV !== 'production') {
+    query = query.overlaps(
+      'tags',
+      tagList
+    )
+  }
+
+  query = query
+    .order(
+      'starts_at',
+      {
+        ascending:
+          true,
+      }
+    )
+    .range(
+      offset,
+      offset + limit - 1
+    )
+
+  const {
+    data,
+    error,
+  } = await query
+
+  if (error) {
+    console.error(
+      '❌ Error fetching events:',
+      error
+    )
+
+    return NextResponse.json(
+      {
+        error:
+          'Failed to fetch events',
+        details:
+          error.message,
+      },
+      {
+        status: 500,
+      }
+    )
+  }
+
+  const eventsWithCounts =
+    (data ?? []).map(
+      (event) => {
+        const communityDiscovery =
+          event.source_type ===
+          'community_signal'
+            ? discoverableCommunityEventById.get(
+                event.id
+              )
+            : undefined
+
+        const confirmingContributors =
+          communityDiscovery
+            ? confirmingContributorsByOccurrenceId.get(
+                communityDiscovery.occurrence_id
+              )
+            : undefined
+
+        return {
+          ...event,
+
+          interest_count:
+            event.event_interests?.[0]
+              ?.count ?? 0,
+
+          ...(communityDiscovery
+            ? {
+                occurrence_id:
+                  communityDiscovery.occurrence_id,
+
+                confidence_band:
+                  communityDiscovery.confidence_band,
+
+                confirming_contributors:
+                  confirmingContributors ??
+                  0,
+              }
+            : {}),
+        }
+      }
+    )
+
+  if (
+    process.env.NODE_ENV !==
+    'production'
+  ) {
     console.debug(
       '📤 Events returned from Supabase:',
-      eventsWithCounts.map((ev) => ({
-        id: ev.id,
-        title: ev.title,
-        starts_at: ev.starts_at,
-        ends_at: ev.ends_at,
-        venue_city: ev.venue?.city,
-        is_active: ev.is_active,
-        checkin_enabled: ev.checkin_enabled,
-        xp_reward: ev.xp_reward,
-        social_group_id: ev.social_group_id,
-        interest_count: ev.interest_count,
-      }))
+      eventsWithCounts.map(
+        (ev) => ({
+          id:
+            ev.id,
+
+          title:
+            ev.title,
+
+          starts_at:
+            ev.starts_at,
+
+          ends_at:
+            ev.ends_at,
+
+          venue_city:
+            ev.venue?.city,
+
+          is_active:
+            ev.is_active,
+
+          checkin_enabled:
+            ev.checkin_enabled,
+
+          xp_reward:
+            ev.xp_reward,
+
+          social_group_id:
+            ev.social_group_id,
+
+          interest_count:
+            ev.interest_count,
+
+          source_type:
+            ev.source_type,
+
+          occurrence_id:
+            'occurrence_id' in
+            ev
+              ? ev.occurrence_id
+              : undefined,
+
+          confidence_band:
+            'confidence_band' in
+            ev
+              ? ev.confidence_band
+              : undefined,
+
+          confirming_contributors:
+            'confirming_contributors' in
+            ev
+              ? ev.confirming_contributors
+              : undefined,
+        })
+      )
     )
   }
 
   const response = {
-    events: eventsWithCounts,
+    events:
+      eventsWithCounts,
+
     meta: {
-      count: eventsWithCounts.length,
+      count:
+        eventsWithCounts.length,
+
       city,
+
       from,
+
       to,
-      active: isActive,
-      tags: tags?.split(',') ?? [],
+
+      active:
+        isActive,
+
+      tags:
+        tags?.split(',') ??
+        [],
+
       limit,
+
       offset,
-      fetched_at: new Date().toISOString(),
+
+      fetched_at:
+        new Date().toISOString(),
     },
   }
 
-  return NextResponse.json(response)
+  return NextResponse.json(
+    response
+  )
 }

@@ -777,7 +777,7 @@ export function getClusterLabel(
     cluster.liveEventCount >
     0
   ) {
-    return `${cluster.count} places, ${cluster.liveEventCount} with events`
+    return `${cluster.count} places, ${cluster.liveEventCount} with live activity`
   }
 
   return `${cluster.count} curated places`
