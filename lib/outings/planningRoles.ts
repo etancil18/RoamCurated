@@ -963,15 +963,12 @@ function resolveRolePhaseForIndex(
   if (mode === "before") return "before"
   if (mode === "after") return "after"
 
-  if (totalRoles <= 1) {
-    return index === 0 ? "before" : "after"
-  }
+  // Full-mode plans use the first role before the event and
+  // every subsequent role after the event. Keep totalRoles in
+  // the signature so existing callers remain wholly unaffected.
+  void totalRoles
 
-  if (totalRoles === 2) {
-    return index === 0 ? "before" : "after"
-  }
-
-  return index < 2 ? "before" : "after"
+  return index === 0 ? "before" : "after"
 }
 
 function getLocalMinutesInDay(

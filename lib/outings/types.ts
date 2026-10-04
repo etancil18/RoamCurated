@@ -168,6 +168,54 @@ export type EventRecord = {
   venue_id: string | null
 }
 
+// ---------- Event Experience Planning ----------
+
+export type ExperienceIntensity =
+  | "low"
+  | "medium"
+  | "high"
+
+export type ConsumptionExposure =
+  | "none"
+  | "possible"
+  | "likely"
+
+export type FoodExposure =
+  | "none"
+  | "light"
+  | "meal"
+
+export type EventExperienceProfile = {
+  physicalIntensity: ExperienceIntensity
+  seatedIntensity: ExperienceIntensity
+
+  socialIntensity: ExperienceIntensity
+  conversationIntensity: ExperienceIntensity
+  stimulation: ExperienceIntensity
+
+  foodExposure: FoodExposure
+  caffeineExposure: ConsumptionExposure
+  alcoholExposure: ConsumptionExposure
+
+  indoorLikelihood: ExperienceIntensity
+
+  /**
+   * Confidence in the planner's inferred event experience profile, normalized
+   * from 0 to 1.
+   *
+   * This represents planning confidence rather than certainty about what any
+   * individual attendee actually experienced.
+   */
+  confidence: number
+
+  /**
+   * Normalized evidence tokens that contributed to the inferred profile.
+   *
+   * These are intended for planner diagnostics rather than user-facing claims.
+   */
+  evidence: string[]
+}
+
 // ---------- Planning / Slot Intent ----------
 
 export type PlanningSlot = {
@@ -225,6 +273,7 @@ export type PlanningContext = {
 
   eventTags: string[]
   eventArchetype: string
+  eventExperience: EventExperienceProfile
 
   desiredRoles: StopRole[]
   slots?: PlanningSlot[]

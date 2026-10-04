@@ -1,7 +1,5 @@
 'use client'
 
-import Link from 'next/link'
-
 type EventSocialGroupBadgeProps = {
   socialGroupId?: string | null
   socialGroupName?: string | null
@@ -20,7 +18,6 @@ export default function EventSocialGroupBadge({
   if (!socialGroupId && !socialGroupName) return null
 
   const label = socialGroupName ?? 'Social Group'
-  const href = socialGroupSlug ? `/social-groups/${socialGroupSlug}` : null
 
   const wrapperClasses =
     size === 'md'
@@ -54,14 +51,5 @@ export default function EventSocialGroupBadge({
     </span>
   )
 
-  if (!href) return content
-
-  return (
-    <Link
-      href={href}
-      className="inline-flex transition hover:opacity-80"
-    >
-      {content}
-    </Link>
-  )
+  return content
 }

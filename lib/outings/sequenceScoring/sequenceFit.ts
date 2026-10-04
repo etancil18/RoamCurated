@@ -55,6 +55,7 @@ export type SequenceFitBreakdown = {
   archetypeProgression: number
   energyProgression: number
   routeShape: number
+  eventExperienceTransition: number
 }
 
 export type SequenceFitEvidence = {
@@ -84,6 +85,9 @@ export type SequenceFitEvidence = {
 
   isFullModePhaseTransition: boolean
   sequenceDirection: "toward_event" | "away_from_event"
+
+  eventExperienceApplied: boolean
+  isFirstAfterEventSlot: boolean
 }
 
 export type SequenceFitResult = {
@@ -149,6 +153,15 @@ const ARCHETYPE_PROGRESSION_PENALTY = 6
 const ENERGY_PROGRESS_MAX_BONUS = 3
 const ENERGY_PROGRESS_MAX_PENALTY = 4
 
+/*
+ * Event-experience transition scoring is intentionally bounded.
+ *
+ * It should meaningfully influence the first stop after an event without
+ * overpowering semantic fit, hours, geography, vibe, or candidate quality.
+ */
+const EVENT_EXPERIENCE_MAX_BONUS = 12
+const EVENT_EXPERIENCE_MAX_PENALTY = 16
+
 // -----------------------------------------------------------------------------
 // Primary API
 // -----------------------------------------------------------------------------
@@ -160,10 +173,30 @@ export function computeSequenceFit({
   selectedSoFar = [],
   previousVenue: explicitPreviousVenue,
 }: ComputeSequenceFitInput): SequenceFitResult {
-  const previousVenue =
+  const rawPreviousVenue =
     explicitPreviousVenue ??
     selectedSoFar[selectedSoFar.length - 1] ??
     null
+
+  /*
+   * In full mode, the event is the experiential boundary between the before
+   * and after portions of the outing.
+   *
+   * A pre-event venue therefore must not be treated as though it happened
+   * immediately before the first post-event venue. The event happened between
+   * them and is now represented by context.eventExperience.
+   */
+  const isFirstAfterEventSlot =
+    slot.phase === "after" &&
+    !selectedSoFar.some(
+      (selected) => resolveSelectedPhase(selected) === "after"
+    )
+
+  const previousVenue =
+    isFirstAfterEventSlot &&
+    resolveSelectedPhase(rawPreviousVenue) === "before"
+      ? null
+      : rawPreviousVenue
 
   const candidateTypes = normalizeVenueTypes(venue.type)
   const previousTypes = previousVenue
@@ -216,12 +249,15 @@ export function computeSequenceFit({
   const isFullModePhaseTransition =
     context.mode === "full" &&
     slot.phase === "after" &&
-    selectedSoFar.some((selected) => resolveSelectedPhase(selected) === "before")
+    selectedSoFar.some(
+      (selected) => resolveSelectedPhase(selected) === "before"
+    )
 
   const candidateEnergyLevel = readEnergyLevel(venue)
   const previousEnergyLevel = readEnergyLevel(previousVenue)
   const energyEvidenceUsed =
-    candidateEnergyLevel != null && previousEnergyLevel != null
+    candidateEnergyLevel != null &&
+    previousEnergyLevel != null
 
   const roleProgression = scoreRoleProgression({
     previousRole,
@@ -299,6 +335,16 @@ export function computeSequenceFit({
     currentRole,
   })
 
+  const eventExperienceTransition = scoreEventExperienceTransition({
+    context,
+    slot,
+    selectedSoFar,
+    candidateTypes,
+    candidateFamilies: candidateTypeFamilies,
+    currentRole,
+    isFirstAfterEventSlot,
+  })
+
   const breakdown: SequenceFitBreakdown = {
     roleProgression,
     typeTransition,
@@ -311,6 +357,7 @@ export function computeSequenceFit({
     archetypeProgression,
     energyProgression,
     routeShape,
+    eventExperienceTransition,
   }
 
   const rawScore =
@@ -324,7 +371,8 @@ export function computeSequenceFit({
     phaseCoherence +
     archetypeProgression +
     energyProgression +
-    routeShape
+    routeShape +
+    eventExperienceTransition
 
   const score = clamp(
     Math.round(rawScore),
@@ -387,6 +435,9 @@ export function computeSequenceFit({
         slot.phase === "before"
           ? "toward_event"
           : "away_from_event",
+      eventExperienceApplied:
+        context.eventExperience.confidence > 0,
+      isFirstAfterEventSlot,
     },
   }
 }
@@ -457,6 +508,8 @@ export function getSequenceFitMetadata(
   energyEvidenceUsed: boolean
   candidateEnergyLevel: number | null
   previousEnergyLevel: number | null
+  eventExperienceApplied: boolean
+  isFirstAfterEventSlot: boolean
   sequenceBreakdown: SequenceFitBreakdown
 } {
   return {
@@ -479,6 +532,8 @@ export function getSequenceFitMetadata(
     energyEvidenceUsed: result.evidence.energyEvidenceUsed,
     candidateEnergyLevel: result.evidence.candidateEnergyLevel,
     previousEnergyLevel: result.evidence.previousEnergyLevel,
+    eventExperienceApplied: result.evidence.eventExperienceApplied,
+    isFirstAfterEventSlot: result.evidence.isFirstAfterEventSlot,
     sequenceBreakdown: result.breakdown,
   }
 }
@@ -491,6 +546,449 @@ export function hasAcceptableSequenceFit(
     !result.isHardConflict &&
     result.confidenceScore >= minimumConfidence &&
     result.score > -10
+  )
+}
+
+// -----------------------------------------------------------------------------
+// Event-experience transition
+// -----------------------------------------------------------------------------
+
+function scoreEventExperienceTransition({
+  context,
+  slot,
+  selectedSoFar,
+  candidateTypes,
+  candidateFamilies,
+  currentRole,
+  isFirstAfterEventSlot,
+}: {
+  context: PlanningContext
+  slot: PlanningSlot
+  selectedSoFar: SequenceVenueLike[]
+  candidateTypes: string[]
+  candidateFamilies: string[]
+  currentRole: StopRole
+  isFirstAfterEventSlot: boolean
+}): number {
+  const experience = context.eventExperience
+
+  if (!experience || experience.confidence <= 0) {
+    return 0
+  }
+
+  /*
+   * Before the event, the event represents an anticipated future experience.
+   *
+   * Discourage high-confidence experiential duplication or fatigue immediately
+   * before that event without making any candidate categorically ineligible.
+   * This keeps the planner flexible when venue coverage is thin.
+   */
+  if (slot.phase === "before") {
+    const candidateCoffee =
+      candidateFamilies.includes("coffee") ||
+      currentRole === "coffee"
+
+    const candidateMeal =
+      candidateFamilies.includes("meal") ||
+      currentRole === "food"
+
+    const candidateDrinks =
+      candidateFamilies.includes("drinks") ||
+      currentRole === "drink"
+
+    const candidatePhysical =
+      candidateFamilies.includes("wellness") ||
+      hasAnyType(candidateTypes, [
+        "fitness",
+        "yoga",
+        "pilates",
+        "gym",
+        "workout",
+        "running",
+        "cycling",
+        "hiking",
+        "climbing",
+        "sports",
+        "sport",
+      ])
+
+    let score = 0
+
+    /*
+     * Avoid consuming the same thing immediately before an event that is
+     * already likely to provide it.
+     */
+    if (
+      experience.caffeineExposure === "likely" &&
+      candidateCoffee
+    ) {
+      score -= 12
+    } else if (
+      experience.caffeineExposure === "possible" &&
+      candidateCoffee
+    ) {
+      score -= 6
+    }
+
+    if (
+      experience.foodExposure === "meal" &&
+      candidateMeal
+    ) {
+      score -= 10
+    }
+
+    if (
+      experience.alcoholExposure === "likely" &&
+      candidateDrinks
+    ) {
+      score -= 8
+    } else if (
+      experience.alcoholExposure === "possible" &&
+      candidateDrinks
+    ) {
+      score -= 4
+    }
+
+    /*
+     * Avoid unnecessary physical fatigue immediately before an event that is
+     * itself expected to require substantial physical effort.
+     */
+    if (
+      experience.physicalIntensity === "high" &&
+      candidatePhysical
+    ) {
+      score -= 8
+    } else if (
+      experience.physicalIntensity === "medium" &&
+      candidatePhysical
+    ) {
+      score -= 4
+    }
+
+    const confidenceWeight =
+      0.55 + clamp(experience.confidence, 0, 1) * 0.45
+
+    return clamp(
+      Math.round(
+        score *
+          confidenceWeight
+      ),
+      -EVENT_EXPERIENCE_MAX_PENALTY,
+      EVENT_EXPERIENCE_MAX_BONUS
+    )
+  }
+
+  /*
+   * Only venues selected after the event belong to the current post-event
+   * experiential state.
+   *
+   * Pre-event venues happened on the other side of the event boundary and
+   * should not dilute or reinforce the state created by the event itself.
+   */
+  const selectedAfterEvent = selectedSoFar.filter(
+    (selected) => resolveSelectedPhase(selected) === "after"
+  )
+
+  const selectedAfterFamilies = uniqueStrings(
+    selectedAfterEvent.flatMap((selected) =>
+      getTypeFamilies(
+        normalizeVenueTypes(selected.type)
+      )
+    )
+  )
+
+  const selectedAfterRoles = uniqueStrings(
+    selectedAfterEvent
+      .map((selected) => resolveSelectedRole(selected))
+      .filter(
+        (role): role is StopRole =>
+          role != null
+      )
+  )
+
+  const hasPostEventCoffee =
+    selectedAfterFamilies.includes("coffee") ||
+    selectedAfterRoles.includes("coffee")
+
+  const hasPostEventMeal =
+    selectedAfterFamilies.includes("meal") ||
+    selectedAfterRoles.includes("food")
+
+  const hasPostEventDrinks =
+    selectedAfterFamilies.includes("drinks") ||
+    selectedAfterRoles.includes("drink")
+
+  const hasPostEventActivity =
+    selectedAfterRoles.includes("activity") ||
+    selectedAfterFamilies.includes("culture") ||
+    selectedAfterFamilies.includes("outdoor") ||
+    selectedAfterFamilies.includes("wellness")
+
+  const hasPostEventQuiet =
+    selectedAfterFamilies.includes("quiet")
+
+  const candidateCoffee =
+    candidateFamilies.includes("coffee") ||
+    currentRole === "coffee"
+
+  const candidateMeal =
+    candidateFamilies.includes("meal") ||
+    currentRole === "food"
+
+  const candidateDrinks =
+    candidateFamilies.includes("drinks") ||
+    currentRole === "drink"
+
+  const candidateCulture =
+    candidateFamilies.includes("culture")
+
+  const candidateOutdoor =
+    candidateFamilies.includes("outdoor")
+
+  const candidateQuiet =
+    candidateFamilies.includes("quiet")
+
+  const candidateNightlife =
+    candidateFamilies.includes("nightlife")
+
+  const candidateWellness =
+    candidateFamilies.includes("wellness")
+
+  const candidateActivity =
+    currentRole === "activity" ||
+    candidateCulture ||
+    candidateOutdoor ||
+    candidateWellness ||
+    hasAnyType(candidateTypes, [
+      "activity",
+      "arcade",
+      "bowling",
+      "mini golf",
+      "market",
+      "park",
+      "garden",
+      "gallery",
+      "museum",
+      "bookstore",
+      "cinema",
+      "theater",
+    ])
+
+  let score = 0
+
+  /*
+   * Consumption repetition.
+   *
+   * Event exposure establishes the initial post-event state. Once an actual
+   * after-event stop has already satisfied the same consumption category, the
+   * selected route becomes the stronger signal and repeated consumption should
+   * be discouraged more aggressively.
+   */
+  if (
+    experience.caffeineExposure === "likely" &&
+    candidateCoffee
+  ) {
+    score -= 12
+  } else if (
+    experience.caffeineExposure === "possible" &&
+    candidateCoffee
+  ) {
+    score -= 6
+  }
+
+  if (
+    hasPostEventCoffee &&
+    candidateCoffee
+  ) {
+    score -= 7
+  }
+
+  if (
+    experience.foodExposure === "meal" &&
+    candidateMeal &&
+    !hasPostEventMeal
+  ) {
+    score -= 10
+  } else if (
+    experience.foodExposure === "light" &&
+    candidateMeal &&
+    !hasPostEventMeal
+  ) {
+    score += 6
+  }
+
+  if (
+    hasPostEventMeal &&
+    candidateMeal
+  ) {
+    score -= 8
+  }
+
+  if (
+    experience.alcoholExposure === "likely" &&
+    candidateDrinks &&
+    !hasPostEventDrinks
+  ) {
+    score -= 9
+  } else if (
+    experience.alcoholExposure === "possible" &&
+    candidateDrinks &&
+    !hasPostEventDrinks
+  ) {
+    score -= 4
+  }
+
+  if (
+    hasPostEventDrinks &&
+    candidateDrinks &&
+    normalizeArchetype(context.eventArchetype) !== "nightlife"
+  ) {
+    score -= 6
+  }
+
+  /*
+   * Physical-state progression.
+   *
+   * A highly seated event creates a meaningful preference for movement,
+   * exploration, or a change of environment. Once an after-event activity has
+   * already supplied that change, this preference fades rather than continuing
+   * to reward activities indefinitely.
+   */
+  if (experience.seatedIntensity === "high") {
+    if (!hasPostEventActivity) {
+      if (
+        candidateActivity &&
+        (candidateOutdoor || candidateCulture)
+      ) {
+        score += 8
+      } else if (candidateActivity) {
+        score += 5
+      }
+
+      if (
+        candidateCoffee &&
+        !candidateOutdoor
+      ) {
+        score -= 4
+      }
+    }
+  }
+
+  if (experience.physicalIntensity === "high") {
+    if (
+      !hasPostEventMeal &&
+      !hasPostEventCoffee &&
+      !hasPostEventQuiet &&
+      (
+        candidateMeal ||
+        candidateCoffee ||
+        candidateQuiet
+      )
+    ) {
+      score += 5
+    }
+
+    if (
+      candidateNightlife &&
+      !hasPostEventQuiet
+    ) {
+      score -= 5
+    }
+  } else if (experience.physicalIntensity === "medium") {
+    if (
+      !hasPostEventMeal &&
+      !hasPostEventCoffee &&
+      !hasPostEventQuiet &&
+      (
+        candidateMeal ||
+        candidateCoffee ||
+        candidateQuiet
+      )
+    ) {
+      score += 2
+    }
+  }
+
+  /*
+   * Stimulation progression.
+   *
+   * Once the route has already supplied a quiet decompression stop, the event's
+   * stimulation state should no longer keep rewarding additional quiet venues.
+   */
+  if (experience.stimulation === "high") {
+    if (
+      candidateQuiet &&
+      !hasPostEventQuiet
+    ) {
+      score += 6
+    }
+
+    if (
+      candidateNightlife &&
+      !hasPostEventQuiet &&
+      normalizeArchetype(context.eventArchetype) !== "nightlife"
+    ) {
+      score -= 3
+    }
+  }
+
+  if (
+    experience.stimulation === "low" &&
+    candidateNightlife &&
+    !hasPostEventActivity
+  ) {
+    score -= 6
+  }
+
+  /*
+   * Conversation and social-state progression.
+   *
+   * A seated, conversational event benefits from a change of mode. Once the
+   * route has already delivered that change, the bonus fades so the planner
+   * does not mechanically stack activities.
+   */
+  if (
+    experience.conversationIntensity === "high" &&
+    experience.seatedIntensity === "high"
+  ) {
+    if (
+      candidateActivity &&
+      !hasPostEventActivity
+    ) {
+      score += 4
+    }
+
+    if (
+      candidateCoffee &&
+      !candidateActivity &&
+      !hasPostEventActivity
+    ) {
+      score -= 3
+    }
+  }
+
+  /*
+   * The event should dominate the first post-event transition and then fade.
+   *
+   * Once the group has completed an after-event stop, the actual selected
+   * venues increasingly become the correct source of sequence state.
+   */
+  const transitionWeight =
+    isFirstAfterEventSlot
+      ? 1
+      : 0.55
+
+  const confidenceWeight =
+    0.55 + clamp(experience.confidence, 0, 1) * 0.45
+
+  return clamp(
+    Math.round(
+      score *
+        transitionWeight *
+        confidenceWeight
+    ),
+    -EVENT_EXPERIENCE_MAX_PENALTY,
+    EVENT_EXPERIENCE_MAX_BONUS
   )
 }
 
@@ -590,7 +1088,10 @@ function scoreTypeTransition({
   phase: SlotPhase
   context: PlanningContext
 }): number {
-  if (previousTypes.length === 0 || candidateTypes.length === 0) {
+  if (
+    previousTypes.length === 0 ||
+    candidateTypes.length === 0
+  ) {
     return 0
   }
 
@@ -697,7 +1198,10 @@ function scoreSharedContinuity(
 ): number {
   if (sharedCount <= 0) return 0
 
-  return Math.min(sharedCount * 2, maximumBonus)
+  return Math.min(
+    sharedCount * 2,
+    maximumBonus
+  )
 }
 
 function scoreTimeCategoryContinuity({
@@ -723,18 +1227,24 @@ function scoreTimeCategoryContinuity({
     )
   }
 
-  const previousLate = hasAnyValue(previousTimeCategories, [
-    "late night",
-    "late-night",
-    "night",
-  ])
+  const previousLate = hasAnyValue(
+    previousTimeCategories,
+    [
+      "late night",
+      "late-night",
+      "night",
+    ]
+  )
 
-  const candidateMorning = hasAnyValue(candidateTimeCategories, [
-    "morning",
-    "breakfast",
-    "early morning",
-    "early_morning",
-  ])
+  const candidateMorning = hasAnyValue(
+    candidateTimeCategories,
+    [
+      "morning",
+      "breakfast",
+      "early morning",
+      "early_morning",
+    ]
+  )
 
   if (previousLate && candidateMorning) {
     return -6
@@ -760,7 +1270,9 @@ function scoreSequenceVariety({
 
   const selectedFamilies = uniqueStrings(
     selectedSoFar.flatMap((selected) =>
-      getTypeFamilies(normalizeVenueTypes(selected.type))
+      getTypeFamilies(
+        normalizeVenueTypes(selected.type)
+      )
     )
   )
 
@@ -771,11 +1283,13 @@ function scoreSequenceVariety({
   )
 
   const addsNewFamily = candidateFamilies.some(
-    (family) => !selectedFamilies.includes(family)
+    (family) =>
+      !selectedFamilies.includes(family)
   )
 
   const addsNewType = candidateTypes.some(
-    (type) => !selectedTypes.includes(type)
+    (type) =>
+      !selectedTypes.includes(type)
   )
 
   if (addsNewFamily && addsNewType) {
@@ -789,7 +1303,8 @@ function scoreSequenceVariety({
   if (
     selectedFamilies.length >= 3 &&
     candidateFamilies.every(
-      (family) => !selectedFamilies.includes(family)
+      (family) =>
+        !selectedFamilies.includes(family)
     )
   ) {
     return -EXCESSIVE_VARIETY_PENALTY
@@ -847,7 +1362,8 @@ function scorePhaseCoherence({
 }): number {
   if (!previousVenue) return 0
 
-  const previousPhase = resolveSelectedPhase(previousVenue)
+  const previousPhase =
+    resolveSelectedPhase(previousVenue)
 
   if (
     previousPhase &&
@@ -859,14 +1375,20 @@ function scorePhaseCoherence({
   if (isFullModePhaseTransition) {
     if (
       previousRole === "food" &&
-      (currentRole === "drink" || currentRole === "dessert")
+      (
+        currentRole === "drink" ||
+        currentRole === "dessert"
+      )
     ) {
       return PHASE_COHERENCE_BONUS
     }
 
     if (
       previousRole === "activity" &&
-      (currentRole === "food" || currentRole === "drink")
+      (
+        currentRole === "food" ||
+        currentRole === "drink"
+      )
     ) {
       return PHASE_COHERENCE_BONUS
     }
@@ -908,7 +1430,10 @@ function scoreArchetypeProgression({
 }): number {
   if (previousTypes.length === 0) return 0
 
-  const archetype = normalizeArchetype(context.eventArchetype)
+  const archetype =
+    normalizeArchetype(
+      context.eventArchetype
+    )
 
   if (archetype === "nightlife") {
     if (
@@ -1054,7 +1579,9 @@ function scoreEnergyProgression({
     return 0
   }
 
-  const delta = candidateEnergyLevel - previousEnergyLevel
+  const delta =
+    candidateEnergyLevel -
+    previousEnergyLevel
 
   if (
     archetype === "nightlife" ||
@@ -1116,27 +1643,45 @@ function scoreRouteShape({
 }): number {
   if (selectedSoFar.length < 2) return 0
 
-  const previous = selectedSoFar[selectedSoFar.length - 1]
-  const prior = selectedSoFar[selectedSoFar.length - 2]
+  const previous =
+    selectedSoFar[
+      selectedSoFar.length - 1
+    ]
 
-  const previousFamilies = getTypeFamilies(
-    normalizeVenueTypes(previous.type)
-  )
+  const prior =
+    selectedSoFar[
+      selectedSoFar.length - 2
+    ]
 
-  const priorFamilies = getTypeFamilies(
-    normalizeVenueTypes(prior.type)
-  )
+  const previousFamilies =
+    getTypeFamilies(
+      normalizeVenueTypes(previous.type)
+    )
 
-  const previousRole = resolveSelectedRole(previous)
-  const priorRole = resolveSelectedRole(prior)
+  const priorFamilies =
+    getTypeFamilies(
+      normalizeVenueTypes(prior.type)
+    )
+
+  const previousRole =
+    resolveSelectedRole(previous)
+
+  const priorRole =
+    resolveSelectedRole(prior)
 
   /*
    * Prevent A → B → A style oscillation unless the current role meaningfully
    * changes the function of the venue.
    */
   const returnsToPriorFamily =
-    intersect(candidateFamilies, priorFamilies).length > 0 &&
-    intersect(candidateFamilies, previousFamilies).length === 0
+    intersect(
+      candidateFamilies,
+      priorFamilies
+    ).length > 0 &&
+    intersect(
+      candidateFamilies,
+      previousFamilies
+    ).length === 0
 
   if (
     returnsToPriorFamily &&
@@ -1148,7 +1693,10 @@ function scoreRouteShape({
   const threeRoleProgression =
     priorRole === "coffee" &&
     previousRole === "food" &&
-    (currentRole === "drink" || currentRole === "activity")
+    (
+      currentRole === "drink" ||
+      currentRole === "activity"
+    )
 
   if (threeRoleProgression) {
     return 5
@@ -1176,8 +1724,11 @@ function scoreRouteShape({
 
   const samePrimaryTypeThreeTimes =
     candidateTypes.some((type) => {
-      const previousTypes = normalizeVenueTypes(previous.type)
-      const priorTypes = normalizeVenueTypes(prior.type)
+      const previousTypes =
+        normalizeVenueTypes(previous.type)
+
+      const priorTypes =
+        normalizeVenueTypes(prior.type)
 
       return (
         previousTypes.includes(type) &&
@@ -1221,21 +1772,44 @@ function calculateSequenceConfidence({
 
   let confidence = 0.32
 
-  if (candidateTypes.length > 0) confidence += 0.14
-  if (previousTypes.length > 0) confidence += 0.14
+  if (candidateTypes.length > 0) {
+    confidence += 0.14
+  }
 
-  if (candidateVibes.length > 0) confidence += 0.08
-  if (previousVibes.length > 0) confidence += 0.08
+  if (previousTypes.length > 0) {
+    confidence += 0.14
+  }
 
-  if (hasAssignedPreviousRole) confidence += 0.08
-  if (selectedVenueCount >= 2) confidence += 0.07
+  if (candidateVibes.length > 0) {
+    confidence += 0.08
+  }
+
+  if (previousVibes.length > 0) {
+    confidence += 0.08
+  }
+
+  if (hasAssignedPreviousRole) {
+    confidence += 0.08
+  }
+
+  if (selectedVenueCount >= 2) {
+    confidence += 0.07
+  }
 
   /*
    * Partial energy coverage can raise confidence only slightly.
    */
-  if (energyEvidenceUsed) confidence += 0.03
+  if (energyEvidenceUsed) {
+    confidence += 0.03
+  }
 
-  return Number(clamp(confidence, 0, 0.99).toFixed(2))
+  return Number(
+    clamp(
+      confidence,
+      0,
+      0.99
+    ).toFixed(2)
+  )
 }
 
 function resolveSequenceConfidence({
@@ -1245,9 +1819,18 @@ function resolveSequenceConfidence({
   confidenceScore: number
   hasPreviousVenue: boolean
 }): SequenceFitConfidence {
-  if (!hasPreviousVenue) return "insufficient"
-  if (confidenceScore >= 0.75) return "high"
-  if (confidenceScore >= 0.5) return "medium"
+  if (!hasPreviousVenue) {
+    return "insufficient"
+  }
+
+  if (confidenceScore >= 0.75) {
+    return "high"
+  }
+
+  if (confidenceScore >= 0.5) {
+    return "medium"
+  }
+
   return "low"
 }
 
@@ -1255,7 +1838,9 @@ function resolveSequenceConfidence({
 // Type-family helpers
 // -----------------------------------------------------------------------------
 
-function getTypeFamilies(types: string[]): string[] {
+function getTypeFamilies(
+  types: string[]
+): string[] {
   const families: string[] = []
 
   if (
@@ -1380,7 +1965,10 @@ function getTypeFamilies(types: string[]): string[] {
     families.push("quiet")
   }
 
-  if (families.length === 0 && types.length > 0) {
+  if (
+    families.length === 0 &&
+    types.length > 0
+  ) {
     families.push("other")
   }
 
@@ -1398,16 +1986,23 @@ function countRepeatedTypeFamilies(
     return 0
   }
 
-  return selectedSoFar.filter((selected) => {
-    const selectedFamilies = getTypeFamilies(
-      normalizeVenueTypes(selected.type)
-    )
+  return selectedSoFar.filter(
+    (selected) => {
+      const selectedFamilies =
+        getTypeFamilies(
+          normalizeVenueTypes(
+            selected.type
+          )
+        )
 
-    return intersect(
-      candidateFamilies,
-      selectedFamilies
-    ).length > 0
-  }).length
+      return (
+        intersect(
+          candidateFamilies,
+          selectedFamilies
+        ).length > 0
+      )
+    }
+  ).length
 }
 
 function countRepeatedPrimaryTypes(
@@ -1421,14 +2016,21 @@ function countRepeatedPrimaryTypes(
     return 0
   }
 
-  return selectedSoFar.filter((selected) => {
-    const selectedTypes = normalizeVenueTypes(selected.type)
+  return selectedSoFar.filter(
+    (selected) => {
+      const selectedTypes =
+        normalizeVenueTypes(
+          selected.type
+        )
 
-    return intersect(
-      candidateTypes,
-      selectedTypes
-    ).length > 0
-  }).length
+      return (
+        intersect(
+          candidateTypes,
+          selectedTypes
+        ).length > 0
+      )
+    }
+  ).length
 }
 
 // -----------------------------------------------------------------------------
@@ -1440,16 +2042,26 @@ function resolveSelectedRole(
 ): StopRole | null {
   if (!venue) return null
 
-  if (isStopRole(venue.assignedRole)) {
+  if (
+    isStopRole(
+      venue.assignedRole
+    )
+  ) {
     return venue.assignedRole
   }
 
-  if (isStopRole(venue.slotRole)) {
+  if (
+    isStopRole(
+      venue.slotRole
+    )
+  ) {
     return venue.slotRole
   }
 
   if (
-    Array.isArray(venue.inferredRoles) &&
+    Array.isArray(
+      venue.inferredRoles
+    ) &&
     venue.inferredRoles.length === 1
   ) {
     return venue.inferredRoles[0]
@@ -1463,7 +2075,10 @@ function resolveSelectedPhase(
 ): SlotPhase | null {
   if (!venue) return null
 
-  if (venue.phase === "before" || venue.phase === "after") {
+  if (
+    venue.phase === "before" ||
+    venue.phase === "after"
+  ) {
     return venue.phase
   }
 
@@ -1482,33 +2097,53 @@ function readEnergyLevel(
 ): number | null {
   if (!venue) return null
 
-  const rawValue = venue.energy_ramp
+  const rawValue =
+    venue.energy_ramp
 
   if (
     typeof rawValue === "number" &&
     Number.isFinite(rawValue)
   ) {
-    return clamp(rawValue, 1, 10)
+    return clamp(
+      rawValue,
+      1,
+      10
+    )
   }
 
-  if (typeof rawValue !== "string") {
+  if (
+    typeof rawValue !== "string"
+  ) {
     return null
   }
 
-  const normalized = rawValue
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_-]+/g, " ")
+  const normalized =
+    rawValue
+      .trim()
+      .toLowerCase()
+      .replace(/[\s_-]+/g, " ")
 
-  if (!normalized) return null
-
-  const numericValue = Number(normalized)
-
-  if (Number.isFinite(numericValue)) {
-    return clamp(numericValue, 1, 10)
+  if (!normalized) {
+    return null
   }
 
-  const energyMap: Record<string, number> = {
+  const numericValue =
+    Number(normalized)
+
+  if (
+    Number.isFinite(numericValue)
+  ) {
+    return clamp(
+      numericValue,
+      1,
+      10
+    )
+  }
+
+  const energyMap: Record<
+    string,
+    number
+  > = {
     very_low: 1,
     "very low": 1,
     low: 2,
@@ -1531,7 +2166,10 @@ function readEnergyLevel(
     peak: 10,
   }
 
-  return energyMap[normalized] ?? null
+  return (
+    energyMap[normalized] ??
+    null
+  )
 }
 
 // -----------------------------------------------------------------------------
@@ -1539,7 +2177,11 @@ function readEnergyLevel(
 // -----------------------------------------------------------------------------
 
 function normalizeValues(
-  value: string[] | string | null | undefined
+  value:
+    | string[]
+    | string
+    | null
+    | undefined
 ): string[] {
   return uniqueStrings(
     normalizeStringArray(value)
@@ -1568,10 +2210,13 @@ function intersect(
     return []
   }
 
-  const secondSet = new Set(second)
+  const secondSet =
+    new Set(second)
 
   return uniqueStrings(
-    first.filter((value) => secondSet.has(value))
+    first.filter((value) =>
+      secondSet.has(value)
+    )
   )
 }
 
@@ -1579,14 +2224,16 @@ function hasAnyValue(
   values: string[],
   expected: string[]
 ): boolean {
-  const valueSet = new Set(values)
+  const valueSet =
+    new Set(values)
 
-  return expected.some((value) =>
-    valueSet.has(
-      value
-        .toLowerCase()
-        .replace(/[_-]+/g, " ")
-    )
+  return expected.some(
+    (value) =>
+      valueSet.has(
+        value
+          .toLowerCase()
+          .replace(/[_-]+/g, " ")
+      )
   )
 }
 
@@ -1603,12 +2250,26 @@ function isStopRole(
 }
 
 function normalizeArchetype(
-  archetype: string | null | undefined
+  archetype:
+    | string
+    | null
+    | undefined
 ): string {
-  if (archetype === "art") return "arts_culture"
-  if (archetype === "sports") return "social_sports"
-  if (archetype === "festival") return "market"
-  if (archetype === "general") return "other"
+  if (archetype === "art") {
+    return "arts_culture"
+  }
+
+  if (archetype === "sports") {
+    return "social_sports"
+  }
+
+  if (archetype === "festival") {
+    return "market"
+  }
+
+  if (archetype === "general") {
+    return "other"
+  }
 
   return archetype ?? "other"
 }
@@ -1619,7 +2280,10 @@ function clamp(
   maximum: number
 ): number {
   return Math.min(
-    Math.max(value, minimum),
+    Math.max(
+      value,
+      minimum
+    ),
     maximum
   )
 }

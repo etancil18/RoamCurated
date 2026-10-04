@@ -16,6 +16,7 @@ import {
   candidateSupportsSlot,
   computeSlotRoleFitBonus,
   pickRoleForSlot,
+  violatesStrictEventAwareMealIntent,
 } from "./roles"
 
 import {
@@ -523,13 +524,27 @@ function evaluateCandidateForPass({
    * A route may contain multiple hospitality stops, but it must never contain
    * two breakfasts, two brunches, two lunches, or two dinners.
    */
-  if (
+    if (
     hasDuplicateMealOccasion({
       candidate,
       selected,
       slot,
       timeZone,
     })
+  ) {
+    return {
+      eligible: false,
+      reason: "role",
+    }
+  }
+
+  if (
+    violatesStrictEventAwareMealIntent(
+      candidate,
+      slot,
+      context,
+      pass.relaxedRole
+    )
   ) {
     return {
       eligible: false,

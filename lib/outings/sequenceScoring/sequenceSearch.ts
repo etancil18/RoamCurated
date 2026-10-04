@@ -480,6 +480,13 @@ function buildCandidateExpansions({
 }): CandidateExpansion[] {
   const timeZone = resolvePlannerTimeZone(context)
 
+  const relevantSelectedVenues =
+    resolveRelevantSelectedVenuesForSlot(
+      state,
+      slot,
+      context
+    )
+
   for (const pass of passes) {
     passAttempts[pass.name] += 1
 
@@ -511,7 +518,7 @@ function buildCandidateExpansions({
       const geometryEligibility =
         evaluateCandidateEligibilityForSlot(
           candidate,
-          state.selectedVenues,
+          relevantSelectedVenues,
           slot,
           context,
           pass.relaxedGeometry,
@@ -646,12 +653,21 @@ function computeExpansionScore({
   context: PlanningContext
   pass: SearchPassConfig
 }): SequenceSearchCandidateScore {
+  const relevantSelectedVenues =
+    resolveRelevantSelectedVenuesForSlot(
+      state,
+      slot,
+      context
+    )
+
   const previous =
-    state.selectedVenues[state.selectedVenues.length - 1] ?? null
+    relevantSelectedVenues[
+      relevantSelectedVenues.length - 1
+    ] ?? null
 
   const baseScore = computeSequentialCandidateScore(
     candidate,
-    state.selectedVenues,
+    relevantSelectedVenues,
     slot,
     context
   )
@@ -671,7 +687,7 @@ function computeExpansionScore({
 
   const diversityScore =
     computeSequenceDiversityScore(
-      state.selectedVenues,
+      relevantSelectedVenues,
       candidate,
       slot
     )
@@ -885,6 +901,24 @@ function computeMissingCandidateDataPenalty(
   }
 
   return penalty
+}
+
+// -----------------------------------------------------------------------------
+// Event-boundary sequence context
+// -----------------------------------------------------------------------------
+
+function resolveRelevantSelectedVenuesForSlot(
+  state: SearchState,
+  slot: PlanningSlot,
+  context: PlanningContext
+): CandidateVenue[] {
+  if (context.mode !== "full") {
+    return state.selectedVenues
+  }
+
+  return state.steps
+    .filter((step) => step.slot.phase === slot.phase)
+    .map((step) => step.venue)
 }
 
 // -----------------------------------------------------------------------------

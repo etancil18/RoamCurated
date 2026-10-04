@@ -29,6 +29,8 @@ import {
   normalizeEventArchetypeForPlanner,
 } from "./eventArchetypes"
 
+import { resolveEventExperience } from "./eventExperience"
+
 import {
   expandVibeTags,
   getDiscouragedDaypartsForVibe,
@@ -120,6 +122,13 @@ export function buildPlanningContext(
     ? normalizeEventArchetypeForPlanner(input.event.archetype)
     : inferEventArchetype(eventTags)
 
+  const eventExperience = resolveEventExperience({
+    event: input.event,
+    anchorVenue: input.anchorVenue,
+    eventArchetype,
+    eventTags,
+  })
+
   const desiredRoles = normalizeDesiredRolesForContext(
     desiredRolesFor(
       input.mode,
@@ -133,6 +142,7 @@ export function buildPlanningContext(
     {
       mode: input.mode,
       eventArchetype,
+      eventExperience,
       startsAt,
       effectiveExitAt,
       timeZone,
@@ -179,6 +189,7 @@ export function buildPlanningContext(
     effectiveExitAt,
     eventTags,
     eventArchetype,
+    eventExperience,
     desiredRoles,
     slots,
     groupSize,
@@ -288,6 +299,29 @@ export function inferEventDurationMinutes(event: EventRecord): number {
 
 export function inferEventArchetype(tags: string[]): string {
   const normalizedTags = uniqueStrings(tags.map(normalizeToken))
+
+  const hasNonSportsGameEvidence = hasAnyToken(normalizedTags, [
+    "cards",
+    "card",
+    "boardgame",
+    "boardgames",
+    "tabletop",
+    "chess",
+  ])
+
+  const hasStrongSportsEvidence = hasAnyToken(normalizedTags, [
+    "sports",
+    "sport",
+    "match",
+    "matchday",
+    "soccer",
+    "football",
+    "fifa",
+    "tailgate",
+    "pregame",
+    "watchparty",
+  ])
+
   const scores: EventArchetypeScore[] = [
     {
       archetype: "market",
@@ -350,21 +384,24 @@ export function inferEventArchetype(tags: string[]): string {
     },
     {
       archetype: "social_sports",
-      score: scoreTokenMatches(normalizedTags, {
-        sports: 9,
-        sport: 7,
-        game: 5,
-        games: 4,
-        match: 8,
-        matchday: 9,
-        soccer: 9,
-        football: 8,
-        fifa: 8,
-        tailgate: 8,
-        pregame: 5,
-        watchparty: 8,
-        watch: 2,
-      }),
+      score:
+        hasNonSportsGameEvidence && !hasStrongSportsEvidence
+          ? 0
+          : scoreTokenMatches(normalizedTags, {
+              sports: 9,
+              sport: 7,
+              game: 5,
+              games: 4,
+              match: 8,
+              matchday: 9,
+              soccer: 9,
+              football: 8,
+              fifa: 8,
+              tailgate: 8,
+              pregame: 5,
+              watchparty: 8,
+              watch: 2,
+            }),
     },
     {
       archetype: "comedy",
@@ -447,6 +484,12 @@ export function inferEventArchetype(tags: string[]): string {
         volunteer: 6,
         social: 1,
         meetup: 2,
+        cards: 6,
+        card: 4,
+        boardgame: 7,
+        boardgames: 7,
+        tabletop: 7,
+        chess: 6,
       }),
     },
   ]
@@ -769,6 +812,7 @@ function normalizeDesiredRolesForContext(
   context: {
     mode: PlanMode
     eventArchetype: string
+    eventExperience: PlanningContext["eventExperience"]
     startsAt: Date
     effectiveExitAt: Date
     timeZone: string
@@ -835,7 +879,119 @@ function normalizeDesiredRolesForContext(
     }
   }
 
-  return roles
+  return normalizePostEventRolesForExperience(
+    roles,
+    context
+  )
+}
+
+/*
+ * The event itself is part of the outing sequence.
+ *
+ * Desired-role generation historically treated the event as a timing anchor,
+ * but not as an experience the attendee is about to have or has already had.
+ * That can produce semantically repetitive slots on either side of the event —
+ * for example, coffee immediately before or after a coffee-centered event.
+ *
+ * Keep this normalization intentionally narrow:
+ * - stop count and role order are preserved;
+ * - pre-event coffee repetition is corrected only when caffeine exposure is
+ *   likely;
+ * - post-event coffee repetition retains the existing high-seated requirement;
+ * - candidate scoring remains responsible for choosing the actual venue.
+ */
+function normalizePostEventRolesForExperience(
+  roles: StopRole[],
+  context: {
+    mode: PlanMode
+    eventExperience: PlanningContext["eventExperience"]
+  }
+): StopRole[] {
+  if (roles.length === 0) {
+    return roles
+  }
+
+  const eventExperience = context.eventExperience
+
+  if (!eventExperience) {
+    return roles
+  }
+
+  const eventLikelyIncludedCaffeine =
+    eventExperience.caffeineExposure === "likely"
+
+  const eventWasHighlySeated =
+    eventExperience.seatedIntensity === "high"
+
+  /*
+   * Full mode reserves only the first desired role for the pre-event slot.
+   * Before mode contains only pre-event roles.
+   * After mode contains no pre-event roles.
+   */
+  const isPreEventRoleIndex = (index: number): boolean => {
+    if (context.mode === "before") return true
+    if (context.mode === "full") return index === 0
+
+    return false
+  }
+
+  /*
+   * Avoid converting a pre-event coffee role into food when another pre-event
+   * food role already exists. In that case, activity provides the more useful
+   * change of mode without manufacturing duplicate food stops.
+   */
+  const hasOtherPreEventFoodRole = (currentIndex: number): boolean =>
+    roles.some(
+      (role, index) =>
+        index !== currentIndex &&
+        isPreEventRoleIndex(index) &&
+        role === "food"
+    )
+
+  /*
+   * Full mode reserves the first desired role for the pre-event slot.
+   * After mode contains only post-event roles.
+   * Before mode contains no post-event roles.
+   */
+  const firstPostEventRoleIndex =
+    context.mode === "full"
+      ? 1
+      : context.mode === "after"
+        ? 0
+        : roles.length
+
+  return roles.map((role, index) => {
+    if (isPreEventRoleIndex(index)) {
+      if (
+        role === "coffee" &&
+        eventLikelyIncludedCaffeine
+      ) {
+        const canPreferFood =
+          eventExperience.foodExposure !== "meal" &&
+          !hasOtherPreEventFoodRole(index)
+
+        return canPreferFood
+          ? "food"
+          : "activity"
+      }
+
+      return role
+    }
+
+    if (index < firstPostEventRoleIndex) {
+      return role
+    }
+
+    if (
+      eventLikelyIncludedCaffeine &&
+      eventWasHighlySeated &&
+      role === "coffee"
+    ) {
+      return "activity"
+    }
+
+    return role
+  })
 }
 
 function buildVibePlanningProfile(
@@ -1362,7 +1518,7 @@ function normalizeTokenFragments(
   return String(value)
     .toLowerCase()
     .replace(/['’]/g, "")
-    .split(/[\s,./|_\-–—()[\]{}:;!?+]+/)
+    .split(/[\s,./|_\\\-–—()[\]{}:;!?+]+/)
     .map((token) => token.trim())
     .filter(Boolean)
 }

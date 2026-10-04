@@ -107,9 +107,14 @@ export function pickRoleForSlot(
   candidateRoles: StopRole[]
 ): StopRole {
   if (candidateRoles.includes(slot.role)) return slot.role
-  if (slot.flexibleRole && candidateRoles.includes(slot.flexibleRole)) {
+
+  if (
+    slot.flexibleRole &&
+    candidateRoles.includes(slot.flexibleRole)
+  ) {
     return slot.flexibleRole
   }
+
   return candidateRoles[0] ?? slot.role
 }
 
@@ -119,7 +124,14 @@ export function pickRoleForIndex(
   desiredRoles: StopRole[]
 ): StopRole {
   const desiredRole = desiredRoles[index]
-  if (desiredRole && candidateRoles.includes(desiredRole)) return desiredRole
+
+  if (
+    desiredRole &&
+    candidateRoles.includes(desiredRole)
+  ) {
+    return desiredRole
+  }
+
   return candidateRoles[0] ?? "activity"
 }
 
@@ -129,6 +141,17 @@ export function candidateSupportsSlot(
   context: PlanningContext,
   relaxed = false
 ): boolean {
+  if (
+    violatesStrictEventAwareMealIntent(
+      candidate,
+      slot,
+      context,
+      relaxed
+    )
+  ) {
+    return false
+  }
+
   const acceptableRoles = getAcceptableRolesForSlot(
     slot,
     candidate,
@@ -138,6 +161,48 @@ export function candidateSupportsSlot(
 
   return acceptableRoles.some((role) =>
     candidate.inferredRoles.includes(role)
+  )
+}
+
+/*
+ * A likely-caffeine event should not be paired with a coffee-forward venue for
+ * a strict food slot merely because broad cafe role inference also labels that
+ * venue as food.
+ *
+ * This is an explicit experiential contradiction rather than a normal role-fit
+ * preference, so callers that broaden compatibility must be able to enforce the
+ * same rule before applying contextual fallbacks.
+ *
+ * Keep this guard intentionally narrow:
+ * - strict passes only;
+ * - food slots only;
+ * - likely-caffeine events only;
+ * - coffee-forward venues remain eligible when they have explicit meal
+ *   evidence;
+ * - relaxed fallback behavior remains completely unchanged.
+ */
+export function violatesStrictEventAwareMealIntent(
+  candidate: Pick<RoleCompatibleVenue, "type">,
+  slot: PlanningSlot,
+  context: PlanningContext,
+  relaxed = false
+): boolean {
+  if (relaxed) {
+    return false
+  }
+
+  if (
+    slot.role !== "food" ||
+    context.eventExperience.caffeineExposure !== "likely"
+  ) {
+    return false
+  }
+
+  const types = normalizeVenueTypes(candidate.type)
+
+  return (
+    isCoffeeForwardVenueType(types) &&
+    !hasExplicitMealEvidence(types)
   )
 }
 
@@ -183,10 +248,21 @@ export function getAcceptableRolesForSlot(
       "lifestyle",
     ])
   ) {
-    if (slot.role === "coffee") roles.push("food", "drink", "activity")
-    if (slot.role === "food") roles.push("coffee", "drink", "activity")
-    if (slot.role === "drink") roles.push("food", "coffee", "activity")
-    if (slot.role === "activity") roles.push("coffee", "drink", "food")
+    if (slot.role === "coffee") {
+      roles.push("food", "drink", "activity")
+    }
+
+    if (slot.role === "food") {
+      roles.push("coffee", "drink", "activity")
+    }
+
+    if (slot.role === "drink") {
+      roles.push("food", "coffee", "activity")
+    }
+
+    if (slot.role === "activity") {
+      roles.push("coffee", "drink", "food")
+    }
   }
 
   if (
@@ -208,9 +284,17 @@ export function getAcceptableRolesForSlot(
       "spa",
     ])
   ) {
-    if (slot.role === "coffee") roles.push("food", "activity")
-    if (slot.role === "food") roles.push("coffee", "activity")
-    if (slot.role === "activity") roles.push("coffee", "food")
+    if (slot.role === "coffee") {
+      roles.push("food", "activity")
+    }
+
+    if (slot.role === "food") {
+      roles.push("coffee", "activity")
+    }
+
+    if (slot.role === "activity") {
+      roles.push("coffee", "food")
+    }
   }
 
   if (
@@ -242,23 +326,43 @@ export function getAcceptableRolesForSlot(
     roles.push("activity")
   }
 
-  if (slot.phase === "before" && slot.role === "food") {
+  if (
+    slot.phase === "before" &&
+    slot.role === "food"
+  ) {
     if (
       hour < 12.5 &&
-      hasAnyType(types, ["breakfast", "brunch", "cafe", "café"])
+      hasAnyType(types, [
+        "breakfast",
+        "brunch",
+        "cafe",
+        "café",
+      ])
     ) {
       roles.push("coffee")
     }
 
-    if (relaxed && hour < 12.5 && hasAnyType(types, ["bakery"])) {
+    if (
+      relaxed &&
+      hour < 12.5 &&
+      hasAnyType(types, ["bakery"])
+    ) {
       roles.push("coffee")
     }
   }
 
-  if (slot.phase === "before" && slot.role === "coffee") {
+  if (
+    slot.phase === "before" &&
+    slot.role === "coffee"
+  ) {
     if (
       hour < 13 &&
-      hasAnyType(types, ["breakfast", "brunch", "cafe", "café"])
+      hasAnyType(types, [
+        "breakfast",
+        "brunch",
+        "cafe",
+        "café",
+      ])
     ) {
       roles.push("food")
     }
@@ -271,7 +375,11 @@ export function computeSlotRoleFitBonus(
   candidate: Pick<RoleCompatibleVenue, "inferredRoles">,
   slot: PlanningSlot
 ): number {
-  if (candidate.inferredRoles.includes(slot.role)) return 14
+  if (
+    candidate.inferredRoles.includes(slot.role)
+  ) {
+    return 14
+  }
 
   if (
     slot.flexibleRole &&
@@ -296,51 +404,89 @@ export function pickBestDisplayTypeForRole(
 
   const orderedCandidates =
     role === "coffee"
-      ? ["coffee", "tea", "cafe", "café", "bakery", "breakfast", "brunch"]
-      : role === "food"
-      ? arrivalHour < 11
-        ? ["breakfast", "brunch", "lunch", "dinner", "cafe", "café"]
-        : arrivalHour < 15
-        ? ["lunch", "brunch", "breakfast", "dinner", "cafe", "café"]
-        : arrivalHour < DINNER_MINIMUM_LOCAL_HOUR && slot.phase === "before"
-        ? ["cocktail", "wine bar", "lounge", "bar", "dinner", "lunch", "brunch"]
-        : ["dinner", "lunch", "brunch", "breakfast"]
-      : role === "drink"
       ? [
-          "cocktail",
-          "wine bar",
-          "bar",
-          "lounge",
-          "speakeasy",
-          "brewery",
-          "rooftop",
-          "club",
-          "sports bar",
-          "hotel bar",
-          "hotel lobby",
-          "social club",
+          "coffee",
+          "tea",
+          "cafe",
+          "café",
+          "bakery",
+          "breakfast",
+          "brunch",
         ]
-      : role === "dessert"
-      ? ["dessert", "bakery"]
-      : [
-          "gallery",
-          "museum",
-          "bookstore",
-          "library",
-          "park",
-          "garden",
-          "music",
-          "market",
-          "showroom",
-          "lifestyle",
-          "spa",
-          "coworking",
-          "hotel lobby",
-          "social club",
-        ]
+      : role === "food"
+        ? arrivalHour < 11
+          ? [
+              "breakfast",
+              "brunch",
+              "lunch",
+              "dinner",
+              "cafe",
+              "café",
+            ]
+          : arrivalHour < 15
+            ? [
+                "lunch",
+                "brunch",
+                "breakfast",
+                "dinner",
+                "cafe",
+                "café",
+              ]
+            : arrivalHour < DINNER_MINIMUM_LOCAL_HOUR &&
+                slot.phase === "before"
+              ? [
+                  "cocktail",
+                  "wine bar",
+                  "lounge",
+                  "bar",
+                  "dinner",
+                  "lunch",
+                  "brunch",
+                ]
+              : [
+                  "dinner",
+                  "lunch",
+                  "brunch",
+                  "breakfast",
+                ]
+        : role === "drink"
+          ? [
+              "cocktail",
+              "wine bar",
+              "bar",
+              "lounge",
+              "speakeasy",
+              "brewery",
+              "rooftop",
+              "club",
+              "sports bar",
+              "hotel bar",
+              "hotel lobby",
+              "social club",
+            ]
+          : role === "dessert"
+            ? ["dessert", "bakery"]
+            : [
+                "gallery",
+                "museum",
+                "bookstore",
+                "library",
+                "park",
+                "garden",
+                "music",
+                "market",
+                "showroom",
+                "lifestyle",
+                "spa",
+                "coworking",
+                "hotel lobby",
+                "social club",
+              ]
 
   return (
-    orderedCandidates.find((type) => venueTypes.includes(type)) ??
+    orderedCandidates.find((type) =>
+      venueTypes.includes(type)
+    ) ??
     null
   )
 }
@@ -351,21 +497,71 @@ export function getPrimaryDisplayVenueType(
   return normalizeDisplayVenueType(venue.type)
 }
 
-function isEarlyDinnerCompatibleVenueType(types: string[]): boolean {
+function isCoffeeForwardVenueType(
+  types: string[]
+): boolean {
+  return hasAnyType(types, [
+    "coffee",
+    "tea",
+    "cafe",
+    "café",
+  ])
+}
+
+function hasExplicitMealEvidence(
+  types: string[]
+): boolean {
+  return hasAnyType(types, [
+    "breakfast",
+    "brunch",
+    "lunch",
+    "dinner",
+    "restaurant",
+    "food",
+    "food hall",
+    "casual food",
+    "fine dining",
+  ])
+}
+
+function isEarlyDinnerCompatibleVenueType(
+  types: string[]
+): boolean {
   const isHybridDinnerDrink =
     hasAnyType(types, ["dinner"]) &&
-    hasAnyType(types, ["cocktail", "bar", "wine bar", "lounge"])
+    hasAnyType(types, [
+      "cocktail",
+      "bar",
+      "wine bar",
+      "lounge",
+    ])
 
-  const isFallbackDrink = hasAnyType(types, ["cocktail", "wine bar"])
+  const isFallbackDrink = hasAnyType(
+    types,
+    ["cocktail", "wine bar"]
+  )
 
   return isHybridDinnerDrink || isFallbackDrink
 }
 
-function normalizeRoleArchetype(archetype: string | null | undefined): string {
-  if (archetype === "art") return "arts_culture"
-  if (archetype === "sports") return "social_sports"
-  if (archetype === "festival") return "market"
-  if (archetype === "general") return "other"
+function normalizeRoleArchetype(
+  archetype: string | null | undefined
+): string {
+  if (archetype === "art") {
+    return "arts_culture"
+  }
+
+  if (archetype === "sports") {
+    return "social_sports"
+  }
+
+  if (archetype === "festival") {
+    return "market"
+  }
+
+  if (archetype === "general") {
+    return "other"
+  }
 
   return archetype ?? "other"
 }
