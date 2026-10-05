@@ -1099,6 +1099,7 @@ export default function CreatorOnboardingPage() {
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(0, 0, 0, 0.34);
           padding: 0.85rem 0.95rem;
+          font-size: 1rem;
           color: white;
           outline: none;
           transition:

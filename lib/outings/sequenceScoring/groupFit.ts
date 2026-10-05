@@ -79,6 +79,21 @@ const LARGE_GROUP_HARD_CONFLICT_MINIMUM_SIZE = 9
 const HARD_CONFLICT_MINIMUM_DISCOURAGED_MATCHES = 2
 const HARD_CONFLICT_MINIMUM_CONFIDENCE = 0.7
 
+/*
+ * Fitness-style venues are a separate group-feasibility case.
+ *
+ * They may remain viable for solo or duo outings, but should not be treated as
+ * spontaneous group outing stops once the party reaches three people.
+ */
+const FITNESS_GROUP_HARD_CONFLICT_MINIMUM_SIZE = 3
+
+const FITNESS_GROUP_HARD_CONFLICT_TYPES = [
+  "fitness",
+  "gym",
+  "yoga",
+  "pilates",
+]
+
 // -----------------------------------------------------------------------------
 // Public API
 // -----------------------------------------------------------------------------
@@ -129,6 +144,14 @@ export function computeGroupFit({
     ...tagTokens,
     ...vibeTokens,
   ])
+
+  const hasFitnessGroupHardConflict =
+    groupSize >=
+      FITNESS_GROUP_HARD_CONFLICT_MINIMUM_SIZE &&
+    FITNESS_GROUP_HARD_CONFLICT_TYPES.some(
+      (type) =>
+        allEvidence.includes(type)
+    )
 
   const preferredTypes = uniqueStrings(
     preset.preferredTypes.map(normalizeToken)
@@ -241,7 +264,7 @@ export function computeGroupFit({
   const hasExplicitTypeConflict =
     typeLevelDiscouragedMatches.length > 0
 
-  const isHardConflict =
+  const hasLargeGroupStrongVenueMismatch =
     groupSize >=
       LARGE_GROUP_HARD_CONFLICT_MINIMUM_SIZE &&
     !hasPreferredEvidence &&
@@ -250,7 +273,17 @@ export function computeGroupFit({
     confidenceScore >=
       HARD_CONFLICT_MINIMUM_CONFIDENCE
 
-  if (isHardConflict) {
+  const isHardConflict =
+    hasFitnessGroupHardConflict ||
+    hasLargeGroupStrongVenueMismatch
+
+  if (hasFitnessGroupHardConflict) {
+    reasons.push(
+      "group_fitness_venue_hard_conflict"
+    )
+  }
+
+  if (hasLargeGroupStrongVenueMismatch) {
     reasons.push(
       "large_group_strong_venue_mismatch"
     )

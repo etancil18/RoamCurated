@@ -29,6 +29,10 @@ import {
   normalizeEventArchetypeForPlanner,
 } from "./eventArchetypes"
 
+import {
+  applyGroupSizeRoleBias,
+} from "./groupSizePresets"
+
 import { resolveEventExperience } from "./eventExperience"
 
 import {
@@ -63,6 +67,8 @@ const BEFORE_EVENT_BUFFER_MINUTES = 20
 const AFTER_EVENT_BUFFER_MINUTES = 20
 const INTERSTOP_TRAVEL_BUFFER_MINUTES = 12
 const DEFAULT_TIME_ZONE = "America/New_York"
+
+const GROUP_BIASED_PRE_EVENT_DRINK_MINIMUM_LOCAL_HOUR = 13
 
 type EventArchetypeScore = {
   archetype:
@@ -129,7 +135,7 @@ export function buildPlanningContext(
     eventTags,
   })
 
-  const desiredRoles = normalizeDesiredRolesForContext(
+  const baseDesiredRoles =
     desiredRolesFor(
       input.mode,
       eventArchetype,
@@ -138,7 +144,31 @@ export function buildPlanningContext(
       timeZone,
       leaveEarlyByHours,
       vibeTags
-    ),
+    )
+
+  const groupBiasedDesiredRoles =
+    applyGroupSizeRoleBias(
+      baseDesiredRoles,
+      {
+        groupSize,
+        mode: input.mode,
+      }
+    )
+
+  const daypartSafeGroupBiasedDesiredRoles =
+    normalizeGroupBiasedRolesForDaypart(
+      baseDesiredRoles,
+      groupBiasedDesiredRoles,
+      {
+        mode: input.mode,
+        startsAt,
+        timeZone,
+        eventArchetype,
+      }
+    )
+
+  const desiredRoles = normalizeDesiredRolesForContext(
+    daypartSafeGroupBiasedDesiredRoles,
     {
       mode: input.mode,
       eventArchetype,
@@ -805,6 +835,138 @@ function buildFullSlots(
   }))
 
   return [...beforeSlots, ...afterSlots]
+}
+
+/*
+ * Group-size role preferences must remain subordinate to daypart reality.
+ *
+ * Group presets may introduce a drink role because larger groups often benefit
+ * from bars, breweries, rooftops, and other social drink-oriented venues.
+ * That preference must not manufacture a morning drink stop simply because the
+ * group is large.
+ *
+ * Keep this reconciliation intentionally narrow:
+ * - only pre-event roles are considered;
+ * - only drink roles introduced by group-size bias are corrected;
+ * - drink roles already present in the underlying itinerary strategy are left
+ *   untouched;
+ * - the actual pre-event slot timing is used rather than the event start hour;
+ * - the original role strategy is restored where possible;
+ * - stop count and role order are preserved.
+ */
+function normalizeGroupBiasedRolesForDaypart(
+  baseRoles: StopRole[],
+  groupBiasedRoles: StopRole[],
+  context: {
+    mode: PlanMode
+    startsAt: Date
+    timeZone: string
+    eventArchetype: string
+  }
+): StopRole[] {
+  if (
+    groupBiasedRoles.length === 0 ||
+    context.mode === "after"
+  ) {
+    return groupBiasedRoles
+  }
+
+  const preEventRoleCount =
+    context.mode === "full"
+      ? Math.min(1, groupBiasedRoles.length)
+      : groupBiasedRoles.length
+
+  if (preEventRoleCount === 0) {
+    return groupBiasedRoles
+  }
+
+  const preEventRoles =
+    groupBiasedRoles.slice(0, preEventRoleCount)
+
+  const preliminarySlots =
+    buildBeforeSlots(
+      preEventRoles,
+      context.startsAt,
+      context.timeZone,
+      context.eventArchetype,
+      null,
+      context.mode
+    )
+
+  const normalizedRoles =
+    [...groupBiasedRoles]
+
+  for (
+    let index = 0;
+    index < preEventRoleCount;
+    index += 1
+  ) {
+    if (
+      normalizedRoles[index] !== "drink" ||
+      baseRoles[index] === "drink"
+    ) {
+      continue
+    }
+
+    const slot = preliminarySlots[index]
+
+    if (!slot) {
+      continue
+    }
+
+    const arrivalHour =
+      getHourFractionInTimeZone(
+        slot.targetArrivalAt,
+        context.timeZone
+      )
+
+    if (
+      arrivalHour >=
+      GROUP_BIASED_PRE_EVENT_DRINK_MINIMUM_LOCAL_HOUR
+    ) {
+      continue
+    }
+
+    const currentPreEventRoles =
+      normalizedRoles.slice(
+        0,
+        preEventRoleCount
+      )
+
+    const baseRoleAtIndex =
+      baseRoles[index]
+
+    if (
+      baseRoleAtIndex &&
+      baseRoleAtIndex !== "drink" &&
+      !currentPreEventRoles.includes(
+        baseRoleAtIndex
+      )
+    ) {
+      normalizedRoles[index] =
+        baseRoleAtIndex
+
+      continue
+    }
+
+    const unusedBaseRole =
+      baseRoles
+        .slice(
+          0,
+          preEventRoleCount
+        )
+        .find(
+          (role) =>
+            role !== "drink" &&
+            !currentPreEventRoles.includes(role)
+        )
+
+    normalizedRoles[index] =
+      unusedBaseRole ??
+      "activity"
+  }
+
+  return normalizedRoles
 }
 
 function normalizeDesiredRolesForContext(

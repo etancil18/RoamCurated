@@ -149,7 +149,7 @@ export function ControlPanel({
   }
 
   const inputBase =
-    'h-11 w-full rounded-xl border border-white/10 bg-white/[0.07] px-3 text-sm ' +
+    'h-11 w-full rounded-xl border border-white/10 bg-white/[0.07] px-3 text-base sm:text-sm ' +
     'font-medium text-white shadow-sm outline-none transition ' +
     'placeholder:text-zinc-500 hover:border-white/20 hover:bg-white/[0.09] ' +
     'focus:border-cyan-300/60 focus:bg-white/[0.1] focus:ring-2 focus:ring-cyan-300/20 ' +
@@ -233,7 +233,7 @@ export function ControlPanel({
                   },
                 })
               }}
-              className={`${inputBase} pl-10 text-base sm:text-sm`}
+              className={`${inputBase} pl-10`}
               aria-label="Search venues"
             />
           </div>

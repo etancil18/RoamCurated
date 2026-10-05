@@ -20117,6 +20117,86 @@ const atlantaData = [
     "id": "8980c9e8-8a3c-4bce-bb90-6ba151e3ad37"
   },
   {
+    "slug": "wish-atlanta",
+    "name": "Wish Atlanta",
+    "vibe": "streetwear, fashion, sneakers, hype, urban, boutique, minimalist, edgy, modern, exclusive, curated, stylish, premium",
+    "type": [
+      "random gem",
+      "lifestyle"
+    ],
+    "lat": 33.7665472,
+    "lon": -84.348803,
+    "link": "https://www.instagram.com/wishatl/",
+    "cover": "img/venues/Wish Atlanta.jpg",
+    "openNow": true,
+    "hours": [
+      "Sunday: 1:00 PM–7:00 PM",
+      "Monday: 12:00 PM–7:00 PM",
+      "Tuesday: 12:00 PM–7:00 PM",
+      "Wednesday: 12:00 PM–7:00 PM",
+      "Thursday: 12:00 PM–7:00 PM",
+      "Friday: 12:00 PM–8:00 PM",
+      "Saturday: 12:00 PM–8:00 PM"
+    ],
+    "dateEvents": [
+      {
+        "date": "-",
+        "title": "-",
+        "time": "-"
+      },
+      {
+        "date": "-",
+        "title": "-",
+        "time": "-"
+      }
+    ],
+    "hoursNumeric": {
+      "sun": {
+        "open": 13,
+        "close": 19
+      },
+      "mon": {
+        "open": 12,
+        "close": 19
+      },
+      "tue": {
+        "open": 12,
+        "close": 19
+      },
+      "wed": {
+        "open": 12,
+        "close": 19
+      },
+      "thu": {
+        "open": 12,
+        "close": 19
+      },
+      "fri": {
+        "open": 12,
+        "close": 20
+      },
+      "sat": {
+        "open": 12,
+        "close": 20
+      }
+    },
+    "dayParts": {
+      "mon": "A",
+      "tue": "A",
+      "wed": "A",
+      "thu": "A",
+      "fri": "A",
+      "sat": "A",
+      "sun": "A"
+    },
+    "timeCategory": "afternoon",
+    "energyRamp": 2,
+    "tags": "streetwear, fashion, sneakers, hype, urban, boutique, minimalist, style, art, creative",
+    "price": "$$",
+    "duration": 0.75,
+    "id": "4736b46f-cf67-4736-8d4e-991592463b72"
+  },
+  {
     "slug": "side-saddle-wine-saloon-bar",
     "name": "Side Saddle Wine Saloon & Bar",
     "vibe": "Wine, Rustic, Cozy, Intimate, Date, Bar, Relaxed, Stylish, Warm, Festive, Inviting",

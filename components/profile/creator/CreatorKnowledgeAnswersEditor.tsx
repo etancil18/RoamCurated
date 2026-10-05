@@ -754,7 +754,7 @@ export default function CreatorKnowledgeAnswersEditor({
                           placeholder={
                             prompt.placeholder
                           }
-                          className="mt-4 w-full resize-y rounded-2xl border border-neutral-800 bg-black/50 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/10"
+                          className="mt-4 w-full resize-y rounded-2xl border border-neutral-800 bg-black/50 px-4 py-3 text-base leading-6 text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500/60 focus:ring-2 focus:ring-cyan-500/10 sm:text-sm"
                         />
 
                         <div className="mt-2 flex items-start justify-between gap-4 text-[11px] text-neutral-600">

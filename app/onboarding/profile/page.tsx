@@ -217,7 +217,7 @@ export default function OnboardingProfilePage() {
             </p>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+<form onSubmit={handleSubmit} className="space-y-8">
             <FormSection eyebrow="Identity" title="Who is this Passport for?">
               <Field label="Full Name">
                 <input
@@ -408,13 +408,14 @@ export default function OnboardingProfilePage() {
         </section>
       </div>
 
-      <style jsx>{`
+<style jsx>{`
         .field-input {
           width: 100%;
           border-radius: 0.875rem;
           border: 1px solid rgba(255, 255, 255, 0.12);
           background: rgba(0, 0, 0, 0.34);
           padding: 0.75rem 0.875rem;
+          font-size: 1rem;
           color: white;
           outline: none;
         }

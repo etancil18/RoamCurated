@@ -2001,7 +2001,7 @@ function keyToActionField(
  * ======================================================= */
 
 const inputClassName = [
-  'w-full min-w-0 rounded-xl border border-neutral-800 bg-black px-3 py-2.5 text-sm text-white outline-none transition',
+  'w-full min-w-0 rounded-xl border border-neutral-800 bg-black px-3 py-2.5 text-base text-white outline-none transition sm:text-sm',
   'placeholder:text-neutral-700',
   'focus:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-400/40',
   'aria-[invalid=true]:border-red-500/60 aria-[invalid=true]:focus-visible:ring-red-400/30',

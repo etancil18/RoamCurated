@@ -86,6 +86,10 @@ export function isRoleTemporallyCompatible(
     "wine bar",
   ])
 
+  if (role === "drink" && hour < (relaxed ? 13 : 14)) {
+    return false
+  }
+
   if (
     isBeforeDinnerMinimum &&
     role === "food" &&
@@ -189,8 +193,6 @@ export function isRoleTemporallyCompatible(
       return hour >= 6 && hour <= (relaxed ? 13.5 : 12.5)
     }
   }
-
-  if (role === "drink" && hour < (relaxed ? 13 : 14)) return false
 
   return true
 }

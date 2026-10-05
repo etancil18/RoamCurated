@@ -265,6 +265,56 @@ const DINNER_MINIMUM_LOCAL_HOUR = 17.5
 // Public selection entrypoint
 // -----------------------------------------------------------------------------
 
+function shouldOmitWeakBeforeFallback({
+  selected,
+  selectedForSlot,
+  context,
+}: {
+  selected: SelectedSlotVenue[]
+  selectedForSlot: {
+    pass: SelectionPass
+    groupFit: {
+      score: number
+      confidenceScore: number
+      isWeakFit: boolean
+      isHardConflict: boolean
+      matchedPreferredTypes: string[]
+      matchedDiscouragedTypes: string[]
+      reasons: string[]
+    }
+  }
+  context: PlanningContext
+}): boolean {
+  if (context.mode !== "before") {
+    return false
+  }
+
+  const hasCredibleExistingStop =
+    selected.some(
+      (selection) =>
+        selection.selectedPass !== "emergency" &&
+        !selection.groupFit.isWeakFit &&
+        !selection.groupFit.isHardConflict
+    )
+
+  if (!hasCredibleExistingStop) {
+    return false
+  }
+
+  const isFallbackPass =
+    selectedForSlot.pass === "relaxed" ||
+    selectedForSlot.pass === "emergency"
+
+  if (!isFallbackPass) {
+    return false
+  }
+
+  return (
+    selectedForSlot.groupFit.isWeakFit &&
+    selectedForSlot.groupFit.matchedPreferredTypes.length === 0
+  )
+}
+
 export function selectCandidates(
   rankedCandidates: CandidateVenue[],
   context: PlanningContext,
@@ -330,6 +380,31 @@ export function selectCandidates(
       }
 
       break
+    }
+
+    if (
+      selectedForSlot &&
+      shouldOmitWeakBeforeFallback({
+        selected,
+        selectedForSlot,
+        context,
+      })
+    ) {
+      slotDiagnostics.push({
+        slotIndex: slot.index,
+        role: slot.role,
+        phase: slot.phase,
+        selectedVenueId: null,
+        selectedPass: null,
+        candidatesTotal: rankedCandidates.length,
+        matchedRole: selectedForSlot.matchedRole,
+        passedHardConstraints: selectedForSlot.passedHardConstraints,
+        rejectionCounts: selectedForSlot.rejectionCounts,
+        groupScore: null,
+        groupFit: null,
+      })
+
+      continue
     }
 
     if (selectedForSlot) {
@@ -465,8 +540,33 @@ function selectBestCandidateForPass({
         pass.name
       )
 
-const canonicalScore =
-  canonicalScoreResult.score
+    const groupFit =
+      canonicalScoreResult.result.fits.group
+
+    if (groupFit.isHardConflict) {
+      continue
+    }
+
+    const rejectsWeakGroupFit =
+      groupFit.isWeakFit &&
+      context.groupSize != null &&
+      (
+        (
+          context.groupSize >= 5 &&
+          pass.name === "strict"
+        ) ||
+        (
+          context.groupSize >= 9 &&
+          pass.name === "balanced"
+        )
+      )
+
+    if (rejectsWeakGroupFit) {
+      continue
+    }
+
+    const canonicalScore =
+      canonicalScoreResult.score
 
     const roleFitScore =
       computeSlotRoleFitBonus(
@@ -1343,13 +1443,10 @@ export function evaluateTemporalEligibility(
       )
 
     return {
-      eligible:
-        roleCompatible ||
-        relaxed,
+      eligible: roleCompatible,
 
       reason:
-        roleCompatible ||
-        relaxed
+        roleCompatible
           ? undefined
           : "temporal",
     }
@@ -1412,10 +1509,7 @@ export function evaluateTemporalEligibility(
       relaxed
     )
 
-  if (
-    !roleCompatible &&
-    !relaxed
-  ) {
+  if (!roleCompatible) {
     return {
       eligible: false,
       reason: "temporal",
