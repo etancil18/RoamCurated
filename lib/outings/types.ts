@@ -516,6 +516,18 @@ export type GeneratedOutingStopMetadata = {
   vibeFitScore?: number | null
   vibeFitConfidence?: number | null
 
+  groupScore?: number | null
+
+  groupFit?: {
+    score: number
+    confidenceScore: number
+    isWeakFit: boolean
+    isHardConflict: boolean
+    matchedPreferredTypes: string[]
+    matchedDiscouragedTypes: string[]
+    reasons: string[]
+  } | null
+
   timeFitScore?: number | null
   timeFitConfidence?: number | null
 

@@ -17,7 +17,7 @@ import {
 } from "./geometry"
 
 import {
-  computeSequentialCandidateScore,
+  computeSequentialCandidateScoreResult,
 } from "./bias"
 
 import {
@@ -89,6 +89,16 @@ export type SequenceSearchCandidateScore = {
   slotIndex: number
   pass: SelectionPass
   baseScore: number
+  groupScore: number
+  groupFit: {
+    score: number
+    confidenceScore: number
+    isWeakFit: boolean
+    isHardConflict: boolean
+    matchedPreferredTypes: string[]
+    matchedDiscouragedTypes: string[]
+    reasons: string[]
+  }
   roleFitScore: number
   semanticContinuityScore: number
   diversityScore: number
@@ -665,12 +675,15 @@ function computeExpansionScore({
       relevantSelectedVenues.length - 1
     ] ?? null
 
-  const baseScore = computeSequentialCandidateScore(
-    candidate,
-    relevantSelectedVenues,
-    slot,
-    context
-  )
+  const baseScoreResult =
+    computeSequentialCandidateScoreResult(
+      candidate,
+      relevantSelectedVenues,
+      slot,
+      context
+    )
+
+  const baseScore = baseScoreResult.score
 
   const roleFitScore = computeSlotRoleFitBonus(
     candidate,
@@ -717,6 +730,10 @@ function computeExpansionScore({
     slotIndex: slot.index,
     pass: pass.name,
     baseScore,
+    groupScore:
+      baseScoreResult.result.breakdown.group,
+    groupFit:
+      baseScoreResult.result.fits.group,
     roleFitScore,
     semanticContinuityScore,
     diversityScore,
@@ -969,11 +986,15 @@ function buildSequenceSearchResult(
   intendedSlotCount: number
 ): SequenceSearchResult {
   const selected: SelectedSlotVenue[] =
-    state.steps.map((step) => ({
-      venue: step.venue,
-      slot: step.slot,
-      selectedPass: step.selectedPass,
-    }))
+  state.steps.map((step) => ({
+    venue: step.venue,
+    slot: step.slot,
+    selectedPass: step.selectedPass,
+    groupScore:
+      step.scoreBreakdown.groupScore,
+    groupFit:
+      step.scoreBreakdown.groupFit,
+  }))
 
   return {
     selected,

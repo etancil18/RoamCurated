@@ -87,6 +87,18 @@ type SelectedCandidateWithSlot = {
   venue: CandidateVenue
   slot: PlanningSlot
   selectedPass: SelectionPass
+
+  groupScore: number
+
+  groupFit: {
+    score: number
+    confidenceScore: number
+    isWeakFit: boolean
+    isHardConflict: boolean
+    matchedPreferredTypes: string[]
+    matchedDiscouragedTypes: string[]
+    reasons: string[]
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -105,7 +117,16 @@ export function generatePlanStops(
     selection.selected as SelectedCandidateWithSlot[]
 
   return selectedStopsWithSlots.map(
-    ({ venue, slot, selectedPass }, index) => {
+    (
+      {
+        venue,
+        slot,
+        selectedPass,
+        groupScore,
+        groupFit,
+      },
+      index
+    ) => {
       const candidate = venue as CandidateWithPlannerEvidence
       const role = pickRoleForSlot(slot, candidate.inferredRoles)
 
@@ -237,6 +258,9 @@ export function generatePlanStops(
 
           selectedPass:
             selectedPass ?? null,
+
+          groupScore,
+          groupFit,
 
           eventArchetype:
             context.eventArchetype,
@@ -1811,7 +1835,7 @@ function normalizeToken(
   return String(value)
     .trim()
     .toLowerCase()
-    .replace(/[_-]+/g, " ")
+    .replace(/[\_-]+/g, " ")
     .replace(/\s+/g, " ")
 }
 

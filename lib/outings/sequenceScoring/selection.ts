@@ -56,7 +56,7 @@ import {
 } from "./time"
 
 import {
-  computeSequentialCandidateScore,
+  computeSequentialCandidateScoreResult,
 } from "./bias"
 
 // -----------------------------------------------------------------------------
@@ -136,6 +136,18 @@ type CandidateEvaluation = {
 type RankedCandidateForPass = {
   venue: CandidateVenue
   score: number
+
+  groupScore: number
+
+  groupFit: {
+    score: number
+    confidenceScore: number
+    isWeakFit: boolean
+    isHardConflict: boolean
+    matchedPreferredTypes: string[]
+    matchedDiscouragedTypes: string[]
+    reasons: string[]
+  }
 }
 
 type VibeMatchEvidence = {
@@ -163,12 +175,36 @@ export type SlotSelectionDebug = {
   matchedRole: number
   passedHardConstraints: number
   rejectionCounts: RejectionCounts
+
+  groupScore: number | null
+
+  groupFit: {
+    score: number
+    confidenceScore: number
+    isWeakFit: boolean
+    isHardConflict: boolean
+    matchedPreferredTypes: string[]
+    matchedDiscouragedTypes: string[]
+    reasons: string[]
+  } | null
 }
 
 export type SelectedSlotVenue = {
   venue: CandidateVenue
   slot: PlanningSlot
   selectedPass: SelectionPass
+
+  groupScore: number
+
+  groupFit: {
+    score: number
+    confidenceScore: number
+    isWeakFit: boolean
+    isHardConflict: boolean
+    matchedPreferredTypes: string[]
+    matchedDiscouragedTypes: string[]
+    reasons: string[]
+  }
 }
 
 export type SelectionDebugResult = {
@@ -250,6 +286,16 @@ export function selectCandidates(
       matchedRole: number
       passedHardConstraints: number
       rejectionCounts: RejectionCounts
+      groupScore: number
+      groupFit: {
+        score: number
+        confidenceScore: number
+        isWeakFit: boolean
+        isHardConflict: boolean
+        matchedPreferredTypes: string[]
+        matchedDiscouragedTypes: string[]
+        reasons: string[]
+      }
     } | null = null
 
     for (const pass of SELECTION_PASSES) {
@@ -274,11 +320,13 @@ export function selectCandidates(
       if (!attempt.best) continue
 
       selectedForSlot = {
-        venue: attempt.best,
+        venue: attempt.best.venue,
         pass: pass.name,
         matchedRole: attempt.matchedRole,
         passedHardConstraints: attempt.passedHardConstraints,
         rejectionCounts: attempt.rejectionCounts,
+        groupScore: attempt.best.groupScore,
+        groupFit: attempt.best.groupFit,
       }
 
       break
@@ -289,6 +337,8 @@ export function selectCandidates(
         venue: selectedForSlot.venue,
         slot,
         selectedPass: selectedForSlot.pass,
+        groupScore: selectedForSlot.groupScore,
+        groupFit: selectedForSlot.groupFit,
       })
 
       usedIds.add(selectedForSlot.venue.id)
@@ -303,6 +353,8 @@ export function selectCandidates(
         matchedRole: selectedForSlot.matchedRole,
         passedHardConstraints: selectedForSlot.passedHardConstraints,
         rejectionCounts: selectedForSlot.rejectionCounts,
+        groupScore: selectedForSlot.groupScore,
+        groupFit: selectedForSlot.groupFit,
       })
 
       continue
@@ -318,6 +370,8 @@ export function selectCandidates(
       matchedRole: aggregateMatchedRole,
       passedHardConstraints: aggregatePassedHardConstraints,
       rejectionCounts: aggregateRejections,
+      groupScore: null,
+      groupFit: null,
     })
   }
 
@@ -348,7 +402,7 @@ function selectBestCandidateForPass({
   timeZone: string
   pass: SelectionPassConfig
 }): {
-  best: CandidateVenue | null
+  best: RankedCandidateForPass | null
   matchedRole: number
   passedHardConstraints: number
   rejectionCounts: RejectionCounts
@@ -402,13 +456,17 @@ function selectBestCandidateForPass({
 
     passedHardConstraints += 1
 
-    const canonicalScore = computeSequentialCandidateScore(
-      candidate,
-      selectedVenues,
-      slot,
-      context,
-      pass.name
-    )
+    const canonicalScoreResult =
+      computeSequentialCandidateScoreResult(
+        candidate,
+        selectedVenues,
+        slot,
+        context,
+        pass.name
+      )
+
+const canonicalScore =
+  canonicalScoreResult.score
 
     const roleFitScore =
       computeSlotRoleFitBonus(
@@ -455,6 +513,10 @@ function selectBestCandidateForPass({
     eligibleCandidates.push({
       venue: candidate,
       score: passScore,
+      groupScore:
+        canonicalScoreResult.result.breakdown.group,
+      groupFit:
+        canonicalScoreResult.result.fits.group,
     })
   }
 
@@ -464,7 +526,7 @@ function selectBestCandidateForPass({
 
   return {
     best:
-      eligibleCandidates[0]?.venue ??
+      eligibleCandidates[0] ??
       null,
 
     matchedRole,

@@ -26,6 +26,11 @@ import {
 } from "./vibeFit"
 
 import {
+  computeGroupFit,
+  type GroupFitResult,
+} from "./groupFit"
+
+import {
   computeTimeFit,
   type TimeFitResult,
 } from "./timeFit"
@@ -81,6 +86,7 @@ export type CandidateScoreWeights = {
   semantic: number
   archetype: number
   vibe: number
+  group: number
   time: number
   geometry: number
   sequence: number
@@ -90,6 +96,7 @@ export type CandidateScoreBreakdown = {
   semantic: number
   archetype: number
   vibe: number
+  group: number
   time: number
   geometry: number
   sequence: number
@@ -148,6 +155,7 @@ export type CandidateScoreResult = {
     semantic: SemanticFitResult
     archetype: ArchetypeFitResult
     vibe: VibeFitResult
+    group: GroupFitResult
     time: TimeFitResult
     geometry: GeometryFitResult
     sequence: SequenceFitResult
@@ -206,7 +214,7 @@ export type RankVenueCandidatesInput = {
 /**
  * Semantic compatibility is the highest-value signal.
  *
- * Archetype and vibe provide contextual meaning.
+ * Archetype, vibe, and group fit provide contextual meaning.
  * Time and geometry verify feasibility.
  * Sequence evaluates whether the venue works with already selected stops.
  */
@@ -214,6 +222,7 @@ export const DEFAULT_CANDIDATE_SCORE_WEIGHTS: CandidateScoreWeights = {
   semantic: 1.3,
   archetype: 1.05,
   vibe: 1.15,
+  group: 1,
   time: 1,
   geometry: 0.8,
   sequence: 0.75,
@@ -270,6 +279,12 @@ export function computeCandidateScore({
     slot,
   })
 
+  const group = computeGroupFit({
+    venue,
+    context,
+    slot,
+  })
+
   const time = computeTimeFit({
     venue,
     context,
@@ -298,6 +313,7 @@ export function computeCandidateScore({
     semantic,
     archetype,
     vibe,
+    group,
     time,
     geometry,
     sequence,
@@ -307,6 +323,7 @@ export function computeCandidateScore({
     semantic,
     archetype,
     vibe,
+    group,
     time,
     geometry,
     sequence,
@@ -327,6 +344,11 @@ export function computeCandidateScore({
   const vibeScore = weightedScore(
     vibe.score,
     weights.vibe
+  )
+
+  const groupScore = weightedScore(
+    group.score,
+    weights.group
   )
 
   const timeScore = weightedScore(
@@ -371,6 +393,7 @@ export function computeCandidateScore({
     semanticScore +
     archetypeScore +
     vibeScore +
+    groupScore +
     timeScore +
     geometryScore +
     sequenceScore +
@@ -390,6 +413,7 @@ export function computeCandidateScore({
     semantic,
     archetype,
     vibe,
+    group,
     time,
     geometry,
     sequence,
@@ -429,6 +453,7 @@ export function computeCandidateScore({
       semantic: semanticScore,
       archetype: archetypeScore,
       vibe: vibeScore,
+      group: groupScore,
       time: timeScore,
       geometry: geometryScore,
       sequence: sequenceScore,
@@ -480,6 +505,7 @@ export function computeCandidateScore({
       semantic,
       archetype,
       vibe,
+      group,
       time,
       geometry,
       sequence,
@@ -648,6 +674,7 @@ export function getCandidateScoreMetadata(
   semanticScore: number
   archetypeScore: number
   vibeScore: number
+  groupScore: number
   timeScore: number
   geometryScore: number
   sequenceScore: number
@@ -675,6 +702,9 @@ export function getCandidateScoreMetadata(
 
     vibeScore:
       result.breakdown.vibe,
+
+    groupScore:
+      result.breakdown.group,
 
     timeScore:
       result.breakdown.time,
@@ -801,6 +831,7 @@ function collectHardConflictReasons({
   semantic,
   archetype,
   vibe,
+  group,
   time,
   geometry,
   sequence,
@@ -808,6 +839,7 @@ function collectHardConflictReasons({
   semantic: SemanticFitResult
   archetype: ArchetypeFitResult
   vibe: VibeFitResult
+  group: GroupFitResult
   time: TimeFitResult
   geometry: GeometryFitResult
   sequence: SequenceFitResult
@@ -843,6 +875,10 @@ function collectHardConflictReasons({
     reasons.push("vibe_conflict")
   }
 
+  if (group.isHardConflict) {
+    reasons.push("group_conflict")
+  }
+
   return uniqueStrings(reasons)
 }
 
@@ -850,6 +886,7 @@ function collectSoftConflictReasons({
   semantic,
   archetype,
   vibe,
+  group,
   time,
   geometry,
   sequence,
@@ -857,6 +894,7 @@ function collectSoftConflictReasons({
   semantic: SemanticFitResult
   archetype: ArchetypeFitResult
   vibe: VibeFitResult
+  group: GroupFitResult
   time: TimeFitResult
   geometry: GeometryFitResult
   sequence: SequenceFitResult
@@ -882,6 +920,13 @@ function collectSoftConflictReasons({
     !vibe.isHardConflict
   ) {
     reasons.push("weak_vibe_fit")
+  }
+
+  if (
+    group.isWeakFit &&
+    !group.isHardConflict
+  ) {
+    reasons.push("weak_group_fit")
   }
 
   if (
@@ -1093,6 +1138,7 @@ function computeCandidateConfidence({
   semantic,
   archetype,
   vibe,
+  group,
   time,
   geometry,
   sequence,
@@ -1101,6 +1147,7 @@ function computeCandidateConfidence({
   semantic: SemanticFitResult
   archetype: ArchetypeFitResult
   vibe: VibeFitResult
+  group: GroupFitResult
   time: TimeFitResult
   geometry: GeometryFitResult
   sequence: SequenceFitResult
@@ -1148,6 +1195,11 @@ function computeCandidateConfidence({
     normalizedFitConfidence(
       vibe.confidenceScore
     ) * 0.1
+
+  confidence +=
+    normalizedFitConfidence(
+      group.confidenceScore
+    ) * 0.07
 
   confidence +=
     normalizedFitConfidence(
