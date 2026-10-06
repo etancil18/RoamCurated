@@ -366,6 +366,10 @@ export async function GET(
           'is_public',
           true
         )
+        .eq(
+          'is_discoverable',
+          true
+        )
         .not(
           'username',
           'is',
@@ -464,105 +468,127 @@ export async function GET(
     }
 
     const [
-      followResult,
-      followingResult,
-      categoriesResult,
-      reputationRowsResult,
-    ] =
-      await Promise.all([
-        supabase
+  followResult,
+  followingResult,
+  categoriesResult,
+  reputationRowsResult,
+  discoverableProfilesResult,
+] =
+  await Promise.all([
+    supabase
+      .from(
+        'user_follows'
+      )
+      .select(
+        'following_id'
+      )
+      .in(
+        'following_id',
+        profileIds
+      ),
+
+    user
+      ? supabase
           .from(
             'user_follows'
           )
           .select(
             'following_id'
           )
+          .eq(
+            'follower_id',
+            user.id
+          )
           .in(
             'following_id',
             profileIds
-          ),
-
-        user
-          ? supabase
-              .from(
-                'user_follows'
-              )
-              .select(
-                'following_id'
-              )
-              .eq(
-                'follower_id',
-                user.id
-              )
-              .in(
-                'following_id',
-                profileIds
-              )
-          : Promise.resolve({
-              data:
-                [] as Array<{
-                  following_id:
-                    string
-                }>,
-
-              error:
-                null,
-            }),
-
-        admin
-          .from(
-            'reputation_categories'
           )
-          .select(`
-            id,
-            label,
-            is_active
-          `)
-          .eq(
-            'is_active',
-            true
-          ),
+      : Promise.resolve({
+          data:
+            [] as Array<{
+              following_id:
+                string
+            }>,
 
-        /**
-         * All current reputation rows are loaded so ranks and
-         * percentiles are calculated against the full eligible
-         * comparison population rather than only the users in
-         * the current search response.
-         */
-        admin
-          .from(
-            'creator_reputation_stats'
-          )
-          .select(`
-            user_id,
-            category_id,
-            scope,
-            city_key,
-            reputation_level,
-            reputation_score,
-            verified_venue_count,
-            weighted_venue_count,
-            city_count,
-            public_collection_count,
-            curated_venue_count,
-            public_snapshot_count,
-            completed_flow_count,
-            recency_score,
-            quality_score,
-            policy_version,
-            calculated_at
-          `)
-          .order(
-            'policy_version',
-            {
-              ascending:
-                false,
-            }
-          )
-          .limit(
-            10000
-          ),
-      ])
+          error:
+            null,
+        }),
+
+    admin
+      .from(
+        'reputation_categories'
+      )
+      .select(`
+        id,
+        label,
+        is_active
+      `)
+      .eq(
+        'is_active',
+        true
+      ),
+
+    /**
+     * All current reputation rows are loaded so ranks and
+     * percentiles are calculated against the full eligible
+     * comparison population rather than only the users in
+     * the current search response.
+     */
+    admin
+      .from(
+        'creator_reputation_stats'
+      )
+      .select(`
+        user_id,
+        category_id,
+        scope,
+        city_key,
+        reputation_level,
+        reputation_score,
+        verified_venue_count,
+        weighted_venue_count,
+        city_count,
+        public_collection_count,
+        curated_venue_count,
+        public_snapshot_count,
+        completed_flow_count,
+        recency_score,
+        quality_score,
+        policy_version,
+        calculated_at
+      `)
+      .order(
+        'policy_version',
+        {
+          ascending:
+            false,
+        }
+      )
+      .limit(
+        10000
+      ),
+
+    admin
+      .from(
+        'profiles'
+      )
+      .select(
+        'id'
+      )
+      .eq(
+        'is_public',
+        true
+      )
+      .eq(
+        'is_discoverable',
+        true
+      )
+      .not(
+        'username',
+        'is',
+        null
+      ),
+  ])
 
     if (
       followResult.error
@@ -599,6 +625,15 @@ export async function GET(
         reputationRowsResult.error
       )
     }
+
+    if (
+  discoverableProfilesResult.error
+) {
+  console.error(
+    'Discover reputation-population profile lookup error:',
+    discoverableProfilesResult.error
+  )
+}
 
     const followRows =
       followResult.data ??
@@ -669,28 +704,56 @@ export async function GET(
       )
 
     const normalizedReputationRows =
-      normalizeReputationRows(
-        reputationRowsResult.error
-          ? []
-          : reputationRowsResult.data
+  normalizeReputationRows(
+    reputationRowsResult.error
+      ? []
+      : reputationRowsResult.data
+  )
+
+const discoverableProfileIds =
+  new Set(
+    discoverableProfilesResult.error
+      ? []
+      : (
+          discoverableProfilesResult.data ??
+          []
+        )
+          .map(
+            (
+              profile
+            ) =>
+              normalizeRequiredText(
+                profile.id
+              )
+          )
+          .filter(
+            (
+              value
+            ): value is string =>
+              value !==
+              null
+          )
+  )
+
+const currentPolicyRows =
+  normalizedReputationRows.filter(
+    (
+      row
+    ) =>
+      row.policyVersion ===
+        REPUTATION_POLICY_VERSION &&
+      discoverableProfileIds.has(
+        row.userId
       )
+  )
 
-    const currentPolicyRows =
-      normalizedReputationRows.filter(
-        (
-          row
-        ) =>
-          row.policyVersion ===
-          REPUTATION_POLICY_VERSION
-      )
+const rankedReputationRows =
+  rankEligibleReputationRows({
+    rows:
+      currentPolicyRows,
 
-    const rankedReputationRows =
-      rankEligibleReputationRows({
-        rows:
-          currentPolicyRows,
-
-        categoriesById,
-      })
+    categoriesById,
+  })
 
     const reputationByUserId =
       buildReputationSummariesByUserId(

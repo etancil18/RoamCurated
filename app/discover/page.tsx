@@ -94,14 +94,6 @@ export default function DiscoverPage() {
               places you care about.
             </h1>
 
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base sm:leading-7">
-              Search people directly,
-              discover Roamers worth
-              following, and see who has
-              built real reputation across
-              cities and categories.
-            </p>
-
             <div className="mt-6 max-w-3xl">
               <UserSearch />
             </div>
@@ -118,7 +110,6 @@ export default function DiscoverPage() {
               id="suggested-roamers-title"
               eyebrow="Discover"
               title="People to discover"
-              description="Find Roamers through shared interests, vibes, local context, and the reputation they’ve built."
             />
 
             <div className="mt-5">
@@ -135,7 +126,6 @@ export default function DiscoverPage() {
               id="roam-leaderboard-title"
               eyebrow="Reputation"
               title="Who knows this place?"
-              description="See which eligible Roamers have built credibility globally or within a city across the categories they actually explore."
             />
 
             <div className="mt-5">
@@ -156,12 +146,10 @@ function DiscoverSectionHeading({
   id,
   eyebrow,
   title,
-  description,
 }: {
   id: string
   eyebrow: string
   title: string
-  description: string
 }) {
   return (
     <div className="min-w-0">
@@ -179,10 +167,6 @@ function DiscoverSectionHeading({
       >
         {title}
       </h2>
-
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-        {description}
-      </p>
     </div>
   )
 }

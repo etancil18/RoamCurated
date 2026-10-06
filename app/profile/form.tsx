@@ -36,6 +36,7 @@ export default function ProfileForm() {
   const [intentLevel, setIntentLevel] = useState<string>("")
   const [socialComfort, setSocialComfort] = useState<string>("")
   const [daysOut, setDaysOut] = useState<string[]>([])
+  const [isDiscoverable, setIsDiscoverable] = useState(true)
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -67,6 +68,7 @@ export default function ProfileForm() {
         setIntentLevel(data.intent_level ?? "")
         setSocialComfort(data.social_comfort ?? "")
         setDaysOut(data.days_out ?? [])
+        setIsDiscoverable(data.is_discoverable ?? true)
       }
 
       setLoading(false)
@@ -110,6 +112,7 @@ export default function ProfileForm() {
       intent_level: intentLevel,
       social_comfort: socialComfort,
       days_out: daysOut,
+      is_discoverable: isDiscoverable,
       has_seen_roam_intro: true,
       updated_at: new Date().toISOString(),
     }
@@ -252,6 +255,46 @@ export default function ProfileForm() {
             </div>
           </div>
         </div>
+      </SettingsSection>
+
+      <SettingsSection title="Discoverability">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isDiscoverable}
+          onClick={() => setIsDiscoverable((current) => !current)}
+          className="flex w-full items-center justify-between gap-4 rounded-2xl border border-neutral-800 bg-black/30 px-4 py-4 text-left transition hover:border-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/40"
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white">
+              Appear in Discover
+            </p>
+
+            <p className="mt-1 max-w-xl text-xs leading-5 text-neutral-500">
+              Allow your profile to appear in people search, suggested Roamers,
+              leaderboards, and other discovery surfaces.
+            </p>
+          </div>
+
+          <span
+            aria-hidden="true"
+            className={[
+              "relative h-6 w-11 shrink-0 rounded-full transition",
+              isDiscoverable
+                ? "bg-cyan-300"
+                : "bg-neutral-800",
+            ].join(" ")}
+          >
+            <span
+              className={[
+                "absolute top-1 h-4 w-4 rounded-full transition",
+                isDiscoverable
+                  ? "left-6 bg-black"
+                  : "left-1 bg-neutral-400",
+              ].join(" ")}
+            />
+          </span>
+        </button>
       </SettingsSection>
 
       {error && (

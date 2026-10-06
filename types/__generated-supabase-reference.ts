@@ -5384,6 +5384,7 @@ export type Database = {
           instagram_handle: string | null
           intent_level: string | null
           interest_categories: string[] | null
+          is_discoverable: boolean
           is_public: boolean | null
           onboarding_path: string | null
           onboarding_path_selected_at: string | null
@@ -5418,6 +5419,7 @@ export type Database = {
           instagram_handle?: string | null
           intent_level?: string | null
           interest_categories?: string[] | null
+          is_discoverable?: boolean
           is_public?: boolean | null
           onboarding_path?: string | null
           onboarding_path_selected_at?: string | null
@@ -5452,6 +5454,7 @@ export type Database = {
           instagram_handle?: string | null
           intent_level?: string | null
           interest_categories?: string[] | null
+          is_discoverable?: boolean
           is_public?: boolean | null
           onboarding_path?: string | null
           onboarding_path_selected_at?: string | null

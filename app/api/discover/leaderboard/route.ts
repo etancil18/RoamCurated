@@ -247,85 +247,44 @@ export async function GET(
         request
       )
 
-    const [
-      profilesResult,
-      currentProfileResult,
-    ] =
-      await Promise.all([
-        supabase
-          .from(
-            'profiles'
-          )
-          .select(`
-            id,
-            username,
-            full_name,
-            avatar_url,
-            bio,
-            home_neighborhood,
-            preferred_vibes,
-            interest_categories,
-            is_public
-          `)
-          .eq(
-            'is_public',
-            true
-          )
-          .not(
-            'username',
-            'is',
-            null
-          )
-          .returns<
-            ProfileRow[]
-          >(),
-
-        user
-          ? supabase
-              .from(
-                'profiles'
-              )
-              .select(`
-                id,
-                username,
-                full_name,
-                avatar_url,
-                bio,
-                home_neighborhood,
-                preferred_vibes,
-                interest_categories,
-                is_public
-              `)
-              .eq(
-                'id',
-                user.id
-              )
-              .not(
-                'username',
-                'is',
-                null
-              )
-              .maybeSingle<
-                ProfileRow
-              >()
-          : Promise.resolve({
-              data:
-                null as
-                  ProfileRow | null,
-
-              error:
-                null,
-            }),
-      ])
-
     const {
-      data:
-        profilesRaw,
+  data:
+    profilesRaw,
 
-      error:
-        profilesError,
-    } =
-      profilesResult
+  error:
+    profilesError,
+} =
+  await supabase
+    .from(
+      'profiles'
+    )
+    .select(`
+      id,
+      username,
+      full_name,
+      avatar_url,
+      bio,
+      home_neighborhood,
+      preferred_vibes,
+      interest_categories,
+      is_public
+    `)
+    .eq(
+      'is_public',
+      true
+    )
+    .eq(
+      'is_discoverable',
+      true
+    )
+    .not(
+      'username',
+      'is',
+      null
+    )
+    .returns<
+      ProfileRow[]
+    >()
 
     if (
       profilesError
@@ -350,57 +309,13 @@ export async function GET(
       )
     }
 
-    if (
-      currentProfileResult.error
-    ) {
-      console.error(
-        'Leaderboard current profile lookup error:',
-        currentProfileResult.error
-      )
-    }
-
     /**
-     * Public users form the shared leaderboard population.
-     *
-     * The authenticated user is merged into their own response
-     * when they have a username, even when their profile is
-     * private. This allows a user to see their own standing
-     * without exposing that private profile to other users.
-     */
-    const profilesById =
-      new Map<
-        string,
-        ProfileRow
-      >()
-
-    for (
-      const profile of
-        profilesRaw ??
-        []
-    ) {
-      profilesById.set(
-        profile.id,
-        profile
-      )
-    }
-
-    if (
-      currentProfileResult.data
-    ) {
-      profilesById.set(
-        currentProfileResult
-          .data
-          .id,
-
-        currentProfileResult
-          .data
-      )
-    }
-
-    const profiles =
-      Array.from(
-        profilesById.values()
-      )
+ * Public, discoverable users form the shared
+ * leaderboard population.
+ */
+const profiles =
+  profilesRaw ??
+  []
 
     const profileIds =
       profiles.map(
