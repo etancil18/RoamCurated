@@ -7,6 +7,7 @@ import CollectionCarousel, {
 } from '@/components/profile/creator/collections/CollectionCarousel'
 import CollectionFlowCallToAction from '@/components/public-profile/creator/CollectionFlowCallToAction'
 import CollectionShareButton from '@/components/public-profile/creator/CollectionShareButton'
+import PublicCollectionViewLogger from '@/components/public-profile/creator/PublicCollectionViewLogger'
 
 import {
   CREATOR_COLLECTION_MEDIA_BUCKET,
@@ -302,7 +303,7 @@ export default async function PublicCreatorCollectionPage({
       includeItems: true,
     })
 
-  if (!data) {
+    if (!data) {
     notFound()
   }
 
@@ -314,6 +315,16 @@ export default async function PublicCreatorCollectionPage({
     items,
     supabaseUrl,
   } = data
+
+  const supabase =
+    await createServerClient()
+
+  const {
+    data: {
+      user,
+    },
+  } =
+    await supabase.auth.getUser()
 
   const experiencedVenueIds =
     await loadViewerExperiencedVenueIds({
@@ -403,8 +414,36 @@ export default async function PublicCreatorCollectionPage({
       },
     }
 
-  return (
+    return (
     <main className="min-h-screen w-full overflow-x-clip bg-black px-4 pb-16 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6">
+      <PublicCollectionViewLogger
+        collectionId={
+          collection.id
+        }
+        collectionSlug={
+          collection.slug
+        }
+        collectionTitle={
+          collection.title
+        }
+        creatorUserId={
+          profile.id
+        }
+        creatorUsername={
+          profile.username
+        }
+        viewerAuthenticated={
+          Boolean(user)
+        }
+        viewerIsOwner={
+          user?.id ===
+          profile.id
+        }
+        collectionFeatured={
+          collection.featured
+        }
+      />
+
       <div className="mx-auto w-full min-w-0 max-w-5xl">
         <CollectionNavigation
           profileHref={

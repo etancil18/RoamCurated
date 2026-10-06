@@ -37,6 +37,13 @@ type RouteIngestionOptions = {
   syncUrl?: boolean
 }
 
+type ActiveFlowConflict = {
+  id: string
+  title: string | null
+  city: string | null
+  started_at: string | null
+}
+
 const MIN_QUALITY_STOPS = 3
 
 function normalizeSearchableList(
@@ -255,6 +262,26 @@ export default function MapWrapper() {
     generatedRouteRetryAttempt,
     setGeneratedRouteRetryAttempt,
   ] = useState(0)
+
+  const [
+    activeFlowConflict,
+    setActiveFlowConflict,
+  ] =
+    useState<ActiveFlowConflict | null>(
+      null
+    )
+
+  const [
+    isReplacingActiveFlow,
+    setIsReplacingActiveFlow,
+  ] = useState(false)
+
+  const [
+    activeFlowConflictError,
+    setActiveFlowConflictError,
+  ] = useState<string | null>(
+    null
+  )
 
   const { user } = useUser()
 
@@ -652,34 +679,34 @@ export default function MapWrapper() {
     ])
 
   const visibleVenues =
-  useMemo(() => {
-    if (
-      !showLiveEventsOnly
-    ) {
-      return filteredVenues
-    }
-
-    return filteredVenues.filter(
-      (venue) => {
-        const venueEvents =
-          eventsByVenueId[
-            venue.id
-          ] ?? []
-
-        return venueEvents.some(
-          (event) =>
-            !isCommunityEventSignal(
-              event
-            ) &&
-            !!event.starts_at
-        )
+    useMemo(() => {
+      if (
+        !showLiveEventsOnly
+      ) {
+        return filteredVenues
       }
-    )
-  }, [
-    filteredVenues,
-    showLiveEventsOnly,
-    eventsByVenueId,
-  ])
+
+      return filteredVenues.filter(
+        (venue) => {
+          const venueEvents =
+            eventsByVenueId[
+              venue.id
+            ] ?? []
+
+          return venueEvents.some(
+            (event) =>
+              !isCommunityEventSignal(
+                event
+              ) &&
+              !!event.starts_at
+          )
+        }
+      )
+    }, [
+      filteredVenues,
+      showLiveEventsOnly,
+      eventsByVenueId,
+    ])
 
   const handleMapClick =
     useCallback(
@@ -761,24 +788,35 @@ export default function MapWrapper() {
       (
         slug: string | null
       ) => {
-        setSelectedCity(slug)
-        setRouteVenueIds([])
-        setPendingRouteVenueIds(
-          null
-        )
-        setCustomStart(null)
-        setRouteErrorMessage(null)
-        setConfidenceTier(null)
-        setGeneratedRouteContext(
-          null
-        )
-        setGeneratedRouteRetryAttempt(
-          0
-        )
+        setSelectedCity(
+          (currentCity) => {
+            if (
+              currentCity === slug
+            ) {
+              return currentCity
+            }
 
-        if (slug) {
-          setIsPanelOpen(true)
-        }
+            setRouteVenueIds([])
+            setPendingRouteVenueIds(
+              null
+            )
+            setCustomStart(null)
+            setRouteErrorMessage(null)
+            setConfidenceTier(null)
+            setGeneratedRouteContext(
+              null
+            )
+            setGeneratedRouteRetryAttempt(
+              0
+            )
+
+            if (slug) {
+              setIsPanelOpen(true)
+            }
+
+            return slug
+          }
+        )
       },
       []
     )
@@ -1048,6 +1086,46 @@ export default function MapWrapper() {
       ]
     )
 
+  const startGeneratedFlow =
+    async () => {
+      const response =
+        await fetch(
+          '/api/active-flow/start',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+            body:
+              JSON.stringify({
+                city:
+                  selectedCity,
+                title:
+                  selectedThemeId
+                    ? `${selectedThemeId} Flow`
+                    : 'Roam Flow',
+                source: 'map',
+                venue_ids:
+                  routeVenueIds,
+                theme_id:
+                  selectedThemeId ||
+                  null,
+                travel_mode:
+                  travelMode,
+              }),
+          }
+        )
+
+      const json =
+        await response.json()
+
+      return {
+        response,
+        json,
+      }
+    }
+
   const handleStartGeneratedFlow =
     async () => {
       if (
@@ -1057,48 +1135,39 @@ export default function MapWrapper() {
       }
 
       try {
-        const response =
-          await fetch(
-            '/api/active-flow/start',
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type':
-                  'application/json',
-              },
-              body:
-                JSON.stringify({
-                  city:
-                    selectedCity,
-                  title:
-                    selectedThemeId
-                      ? `${selectedThemeId} Flow`
-                      : 'Roam Flow',
-                  source: 'map',
-                  venue_ids:
-                    routeVenueIds,
-                  theme_id:
-                    selectedThemeId ||
-                    null,
-                  travel_mode:
-                    travelMode,
-                }),
-            }
-          )
-
-        const json =
-          await response.json()
+        const {
+          response,
+          json,
+        } =
+          await startGeneratedFlow()
 
         if (!response.ok) {
           if (
             response.status ===
               409 &&
             json.activeSession
-              ?.id &&
-            inBrowser()
+              ?.id
           ) {
-            window.location.href =
-              `/flow/${json.activeSession.id}`
+            setActiveFlowConflict({
+              id:
+                json.activeSession.id,
+              title:
+                json.activeSession
+                  .title ??
+                null,
+              city:
+                json.activeSession
+                  .city ??
+                null,
+              started_at:
+                json.activeSession
+                  .started_at ??
+                null,
+            })
+
+            setActiveFlowConflictError(
+              null
+            )
 
             return
           }
@@ -1126,6 +1195,163 @@ export default function MapWrapper() {
 
         alert(
           'Something went wrong starting this flow.'
+        )
+      }
+    }
+
+  const handleContinueActiveFlow =
+    () => {
+      if (
+        !activeFlowConflict ||
+        !inBrowser()
+      ) {
+        return
+      }
+
+      window.location.href =
+        `/flow/${activeFlowConflict.id}`
+    }
+
+  const handleKeepGeneratedFlow =
+    () => {
+      if (
+        isReplacingActiveFlow
+      ) {
+        return
+      }
+
+      setActiveFlowConflict(
+        null
+      )
+
+      setActiveFlowConflictError(
+        null
+      )
+    }
+
+  const handleReplaceActiveFlow =
+    async () => {
+      if (
+        !activeFlowConflict ||
+        isReplacingActiveFlow
+      ) {
+        return
+      }
+
+      setIsReplacingActiveFlow(
+        true
+      )
+
+      setActiveFlowConflictError(
+        null
+      )
+
+      try {
+        const cancelResponse =
+          await fetch(
+            '/api/active-flow/cancel',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+              body:
+                JSON.stringify({
+                  session_id:
+                    activeFlowConflict.id,
+                }),
+            }
+          )
+
+        const cancelJson =
+          await cancelResponse
+            .json()
+            .catch(() => null)
+
+        if (
+          !cancelResponse.ok
+        ) {
+          setActiveFlowConflictError(
+            cancelJson?.error ??
+              'Could not end your current Flow.'
+          )
+
+          return
+        }
+
+        const {
+          response,
+          json,
+        } =
+          await startGeneratedFlow()
+
+        if (!response.ok) {
+          if (
+            response.status ===
+              409 &&
+            json.activeSession
+              ?.id
+          ) {
+            setActiveFlowConflict({
+              id:
+                json.activeSession.id,
+              title:
+                json.activeSession
+                  .title ??
+                null,
+              city:
+                json.activeSession
+                  .city ??
+                null,
+              started_at:
+                json.activeSession
+                  .started_at ??
+                null,
+            })
+
+            setActiveFlowConflictError(
+              'Your previous Flow was ended, but another active Flow is preventing this one from starting.'
+            )
+
+            return
+          }
+
+          setActiveFlowConflict(
+            null
+          )
+
+          setActiveFlowConflictError(
+            null
+          )
+
+          alert(
+            json.error ??
+              'Your previous Flow was ended, but this Flow could not be started. Try starting it again.'
+          )
+
+          return
+        }
+
+        if (
+          json.session?.id &&
+          inBrowser()
+        ) {
+          window.location.href =
+            `/flow/${json.session.id}`
+        }
+      } catch (error) {
+        console.error(
+          'Replace Active Flow Error:',
+          error
+        )
+
+        setActiveFlowConflictError(
+          'Something went wrong while switching Flows. Try again.'
+        )
+      } finally {
+        setIsReplacingActiveFlow(
+          false
         )
       }
     }
@@ -1898,6 +2124,209 @@ export default function MapWrapper() {
             }
           />
         </Suspense>
+      )}
+
+      {activeFlowConflict && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-[6000]
+            flex
+            items-end
+            justify-center
+            bg-black/60
+            p-4
+            sm:items-center
+          "
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="active-flow-conflict-title"
+        >
+          <div
+            className="
+              w-full
+              max-w-md
+              rounded-2xl
+              border
+              border-white/10
+              bg-zinc-950
+              p-5
+              shadow-2xl
+            "
+          >
+            <h2
+              id="active-flow-conflict-title"
+              className="
+                text-lg
+                font-semibold
+                text-white
+              "
+            >
+              You already have an
+              active Flow
+            </h2>
+
+            <p
+              className="
+                mt-2
+                text-sm
+                leading-6
+                text-zinc-400
+              "
+            >
+              {activeFlowConflict
+                .title
+                ? (
+                    <>
+                      You&apos;re
+                      currently in{' '}
+                      <span
+                        className="
+                          font-medium
+                          text-zinc-200
+                        "
+                      >
+                        {
+                          activeFlowConflict
+                            .title
+                        }
+                      </span>
+                      . End it to
+                      start this Flow.
+                    </>
+                  )
+                : (
+                    <>
+                      End your
+                      current Flow
+                      to start this
+                      one.
+                    </>
+                  )}
+            </p>
+
+            <p
+              className="
+                mt-2
+                text-xs
+                leading-5
+                text-zinc-500
+              "
+            >
+              Checked-in stops from
+              your current Flow will
+              remain saved.
+            </p>
+
+            {activeFlowConflictError && (
+              <div
+                role="alert"
+                className="
+                  mt-4
+                  rounded-lg
+                  border
+                  border-red-500/20
+                  bg-red-500/10
+                  px-3
+                  py-2
+                  text-sm
+                  text-red-200
+                "
+              >
+                {
+                  activeFlowConflictError
+                }
+              </div>
+            )}
+
+            <div
+              className="
+                mt-5
+                grid
+                gap-2
+              "
+            >
+              <button
+                type="button"
+                onClick={
+                  handleReplaceActiveFlow
+                }
+                disabled={
+                  isReplacingActiveFlow
+                }
+                className="
+                  rounded-xl
+                  bg-white
+                  px-4
+                  py-3
+                  text-sm
+                  font-semibold
+                  text-zinc-950
+                  transition
+                  hover:bg-zinc-200
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                {isReplacingActiveFlow
+                  ? 'Ending current Flow…'
+                  : 'End Current & Start This Flow'}
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  handleContinueActiveFlow
+                }
+                disabled={
+                  isReplacingActiveFlow
+                }
+                className="
+                  rounded-xl
+                  border
+                  border-white/10
+                  bg-white/5
+                  px-4
+                  py-3
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:bg-white/10
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                Continue Current Flow
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  handleKeepGeneratedFlow
+                }
+                disabled={
+                  isReplacingActiveFlow
+                }
+                className="
+                  rounded-xl
+                  px-4
+                  py-2.5
+                  text-sm
+                  font-medium
+                  text-zinc-400
+                  transition
+                  hover:text-white
+                  disabled:cursor-not-allowed
+                  disabled:opacity-60
+                "
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   )

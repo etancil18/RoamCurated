@@ -1820,19 +1820,6 @@ function QualifyingRoamsPanel({
       <div className="pointer-events-none absolute right-[-4rem] top-[-5rem] h-44 w-44 rounded-full bg-indigo-400/[0.08] blur-3xl" />
 
       <div className="relative z-10">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">
-            Worth remembering
-          </p>
-
-          <h3 className="mt-2 text-lg font-black tracking-tight text-white">
-            Turn a day out into a Roam Snapshot
-          </h3>
-
-          <p className="mt-1.5 max-w-xl text-xs leading-5 text-zinc-500">
-            Days with three or more distinct verified stops can become a shareable record of where you went.
-          </p>
-        </div>
 
         <div className="mt-5 space-y-3">
           {roams.map(

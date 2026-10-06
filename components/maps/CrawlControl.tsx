@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import type { Venue } from '@/types/venue'
 import { themeById } from '@/lib/crawlConfig'
@@ -328,28 +329,52 @@ export default function CrawlControl({
             {hasRoute ? (
               <ol className="mt-3 max-h-36 space-y-1.5 overflow-y-auto">
                 {route?.map((stop, i) => {
-                  const stopUrl = getVenueContactUrl(stop)
+                  const returnParams = new URLSearchParams()
+
+                  returnParams.set(
+                    'route',
+                    route
+                      .map((venue) => venue.id)
+                      .join(',')
+                  )
+
+                  if (city) {
+                    returnParams.set(
+                      'city',
+                      city
+                    )
+                  }
+
+                  const returnTo =
+                    `/?${returnParams.toString()}`
+
+                  const venueHref = stop.id
+                    ? `/venue-profile/${encodeURIComponent(
+                        String(stop.id)
+                      )}?return_to=${encodeURIComponent(
+                        returnTo
+                      )}&return_label=${encodeURIComponent(
+                        'Back to Route'
+                      )}`
+                    : null
 
                   return (
                     <li
                       key={i}
                       className="group flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-black/20 px-2.5 py-2"
                     >
-                      {stopUrl ? (
-                        <a
-                          href={stopUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      {venueHref ? (
+                        <Link
+                          href={venueHref}
                           onClick={(e) => {
                             e.stopPropagation()
 
-                            logEvent('crawl_stop_external_link_clicked', {
+                            logEvent('crawl_stop_venue_clicked', {
                               venue_id: stop.id,
                               metadata: {
                                 city,
                                 index: i,
                                 venue_name: stop.name,
-                                url: stopUrl,
                               },
                             })
                           }}
@@ -359,7 +384,7 @@ export default function CrawlControl({
                             {i + 1}
                           </span>
                           <span className="truncate">{stop.name}</span>
-                        </a>
+                        </Link>
                       ) : (
                         <div className="flex min-w-0 items-center gap-2 text-white/70">
                           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-black text-white">
@@ -517,46 +542,4 @@ export default function CrawlControl({
       )}
     </>
   )
-}
-
-function getVenueContactUrl(venue: Venue): string | null {
-  const rawVenue = venue as Venue & {
-    contact?: string[] | string | null
-    link?: string | null
-  }
-
-  const firstContact = Array.isArray(rawVenue.contact)
-    ? rawVenue.contact[0]
-    : rawVenue.contact
-
-  return normalizeExternalUrl(rawVenue.link ?? firstContact)
-}
-
-function normalizeExternalUrl(value: unknown): string | null {
-  if (typeof value !== 'string') return null
-
-  const raw = value.trim()
-  if (!raw || raw === '#') return null
-
-  if (raw.startsWith('@')) {
-    return `https://instagram.com/${raw.slice(1)}`
-  }
-
-  if (/^https?:\/\//i.test(raw)) {
-    return raw
-  }
-
-  if (/^www\./i.test(raw)) {
-    return `https://${raw}`
-  }
-
-  if (raw.startsWith('instagram.com/')) {
-    return `https://${raw}`
-  }
-
-  if (raw.includes('.')) {
-    return `https://${raw}`
-  }
-
-  return null
 }

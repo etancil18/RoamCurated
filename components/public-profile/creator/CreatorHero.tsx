@@ -11,6 +11,8 @@ import {
   Youtube,
 } from 'lucide-react'
 
+import FollowButton from '@/components/profile/FollowButton'
+
 import {
   CREATOR_SOCIAL_PLATFORM_DEFINITIONS,
   getCreatorSocialDisplayLabel,
@@ -113,6 +115,28 @@ export type CreatorHeroProps = {
   followingCount?: number
 
   /**
+   * User ID used by the public Follow control.
+   */
+  userId?: string
+
+  /**
+   * Whether the current viewer already follows this creator.
+   */
+  initialIsFollowing?: boolean
+
+  /**
+   * Whether the current viewer is authenticated.
+   */
+  isAuthenticated?: boolean
+
+  /**
+   * Whether the Follow control should be rendered.
+   *
+   * The public profile should disable this for the creator's own profile.
+   */
+  showFollowButton?: boolean
+
+  /**
    * Public Roam Passport level.
    *
    * Pass `null` when the creator has disabled public XP and
@@ -168,6 +192,10 @@ export default function CreatorHero({
   socialLinks = [],
   followersCount = 0,
   followingCount = 0,
+  userId,
+  initialIsFollowing = false,
+  isAuthenticated = false,
+  showFollowButton = false,
   passportLevel = null,
   placesExploredCount = 0,
   competitionWins = [],
@@ -266,6 +294,19 @@ export default function CreatorHero({
             }
             username={
               normalizedUsername
+            }
+            userId={userId}
+            initialIsFollowing={
+              initialIsFollowing
+            }
+            followersCount={
+              normalizedFollowersCount
+            }
+            isAuthenticated={
+              isAuthenticated
+            }
+            showFollowButton={
+              showFollowButton
             }
           />
         </div>
@@ -401,32 +442,63 @@ function CreatorAvatar({
 function CreatorIdentity({
   displayName,
   username,
+  userId,
+  initialIsFollowing,
+  followersCount,
+  isAuthenticated,
+  showFollowButton,
 }: {
   displayName: string
   username: string | null
+  userId?: string
+  initialIsFollowing: boolean
+  followersCount: number
+  isAuthenticated: boolean
+  showFollowButton: boolean
 }) {
   return (
     <div className="min-w-0 flex-1">
-      <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
-        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.7)]" />
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.7)]" />
 
-        <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
-          Roam Creator
-        </p>
+            <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+              Roam Creator
+            </p>
+          </div>
+
+          <h1
+            id="creator-hero-title"
+            className="mt-3 break-words text-[2rem] font-black leading-[0.98] tracking-[-0.045em] text-white sm:mt-4 sm:text-5xl"
+          >
+            {displayName}
+          </h1>
+
+          {username ? (
+            <p className="mt-2 break-all text-sm font-semibold text-zinc-500">
+              @{username}
+            </p>
+          ) : null}
+        </div>
+
+        {showFollowButton && userId ? (
+          <div className="shrink-0">
+            <FollowButton
+              userId={userId}
+              initialIsFollowing={
+                initialIsFollowing
+              }
+              initialFollowersCount={
+                followersCount
+              }
+              disabled={
+                !isAuthenticated
+              }
+            />
+          </div>
+        ) : null}
       </div>
-
-      <h1
-        id="creator-hero-title"
-        className="mt-3 break-words text-[2rem] font-black leading-[0.98] tracking-[-0.045em] text-white sm:mt-4 sm:text-5xl"
-      >
-        {displayName}
-      </h1>
-
-      {username ? (
-        <p className="mt-2 break-all text-sm font-semibold text-zinc-500">
-          @{username}
-        </p>
-      ) : null}
     </div>
   )
 }

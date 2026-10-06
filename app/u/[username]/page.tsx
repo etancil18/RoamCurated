@@ -8,6 +8,7 @@ import CreatorHero from '@/components/public-profile/creator/CreatorHero'
 import FollowButton from '@/components/profile/FollowButton'
 import ShareProfileButton from '@/components/profile/ShareProfileButton'
 import PublicRoamCard from '@/components/public-profile/PublicRoamCard'
+import PublicProfileViewLogger from '@/components/public-profile/PublicProfileViewLogger'
 
 import {
   getPublicCreatorProfile,
@@ -192,16 +193,7 @@ export default async function PublicUserProfilePage({
     notFound()
   }
 
-  await logPublicProfileViewed({
-    supabase,
-    viewerUserId: user?.id ?? null,
-    profileUserId: profile.id,
-    username: profile.username,
-    isOwnProfile,
-    isPublic,
-  })
-
-  const creatorModeRequested =
+   const creatorModeRequested =
     profile.creator_mode_enabled === true
 
   const publicMapRequested =
@@ -500,8 +492,25 @@ export default async function PublicUserProfilePage({
         ]
       : []
 
-  return (
+    return (
     <main className="relative min-h-screen overflow-x-clip bg-[#070809] px-4 pb-20 pt-[calc(4rem+env(safe-area-inset-top)+1.25rem)] text-white sm:px-6 sm:pb-28">
+      <PublicProfileViewLogger
+        profileUserId={profile.id}
+        profileUsername={
+          profile.username
+        }
+        viewerAuthenticated={
+          Boolean(user)
+        }
+        viewerIsOwner={
+          isOwnProfile
+        }
+        profileIsCreator={
+          profile.creator_mode_enabled ===
+          true
+        }
+      />
+
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute left-[-22%] top-[-10%] h-[28rem] w-[28rem] rounded-full bg-cyan-400/[0.07] blur-[120px] sm:left-[-8%]" />
 
@@ -591,6 +600,18 @@ export default async function PublicUserProfilePage({
                 followingCount={
                   followingCount
                 }
+                userId={profile.id}
+                initialIsFollowing={
+                  Boolean(
+                    existingFollow
+                  )
+                }
+                isAuthenticated={
+                  Boolean(user)
+                }
+                showFollowButton={
+                  !isOwnProfile
+                }
                 passportLevel={
                   profile.show_xp !== false
                     ? passportLevel
@@ -601,23 +622,6 @@ export default async function PublicUserProfilePage({
                 }
               />
             </div>
-
-            {!isOwnProfile ? (
-              <CreatorActionBar
-                userId={profile.id}
-                existingFollow={
-                  Boolean(
-                    existingFollow
-                  )
-                }
-                followersCount={
-                  followersCount
-                }
-                isAuthenticated={
-                  Boolean(user)
-                }
-              />
-            ) : null}
 
             <CreatorProfileNavigation
               items={
@@ -770,8 +774,7 @@ export default async function PublicUserProfilePage({
                 <ProfileSectionHeading
                   id="creator-exploration-map-title"
                   eyebrow="Their footprint"
-                  title={`Places ${creatorDisplayName} actually knows`}
-                  description="Geo-verified places this creator has visited and chosen to make part of their public city story."
+                  title={`Places ${creatorDisplayName} knows`}
                 />
 
                 <div className="overflow-hidden rounded-[2rem] bg-white/[0.025] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
@@ -802,7 +805,6 @@ export default async function PublicUserProfilePage({
                   id="creator-guides-title"
                   eyebrow="Their picks"
                   title="Places worth knowing"
-                  description={`Collections built by ${creatorDisplayName} around places, moods, and experiences they genuinely think are worth your time.`}
                 />
 
                 <CreatorFeaturedCollections
@@ -837,10 +839,6 @@ export default async function PublicUserProfilePage({
                         >
                           Nights and routes worth remembering
                         </h2>
-
-                        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                          Completed Roams this creator chose to make public. Some can be replayed so you can experience the route yourself.
-                        </p>
                       </div>
 
                       <div className="shrink-0">
@@ -885,7 +883,6 @@ export default async function PublicUserProfilePage({
                   id="creator-earned-reputation-heading"
                   eyebrow="What they know"
                   title="Reputation earned through real activity"
-                  description="Category credibility built from relevant verified visits and completed Roam activity—not follower count."
                 />
 
                 <CreatorReputationSection
@@ -901,20 +898,6 @@ export default async function PublicUserProfilePage({
               .length > 0 ? (
               <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-transparent p-5 shadow-[0_24px_80px_rgba(0,0,0,0.18)] ring-1 ring-white/[0.065] sm:p-6">
                 <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-indigo-400/[0.06] blur-3xl" />
-
-                <div className="relative z-10 mb-5">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">
-                    Open to
-                  </p>
-
-                  <h3 className="mt-2 text-xl font-black tracking-tight text-white">
-                    Make something together
-                  </h3>
-
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                    The collaborations, projects, and experiences this creator is open to exploring.
-                  </p>
-                </div>
 
                 <CreatorCollaborationTags
                   tags={
@@ -933,23 +916,6 @@ export default async function PublicUserProfilePage({
               >
                 <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-cyan-300/[0.035] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
                   <div className="pointer-events-none absolute right-[-5rem] top-[-5rem] h-44 w-44 rounded-full bg-cyan-300/[0.06] blur-3xl" />
-
-                  <div className="relative z-10 border-b border-white/[0.055] p-5 sm:p-6">
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
-                      Taste
-                    </p>
-
-                    <h2
-                      id="creator-taste-profile-title"
-                      className="mt-2 text-2xl font-black tracking-[-0.035em] text-white"
-                    >
-                      Their kind of city
-                    </h2>
-
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-                      The moods, scenes, and experiences they naturally gravitate toward.
-                    </p>
-                  </div>
 
                   <div className="relative z-10 grid gap-7 p-5 sm:grid-cols-2 sm:p-6">
                     <ChipGroup
@@ -1057,53 +1023,10 @@ export default async function PublicUserProfilePage({
   )
 }
 
+
 /* =========================================================
  * Creator page navigation and structure
  * ======================================================= */
-
-function CreatorActionBar({
-  userId,
-  existingFollow,
-  followersCount,
-  isAuthenticated,
-}: {
-  userId: string
-  existingFollow: boolean
-  followersCount: number
-  isAuthenticated: boolean
-}) {
-  return (
-    <section
-      aria-label="Creator profile actions"
-      className="flex flex-col gap-4 rounded-[1.75rem] bg-white/[0.035] p-4 ring-1 ring-white/[0.065] sm:flex-row sm:items-center sm:justify-between sm:px-5"
-    >
-      <div className="min-w-0">
-        <p className="text-sm font-black text-white">
-          Follow their point of view
-        </p>
-
-        <p className="mt-1 text-xs leading-5 text-zinc-500">
-          New collections, completed Roams, and city discoveries will be easier to find.
-        </p>
-      </div>
-
-      <div className="shrink-0">
-        <FollowButton
-          userId={userId}
-          initialIsFollowing={
-            existingFollow
-          }
-          initialFollowersCount={
-            followersCount
-          }
-          disabled={
-            !isAuthenticated
-          }
-        />
-      </div>
-    </section>
-  )
-}
 
 function CreatorProfileNavigation({
   items,
@@ -1149,13 +1072,11 @@ function ProfileSectionHeading({
   id,
   eyebrow,
   title,
-  description,
   trailing,
 }: {
   id: string
   eyebrow: string
   title: string
-  description: string
   trailing?: string
 }) {
   return (
@@ -1175,10 +1096,6 @@ function ProfileSectionHeading({
         >
           {title}
         </h2>
-
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-[15px] sm:leading-7">
-          {description}
-        </p>
       </div>
 
       {trailing ? (

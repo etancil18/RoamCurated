@@ -249,12 +249,10 @@ const TYPE_OPTIONS: Array<{
     | 'all'
   label: string
 }> = [
-  
   {
     value: 'venue',
     label: 'Venues',
   },
-  
 ]
 
 /* =========================================================
@@ -267,8 +265,6 @@ export default function CollectionItemPicker({
   addItemsAction,
   searchItemsAction,
   title = 'Add collection items',
-  description =
-    'Search the available places, then add the strongest matches to this collection.',
   initialType = 'all',
   selectionLimit =
     DEFAULT_SELECTION_LIMIT,
@@ -348,6 +344,13 @@ export default function CollectionItemPicker({
   )
 
   const [
+    selectedItems,
+    setSelectedItems,
+  ] = useState<
+    CollectionItemPickerCandidate[]
+  >([])
+
+  const [
     feedback,
     setFeedback,
   ] = useState<Feedback>(null)
@@ -381,7 +384,6 @@ export default function CollectionItemPicker({
       latestSearchIdRef.current += 1
 
       setCandidates([])
-      setSelectedIds(new Set())
       setSearchError(null)
       setIsSearching(false)
 
@@ -423,9 +425,6 @@ export default function CollectionItemPicker({
 
               if (!result.success) {
                 setCandidates([])
-                setSelectedIds(
-                  new Set()
-                )
                 setSearchError(
                   normalizeFeedbackMessage(
                     result.error
@@ -445,29 +444,6 @@ export default function CollectionItemPicker({
               setCandidates(
                 nextCandidates
               )
-
-              const nextCandidateIds =
-                new Set(
-                  nextCandidates.map(
-                    (candidate) =>
-                      candidate.id
-                  )
-                )
-
-              setSelectedIds(
-                (current) =>
-                  new Set(
-                    [...current].filter(
-                      (candidateId) =>
-                        nextCandidateIds.has(
-                          candidateId
-                        ) &&
-                        !existingIds.has(
-                          candidateId
-                        )
-                    )
-                  )
-              )
             })
             .catch(
               (error: unknown) => {
@@ -485,9 +461,6 @@ export default function CollectionItemPicker({
                 )
 
                 setCandidates([])
-                setSelectedIds(
-                  new Set()
-                )
                 setSearchError(
                   'Available items could not be searched. Try again.'
                 )
@@ -516,7 +489,6 @@ export default function CollectionItemPicker({
       )
     }
   }, [
-    existingIds,
     normalizedCollectionId,
     normalizedQuery,
     searchItemsAction,
@@ -539,7 +511,7 @@ export default function CollectionItemPicker({
   const selectedCandidates =
     useMemo(
       () =>
-        normalizedCandidates.filter(
+        selectedItems.filter(
           (candidate) =>
             selectedIds.has(
               candidate.id
@@ -549,7 +521,7 @@ export default function CollectionItemPicker({
             )
         ),
       [
-        normalizedCandidates,
+        selectedItems,
         selectedIds,
         existingIds,
       ]
@@ -593,36 +565,101 @@ export default function CollectionItemPicker({
 
     setFeedback(null)
 
-    setSelectedIds(
-      (current) => {
-        const next =
-          new Set(current)
+    const candidate =
+      normalizedCandidates.find(
+        (item) =>
+          item.id === candidateId
+      )
 
-        if (
-          next.has(candidateId)
-        ) {
+    if (!candidate) {
+      return
+    }
+
+    if (
+      selectedIds.has(candidateId)
+    ) {
+      setSelectedIds(
+        (current) => {
+          const next =
+            new Set(current)
+
           next.delete(candidateId)
 
           return next
         }
+      )
 
-        if (
-          next.size >=
-          normalizedSelectionLimit
-        ) {
-          setFeedback({
-            type: 'error',
-            message: `You can add at most ${normalizedSelectionLimit} items at once.`,
-          })
+      setSelectedItems(
+        (current) =>
+          current.filter(
+            (item) =>
+              item.id !== candidateId
+          )
+      )
 
-          return current
-        }
+      return
+    }
+
+    if (
+      selectedIds.size >=
+      normalizedSelectionLimit
+    ) {
+      setFeedback({
+        type: 'error',
+        message: `You can add at most ${normalizedSelectionLimit} items at once.`,
+      })
+
+      return
+    }
+
+    setSelectedIds(
+      (current) => {
+        const next =
+          new Set(current)
 
         next.add(candidateId)
 
         return next
       }
     )
+
+    setSelectedItems(
+      (current) =>
+        normalizeCandidates([
+          ...current,
+          candidate,
+        ])
+    )
+  }
+
+  function removeSelectedCandidate(
+    candidateId: string
+  ) {
+    if (isBusy) {
+      return
+    }
+
+    setSelectedIds(
+      (current) => {
+        const next =
+          new Set(current)
+
+        next.delete(candidateId)
+
+        return next
+      }
+    )
+
+    setSelectedItems(
+      (current) =>
+        current.filter(
+          (candidate) =>
+            candidate.id !==
+            candidateId
+        )
+    )
+
+    setFeedback(null)
   }
 
   function clearSelection() {
@@ -631,6 +668,7 @@ export default function CollectionItemPicker({
     }
 
     setSelectedIds(new Set())
+    setSelectedItems([])
     setFeedback(null)
   }
 
@@ -689,10 +727,23 @@ export default function CollectionItemPicker({
               rejectedIds.length >
               0
             ) {
-              setSelectedIds(
+              const rejectedIdSet =
                 new Set(
                   rejectedIds
                 )
+
+              setSelectedIds(
+                rejectedIdSet
+              )
+
+              setSelectedItems(
+                (current) =>
+                  current.filter(
+                    (candidate) =>
+                      rejectedIdSet.has(
+                        candidate.id
+                      )
+                  )
               )
             }
 
@@ -722,6 +773,7 @@ export default function CollectionItemPicker({
             new Set()
           )
 
+          setSelectedItems([])
           setCandidates([])
           setQuery('')
           setSearchError(null)
@@ -776,7 +828,6 @@ export default function CollectionItemPicker({
     >
       <PickerHeader
         title={title}
-        description={description}
         candidateCount={
           normalizedCandidates.length
         }
@@ -801,6 +852,19 @@ export default function CollectionItemPicker({
           }
         />
       </div>
+
+      {selectedCandidates.length >
+      0 ? (
+        <SelectedItemsTray
+          candidates={
+            selectedCandidates
+          }
+          disabled={isBusy}
+          onRemove={
+            removeSelectedCandidate
+          }
+        />
+      ) : null}
 
       <div className="min-w-0 p-4 sm:p-5">
         {feedback ? (
@@ -950,13 +1014,11 @@ export default function CollectionItemPicker({
 
 function PickerHeader({
   title,
-  description,
   candidateCount,
   selectionCount,
   selectionLimit,
 }: {
   title: string
-  description: string
   candidateCount: number
   selectionCount: number
   selectionLimit: number
@@ -975,11 +1037,12 @@ function PickerHeader({
           {title}
         </h2>
 
-        {description ? (
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
-            {description}
-          </p>
-        ) : null}
+        <p className="mt-1 max-w-xl text-sm leading-6 text-neutral-500">
+          Search and select multiple
+          places. Your selections stay
+          saved while you keep
+          searching.
+        </p>
       </div>
 
       <div className="flex shrink-0 flex-wrap gap-2">
@@ -1083,8 +1146,8 @@ function SearchAndFilters({
           onChange={onQueryChange}
           autoComplete="off"
           spellCheck={false}
-          placeholder="Enter at least 2 characters to search"
-          className="w-full min-w-0 rounded-xl border border-neutral-800 bg-black py-2.5 pl-10 pr-10 text-sm text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+          placeholder="Search places by name"
+          className="w-full min-w-0 rounded-xl border border-neutral-800 bg-black py-2.5 pl-10 pr-10 text-base text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
         />
 
         {query ? (
@@ -1147,6 +1210,72 @@ function SearchAndFilters({
               </button>
             )
           }
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* =========================================================
+ * Selected items
+ * ======================================================= */
+
+function SelectedItemsTray({
+  candidates,
+  disabled,
+  onRemove,
+}: {
+  candidates:
+    CollectionItemPickerCandidate[]
+  disabled: boolean
+  onRemove: (
+    candidateId: string
+  ) => void
+}) {
+  return (
+    <div className="border-b border-neutral-800/80 bg-indigo-500/[0.035] px-4 py-4 sm:px-5">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-300">
+            Selected places
+          </p>
+
+          <p className="mt-1 text-xs text-neutral-500">
+            Keep searching to add more
+            before submitting.
+          </p>
+        </div>
+
+        <span className="shrink-0 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-2.5 py-1 text-xs font-semibold text-indigo-200">
+          {candidates.length.toLocaleString()}
+        </span>
+      </div>
+
+      <div className="mt-3 flex min-w-0 flex-wrap gap-2">
+        {candidates.map(
+          (candidate) => (
+            <button
+              key={`${candidate.item_type}:${candidate.id}`}
+              type="button"
+              disabled={disabled}
+              onClick={() =>
+                onRemove(
+                  candidate.id
+                )
+              }
+              aria-label={`Remove ${candidate.title} from selection`}
+              className="inline-flex max-w-full items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-500/10 py-1.5 pl-3 pr-2 text-xs font-medium text-indigo-100 transition hover:border-indigo-400/50 hover:bg-indigo-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="truncate">
+                {candidate.title}
+              </span>
+
+              <X
+                aria-hidden="true"
+                className="h-3.5 w-3.5 shrink-0 text-indigo-300"
+              />
+            </button>
+          )
         )}
       </div>
     </div>
@@ -1580,16 +1709,16 @@ function PickerEmptyState({
 
       <h3 className="mt-4 text-base font-semibold text-white">
         {mode === 'prompt'
-          ? 'Search for collection items'
-          : 'No matching items'}
+          ? 'Search for places'
+          : 'No matching places'}
       </h3>
 
       <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-neutral-500">
         {mode === 'prompt'
-          ? `Enter at least ${MINIMUM_SEARCH_LENGTH} characters to search for eligible items.`
+          ? `Enter at least ${MINIMUM_SEARCH_LENGTH} characters. Select a place, then keep searching to build your batch.`
           : filteredToType
             ? 'No search results match the selected type. Change the search terms or type filter.'
-            : 'No eligible items matched your search. Try a different name or spelling.'}
+            : 'No eligible places matched your search. Try a different name or spelling.'}
       </p>
     </div>
   )
@@ -1650,23 +1779,34 @@ function PickerFooter({
   const isDisabled =
     disabled || isPending
 
+  const resolvedSubmitLabel =
+    submitLabel ===
+      'Add Selected Items' &&
+    selectionCount > 0
+      ? `Add ${selectionCount.toLocaleString()} ${
+          selectionCount === 1
+            ? 'Place'
+            : 'Places'
+        }`
+      : submitLabel
+
   return (
     <footer className="flex min-w-0 flex-col gap-4 border-t border-neutral-800/80 bg-black/15 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
       <div className="min-w-0">
         <p className="text-xs font-medium text-neutral-400">
           {selectionCount === 0
-            ? 'No items selected'
+            ? 'No places selected'
             : `${selectionCount.toLocaleString()} ${
                 selectionCount === 1
-                  ? 'item'
-                  : 'items'
+                  ? 'place'
+                  : 'places'
               } selected`}
         </p>
 
         <p className="mt-1 text-[11px] text-neutral-600">
           Maximum{' '}
           {selectionLimit.toLocaleString()}{' '}
-          items per submission.
+          places per submission.
         </p>
       </div>
 
@@ -1717,7 +1857,7 @@ function PickerFooter({
 
           {isPending
             ? 'Adding…'
-            : submitLabel}
+            : resolvedSubmitLabel}
         </button>
       </div>
     </footer>

@@ -264,6 +264,49 @@ function normalizeExternalUrl(
   return null
 }
 
+function formatFlowTitle(
+  title: string | null
+): string {
+  if (!title?.trim()) {
+    return 'Roam Flow'
+  }
+
+  const normalized =
+    title
+      .trim()
+      .replace(
+        /\s+Flow$/i,
+        ''
+      )
+      .replace(
+        /[-_]+/g,
+        ' '
+      )
+      .replace(
+        /\s+/g,
+        ' '
+      )
+      .trim()
+
+  if (!normalized) {
+    return 'Roam Flow'
+  }
+
+  return normalized
+    .split(' ')
+    .map((word) => {
+      if (!word) {
+        return word
+      }
+
+      return (
+        word.charAt(0).toUpperCase() +
+        word.slice(1).toLowerCase()
+      )
+    })
+    .join(' ')
+}
+
 function getVenuePrimaryUrl(
   venue: Venue
 ): string | null {
@@ -1460,39 +1503,10 @@ export default function ActiveFlowCard({
               </div>
 
               <h2 className="mt-3 break-words text-2xl font-black tracking-[-0.04em] text-white sm:text-[1.8rem]">
-                {session.title ??
-                  'Roam Flow'}
+                {formatFlowTitle(
+                  session.title
+                )}
               </h2>
-
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-zinc-500">
-                <span>
-                  {session.city ??
-                    'City'}
-                </span>
-
-                <span
-                  aria-hidden="true"
-                  className="h-1 w-1 rounded-full bg-zinc-700"
-                />
-
-                <span className="capitalize">
-                  {session.travel_mode ??
-                    'walking'}
-                </span>
-
-                <span
-                  aria-hidden="true"
-                  className="h-1 w-1 rounded-full bg-zinc-700"
-                />
-
-                <span>
-                  {totalStops}{' '}
-                  {totalStops ===
-                  1
-                    ? 'stop'
-                    : 'stops'}
-                </span>
-              </div>
             </div>
           </div>
 

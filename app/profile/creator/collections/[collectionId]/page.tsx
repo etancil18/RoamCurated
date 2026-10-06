@@ -396,13 +396,6 @@ function CollectionPageHeader({
         <p className="mt-2 break-all text-sm text-neutral-600">
           /{collection.slug}
         </p>
-
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-400">
-          Edit the collection’s
-          public identity,
-          publishing status, and
-          featured placement.
-        </p>
       </div>
     </header>
   )
@@ -540,17 +533,6 @@ function CollectionStatusOverview({
               }
             />
           </div>
-
-          <p className="mt-4 max-w-xl text-sm leading-6 text-neutral-400">
-            Public collections are
-            eligible for public
-            collection routes.
-            Featured public
-            collections receive
-            priority in the creator
-            profile’s featured
-            collection section.
-          </p>
         </div>
 
         <dl className="grid shrink-0 grid-cols-2 gap-2">
@@ -671,172 +653,171 @@ function CollectionEditor({
       aria-labelledby="collection-editor-title"
       className="w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/75 shadow-2xl shadow-black/20"
     >
-      <div className="border-b border-neutral-800/80 px-4 py-4 sm:px-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">
-          Collection identity
-        </p>
+      <form
+        action={
+          updateCollectionFormAction
+        }
+        className="min-w-0"
+      >
+        <input
+          type="hidden"
+          name="collectionId"
+          value={collection.id}
+        />
 
-        <h2
-          id="collection-editor-title"
-          className="mt-1 text-lg font-semibold text-white"
-        >
-          Edit collection details
-        </h2>
-
-        <p className="mt-1 text-xs leading-5 text-neutral-500">
-          Updating the title does
-          not change the existing
-          collection URL slug.
-        </p>
-      </div>
-
-      <div className="grid min-w-0 gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_260px]">
-        <form
-          action={
-            updateCollectionFormAction
+        <input
+          type="hidden"
+          name="sort_order"
+          value={
+            collection.sort_order
           }
-          className="min-w-0 space-y-5"
-        >
-          <input
-            type="hidden"
-            name="collectionId"
-            value={collection.id}
-          />
+        />
 
-          <input
-            type="hidden"
-            name="sort_order"
-            value={
-              collection.sort_order
-            }
-          />
-
-          <FormField
-            id="collection-title"
-            label="Title"
-            required
-            description="Changing the title preserves the existing public URL."
-          >
-            <input
-              id="collection-title"
-              name="title"
-              type="text"
-              required
-              maxLength={160}
-              defaultValue={
-                collection.title
-              }
-              className={
-                inputClassName
-              }
-            />
-          </FormField>
-
-          <FormField
-            id="collection-description"
-            label="Description"
-            description="Explain what this collection contains and why it is useful."
-          >
-            <textarea
-              id="collection-description"
-              name="description"
-              rows={5}
-              maxLength={1000}
-              defaultValue={
-                collection.description ??
-                ''
-              }
-              className={`${inputClassName} resize-y leading-6`}
-            />
-          </FormField>
-
-          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-            <FormField
-              id="collection-city"
-              label="City"
-            >
-              <select
-                id="collection-city"
-                name="city"
-                defaultValue={
-                  normalizeCityKey(
-                    collection.city
-                  )
-                }
-                className={inputClassName}
+        <div className="grid min-w-0 gap-6 p-4 sm:p-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.75fr)] lg:gap-8">
+          <div className="min-w-0">
+            <div className="mb-5">
+              <p
+                id="collection-editor-title"
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-600"
               >
-                <option value="">
-                  Select a city
-                </option>
+                Collection details
+              </p>
 
-                {SUPPORTED_CITIES.map(
-                  (city) => (
-                    <option
-                      key={city.value}
-                      value={city.value}
-                    >
-                      {city.label}
+              <p className="mt-1 text-sm leading-6 text-neutral-500">
+                How this collection
+                appears to people
+                exploring your profile.
+              </p>
+            </div>
+
+            <div className="min-w-0 space-y-5">
+              <FormField
+                id="collection-title"
+                label="Title"
+                required
+              >
+                <input
+                  id="collection-title"
+                  name="title"
+                  type="text"
+                  required
+                  maxLength={160}
+                  defaultValue={
+                    collection.title
+                  }
+                  className={
+                    inputClassName
+                  }
+                />
+              </FormField>
+
+              <FormField
+                id="collection-description"
+                label="Description"
+              >
+                <textarea
+                  id="collection-description"
+                  name="description"
+                  rows={5}
+                  maxLength={1000}
+                  defaultValue={
+                    collection.description ??
+                    ''
+                  }
+                  className={`${inputClassName} resize-y leading-6`}
+                />
+              </FormField>
+
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+                <FormField
+                  id="collection-city"
+                  label="City"
+                >
+                  <select
+                    id="collection-city"
+                    name="city"
+                    defaultValue={
+                      normalizeCityKey(
+                        collection.city
+                      )
+                    }
+                    className={
+                      inputClassName
+                    }
+                  >
+                    <option value="">
+                      Select a city
                     </option>
-                  )
-                )}
-              </select>
-            </FormField>
 
-            <FormField
-              id="collection-category"
-              label="Category"
-            >
-              <input
-                id="collection-category"
-                name="category"
-                type="text"
-                maxLength={120}
-                defaultValue={
-                  collection.category ??
-                  ''
-                }
-                className={
-                  inputClassName
-                }
-              />
-            </FormField>
+                    {SUPPORTED_CITIES.map(
+                      (city) => (
+                        <option
+                          key={
+                            city.value
+                          }
+                          value={
+                            city.value
+                          }
+                        >
+                          {city.label}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </FormField>
+
+                <FormField
+                  id="collection-category"
+                  label="Category"
+                >
+                  <input
+                    id="collection-category"
+                    name="category"
+                    type="text"
+                    maxLength={120}
+                    defaultValue={
+                      collection.category ??
+                      ''
+                    }
+                    className={
+                      inputClassName
+                    }
+                  />
+                </FormField>
+              </div>
+            </div>
           </div>
 
-          <FormField
-            id="collection-cover-image"
-            label="Cover image URL"
-            description="Use a public http:// or https:// image URL. Local and private-network URLs are rejected."
-          >
-            <input
-              id="collection-cover-image"
-              name="cover_image_url"
-              type="url"
-              inputMode="url"
-              autoComplete="url"
-              maxLength={2048}
-              defaultValue={
-                collection.cover_image_url ??
-                ''
-              }
-              className={
-                inputClassName
-              }
-            />
-          </FormField>
+          <aside className="min-w-0 border-t border-neutral-800/80 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+            <div className="mb-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-600">
+                Collection settings
+              </p>
 
-          <VisibilityFields
-            collection={
-              collection
-            }
-          />
+              <p className="mt-1 text-sm leading-6 text-neutral-500">
+                Control where this
+                collection appears.
+              </p>
+            </div>
 
-          <FeaturedField
-            collection={
-              collection
-            }
-          />
+            <div className="min-w-0 space-y-5">
+              <VisibilityFields
+                collection={
+                  collection
+                }
+              />
 
-          <div className="flex flex-wrap gap-3 border-t border-neutral-800/80 pt-5">
+              <FeaturedField
+                collection={
+                  collection
+                }
+              />
+            </div>
+          </aside>
+        </div>
+
+        <div className="border-t border-neutral-800/80 px-4 py-4 sm:px-5">
+          <div className="flex flex-wrap gap-3">
             <button
               type="submit"
               className="inline-flex items-center justify-center rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
@@ -851,14 +832,8 @@ function CollectionEditor({
               Cancel
             </Link>
           </div>
-        </form>
-
-        <CollectionCoverPreview
-          collection={
-            collection
-          }
-        />
-      </div>
+        </div>
+      </form>
     </section>
   )
 }
@@ -875,7 +850,7 @@ function VisibilityFields({
         Visibility
       </legend>
 
-      <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
+      <div className="mt-3 grid min-w-0 gap-3">
         <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-neutral-800 bg-black/30 p-4 transition hover:border-neutral-600">
           <input
             type="radio"
@@ -1078,71 +1053,6 @@ function CollectionVenueManager({
   )
 }
 
-/* =========================================================
- * Cover preview
- * ======================================================= */
-
-function CollectionCoverPreview({
-  collection,
-}: {
-  collection:
-    CreatorCollectionRow
-}) {
-  return (
-    <aside className="min-w-0">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
-        Current cover
-      </p>
-
-      <div className="mt-3 overflow-hidden rounded-2xl border border-neutral-800 bg-black/30">
-        <div className="relative aspect-[4/3] overflow-hidden bg-neutral-900">
-          {collection.cover_image_url ? (
-            <img
-              src={
-                collection.cover_image_url
-              }
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.24),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(6,182,212,0.18),transparent_42%),#09090b]">
-              <div className="text-center">
-                <span className="text-3xl">
-                  🗺️
-                </span>
-
-                <p className="mt-2 text-xs font-medium text-neutral-500">
-                  No cover image
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="p-3">
-          <p className="line-clamp-2 break-words text-sm font-semibold text-white">
-            {collection.title}
-          </p>
-
-          {collection.city ? (
-            <p className="mt-1 truncate text-xs text-neutral-500">
-              {getCityLabel(
-                collection.city
-              ) ?? collection.city}
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      <p className="mt-3 text-xs leading-5 text-neutral-600">
-        This preview reflects the
-        currently saved cover.
-        Submit the form before a
-        new URL appears here.
-      </p>
-    </aside>
-  )
-}
 
 /* =========================================================
  * Publishing controls
@@ -1204,13 +1114,6 @@ function CollectionPublishingControls({
             {collection.visibility}
           </p>
 
-          <p className="mt-1 text-xs leading-5 text-neutral-600">
-            Change only the
-            visibility state
-            without submitting the
-            full editor form.
-          </p>
-
           <button
             type="submit"
             className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-cyan-500/30 bg-cyan-500/[0.06] px-4 py-2.5 text-sm font-semibold text-cyan-200 transition hover:border-cyan-400/60 hover:bg-cyan-500/10 hover:text-white"
@@ -1249,14 +1152,6 @@ function CollectionPublishingControls({
             {collection.featured
               ? 'Featured'
               : 'Not featured'}
-          </p>
-
-          <p className="mt-1 text-xs leading-5 text-neutral-600">
-            Change featured
-            placement without
-            modifying the
-            remaining collection
-            fields.
           </p>
 
           <button

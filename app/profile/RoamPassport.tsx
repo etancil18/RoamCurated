@@ -533,14 +533,6 @@ export default function RoamPassport() {
               <h2 className="mt-5 text-3xl font-black tracking-[-0.045em] text-white sm:text-4xl">
                 Level {level} Explorer
               </h2>
-
-              <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
-                Every place you visit,
-                Flow you finish, event you
-                check into, and guide you
-                save adds another layer to
-                your city story.
-              </p>
             </div>
 
             <div className="flex w-fit shrink-0 items-baseline gap-1.5 rounded-2xl bg-black/25 px-4 py-3 ring-1 ring-white/[0.07]">
@@ -765,15 +757,6 @@ export default function RoamPassport() {
         <div className="mb-5">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
             Milestones
-          </p>
-
-          <h3 className="mt-1.5 text-lg font-black tracking-tight text-white">
-            What you have unlocked
-          </h3>
-
-          <p className="mt-1.5 text-xs leading-5 text-zinc-500">
-            Small markers of how your Roam
-            history is taking shape.
           </p>
         </div>
 
@@ -1345,14 +1328,6 @@ function RoamReputationSection({
           >
             Your Roam Reputation
           </h2>
-
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-            Passport records what you have
-            done. Reputation reflects where
-            your verified city experience
-            is becoming genuinely
-            meaningful.
-          </p>
         </div>
 
         <span

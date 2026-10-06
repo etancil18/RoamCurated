@@ -281,7 +281,6 @@ export type CollaborationCategoryDefinition = {
   value: CollaborationTagCategory
   label: string
   singularLabel: string
-  description: string
   sortOrder: number
 }
 
@@ -290,8 +289,6 @@ export const COLLABORATION_CATEGORY_DEFINITIONS = {
     value: 'campaign',
     label: 'Campaigns',
     singularLabel: 'Campaign',
-    description:
-      'The campaign opportunities this creator is open to.',
     sortOrder: 10,
   },
 
@@ -299,8 +296,6 @@ export const COLLABORATION_CATEGORY_DEFINITIONS = {
     value: 'deliverable',
     label: 'Deliverables',
     singularLabel: 'Deliverable',
-    description:
-      'The content formats and production services this creator offers.',
     sortOrder: 20,
   },
 
@@ -308,8 +303,6 @@ export const COLLABORATION_CATEGORY_DEFINITIONS = {
     value: 'industry',
     label: 'Industries',
     singularLabel: 'Industry',
-    description:
-      'The industries and experience categories this creator specializes in.',
     sortOrder: 30,
   },
 } as const satisfies Record<

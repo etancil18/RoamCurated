@@ -183,8 +183,6 @@ export default function CollectionItemList({
   collectionId,
   initialItems,
   title = 'Collection items',
-  description =
-    'The places, properties, flows, snapshots, and custom recommendations included in this collection.',
   showHeading = true,
   editable = true,
   addItemHref,
@@ -528,7 +526,6 @@ export default function CollectionItemList({
       {showHeading ? (
         <CollectionItemsHeading
           title={title}
-          description={description}
           itemCount={items.length}
           addItemHref={
             editable
@@ -669,12 +666,10 @@ export default function CollectionItemList({
 
 function CollectionItemsHeading({
   title,
-  description,
   itemCount,
   addItemHref,
 }: {
   title: string
-  description: string
   itemCount: number
   addItemHref: string | null
 }) {
@@ -700,12 +695,6 @@ function CollectionItemsHeading({
         >
           {title}
         </h2>
-
-        {description ? (
-          <p className="mt-2 max-w-2xl break-words text-sm leading-6 text-neutral-400">
-            {description}
-          </p>
-        ) : null}
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">

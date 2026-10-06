@@ -224,7 +224,9 @@ export async function getPublicCreatorProfile({
       `)
       .eq('user_id', normalizedUserId)
       .eq('visibility', 'public')
-      .eq('featured', true)
+      .order('featured', {
+        ascending: false,
+      })
       .order('sort_order', {
         ascending: true,
       })
@@ -711,15 +713,6 @@ function parseFeaturedCollections({
         })
       }
 
-      if (collection.featured !== true) {
-        throwInvalidDatabaseData({
-          entity:
-            `creator_collections[${index}].featured`,
-          value: collection.featured,
-          expectedValue: true,
-        })
-      }
-
       return collection
     }
   )
@@ -751,6 +744,15 @@ function compareCollections(
   first: CreatorCollection,
   second: CreatorCollection
 ): number {
+  if (
+    first.featured !==
+    second.featured
+  ) {
+    return first.featured
+      ? -1
+      : 1
+  }
+
   if (
     first.sort_order !==
     second.sort_order

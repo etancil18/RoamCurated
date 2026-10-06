@@ -1233,7 +1233,6 @@ export default function UserProfilePage() {
               id="profile-passport-title"
               eyebrow="Your identity"
               title="Your Passport"
-              description="Your evolving Roam identity, built from the places you explore and the local knowledge you earn."
             />
 
             <div className="mt-5 w-full min-w-0 space-y-4">
@@ -1275,14 +1274,12 @@ export default function UserProfilePage() {
               id="profile-activity-title"
               eyebrow="Your activity"
               title="Where you've been"
-              description="Your verified places, memorable routes, and past Roam experiences."
             />
 
             <div className="mt-5 space-y-3">
               <ProfilePanel
                 eyebrow="Explored"
                 title="Places you've experienced"
-                description="Your verified venue history, built from real-world visits."
               >
                 <VisitHistorySection />
               </ProfilePanel>
@@ -1290,7 +1287,6 @@ export default function UserProfilePage() {
               <ProfileDisclosure
                 eyebrow="Memories"
                 title="Flow snapshots"
-                description="Routes and moments you chose to keep."
                 defaultOpen={
                   snapshots.length >
                   0
@@ -1316,7 +1312,6 @@ export default function UserProfilePage() {
               <ProfileDisclosure
                 eyebrow="Flows"
                 title="Your nights and routes"
-                description="Flows you created, joined, hosted, or completed."
               >
                 <UserCrawls />
               </ProfileDisclosure>
@@ -1332,7 +1327,6 @@ export default function UserProfilePage() {
               id="profile-creator-title"
               eyebrow="Creator Studio"
               title="Share what you know"
-              description="Turn your real city knowledge into collections and a public perspective people can follow."
             />
 
             <div className="mt-5">
@@ -1342,11 +1336,6 @@ export default function UserProfilePage() {
                   creatorModeEnabled
                     ? "Your creator profile is live"
                     : "Build your public point of view"
-                }
-                description={
-                  creatorModeEnabled
-                    ? "Manage what people discover when they find your Roam profile."
-                    : "Turn your existing Roam activity into collections, recommendations, and a public creator identity."
                 }
               >
                 <CreatorModeEntryCard
@@ -1373,14 +1362,12 @@ export default function UserProfilePage() {
               id="profile-saved-title"
               eyebrow="Your library"
               title="Saved for later"
-              description="Everything you've kept for another day, night, or plan."
             />
 
             <div className="mt-5 grid min-w-0 gap-4 lg:grid-cols-2 lg:items-start">
               <ProfilePanel
                 eyebrow="Guides"
                 title="Saved guides"
-                description="Neighborhood and destination guides you want to keep close."
               >
                 <SavedProperties />
               </ProfilePanel>
@@ -1388,7 +1375,6 @@ export default function UserProfilePage() {
               <ProfilePanel
                 eyebrow="Saved"
                 title="Your saved picks"
-                description="Venues and Flows waiting for the right moment."
               >
                 <SavedLibraryShell />
               </ProfilePanel>
@@ -1404,14 +1390,12 @@ export default function UserProfilePage() {
               id="profile-settings-title"
               eyebrow="Account"
               title="Profile & settings"
-              description="Manage the details and preferences connected to your Roam account."
             />
 
             <div className="mt-5">
               <ProfileDisclosure
                 eyebrow="Profile"
                 title="Edit your details"
-                description="Update your identity, preferences, and account information."
               >
                 <ProfileForm />
               </ProfileDisclosure>
@@ -1453,11 +1437,6 @@ function ProfileHeader({
             Your city,
             according to you.
           </h1>
-
-          <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-500 sm:text-[15px]">
-            The places you explore, save,
-            and recommend shape your Roam.
-          </p>
 
           {username ? (
             <p className="mt-3 text-xs font-semibold text-zinc-600">
@@ -1536,7 +1515,6 @@ function ProfileSectionHeading({
   id,
   eyebrow,
   title,
-  description,
 }: {
   id:
     string
@@ -1545,9 +1523,6 @@ function ProfileSectionHeading({
     string
 
   title:
-    string
-
-  description:
     string
 }) {
   return (
@@ -1566,10 +1541,6 @@ function ProfileSectionHeading({
       >
         {title}
       </h2>
-
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-        {description}
-      </p>
     </div>
   )
 }
@@ -1656,19 +1627,6 @@ function OwnerReputationPanel({
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
             Your strongest lanes
-          </p>
-
-          <h3
-            id="category-standing-title"
-            className="mt-1.5 text-lg font-black tracking-tight text-white"
-          >
-            What your history says you know
-          </h3>
-
-          <p className="mt-1.5 max-w-2xl text-xs leading-5 text-zinc-500">
-            Your standing grows from verified
-            places and the categories where
-            your experience keeps showing up.
           </p>
         </div>
 
@@ -2438,33 +2396,6 @@ function CreatorModeEntryCard({
         </Link>
       </div>
 
-      {enabled &&
-      publicProfileHref ? (
-        <Link
-          href={
-            publicProfileHref
-          }
-          onClick={() =>
-            safeLogEvent(
-              "profile_creator_preview_clicked",
-              {
-                username,
-              }
-            )
-          }
-          className="group inline-flex min-h-10 w-full min-w-0 items-center justify-center rounded-full bg-white/[0.03] px-4 py-2 text-center text-sm font-semibold text-zinc-500 ring-1 ring-white/[0.06] transition hover:bg-white/[0.06] hover:text-white"
-        >
-          See what people see
-
-          <span
-            aria-hidden="true"
-            className="ml-2 transition-transform group-hover:translate-x-0.5"
-          >
-            →
-          </span>
-        </Link>
-      ) : null}
-
       {!username ? (
         <p className="rounded-xl bg-amber-400/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-100/70 ring-1 ring-amber-300/15">
           Add a username in Profile
@@ -2646,16 +2577,12 @@ function SnapshotLibraryError({
 function ProfilePanel({
   eyebrow,
   title,
-  description,
   children,
 }: {
   eyebrow:
     string
 
   title:
-    string
-
-  description?:
     string
 
   children:
@@ -2671,12 +2598,6 @@ function ProfilePanel({
         <h3 className="mt-1.5 break-words text-lg font-black tracking-tight text-white">
           {title}
         </h3>
-
-        {description ? (
-          <p className="mt-1 break-words text-xs leading-5 text-zinc-500">
-            {description}
-          </p>
-        ) : null}
       </div>
 
       <div className="w-full min-w-0">
@@ -2689,7 +2610,6 @@ function ProfilePanel({
 function ProfileDisclosure({
   eyebrow,
   title,
-  description,
   children,
   defaultOpen = false,
 }: {
@@ -2697,9 +2617,6 @@ function ProfileDisclosure({
     string
 
   title:
-    string
-
-  description?:
     string
 
   children:
@@ -2724,12 +2641,6 @@ function ProfileDisclosure({
           <h3 className="mt-1 break-words text-base font-black tracking-tight text-white sm:text-lg">
             {title}
           </h3>
-
-          {description ? (
-            <p className="mt-1 break-words text-xs leading-5 text-zinc-500">
-              {description}
-            </p>
-          ) : null}
         </div>
 
         <span

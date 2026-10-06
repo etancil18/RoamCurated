@@ -27,8 +27,6 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Creator Collections | Roam',
-  description:
-    'Create, organize, and publish collections for your Roam creator profile.',
   robots: {
     index: false,
     follow: false,
@@ -207,12 +205,6 @@ function CollectionsHeader({
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             Creator collections
           </h1>
-
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-400">
-            Curate public and private
-            collections that demonstrate
-            your local point of view.
-          </p>
 
           {!username ? (
             <p className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-200/80">
@@ -427,13 +419,6 @@ function CreateCollectionPanel({
           <h2 className="mt-1 text-base font-semibold text-white">
             Create a creator collection
           </h2>
-
-          <p className="mt-1 text-xs leading-5 text-neutral-500">
-            Create the collection first,
-            then add photos, videos, and
-            venues from its collection
-            manager.
-          </p>
         </div>
 
         <span
@@ -1059,14 +1044,12 @@ function FormField({
   id,
   label,
   required = false,
-  description,
   children,
 }: {
   id: string
   label: string
   name: string
   required?: boolean
-  description?: string
   children: ReactNode
 }) {
   return (
@@ -1088,12 +1071,6 @@ function FormField({
       <div className="mt-2">
         {children}
       </div>
-
-      {description ? (
-        <p className="mt-1.5 text-xs leading-5 text-neutral-600">
-          {description}
-        </p>
-      ) : null}
     </div>
   )
 }

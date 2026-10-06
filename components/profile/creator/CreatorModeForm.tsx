@@ -791,11 +791,6 @@ function CreatorModeToggleSection({
               {enabled ? 'Live' : 'Hidden'}
             </span>
           </div>
-
-          <p className="mt-1 max-w-xl text-sm leading-6 text-neutral-400">
-            Show your creator profile publicly on
-            Roam.
-          </p>
         </div>
 
         <button
@@ -904,11 +899,6 @@ function PublicExplorationMapSection({
                   : 'Private'}
               </span>
             </div>
-
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
-              Show eligible places you've explored
-              on your public creator profile.
-            </p>
           </div>
         </div>
 
@@ -1037,7 +1027,6 @@ function CreatorIdentitySection({
       <SectionHeading
         eyebrow="About you"
         title="Your creator profile"
-        description="Tell people what you explore, recommend, or create."
         id="creator-identity-title"
       />
 
@@ -1116,7 +1105,6 @@ function CreatorIdentitySection({
               errors,
               'publicEmail'
             )}
-            description="Only add an email you are comfortable displaying publicly."
             onChange={(value) => {
               onInteraction()
               onPublicEmailChange(value)
@@ -1129,7 +1117,6 @@ function CreatorIdentitySection({
             checked={acceptingCollaborations}
             disabled={disabled}
             title="Open to collaborations"
-            description="Let brands and creators know you're available."
             error={getFirstFieldError(
               errors,
               'acceptingCollaborations'
@@ -1146,7 +1133,6 @@ function CreatorIdentitySection({
             checked={availableForTravel}
             disabled={disabled}
             title="Available for travel"
-            description="Show that you're open to opportunities outside your primary city."
             error={getFirstFieldError(
               errors,
               'availableForTravel'
@@ -1207,7 +1193,6 @@ function CreatorSocialLinksSection({
         <SectionHeading
           eyebrow="Social links"
           title="Show people your work"
-          description="Add the platforms where people can find and review your content."
           id="creator-social-links-title"
         />
 
@@ -1333,6 +1318,14 @@ function SocialLinkEditor({
     ),
   ]
 
+  const canDeriveProfileUrl =
+    Boolean(
+      getSocialProfileUrl(
+        link.platform,
+        'handle'
+      )
+    )
+
   return (
     <article className="w-full min-w-0 rounded-2xl border border-neutral-800 bg-neutral-950/55 p-3 sm:p-4">
       <div className="flex min-w-0 items-center justify-between gap-3">
@@ -1438,7 +1431,7 @@ function SocialLinkEditor({
         {definition.supportsHandle ? (
           <label className="block min-w-0">
             <span className="text-xs font-medium text-neutral-300">
-              Display handle
+              Handle
             </span>
 
             <input
@@ -1451,12 +1444,21 @@ function SocialLinkEditor({
               placeholder={
                 definition.handlePlaceholder
               }
-              onChange={(event) =>
+              onChange={(event) => {
+                const handle =
+                  normalizeSocialHandle(
+                    event.target.value
+                  )
+
                 onUpdate({
-                  handle:
-                    event.target.value,
+                  handle,
+                  url:
+                    getSocialProfileUrl(
+                      link.platform,
+                      handle
+                    ) ?? link.url,
                 })
-              }
+              }}
               className="mt-2 min-h-11 w-full min-w-0 rounded-xl border border-neutral-800 bg-black px-3 py-2.5 text-base text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
             />
           </label>
@@ -1465,45 +1467,68 @@ function SocialLinkEditor({
         )}
       </div>
 
-      <label className="mt-4 block min-w-0">
-        <span className="text-xs font-medium text-neutral-300">
-          Profile URL
-        </span>
+      {canDeriveProfileUrl ? (
+        link.url.trim() ? (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Open ${definition.label} URL`}
+            className="mt-4 inline-flex max-w-full items-center gap-2 text-xs font-medium text-neutral-500 transition hover:text-cyan-300"
+          >
+            <ExternalLink
+              aria-hidden="true"
+              className="h-3.5 w-3.5 shrink-0"
+            />
 
-        <div className="relative mt-2">
-          <input
-            type="url"
-            inputMode="url"
-            value={link.url}
-            disabled={disabled}
-            maxLength={
-              CREATOR_FIELD_LIMITS.socialUrl
-            }
-            placeholder={definition.placeholder}
-            onChange={(event) =>
-              onUpdate({
-                url: event.target.value,
-              })
-            }
-            className="min-h-11 w-full min-w-0 rounded-xl border border-neutral-800 bg-black py-2.5 pl-3 pr-10 text-base text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
-          />
+            <span className="truncate">
+              {getSocialProfileUrlDisplay(
+                link.url
+              )}
+            </span>
+          </a>
+        ) : null
+      ) : (
+        <label className="mt-4 block min-w-0">
+          <span className="text-xs font-medium text-neutral-300">
+            Profile URL
+          </span>
 
-          {link.url.trim() ? (
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Open ${definition.label} URL`}
-              className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center text-neutral-500 transition hover:text-cyan-300"
-            >
-              <ExternalLink
-                aria-hidden="true"
-                className="h-4 w-4"
-              />
-            </a>
-          ) : null}
-        </div>
-      </label>
+          <div className="relative mt-2">
+            <input
+              type="url"
+              inputMode="url"
+              value={link.url}
+              disabled={disabled}
+              maxLength={
+                CREATOR_FIELD_LIMITS.socialUrl
+              }
+              placeholder={definition.placeholder}
+              onChange={(event) =>
+                onUpdate({
+                  url: event.target.value,
+                })
+              }
+              className="min-h-11 w-full min-w-0 rounded-xl border border-neutral-800 bg-black py-2.5 pl-3 pr-10 text-base text-white outline-none transition placeholder:text-neutral-700 focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+            />
+
+            {link.url.trim() ? (
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${definition.label} URL`}
+                className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center text-neutral-500 transition hover:text-cyan-300"
+              >
+                <ExternalLink
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                />
+              </a>
+            ) : null}
+          </div>
+        </label>
+      )}
 
       <label className="mt-4 flex min-h-11 cursor-pointer items-center justify-between gap-4 rounded-xl border border-neutral-800 bg-black/40 px-3 py-3">
         <span className="flex min-w-0 items-center gap-3">
@@ -1551,6 +1576,58 @@ function SocialLinkEditor({
   )
 }
 
+function normalizeSocialHandle(
+  value: string
+): string {
+  return value
+    .trimStart()
+    .replace(/^@+/, '')
+}
+
+function getSocialProfileUrl(
+  platform: CreatorSocialPlatform,
+  handle: string
+): string | null {
+  const normalizedHandle =
+    normalizeSocialHandle(handle).trim()
+
+  if (!normalizedHandle) {
+    return null
+  }
+
+  switch (platform) {
+    case 'instagram':
+      return `https://www.instagram.com/${normalizedHandle}`
+
+    case 'tiktok':
+      return `https://www.tiktok.com/@${normalizedHandle}`
+
+    case 'x':
+      return `https://x.com/${normalizedHandle}`
+
+    case 'youtube':
+      return `https://www.youtube.com/@${normalizedHandle}`
+
+    default:
+      return null
+  }
+}
+
+function getSocialProfileUrlDisplay(
+  value: string
+): string {
+  try {
+    const parsed = new URL(value)
+
+    return `${parsed.hostname.replace(
+      /^www\./,
+      ''
+    )}${parsed.pathname.replace(/\/$/, '')}`
+  } catch {
+    return value
+  }
+}
+
 /* =========================================================
  * Collaboration tags
  * ======================================================= */
@@ -1587,7 +1664,6 @@ function CreatorCollaborationTagsSection({
       <SectionHeading
         eyebrow="Opportunities"
         title="What are you open to?"
-        description="Choose the collaboration types that match your work."
         id="creator-collaboration-tags-title"
       />
 
@@ -1610,10 +1686,6 @@ function CreatorCollaborationTagsSection({
                 <div>
                   <p className="text-sm font-semibold text-neutral-200">
                     {category.label}
-                  </p>
-
-                  <p className="mt-1 text-xs leading-5 text-neutral-500">
-                    {category.description}
                   </p>
                 </div>
 
@@ -1769,12 +1841,10 @@ function CreatorModeRequirements({
 function SectionHeading({
   eyebrow,
   title,
-  description,
   id,
 }: {
   eyebrow: string
   title: string
-  description: string
   id: string
 }) {
   return (
@@ -1789,10 +1859,6 @@ function SectionHeading({
       >
         {title}
       </h3>
-
-      <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
-        {description}
-      </p>
     </div>
   )
 }
@@ -1980,14 +2046,12 @@ function BooleanPreferenceCard({
   checked,
   disabled,
   title,
-  description,
   error,
   onChange,
 }: {
   checked: boolean
   disabled: boolean
   title: string
-  description: string
   error?: string
   onChange: (value: boolean) => void
 }) {
@@ -1997,10 +2061,6 @@ function BooleanPreferenceCard({
         <div className="min-w-0">
           <p className="text-sm font-semibold text-white">
             {title}
-          </p>
-
-          <p className="mt-1 text-xs leading-5 text-neutral-500">
-            {description}
           </p>
         </div>
 

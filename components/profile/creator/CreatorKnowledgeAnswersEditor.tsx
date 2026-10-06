@@ -514,15 +514,6 @@ export default function CreatorKnowledgeAnswersEditor({
       <div className="relative z-10 border-b border-neutral-800/80 px-4 py-5 sm:px-6">
         <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-white">
-              Creator knowledge
-            </p>
-
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500">
-              Keep the answers that define
-              your local perspective accurate,
-              useful, and intentional.
-            </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-neutral-800 bg-black/35 px-4 py-3">

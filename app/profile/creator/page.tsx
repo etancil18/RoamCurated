@@ -277,7 +277,6 @@ export default async function CreatorSettingsPage() {
             <SectionHeading
               id="creator-settings-form-title"
               title="Profile details"
-              description="Control what people see and how they can connect with you."
             />
 
             <div className="mt-4 w-full min-w-0 overflow-hidden rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/80 shadow-2xl shadow-black/30 backdrop-blur-xl sm:rounded-[2rem]">
@@ -310,7 +309,6 @@ export default async function CreatorSettingsPage() {
             <SectionHeading
               id="creator-knowledge-title"
               title="Creator knowledge"
-              description="Keep your recommendations, routines, local expertise, and personal taste current."
             />
 
             <div className="mt-4">
@@ -329,7 +327,6 @@ export default async function CreatorSettingsPage() {
             <SectionHeading
               id="creator-collections-title"
               title="Collections"
-              description="Turn the places and experiences you love into guides people can save."
             />
 
             <div className="mt-4">
@@ -386,11 +383,6 @@ function CreatorSettingsHeader({
             Your creator profile
           </h1>
 
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-400">
-            Manage how you show up, what
-            you recommend, and how people
-            can connect with you.
-          </p>
 
           <div className="mt-4 flex min-w-0 flex-wrap items-center gap-2">
             <CreatorModeBadge
@@ -451,15 +443,11 @@ function CreatorSettingsHeader({
 function SectionHeading({
   id,
   title,
-  description,
 }: {
   id:
     string
 
   title:
-    string
-
-  description:
     string
 }) {
   return (
@@ -470,10 +458,6 @@ function SectionHeading({
       >
         {title}
       </h2>
-
-      <p className="mt-1.5 max-w-2xl text-sm leading-6 text-neutral-400">
-        {description}
-      </p>
     </div>
   )
 }
@@ -691,12 +675,6 @@ function CreatorModeStatusCard({
               ? 'Your creator profile is live'
               : 'Get your creator profile ready'}
           </h3>
-
-          <p className="mt-1 max-w-xl text-xs leading-5 text-neutral-500 sm:text-sm sm:leading-6">
-            {creatorModeEnabled
-              ? 'Keep the essentials current so people immediately understand your point of view.'
-              : 'Complete the essentials, then turn Creator Mode on when you are ready to be discovered.'}
-          </p>
         </div>
 
         <div className="shrink-0 rounded-xl border border-neutral-800 bg-black/40 px-3 py-2 text-right">
@@ -937,19 +915,16 @@ function CreatorModeGuidance() {
           <GuidanceItem
             number="01"
             title="Be memorable"
-            description="Say what you are known for, which cities you cover, and what kind of experiences you share."
           />
 
           <GuidanceItem
             number="02"
             title="Show your taste"
-            description="Use genuine Roam activity, collections, and your optional map to make your point of view visible."
           />
 
           <GuidanceItem
             number="03"
             title="Make connecting easy"
-            description="Keep at least one public contact or social link current so people know where to reach you."
           />
         </div>
       </div>
@@ -960,15 +935,11 @@ function CreatorModeGuidance() {
 function GuidanceItem({
   number,
   title,
-  description,
 }: {
   number:
     string
 
   title:
-    string
-
-  description:
     string
 }) {
   return (
@@ -979,10 +950,6 @@ function GuidanceItem({
 
       <p className="mt-2 text-sm font-semibold text-white">
         {title}
-      </p>
-
-      <p className="mt-1 text-xs leading-5 text-neutral-500">
-        {description}
       </p>
     </div>
   )

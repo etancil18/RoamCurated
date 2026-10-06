@@ -1,10 +1,16 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import {
+  useMemo,
+  useState,
+} from 'react'
 import { Button } from '@/components/ui/button'
 import { logEvent } from '@/lib/logEvent'
 
-type TravelMode = 'walking' | 'cycling' | 'driving'
+type TravelMode =
+  | 'walking'
+  | 'cycling'
+  | 'driving'
 
 type FlowRouteVenue = {
   id: string
@@ -19,13 +25,20 @@ type Props = {
   venues: FlowRouteVenue[]
   travelMode?: TravelMode
   flowId?: string | null
-  source?: 'active_flow' | 'event_flow' | 'hosted_flow' | 'guide_flow'
+  source?:
+    | 'active_flow'
+    | 'event_flow'
+    | 'hosted_flow'
+    | 'guide_flow'
   className?: string
 }
 
 function safeLogEvent(
   eventName: string,
-  metadata: Record<string, unknown> = {}
+  metadata: Record<
+    string,
+    unknown
+  > = {}
 ) {
   try {
     void Promise.resolve(
@@ -42,6 +55,122 @@ function safeLogEvent(
   }
 }
 
+function hasCoordinates(
+  venue: FlowRouteVenue
+) {
+  return (
+    typeof venue.lat ===
+      'number' &&
+    Number.isFinite(
+      venue.lat
+    ) &&
+    typeof venue.lon ===
+      'number' &&
+    Number.isFinite(
+      venue.lon
+    )
+  )
+}
+
+function getVenueSearchLabel(
+  venue: FlowRouteVenue
+) {
+  const name =
+    venue.name?.trim()
+
+  const address =
+    venue.address?.trim()
+
+  const city =
+    venue.city?.trim()
+
+  if (
+    name &&
+    address &&
+    city
+  ) {
+    return `${name}, ${address}, ${city}`
+  }
+
+  if (
+    name &&
+    address
+  ) {
+    return `${name}, ${address}`
+  }
+
+  if (
+    name &&
+    city
+  ) {
+    return `${name}, ${city}`
+  }
+
+  return (
+    name ||
+    address ||
+    city ||
+    ''
+  )
+}
+
+function getVenueRouteValue(
+  venue: FlowRouteVenue
+) {
+  if (
+    hasCoordinates(venue)
+  ) {
+    return `${venue.lat},${venue.lon}`
+  }
+
+  return getVenueSearchLabel(
+    venue
+  )
+}
+
+function getVenueDisplayAddress(
+  venue: FlowRouteVenue
+) {
+  const address =
+    venue.address?.trim()
+
+  const city =
+    venue.city?.trim()
+
+  if (
+    address &&
+    city
+  ) {
+    return `${address}, ${city}`
+  }
+
+  return (
+    address ||
+    city ||
+    null
+  )
+}
+
+function getTravelModeLabel(
+  travelMode: TravelMode
+) {
+  if (
+    travelMode ===
+    'cycling'
+  ) {
+    return 'Cycling'
+  }
+
+  if (
+    travelMode ===
+    'driving'
+  ) {
+    return 'Driving'
+  }
+
+  return 'Walking'
+}
+
 export default function FlowRouteLauncher({
   venues,
   travelMode = 'walking',
@@ -54,15 +183,17 @@ export default function FlowRouteLauncher({
     setRouteChooserOpen,
   ] = useState(false)
 
-  const routeVenues = useMemo(() => {
-    return venues.filter(
-      (venue) =>
-        typeof venue.lat === 'number' &&
-        Number.isFinite(venue.lat) &&
-        typeof venue.lon === 'number' &&
-        Number.isFinite(venue.lon)
-    )
-  }, [venues])
+  const routeVenues =
+    useMemo(() => {
+      return venues.filter(
+        (venue) =>
+          Boolean(
+            getVenueRouteValue(
+              venue
+            )
+          )
+      )
+    }, [venues])
 
   const canLaunchRoute =
     routeVenues.length >= 2
@@ -74,27 +205,38 @@ export default function FlowRouteLauncher({
     return {
       flow_id: flowId,
       source,
-      travel_mode: travelMode,
-      stop_count: routeVenues.length,
+      travel_mode:
+        travelMode,
+      stop_count:
+        routeVenues.length,
     }
   }
 
   /**
    * Opens the destination outside the current Roam browsing context.
    *
-   * Standard HTTPS universal links allow iOS and Android to hand the request
+   * Standard HTTPS universal links allow supported devices to hand the request
    * to an installed maps app while preserving the current Roam screen.
    */
-  function openExternalUrl(url: string) {
+  function openExternalUrl(
+    url: string
+  ) {
     const anchor =
-      document.createElement('a')
+      document.createElement(
+        'a'
+      )
 
     anchor.href = url
     anchor.target = '_blank'
-    anchor.rel = 'noopener noreferrer'
-    anchor.style.display = 'none'
+    anchor.rel =
+      'noopener noreferrer'
+    anchor.style.display =
+      'none'
 
-    document.body.appendChild(anchor)
+    document.body.appendChild(
+      anchor
+    )
+
     anchor.click()
     anchor.remove()
   }
@@ -112,9 +254,9 @@ export default function FlowRouteLauncher({
       routeVenues
         .slice(1, -1)
         .map(
-          (venue) =>
-            `${venue.lat},${venue.lon}`
+          getVenueRouteValue
         )
+        .filter(Boolean)
         .join('|')
 
     const url =
@@ -129,17 +271,22 @@ export default function FlowRouteLauncher({
 
     url.searchParams.set(
       'origin',
-      `${origin.lat},${origin.lon}`
+      getVenueRouteValue(
+        origin
+      )
     )
 
     url.searchParams.set(
       'destination',
-      `${destination.lat},${destination.lon}`
+      getVenueRouteValue(
+        destination
+      )
     )
 
     url.searchParams.set(
       'travelmode',
-      travelMode === 'cycling'
+      travelMode ===
+        'cycling'
         ? 'bicycling'
         : travelMode
     )
@@ -163,31 +310,45 @@ export default function FlowRouteLauncher({
         routeVenues.length - 1
       ]
 
-    const dirFlag =
-      travelMode === 'driving'
-        ? 'd'
-        : travelMode === 'walking'
-          ? 'w'
-          : 'r'
+    const waypoints =
+      routeVenues.slice(
+        1,
+        -1
+      )
 
     const url =
       new URL(
-        'https://maps.apple.com/'
+        'https://maps.apple.com/directions'
       )
 
     url.searchParams.set(
-      'saddr',
-      `${origin.lat},${origin.lon}`
+      'source',
+      getVenueRouteValue(
+        origin
+      )
     )
 
     url.searchParams.set(
-      'daddr',
-      `${destination.lat},${destination.lon}`
+      'destination',
+      getVenueRouteValue(
+        destination
+      )
+    )
+
+    waypoints.forEach(
+      (venue) => {
+        url.searchParams.append(
+          'waypoint',
+          getVenueRouteValue(
+            venue
+          )
+        )
+      }
     )
 
     url.searchParams.set(
-      'dirflg',
-      dirFlag
+      'mode',
+      travelMode
     )
 
     return url.toString()
@@ -215,7 +376,11 @@ export default function FlowRouteLauncher({
 
     safeLogEvent(
       'flow_route_apple_maps_clicked',
-      baseLogMetadata()
+      {
+        ...baseLogMetadata(),
+        handoff_stop_count:
+          routeVenues.length,
+      }
     )
 
     openExternalUrl(
@@ -226,49 +391,130 @@ export default function FlowRouteLauncher({
   return (
     <div
       className={[
-        'rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-white',
+        'rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-white',
         className,
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-400">
-            Route Actions
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-indigo-400">
+                Navigation
+              </p>
 
-          
+              <h3 className="mt-1 text-base font-semibold text-white">
+                Continue your Flow
+                in Maps
+              </h3>
+            </div>
+
+            {canLaunchRoute ? (
+              <div className="shrink-0 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1 text-xs font-medium text-neutral-300">
+                {
+                  routeVenues.length
+                }{' '}
+                stops
+              </div>
+            ) : null}
+          </div>
+
+          <p className="mt-2 text-sm leading-5 text-neutral-400">
+            Open your route in
+            your preferred maps
+            app. Your Flow stays
+            active in Roam.
+          </p>
         </div>
 
-        <Button
-          type="button"
-          disabled={!canLaunchRoute}
-          onClick={() => {
-            safeLogEvent(
-              'flow_start_route_clicked',
-              baseLogMetadata()
-            )
+        {canLaunchRoute ? (
+          <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60">
+            {routeVenues.map(
+              (
+                venue,
+                index
+              ) => {
+                const displayAddress =
+                  getVenueDisplayAddress(
+                    venue
+                  )
 
-            setRouteChooserOpen(true)
-          }}
-          className="bg-indigo-600 text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Google/Apple Maps
-        </Button>
+                return (
+                  <div
+                    key={
+                      venue.id
+                    }
+                    className={[
+                      'flex gap-3 px-3 py-3',
+                      index > 0
+                        ? 'border-t border-neutral-800'
+                        : '',
+                    ]
+                      .filter(
+                        Boolean
+                      )
+                      .join(
+                        ' '
+                      )}
+                  >
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 text-[11px] font-bold text-indigo-300">
+                      {index +
+                        1}
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-neutral-100">
+                        {
+                          venue.name
+                        }
+                      </p>
+
+                      {displayAddress ? (
+                        <p className="mt-0.5 truncate text-xs text-neutral-500">
+                          {
+                            displayAddress
+                          }
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                )
+              }
+            )}
+          </div>
+        ) : null}
+
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            disabled={
+              !canLaunchRoute
+            }
+            onClick={() => {
+              safeLogEvent(
+                'flow_start_route_clicked',
+                baseLogMetadata()
+              )
+
+              setRouteChooserOpen(
+                true
+              )
+            }}
+            className="bg-indigo-600 text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Google/Apple Maps
+          </Button>
+        </div>
       </div>
-
-      {!canLaunchRoute ? (
-        <p className="mt-3 text-xs text-neutral-500">
-          Add at least two stops with coordinates to launch a route.
-        </p>
-      ) : null}
 
       {routeChooserOpen ? (
         <div
           className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/80 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:items-center sm:pb-4"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="flow-route-chooser-title"
           onClick={() => {
             safeLogEvent(
               'flow_route_chooser_cancelled',
@@ -279,22 +525,25 @@ export default function FlowRouteLauncher({
               }
             )
 
-            setRouteChooserOpen(false)
+            setRouteChooserOpen(
+              false
+            )
           }}
         >
           <div
             className="w-full max-w-sm rounded-2xl border border-neutral-700 bg-neutral-950 p-5 text-white shadow-2xl"
-            onClick={(event) =>
+            onClick={(
+              event
+            ) =>
               event.stopPropagation()
             }
           >
             <div className="mb-5">
-              <p className="text-lg font-semibold text-white">
-                Start route
-              </p>
-
-              <p className="mt-1 text-sm leading-5 text-neutral-300">
-                Choose your preferred maps app.
+              <p
+                id="flow-route-chooser-title"
+                className="text-lg font-semibold text-white"
+              >
+                Continue in Maps
               </p>
             </div>
 
@@ -303,24 +552,38 @@ export default function FlowRouteLauncher({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setRouteChooserOpen(false)
+                  setRouteChooserOpen(
+                    false
+                  )
+
                   openGoogleMaps()
                 }}
-                className="h-12 w-full justify-start border-neutral-700 bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white"
+                className="h-auto min-h-14 w-full justify-start border-neutral-700 bg-neutral-900 px-4 py-3 text-left text-white hover:bg-neutral-800 hover:text-white"
               >
-                Open in Google Maps
+                <span>
+                  <span className="block font-semibold">
+                    Google Maps
+                  </span>
+                </span>
               </Button>
 
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  setRouteChooserOpen(false)
+                  setRouteChooserOpen(
+                    false
+                  )
+
                   openAppleMaps()
                 }}
-                className="h-12 w-full justify-start border-neutral-700 bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white"
+                className="h-auto min-h-14 w-full justify-start border-neutral-700 bg-neutral-900 px-4 py-3 text-left text-white hover:bg-neutral-800 hover:text-white"
               >
-                Open in Apple Maps
+                <span>
+                  <span className="block font-semibold">
+                    Apple Maps
+                  </span>
+                </span>
               </Button>
 
               <Button
@@ -336,7 +599,9 @@ export default function FlowRouteLauncher({
                     }
                   )
 
-                  setRouteChooserOpen(false)
+                  setRouteChooserOpen(
+                    false
+                  )
                 }}
                 className="h-11 w-full text-neutral-300 hover:bg-neutral-900 hover:text-white"
               >
