@@ -472,7 +472,7 @@ function CreatorIdentity({
 }) {
   return (
     <div className="min-w-0 flex-1">
-      <div className="flex min-w-0 items-start justify-between gap-3">
+      <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:justify-between">
         <div className="min-w-0">
           <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.7)]" />

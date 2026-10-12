@@ -140,12 +140,6 @@ export default function FollowButton({
             : 'Follow'}
       </button>
 
-      {typeof followersCount === 'number' && (
-        <p className="text-xs text-neutral-500">
-          {followersCount.toLocaleString()} follower{followersCount === 1 ? '' : 's'}
-        </p>
-      )}
-
       {error && (
         <p className="text-xs text-red-400">
           {error}

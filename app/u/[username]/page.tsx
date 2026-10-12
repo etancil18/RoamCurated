@@ -228,6 +228,8 @@ export default async function PublicUserProfilePage({
   const [
     existingFollowResult,
     publicStatsResult,
+    followersResult,
+    followingResult,
     socialGroupsResult,
     snapshotResult,
     creatorBundle,
@@ -281,6 +283,22 @@ export default async function PublicUserProfilePage({
         profile.id
       )
       .maybeSingle<ProfilePublicStatsRow>(),
+
+      supabase
+        .from('user_follows')
+        .select('id', {
+          count: 'exact',
+          head: true,
+        })
+        .eq('following_id', profile.id),
+
+      supabase
+        .from('user_follows')
+        .select('id', {
+          count: 'exact',
+          head: true,
+        })
+        .eq('follower_id', profile.id),
 
     profile.show_social_groups === false
       ? Promise.resolve({
@@ -367,6 +385,20 @@ export default async function PublicUserProfilePage({
     )
   }
 
+  if (followersResult.error) {
+  console.error(
+    '[public profile] Failed to load followers count:',
+    followersResult.error
+  )
+}
+
+if (followingResult.error) {
+  console.error(
+    '[public profile] Failed to load following count:',
+    followingResult.error
+  )
+}
+
   if (socialGroupsResult.error) {
     console.error(
       '[public profile] Failed to load social group count:',
@@ -388,10 +420,14 @@ export default async function PublicUserProfilePage({
     publicStatsResult.data
 
   const followersCount =
-    publicStats?.followers_count ?? 0
+  followersResult.error
+    ? (publicStats?.followers_count ?? 0)
+    : (followersResult.count ?? 0)
 
-  const followingCount =
-    publicStats?.following_count ?? 0
+const followingCount =
+  followingResult.error
+    ? (publicStats?.following_count ?? 0)
+    : (followingResult.count ?? 0)
 
   const socialGroupsCount =
     socialGroupsResult.count ?? 0
