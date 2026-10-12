@@ -162,6 +162,14 @@ export type CreatorHeroProps = {
   competitionWins?: readonly CreatorCompetitionWinStat[]
 
   /**
+   * Admin-curated Founding Tastemaker designation.
+   *
+   * This affects presentation only and does not change creator
+   * eligibility, Passport, reputation, or any other creator behavior.
+   */
+  isFoundingTastemaker?: boolean
+
+  /**
    * Maximum number of social links rendered in the hero.
    *
    * Remaining links can be rendered in a dedicated social-links
@@ -199,6 +207,7 @@ export default function CreatorHero({
   passportLevel = null,
   placesExploredCount = 0,
   competitionWins = [],
+  isFoundingTastemaker = false,
   socialLinkLimit = 4,
   className = '',
 }: CreatorHeroProps) {
@@ -307,6 +316,9 @@ export default function CreatorHero({
             }
             showFollowButton={
               showFollowButton
+            }
+            isFoundingTastemaker={
+              isFoundingTastemaker
             }
           />
         </div>
@@ -447,6 +459,7 @@ function CreatorIdentity({
   followersCount,
   isAuthenticated,
   showFollowButton,
+  isFoundingTastemaker,
 }: {
   displayName: string
   username: string | null
@@ -455,6 +468,7 @@ function CreatorIdentity({
   followersCount: number
   isAuthenticated: boolean
   showFollowButton: boolean
+  isFoundingTastemaker: boolean
 }) {
   return (
     <div className="min-w-0 flex-1">
@@ -464,7 +478,9 @@ function CreatorIdentity({
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.7)]" />
 
             <p className="truncate text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
-              Roam Creator
+              {isFoundingTastemaker
+                ? 'Founding Tastemaker'
+                : 'Roam Creator'}
             </p>
           </div>
 

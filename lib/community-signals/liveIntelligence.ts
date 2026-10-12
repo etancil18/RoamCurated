@@ -20,6 +20,15 @@ export type CommunityEventConfidenceBand =
   | 'supported'
   | 'strong'
 
+export type CommunityHappeningConfidenceBand =
+  | 'emerging'
+  | 'supported'
+  | 'strong'
+
+export type CommunityHappeningViewerResponse =
+  | 'confirmed'
+  | 'not_there'
+
 export type CommunityPlaceSignalType =
   | 'line'
   | 'temporary_closure'
@@ -48,6 +57,37 @@ export type CommunityEventIntelligence = {
   timezone: string | null
 }
 
+export type CommunityHappeningIntelligence = {
+  kind: 'happening'
+  intelligenceId:
+    `happening:${string}`
+  venueId: string
+  occurrenceId: string
+  title: string
+  archetype: string | null
+  observedAt: string
+  confidenceBand:
+    CommunityHappeningConfidenceBand
+  contributors: number
+  reporters: number
+  confirmers: number
+  pendingCorrections: number
+  appliedCorrections: number
+
+  /**
+   * Authenticated viewer's durable quick-response posture for
+   * this occurrence.
+   *
+   * null means the viewer has not yet responded.
+   *
+   * This is viewer-specific presentation metadata only. It does
+   * not participate in occurrence confidence, canonicalization,
+   * discovery, or Community Signal truth.
+   */
+  viewerResponse:
+    CommunityHappeningViewerResponse | null
+}
+
 export type CommunityPlaceSignalIntelligence = {
   kind: 'place_signal'
   intelligenceId:
@@ -66,12 +106,19 @@ export type CommunityPlaceSignalIntelligence = {
 
 export type CommunityLiveIntelligence =
   | CommunityEventIntelligence
+  | CommunityHappeningIntelligence
   | CommunityPlaceSignalIntelligence
 
 export function buildCommunityEventIntelligenceId(
   eventId: string
 ): CommunityEventIntelligence['intelligenceId'] {
   return `event:${eventId}`
+}
+
+export function buildCommunityHappeningIntelligenceId(
+  occurrenceId: string
+): CommunityHappeningIntelligence['intelligenceId'] {
+  return `happening:${occurrenceId}`
 }
 
 export function buildCommunityPlaceSignalIntelligenceId({
@@ -90,6 +137,25 @@ export function isCommunityEventConfidenceBand(
   return (
     value === 'supported' ||
     value === 'strong'
+  )
+}
+
+export function isCommunityHappeningConfidenceBand(
+  value: unknown
+): value is CommunityHappeningConfidenceBand {
+  return (
+    value === 'emerging' ||
+    value === 'supported' ||
+    value === 'strong'
+  )
+}
+
+export function isCommunityHappeningViewerResponse(
+  value: unknown
+): value is CommunityHappeningViewerResponse {
+  return (
+    value === 'confirmed' ||
+    value === 'not_there'
   )
 }
 

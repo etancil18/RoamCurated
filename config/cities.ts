@@ -30,7 +30,7 @@ export const CITY_CONFIGS: Record<string, CityConfig> = {
   atl: {
     name: 'Atlanta',
     center: [33.749, -84.388],
-    zoom: 13.8,
+    zoom: 14.5,
     timezone: 'America/New_York',
     planning: {
       distances: {
@@ -48,7 +48,7 @@ export const CITY_CONFIGS: Record<string, CityConfig> = {
   nyc: {
     name: 'New York City',
     center: [40.720894, -74.002213],
-    zoom: 13.9,
+    zoom: 14.2,
     timezone: 'America/New_York',
     planning: {
       distances: {
@@ -66,7 +66,7 @@ export const CITY_CONFIGS: Record<string, CityConfig> = {
   la: {
     name: 'Los Angeles',
     center: [34.0522, -118.2437],
-    zoom: 13.85,
+    zoom: 14.2,
     timezone: 'America/Los_Angeles',
     planning: {
       distances: {
@@ -104,7 +104,7 @@ export const CITY_CONFIGS: Record<string, CityConfig> = {
   london: {
     name: 'London',
     center: [51.5072, -0.1276],
-    zoom: 13.8,
+    zoom: 15.0,
     timezone: 'Europe/London',
     planning: {
       distances: {

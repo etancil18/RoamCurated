@@ -168,6 +168,17 @@ export default function MapWrapper() {
     setHasHydratedRouteFromUrl,
   ] = useState(false)
 
+    /**
+   * Venue requested by the map URL when returning
+   * from a venue profile.
+   */
+  const [
+    pendingVenueIdFromUrl,
+    setPendingVenueIdFromUrl,
+  ] = useState<string | null>(
+    null
+  )
+
   const [
     searchTerm,
     setSearchTerm,
@@ -291,6 +302,7 @@ export default function MapWrapper() {
     supabaseBrowser()
 
   const {
+    allVenues = [],
     venues = [],
     eventsByVenueId = {},
   } = useCityData(
@@ -315,11 +327,50 @@ export default function MapWrapper() {
       )
     }, [venues])
 
+    const allVenueById =
+  useMemo(() => {
+    return new Map<
+      string,
+      Venue
+    >(
+      allVenues.map(
+        (venue) => [
+          venue.id,
+          venue,
+        ]
+      )
+    )
+  }, [allVenues])
+
+      /**
+   * Resolve the URL-requested venue only after
+   * the selected city's venue data is available.
+   */
+  const venueToRestore =
+    useMemo(() => {
+      if (
+        !pendingVenueIdFromUrl
+      ) {
+        return null
+      }
+
+      return (
+        allVenues.find(
+          (venue) =>
+            venue.id ===
+            pendingVenueIdFromUrl
+        ) ?? null
+      )
+    }, [
+      pendingVenueIdFromUrl,
+      allVenues,
+    ])
+
   const route =
     useMemo(() => {
       return routeVenueIds
         .map((id) =>
-          venueById.get(id)
+          allVenueById.get(id)
         )
         .filter(
           (
@@ -329,7 +380,7 @@ export default function MapWrapper() {
         )
     }, [
       routeVenueIds,
-      venueById,
+      allVenueById,
     ])
 
   const routeForProps =
@@ -470,22 +521,45 @@ export default function MapWrapper() {
         window.location.search
       )
 
-    const cityParam =
-      params.get('city')
+      const cityParam =
+        params.get('city')
 
-    const latParam =
-      params.get('lat')
+      const latParam =
+        params.get('lat')
 
-    const lonParam =
-      params.get('lon')
+      const lonParam =
+        params.get('lon')
 
-    if (cityParam) {
-      setSelectedCity(
-        cityParam
-      )
+      const venueParam =
+        params.get('venue')?.trim()
 
-      setIsPanelOpen(true)
-    }
+      if (venueParam && params.has('route')) {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('route')
+
+        window.history.replaceState(
+          null,
+          '',
+          url.toString()
+        )
+      }
+
+      if (venueParam) {
+        setPendingVenueIdFromUrl(
+          venueParam
+        )
+      }
+
+      if (cityParam) {
+        setSelectedCity(
+          cityParam
+        )
+
+        setIsPanelOpen(
+          !venueParam &&
+          !params.get('route')
+        )
+      }
 
     if (
       latParam &&
@@ -522,8 +596,13 @@ export default function MapWrapper() {
         window.location.search
       )
 
+    const venueParam =
+      params.get('venue')?.trim()
+
     const routeParam =
-      params.get('route')
+      venueParam
+        ? null
+        : params.get('route')
 
     const cityParam =
       params.get('city')
@@ -555,27 +634,27 @@ export default function MapWrapper() {
   useEffect(() => {
     if (
       !pendingRouteVenueIds ||
-      pendingRouteVenueIds.length ===
-        0 ||
-      venues.length === 0
+      pendingRouteVenueIds.length === 0 ||
+      allVenues.length === 0
     ) {
       return
     }
 
-    const canonicalIds =
-      pendingRouteVenueIds.filter(
+    const allStopsAvailable =
+      pendingRouteVenueIds.every(
         (id) =>
-          venueById.has(id)
+          allVenues.some(
+            (venue) =>
+              venue.id === id
+          )
       )
 
-    if (
-      canonicalIds.length === 0
-    ) {
+    if (!allStopsAvailable) {
       return
     }
 
     setRouteVenueIds(
-      canonicalIds
+      pendingRouteVenueIds
     )
 
     setPendingRouteVenueIds(
@@ -583,8 +662,7 @@ export default function MapWrapper() {
     )
   }, [
     pendingRouteVenueIds,
-    venueById,
-    venues.length,
+    allVenues,
   ])
 
   const filteredVenues =
@@ -2088,6 +2166,9 @@ export default function MapWrapper() {
           <MapCanvas
             route={
               routeForProps
+            }
+            venueToRestore={
+              venueToRestore
             }
             onMapClick={
               handleMapClick

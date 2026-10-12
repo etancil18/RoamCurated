@@ -6,12 +6,17 @@ import type {
 
 import {
   buildCommunityEventIntelligenceId,
+  buildCommunityHappeningIntelligenceId,
   buildCommunityPlaceSignalIntelligenceId,
   isCommunityEventConfidenceBand,
+  isCommunityHappeningConfidenceBand,
+  isCommunityHappeningViewerResponse,
   isCommunityPlaceSignalPosture,
   isCommunityPlaceSignalState,
   isCommunityPlaceSignalType,
   type CommunityEventIntelligence,
+  type CommunityHappeningIntelligence,
+  type CommunityHappeningViewerResponse,
   type CommunityLiveIntelligence,
   type CommunityPlaceSignalIntelligence,
   type CommunityPlaceSignalType,
@@ -42,6 +47,25 @@ type CommunityEventRow = {
   is_active: boolean | null
   source: string | null
   source_type: string | null
+}
+
+type CurrentCommunityHappeningRow = {
+  occurrence_id: string
+  venue_id: string
+  display_title: string | null
+  reported_archetype: string | null
+  observed_at: string | null
+  confidence_band: string
+  unique_contributors: number
+  unique_reporters: number
+  unique_confirmers: number
+  pending_usable_corrections: number
+  applied_corrections: number
+}
+
+type EventOccurrenceResponseRow = {
+  occurrence_id: string
+  response_type: string
 }
 
 /**
@@ -155,6 +179,92 @@ function normalizeCommunityEvent({
 
     timezone:
       event.timezone,
+  }
+}
+
+function normalizeCurrentCommunityHappening({
+  row,
+  viewerResponse,
+}: {
+  row: CurrentCommunityHappeningRow
+  viewerResponse:
+    CommunityHappeningViewerResponse | null
+}): CommunityHappeningIntelligence | null {
+  if (
+    !row.occurrence_id ||
+    !row.venue_id ||
+    !row.display_title ||
+    !row.observed_at ||
+    !isCommunityHappeningConfidenceBand(
+      row.confidence_band
+    ) ||
+    !Number.isInteger(
+      row.unique_contributors
+    ) ||
+    row.unique_contributors < 1 ||
+    !Number.isInteger(
+      row.unique_reporters
+    ) ||
+    row.unique_reporters < 1 ||
+    !Number.isInteger(
+      row.unique_confirmers
+    ) ||
+    row.unique_confirmers < 0 ||
+    !Number.isInteger(
+      row.pending_usable_corrections
+    ) ||
+    row.pending_usable_corrections < 0 ||
+    !Number.isInteger(
+      row.applied_corrections
+    ) ||
+    row.applied_corrections < 0
+  ) {
+    return null
+  }
+
+  return {
+    kind:
+      'happening',
+
+    intelligenceId:
+      buildCommunityHappeningIntelligenceId(
+        row.occurrence_id
+      ),
+
+    venueId:
+      row.venue_id,
+
+    occurrenceId:
+      row.occurrence_id,
+
+    title:
+      row.display_title,
+
+    archetype:
+      row.reported_archetype,
+
+    observedAt:
+      row.observed_at,
+
+    confidenceBand:
+      row.confidence_band,
+
+    contributors:
+      row.unique_contributors,
+
+    reporters:
+      row.unique_reporters,
+
+    confirmers:
+      row.unique_confirmers,
+
+    pendingCorrections:
+      row.pending_usable_corrections,
+
+    appliedCorrections:
+      row.applied_corrections,
+
+    viewerResponse,
   }
 }
 
@@ -533,6 +643,201 @@ export async function loadDiscoverableCommunityEventIntelligence({
 }
 
 /**
+ * Load current venue-local Community Signal happenings.
+ *
+ * Authority:
+ *
+ * get_current_community_happenings_for_venue
+ *
+ * This is deliberately distinct from canonical Community Event
+ * discovery.
+ *
+ * An open occurrence may be visible as venue-local intelligence
+ * while still being only emerging and before canonicalization.
+ *
+ * The SQL projection remains authoritative for:
+ *
+ * - occurrence openness
+ * - usable report eligibility
+ * - confidence aggregation
+ * - correction handling
+ * - venue scoping
+ *
+ * Viewer response state is loaded separately from
+ * event_occurrence_responses and is presentation metadata only.
+ *
+ * This function only validates and normalizes those read models.
+ */
+export async function loadCurrentCommunityHappeningsForVenue({
+  venueId,
+  asOf = new Date(),
+  viewerUserId,
+  supabase: providedSupabase,
+}: {
+  venueId: string
+  asOf?: Date
+  viewerUserId?: string | null
+  supabase?: SupabaseClient
+}): Promise<CommunityHappeningIntelligence[]> {
+  const normalizedVenueId =
+    venueId.trim()
+
+  if (
+    !normalizedVenueId
+  ) {
+    throw new Error(
+      '[community-signals/live-intelligence] venueId is required.'
+    )
+  }
+
+  const normalizedViewerUserId =
+    viewerUserId?.trim() ||
+    null
+
+  const asOfIso =
+    assertValidAsOf(
+      asOf
+    )
+
+  const supabase =
+    providedSupabase ??
+    getSupabaseAdmin()
+
+  const {
+    data,
+    error,
+  } = await supabase.rpc(
+    'get_current_community_happenings_for_venue',
+    {
+      p_venue_id:
+        normalizedVenueId,
+
+      p_as_of:
+        asOfIso,
+    }
+  )
+
+  if (
+    error
+  ) {
+    throw new Error(
+      `[community-signals/live-intelligence] Failed to load current venue happenings: ${error.message}`
+    )
+  }
+
+  const rows =
+    (data ??
+      []) as CurrentCommunityHappeningRow[]
+
+  if (
+    rows.length === 0
+  ) {
+    return []
+  }
+
+  const viewerResponseByOccurrenceId =
+    new Map<
+      string,
+      CommunityHappeningViewerResponse
+    >()
+
+  if (
+    normalizedViewerUserId
+  ) {
+    const occurrenceIds =
+      Array.from(
+        new Set(
+          rows
+            .map(
+              row =>
+                row.occurrence_id
+            )
+            .filter(
+              (
+                occurrenceId
+              ): occurrenceId is string =>
+                Boolean(
+                  occurrenceId
+                )
+            )
+        )
+      )
+
+    if (
+      occurrenceIds.length > 0
+    ) {
+      const {
+        data: responseRows,
+        error: responseError,
+      } = await supabase
+        .from(
+          'event_occurrence_responses'
+        )
+        .select(
+          'occurrence_id, response_type'
+        )
+        .eq(
+          'contributor_user_id',
+          normalizedViewerUserId
+        )
+        .in(
+          'occurrence_id',
+          occurrenceIds
+        )
+
+      if (
+        responseError
+      ) {
+        throw new Error(
+          `[community-signals/live-intelligence] Failed to load viewer occurrence responses: ${responseError.message}`
+        )
+      }
+
+      for (
+        const responseRow of
+          (responseRows ??
+            []) as EventOccurrenceResponseRow[]
+      ) {
+        if (
+          !responseRow.occurrence_id ||
+          !isCommunityHappeningViewerResponse(
+            responseRow.response_type
+          )
+        ) {
+          continue
+        }
+
+        viewerResponseByOccurrenceId.set(
+          responseRow.occurrence_id,
+          responseRow.response_type
+        )
+      }
+    }
+  }
+
+  return rows.flatMap(
+    row => {
+      const intelligence =
+        normalizeCurrentCommunityHappening({
+          row,
+
+          viewerResponse:
+            viewerResponseByOccurrenceId.get(
+              row.occurrence_id
+            ) ??
+            null,
+        })
+
+      return intelligence
+        ? [
+            intelligence,
+          ]
+        : []
+    }
+  )
+}
+
+/**
  * Load the current live condition for one venue + signal type.
  *
  * Authority:
@@ -729,26 +1034,39 @@ export async function loadCurrentCommunityPlaceIntelligenceForVenue({
  *
  * With venueId:
  *
- *   returns discoverable Community Signal events at that venue
+ *   returns discoverable Community Signal events at that venue,
+ *   the venue's current open Community Signal happenings,
  *   plus the venue's current V2 place signals.
+ *
+ * When viewerUserId is supplied, venue-local happenings are
+ * decorated with that authenticated viewer's durable quick-response
+ * posture.
  *
  * Important:
  *
- * This function does NOT attempt global place-signal discovery.
- * That query shape belongs to the later Community Signals
- * presentation/discovery layer.
+ * This function does NOT attempt global place-signal or
+ * open-occurrence discovery.
+ *
+ * Venue-local happenings remain distinct from canonical,
+ * globally discoverable Community Events.
  */
 export async function loadCommunityLiveIntelligence({
   venueId,
   asOf = new Date(),
+  viewerUserId,
   supabase: providedSupabase,
 }: {
   venueId?: string
   asOf?: Date
+  viewerUserId?: string | null
   supabase?: SupabaseClient
 } = {}): Promise<CommunityLiveIntelligence[]> {
   const normalizedVenueId =
     venueId?.trim() ||
+    null
+
+  const normalizedViewerUserId =
+    viewerUserId?.trim() ||
     null
 
   const supabase =
@@ -757,12 +1075,29 @@ export async function loadCommunityLiveIntelligence({
 
   const [
     events,
+    happenings,
     placeSignals,
   ] = await Promise.all([
     loadDiscoverableCommunityEventIntelligence({
       asOf,
       supabase,
     }),
+
+    normalizedVenueId
+      ? loadCurrentCommunityHappeningsForVenue({
+          venueId:
+            normalizedVenueId,
+
+          asOf,
+
+          viewerUserId:
+            normalizedViewerUserId,
+
+          supabase,
+        })
+      : Promise.resolve<
+          CommunityHappeningIntelligence[]
+        >([]),
 
     normalizedVenueId
       ? loadCurrentCommunityPlaceIntelligenceForVenue({
@@ -792,6 +1127,8 @@ export async function loadCommunityLiveIntelligence({
         event.venueId ===
         normalizedVenueId
     ),
+
+    ...happenings,
 
     ...placeSignals,
   ]

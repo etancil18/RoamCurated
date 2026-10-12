@@ -251,6 +251,7 @@ function MapViewportTracker({
 
 type Props = {
   route?: Venue[]
+  venueToRestore?: Venue | null
   travelMode:
     | 'walking'
     | 'cycling'
@@ -282,6 +283,7 @@ type Props = {
 
 export default function MapCanvas({
   route,
+  venueToRestore = null,
   travelMode,
   themeId,
   searchTerm = '',
@@ -383,6 +385,15 @@ export default function MapCanvas({
 
   const focusedVenueIdRef =
     useRef<string | null>(null)
+
+  const restoredVenueIdRef =
+    useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!venueToRestore?.id) {
+      restoredVenueIdRef.current = null
+    }
+  }, [venueToRestore?.id])
 
   const nowForCity = useMemo(
     () =>
@@ -686,6 +697,67 @@ export default function MapCanvas({
       selectedVenueId,
     ]
   )
+
+    /**
+   * Restore the venue selected before
+   * navigating to its profile.
+   *
+   * Wait for the matching city's data.
+   * Only consume each restoration once.
+   */
+  useEffect(() => {
+    if (
+      !venueToRestore?.id ||
+      !selectedCity ||
+      !mapRef.current
+    ) {
+      return
+    }
+
+    const matchingVenue =
+      allVenues.find(
+        (venue) =>
+          venue.id ===
+          venueToRestore.id
+      )
+
+    if (
+      !matchingVenue ||
+      !Number.isFinite(
+        matchingVenue.lat
+      ) ||
+      !Number.isFinite(
+        matchingVenue.lon
+      )
+    ) {
+      return
+    }
+
+    if (
+      restoredVenueIdRef.current ===
+      matchingVenue.id
+    ) {
+      return
+    }
+
+    restoredVenueIdRef.current =
+      matchingVenue.id
+
+    focusedVenueIdRef.current = null
+
+    setShowCitySelector(false)
+
+    onRequestClosePanel?.()
+
+    setSelectedVenueId(
+      matchingVenue.id
+    )
+  }, [
+    venueToRestore?.id,
+    selectedCity,
+    allVenues,
+    onRequestClosePanel,
+  ])
 
   const selectedVenueEvents =
     useMemo<VenuePreviewEvent[]>(() => {
@@ -1062,9 +1134,9 @@ export default function MapCanvas({
 
       setShowCitySelector(false)
 
-      onCityChange?.(
-        cityParam
-      )
+      // The parent restores its city and route
+      // directly from the URL. Do not invoke
+      // the user-initiated city-change handler.
     }
 
     if (zoomParam) {
@@ -1159,43 +1231,60 @@ export default function MapCanvas({
     returnFocusZoom,
   ])
 
-  useEffect(() => {
-    if (
-      !mapRef.current ||
-      visibleRoute.length < 2
-    ) {
-      return
-    }
-
-    const avgLat =
-      visibleRoute.reduce(
-        (
-          sum,
-          venue
-        ) =>
-          sum + venue.lat,
-        0
-      ) /
-      visibleRoute.length
-
-    const avgLon =
-      visibleRoute.reduce(
-        (
-          sum,
-          venue
-        ) =>
-          sum + venue.lon,
-        0
-      ) /
-      visibleRoute.length
-
-    mapRef.current.panTo(
-      [avgLat, avgLon],
-      {
-        animate: true,
+    useEffect(() => {
+      if (
+        !mapRef.current ||
+        visibleRoute.length < 2 ||
+        Boolean(venueToRestore?.id)
+      ) {
+        return
       }
-    )
-  }, [visibleRoute])
+
+      const validRoute =
+        visibleRoute.filter(
+          (venue) =>
+            Number.isFinite(
+              venue.lat
+            ) &&
+            Number.isFinite(
+              venue.lon
+            )
+        )
+
+      if (
+        validRoute.length < 2
+      ) {
+        return
+      }
+
+      const L =
+        require('leaflet')
+
+      const bounds =
+        L.latLngBounds(
+          validRoute.map(
+            (venue) => [
+              venue.lat,
+              venue.lon,
+            ]
+          )
+        )
+
+      mapRef.current.flyToBounds(
+        bounds,
+        {
+          padding: [64, 64],
+          maxZoom: 15,
+          animate: true,
+          duration: 0.8,
+        }
+      )
+      const map = mapRef.current
+    }, [
+      visibleRoute,
+      venueToRestore?.id,
+      mapInsets,
+    ])
 
   useEffect(() => {
     if (
@@ -2038,11 +2127,16 @@ export default function MapCanvas({
       searchMatchVenueIds,
     ])
 
-  const renderedVenues =
-    useMemo(() => {
-      if (isRouteMode) {
-        return visibleRoute
-      }
+    const renderedVenues =
+      useMemo(() => {
+        if (isRouteMode) {
+          return selectedVenue
+            ? dedupeVenues([
+                ...visibleRoute,
+                selectedVenue,
+              ])
+            : visibleRoute
+        }
 
       if (!selectedCity) {
         return []
@@ -2114,9 +2208,10 @@ export default function MapCanvas({
           ({ venue }) =>
             venue
         )
-    }, [
+      }, [
       isRouteMode,
       visibleRoute,
+      selectedVenue,
       selectedCity,
       initialCityVenues,
       currentZoom,
@@ -2128,6 +2223,21 @@ export default function MapCanvas({
       rankedViewportVenues,
       viewportEligibleVenues,
     ])
+
+      const renderedVenuesWithSelection =
+        useMemo(() => {
+          if (!selectedVenue) {
+            return renderedVenues
+          }
+
+          return dedupeVenues([
+            ...renderedVenues,
+            selectedVenue,
+          ])
+        }, [
+          renderedVenues,
+          selectedVenue,
+        ])
 
   const showLowZoomState =
     Boolean(selectedCity) &&
@@ -2254,7 +2364,7 @@ export default function MapCanvas({
 
         {selectedCity &&
           nowForCity &&
-          renderedVenues.map(
+          renderedVenuesWithSelection.map(
             (
               venue: Venue,
               index: number

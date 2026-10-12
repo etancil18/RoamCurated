@@ -41621,29 +41621,29 @@ const atlantaData = [
     "cover": "img/venues/read-the-room-atl.jpg",
     "openNow": "TRUE",
     "hours": [
-      "Sunday: Closed",
+      "Sunday: 12:00 PM–10:00 PM",
       "Monday: Closed",
       "Tuesday: Closed",
-      "Wednesday: Closed",
-      "Thursday: Closed",
-      "Friday: 5:00 PM–2:30 AM",
-      "Saturday: 5:00 PM–2:30 AM"
+      "Wednesday: 12:00 PM–10:00 PM",
+      "Thursday: 12:00 PM–2:00 AM",
+      "Friday: 12:00 PM–2:30 AM",
+      "Saturday: 12:00 PM–2:30 AM"
     ],
     "hoursNumeric": {
-      "sun": null,
+      "sun": { "open": 12, "close": 22 },
       "mon": null,
       "tue": null,
-      "wed": null,
-      "thu": null,
-      "fri": { "open": 17, "close": 26.5 },
-      "sat": { "open": 17, "close": 26.5 }
+      "wed": { "open": 12, "close": 22 },
+      "thu": { "open": 12, "close": 26 },
+      "fri": { "open": 12, "close": 26.5 },
+      "sat": { "open": 12, "close": 26.5 }
     },
     "dayParts": {
-      "sun": "-",
+      "sun": "E",
       "mon": "-",
       "tue": "-",
-      "wed": "-",
-      "thu": "-",
+      "wed": "E",
+      "thu": "E",
       "fri": "E",
       "sat": "E"
     },

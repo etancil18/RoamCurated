@@ -750,7 +750,10 @@ export default async function ActiveFlowPage({
 
       <div className="relative z-10 mx-auto w-full max-w-4xl px-4 pb-14 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] sm:px-6">
         <div className="flex min-w-0 items-center justify-between gap-4">
-          <BackToRouteButton />
+          <BackToRouteButton
+            flowCity={normalizedSession.city}
+            flowVenueIds={venueIds}
+          />
 
           <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white/[0.035] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500 ring-1 ring-white/[0.055]">
             <span

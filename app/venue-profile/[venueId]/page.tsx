@@ -3,6 +3,10 @@
 import { notFound } from 'next/navigation'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { isCommunityEventSignal } from '@/lib/community-signals/presentation'
+import {
+  loadCurrentCommunityHappeningsForVenue,
+  loadCurrentCommunityPlaceIntelligenceForVenue,
+} from '@/lib/community-signals/liveIntelligence.server'
 
 import HeroBanner from '@/components/venue-profile/HeroBanner'
 import SocialLinks from '@/components/venue-profile/SocialLinks'
@@ -11,6 +15,7 @@ import EventCarousel from '@/components/venue-profile/EventCarousel'
 import VenueVisitButton from '@/components/venue-profile/VenueVisitButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
 import VenuePartnerBadge from '@/components/venue-profile/VenuePartnerBadge'
+import VenueProfileCommunitySignals from '@/components/venue-profile/VenueProfileCommunitySignals'
 
 import BackToRouteButton from '@/app/flow/[session_id]/components/BackToRouteButton'
 
@@ -262,6 +267,55 @@ export default async function VenueProfilePage({
         typeof row?.url ===
           'string'
     )
+
+  const communitySignalsAsOf =
+    new Date(
+      nowIso
+    )
+
+  const [
+    communityHappenings,
+    communityPlaceSignals,
+  ] = await Promise.all([
+    loadCurrentCommunityHappeningsForVenue({
+      venueId,
+      asOf:
+        communitySignalsAsOf,
+      viewerUserId:
+        user?.id ??
+        null,
+    }).catch(
+      error => {
+        console.error(
+          '[venue-profile] Failed to load current Community Signal happenings:',
+          {
+            venueId,
+            error,
+          }
+        )
+
+        return []
+      }
+    ),
+
+    loadCurrentCommunityPlaceIntelligenceForVenue({
+      venueId,
+      asOf:
+        communitySignalsAsOf,
+    }).catch(
+      error => {
+        console.error(
+          '[venue-profile] Failed to load current Community Signal place intelligence:',
+          {
+            venueId,
+            error,
+          }
+        )
+
+        return []
+      }
+    ),
+  ])
 
   const { data: events } =
     await supabase
@@ -604,7 +658,7 @@ export default async function VenueProfilePage({
             />
           </section>
 
-          <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 text-slate-100 shadow-2xl backdrop-blur-xl [&_*]:text-slate-100 [&_h2]:text-white [&_h3]:text-white [&_p]:text-slate-300">
+          <section className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 text-slate-100 shadow-2xl backdrop-blur-xl [&_*]:text-slate-100 [&_a]:text-cyan-300 [&_a:hover]:text-cyan-200 [&_h2]:text-white [&_h3]:text-white [&_p]:text-slate-300">
             <VenueHours
               hours={
                 normalizedVenue.hours
@@ -614,6 +668,15 @@ export default async function VenueProfilePage({
               }
             />
           </section>
+
+          <VenueProfileCommunitySignals
+            happenings={
+              communityHappenings
+            }
+            placeSignals={
+              communityPlaceSignals
+            }
+          />
 
           {upcomingEvents.length >
             0 && (

@@ -10,6 +10,8 @@ import EventJourneysAdmin from './EventJourneysAdmin'
 import PropertyGuidesAdmin from './PropertyGuidesAdmin'
 import SocialGroupsAdmin from './components/SocialGroupsAdmin'
 import CompetitionEntrySelector from './components/CompetitionEntrySelector'
+import HistoricalVenueVisitAdmin from './HistoricalVenueVisitAdmin'
+import FoundingTastemakerAdmin from './FoundingTastemakerAdmin'
 import type { Database } from '@/types/supabase'
 
 export type VenueSummary = Pick<
@@ -17,11 +19,86 @@ export type VenueSummary = Pick<
   'id' | 'name' | 'city'
 >
 
+type AdminWorkspace =
+  | 'overview'
+  | 'events'
+  | 'historical-visits'
+  | 'founding-tastemakers'
+  | 'social-groups'
+  | 'property-guides'
+  | 'event-journeys'
+  | 'relay'
+  | 'competitions'
+
+const ADMIN_WORKSPACES: Array<{
+  id: AdminWorkspace
+  label: string
+  eyebrow: string
+  description: string
+}> = [
+  {
+    id: 'overview',
+    label: 'Overview',
+    eyebrow: 'Control center',
+    description: 'Choose what you want to manage.',
+  },
+  {
+    id: 'events',
+    label: 'Venue events',
+    eyebrow: 'Venue operations',
+    description: 'Events and recurring programming.',
+  },
+  {
+    id: 'historical-visits',
+    label: 'Historical visits',
+    eyebrow: 'Founding tastemakers',
+    description: 'Verified historical attendance.',
+  },
+  {
+    id: 'founding-tastemakers',
+    label: 'Founding Tastemakers',
+    eyebrow: 'Creator identity',
+    description: 'Designate founding Roam creators.',
+  },
+  {
+    id: 'social-groups',
+    label: 'Social groups',
+    eyebrow: 'Community',
+    description: 'Manage social experiences.',
+  },
+  {
+    id: 'property-guides',
+    label: 'Property guides',
+    eyebrow: 'Editorial',
+    description: 'Manage guide content.',
+  },
+  {
+    id: 'event-journeys',
+    label: 'Event journeys',
+    eyebrow: 'Experiences',
+    description: 'Build guided event journeys.',
+  },
+  {
+    id: 'relay',
+    label: 'Roam Relay',
+    eyebrow: 'Experiences',
+    description: 'Manage collaborative Relay experiences.',
+  },
+  {
+    id: 'competitions',
+    label: 'Taste Duels',
+    eyebrow: 'Competitions',
+    description: 'Operate competition workflows.',
+  },
+]
+
 export default function VenueAdminPage() {
   const router = useRouter()
   const supabase = supabaseBrowser()
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [selectedVenueId, setSelectedVenueId] = useState<string>('')
+  const [activeWorkspace, setActiveWorkspace] =
+    useState<AdminWorkspace>('overview')
 
   const allowedEmails = [
     'evantancil@gmail.com',
@@ -49,50 +126,762 @@ export default function VenueAdminPage() {
 
   if (!userEmail) return null
 
+  const activeWorkspaceMeta =
+    ADMIN_WORKSPACES.find(
+      (workspace) => workspace.id === activeWorkspace,
+    ) ?? ADMIN_WORKSPACES[0]
+
   return (
-    <div className="max-w-4xl mx-auto py-10 space-y-12">
-      <section className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
-              Roam Relay
-            </p>
+    <main className="roam-admin-page min-h-screen bg-[#07111f] text-slate-100">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-24 pt-5 sm:px-6 sm:pt-8 lg:px-8">
+        {/* =====================================================
+            PAGE HEADER
+        ====================================================== */}
 
-            <h2 className="mt-2 text-xl font-semibold text-white">
-              Relay management
-            </h2>
+        <header className="relative overflow-hidden rounded-[28px] border border-slate-700/50 bg-[#0a1628] px-5 py-6 shadow-2xl shadow-black/20 sm:px-7 sm:py-8">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0"
+          >
+            <div className="absolute -right-20 -top-28 h-72 w-72 rounded-full bg-blue-500/[0.08] blur-3xl" />
 
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-neutral-400">
-              Create, configure, and manage collaborative Relay experiences,
-              route templates, team structure, and reward policy.
-            </p>
+            <div className="absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-cyan-400/[0.05] blur-3xl" />
+
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent" />
           </div>
 
-          <Link
-            href="/venue-admin/relay"
-            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900 px-4 text-sm font-medium text-neutral-200 transition hover:bg-neutral-800"
-          >
-            Open Relay admin
-          </Link>
+          <div className="relative">
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-2xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex h-7 items-center rounded-full border border-blue-400/20 bg-blue-400/10 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-200">
+                    Roam Admin
+                  </span>
+
+                  <span className="text-xs text-slate-500">
+                    Internal operations
+                  </span>
+                </div>
+
+                <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                  Venue operations
+                </h1>
+
+                <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400 sm:text-[15px]">
+                  Pick the job you need to do. Roam keeps the rest of the
+                  admin system out of your way until you need it.
+                </p>
+              </div>
+
+              <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-700/50 bg-[#0d1b2f] px-4 py-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-400/10 text-sm font-semibold text-blue-200">
+                  {userEmail.slice(0, 1).toUpperCase()}
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    Signed in
+                  </p>
+
+                  <p className="truncate text-sm text-slate-300">
+                    {userEmail}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* =====================================================
+            MOBILE WORKSPACE SWITCHER
+        ====================================================== */}
+
+        <div className="sticky top-0 z-40 -mx-4 mt-4 border-y border-slate-700/40 bg-[#07111f]/95 px-4 py-3 backdrop-blur-xl lg:hidden">
+          <label className="block">
+            <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Workspace
+            </span>
+
+            <select
+              value={activeWorkspace}
+              onChange={(event) =>
+                setActiveWorkspace(
+                  event.target.value as AdminWorkspace,
+                )
+              }
+              className="min-h-12 w-full appearance-none rounded-xl border border-slate-600 bg-[#0d1b2f] px-4 text-[16px] font-medium text-white outline-none ring-blue-400/30 transition focus:border-blue-400 focus:ring-2"
+            >
+              {ADMIN_WORKSPACES.map((workspace) => (
+                <option
+                  key={workspace.id}
+                  value={workspace.id}
+                  className="bg-[#0d1b2f] text-white"
+                >
+                  {workspace.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-      </section>
 
-      <SocialGroupsAdmin />
+        {/* =====================================================
+            DESKTOP SIDEBAR + WORKSPACE
+        ====================================================== */}
 
-      <PropertyGuidesAdmin />
+        <div className="mt-6 grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
+          <aside className="hidden lg:sticky lg:top-6 lg:block">
+            <div className="overflow-hidden rounded-2xl border border-slate-700/50 bg-[#0a1628]">
+              <div className="border-b border-slate-700/40 px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-300">
+                  Workspaces
+                </p>
 
-      <EventsAdmin
-        selectedVenue={selectedVenueId}
-        onVenueChange={setSelectedVenueId}
-      />
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  One job at a time.
+                </p>
+              </div>
 
-      {selectedVenueId && (
-        <RecurringEventAdmin venueId={selectedVenueId} />
+              <nav
+                aria-label="Venue admin workspaces"
+                className="space-y-1 p-2"
+              >
+                {ADMIN_WORKSPACES.map((workspace) => {
+                  const active =
+                    activeWorkspace === workspace.id
+
+                  return (
+                    <button
+                      key={workspace.id}
+                      type="button"
+                      onClick={() =>
+                        setActiveWorkspace(workspace.id)
+                      }
+                      className={[
+                        'w-full rounded-xl px-3 py-3 text-left transition',
+                        active
+                          ? 'bg-blue-500/15 text-white ring-1 ring-inset ring-blue-400/20'
+                          : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200',
+                      ].join(' ')}
+                    >
+                      <span className="block text-sm font-medium">
+                        {workspace.label}
+                      </span>
+
+                      <span
+                        className={[
+                          'mt-1 block text-[11px] leading-4',
+                          active
+                            ? 'text-blue-200/70'
+                            : 'text-slate-600',
+                        ].join(' ')}
+                      >
+                        {workspace.description}
+                      </span>
+                    </button>
+                  )
+                })}
+              </nav>
+            </div>
+          </aside>
+
+          <div className="min-w-0">
+            {/* =================================================
+                ACTIVE WORKSPACE HEADER
+            ================================================== */}
+
+            {activeWorkspace !== 'overview' && (
+              <div className="mb-5 flex items-start gap-3 px-1">
+                <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-400/10 text-blue-200">
+                  <span className="h-2 w-2 rounded-full bg-blue-300 shadow-[0_0_14px_rgba(147,197,253,0.7)]" />
+                </div>
+
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-300">
+                    {activeWorkspaceMeta.eyebrow}
+                  </p>
+
+                  <h2 className="mt-1 text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                    {activeWorkspaceMeta.label}
+                  </h2>
+
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    {activeWorkspaceMeta.description}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* =================================================
+                OVERVIEW
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'overview'}
+              className="space-y-6"
+            >
+              <div className="rounded-[24px] border border-slate-700/50 bg-[#0a1628] p-5 sm:p-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-300">
+                  Control center
+                </p>
+
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
+                  What do you need to do?
+                </h2>
+
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                  Choose a task instead of navigating a long admin page.
+                  Your selected venue stays available as you move between
+                  venue-related workspaces.
+                </p>
+
+                <div className="mt-6 space-y-7">
+                  <AdminOverviewGroup
+                    label="Venue operations"
+                    description="Programming and attendance tied to a specific venue."
+                  >
+                    <AdminTaskCard
+                      title="Manage venue events"
+                      description="Select a venue, edit its events, and manage recurring programming."
+                      accent="blue"
+                      onClick={() =>
+                        setActiveWorkspace('events')
+                      }
+                    />
+
+                    <AdminTaskCard
+                      title="Add historical visit"
+                      description="Seed verified historical attendance for a founding tastemaker."
+                      accent="emerald"
+                      badge={
+                        selectedVenueId
+                          ? 'Venue selected'
+                          : undefined
+                      }
+                      onClick={() =>
+                        setActiveWorkspace('historical-visits')
+                      }
+                    />
+                  </AdminOverviewGroup>
+
+                  <AdminOverviewGroup
+                    label="Community & editorial"
+                    description="Manage the content and community systems people experience across Roam."
+                  >
+                    <AdminTaskCard
+                      title="Founding Tastemakers"
+                      description="Designate or remove the founding identity shown on a creator’s public profile."
+                      accent="amber"
+                      onClick={() =>
+                        setActiveWorkspace('founding-tastemakers')
+                      }
+                    />
+                    <AdminTaskCard
+                      title="Social groups"
+                      description="Manage community and social-group experiences."
+                      accent="cyan"
+                      onClick={() =>
+                        setActiveWorkspace('social-groups')
+                      }
+                    />
+
+                    <AdminTaskCard
+                      title="Property guides"
+                      description="Manage editorial guide content and venue curation."
+                      accent="amber"
+                      onClick={() =>
+                        setActiveWorkspace('property-guides')
+                      }
+                    />
+
+                    <AdminTaskCard
+                      title="Event journeys"
+                      description="Create and manage guided event journeys."
+                      accent="violet"
+                      onClick={() =>
+                        setActiveWorkspace('event-journeys')
+                      }
+                    />
+                  </AdminOverviewGroup>
+
+                  <AdminOverviewGroup
+                    label="Experiences & growth"
+                    description="Operate Roam’s higher-order engagement systems."
+                  >
+                    <AdminTaskCard
+                      title="Roam Relay"
+                      description="Configure collaborative Relay experiences and route structures."
+                      accent="amber"
+                      onClick={() =>
+                        setActiveWorkspace('relay')
+                      }
+                    />
+
+                    <AdminTaskCard
+                      title="Taste Duels"
+                      description="Create, moderate, run, and settle competition experiences."
+                      accent="violet"
+                      onClick={() =>
+                        setActiveWorkspace('competitions')
+                      }
+                    />
+                  </AdminOverviewGroup>
+                </div>
+              </div>
+            </section>
+
+            {/* =================================================
+                VENUE EVENTS
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'events'}
+              className="space-y-5"
+            >
+              <AdminModuleFrame>
+                <EventsAdmin
+                  selectedVenue={selectedVenueId}
+                  onVenueChange={setSelectedVenueId}
+                />
+              </AdminModuleFrame>
+
+              {selectedVenueId ? (
+                <AdminModuleFrame>
+                  <div className="mb-5 border-b border-slate-700/40 pb-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300">
+                      Selected venue
+                    </p>
+
+                    <p className="mt-1 break-all text-xs text-slate-500">
+                      {selectedVenueId}
+                    </p>
+                  </div>
+
+                  <RecurringEventAdmin
+                    venueId={selectedVenueId}
+                  />
+                </AdminModuleFrame>
+              ) : (
+                <AdminEmptyState
+                  title="Select a venue first"
+                  description="Choose the venue above. Recurring event controls will appear here automatically."
+                />
+              )}
+            </section>
+
+            {/* =================================================
+                HISTORICAL VENUE VISITS
+                Independent workspace.
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'historical-visits'}
+              className="space-y-5"
+            >
+              {selectedVenueId ? (
+                <>
+                  <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.05] px-4 py-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-400/10 text-sm font-semibold text-emerald-200">
+                        ✓
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-emerald-100">
+                          Venue ready
+                        </p>
+
+                        <p className="mt-1 break-all text-xs leading-5 text-emerald-100/55">
+                          {selectedVenueId}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveWorkspace('events')
+                          }
+                          className="mt-3 text-xs font-medium text-emerald-200 underline decoration-emerald-400/30 underline-offset-4"
+                        >
+                          Change venue
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <AdminModuleFrame>
+                    <HistoricalVenueVisitAdmin
+                      venueId={selectedVenueId}
+                    />
+                  </AdminModuleFrame>
+                </>
+              ) : (
+                <AdminEmptyState
+                  title="Choose a venue before adding attendance"
+                  description="Historical visits must attach to one canonical venue. Select the venue in Venue Events first, then come back here."
+                  actionLabel="Select venue"
+                  onAction={() =>
+                    setActiveWorkspace('events')
+                  }
+                />
+              )}
+            </section>
+
+            {/* =================================================
+                  FOUNDING TASTEMAKERS
+              ================================================== */}
+
+              <section
+                hidden={activeWorkspace !== 'founding-tastemakers'}
+              >
+                <AdminModuleFrame>
+                  <FoundingTastemakerAdmin />
+                </AdminModuleFrame>
+              </section>
+
+            {/* =================================================
+                SOCIAL GROUPS
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'social-groups'}
+            >
+              <AdminModuleFrame>
+                <SocialGroupsAdmin />
+              </AdminModuleFrame>
+            </section>
+
+            {/* =================================================
+                PROPERTY GUIDES
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'property-guides'}
+            >
+              <AdminModuleFrame>
+                <PropertyGuidesAdmin />
+              </AdminModuleFrame>
+            </section>
+
+            {/* =================================================
+                EVENT JOURNEYS
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'event-journeys'}
+            >
+              <AdminModuleFrame>
+                <EventJourneysAdmin />
+              </AdminModuleFrame>
+            </section>
+
+            {/* =================================================
+                RELAY
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'relay'}
+            >
+              <div className="rounded-[24px] border border-slate-700/50 bg-[#0a1628] p-5 sm:p-6">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300">
+                      Roam Relay
+                    </p>
+
+                    <h3 className="mt-2 text-xl font-semibold text-white">
+                      Relay management
+                    </h3>
+
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                      Create, configure, and manage collaborative Relay
+                      experiences, route templates, team structure, and
+                      reward policy.
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/venue-admin/relay"
+                    className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-blue-500 px-5 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-400 active:scale-[0.99]"
+                  >
+                    Open Relay admin
+                  </Link>
+                </div>
+              </div>
+            </section>
+
+            {/* =================================================
+                COMPETITIONS
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'competitions'}
+            >
+              <AdminModuleFrame>
+                <CompetitionsAdmin />
+              </AdminModuleFrame>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      {/* =====================================================
+          SCOPED ROAM ADMIN THEME NORMALIZATION
+
+          This intentionally normalizes older admin components
+          that still contain white/light cards and makes every
+          form control readable under browser/OS dark mode.
+      ====================================================== */}
+
+      <style jsx global>{`
+        .roam-admin-page {
+          color-scheme: dark;
+        }
+
+        .roam-admin-page input:not([type='checkbox']):not([type='radio']),
+        .roam-admin-page textarea,
+        .roam-admin-page select {
+          color-scheme: dark !important;
+          background-color: #0d1b2f !important;
+          color: #f8fafc !important;
+          -webkit-text-fill-color: #f8fafc !important;
+          border-color: #334155 !important;
+          caret-color: #93c5fd !important;
+        }
+
+        .roam-admin-page input:not([type='checkbox']):not([type='radio']):focus,
+        .roam-admin-page textarea:focus,
+        .roam-admin-page select:focus {
+          border-color: #60a5fa !important;
+          box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.18) !important;
+        }
+
+        .roam-admin-page input::placeholder,
+        .roam-admin-page textarea::placeholder {
+          color: #64748b !important;
+          -webkit-text-fill-color: #64748b !important;
+          opacity: 1 !important;
+        }
+
+        .roam-admin-page select option {
+          background-color: #0d1b2f !important;
+          color: #f8fafc !important;
+        }
+
+        .roam-admin-page input[type='date'],
+        .roam-admin-page input[type='datetime-local'],
+        .roam-admin-page input[type='time'] {
+          color-scheme: dark !important;
+        }
+
+        .roam-admin-module {
+          color: #e2e8f0;
+        }
+
+        .roam-admin-module > * {
+          max-width: 100%;
+        }
+
+        .roam-admin-module .bg-white,
+        .roam-admin-module .bg-gray-50,
+        .roam-admin-module .bg-gray-100,
+        .roam-admin-module .bg-neutral-50,
+        .roam-admin-module .bg-neutral-100,
+        .roam-admin-module .bg-slate-50,
+        .roam-admin-module .bg-slate-100 {
+          background-color: #0d1b2f !important;
+        }
+
+        .roam-admin-module .text-black,
+        .roam-admin-module .text-gray-900,
+        .roam-admin-module .text-neutral-900,
+        .roam-admin-module .text-slate-900,
+        .roam-admin-module .text-gray-800,
+        .roam-admin-module .text-neutral-800,
+        .roam-admin-module .text-slate-800 {
+          color: #f8fafc !important;
+        }
+
+        .roam-admin-module .text-gray-700,
+        .roam-admin-module .text-neutral-700,
+        .roam-admin-module .text-slate-700,
+        .roam-admin-module .text-gray-600,
+        .roam-admin-module .text-neutral-600,
+        .roam-admin-module .text-slate-600 {
+          color: #94a3b8 !important;
+        }
+
+        .roam-admin-module .border-gray-200,
+        .roam-admin-module .border-neutral-200,
+        .roam-admin-module .border-slate-200,
+        .roam-admin-module .border-gray-300,
+        .roam-admin-module .border-neutral-300,
+        .roam-admin-module .border-slate-300 {
+          border-color: #334155 !important;
+        }
+
+        .roam-admin-module button.bg-white {
+          background-color: #f8fafc !important;
+          color: #0f172a !important;
+        }
+
+        .roam-admin-module button.text-black {
+          color: #0f172a !important;
+        }
+
+        @media (max-width: 640px) {
+          .roam-admin-page input,
+          .roam-admin-page textarea,
+          .roam-admin-page select {
+            font-size: 16px !important;
+          }
+        }
+      `}</style>
+    </main>
+  )
+}
+
+// ============================================================
+// VENUE ADMIN PAGE UI
+// ============================================================
+
+function AdminModuleFrame({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="roam-admin-module overflow-hidden rounded-[24px] border border-slate-700/50 bg-[#0a1628] p-4 shadow-xl shadow-black/10 sm:p-5">
+      {children}
+    </div>
+  )
+}
+
+function AdminOverviewGroup({
+  label,
+  description,
+  children,
+}: {
+  label: string
+  description: string
+  children: React.ReactNode
+}) {
+  return (
+    <section>
+      <div>
+        <h3 className="text-sm font-semibold text-slate-200">
+          {label}
+        </h3>
+
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          {description}
+        </p>
+      </div>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {children}
+      </div>
+    </section>
+  )
+}
+
+function AdminTaskCard({
+  title,
+  description,
+  accent,
+  badge,
+  onClick,
+}: {
+  title: string
+  description: string
+  accent:
+    | 'blue'
+    | 'cyan'
+    | 'emerald'
+    | 'amber'
+    | 'violet'
+  badge?: string
+  onClick: () => void
+}) {
+  const accentClass =
+    accent === 'blue'
+      ? 'bg-blue-400'
+      : accent === 'cyan'
+        ? 'bg-cyan-400'
+        : accent === 'emerald'
+          ? 'bg-emerald-400'
+          : accent === 'amber'
+            ? 'bg-amber-400'
+            : 'bg-violet-400'
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group min-h-[132px] rounded-2xl border border-slate-700/50 bg-[#0d1b2f] p-4 text-left transition hover:border-slate-600 hover:bg-[#102039] active:scale-[0.995]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span
+          className={[
+            'mt-1 h-2.5 w-2.5 shrink-0 rounded-full shadow-[0_0_14px_currentColor]',
+            accentClass,
+          ].join(' ')}
+        />
+
+        {badge && (
+          <span className="rounded-full border border-emerald-400/15 bg-emerald-400/[0.08] px-2 py-1 text-[10px] font-medium text-emerald-200">
+            {badge}
+          </span>
+        )}
+      </div>
+
+      <h4 className="mt-4 text-sm font-semibold text-white">
+        {title}
+      </h4>
+
+      <p className="mt-1.5 text-xs leading-5 text-slate-500">
+        {description}
+      </p>
+
+      <p className="mt-3 text-xs font-medium text-blue-300 opacity-80 transition group-hover:opacity-100">
+        Open workspace →
+      </p>
+    </button>
+  )
+}
+
+function AdminEmptyState({
+  title,
+  description,
+  actionLabel,
+  onAction,
+}: {
+  title: string
+  description: string
+  actionLabel?: string
+  onAction?: () => void
+}) {
+  return (
+    <div className="rounded-[24px] border border-dashed border-slate-700 bg-[#0a1628] px-5 py-8 text-center sm:px-8">
+      <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-blue-400/20 bg-blue-400/10 text-blue-200">
+        ↗
+      </div>
+
+      <h3 className="mt-4 text-sm font-semibold text-white">
+        {title}
+      </h3>
+
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+        {description}
+      </p>
+
+      {actionLabel && onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-500 px-5 text-sm font-semibold text-white transition hover:bg-blue-400 active:scale-[0.99]"
+        >
+          {actionLabel}
+        </button>
       )}
-
-      <EventJourneysAdmin />
-
-      <CompetitionsAdmin />
     </div>
   )
 }

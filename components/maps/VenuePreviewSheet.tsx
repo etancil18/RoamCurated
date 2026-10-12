@@ -6,7 +6,12 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
+} from 'react'
+
+import type {
+  ReactNode,
 } from 'react'
 import type {
   DateTime,
@@ -26,6 +31,7 @@ import {
 } from '@/components/FavoritesButton'
 import VenueSignalReporter from '@/components/maps/VenueSignalReporter'
 import type {
+  CommunityHappeningIntelligence,
   CommunityPlaceSignalIntelligence,
 } from '@/lib/community-signals/liveIntelligence'
 import {
@@ -106,7 +112,282 @@ type UpcomingEvent = {
 type CommunityLiveResponse = {
   place_signals?:
     CommunityPlaceSignalIntelligence[]
+
+  happenings?:
+    CommunityHappeningIntelligence[]
+
   error?: string
+}
+
+type CommunitySignalExposurePayload = {
+  client_event_id: string
+
+  exposure_type:
+    'signal_impression'
+
+  signal_domain:
+    | 'place_state'
+    | 'happening'
+
+  signal_key: string
+
+  venue_id:
+    string | null
+
+  occurrence_id:
+    string | null
+
+  canonical_event_id:
+    string | null
+
+  session_token:
+    string | null
+
+  surface:
+    'map_venue_preview'
+
+  city_slug:
+    string | null
+
+  signal_state_snapshot:
+    Record<
+      string,
+      unknown
+    >
+
+  occurred_at: string
+}
+
+type SignalImpressionBoundaryProps = {
+  exposureKey: string
+
+  onImpression:
+    () => void
+
+  children:
+    ReactNode
+
+  className?: string
+}
+
+const EXPOSURE_SESSION_STORAGE_KEY =
+  'roam:community-signal-exposure-session:v1'
+
+function getExposureSessionToken():
+  string | null {
+  if (
+    typeof window ===
+      'undefined'
+  ) {
+    return null
+  }
+
+  try {
+    const existing =
+      window.sessionStorage
+        .getItem(
+          EXPOSURE_SESSION_STORAGE_KEY
+        )
+
+    if (existing) {
+      return existing
+    }
+
+    const token =
+      typeof crypto !==
+        'undefined' &&
+      typeof crypto.randomUUID ===
+        'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2)}`
+
+    window.sessionStorage
+      .setItem(
+        EXPOSURE_SESSION_STORAGE_KEY,
+        token
+      )
+
+    return token
+  } catch {
+    return null
+  }
+}
+
+function createExposureClientEventId():
+  string | null {
+  if (
+    typeof crypto ===
+      'undefined' ||
+    typeof crypto.randomUUID !==
+      'function'
+  ) {
+    return null
+  }
+
+  return crypto.randomUUID()
+}
+
+function SignalImpressionBoundary({
+  exposureKey,
+  onImpression,
+  children,
+  className,
+}: SignalImpressionBoundaryProps) {
+  const elementRef =
+    useRef<
+      HTMLLIElement | null
+    >(
+      null
+    )
+
+  const onImpressionRef =
+    useRef(
+      onImpression
+    )
+
+  const hasRecordedRef =
+    useRef(
+      false
+    )
+
+  const dwellTimerRef =
+    useRef<
+      ReturnType<
+        typeof setTimeout
+      > | null
+    >(
+      null
+    )
+
+  useEffect(
+    () => {
+      onImpressionRef.current =
+        onImpression
+    },
+    [
+      onImpression,
+    ]
+  )
+
+  useEffect(
+    () => {
+      hasRecordedRef.current =
+        false
+
+      const element =
+        elementRef.current
+
+      if (
+        !element ||
+        typeof IntersectionObserver ===
+          'undefined'
+      ) {
+        return
+      }
+
+      const clearDwellTimer =
+        () => {
+          if (
+            dwellTimerRef.current
+          ) {
+            clearTimeout(
+              dwellTimerRef.current
+            )
+
+            dwellTimerRef.current =
+              null
+          }
+        }
+
+      const observer =
+        new IntersectionObserver(
+          entries => {
+            const entry =
+              entries[0]
+
+            if (
+              !entry ||
+              hasRecordedRef.current
+            ) {
+              return
+            }
+
+            const qualifies =
+              entry.isIntersecting &&
+              entry.intersectionRatio >=
+                0.5
+
+            if (!qualifies) {
+              clearDwellTimer()
+
+              return
+            }
+
+            if (
+              dwellTimerRef.current
+            ) {
+              return
+            }
+
+            dwellTimerRef.current =
+              setTimeout(
+                () => {
+                  dwellTimerRef.current =
+                    null
+
+                  if (
+                    hasRecordedRef.current
+                  ) {
+                    return
+                  }
+
+                  hasRecordedRef.current =
+                    true
+
+                  onImpressionRef
+                    .current()
+                },
+                500
+              )
+          },
+          {
+            threshold: [
+              0,
+              0.5,
+              1,
+            ],
+          }
+        )
+
+      observer.observe(
+        element
+      )
+
+      return () => {
+        observer.disconnect()
+
+        clearDwellTimer()
+      }
+    },
+    [
+      exposureKey,
+    ]
+  )
+
+  return (
+    <li
+      ref={
+        elementRef
+      }
+      className={
+        className
+      }
+    >
+      {children}
+    </li>
+  )
 }
 
 function formatListValue(
@@ -411,6 +692,16 @@ export default function VenuePreviewSheet({
       []
     )
 
+    const [
+      happenings,
+      setHappenings,
+    ] =
+      useState<
+        CommunityHappeningIntelligence[]
+      >(
+        []
+      )
+
   const [
     confirmingSignalId,
     setConfirmingSignalId,
@@ -479,104 +770,270 @@ export default function VenuePreviewSheet({
       {}
     )
 
+      const exposedSignalKeysRef =
+        useRef<
+          Set<string>
+        >(
+          new Set<string>()
+        )
+
   const isCreatorExplorationMap =
     interactionContext ===
     'creator-exploration-map'
 
-  const loadPlaceSignals =
-    useCallback(
-      async (
-        signal?:
-          AbortSignal
-      ) => {
-        const venueId =
-          venue?.id
+      /**
+   * Preserve the current main-map URL when navigating
+   * to a venue profile, and request that the selected
+   * venue be restored when returning.
+   *
+   * Creator Exploration Map navigation remains unchanged.
+   */
+  const getVenueProfileHref =
+    () => {
+      const profilePath =
+        `/venue-profile/${encodeURIComponent(
+          venue?.id ?? ''
+        )}`
 
-        if (
-          !venueId ||
-          isCreatorExplorationMap
-        ) {
-          setPlaceSignals(
-            []
+      if (
+        !venue?.id ||
+        isCreatorExplorationMap ||
+        typeof window ===
+          'undefined'
+      ) {
+        return profilePath
+      }
+
+      const returnUrl =
+        new URL(
+          '/',
+          window.location.origin
+        )
+
+      if (
+        city
+      ) {
+        returnUrl.searchParams.set(
+          'city',
+          city
+        )
+      }
+
+      returnUrl.searchParams.set(
+        'venue',
+        venue.id
+      )
+
+      const returnTo =
+        `${returnUrl.pathname}${returnUrl.search}`
+
+      const profileParams =
+        new URLSearchParams({
+          return_to:
+            returnTo,
+
+          return_label:
+            'Back to Map',
+        })
+
+      return (
+        `${profilePath}?${profileParams.toString()}`
+      )
+    }
+
+    const recordSignalImpression =
+      useCallback(
+        (
+          payload:
+            Omit<
+              CommunitySignalExposurePayload,
+              | 'client_event_id'
+              | 'session_token'
+              | 'occurred_at'
+            >
+        ) => {
+          if (
+            exposedSignalKeysRef
+              .current
+              .has(
+                payload.signal_key
+              )
+          ) {
+            return
+          }
+
+          const clientEventId =
+            createExposureClientEventId()
+
+          if (!clientEventId) {
+            return
+          }
+
+          exposedSignalKeysRef
+            .current
+            .add(
+              payload.signal_key
+            )
+
+          const exposure:
+            CommunitySignalExposurePayload = {
+            ...payload,
+
+            client_event_id:
+              clientEventId,
+
+            session_token:
+              getExposureSessionToken(),
+
+            occurred_at:
+              new Date()
+                .toISOString(),
+          }
+
+          void fetch(
+            '/api/community-signals/exposures',
+            {
+              method:
+                'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              credentials:
+                'include',
+
+              keepalive:
+                true,
+
+              body:
+                JSON.stringify(
+                  exposure
+                ),
+            }
+          ).catch(
+            error => {
+              console.error(
+                '[VenuePreviewSheet] Failed to record Community Signal exposure:',
+                error
+              )
+            }
+          )
+        },
+        []
+      )
+
+  const loadLiveCommunitySignals =
+  useCallback(
+    async (
+      signal?:
+        AbortSignal
+    ) => {
+      const venueId =
+        venue?.id
+
+      if (
+        !venueId ||
+        isCreatorExplorationMap
+      ) {
+        setPlaceSignals(
+          []
+        )
+
+        setHappenings(
+          []
+        )
+
+        return
+      }
+
+      try {
+        const response =
+          await fetch(
+            `/api/community-signals/live?venue_id=${encodeURIComponent(
+              venueId
+            )}`,
+            {
+              method:
+                'GET',
+
+              credentials:
+                'include',
+
+              cache:
+                'no-store',
+
+              signal,
+            }
           )
 
+        let body:
+          | CommunityLiveResponse
+          | null = null
+
+        try {
+          body =
+            (await response.json()) as
+              CommunityLiveResponse
+        } catch {
+          body = null
+        }
+
+        if (!response.ok) {
+          throw new Error(
+            body?.error ??
+              'Could not load community signals.'
+          )
+        }
+
+        if (
+          signal?.aborted
+        ) {
           return
         }
 
-        try {
-          const response =
-            await fetch(
-              `/api/community-signals/live?venue_id=${encodeURIComponent(
-                venueId
-              )}`,
-              {
-                method:
-                  'GET',
-
-                credentials:
-                  'include',
-
-                cache:
-                  'no-store',
-
-                signal,
-              }
-            )
-
-          let body:
-            | CommunityLiveResponse
-            | null = null
-
-          try {
-            body =
-              (await response.json()) as
-                CommunityLiveResponse
-          } catch {
-            body = null
-          }
-
-          if (!response.ok) {
-            throw new Error(
-              body?.error ??
-                'Could not load community signals.'
-            )
-          }
-
-          if (
-            signal?.aborted
-          ) {
-            return
-          }
-
-          setPlaceSignals(
-            Array.isArray(
-              body?.place_signals
-            )
-              ? body.place_signals
-              : []
+        setPlaceSignals(
+          Array.isArray(
+            body?.place_signals
           )
-        } catch (error) {
-          if (
-            signal?.aborted
-          ) {
-            return
-          }
+            ? body.place_signals
+            : []
+        )
 
-          console.error(
-            '[VenuePreviewSheet] Failed to load current place signals:',
-            error
+        setHappenings(
+          Array.isArray(
+            body?.happenings
           )
-
-          setPlaceSignals(
-            []
-          )
+            ? body.happenings
+            : []
+        )
+      } catch (error) {
+        if (
+          signal?.aborted
+        ) {
+          return
         }
-      },
-      [
-        venue?.id,
-        isCreatorExplorationMap,
-      ]
-    )
+
+        console.error(
+          '[VenuePreviewSheet] Failed to load current community signals:',
+          error
+        )
+
+        setPlaceSignals(
+          []
+        )
+
+        setHappenings(
+          []
+        )
+      }
+    },
+    [
+      venue?.id,
+      isCreatorExplorationMap,
+    ]
+  )
 
   const timezone =
     useMemo(
@@ -689,14 +1146,28 @@ export default function VenuePreviewSheet({
 
   useEffect(
     () => {
+      exposedSignalKeysRef.current =
+        new Set<string>()
+    },
+    [
+      venue?.id,
+    ]
+  )
+
+  useEffect(
+    () => {
       setPlaceSignals(
+        []
+      )
+
+      setHappenings(
         []
       )
 
       const controller =
         new AbortController()
 
-      void loadPlaceSignals(
+      void loadLiveCommunitySignals(
         controller.signal
       )
 
@@ -705,7 +1176,7 @@ export default function VenuePreviewSheet({
       }
     },
     [
-      loadPlaceSignals,
+      loadLiveCommunitySignals,
     ]
   )
 
@@ -1111,7 +1582,7 @@ export default function VenuePreviewSheet({
           refresh ===
           'place'
         ) {
-          await loadPlaceSignals()
+          await loadLiveCommunitySignals()
         }
 
         if (
@@ -1250,7 +1721,7 @@ export default function VenuePreviewSheet({
           refresh ===
           'place'
         ) {
-          await loadPlaceSignals()
+          await loadLiveCommunitySignals()
         }
 
         if (
@@ -1827,6 +2298,8 @@ export default function VenuePreviewSheet({
                 {(
                   communitySignals.length >
                     0 ||
+                  happenings.length >
+                    0 ||
                   presentPlaceSignals.length >
                     0
                 ) && (
@@ -1962,6 +2435,8 @@ export default function VenuePreviewSheet({
             {(
               communitySignals.length >
                 0 ||
+              happenings.length >
+                0 ||
               presentPlaceSignals.length >
                 0
             ) && (
@@ -1993,11 +2468,57 @@ export default function VenuePreviewSheet({
                         )
 
                       return (
-                        <li
+                        <SignalImpressionBoundary
                           key={
                             signal.intelligenceId
                           }
+                          exposureKey={
+                            `place:${signal.venueId}:${signal.signalType}`
+                          }
                           className="flex items-start gap-3 text-sm"
+                          onImpression={
+                            () => {
+                              recordSignalImpression({
+                                exposure_type:
+                                  'signal_impression',
+
+                                signal_domain:
+                                  'place_state',
+
+                                signal_key:
+                                  `place:${signal.venueId}:${signal.signalType}`,
+
+                                venue_id:
+                                  signal.venueId,
+
+                                occurrence_id:
+                                  null,
+
+                                canonical_event_id:
+                                  null,
+
+                                surface:
+                                  'map_venue_preview',
+
+                                city_slug:
+                                  city,
+
+                                signal_state_snapshot: {
+                                  intelligence_id:
+                                    signal.intelligenceId,
+
+                                  signal_type:
+                                    signal.signalType,
+
+                                  signal_state:
+                                    signal.signalState,
+
+                                  supporting_contributors:
+                                    signal.supportingContributors,
+                                },
+                              })
+                            }
+                          }
                         >
                           <div
                             className="
@@ -2190,236 +2711,590 @@ export default function VenuePreviewSheet({
                               ) : null}
                             </div>
                           </div>
-                        </li>
+                        </SignalImpressionBoundary>
                       )
-                    }
-                  )}
+                      }
+                      )}
 
-                  {communitySignals.map(
-                    ({
-                      event,
-                      startsAt,
-                      endsAt,
-                    }) => {
-                      const nowMillis =
-                        resolvedNow.toMillis()
+                      {happenings.map(
+                        signal => {
+                          const signalId =
+                            signal.intelligenceId
 
-                      const isHappeningNow =
-                        startsAt.toMillis() <=
-                          nowMillis &&
-                        endsAt !==
-                          null &&
-                        endsAt.toMillis() >
-                          nowMillis
+                          const localViewerResponse =
+                            confirmedSignalIds.has(
+                              signalId
+                            )
+                              ? 'confirmed'
+                              : reportedAbsentSignalIds.has(
+                                    signalId
+                                  )
+                                ? 'not_there'
+                                : null
 
-                      const signalId =
-                        `event:${event.id}`
+                          const viewerResponse =
+                            signal.viewerResponse ??
+                            localViewerResponse
 
-                      const occurrenceId =
-                        event.occurrence_id
+                          const confidenceLabel =
+                            signal.confidenceBand ===
+                              'strong'
+                              ? 'Strong'
+                              : signal.confidenceBand ===
+                                  'supported'
+                                ? 'Supported'
+                                : 'Emerging'
 
-                      const isConfirmed =
-                        confirmedSignalIds.has(
-                          signalId
-                        )
-
-                      return (
-                        <li
-                          key={
-                            event.id
-                          }
-                          className="flex items-start gap-3 text-sm"
-                        >
-                          <div
-                            className="
-                              min-w-[88px]
-                              rounded-lg
-                              bg-cyan-400/10
-                              px-2
-                              py-1
-                              text-center
-                              text-[11px]
-                              font-bold
-                              text-cyan-200
-                            "
-                          >
-                            {isHappeningNow
-                              ? 'Happening now'
-                              : startsAt.toFormat(
-                                  'MMM d · h:mm a'
-                                )}
-                          </div>
-
-                          <div className="min-w-0 pt-0.5">
-                            <div className="font-medium leading-5 text-zinc-200">
-                              {
-                                event.title
+                          return (
+                            <SignalImpressionBoundary
+                              key={
+                                signal.intelligenceId
                               }
-                            </div>
+                              exposureKey={
+                                `occurrence:${signal.occurrenceId}`
+                              }
+                              className="flex items-start gap-3 text-sm"
+                              onImpression={
+                                () => {
+                                  recordSignalImpression({
+                                    exposure_type:
+                                      'signal_impression',
 
-                            <div className="mt-0.5 text-[11px] font-semibold text-cyan-300/70">
-                              {typeof event.confirming_contributors ===
-                                'number' &&
-                              event.confirming_contributors >= 2
-                                ? `Community · ${event.confirming_contributors} people confirm this`
-                                : 'Community'}
-                            </div>
+                                    signal_domain:
+                                      'happening',
 
-                            <div className="mt-2">
-                              <div className="flex flex-wrap gap-2">
-                                {isConfirmed ? (
-                                  <div className="text-[11px] font-bold text-emerald-300">
-                                    Thanks — confirmed
-                                  </div>
-                                ) : occurrenceId ? (
-                                  <button
-                                    type="button"
-                                    disabled={
-                                      confirmingSignalId !==
-                                        null ||
-                                      reportingAbsentSignalId !==
-                                        null
-                                    }
-                                    onClick={() => {
-                                      void handleStillHappening({
-                                        signalId,
+                                    signal_key:
+                                      `occurrence:${signal.occurrenceId}`,
 
-                                        url:
-                                          `/api/event-occurrences/${encodeURIComponent(
-                                            occurrenceId
-                                          )}/confirmations`,
+                                    venue_id:
+                                      signal.venueId,
 
-                                        body: {},
+                                    occurrence_id:
+                                      signal.occurrenceId,
 
-                                        refresh:
-                                          'events',
-                                      })
-                                    }}
-                                    className="
-                                      rounded-lg
-                                      border
-                                      border-cyan-300/20
-                                      bg-cyan-300/[0.07]
-                                      px-2.5
-                                      py-1.5
-                                      text-[11px]
-                                      font-bold
-                                      text-cyan-100
-                                      transition
-                                      hover:border-cyan-300/35
-                                      hover:bg-cyan-300/10
-                                      hover:text-white
-                                      focus-visible:outline-none
-                                      focus-visible:ring-2
-                                      focus-visible:ring-cyan-300
-                                      disabled:cursor-not-allowed
-                                      disabled:opacity-50
-                                    "
-                                  >
-                                    {confirmingSignalId ===
-                                    signalId
-                                      ? 'Confirming…'
-                                      : 'Still happening'}
-                                  </button>
-                                ) : null}
+                                    canonical_event_id:
+                                      null,
 
-                                {reportedAbsentSignalIds.has(
-                                  signalId
-                                ) ? (
-                                  <div className="text-[11px] font-bold text-emerald-300">
-                                    Thanks — reported
-                                  </div>
-                                ) : occurrenceId ? (
-                                  <button
-                                    type="button"
-                                    disabled={
-                                      confirmingSignalId !==
-                                        null ||
-                                      reportingAbsentSignalId !==
-                                        null
-                                    }
-                                    onClick={() => {
-                                      void handleNotThere({
-                                        signalId,
+                                    surface:
+                                      'map_venue_preview',
 
-                                        url:
-                                          `/api/event-occurrences/${encodeURIComponent(
-                                            occurrenceId
-                                          )}/corrections`,
+                                    city_slug:
+                                      city,
 
-                                        body: {
-                                          correction_type:
-                                            'canceled',
+                                    signal_state_snapshot: {
+                                      intelligence_id:
+                                        signal.intelligenceId,
 
-                                          claim: {},
-                                        },
+                                      title:
+                                        signal.title,
 
-                                        refresh:
-                                          'events',
-                                      })
-                                    }}
-                                    className="
-                                      rounded-lg
-                                      border
-                                      border-rose-300/20
-                                      bg-rose-300/[0.06]
-                                      px-2.5
-                                      py-1.5
-                                      text-[11px]
-                                      font-bold
-                                      text-rose-100
-                                      transition
-                                      hover:border-rose-300/35
-                                      hover:bg-rose-300/10
-                                      hover:text-white
-                                      focus-visible:outline-none
-                                      focus-visible:ring-2
-                                      focus-visible:ring-rose-300
-                                      disabled:cursor-not-allowed
-                                      disabled:opacity-50
-                                    "
-                                  >
-                                    {reportingAbsentSignalId ===
-                                    signalId
-                                      ? 'Reporting…'
-                                      : 'Not there'}
-                                  </button>
-                                ) : null}
+                                      archetype:
+                                        signal.archetype,
+
+                                      confidence_band:
+                                        signal.confidenceBand,
+
+                                      contributors:
+                                        signal.contributors,
+
+                                      reporters:
+                                        signal.reporters,
+
+                                      confirmers:
+                                        signal.confirmers,
+
+                                      observed_at:
+                                        signal.observedAt,
+
+                                      pending_corrections:
+                                        signal.pendingCorrections,
+                                    },
+                                  })
+                                }
+                              }
+                            >
+                              <div
+                                className="
+                                  min-w-[88px]
+                                  rounded-lg
+                                  bg-cyan-400/10
+                                  px-2
+                                  py-1
+                                  text-center
+                                  text-[11px]
+                                  font-bold
+                                  text-cyan-200
+                                "
+                              >
+                                {confidenceLabel}
                               </div>
 
-                              {confirmationErrorBySignalId[
-                                signalId
-                              ] ? (
-                                <p
-                                  role="alert"
-                                  className="mt-1 text-[11px] leading-4 text-rose-300"
-                                >
-                                  {
-                                    confirmationErrorBySignalId[
-                                      signalId
-                                    ]
+                              <div className="min-w-0 pt-0.5">
+                                <div className="font-medium leading-5 text-zinc-200">
+                                  {signal.title}
+                                </div>
+
+                                <div className="mt-0.5 text-[11px] font-semibold text-cyan-300/70">
+                                  {signal.contributors >= 2
+                                    ? `Community · ${signal.contributors} people report this`
+                                    : 'Community · recently reported'}
+                                </div>
+
+                                <div className="mt-2">
+                                  <div className="flex flex-wrap gap-2">
+                                    {viewerResponse ===
+                                    'confirmed' ? (
+                                      <div className="text-[11px] font-bold text-emerald-300">
+                                        Thanks — confirmed
+                                      </div>
+                                    ) : viewerResponse ===
+                                      'not_there' ? (
+                                      <div className="text-[11px] font-bold text-emerald-300">
+                                        Thanks — reported
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <button
+                                          type="button"
+                                          disabled={
+                                            confirmingSignalId !==
+                                              null ||
+                                            reportingAbsentSignalId !==
+                                              null
+                                          }
+                                          onClick={() => {
+                                            void handleStillHappening({
+                                              signalId,
+
+                                              url:
+                                                `/api/event-occurrences/${encodeURIComponent(
+                                                  signal.occurrenceId
+                                                )}/confirmations`,
+
+                                              body: {},
+
+                                              refresh:
+                                                'place',
+                                            })
+                                          }}
+                                          className="
+                                            rounded-lg
+                                            border
+                                            border-cyan-300/20
+                                            bg-cyan-300/[0.07]
+                                            px-2.5
+                                            py-1.5
+                                            text-[11px]
+                                            font-bold
+                                            text-cyan-100
+                                            transition
+                                            hover:border-cyan-300/35
+                                            hover:bg-cyan-300/10
+                                            hover:text-white
+                                            focus-visible:outline-none
+                                            focus-visible:ring-2
+                                            focus-visible:ring-cyan-300
+                                            disabled:cursor-not-allowed
+                                            disabled:opacity-50
+                                          "
+                                        >
+                                          {confirmingSignalId ===
+                                          signalId
+                                            ? 'Confirming…'
+                                            : 'Still happening'}
+                                        </button>
+
+                                        <button
+                                          type="button"
+                                          disabled={
+                                            confirmingSignalId !==
+                                              null ||
+                                            reportingAbsentSignalId !==
+                                              null
+                                          }
+                                          onClick={() => {
+                                            void handleNotThere({
+                                              signalId,
+
+                                              url:
+                                                `/api/event-occurrences/${encodeURIComponent(
+                                                  signal.occurrenceId
+                                                )}/corrections`,
+
+                                              body: {
+                                                correction_type:
+                                                  'canceled',
+
+                                                claim: {},
+                                              },
+
+                                              refresh:
+                                                'place',
+                                            })
+                                          }}
+                                          className="
+                                            rounded-lg
+                                            border
+                                            border-rose-300/20
+                                            bg-rose-300/[0.06]
+                                            px-2.5
+                                            py-1.5
+                                            text-[11px]
+                                            font-bold
+                                            text-rose-100
+                                            transition
+                                            hover:border-rose-300/35
+                                            hover:bg-rose-300/10
+                                            hover:text-white
+                                            focus-visible:outline-none
+                                            focus-visible:ring-2
+                                            focus-visible:ring-rose-300
+                                            disabled:cursor-not-allowed
+                                            disabled:opacity-50
+                                          "
+                                        >
+                                          {reportingAbsentSignalId ===
+                                          signalId
+                                            ? 'Reporting…'
+                                            : 'Not there'}
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {confirmationErrorBySignalId[
+                                    signalId
+                                  ] ? (
+                                    <p
+                                      role="alert"
+                                      className="mt-1 text-[11px] leading-4 text-rose-300"
+                                    >
+                                      {
+                                        confirmationErrorBySignalId[
+                                          signalId
+                                        ]
+                                      }
+                                    </p>
+                                  ) : null}
+
+                                  {absentReportErrorBySignalId[
+                                    signalId
+                                  ] ? (
+                                    <p
+                                      role="alert"
+                                      className="mt-1 text-[11px] leading-4 text-rose-300"
+                                    >
+                                      {
+                                        absentReportErrorBySignalId[
+                                          signalId
+                                        ]
+                                      }
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </SignalImpressionBoundary>
+                          )
+                        }
+                      )}
+
+                      {communitySignals.map(
+                        ({
+                          event,
+                          startsAt,
+                          endsAt,
+                        }) => {
+                          const nowMillis =
+                            resolvedNow.toMillis()
+
+                          const isHappeningNow =
+                            startsAt.toMillis() <=
+                              nowMillis &&
+                            endsAt !==
+                              null &&
+                            endsAt.toMillis() >
+                              nowMillis
+
+                          const signalId =
+                            `event:${event.id}`
+
+                          const occurrenceId =
+                            event.occurrence_id
+
+                          const isConfirmed =
+                            confirmedSignalIds.has(
+                              signalId
+                            )
+
+                      return (
+                      <SignalImpressionBoundary
+                        key={
+                          event.id
+                        }
+                        exposureKey={
+                          occurrenceId
+                            ? `occurrence:${occurrenceId}`
+                            : `untracked-event:${event.id}`
+                        }
+                        className="flex items-start gap-3 text-sm"
+                        onImpression={
+                          () => {
+                            if (
+                              !occurrenceId
+                            ) {
+                              return
+                            }
+
+                            recordSignalImpression({
+                              exposure_type:
+                                'signal_impression',
+
+                              signal_domain:
+                                'happening',
+
+                              signal_key:
+                                `occurrence:${occurrenceId}`,
+
+                              venue_id:
+                                venue.id
+                                  ? String(
+                                      venue.id
+                                    )
+                                  : null,
+
+                              occurrence_id:
+                                occurrenceId,
+
+                              canonical_event_id:
+                                null,
+
+                              surface:
+                                'map_venue_preview',
+
+                              city_slug:
+                                city,
+
+                              signal_state_snapshot: {
+                                event_id:
+                                  String(
+                                    event.id
+                                  ),
+
+                                title:
+                                  event.title,
+
+                                confidence_band:
+                                  event.confidence_band ??
+                                  null,
+
+                                confirming_contributors:
+                                  event.confirming_contributors ??
+                                  null,
+
+                                starts_at:
+                                  event.starts_at,
+
+                                ends_at:
+                                  event.ends_at ??
+                                  null,
+
+                                happening_now:
+                                  isHappeningNow,
+                              },
+                            })
+                          }
+                        }
+                      >
+                        <div
+                          className="
+                            min-w-[88px]
+                            rounded-lg
+                            bg-cyan-400/10
+                            px-2
+                            py-1
+                            text-center
+                            text-[11px]
+                            font-bold
+                            text-cyan-200
+                          "
+                        >
+                          {isHappeningNow
+                            ? 'Happening now'
+                            : startsAt.toFormat(
+                                'MMM d · h:mm a'
+                              )}
+                        </div>
+
+                        <div className="min-w-0 pt-0.5">
+                          <div className="font-medium leading-5 text-zinc-200">
+                            {
+                              event.title
+                            }
+                          </div>
+
+                          <div className="mt-0.5 text-[11px] font-semibold text-cyan-300/70">
+                            {typeof event.confirming_contributors ===
+                              'number' &&
+                            event.confirming_contributors >= 2
+                              ? `Community · ${event.confirming_contributors} people confirm this`
+                              : 'Community'}
+                          </div>
+
+                          <div className="mt-2">
+                            <div className="flex flex-wrap gap-2">
+                              {isConfirmed ? (
+                                <div className="text-[11px] font-bold text-emerald-300">
+                                  Thanks — confirmed
+                                </div>
+                              ) : occurrenceId ? (
+                                <button
+                                  type="button"
+                                  disabled={
+                                    confirmingSignalId !==
+                                      null ||
+                                    reportingAbsentSignalId !==
+                                      null
                                   }
-                                </p>
+                                  onClick={() => {
+                                    void handleStillHappening({
+                                      signalId,
+
+                                      url:
+                                        `/api/event-occurrences/${encodeURIComponent(
+                                          occurrenceId
+                                        )}/confirmations`,
+
+                                      body: {},
+
+                                      refresh:
+                                        'events',
+                                    })
+                                  }}
+                                  className="
+                                    rounded-lg
+                                    border
+                                    border-cyan-300/20
+                                    bg-cyan-300/[0.07]
+                                    px-2.5
+                                    py-1.5
+                                    text-[11px]
+                                    font-bold
+                                    text-cyan-100
+                                    transition
+                                    hover:border-cyan-300/35
+                                    hover:bg-cyan-300/10
+                                    hover:text-white
+                                    focus-visible:outline-none
+                                    focus-visible:ring-2
+                                    focus-visible:ring-cyan-300
+                                    disabled:cursor-not-allowed
+                                    disabled:opacity-50
+                                  "
+                                >
+                                  {confirmingSignalId ===
+                                  signalId
+                                    ? 'Confirming…'
+                                    : 'Still happening'}
+                                </button>
                               ) : null}
 
-                              {absentReportErrorBySignalId[
+                              {reportedAbsentSignalIds.has(
                                 signalId
-                              ] ? (
-                                <p
-                                  role="alert"
-                                  className="mt-1 text-[11px] leading-4 text-rose-300"
-                                >
-                                  {
-                                    absentReportErrorBySignalId[
-                                      signalId
-                                    ]
+                              ) ? (
+                                <div className="text-[11px] font-bold text-emerald-300">
+                                  Thanks — reported
+                                </div>
+                              ) : occurrenceId ? (
+                                <button
+                                  type="button"
+                                  disabled={
+                                    confirmingSignalId !==
+                                      null ||
+                                    reportingAbsentSignalId !==
+                                      null
                                   }
-                                </p>
+                                  onClick={() => {
+                                    void handleNotThere({
+                                      signalId,
+
+                                      url:
+                                        `/api/event-occurrences/${encodeURIComponent(
+                                          occurrenceId
+                                        )}/corrections`,
+
+                                      body: {
+                                        correction_type:
+                                          'canceled',
+
+                                        claim: {},
+                                      },
+
+                                      refresh:
+                                        'events',
+                                    })
+                                  }}
+                                  className="
+                                    rounded-lg
+                                    border
+                                    border-rose-300/20
+                                    bg-rose-300/[0.06]
+                                    px-2.5
+                                    py-1.5
+                                    text-[11px]
+                                    font-bold
+                                    text-rose-100
+                                    transition
+                                    hover:border-rose-300/35
+                                    hover:bg-rose-300/10
+                                    hover:text-white
+                                    focus-visible:outline-none
+                                    focus-visible:ring-2
+                                    focus-visible:ring-rose-300
+                                    disabled:cursor-not-allowed
+                                    disabled:opacity-50
+                                  "
+                                >
+                                  {reportingAbsentSignalId ===
+                                  signalId
+                                    ? 'Reporting…'
+                                    : 'Not there'}
+                                </button>
                               ) : null}
                             </div>
+
+                            {confirmationErrorBySignalId[
+                              signalId
+                            ] ? (
+                              <p
+                                role="alert"
+                                className="mt-1 text-[11px] leading-4 text-rose-300"
+                              >
+                                {
+                                  confirmationErrorBySignalId[
+                                    signalId
+                                  ]
+                                }
+                              </p>
+                            ) : null}
+
+                            {absentReportErrorBySignalId[
+                              signalId
+                            ] ? (
+                              <p
+                                role="alert"
+                                className="mt-1 text-[11px] leading-4 text-rose-300"
+                              >
+                                {
+                                  absentReportErrorBySignalId[
+                                    signalId
+                                  ]
+                                }
+                              </p>
+                            ) : null}
                           </div>
-                        </li>
-                      )
+                        </div>
+                      </SignalImpressionBoundary>
+                    )
                     }
                   )}
                 </ul>
@@ -2500,6 +3375,8 @@ export default function VenuePreviewSheet({
                           setSignalReported(
                             true
                           )
+
+                          void loadLiveCommunitySignals()
                         }
                       }
                     />
@@ -2570,7 +3447,9 @@ export default function VenuePreviewSheet({
               <div className="grid grid-cols-2 gap-2">
                 {venue.id ? (
                   <Link
-                    href={`/venue-profile/${venue.id}`}
+                    href={
+                      getVenueProfileHref()
+                    }
                     onClick={
                       () =>
                         onViewVenue?.(

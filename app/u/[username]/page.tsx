@@ -49,6 +49,7 @@ type ProfileRow = {
   show_checkins: boolean | null
   show_saved_guides: boolean | null
   show_social_groups: boolean | null
+  is_founding_tastemaker: boolean
   creator_mode_enabled: boolean | null
   creator_headline: string | null
   show_public_exploration_map: boolean
@@ -158,6 +159,7 @@ export default async function PublicUserProfilePage({
       id,
       username,
       full_name,
+      is_founding_tastemaker,
       avatar_url,
       bio,
       home_neighborhood,
@@ -620,7 +622,10 @@ export default async function PublicUserProfilePage({
                 placesExploredCount={
                   venueVisitsCount
                 }
-              />
+                isFoundingTastemaker={
+                  profile.is_founding_tastemaker === true
+                }
+                />
             </div>
 
             <CreatorProfileNavigation

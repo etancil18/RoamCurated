@@ -702,6 +702,9 @@ export async function POST(
   // - distance_meters
   // - proximity_verified
   // - moderation_status
+  //
+  // The database additionally enforces one durable quick-response
+  // posture per contributor + occurrence.
   // ----------------------------------------------------------
 
   const {
@@ -805,6 +808,32 @@ export async function POST(
           }
         )
       }
+    }
+
+    /**
+     * PostgreSQL check_violation deliberately raised by the
+     * durable occurrence-response guard when this contributor
+     * previously chose the opposite quick-response posture.
+     *
+     * Do not treat unrelated database check violations as this
+     * expected product conflict.
+     */
+    if (
+      insertError.code ===
+        '23514' &&
+      insertError.message.includes(
+        'Contributor has already responded to this occurrence.'
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'You have already responded to this community signal.',
+        },
+        {
+          status: 409,
+        }
+      )
     }
 
     console.error(

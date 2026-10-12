@@ -285,6 +285,1051 @@ export type Database = {
           },
         ]
       }
+      admin_historical_venue_visit_assertions: {
+        Row: {
+          asserted_by_user_id: string
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+          venue_id: string
+          venue_timezone: string
+          venue_visit_id: string
+          visit_date: string
+          visited_at: string
+        }
+        Insert: {
+          asserted_by_user_id: string
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+          venue_id: string
+          venue_timezone: string
+          venue_visit_id: string
+          visit_date: string
+          visited_at: string
+        }
+        Update: {
+          asserted_by_user_id?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+          venue_id?: string
+          venue_timezone?: string
+          venue_visit_id?: string
+          visit_date?: string
+          visited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_historical_venue_visit_assertions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "admin_historical_venue_visit_assertions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_historical_venue_visit_assertions_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: true
+            referencedRelation: "community_signal_episode_verified_participation_v1"
+            referencedColumns: ["participation_id"]
+          },
+          {
+            foreignKeyName: "admin_historical_venue_visit_assertions_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: true
+            referencedRelation: "community_signal_exposure_participation_alignment_v1"
+            referencedColumns: ["next_participation_id"]
+          },
+          {
+            foreignKeyName: "admin_historical_venue_visit_assertions_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: true
+            referencedRelation: "community_signal_exposure_participation_alignment_v1"
+            referencedColumns: ["prior_participation_id"]
+          },
+          {
+            foreignKeyName: "admin_historical_venue_visit_assertions_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: true
+            referencedRelation: "community_signal_verified_venue_participation_fact_v1"
+            referencedColumns: ["participation_id"]
+          },
+          {
+            foreignKeyName: "admin_historical_venue_visit_assertions_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: true
+            referencedRelation: "venue_visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_credit_ledger: {
+        Row: {
+          allocation_lot_id: string | null
+          amount_delta: number
+          created_at: string
+          cycle_id: string
+          effective_at: string
+          entry_type: string
+          id: string
+          idempotency_key: string
+          metadata: Json
+          redemption_id: string | null
+          schema_version: number
+          user_id: string
+        }
+        Insert: {
+          allocation_lot_id?: string | null
+          amount_delta: number
+          created_at?: string
+          cycle_id: string
+          effective_at?: string
+          entry_type: string
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          redemption_id?: string | null
+          schema_version?: number
+          user_id: string
+        }
+        Update: {
+          allocation_lot_id?: string | null
+          amount_delta?: number
+          created_at?: string
+          cycle_id?: string
+          effective_at?: string
+          entry_type?: string
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          redemption_id?: string | null
+          schema_version?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_credit_ledger_allocation_lot_fk"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_credit_ledger_allocation_lot_fk"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_credit_ledger_allocation_lot_fk"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_credit_ledger_allocation_lot_fk"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_credit_ledger_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_credit_ledger_redemption_fk"
+            columns: ["redemption_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_redemptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_market_allocation_lots: {
+        Row: {
+          allocated_at: string
+          allocation_source: string
+          created_at: string
+          credits_allocated: number
+          cycle_id: string
+          id: string
+          idempotency_key: string
+          market_id: string
+          metadata: Json
+          position_direction: string
+          schema_version: number
+          user_id: string
+        }
+        Insert: {
+          allocated_at?: string
+          allocation_source?: string
+          created_at?: string
+          credits_allocated: number
+          cycle_id: string
+          id?: string
+          idempotency_key: string
+          market_id: string
+          metadata?: Json
+          position_direction: string
+          schema_version?: number
+          user_id: string
+        }
+        Update: {
+          allocated_at?: string
+          allocation_source?: string
+          created_at?: string
+          credits_allocated?: number
+          cycle_id?: string
+          id?: string
+          idempotency_key?: string
+          market_id?: string
+          metadata?: Json
+          position_direction?: string
+          schema_version?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_allocation_lots_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id", "cycle_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id", "cycle_id"]
+          },
+        ]
+      }
+      city_market_allocation_settlements: {
+        Row: {
+          allocation_lot_id: string
+          created_at: string
+          cycle_id: string
+          gross_redeemed_credits: number
+          id: string
+          market_id: string
+          metadata: Json
+          original_credits: number
+          outcome_direction: string
+          position_direction: string
+          resolution_id: string
+          schema_version: number
+          settled_at: string
+          settlement_fingerprint: string
+          settlement_result: string
+          settlement_rule_version: string
+          surviving_credits: number
+          user_id: string
+        }
+        Insert: {
+          allocation_lot_id: string
+          created_at?: string
+          cycle_id: string
+          gross_redeemed_credits: number
+          id?: string
+          market_id: string
+          metadata?: Json
+          original_credits: number
+          outcome_direction: string
+          position_direction: string
+          resolution_id: string
+          schema_version?: number
+          settled_at?: string
+          settlement_fingerprint: string
+          settlement_result: string
+          settlement_rule_version: string
+          surviving_credits: number
+          user_id: string
+        }
+        Update: {
+          allocation_lot_id?: string
+          created_at?: string
+          cycle_id?: string
+          gross_redeemed_credits?: number
+          id?: string
+          market_id?: string
+          metadata?: Json
+          original_credits?: number
+          outcome_direction?: string
+          position_direction?: string
+          resolution_id?: string
+          schema_version?: number
+          settled_at?: string
+          settlement_fingerprint?: string
+          settlement_result?: string
+          settlement_rule_version?: string
+          surviving_credits?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_allocation_settlements_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_lot_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: [
+              "allocation_lot_id",
+              "cycle_id",
+              "market_id",
+              "user_id",
+            ]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_lot_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: [
+              "allocation_lot_id",
+              "cycle_id",
+              "market_id",
+              "user_id",
+            ]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_lot_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id", "cycle_id", "market_id", "user_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_resolution_identity_fk"
+            columns: ["resolution_id", "cycle_id", "market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id", "cycle_id", "market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_resolution_identity_fk"
+            columns: ["resolution_id", "cycle_id", "market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id", "cycle_id", "market_id"]
+          },
+        ]
+      }
+      city_market_cycles: {
+        Row: {
+          allocation_closes_at: string
+          allocation_opens_at: string
+          canceled_at: string | null
+          city_slug: string
+          closed_at: string | null
+          created_at: string
+          credit_ruleset_version: string
+          cycle_key: string
+          ends_at: string
+          id: string
+          market_ruleset_version: string
+          measurement_ends_at: string
+          measurement_starts_at: string
+          metadata: Json
+          opened_at: string | null
+          resolution_fingerprint: string | null
+          resolved_at: string | null
+          schema_version: number
+          settled_at: string | null
+          settlement_fingerprint: string | null
+          starts_at: string
+          status: string
+          timezone: string
+          updated_at: string
+          voided_at: string | null
+        }
+        Insert: {
+          allocation_closes_at: string
+          allocation_opens_at: string
+          canceled_at?: string | null
+          city_slug: string
+          closed_at?: string | null
+          created_at?: string
+          credit_ruleset_version: string
+          cycle_key: string
+          ends_at: string
+          id?: string
+          market_ruleset_version: string
+          measurement_ends_at: string
+          measurement_starts_at: string
+          metadata?: Json
+          opened_at?: string | null
+          resolution_fingerprint?: string | null
+          resolved_at?: string | null
+          schema_version?: number
+          settled_at?: string | null
+          settlement_fingerprint?: string | null
+          starts_at: string
+          status?: string
+          timezone: string
+          updated_at?: string
+          voided_at?: string | null
+        }
+        Update: {
+          allocation_closes_at?: string
+          allocation_opens_at?: string
+          canceled_at?: string | null
+          city_slug?: string
+          closed_at?: string | null
+          created_at?: string
+          credit_ruleset_version?: string
+          cycle_key?: string
+          ends_at?: string
+          id?: string
+          market_ruleset_version?: string
+          measurement_ends_at?: string
+          measurement_starts_at?: string
+          metadata?: Json
+          opened_at?: string | null
+          resolution_fingerprint?: string | null
+          resolved_at?: string | null
+          schema_version?: number
+          settled_at?: string | null
+          settlement_fingerprint?: string | null
+          starts_at?: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+          voided_at?: string | null
+        }
+        Relationships: []
+      }
+      city_market_exception_unwinds: {
+        Row: {
+          created_at: string
+          cycle_id: string
+          haircut_credits_refunded: number
+          haircut_refund_entry_count: number
+          id: string
+          market_id: string
+          market_status: string
+          metadata: Json
+          release_entry_count: number
+          schema_version: number
+          surviving_credits_released: number
+          unwind_fingerprint: string
+          unwound_at: string
+        }
+        Insert: {
+          created_at?: string
+          cycle_id: string
+          haircut_credits_refunded?: number
+          haircut_refund_entry_count?: number
+          id?: string
+          market_id: string
+          market_status: string
+          metadata?: Json
+          release_entry_count?: number
+          schema_version?: number
+          surviving_credits_released?: number
+          unwind_fingerprint: string
+          unwound_at?: string
+        }
+        Update: {
+          created_at?: string
+          cycle_id?: string
+          haircut_credits_refunded?: number
+          haircut_refund_entry_count?: number
+          id?: string
+          market_id?: string
+          market_status?: string
+          metadata?: Json
+          release_entry_count?: number
+          schema_version?: number
+          surviving_credits_released?: number
+          unwind_fingerprint?: string
+          unwound_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_exception_unwinds_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_exception_unwinds_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id", "cycle_id"]
+          },
+          {
+            foreignKeyName: "city_market_exception_unwinds_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id", "cycle_id"]
+          },
+        ]
+      }
+      city_market_lifecycle_events: {
+        Row: {
+          actor_basis: string
+          actor_user_id: string | null
+          created_at: string
+          cycle_id: string
+          entity_type: string
+          from_state: string | null
+          id: string
+          idempotency_key: string | null
+          market_id: string | null
+          metadata: Json
+          occurred_at: string
+          reason_code: string | null
+          schema_version: number
+          to_state: string
+          transition_type: string
+        }
+        Insert: {
+          actor_basis?: string
+          actor_user_id?: string | null
+          created_at?: string
+          cycle_id: string
+          entity_type: string
+          from_state?: string | null
+          id?: string
+          idempotency_key?: string | null
+          market_id?: string | null
+          metadata?: Json
+          occurred_at?: string
+          reason_code?: string | null
+          schema_version?: number
+          to_state: string
+          transition_type: string
+        }
+        Update: {
+          actor_basis?: string
+          actor_user_id?: string | null
+          created_at?: string
+          cycle_id?: string
+          entity_type?: string
+          from_state?: string | null
+          id?: string
+          idempotency_key?: string | null
+          market_id?: string | null
+          metadata?: Json
+          occurred_at?: string
+          reason_code?: string | null
+          schema_version?: number
+          to_state?: string
+          transition_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_lifecycle_events_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_lifecycle_events_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_lifecycle_events_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_market_redemption_rules: {
+        Row: {
+          base_haircut_rate: number
+          calculation_method: string
+          created_at: string
+          maximum_haircut_rate: number
+          parameters: Json
+          rule_version: string
+          schema_version: number
+        }
+        Insert: {
+          base_haircut_rate: number
+          calculation_method: string
+          created_at?: string
+          maximum_haircut_rate: number
+          parameters?: Json
+          rule_version: string
+          schema_version?: number
+        }
+        Update: {
+          base_haircut_rate?: number
+          calculation_method?: string
+          created_at?: string
+          maximum_haircut_rate?: number
+          parameters?: Json
+          rule_version?: string
+          schema_version?: number
+        }
+        Relationships: []
+      }
+      city_market_redemptions: {
+        Row: {
+          allocation_lot_id: string
+          created_at: string
+          credits_returned: number
+          cycle_id: string
+          gross_credits_redeemed: number
+          haircut_credits: number
+          haircut_rate: number
+          id: string
+          idempotency_key: string
+          market_id: string
+          metadata: Json
+          redeemed_at: string
+          redemption_rule_version: string
+          schema_version: number
+          user_id: string
+        }
+        Insert: {
+          allocation_lot_id: string
+          created_at?: string
+          credits_returned: number
+          cycle_id: string
+          gross_credits_redeemed: number
+          haircut_credits: number
+          haircut_rate: number
+          id?: string
+          idempotency_key: string
+          market_id: string
+          metadata?: Json
+          redeemed_at?: string
+          redemption_rule_version: string
+          schema_version?: number
+          user_id: string
+        }
+        Update: {
+          allocation_lot_id?: string
+          created_at?: string
+          credits_returned?: number
+          cycle_id?: string
+          gross_credits_redeemed?: number
+          haircut_credits?: number
+          haircut_rate?: number
+          id?: string
+          idempotency_key?: string
+          market_id?: string
+          metadata?: Json
+          redeemed_at?: string
+          redemption_rule_version?: string
+          schema_version?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_redemption_allocation_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: [
+              "allocation_lot_id",
+              "cycle_id",
+              "market_id",
+              "user_id",
+            ]
+          },
+          {
+            foreignKeyName: "city_market_redemption_allocation_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: [
+              "allocation_lot_id",
+              "cycle_id",
+              "market_id",
+              "user_id",
+            ]
+          },
+          {
+            foreignKeyName: "city_market_redemption_allocation_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id", "cycle_id", "market_id", "user_id"]
+          },
+          {
+            foreignKeyName: "city_market_redemptions_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_redemptions_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_redemptions_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_redemptions_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_redemptions_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_redemptions_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_redemptions_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_market_resolutions: {
+        Row: {
+          absolute_surprise: number
+          created_at: string
+          cycle_id: string
+          id: string
+          market_id: string
+          measurement_ends_at: string
+          measurement_starts_at: string
+          metadata: Json
+          outcome_direction: string
+          reference_evp: number
+          relative_surprise: number | null
+          resolution_input_fingerprint: string
+          resolution_rule_version: string
+          resolution_source: string
+          resolved_at: string
+          schema_version: number
+          venue_id: string
+          verified_participation: number
+        }
+        Insert: {
+          absolute_surprise: number
+          created_at?: string
+          cycle_id: string
+          id?: string
+          market_id: string
+          measurement_ends_at: string
+          measurement_starts_at: string
+          metadata?: Json
+          outcome_direction: string
+          reference_evp: number
+          relative_surprise?: number | null
+          resolution_input_fingerprint: string
+          resolution_rule_version: string
+          resolution_source: string
+          resolved_at?: string
+          schema_version?: number
+          venue_id: string
+          verified_participation: number
+        }
+        Update: {
+          absolute_surprise?: number
+          created_at?: string
+          cycle_id?: string
+          id?: string
+          market_id?: string
+          measurement_ends_at?: string
+          measurement_starts_at?: string
+          metadata?: Json
+          outcome_direction?: string
+          reference_evp?: number
+          relative_surprise?: number | null
+          resolution_input_fingerprint?: string
+          resolution_rule_version?: string
+          resolution_source?: string
+          resolved_at?: string
+          schema_version?: number
+          venue_id?: string
+          verified_participation?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_resolutions_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_resolutions_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_resolutions_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_resolutions_market_identity_fk"
+            columns: ["market_id", "cycle_id", "venue_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id", "cycle_id", "venue_id"]
+          },
+          {
+            foreignKeyName: "city_market_resolutions_market_identity_fk"
+            columns: ["market_id", "cycle_id", "venue_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id", "cycle_id", "venue_id"]
+          },
+        ]
+      }
+      city_markets: {
+        Row: {
+          canceled_at: string | null
+          closed_at: string | null
+          created_at: string
+          cycle_id: string
+          id: string
+          market_definition_version: string | null
+          metadata: Json
+          opened_at: string | null
+          participation_measurement_ends_at: string | null
+          participation_measurement_starts_at: string | null
+          redemption_rule_version: string | null
+          reference_evp: number | null
+          reference_evp_information_cutoff_at: string | null
+          reference_evp_version: string | null
+          resolution_input_fingerprint: string | null
+          resolution_metadata: Json
+          resolution_rule_version: string | null
+          resolution_source: string | null
+          resolved_at: string | null
+          resolved_verified_participation: number | null
+          schema_version: number
+          scoring_context_version: string | null
+          settled_at: string | null
+          settlement_fingerprint: string | null
+          settlement_metadata: Json
+          settlement_rule_version: string | null
+          status: string
+          updated_at: string
+          venue_id: string
+          voided_at: string | null
+        }
+        Insert: {
+          canceled_at?: string | null
+          closed_at?: string | null
+          created_at?: string
+          cycle_id: string
+          id?: string
+          market_definition_version?: string | null
+          metadata?: Json
+          opened_at?: string | null
+          participation_measurement_ends_at?: string | null
+          participation_measurement_starts_at?: string | null
+          redemption_rule_version?: string | null
+          reference_evp?: number | null
+          reference_evp_information_cutoff_at?: string | null
+          reference_evp_version?: string | null
+          resolution_input_fingerprint?: string | null
+          resolution_metadata?: Json
+          resolution_rule_version?: string | null
+          resolution_source?: string | null
+          resolved_at?: string | null
+          resolved_verified_participation?: number | null
+          schema_version?: number
+          scoring_context_version?: string | null
+          settled_at?: string | null
+          settlement_fingerprint?: string | null
+          settlement_metadata?: Json
+          settlement_rule_version?: string | null
+          status?: string
+          updated_at?: string
+          venue_id: string
+          voided_at?: string | null
+        }
+        Update: {
+          canceled_at?: string | null
+          closed_at?: string | null
+          created_at?: string
+          cycle_id?: string
+          id?: string
+          market_definition_version?: string | null
+          metadata?: Json
+          opened_at?: string | null
+          participation_measurement_ends_at?: string | null
+          participation_measurement_starts_at?: string | null
+          redemption_rule_version?: string | null
+          reference_evp?: number | null
+          reference_evp_information_cutoff_at?: string | null
+          reference_evp_version?: string | null
+          resolution_input_fingerprint?: string | null
+          resolution_metadata?: Json
+          resolution_rule_version?: string | null
+          resolution_source?: string | null
+          resolved_at?: string | null
+          resolved_verified_participation?: number | null
+          schema_version?: number
+          scoring_context_version?: string | null
+          settled_at?: string | null
+          settlement_fingerprint?: string | null
+          settlement_metadata?: Json
+          settlement_rule_version?: string | null
+          status?: string
+          updated_at?: string
+          venue_id?: string
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_markets_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_markets_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "city_markets_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaboration_tags: {
         Row: {
           active: boolean
@@ -383,6 +1428,441 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      community_signal_contributor_snapshots: {
+        Row: {
+          account_age_seconds: number | null
+          account_created_at: string | null
+          behavior_cluster_token: string | null
+          captured_at: string
+          contributor_user_id: string
+          coordination_cluster_token: string | null
+          declared_venue_affiliation: boolean | null
+          device_cluster_token: string | null
+          id: string
+          independence_risk: string
+          integrity_flags: Json
+          metadata: Json
+          prior_corrected_signal_count: number | null
+          prior_removed_signal_count: number | null
+          prior_signal_evidence_count: number | null
+          prior_supported_signal_count: number | null
+          provenance_model_version: string
+          schema_version: number
+          source_evidence_row_id: string
+          source_evidence_table: string
+          trust_model_version: string | null
+          trust_score: number | null
+          trust_tier: string | null
+          venue_affiliation_status: string
+        }
+        Insert: {
+          account_age_seconds?: number | null
+          account_created_at?: string | null
+          behavior_cluster_token?: string | null
+          captured_at: string
+          contributor_user_id: string
+          coordination_cluster_token?: string | null
+          declared_venue_affiliation?: boolean | null
+          device_cluster_token?: string | null
+          id?: string
+          independence_risk?: string
+          integrity_flags?: Json
+          metadata?: Json
+          prior_corrected_signal_count?: number | null
+          prior_removed_signal_count?: number | null
+          prior_signal_evidence_count?: number | null
+          prior_supported_signal_count?: number | null
+          provenance_model_version?: string
+          schema_version?: number
+          source_evidence_row_id: string
+          source_evidence_table: string
+          trust_model_version?: string | null
+          trust_score?: number | null
+          trust_tier?: string | null
+          venue_affiliation_status?: string
+        }
+        Update: {
+          account_age_seconds?: number | null
+          account_created_at?: string | null
+          behavior_cluster_token?: string | null
+          captured_at?: string
+          contributor_user_id?: string
+          coordination_cluster_token?: string | null
+          declared_venue_affiliation?: boolean | null
+          device_cluster_token?: string | null
+          id?: string
+          independence_risk?: string
+          integrity_flags?: Json
+          metadata?: Json
+          prior_corrected_signal_count?: number | null
+          prior_removed_signal_count?: number | null
+          prior_signal_evidence_count?: number | null
+          prior_supported_signal_count?: number | null
+          provenance_model_version?: string
+          schema_version?: number
+          source_evidence_row_id?: string
+          source_evidence_table?: string
+          trust_model_version?: string | null
+          trust_score?: number | null
+          trust_tier?: string | null
+          venue_affiliation_status?: string
+        }
+        Relationships: []
+      }
+      community_signal_evidence_ledger: {
+        Row: {
+          canonical_event_id: string | null
+          contributor_snapshot_id: string | null
+          contributor_user_id: string | null
+          correction_type: string | null
+          evidence_source: string | null
+          evidence_type: string
+          freshness_expires_at: string | null
+          id: string
+          ingestion_mode: string
+          metadata: Json
+          moderation_status: string | null
+          observed_at: string | null
+          occurrence_id: string | null
+          payload_fingerprint: string
+          place_signal_state: string | null
+          place_signal_type: string | null
+          provenance_version: string
+          received_at: string
+          received_at_basis: string
+          recorded_at: string
+          review_status: string | null
+          schema_version: number
+          signal_domain: string
+          source_created_at: string
+          source_row_id: string
+          source_table: string
+          venue_id: string
+        }
+        Insert: {
+          canonical_event_id?: string | null
+          contributor_snapshot_id?: string | null
+          contributor_user_id?: string | null
+          correction_type?: string | null
+          evidence_source?: string | null
+          evidence_type: string
+          freshness_expires_at?: string | null
+          id?: string
+          ingestion_mode?: string
+          metadata?: Json
+          moderation_status?: string | null
+          observed_at?: string | null
+          occurrence_id?: string | null
+          payload_fingerprint: string
+          place_signal_state?: string | null
+          place_signal_type?: string | null
+          provenance_version?: string
+          received_at: string
+          received_at_basis: string
+          recorded_at?: string
+          review_status?: string | null
+          schema_version?: number
+          signal_domain: string
+          source_created_at: string
+          source_row_id: string
+          source_table: string
+          venue_id: string
+        }
+        Update: {
+          canonical_event_id?: string | null
+          contributor_snapshot_id?: string | null
+          contributor_user_id?: string | null
+          correction_type?: string | null
+          evidence_source?: string | null
+          evidence_type?: string
+          freshness_expires_at?: string | null
+          id?: string
+          ingestion_mode?: string
+          metadata?: Json
+          moderation_status?: string | null
+          observed_at?: string | null
+          occurrence_id?: string | null
+          payload_fingerprint?: string
+          place_signal_state?: string | null
+          place_signal_type?: string | null
+          provenance_version?: string
+          received_at?: string
+          received_at_basis?: string
+          recorded_at?: string
+          review_status?: string | null
+          schema_version?: number
+          signal_domain?: string
+          source_created_at?: string
+          source_row_id?: string
+          source_table?: string
+          venue_id?: string
+        }
+        Relationships: []
+      }
+      community_signal_exposure_events: {
+        Row: {
+          canonical_event_id: string | null
+          city_slug: string | null
+          client_event_id: string
+          experiment_key: string | null
+          experiment_variant: string | null
+          exposure_type: string
+          flow_id: string | null
+          id: string
+          metadata: Json
+          occurred_at: string
+          occurrence_id: string | null
+          received_at: string
+          route_stop_id: string | null
+          schema_version: number
+          session_token: string | null
+          signal_domain: string
+          signal_key: string
+          signal_state_snapshot: Json
+          surface: string
+          venue_id: string
+          viewer_user_id: string | null
+        }
+        Insert: {
+          canonical_event_id?: string | null
+          city_slug?: string | null
+          client_event_id: string
+          experiment_key?: string | null
+          experiment_variant?: string | null
+          exposure_type: string
+          flow_id?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at: string
+          occurrence_id?: string | null
+          received_at?: string
+          route_stop_id?: string | null
+          schema_version?: number
+          session_token?: string | null
+          signal_domain: string
+          signal_key: string
+          signal_state_snapshot?: Json
+          surface: string
+          venue_id: string
+          viewer_user_id?: string | null
+        }
+        Update: {
+          canonical_event_id?: string | null
+          city_slug?: string | null
+          client_event_id?: string
+          experiment_key?: string | null
+          experiment_variant?: string | null
+          exposure_type?: string
+          flow_id?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          occurrence_id?: string | null
+          received_at?: string
+          route_stop_id?: string | null
+          schema_version?: number
+          session_token?: string | null
+          signal_domain?: string
+          signal_key?: string
+          signal_state_snapshot?: Json
+          surface?: string
+          venue_id?: string
+          viewer_user_id?: string | null
+        }
+        Relationships: []
+      }
+      community_signal_history_checkpoints: {
+        Row: {
+          last_created_at: string | null
+          last_source_row_id: string | null
+          source_table: string
+          updated_at: string
+        }
+        Insert: {
+          last_created_at?: string | null
+          last_source_row_id?: string | null
+          source_table: string
+          updated_at?: string
+        }
+        Update: {
+          last_created_at?: string | null
+          last_source_row_id?: string | null
+          source_table?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      community_signal_research_readiness_snapshots: {
+        Row: {
+          accumulation_status: string
+          captured_at: string
+          episodes_with_exposed_then_participated: number
+          episodes_with_exposure: number
+          episodes_with_verified_participation: number
+          episodes_without_exposure: number
+          episodes_without_verified_participation: number
+          has_exposure_variation: boolean
+          has_outcome_variation: boolean
+          id: string
+          inference_policy: string
+          line_episode_count: number
+          metadata: Json
+          observed_episode_count: number
+          represented_venue_count: number
+          schema_version: number
+          temporary_closure_episode_count: number
+          total_aligned_exposures: number
+          total_during_episode_participations: number
+        }
+        Insert: {
+          accumulation_status: string
+          captured_at?: string
+          episodes_with_exposed_then_participated: number
+          episodes_with_exposure: number
+          episodes_with_verified_participation: number
+          episodes_without_exposure: number
+          episodes_without_verified_participation: number
+          has_exposure_variation: boolean
+          has_outcome_variation: boolean
+          id?: string
+          inference_policy: string
+          line_episode_count: number
+          metadata?: Json
+          observed_episode_count: number
+          represented_venue_count: number
+          schema_version?: number
+          temporary_closure_episode_count: number
+          total_aligned_exposures: number
+          total_during_episode_participations: number
+        }
+        Update: {
+          accumulation_status?: string
+          captured_at?: string
+          episodes_with_exposed_then_participated?: number
+          episodes_with_exposure?: number
+          episodes_with_verified_participation?: number
+          episodes_without_exposure?: number
+          episodes_without_verified_participation?: number
+          has_exposure_variation?: boolean
+          has_outcome_variation?: boolean
+          id?: string
+          inference_policy?: string
+          line_episode_count?: number
+          metadata?: Json
+          observed_episode_count?: number
+          represented_venue_count?: number
+          schema_version?: number
+          temporary_closure_episode_count?: number
+          total_aligned_exposures?: number
+          total_during_episode_participations?: number
+        }
+        Relationships: []
+      }
+      community_signal_state_observer_checkpoints: {
+        Row: {
+          canonical_event_id: string | null
+          created_at: string
+          last_as_of: string
+          last_evidence_set_fingerprint: string
+          last_snapshot: Json
+          occurrence_id: string | null
+          projection_version: string
+          signal_domain: string
+          signal_key: string
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          canonical_event_id?: string | null
+          created_at?: string
+          last_as_of: string
+          last_evidence_set_fingerprint: string
+          last_snapshot: Json
+          occurrence_id?: string | null
+          projection_version: string
+          signal_domain: string
+          signal_key: string
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          canonical_event_id?: string | null
+          created_at?: string
+          last_as_of?: string
+          last_evidence_set_fingerprint?: string
+          last_snapshot?: Json
+          occurrence_id?: string | null
+          projection_version?: string
+          signal_domain?: string
+          signal_key?: string
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: []
+      }
+      community_signal_state_transitions: {
+        Row: {
+          as_of: string
+          canonical_event_id: string | null
+          computed_at: string
+          effective_at: string
+          evidence_set_fingerprint: string | null
+          from_state: Json | null
+          id: string
+          metadata: Json
+          occurrence_id: string | null
+          projection_version: string
+          schema_version: number
+          signal_domain: string
+          signal_key: string
+          to_state: Json
+          transition_reason: string | null
+          transition_type: string
+          triggering_evidence_ledger_id: string | null
+          venue_id: string
+        }
+        Insert: {
+          as_of: string
+          canonical_event_id?: string | null
+          computed_at?: string
+          effective_at: string
+          evidence_set_fingerprint?: string | null
+          from_state?: Json | null
+          id?: string
+          metadata?: Json
+          occurrence_id?: string | null
+          projection_version: string
+          schema_version?: number
+          signal_domain: string
+          signal_key: string
+          to_state: Json
+          transition_reason?: string | null
+          transition_type: string
+          triggering_evidence_ledger_id?: string | null
+          venue_id: string
+        }
+        Update: {
+          as_of?: string
+          canonical_event_id?: string | null
+          computed_at?: string
+          effective_at?: string
+          evidence_set_fingerprint?: string | null
+          from_state?: Json | null
+          id?: string
+          metadata?: Json
+          occurrence_id?: string | null
+          projection_version?: string
+          schema_version?: number
+          signal_domain?: string
+          signal_key?: string
+          to_state?: Json
+          transition_reason?: string | null
+          transition_type?: string
+          triggering_evidence_ledger_id?: string | null
+          venue_id?: string
+        }
+        Relationships: []
       }
       competition_entries: {
         Row: {
@@ -2484,6 +3964,34 @@ export type Database = {
             foreignKeyName: "competition_venue_participation_events_venue_visit_fk"
             columns: ["venue_visit_id"]
             isOneToOne: false
+            referencedRelation: "community_signal_episode_verified_participation_v1"
+            referencedColumns: ["participation_id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_venue_visit_fk"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "community_signal_exposure_participation_alignment_v1"
+            referencedColumns: ["next_participation_id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_venue_visit_fk"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "community_signal_exposure_participation_alignment_v1"
+            referencedColumns: ["prior_participation_id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_venue_visit_fk"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "community_signal_verified_venue_participation_fact_v1"
+            referencedColumns: ["participation_id"]
+          },
+          {
+            foreignKeyName: "competition_venue_participation_events_venue_visit_fk"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
             referencedRelation: "venue_visits"
             referencedColumns: ["id"]
           },
@@ -4250,6 +5758,38 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_occurrence_responses: {
+        Row: {
+          contributor_user_id: string
+          created_at: string
+          id: string
+          occurrence_id: string
+          response_type: string
+        }
+        Insert: {
+          contributor_user_id: string
+          created_at?: string
+          id?: string
+          occurrence_id: string
+          response_type: string
+        }
+        Update: {
+          contributor_user_id?: string
+          created_at?: string
+          id?: string
+          occurrence_id?: string
+          response_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_occurrence_responses_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "event_occurrences"
             referencedColumns: ["id"]
           },
         ]
@@ -6743,6 +8283,358 @@ export type Database = {
           },
         ]
       }
+      scout_forecast_evidence: {
+        Row: {
+          absolute_surprise: number
+          accuracy_evidence_eligible: boolean
+          allocated_at: string
+          allocation_lot_id: string
+          allocation_settlement_fingerprint: string
+          allocation_settlement_id: string
+          created_at: string
+          cycle_id: string
+          evidence_created_at: string
+          evidence_fingerprint: string
+          final_conviction_present: boolean
+          gross_redeemed_credits: number
+          id: string
+          market_id: string
+          metadata: Json
+          original_credits: number
+          outcome_direction: string
+          position_direction: string
+          reference_evp: number
+          relative_surprise: number | null
+          resolution_id: string
+          resolution_input_fingerprint: string
+          resolution_rule_version: string
+          resolved_at: string
+          schema_version: number
+          scoring_context_version: string
+          settled_at: string
+          settlement_result: string
+          settlement_rule_version: string
+          surviving_credits: number
+          user_id: string
+          venue_id: string
+          verified_participation: number
+        }
+        Insert: {
+          absolute_surprise: number
+          accuracy_evidence_eligible: boolean
+          allocated_at: string
+          allocation_lot_id: string
+          allocation_settlement_fingerprint: string
+          allocation_settlement_id: string
+          created_at?: string
+          cycle_id: string
+          evidence_created_at?: string
+          evidence_fingerprint: string
+          final_conviction_present: boolean
+          gross_redeemed_credits: number
+          id?: string
+          market_id: string
+          metadata?: Json
+          original_credits: number
+          outcome_direction: string
+          position_direction: string
+          reference_evp: number
+          relative_surprise?: number | null
+          resolution_id: string
+          resolution_input_fingerprint: string
+          resolution_rule_version: string
+          resolved_at: string
+          schema_version?: number
+          scoring_context_version: string
+          settled_at: string
+          settlement_result: string
+          settlement_rule_version: string
+          surviving_credits: number
+          user_id: string
+          venue_id: string
+          verified_participation: number
+        }
+        Update: {
+          absolute_surprise?: number
+          accuracy_evidence_eligible?: boolean
+          allocated_at?: string
+          allocation_lot_id?: string
+          allocation_settlement_fingerprint?: string
+          allocation_settlement_id?: string
+          created_at?: string
+          cycle_id?: string
+          evidence_created_at?: string
+          evidence_fingerprint?: string
+          final_conviction_present?: boolean
+          gross_redeemed_credits?: number
+          id?: string
+          market_id?: string
+          metadata?: Json
+          original_credits?: number
+          outcome_direction?: string
+          position_direction?: string
+          reference_evp?: number
+          relative_surprise?: number | null
+          resolution_id?: string
+          resolution_input_fingerprint?: string
+          resolution_rule_version?: string
+          resolved_at?: string
+          schema_version?: number
+          scoring_context_version?: string
+          settled_at?: string
+          settlement_result?: string
+          settlement_rule_version?: string
+          surviving_credits?: number
+          user_id?: string
+          venue_id?: string
+          verified_participation?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_settlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "scout_forecast_evidence_source_v1"
+            referencedColumns: ["allocation_settlement_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_integrity_flag_events: {
+        Row: {
+          created_at: string
+          disposition: string
+          event_at: string
+          event_type: string
+          flag_instance_id: string
+          id: string
+          market_id: string | null
+          metadata: Json
+          policy_version: string
+          reason_code: string
+          scope_type: string
+          user_id: string
+          venue_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          disposition: string
+          event_at?: string
+          event_type: string
+          flag_instance_id: string
+          id?: string
+          market_id?: string | null
+          metadata?: Json
+          policy_version: string
+          reason_code: string
+          scope_type: string
+          user_id: string
+          venue_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          disposition?: string
+          event_at?: string
+          event_type?: string
+          flag_instance_id?: string
+          id?: string
+          market_id?: string | null
+          metadata?: Json
+          policy_version?: string
+          reason_code?: string
+          scope_type?: string
+          user_id?: string
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_integrity_flag_events_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "scout_integrity_policy_rules"
+            referencedColumns: ["rule_version"]
+          },
+          {
+            foreignKeyName: "scout_integrity_flag_events_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "scout_reputation_eligibility_v1"
+            referencedColumns: ["integrity_policy_version"]
+          },
+          {
+            foreignKeyName: "scout_integrity_flag_events_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "scout_trusted_accuracy_reputation_units_v1"
+            referencedColumns: ["integrity_policy_version"]
+          },
+          {
+            foreignKeyName: "scout_integrity_flag_events_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "scout_user_integrity_diagnostics_v1"
+            referencedColumns: ["integrity_policy_version"]
+          },
+        ]
+      }
+      scout_integrity_policy_rules: {
+        Row: {
+          concentration_min_market_units: number
+          created_at: string
+          maximum_single_venue_share: number
+          metadata: Json
+          rule_version: string
+        }
+        Insert: {
+          concentration_min_market_units: number
+          created_at?: string
+          maximum_single_venue_share: number
+          metadata?: Json
+          rule_version: string
+        }
+        Update: {
+          concentration_min_market_units?: number
+          created_at?: string
+          maximum_single_venue_share?: number
+          metadata?: Json
+          rule_version?: string
+        }
+        Relationships: []
+      }
+      scout_reputation_readiness_rules: {
+        Row: {
+          created_at: string
+          deep_history_min_directional_decisions: number
+          deep_history_min_distinct_cycles: number
+          deep_history_min_distinct_venues: number
+          developing_min_directional_decisions: number
+          developing_min_distinct_cycles: number
+          developing_min_distinct_venues: number
+          established_min_directional_decisions: number
+          established_min_distinct_cycles: number
+          established_min_distinct_venues: number
+          insufficient_max_directional_decisions: number
+          metadata: Json
+          rule_version: string
+          wilson_z: number
+        }
+        Insert: {
+          created_at?: string
+          deep_history_min_directional_decisions: number
+          deep_history_min_distinct_cycles: number
+          deep_history_min_distinct_venues: number
+          developing_min_directional_decisions: number
+          developing_min_distinct_cycles: number
+          developing_min_distinct_venues: number
+          established_min_directional_decisions: number
+          established_min_distinct_cycles: number
+          established_min_distinct_venues: number
+          insufficient_max_directional_decisions: number
+          metadata?: Json
+          rule_version: string
+          wilson_z: number
+        }
+        Update: {
+          created_at?: string
+          deep_history_min_directional_decisions?: number
+          deep_history_min_distinct_cycles?: number
+          deep_history_min_distinct_venues?: number
+          developing_min_directional_decisions?: number
+          developing_min_distinct_cycles?: number
+          developing_min_distinct_venues?: number
+          established_min_directional_decisions?: number
+          established_min_distinct_cycles?: number
+          established_min_distinct_venues?: number
+          insufficient_max_directional_decisions?: number
+          metadata?: Json
+          rule_version?: string
+          wilson_z?: number
+        }
+        Relationships: []
+      }
       social_group_event_attendee_activity: {
         Row: {
           after_venue_1_at: string | null
@@ -8071,6 +9963,1325 @@ export type Database = {
       }
     }
     Views: {
+      city_credit_balance_v1: {
+        Row: {
+          administrative_adjustment: number | null
+          available_credits: number | null
+          cycle_id: string | null
+          granted_credits: number | null
+          gross_committed_credits: number | null
+          market_unwind_haircut_refunded_credits: number | null
+          market_unwind_released_credits: number | null
+          returned_credits: number | null
+          settlement_released_credits: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_credit_ledger_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_market_accounting_integrity_v1: {
+        Row: {
+          accounting_valid: boolean | null
+          administrative_adjustment: number | null
+          available_credits: number | null
+          conservation_residual: number | null
+          cycle_id: string | null
+          effective_burned_haircut_credits: number | null
+          granted_credits: number | null
+          gross_allocated_credits: number | null
+          gross_redeemed_credits: number | null
+          haircut_credits: number | null
+          market_unwind_haircut_refunded_credits: number | null
+          market_unwind_released_credits: number | null
+          net_committed_credits: number | null
+          returned_credits: number | null
+          settlement_released_credits: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_credit_ledger_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_market_allocation_lot_economics_v1: {
+        Row: {
+          allocated_at: string | null
+          allocation_lot_id: string | null
+          credits_allocated: number | null
+          credits_returned: number | null
+          cycle_id: string | null
+          derived_status: string | null
+          first_redeemed_at: string | null
+          gross_credits_redeemed: number | null
+          haircut_credits: number | null
+          latest_redeemed_at: string | null
+          market_id: string | null
+          position_direction: string | null
+          redemption_count: number | null
+          remaining_credits: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_allocation_lots_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id", "cycle_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id", "cycle_id"]
+          },
+        ]
+      }
+      city_market_allocation_lot_state_v1: {
+        Row: {
+          allocated_at: string | null
+          allocation_lot_id: string | null
+          credits_allocated: number | null
+          cycle_id: string | null
+          derived_status: string | null
+          gross_credits_redeemed: number | null
+          market_id: string | null
+          position_direction: string | null
+          remaining_credits: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_allocation_lots_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id", "cycle_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id", "cycle_id"]
+          },
+        ]
+      }
+      city_market_conviction_summary_v1: {
+        Row: {
+          allocation_lot_count: number | null
+          cycle_id: string | null
+          distinct_participants: number | null
+          first_allocation_at: string | null
+          latest_allocation_at: string | null
+          market_id: string | null
+          market_status: string | null
+          outperform_conviction_share: number | null
+          outperform_gross_allocated: number | null
+          outperform_remaining: number | null
+          reference_evp: number | null
+          total_remaining_credits: number | null
+          underperform_conviction_share: number | null
+          underperform_gross_allocated: number | null
+          underperform_remaining: number | null
+          venue_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_markets_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_markets_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "city_markets_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_market_cycle_reconciliation_v1: {
+        Row: {
+          cycle_accounting_valid: boolean | null
+          cycle_id: string | null
+          invalid_account_count: number | null
+          total_available_credits: number | null
+          total_conservation_residual: number | null
+          total_effective_burned_haircut_credits: number | null
+          total_granted_credits: number | null
+          total_net_committed_credits: number | null
+          user_account_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_credit_ledger_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_market_settlement_basis_v1: {
+        Row: {
+          allocated_at: string | null
+          allocation_lot_id: string | null
+          cycle_id: string | null
+          gross_credits_redeemed: number | null
+          market_id: string | null
+          original_credits: number | null
+          outcome_direction: string | null
+          position_direction: string | null
+          reference_evp: number | null
+          resolution_id: string | null
+          settlement_result: string | null
+          surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_resolutions_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_resolutions_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_resolutions_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: true
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_resolutions_market_identity_fk"
+            columns: ["market_id", "cycle_id", "venue_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id", "cycle_id", "venue_id"]
+          },
+          {
+            foreignKeyName: "city_market_resolutions_market_identity_fk"
+            columns: ["market_id", "cycle_id", "venue_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id", "cycle_id", "venue_id"]
+          },
+        ]
+      }
+      city_market_user_cycle_accounting_v1: {
+        Row: {
+          administrative_adjustment: number | null
+          available_credits: number | null
+          conservation_residual: number | null
+          cycle_id: string | null
+          effective_burned_haircut_credits: number | null
+          granted_credits: number | null
+          gross_allocated_credits: number | null
+          gross_redeemed_credits: number | null
+          haircut_credits: number | null
+          market_unwind_haircut_refunded_credits: number | null
+          market_unwind_released_credits: number | null
+          net_committed_credits: number | null
+          returned_credits: number | null
+          settlement_released_credits: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_credit_ledger_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      city_market_user_market_summary_v1: {
+        Row: {
+          cycle_id: string | null
+          first_allocated_at: string | null
+          first_redeemed_at: string | null
+          latest_allocated_at: string | null
+          latest_redeemed_at: string | null
+          market_id: string | null
+          outperform_gross_allocated: number | null
+          outperform_remaining: number | null
+          total_gross_allocated: number | null
+          total_gross_redeemed: number | null
+          total_haircut_credits: number | null
+          total_remaining_credits: number | null
+          underperform_gross_allocated: number | null
+          underperform_remaining: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_allocation_lots_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id", "cycle_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id", "cycle_id"]
+          },
+        ]
+      }
+      city_market_user_position_v1: {
+        Row: {
+          allocation_lot_count: number | null
+          credits_returned: number | null
+          cycle_id: string | null
+          first_allocated_at: string | null
+          first_redeemed_at: string | null
+          gross_credits_allocated: number | null
+          gross_credits_redeemed: number | null
+          haircut_credits: number | null
+          latest_allocated_at: string | null
+          latest_redeemed_at: string | null
+          market_id: string | null
+          position_direction: string | null
+          redemption_count: number | null
+          remaining_credits: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_allocation_lots_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_lots_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id", "cycle_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_market_cycle_fk"
+            columns: ["market_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id", "cycle_id"]
+          },
+        ]
+      }
+      community_signal_contributor_fact_v1: {
+        Row: {
+          account_age_seconds: number | null
+          account_created_at: string | null
+          behavior_cluster_token: string | null
+          captured_at: string | null
+          contributor_snapshot_id: string | null
+          contributor_user_id: string | null
+          coordination_cluster_token: string | null
+          declared_venue_affiliation: boolean | null
+          device_cluster_token: string | null
+          independence_risk: string | null
+          integrity_flags: Json | null
+          metadata: Json | null
+          prior_corrected_signal_count: number | null
+          prior_removed_signal_count: number | null
+          prior_signal_evidence_count: number | null
+          prior_supported_signal_count: number | null
+          provenance_model_version: string | null
+          schema_version: number | null
+          source_evidence_row_id: string | null
+          source_evidence_table: string | null
+          trust_model_version: string | null
+          trust_score: number | null
+          trust_tier: string | null
+          venue_affiliation_status: string | null
+        }
+        Insert: {
+          account_age_seconds?: number | null
+          account_created_at?: string | null
+          behavior_cluster_token?: string | null
+          captured_at?: string | null
+          contributor_snapshot_id?: string | null
+          contributor_user_id?: string | null
+          coordination_cluster_token?: string | null
+          declared_venue_affiliation?: boolean | null
+          device_cluster_token?: string | null
+          independence_risk?: string | null
+          integrity_flags?: Json | null
+          metadata?: Json | null
+          prior_corrected_signal_count?: number | null
+          prior_removed_signal_count?: number | null
+          prior_signal_evidence_count?: number | null
+          prior_supported_signal_count?: number | null
+          provenance_model_version?: string | null
+          schema_version?: number | null
+          source_evidence_row_id?: string | null
+          source_evidence_table?: string | null
+          trust_model_version?: string | null
+          trust_score?: number | null
+          trust_tier?: string | null
+          venue_affiliation_status?: string | null
+        }
+        Update: {
+          account_age_seconds?: number | null
+          account_created_at?: string | null
+          behavior_cluster_token?: string | null
+          captured_at?: string | null
+          contributor_snapshot_id?: string | null
+          contributor_user_id?: string | null
+          coordination_cluster_token?: string | null
+          declared_venue_affiliation?: boolean | null
+          device_cluster_token?: string | null
+          independence_risk?: string | null
+          integrity_flags?: Json | null
+          metadata?: Json | null
+          prior_corrected_signal_count?: number | null
+          prior_removed_signal_count?: number | null
+          prior_signal_evidence_count?: number | null
+          prior_supported_signal_count?: number | null
+          provenance_model_version?: string | null
+          schema_version?: number | null
+          source_evidence_row_id?: string | null
+          source_evidence_table?: string | null
+          trust_model_version?: string | null
+          trust_score?: number | null
+          trust_tier?: string | null
+          venue_affiliation_status?: string | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_breadth_summary_v1: {
+        Row: {
+          episode_count: number | null
+          exposed_episode_count: number | null
+          first_episode_started_at: string | null
+          latest_episode_started_at: string | null
+          line_episode_count: number | null
+          null_outcome_episode_count: number | null
+          observed_calendar_day_count: number | null
+          positive_outcome_episode_count: number | null
+          represented_day_of_week_count: number | null
+          represented_duration_bucket_count: number | null
+          represented_signal_type_count: number | null
+          represented_start_hour_count: number | null
+          temporary_closure_episode_count: number | null
+          unexposed_episode_count: number | null
+          venue_count: number | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_concentration_summary_v1: {
+        Row: {
+          largest_venue_episode_share: number | null
+          max_episodes_at_single_venue: number | null
+          represented_venue_count: number | null
+          venue_episode_hhi: number | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_coverage_v1: {
+        Row: {
+          coverage_status: string | null
+          earliest_recorded_transition_effective_at: string | null
+          first_recorded_transition_computed_at: string | null
+          latest_recorded_transition_computed_at: string | null
+          recorded_transition_count: number | null
+          signal_domain: string | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_exposure_cohort_v1: {
+        Row: {
+          analytical_subject_key: string | null
+          episode_ended_at: string | null
+          episode_id: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          exposed_during_authoritative_episode: boolean | null
+          exposure_count: number | null
+          first_exposure_at: string | null
+          first_exposure_seconds_from_episode_start: number | null
+          latest_exposure_at: string | null
+          place_signal_type: string | null
+          signal_domain: string | null
+          signal_key: string | null
+          subject_identity_basis: string | null
+          venue_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_exposure_summary_v1: {
+        Row: {
+          distinct_authenticated_viewers: number | null
+          distinct_sessions: number | null
+          episode_ended_at: string | null
+          episode_id: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          first_exposure_at: string | null
+          latest_exposure_at: string | null
+          place_signal_type: string | null
+          signal_key: string | null
+          total_exposures: number | null
+          venue_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_participation_windows_v1: {
+        Row: {
+          during_distinct_participants: number | null
+          during_participation_count: number | null
+          episode_duration_seconds: number | null
+          episode_ended_at: string | null
+          episode_id: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          place_signal_type: string | null
+          post_distinct_participants: number | null
+          post_participation_count: number | null
+          post_window_ended_at: string | null
+          post_window_started_at: string | null
+          pre_distinct_participants: number | null
+          pre_participation_count: number | null
+          pre_window_ended_at: string | null
+          pre_window_started_at: string | null
+          signal_key: string | null
+          venue_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_reflexivity_diagnostic_v1: {
+        Row: {
+          episode_id: string | null
+          exposed_authenticated_users: number | null
+          exposed_then_participated_users: number | null
+          exposed_verified_participants: number | null
+          participant_exposure_share: number | null
+          reflexivity_status: string | null
+          signal_key: string | null
+          venue_id: string | null
+          verified_participants: number | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_research_diagnostic_v1: {
+        Row: {
+          descriptive_participation_pattern: string | null
+          during_distinct_participants: number | null
+          during_minus_pre_count: number | null
+          during_participation_count: number | null
+          episode_ended_at: string | null
+          episode_id: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          exposed_authenticated_users: number | null
+          exposed_then_participated_users: number | null
+          exposed_verified_participants: number | null
+          inference_level: string | null
+          participant_exposure_share: number | null
+          place_signal_type: string | null
+          post_distinct_participants: number | null
+          post_minus_pre_count: number | null
+          post_participation_count: number | null
+          pre_distinct_participants: number | null
+          pre_participation_count: number | null
+          reflexivity_status: string | null
+          signal_key: string | null
+          venue_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_sampling_frame_v1: {
+        Row: {
+          distinct_authenticated_viewers: number | null
+          distinct_sessions: number | null
+          duration_bucket: string | null
+          during_participation_count: number | null
+          episode_duration_seconds: number | null
+          episode_ended_at: string | null
+          episode_history_basis: string | null
+          episode_id: string | null
+          episode_start_day_utc: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          has_observed_exposure: boolean | null
+          has_verified_participation_during_episode: boolean | null
+          place_signal_type: string | null
+          post_participation_count: number | null
+          pre_participation_count: number | null
+          signal_key: string | null
+          start_hour_utc: number | null
+          start_iso_day_of_week: number | null
+          total_exposures: number | null
+          venue_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_type_breadth_v1: {
+        Row: {
+          episode_count: number | null
+          exposed_episode_count: number | null
+          null_outcome_episode_count: number | null
+          observed_day_count: number | null
+          place_signal_type: string | null
+          positive_outcome_episode_count: number | null
+          venue_count: number | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_venue_concentration_v1: {
+        Row: {
+          episode_count: number | null
+          episode_share: number | null
+          venue_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_episode_verified_participation_v1: {
+        Row: {
+          check_in_source: string | null
+          episode_ended_at: string | null
+          episode_id: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          participation_at: string | null
+          participation_id: string | null
+          place_signal_type: string | null
+          seconds_from_episode_start: number | null
+          signal_key: string | null
+          user_id: string | null
+          venue_id: string | null
+          verification_basis: string | null
+        }
+        Relationships: []
+      }
+      community_signal_evidence_fact_v1: {
+        Row: {
+          canonical_event_id: string | null
+          contributor_snapshot_id: string | null
+          contributor_user_id: string | null
+          correction_type: string | null
+          evidence_id: string | null
+          evidence_source: string | null
+          evidence_type: string | null
+          freshness_expires_at: string | null
+          ingestion_mode: string | null
+          metadata: Json | null
+          moderation_status: string | null
+          observed_at: string | null
+          occurrence_id: string | null
+          payload_fingerprint: string | null
+          place_signal_state: string | null
+          place_signal_type: string | null
+          provenance_version: string | null
+          received_at: string | null
+          received_at_basis: string | null
+          recorded_at: string | null
+          review_status: string | null
+          signal_domain: string | null
+          source_created_at: string | null
+          source_row_id: string | null
+          source_table: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          canonical_event_id?: string | null
+          contributor_snapshot_id?: string | null
+          contributor_user_id?: string | null
+          correction_type?: string | null
+          evidence_id?: string | null
+          evidence_source?: string | null
+          evidence_type?: string | null
+          freshness_expires_at?: string | null
+          ingestion_mode?: string | null
+          metadata?: Json | null
+          moderation_status?: string | null
+          observed_at?: string | null
+          occurrence_id?: string | null
+          payload_fingerprint?: string | null
+          place_signal_state?: string | null
+          place_signal_type?: string | null
+          provenance_version?: string | null
+          received_at?: string | null
+          received_at_basis?: string | null
+          recorded_at?: string | null
+          review_status?: string | null
+          signal_domain?: string | null
+          source_created_at?: string | null
+          source_row_id?: string | null
+          source_table?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          canonical_event_id?: string | null
+          contributor_snapshot_id?: string | null
+          contributor_user_id?: string | null
+          correction_type?: string | null
+          evidence_id?: string | null
+          evidence_source?: string | null
+          evidence_type?: string | null
+          freshness_expires_at?: string | null
+          ingestion_mode?: string | null
+          metadata?: Json | null
+          moderation_status?: string | null
+          observed_at?: string | null
+          occurrence_id?: string | null
+          payload_fingerprint?: string | null
+          place_signal_state?: string | null
+          place_signal_type?: string | null
+          provenance_version?: string | null
+          received_at?: string | null
+          received_at_basis?: string | null
+          recorded_at?: string | null
+          review_status?: string | null
+          signal_domain?: string | null
+          source_created_at?: string | null
+          source_row_id?: string | null
+          source_table?: string | null
+          venue_id?: string | null
+        }
+        Relationships: []
+      }
+      community_signal_exposure_episode_fact_v1: {
+        Row: {
+          canonical_event_id: string | null
+          city_slug: string | null
+          client_event_id: string | null
+          collector_delay_seconds: number | null
+          end_boundary_inclusive: boolean | null
+          episode_alignment_status: string | null
+          episode_ended_at: string | null
+          episode_id: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          exposure_id: string | null
+          exposure_type: string | null
+          occurred_at: string | null
+          occurred_during_authoritative_episode: boolean | null
+          occurrence_id: string | null
+          place_signal_type: string | null
+          received_at: string | null
+          seconds_from_episode_start: number | null
+          seconds_until_episode_end: number | null
+          session_token: string | null
+          signal_domain: string | null
+          signal_key: string | null
+          signal_state_snapshot: Json | null
+          surface: string | null
+          venue_id: string | null
+          viewer_user_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_exposure_fact_v1: {
+        Row: {
+          canonical_event_id: string | null
+          city_slug: string | null
+          client_event_id: string | null
+          experiment_key: string | null
+          experiment_variant: string | null
+          exposure_id: string | null
+          exposure_type: string | null
+          flow_id: string | null
+          metadata: Json | null
+          occurred_at: string | null
+          occurrence_id: string | null
+          received_at: string | null
+          route_stop_id: string | null
+          session_token: string | null
+          signal_domain: string | null
+          signal_key: string | null
+          signal_state_snapshot: Json | null
+          surface: string | null
+          venue_id: string | null
+          viewer_user_id: string | null
+        }
+        Insert: {
+          canonical_event_id?: string | null
+          city_slug?: string | null
+          client_event_id?: string | null
+          experiment_key?: string | null
+          experiment_variant?: string | null
+          exposure_id?: string | null
+          exposure_type?: string | null
+          flow_id?: string | null
+          metadata?: Json | null
+          occurred_at?: string | null
+          occurrence_id?: string | null
+          received_at?: string | null
+          route_stop_id?: string | null
+          session_token?: string | null
+          signal_domain?: string | null
+          signal_key?: string | null
+          signal_state_snapshot?: Json | null
+          surface?: string | null
+          venue_id?: string | null
+          viewer_user_id?: string | null
+        }
+        Update: {
+          canonical_event_id?: string | null
+          city_slug?: string | null
+          client_event_id?: string | null
+          experiment_key?: string | null
+          experiment_variant?: string | null
+          exposure_id?: string | null
+          exposure_type?: string | null
+          flow_id?: string | null
+          metadata?: Json | null
+          occurred_at?: string | null
+          occurrence_id?: string | null
+          received_at?: string | null
+          route_stop_id?: string | null
+          session_token?: string | null
+          signal_domain?: string | null
+          signal_key?: string | null
+          signal_state_snapshot?: Json | null
+          surface?: string | null
+          venue_id?: string | null
+          viewer_user_id?: string | null
+        }
+        Relationships: []
+      }
+      community_signal_exposure_participation_alignment_v1: {
+        Row: {
+          episode_ended_at: string | null
+          episode_id: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          exposure_at: string | null
+          exposure_id: string | null
+          next_participation_at: string | null
+          next_participation_during_same_episode: boolean | null
+          next_participation_id: string | null
+          prior_participation_at: string | null
+          prior_participation_id: string | null
+          seconds_since_prior_participation: number | null
+          seconds_until_next_participation: number | null
+          signal_domain: string | null
+          signal_key: string | null
+          temporal_alignment_status: string | null
+          venue_id: string | null
+          viewer_user_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_happening_history_inventory_v1: {
+        Row: {
+          distinct_happening_signal_count: number | null
+          distinct_transition_type_count: number | null
+          earliest_effective_at: string | null
+          first_computed_at: string | null
+          happening_transition_count: number | null
+          has_observed_happening_history: boolean | null
+          latest_computed_at: string | null
+          observed_transition_types: string[] | null
+        }
+        Relationships: []
+      }
+      community_signal_happening_reconstruction_blockers_v1: {
+        Row: {
+          blocker_name: string | null
+          blocker_present: boolean | null
+          blocker_reason: string | null
+          evaluated_at: string | null
+        }
+        Relationships: []
+      }
+      community_signal_happening_reconstruction_readiness_v1: {
+        Row: {
+          distinct_happening_signal_count: number | null
+          distinct_transition_type_count: number | null
+          earliest_effective_at: string | null
+          evaluated_at: string | null
+          first_computed_at: string | null
+          gate_1_transition_history_exists: boolean | null
+          gate_2_happening_identity_observed: boolean | null
+          gate_3_transition_shape_observed: boolean | null
+          gate_4_transition_payload_review_complete: boolean | null
+          happening_episode_reconstruction_status: string | null
+          happening_transition_count: number | null
+          has_observed_happening_history: boolean | null
+          latest_computed_at: string | null
+          next_action: string | null
+          observed_transition_types: string[] | null
+          reconstruction_policy: string | null
+        }
+        Relationships: []
+      }
+      community_signal_information_timeline_v1: {
+        Row: {
+          canonical_event_id: string | null
+          event_payload: Json | null
+          event_type: string | null
+          information_event_class: string | null
+          information_event_id: string | null
+          information_time: string | null
+          occurrence_id: string | null
+          signal_domain: string | null
+          signal_key: string | null
+          system_received_at: string | null
+          venue_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_place_episode_starts_v1: {
+        Row: {
+          episode_started_at: string | null
+          episode_state: string | null
+          place_signal_type: string | null
+          projected_expires_at_at_start: string | null
+          projection_version: string | null
+          signal_key: string | null
+          start_as_of: string | null
+          start_computed_at: string | null
+          start_metadata: Json | null
+          start_reason: string | null
+          start_transition_id: string | null
+          start_transition_type: string | null
+          starting_fresh_contributors: number | null
+          starting_opposing_contributors: number | null
+          starting_posture: string | null
+          starting_supporting_contributors: number | null
+          venue_id: string | null
+        }
+        Insert: {
+          episode_started_at?: string | null
+          episode_state?: never
+          place_signal_type?: never
+          projected_expires_at_at_start?: never
+          projection_version?: string | null
+          signal_key?: string | null
+          start_as_of?: string | null
+          start_computed_at?: string | null
+          start_metadata?: Json | null
+          start_reason?: string | null
+          start_transition_id?: string | null
+          start_transition_type?: string | null
+          starting_fresh_contributors?: never
+          starting_opposing_contributors?: never
+          starting_posture?: never
+          starting_supporting_contributors?: never
+          venue_id?: string | null
+        }
+        Update: {
+          episode_started_at?: string | null
+          episode_state?: never
+          place_signal_type?: never
+          projected_expires_at_at_start?: never
+          projection_version?: string | null
+          signal_key?: string | null
+          start_as_of?: string | null
+          start_computed_at?: string | null
+          start_metadata?: Json | null
+          start_reason?: string | null
+          start_transition_id?: string | null
+          start_transition_type?: string | null
+          starting_fresh_contributors?: never
+          starting_opposing_contributors?: never
+          starting_posture?: never
+          starting_supporting_contributors?: never
+          venue_id?: string | null
+        }
+        Relationships: []
+      }
+      community_signal_place_episodes_v1: {
+        Row: {
+          end_as_of: string | null
+          end_boundary_inclusive: boolean | null
+          end_computed_at: string | null
+          end_metadata: Json | null
+          end_reason: string | null
+          end_transition_id: string | null
+          end_transition_type: string | null
+          episode_duration_seconds: number | null
+          episode_ended_at: string | null
+          episode_id: string | null
+          episode_provenance: string | null
+          episode_started_at: string | null
+          episode_state: string | null
+          is_open_episode: boolean | null
+          place_signal_type: string | null
+          projected_expires_at_at_start: string | null
+          projection_version: string | null
+          signal_key: string | null
+          start_as_of: string | null
+          start_computed_at: string | null
+          start_metadata: Json | null
+          start_reason: string | null
+          start_transition_id: string | null
+          start_transition_type: string | null
+          starting_fresh_contributors: number | null
+          starting_opposing_contributors: number | null
+          starting_posture: string | null
+          starting_supporting_contributors: number | null
+          venue_id: string | null
+        }
+        Relationships: []
+      }
+      community_signal_research_accumulation_v1: {
+        Row: {
+          accumulation_status: string | null
+          authenticated_viewer_episode_instances: number | null
+          episodes_with_exposed_then_participated: number | null
+          episodes_with_exposure: number | null
+          episodes_with_verified_participation: number | null
+          episodes_without_exposure: number | null
+          episodes_without_verified_participation: number | null
+          evaluated_at: string | null
+          exposed_then_participated_user_instances: number | null
+          first_episode_started_at: string | null
+          has_exposure_variation: boolean | null
+          has_outcome_variation: boolean | null
+          inference_policy: string | null
+          latest_episode_started_at: string | null
+          line_episode_count: number | null
+          observed_episode_count: number | null
+          participant_episode_instances: number | null
+          represented_venue_count: number | null
+          temporary_closure_episode_count: number | null
+          total_aligned_exposures: number | null
+          total_during_episode_participations: number | null
+        }
+        Relationships: []
+      }
+      community_signal_research_entry_gates_v1: {
+        Row: {
+          evaluated_at: string | null
+          exposed_episode_count: number | null
+          gate_0_infrastructure_ready: boolean | null
+          gate_1_minimum_episode_accumulation: boolean | null
+          gate_2_venue_breadth: boolean | null
+          gate_3_signal_type_breadth: boolean | null
+          gate_4_exposure_variation: boolean | null
+          gate_5_outcome_variation: boolean | null
+          gate_6_concentration_not_extreme: boolean | null
+          gate_7_statistical_design_review_complete: boolean | null
+          largest_venue_episode_share: number | null
+          modeling_entry_status: string | null
+          next_research_action: string | null
+          null_outcome_episode_count: number | null
+          observed_place_episode_count: number | null
+          positive_outcome_episode_count: number | null
+          represented_signal_type_count: number | null
+          threshold_policy: string | null
+          unexposed_episode_count: number | null
+          venue_count: number | null
+          venue_episode_hhi: number | null
+        }
+        Relationships: []
+      }
+      community_signal_research_gate_failures_v1: {
+        Row: {
+          evaluated_at: string | null
+          failure_reason: string | null
+          gate_name: string | null
+          gate_passed: boolean | null
+        }
+        Relationships: []
+      }
+      community_signal_research_operational_blockers_v1: {
+        Row: {
+          blocker_domain: string | null
+          blocker_name: string | null
+          blocker_reason: string | null
+          evaluated_at: string | null
+        }
+        Relationships: []
+      }
+      community_signal_research_operational_status_v1: {
+        Row: {
+          episodes_with_exposure: number | null
+          episodes_with_verified_participation: number | null
+          episodes_without_exposure: number | null
+          episodes_without_verified_participation: number | null
+          evaluated_at: string | null
+          gate_0_infrastructure_ready: boolean | null
+          gate_1_minimum_episode_accumulation: boolean | null
+          gate_2_venue_breadth: boolean | null
+          gate_3_signal_type_breadth: boolean | null
+          gate_4_exposure_variation: boolean | null
+          gate_5_outcome_variation: boolean | null
+          gate_6_concentration_not_extreme: boolean | null
+          gate_7_statistical_design_review_complete: boolean | null
+          happening_episode_reconstruction_status: string | null
+          happening_next_action: string | null
+          happening_transition_count: number | null
+          has_exposure_variation: boolean | null
+          has_outcome_variation: boolean | null
+          inference_policy: string | null
+          largest_venue_episode_share: number | null
+          market_boundary_policy: string | null
+          modeling_entry_status: string | null
+          modeling_policy: string | null
+          next_research_action: string | null
+          observed_episode_count: number | null
+          operational_next_action: string | null
+          represented_signal_type_count: number | null
+          represented_venue_count: number | null
+          research_operating_mode: string | null
+          venue_episode_hhi: number | null
+        }
+        Relationships: []
+      }
+      community_signal_research_readiness_v1: {
+        Row: {
+          aligned_exposure_count: number | null
+          descriptive_only_episode_count: number | null
+          distinct_authenticated_viewers: number | null
+          distinct_verified_participants: number | null
+          episodes_with_during_participation: number | null
+          episodes_with_exposed_then_participated: number | null
+          exposure_count: number | null
+          line_episode_count: number | null
+          maximum_current_inference_level: string | null
+          observed_place_episode_count: number | null
+          present_episode_count: number | null
+          research_readiness_status: string | null
+          temporary_closure_episode_count: number | null
+          verified_participation_count: number | null
+        }
+        Relationships: []
+      }
+      community_signal_state_transition_fact_v1: {
+        Row: {
+          as_of: string | null
+          canonical_event_id: string | null
+          computed_at: string | null
+          effective_at: string | null
+          evidence_set_fingerprint: string | null
+          from_state: Json | null
+          metadata: Json | null
+          occurrence_id: string | null
+          projection_version: string | null
+          signal_domain: string | null
+          signal_key: string | null
+          to_state: Json | null
+          transition_id: string | null
+          transition_reason: string | null
+          transition_type: string | null
+          triggering_evidence_ledger_id: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          as_of?: string | null
+          canonical_event_id?: string | null
+          computed_at?: string | null
+          effective_at?: string | null
+          evidence_set_fingerprint?: string | null
+          from_state?: Json | null
+          metadata?: Json | null
+          occurrence_id?: string | null
+          projection_version?: string | null
+          signal_domain?: string | null
+          signal_key?: string | null
+          to_state?: Json | null
+          transition_id?: string | null
+          transition_reason?: string | null
+          transition_type?: string | null
+          triggering_evidence_ledger_id?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          as_of?: string | null
+          canonical_event_id?: string | null
+          computed_at?: string | null
+          effective_at?: string | null
+          evidence_set_fingerprint?: string | null
+          from_state?: Json | null
+          metadata?: Json | null
+          occurrence_id?: string | null
+          projection_version?: string | null
+          signal_domain?: string | null
+          signal_key?: string | null
+          to_state?: Json | null
+          transition_id?: string | null
+          transition_reason?: string | null
+          transition_type?: string | null
+          triggering_evidence_ledger_id?: string | null
+          venue_id?: string | null
+        }
+        Relationships: []
+      }
+      community_signal_verified_venue_participation_fact_v1: {
+        Row: {
+          check_in_source: string | null
+          device_timestamp: string | null
+          distance_meters: number | null
+          geo_verified: boolean | null
+          location_accuracy_meters: number | null
+          participation_at: string | null
+          participation_id: string | null
+          participation_source: string | null
+          system_recorded_at: string | null
+          updated_at: string | null
+          user_id: string | null
+          venue_id: string | null
+          verification_basis: string | null
+          visit_date: string | null
+        }
+        Insert: {
+          check_in_source?: string | null
+          device_timestamp?: string | null
+          distance_meters?: number | null
+          geo_verified?: boolean | null
+          location_accuracy_meters?: number | null
+          participation_at?: string | null
+          participation_id?: string | null
+          participation_source?: never
+          system_recorded_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          venue_id?: string | null
+          verification_basis?: never
+          visit_date?: string | null
+        }
+        Update: {
+          check_in_source?: string | null
+          device_timestamp?: string | null
+          distance_meters?: number | null
+          geo_verified?: boolean | null
+          location_accuracy_meters?: number | null
+          participation_at?: string | null
+          participation_id?: string | null
+          participation_source?: never
+          system_recorded_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          venue_id?: string | null
+          verification_basis?: never
+          visit_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_visits_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "venue_visits_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competition_relay_confidence: {
         Row: {
           comparative_confidence: number | null
@@ -9741,6 +12952,1789 @@ export type Database = {
           },
         ]
       }
+      scout_accuracy_evidence_v1: {
+        Row: {
+          absolute_surprise: number | null
+          accuracy_evidence_eligible: boolean | null
+          allocated_at: string | null
+          allocation_lot_id: string | null
+          allocation_settlement_fingerprint: string | null
+          allocation_settlement_id: string | null
+          created_at: string | null
+          cycle_id: string | null
+          evidence_created_at: string | null
+          evidence_fingerprint: string | null
+          final_conviction_present: boolean | null
+          gross_redeemed_credits: number | null
+          id: string | null
+          market_id: string | null
+          metadata: Json | null
+          original_credits: number | null
+          outcome_direction: string | null
+          position_direction: string | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolution_id: string | null
+          resolution_input_fingerprint: string | null
+          resolution_rule_version: string | null
+          resolved_at: string | null
+          schema_version: number | null
+          scoring_context_version: string | null
+          settled_at: string | null
+          settlement_result: string | null
+          settlement_rule_version: string | null
+          surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Insert: {
+          absolute_surprise?: number | null
+          accuracy_evidence_eligible?: boolean | null
+          allocated_at?: string | null
+          allocation_lot_id?: string | null
+          allocation_settlement_fingerprint?: string | null
+          allocation_settlement_id?: string | null
+          created_at?: string | null
+          cycle_id?: string | null
+          evidence_created_at?: string | null
+          evidence_fingerprint?: string | null
+          final_conviction_present?: boolean | null
+          gross_redeemed_credits?: number | null
+          id?: string | null
+          market_id?: string | null
+          metadata?: Json | null
+          original_credits?: number | null
+          outcome_direction?: string | null
+          position_direction?: string | null
+          reference_evp?: number | null
+          relative_surprise?: number | null
+          resolution_id?: string | null
+          resolution_input_fingerprint?: string | null
+          resolution_rule_version?: string | null
+          resolved_at?: string | null
+          schema_version?: number | null
+          scoring_context_version?: string | null
+          settled_at?: string | null
+          settlement_result?: string | null
+          settlement_rule_version?: string | null
+          surviving_credits?: number | null
+          user_id?: string | null
+          venue_id?: string | null
+          verified_participation?: number | null
+        }
+        Update: {
+          absolute_surprise?: number | null
+          accuracy_evidence_eligible?: boolean | null
+          allocated_at?: string | null
+          allocation_lot_id?: string | null
+          allocation_settlement_fingerprint?: string | null
+          allocation_settlement_id?: string | null
+          created_at?: string | null
+          cycle_id?: string | null
+          evidence_created_at?: string | null
+          evidence_fingerprint?: string | null
+          final_conviction_present?: boolean | null
+          gross_redeemed_credits?: number | null
+          id?: string | null
+          market_id?: string | null
+          metadata?: Json | null
+          original_credits?: number | null
+          outcome_direction?: string | null
+          position_direction?: string | null
+          reference_evp?: number | null
+          relative_surprise?: number | null
+          resolution_id?: string | null
+          resolution_input_fingerprint?: string | null
+          resolution_rule_version?: string | null
+          resolved_at?: string | null
+          schema_version?: number | null
+          scoring_context_version?: string | null
+          settled_at?: string | null
+          settlement_result?: string | null
+          settlement_rule_version?: string | null
+          surviving_credits?: number | null
+          user_id?: string | null
+          venue_id?: string | null
+          verified_participation?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_settlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "scout_forecast_evidence_source_v1"
+            referencedColumns: ["allocation_settlement_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_accuracy_features_v1: {
+        Row: {
+          absolute_surprise: number | null
+          accuracy_direction_value: number | null
+          accuracy_evidence_eligible: boolean | null
+          allocated_at: string | null
+          allocation_closes_at: string | null
+          allocation_lot_id: string | null
+          allocation_opens_at: string | null
+          allocation_settlement_id: string | null
+          allocation_window_progress: number | null
+          allocation_within_cycle_window: boolean | null
+          cycle_id: string | null
+          evidence_created_at: string | null
+          evidence_fingerprint: string | null
+          evidence_id: string | null
+          final_conviction_present: boolean | null
+          gross_redeemed_credits: number | null
+          market_id: string | null
+          original_credits: number | null
+          outcome_direction: string | null
+          participation_measurement_ends_at: string | null
+          participation_measurement_starts_at: string | null
+          position_direction: string | null
+          redemption_ratio: number | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolution_id: string | null
+          resolution_rule_version: string | null
+          resolved_at: string | null
+          scoring_context_version: string | null
+          seconds_until_allocation_close: number | null
+          seconds_until_measurement_end: number | null
+          seconds_until_resolution: number | null
+          settled_at: string | null
+          settlement_result: string | null
+          settlement_rule_version: string | null
+          surprise_scale_v1: number | null
+          survival_ratio: number | null
+          surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_settlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "scout_forecast_evidence_source_v1"
+            referencedColumns: ["allocation_settlement_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_accuracy_reputation_units_v1: {
+        Row: {
+          absolute_surprise: number | null
+          aggregate_redemption_ratio: number | null
+          aggregate_survival_ratio: number | null
+          allocation_lot_count: number | null
+          average_allocation_window_progress: number | null
+          correct_lot_count: number | null
+          cycle_id: string | null
+          direction_change_count: number | null
+          distinct_direction_count: number | null
+          earliest_allocation_window_progress: number | null
+          final_position_direction: string | null
+          first_allocated_at: string | null
+          fully_redeemed_lot_count: number | null
+          incorrect_lot_count: number | null
+          last_allocated_at: string | null
+          latest_allocation_window_progress: number | null
+          market_accuracy_evidence_eligible: boolean | null
+          market_id: string | null
+          market_reputation_result: string | null
+          net_conviction_credits: number | null
+          net_conviction_ratio: number | null
+          neutral_lot_count: number | null
+          outcome_direction: string | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolved_at: string | null
+          settled_at: string | null
+          surviving_outperform_credits: number | null
+          surviving_underperform_credits: number | null
+          switched_direction: boolean | null
+          total_original_credits: number | null
+          total_redeemed_credits: number | null
+          total_surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_active_integrity_flags_v1: {
+        Row: {
+          disposition: string | null
+          flag_instance_id: string | null
+          market_id: string | null
+          metadata: Json | null
+          policy_version: string | null
+          raised_at: string | null
+          reason_code: string | null
+          scope_type: string | null
+          user_id: string | null
+          venue_id: string | null
+        }
+        Insert: {
+          disposition?: string | null
+          flag_instance_id?: string | null
+          market_id?: string | null
+          metadata?: Json | null
+          policy_version?: string | null
+          raised_at?: string | null
+          reason_code?: string | null
+          scope_type?: string | null
+          user_id?: string | null
+          venue_id?: string | null
+        }
+        Update: {
+          disposition?: string | null
+          flag_instance_id?: string | null
+          market_id?: string | null
+          metadata?: Json | null
+          policy_version?: string | null
+          raised_at?: string | null
+          reason_code?: string | null
+          scope_type?: string | null
+          user_id?: string | null
+          venue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_integrity_flag_events_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "scout_integrity_policy_rules"
+            referencedColumns: ["rule_version"]
+          },
+          {
+            foreignKeyName: "scout_integrity_flag_events_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "scout_reputation_eligibility_v1"
+            referencedColumns: ["integrity_policy_version"]
+          },
+          {
+            foreignKeyName: "scout_integrity_flag_events_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "scout_trusted_accuracy_reputation_units_v1"
+            referencedColumns: ["integrity_policy_version"]
+          },
+          {
+            foreignKeyName: "scout_integrity_flag_events_policy_version_fkey"
+            columns: ["policy_version"]
+            isOneToOne: false
+            referencedRelation: "scout_user_integrity_diagnostics_v1"
+            referencedColumns: ["integrity_policy_version"]
+          },
+        ]
+      }
+      scout_behavioral_evidence_v1: {
+        Row: {
+          absolute_surprise: number | null
+          accuracy_evidence_eligible: boolean | null
+          allocated_at: string | null
+          allocation_lot_id: string | null
+          allocation_settlement_fingerprint: string | null
+          allocation_settlement_id: string | null
+          created_at: string | null
+          cycle_id: string | null
+          evidence_created_at: string | null
+          evidence_fingerprint: string | null
+          final_conviction_present: boolean | null
+          gross_redeemed_credits: number | null
+          id: string | null
+          market_id: string | null
+          metadata: Json | null
+          original_credits: number | null
+          outcome_direction: string | null
+          position_direction: string | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolution_id: string | null
+          resolution_input_fingerprint: string | null
+          resolution_rule_version: string | null
+          resolved_at: string | null
+          schema_version: number | null
+          scoring_context_version: string | null
+          settled_at: string | null
+          settlement_result: string | null
+          settlement_rule_version: string | null
+          surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Insert: {
+          absolute_surprise?: number | null
+          accuracy_evidence_eligible?: boolean | null
+          allocated_at?: string | null
+          allocation_lot_id?: string | null
+          allocation_settlement_fingerprint?: string | null
+          allocation_settlement_id?: string | null
+          created_at?: string | null
+          cycle_id?: string | null
+          evidence_created_at?: string | null
+          evidence_fingerprint?: string | null
+          final_conviction_present?: boolean | null
+          gross_redeemed_credits?: number | null
+          id?: string | null
+          market_id?: string | null
+          metadata?: Json | null
+          original_credits?: number | null
+          outcome_direction?: string | null
+          position_direction?: string | null
+          reference_evp?: number | null
+          relative_surprise?: number | null
+          resolution_id?: string | null
+          resolution_input_fingerprint?: string | null
+          resolution_rule_version?: string | null
+          resolved_at?: string | null
+          schema_version?: number | null
+          scoring_context_version?: string | null
+          settled_at?: string | null
+          settlement_result?: string | null
+          settlement_rule_version?: string | null
+          surviving_credits?: number | null
+          user_id?: string | null
+          venue_id?: string | null
+          verified_participation?: number | null
+        }
+        Update: {
+          absolute_surprise?: number | null
+          accuracy_evidence_eligible?: boolean | null
+          allocated_at?: string | null
+          allocation_lot_id?: string | null
+          allocation_settlement_fingerprint?: string | null
+          allocation_settlement_id?: string | null
+          created_at?: string | null
+          cycle_id?: string | null
+          evidence_created_at?: string | null
+          evidence_fingerprint?: string | null
+          final_conviction_present?: boolean | null
+          gross_redeemed_credits?: number | null
+          id?: string | null
+          market_id?: string | null
+          metadata?: Json | null
+          original_credits?: number | null
+          outcome_direction?: string | null
+          position_direction?: string | null
+          reference_evp?: number | null
+          relative_surprise?: number | null
+          resolution_id?: string | null
+          resolution_input_fingerprint?: string | null
+          resolution_rule_version?: string | null
+          resolved_at?: string | null
+          schema_version?: number | null
+          scoring_context_version?: string | null
+          settled_at?: string | null
+          settlement_result?: string | null
+          settlement_rule_version?: string | null
+          surviving_credits?: number | null
+          user_id?: string | null
+          venue_id?: string | null
+          verified_participation?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_settlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "scout_forecast_evidence_source_v1"
+            referencedColumns: ["allocation_settlement_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_behavioral_features_v1: {
+        Row: {
+          absolute_surprise: number | null
+          accuracy_direction_value: number | null
+          accuracy_evidence_eligible: boolean | null
+          allocated_at: string | null
+          allocation_closes_at: string | null
+          allocation_lot_id: string | null
+          allocation_opens_at: string | null
+          allocation_settlement_id: string | null
+          allocation_window_progress: number | null
+          allocation_within_cycle_window: boolean | null
+          cycle_id: string | null
+          evidence_created_at: string | null
+          evidence_fingerprint: string | null
+          evidence_id: string | null
+          final_conviction_present: boolean | null
+          gross_redeemed_credits: number | null
+          market_id: string | null
+          original_credits: number | null
+          outcome_direction: string | null
+          participation_measurement_ends_at: string | null
+          participation_measurement_starts_at: string | null
+          position_direction: string | null
+          redemption_ratio: number | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolution_id: string | null
+          resolution_rule_version: string | null
+          resolved_at: string | null
+          scoring_context_version: string | null
+          seconds_until_allocation_close: number | null
+          seconds_until_measurement_end: number | null
+          seconds_until_resolution: number | null
+          settled_at: string | null
+          settlement_result: string | null
+          settlement_rule_version: string | null
+          surprise_scale_v1: number | null
+          survival_ratio: number | null
+          surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_settlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "scout_forecast_evidence_source_v1"
+            referencedColumns: ["allocation_settlement_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_forecast_evidence_features_v1: {
+        Row: {
+          absolute_surprise: number | null
+          accuracy_direction_value: number | null
+          accuracy_evidence_eligible: boolean | null
+          allocated_at: string | null
+          allocation_closes_at: string | null
+          allocation_lot_id: string | null
+          allocation_opens_at: string | null
+          allocation_settlement_id: string | null
+          allocation_window_progress: number | null
+          allocation_within_cycle_window: boolean | null
+          cycle_id: string | null
+          evidence_created_at: string | null
+          evidence_fingerprint: string | null
+          evidence_id: string | null
+          final_conviction_present: boolean | null
+          gross_redeemed_credits: number | null
+          market_id: string | null
+          original_credits: number | null
+          outcome_direction: string | null
+          participation_measurement_ends_at: string | null
+          participation_measurement_starts_at: string | null
+          position_direction: string | null
+          redemption_ratio: number | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolution_id: string | null
+          resolution_rule_version: string | null
+          resolved_at: string | null
+          scoring_context_version: string | null
+          seconds_until_allocation_close: number | null
+          seconds_until_measurement_end: number | null
+          seconds_until_resolution: number | null
+          settled_at: string | null
+          settlement_result: string | null
+          settlement_rule_version: string | null
+          surprise_scale_v1: number | null
+          survival_ratio: number | null
+          surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_settlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "scout_forecast_evidence_source_v1"
+            referencedColumns: ["allocation_settlement_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_forecast_evidence_source_v1: {
+        Row: {
+          absolute_surprise: number | null
+          accuracy_evidence_eligible: boolean | null
+          allocated_at: string | null
+          allocation_lot_id: string | null
+          allocation_settlement_fingerprint: string | null
+          allocation_settlement_id: string | null
+          cycle_id: string | null
+          final_conviction_present: boolean | null
+          gross_redeemed_credits: number | null
+          market_id: string | null
+          original_credits: number | null
+          outcome_direction: string | null
+          position_direction: string | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolution_id: string | null
+          resolution_input_fingerprint: string | null
+          resolution_rule_version: string | null
+          resolved_at: string | null
+          scoring_context_version: string | null
+          settled_at: string | null
+          settlement_result: string | null
+          settlement_rule_version: string | null
+          surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "city_market_allocation_settlements_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_lot_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: [
+              "allocation_lot_id",
+              "cycle_id",
+              "market_id",
+              "user_id",
+            ]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_lot_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: [
+              "allocation_lot_id",
+              "cycle_id",
+              "market_id",
+              "user_id",
+            ]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_lot_identity_fk"
+            columns: ["allocation_lot_id", "cycle_id", "market_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id", "cycle_id", "market_id", "user_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_resolution_identity_fk"
+            columns: ["resolution_id", "cycle_id", "market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id", "cycle_id", "market_id"]
+          },
+          {
+            foreignKeyName: "city_market_allocation_settlements_resolution_identity_fk"
+            columns: ["resolution_id", "cycle_id", "market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id", "cycle_id", "market_id"]
+          },
+        ]
+      }
+      scout_market_integrity_flags_v1: {
+        Row: {
+          explicit_integrity_reasons: string[] | null
+          has_explicit_exclusion: boolean | null
+          has_explicit_review: boolean | null
+          market_id: string | null
+          user_id: string | null
+          venue_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_reputation_eligibility_v1: {
+        Row: {
+          absolute_surprise: number | null
+          aggregate_redemption_ratio: number | null
+          aggregate_survival_ratio: number | null
+          allocation_lot_count: number | null
+          average_allocation_window_progress: number | null
+          correct_lot_count: number | null
+          cycle_id: string | null
+          direction_change_count: number | null
+          distinct_direction_count: number | null
+          earliest_allocation_window_progress: number | null
+          excessive_single_venue_concentration: boolean | null
+          explicit_integrity_reasons: string[] | null
+          final_position_direction: string | null
+          first_allocated_at: string | null
+          fully_redeemed_lot_count: number | null
+          has_explicit_exclusion: boolean | null
+          has_explicit_review: boolean | null
+          incorrect_lot_count: number | null
+          integrity_eligibility_status: string | null
+          integrity_policy_version: string | null
+          integrity_total_market_units: number | null
+          last_allocated_at: string | null
+          latest_allocation_window_progress: number | null
+          market_accuracy_evidence_eligible: boolean | null
+          market_id: string | null
+          market_reputation_result: string | null
+          maximum_single_venue_share: number | null
+          maximum_single_venue_units: number | null
+          net_conviction_credits: number | null
+          net_conviction_ratio: number | null
+          neutral_lot_count: number | null
+          outcome_direction: string | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolved_at: string | null
+          settled_at: string | null
+          surviving_outperform_credits: number | null
+          surviving_underperform_credits: number | null
+          switched_direction: boolean | null
+          total_original_credits: number | null
+          total_redeemed_credits: number | null
+          total_surviving_credits: number | null
+          trusted_reputation_eligible: boolean | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_reputation_readiness_v1: {
+        Row: {
+          accuracy_eligible_market_count: number | null
+          correct_market_count: number | null
+          directional_accuracy_interval_width_95: number | null
+          directional_accuracy_wilson_lower_95: number | null
+          directional_accuracy_wilson_upper_95: number | null
+          directional_decision_count: number | null
+          directional_decisions_until_developing: number | null
+          distinct_cycle_count: number | null
+          distinct_cycles_until_developing: number | null
+          distinct_venue_count: number | null
+          distinct_venues_until_developing: number | null
+          incorrect_market_count: number | null
+          minimum_reputation_evidence_met: boolean | null
+          raw_directional_accuracy_rate: number | null
+          readiness_rule_version: string | null
+          reputation_readiness: string | null
+          total_market_evidence_units: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      scout_reputation_state_v1: {
+        Row: {
+          correct_market_count: number | null
+          directional_accuracy_interval_width_95: number | null
+          directional_accuracy_wilson_lower_95: number | null
+          directional_accuracy_wilson_upper_95: number | null
+          directional_decision_count: number | null
+          directional_decisions_until_developing: number | null
+          distinct_cycle_count: number | null
+          distinct_cycles_until_developing: number | null
+          distinct_venue_count: number | null
+          distinct_venues_until_developing: number | null
+          incorrect_market_count: number | null
+          minimum_reputation_evidence_met: boolean | null
+          raw_directional_accuracy_rate: number | null
+          readiness_rule_version: string | null
+          reputation_readiness: string | null
+          total_market_evidence_units: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      scout_reputation_uncertainty_v1: {
+        Row: {
+          accuracy_eligible_market_count: number | null
+          correct_market_count: number | null
+          directional_accuracy_interval_width_95: number | null
+          directional_accuracy_wilson_lower_95: number | null
+          directional_accuracy_wilson_upper_95: number | null
+          directional_decision_count: number | null
+          distinct_cycle_count: number | null
+          distinct_venue_count: number | null
+          incorrect_market_count: number | null
+          mixed_market_count: number | null
+          neutral_market_count: number | null
+          no_final_conviction_market_count: number | null
+          observed_directional_accuracy: number | null
+          raw_directional_accuracy_rate: number | null
+          readiness_rule_version: string | null
+          total_market_evidence_units: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      scout_trusted_accuracy_reputation_units_v1: {
+        Row: {
+          absolute_surprise: number | null
+          aggregate_redemption_ratio: number | null
+          aggregate_survival_ratio: number | null
+          allocation_lot_count: number | null
+          average_allocation_window_progress: number | null
+          correct_lot_count: number | null
+          cycle_id: string | null
+          direction_change_count: number | null
+          distinct_direction_count: number | null
+          earliest_allocation_window_progress: number | null
+          excessive_single_venue_concentration: boolean | null
+          explicit_integrity_reasons: string[] | null
+          final_position_direction: string | null
+          first_allocated_at: string | null
+          fully_redeemed_lot_count: number | null
+          has_explicit_exclusion: boolean | null
+          has_explicit_review: boolean | null
+          incorrect_lot_count: number | null
+          integrity_eligibility_status: string | null
+          integrity_policy_version: string | null
+          integrity_total_market_units: number | null
+          last_allocated_at: string | null
+          latest_allocation_window_progress: number | null
+          market_accuracy_evidence_eligible: boolean | null
+          market_id: string | null
+          market_reputation_result: string | null
+          maximum_single_venue_share: number | null
+          maximum_single_venue_units: number | null
+          net_conviction_credits: number | null
+          net_conviction_ratio: number | null
+          neutral_lot_count: number | null
+          outcome_direction: string | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolved_at: string | null
+          settled_at: string | null
+          surviving_outperform_credits: number | null
+          surviving_underperform_credits: number | null
+          switched_direction: boolean | null
+          total_original_credits: number | null
+          total_redeemed_credits: number | null
+          total_surviving_credits: number | null
+          trusted_reputation_eligible: boolean | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_trusted_reputation_readiness_v1: {
+        Row: {
+          readiness_rule_version: string | null
+          trusted_correct_market_count: number | null
+          trusted_directional_accuracy_interval_width_95: number | null
+          trusted_directional_accuracy_wilson_lower_95: number | null
+          trusted_directional_accuracy_wilson_upper_95: number | null
+          trusted_directional_decision_count: number | null
+          trusted_directional_decisions_until_developing: number | null
+          trusted_distinct_cycle_count: number | null
+          trusted_distinct_cycles_until_developing: number | null
+          trusted_distinct_venue_count: number | null
+          trusted_distinct_venues_until_developing: number | null
+          trusted_incorrect_market_count: number | null
+          trusted_minimum_reputation_evidence_met: boolean | null
+          trusted_neutral_market_count: number | null
+          trusted_raw_directional_accuracy_rate: number | null
+          trusted_reputation_readiness: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      scout_trusted_reputation_state_v1: {
+        Row: {
+          readiness_rule_version: string | null
+          trusted_correct_market_count: number | null
+          trusted_directional_accuracy_interval_width_95: number | null
+          trusted_directional_accuracy_wilson_lower_95: number | null
+          trusted_directional_accuracy_wilson_upper_95: number | null
+          trusted_directional_decision_count: number | null
+          trusted_directional_decisions_until_developing: number | null
+          trusted_distinct_cycle_count: number | null
+          trusted_distinct_cycles_until_developing: number | null
+          trusted_distinct_venue_count: number | null
+          trusted_distinct_venues_until_developing: number | null
+          trusted_incorrect_market_count: number | null
+          trusted_minimum_reputation_evidence_met: boolean | null
+          trusted_neutral_market_count: number | null
+          trusted_raw_directional_accuracy_rate: number | null
+          trusted_reputation_readiness: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      scout_trusted_reputation_uncertainty_v1: {
+        Row: {
+          readiness_rule_version: string | null
+          trusted_correct_market_count: number | null
+          trusted_directional_accuracy_interval_width_95: number | null
+          trusted_directional_accuracy_wilson_lower_95: number | null
+          trusted_directional_accuracy_wilson_upper_95: number | null
+          trusted_directional_decision_count: number | null
+          trusted_distinct_cycle_count: number | null
+          trusted_distinct_venue_count: number | null
+          trusted_incorrect_market_count: number | null
+          trusted_neutral_market_count: number | null
+          trusted_observed_directional_accuracy: number | null
+          trusted_raw_directional_accuracy_rate: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      scout_user_integrity_diagnostics_v1: {
+        Row: {
+          excessive_single_venue_concentration: boolean | null
+          integrity_policy_version: string | null
+          maximum_single_venue_share: number | null
+          maximum_single_venue_units: number | null
+          total_market_units: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      scout_user_market_behavior_v1: {
+        Row: {
+          accuracy_eligible_lot_count: number | null
+          aggregate_redemption_ratio: number | null
+          aggregate_survival_ratio: number | null
+          all_allocations_within_cycle_window: boolean | null
+          allocation_lot_count: number | null
+          average_allocation_window_progress: number | null
+          correct_lot_count: number | null
+          cycle_id: string | null
+          direction_change_count: number | null
+          distinct_direction_count: number | null
+          earliest_allocation_window_progress: number | null
+          first_allocated_at: string | null
+          first_position_direction: string | null
+          fully_redeemed_lot_count: number | null
+          incorrect_lot_count: number | null
+          last_allocated_at: string | null
+          last_position_direction: string | null
+          latest_allocation_window_progress: number | null
+          market_id: string | null
+          neutral_lot_count: number | null
+          switched_direction: boolean | null
+          total_original_credits: number | null
+          total_redeemed_credits: number | null
+          total_surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_user_market_lot_sequence_v1: {
+        Row: {
+          absolute_surprise: number | null
+          accuracy_direction_value: number | null
+          accuracy_evidence_eligible: boolean | null
+          allocated_at: string | null
+          allocation_closes_at: string | null
+          allocation_lot_id: string | null
+          allocation_opens_at: string | null
+          allocation_settlement_id: string | null
+          allocation_window_progress: number | null
+          allocation_within_cycle_window: boolean | null
+          cycle_id: string | null
+          direction_changed_from_prior_lot: boolean | null
+          evidence_created_at: string | null
+          evidence_fingerprint: string | null
+          evidence_id: string | null
+          final_conviction_present: boolean | null
+          gross_redeemed_credits: number | null
+          lot_sequence_number: number | null
+          market_id: string | null
+          original_credits: number | null
+          outcome_direction: string | null
+          participation_measurement_ends_at: string | null
+          participation_measurement_starts_at: string | null
+          position_direction: string | null
+          prior_position_direction: string | null
+          redemption_ratio: number | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolution_id: string | null
+          resolution_rule_version: string | null
+          resolved_at: string | null
+          scoring_context_version: string | null
+          seconds_until_allocation_close: number | null
+          seconds_until_measurement_end: number | null
+          seconds_until_resolution: number | null
+          settled_at: string | null
+          settlement_result: string | null
+          settlement_rule_version: string | null
+          surprise_scale_v1: number | null
+          survival_ratio: number | null
+          surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_economics_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lot_state_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_allocation_lots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_lot_id_fkey"
+            columns: ["allocation_lot_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["allocation_lot_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "city_market_allocation_settlements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_allocation_settlement_id_fkey"
+            columns: ["allocation_settlement_id"]
+            isOneToOne: true
+            referencedRelation: "scout_forecast_evidence_source_v1"
+            referencedColumns: ["allocation_settlement_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_resolutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_resolution_id_fkey"
+            columns: ["resolution_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_settlement_basis_v1"
+            referencedColumns: ["resolution_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_user_market_reputation_unit_v1: {
+        Row: {
+          absolute_surprise: number | null
+          aggregate_redemption_ratio: number | null
+          aggregate_survival_ratio: number | null
+          allocation_lot_count: number | null
+          average_allocation_window_progress: number | null
+          correct_lot_count: number | null
+          cycle_id: string | null
+          direction_change_count: number | null
+          distinct_direction_count: number | null
+          earliest_allocation_window_progress: number | null
+          final_position_direction: string | null
+          first_allocated_at: string | null
+          fully_redeemed_lot_count: number | null
+          incorrect_lot_count: number | null
+          last_allocated_at: string | null
+          latest_allocation_window_progress: number | null
+          market_accuracy_evidence_eligible: boolean | null
+          market_id: string | null
+          market_reputation_result: string | null
+          net_conviction_credits: number | null
+          net_conviction_ratio: number | null
+          neutral_lot_count: number | null
+          outcome_direction: string | null
+          reference_evp: number | null
+          relative_surprise: number | null
+          resolved_at: string | null
+          settled_at: string | null
+          surviving_outperform_credits: number | null
+          surviving_underperform_credits: number | null
+          switched_direction: boolean | null
+          total_original_credits: number | null
+          total_redeemed_credits: number | null
+          total_surviving_credits: number | null
+          user_id: string | null
+          venue_id: string | null
+          verified_participation: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_forecast_evidence_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_market_conviction_summary_v1"
+            referencedColumns: ["market_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_market_id_fkey"
+            columns: ["market_id"]
+            isOneToOne: false
+            referencedRelation: "city_markets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "scout_forecast_evidence_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scout_user_reputation_aggregate_v1: {
+        Row: {
+          accuracy_eligible_market_count: number | null
+          average_first_forecast_window_progress: number | null
+          average_forecast_window_progress: number | null
+          average_net_conviction_ratio: number | null
+          average_redemption_ratio: number | null
+          average_survival_ratio: number | null
+          correct_market_count: number | null
+          directional_decision_count: number | null
+          distinct_cycle_count: number | null
+          distinct_venue_count: number | null
+          first_forecast_at: string | null
+          incorrect_market_count: number | null
+          latest_forecast_at: string | null
+          mixed_market_count: number | null
+          neutral_market_count: number | null
+          no_final_conviction_market_count: number | null
+          raw_directional_accuracy_rate: number | null
+          switched_market_count: number | null
+          switched_market_rate: number | null
+          total_direction_change_count: number | null
+          total_market_evidence_units: number | null
+          total_net_conviction_credits: number | null
+          total_original_credits: number | null
+          total_redeemed_credits: number | null
+          total_surviving_credits: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      scout_user_trusted_reputation_aggregate_v1: {
+        Row: {
+          trusted_correct_market_count: number | null
+          trusted_directional_decision_count: number | null
+          trusted_distinct_cycle_count: number | null
+          trusted_distinct_venue_count: number | null
+          trusted_incorrect_market_count: number | null
+          trusted_neutral_market_count: number | null
+          trusted_raw_directional_accuracy_rate: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       venue_rsvps_view: {
         Row: {
           checked_in_at: string | null
@@ -9904,6 +14898,22 @@ export type Database = {
         Args: { p_definition: Json; p_relay_id: string; p_slots: Json }
         Returns: string
       }
+      allocate_city_credits: {
+        Args: {
+          p_credits: number
+          p_cycle_id: string
+          p_idempotency_key: string
+          p_market_id: string
+          p_position_direction: string
+          p_user_id: string
+        }
+        Returns: {
+          allocated_at: string
+          allocation_lot_id: string
+          available_credits: number
+          credits_allocated: number
+        }[]
+      }
       anonymize_profile: { Args: { target_user: string }; Returns: undefined }
       assign_roam_relay_team_slot: {
         Args: { p_relay_slot_id: string; p_team_id: string; p_user_id: string }
@@ -9956,6 +14966,39 @@ export type Database = {
           session_id: string
         }[]
       }
+      capture_community_event_state_snapshot: {
+        Args: { p_as_of: string; p_occurrence_id: string }
+        Returns: Json
+      }
+      capture_community_place_signal_snapshot: {
+        Args: { p_as_of: string; p_signal_type: string; p_venue_id: string }
+        Returns: Json
+      }
+      capture_community_signal_research_readiness: {
+        Args: never
+        Returns: string
+      }
+      claim_event_occurrence_response: {
+        Args: {
+          p_contributor_user_id: string
+          p_occurrence_id: string
+          p_response_type: string
+        }
+        Returns: string
+      }
+      clear_scout_integrity_flag: {
+        Args: { p_flag_instance_id: string; p_metadata?: Json }
+        Returns: string
+      }
+      close_city_market_cycle: {
+        Args: { p_cycle_id: string }
+        Returns: {
+          cycle_id: string
+          cycle_status: string
+          draft_markets_canceled: number
+          markets_closed: number
+        }[]
+      }
       competition_allows_identity_reveal: {
         Args: { p_competition_id: string }
         Returns: boolean
@@ -10003,6 +15046,26 @@ export type Database = {
           detour_venue_id: string
           event_id: string
           session_id: string
+        }[]
+      }
+      create_admin_historical_venue_visit: {
+        Args: {
+          p_reason: string
+          p_user_id: string
+          p_venue_id: string
+          p_venue_timezone: string
+          p_visited_at: string
+        }
+        Returns: {
+          assertion_id: string
+          check_in_source: string
+          created: boolean
+          geo_verified: boolean
+          user_id: string
+          venue_id: string
+          venue_visit_id: string
+          visit_date: string
+          visited_at: string
         }[]
       }
       create_event_occurrence_for_report: {
@@ -10223,6 +15286,10 @@ export type Database = {
         Returns: boolean
       }
       geomfromewkt: { Args: { "": string }; Returns: unknown }
+      get_community_event_evidence_fingerprint: {
+        Args: { p_as_of: string; p_occurrence_id: string }
+        Returns: string
+      }
       get_community_place_signal_evidence: {
         Args: { p_signal_type: string; p_venue_id: string }
         Returns: {
@@ -10238,6 +15305,10 @@ export type Database = {
           usable_observations: number
           venue_id: string
         }[]
+      }
+      get_community_place_signal_evidence_fingerprint: {
+        Args: { p_as_of: string; p_signal_type: string; p_venue_id: string }
+        Returns: string
       }
       get_crawl_with_attendees: {
         Args: { input_crawl_id: string }
@@ -10258,6 +15329,22 @@ export type Database = {
           title: string
           venue_ids: string[]
           vibe_tags: string[]
+        }[]
+      }
+      get_current_community_happenings_for_venue: {
+        Args: { p_as_of?: string; p_venue_id: string }
+        Returns: {
+          applied_corrections: number
+          confidence_band: string
+          display_title: string
+          observed_at: string
+          occurrence_id: string
+          pending_usable_corrections: number
+          reported_archetype: string
+          unique_confirmers: number
+          unique_contributors: number
+          unique_reporters: number
+          venue_id: string
         }[]
       }
       get_current_community_place_signal: {
@@ -10420,6 +15507,26 @@ export type Database = {
         }[]
       }
       gettransactionid: { Args: never; Returns: unknown }
+      grant_city_credits: {
+        Args: {
+          p_amount: number
+          p_cycle_id: string
+          p_idempotency_key: string
+          p_user_id: string
+        }
+        Returns: {
+          available_credits: number
+          granted_credits: number
+          ledger_entry_id: string
+        }[]
+      }
+      initialize_community_signal_state_observer: {
+        Args: { p_as_of?: string }
+        Returns: {
+          happening_baselines_created: number
+          place_baselines_created: number
+        }[]
+      }
       initialize_roam_relay_team_slots: {
         Args: { p_team_id: string }
         Returns: {
@@ -10486,6 +15593,14 @@ export type Database = {
           public_flow_snapshot_id: string
         }[]
       }
+      observe_community_signal_state: {
+        Args: { p_as_of?: string }
+        Returns: {
+          new_happening_baselines: number
+          new_place_baselines: number
+          transition_rows_created: number
+        }[]
+      }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }
@@ -10527,6 +15642,17 @@ export type Database = {
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
       publish_roam_relay: { Args: { p_relay_id: string }; Returns: string }
+      raise_scout_integrity_flag: {
+        Args: {
+          p_market_id?: string
+          p_metadata?: Json
+          p_reason_code: string
+          p_scope_type: string
+          p_user_id: string
+          p_venue_id?: string
+        }
+        Returns: string
+      }
       rebuild_venue_reputation_categories: { Args: never; Returns: number }
       reconcile_competition_relay_replay_evidence: {
         Args: { p_replay_user_id: string; p_session_id: string }
@@ -10601,6 +15727,24 @@ export type Database = {
           venue_id: string
         }[]
       }
+      redeem_city_market_allocation: {
+        Args: {
+          p_allocation_lot_id: string
+          p_gross_credits: number
+          p_idempotency_key: string
+          p_user_id: string
+        }
+        Returns: {
+          available_credits: number
+          credits_returned: number
+          gross_credits_redeemed: number
+          haircut_credits: number
+          haircut_rate: number
+          redeemed_at: string
+          redemption_id: string
+          remaining_lot_credits: number
+        }[]
+      }
       refresh_social_group_event_metrics: {
         Args: { target_event_id: string }
         Returns: Json
@@ -10609,6 +15753,37 @@ export type Database = {
       remove_roam_relay_team_member: {
         Args: { p_team_id: string; p_user_id: string }
         Returns: undefined
+      }
+      resolve_city_market: {
+        Args: { p_market_id: string }
+        Returns: {
+          absolute_surprise: number
+          market_id: string
+          outcome_direction: string
+          reference_evp: number
+          relative_surprise: number
+          resolution_id: string
+          resolution_input_fingerprint: string
+          resolved_at: string
+          verified_participation: number
+        }[]
+      }
+      resolve_city_market_cycle: {
+        Args: { p_cycle_id: string }
+        Returns: {
+          cycle_id: string
+          cycle_status: string
+          exceptional_market_count: number
+          resolution_fingerprint: string
+          resolved_market_count: number
+        }[]
+      }
+      resolve_city_market_redemption_rate: {
+        Args: { p_at?: string; p_market_id: string }
+        Returns: {
+          haircut_rate: number
+          rule_version: string
+        }[]
       }
       resolve_event_occurrence_canonicalize: {
         Args: {
@@ -10725,6 +15900,29 @@ export type Database = {
           slot_count: number
           team_id: string
           team_status: string
+        }[]
+      }
+      settle_city_market: {
+        Args: { p_market_id: string }
+        Returns: {
+          market_id: string
+          released_credits: number
+          settled_at: string
+          settlement_count: number
+          settlement_fingerprint: string
+        }[]
+      }
+      settle_city_market_cycle: {
+        Args: { p_cycle_id: string }
+        Returns: {
+          cycle_id: string
+          cycle_status: string
+          effective_burned_haircut_credits: number
+          exceptional_market_count: number
+          invalid_account_count: number
+          net_committed_credits: number
+          settled_market_count: number
+          settlement_fingerprint: string
         }[]
       }
       settle_competition_from_snapshots: {
@@ -11440,11 +16638,44 @@ export type Database = {
           stop_position: number
         }[]
       }
+      sync_community_signal_contributor_snapshots: {
+        Args: { p_batch_size?: number }
+        Returns: number
+      }
+      sync_community_signal_evidence_ledger: {
+        Args: {
+          p_batch_size?: number
+          p_ingestion_mode?: string
+          p_source_table: string
+        }
+        Returns: number
+      }
+      sync_scout_forecast_evidence: {
+        Args: { p_cycle_id?: string; p_market_id?: string }
+        Returns: {
+          existing_count: number
+          inserted_count: number
+          source_count: number
+        }[]
+      }
       sync_venue_reputation_categories: {
         Args: { target_venue_id: string }
         Returns: undefined
       }
       unlockrows: { Args: { "": string }; Returns: number }
+      unwind_city_market: {
+        Args: { p_market_id: string }
+        Returns: {
+          haircut_credits_refunded: number
+          haircut_refund_entry_count: number
+          market_id: string
+          release_entry_count: number
+          surviving_credits_released: number
+          unwind_fingerprint: string
+          unwind_status: string
+          unwound_at: string
+        }[]
+      }
       update_roam_relay_definition: {
         Args: {
           p_city: string

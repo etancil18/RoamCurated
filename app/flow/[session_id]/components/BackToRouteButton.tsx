@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -6,7 +7,16 @@ import {
 } from 'next/navigation'
 
 
-export default function BackToRouteButton() {
+type BackToRouteButtonProps = {
+  flowCity?: string | null
+  flowVenueIds?: string[]
+}
+
+
+export default function BackToRouteButton({
+  flowCity,
+  flowVenueIds,
+}: BackToRouteButtonProps) {
   const router =
     useRouter()
 
@@ -38,6 +48,31 @@ export default function BackToRouteButton() {
     ) {
       router.push(
         returnTo
+      )
+
+      return
+    }
+
+
+    if (
+      flowCity?.trim() &&
+      flowVenueIds?.length
+    ) {
+      const params =
+        new URLSearchParams()
+
+      params.set(
+        'city',
+        flowCity.trim()
+      )
+
+      params.set(
+        'route',
+        flowVenueIds.join(',')
+      )
+
+      router.push(
+        `/?${params.toString()}`
       )
 
       return

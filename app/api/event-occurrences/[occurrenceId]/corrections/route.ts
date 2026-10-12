@@ -1197,6 +1197,10 @@ export async function POST(
   // - moderation state
   //
   // No canonical mutation occurs here.
+  //
+  // For correction_type='canceled', the database additionally
+  // enforces one durable quick-response posture per contributor
+  // + occurrence.
   // ----------------------------------------------------------
 
   const {
@@ -1265,6 +1269,105 @@ export async function POST(
       .single()
 
   if (insertError) {
+    /**
+     * PostgreSQL unique_violation.
+     *
+     * The installed partial unique index allows one canceled
+     * correction per contributor + occurrence.
+     *
+     * Treat a repeated "Not there" submission as idempotent
+     * rather than creating additional correction evidence.
+     *
+     * Other correction types retain their existing behavior.
+     */
+    if (
+      correctionType ===
+        'canceled' &&
+      insertError.code ===
+        '23505'
+    ) {
+      const {
+        data: existingCorrection,
+        error: existingError,
+      } =
+        await supabaseAdmin
+          .from(
+            'event_corrections'
+          )
+          .select(`
+            id,
+            occurrence_id,
+            correction_type,
+            claim,
+            note,
+            source_url,
+            observed_at,
+            review_status,
+            moderation_status,
+            created_at
+          `)
+          .eq(
+            'occurrence_id',
+            occurrence.id
+          )
+          .eq(
+            'contributor_user_id',
+            user.id
+          )
+          .eq(
+            'correction_type',
+            'canceled'
+          )
+          .maybeSingle()
+
+      if (
+        !existingError &&
+        existingCorrection
+      ) {
+        return NextResponse.json(
+          {
+            correction:
+              existingCorrection,
+          },
+          {
+            status: 200,
+          }
+        )
+      }
+    }
+
+    /**
+     * PostgreSQL check_violation deliberately raised by the
+     * durable occurrence-response guard when this contributor
+     * previously chose the opposite quick-response posture.
+     *
+     * Only canceled corrections participate in this binary
+     * quick-response invariant. Other correction types remain
+     * independent correction evidence.
+     *
+     * Do not treat unrelated database check violations as this
+     * expected product conflict.
+     */
+    if (
+      correctionType ===
+        'canceled' &&
+      insertError.code ===
+        '23514' &&
+      insertError.message.includes(
+        'Contributor has already responded to this occurrence.'
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'You have already responded to this community signal.',
+        },
+        {
+          status: 409,
+        }
+      )
+    }
+
     console.error(
       '[event-corrections][POST] Insert failed:',
       {

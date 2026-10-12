@@ -6,8 +6,13 @@ import {
 } from 'next/server'
 
 import {
+  loadCurrentCommunityHappeningsForVenue,
   loadCurrentCommunityPlaceIntelligenceForVenue,
 } from '@/lib/community-signals/liveIntelligence.server'
+
+import {
+  supabaseServerApi,
+} from '@/lib/supabase/server-api'
 
 function normalizeVenueId(
   value: string | null
@@ -52,15 +57,51 @@ export async function GET(
   }
 
   try {
-    const placeSignals =
-      await loadCurrentCommunityPlaceIntelligenceForVenue({
+    /**
+     * Viewer identity is optional because this live-intelligence
+     * endpoint remains readable without authentication.
+     *
+     * When an authenticated session exists, only the server-derived
+     * user id may be used to decorate occurrence-based happenings
+     * with durable viewer response state.
+     *
+     * No client-supplied viewer identity is accepted.
+     */
+    const supabase =
+      await supabaseServerApi()
+
+    const {
+      data: {
+        user,
+      },
+    } =
+      await supabase.auth.getUser()
+
+    const viewerUserId =
+      user?.id ??
+      null
+
+    const [
+      placeSignals,
+      happenings,
+    ] = await Promise.all([
+      loadCurrentCommunityPlaceIntelligenceForVenue({
         venueId,
-      })
+      }),
+
+      loadCurrentCommunityHappeningsForVenue({
+        venueId,
+
+        viewerUserId,
+      }),
+    ])
 
     return NextResponse.json(
       {
         place_signals:
           placeSignals,
+
+        happenings,
       },
       {
         status: 200,
