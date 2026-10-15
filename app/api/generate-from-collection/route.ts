@@ -1,6 +1,8 @@
-// app/api/generate-from-collection/route.ts
+
+ // app/api/generate-from-collection/route.ts
 
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 import { CITY_CONFIGS } from '@/config/cities'
 import {
@@ -70,6 +72,32 @@ type GeneratedStopOrigin = {
 }
 
 const DEFAULT_MAX_STOPS = 5
+
+/*
+ * CREATOR COLLECTION ATTRIBUTION
+ *
+ * Independent receipt hook. Disabled by default.
+ *
+ * Do not enable until the corresponding service-role-only
+ * receipt RPC has been installed and tested.
+ *
+ * This does not activate creator XP.
+ */
+const CREATOR_COLLECTION_RECEIPTS_ENABLED =
+  process.env.ROAM_CREATOR_COLLECTION_RECEIPTS_ENABLED ===
+  'true'
+
+/*
+ * TEMPORARY PRODUCTION TEST GUARD
+ *
+ * Creator Collection receipts may only be attempted
+ * for the dedicated Ghost explorer during controlled testing.
+ *
+ * Remove this guard only after the integration test passes
+ * and a separate rollout is approved.
+ */
+const CREATOR_COLLECTION_TEST_EXPLORER_ID =
+  'e445970d-edb9-48c0-af97-9764020f7f8e'
 
 const VENUE_SELECT = `
   id,
@@ -556,6 +584,110 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    /*
+     * CREATOR COLLECTION ATTRIBUTION — ADDITIVE HOOK
+     *
+     * Runs only after normal Active Flow creation succeeds.
+     *
+     * Does not:
+     * - Change the active Flow session
+     * - Change original stop status or execution
+     * - Award XP
+     * - Affect the explorer's successful response
+     *
+     * A future service-role-only RPC must verify the persisted
+     * session, original runtime stops, creator/explorer identities,
+     * and final provenance before recording receipts.
+     *
+     * Failures are logged rather than blocking the explorer.
+     */
+    if (
+      CREATOR_COLLECTION_RECEIPTS_ENABLED &&
+      user.id === CREATOR_COLLECTION_TEST_EXPLORER_ID &&
+      user.id !== collection.user_id &&
+      stopOrigins.some(
+        (stop) => stop.origin === 'collection'
+      )
+    ) {
+      try {
+        const supabaseUrl =
+          process.env.NEXT_PUBLIC_SUPABASE_URL
+        const serviceRoleKey =
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+
+        if (!supabaseUrl || !serviceRoleKey) {
+          console.error(
+            '[generate-from-collection] Creator receipt configuration missing.',
+            { sessionId: session.id }
+          )
+        } else {
+          const serviceSupabase = createClient(
+            supabaseUrl,
+            serviceRoleKey,
+            {
+              auth: {
+                autoRefreshToken: false,
+                persistSession: false,
+              },
+            }
+          )
+
+          const {
+            data: receiptCertified,
+            error: receiptError,
+          } = await serviceSupabase.rpc(
+            'certify_existing_creator_collection_flow',
+            {
+              p_session_id: session.id,
+              p_explorer_user_id: user.id,
+              p_collection_id: collection.id,
+              p_venue_ids: venueIds,
+              p_stop_origins: stopOrigins.map(
+                (stop) => stop.origin
+              ),
+            }
+          )
+
+          if (receiptError) {
+            console.error(
+              '[generate-from-collection] Creator attribution receipt failed:',
+              {
+                sessionId: session.id,
+                collectionId: collection.id,
+                error: receiptError,
+              }
+            )
+          } else if (receiptCertified !== true) {
+            console.warn(
+              '[generate-from-collection] Creator attribution receipt was not certified:',
+              {
+                sessionId: session.id,
+                collectionId: collection.id,
+                result: receiptCertified,
+              }
+            )
+          } else {
+            console.info(
+              '[generate-from-collection] Creator attribution receipt certified:',
+              {
+                sessionId: session.id,
+                collectionId: collection.id,
+              }
+            )
+          }
+        }
+      } catch (receiptError) {
+        console.error(
+          '[generate-from-collection] Unexpected creator attribution receipt error:',
+          {
+            sessionId: session.id,
+            collectionId: collection.id,
+            error: receiptError,
+          }
+        )
+      }
+    }
+
     return NextResponse.json(
       {
         session,
@@ -641,7 +773,7 @@ async function loadUserPersonalization({
         .filter(
           (value): value is string =>
             Boolean(value)
-        ) ?? [],
+          ) ?? [],
 
     visitedVenueIds: [
       ...new Set(

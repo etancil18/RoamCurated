@@ -14,6 +14,7 @@ const CITY_SLUG_ALIASES: Record<string, string> = {
   'new-york-city': 'nyc',
   losangeles: 'la',
   'los-angeles': 'la',
+  'los angeles': 'la',
   miami: 'mia',
   london: 'london',
 }

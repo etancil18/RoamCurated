@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server'
 
 import { supabaseServerApi } from '@/lib/supabase/server-api'
@@ -18,6 +19,26 @@ type EventCheckInBody = {
   user_lon?: number
   location_accuracy_meters?: number | null
   device_timestamp?: string
+}
+
+type AtomicEventCheckInResult = {
+  checkedIn: boolean
+  alreadyCheckedIn: boolean
+  xpAwarded: number
+  geoVerified?: boolean
+  distanceMeters?: number
+  eventCheckinId?: string
+  venueVisitId?: string | null
+  venueVisit?: {
+    id: string
+    venue_id: string
+    rating: number | null
+    visited_at: string
+    geo_verified: boolean
+    check_in_source: string
+  } | null
+  visitDate?: string
+  venueTimeZone?: string
 }
 
 const BASE_CHECK_IN_RADIUS_METERS = 125
@@ -84,10 +105,10 @@ export async function POST(
       body.device_timestamp
 
     /**
-     * venue_visits.rating is intentionally non-nullable.
+     * Preserve the existing event check-in rating requirement.
      *
-     * Validate the genuine user-supplied rating before creating
-     * either the event check-in or its canonical venue visit.
+     * Validate the genuine user-supplied rating before
+     * invoking the atomic database transaction.
      */
     if (
       !isValidRating(
@@ -161,10 +182,6 @@ export async function POST(
       {
         userId:
           user?.id ??
-          null,
-
-        email:
-          user?.email ??
           null,
 
         userError:
@@ -405,51 +422,223 @@ export async function POST(
     const now =
       new Date().toISOString()
 
-    const xpAwarded =
-      typeof event.xp_reward ===
-        'number' &&
-      event.xp_reward > 0
-        ? event.xp_reward
-        : 25
-
+    /**
+     * Atomic event check-in.
+     *
+     * The PostgreSQL RPC owns all persistence:
+     *
+     * - event_checkins
+     * - canonical venue_visits
+     * - event_checkins.venue_visit_id
+     * - event_xp_ledger (only when XP > 0)
+     *
+     * XP policy is enforced by the database:
+     *
+     * - venue-admin: configured event XP
+     * - imported events: 25 XP for eligible partners
+     * - community/dash: existing configured XP
+     *
+     * Event eligibility is enforced by the database:
+     *
+     * - active events only
+     * - opens 1 hour before event start
+     * - closes 1 hour after a valid event end
+     * - without a valid end, closes 4 hours after start
+     *
+     * The RPC also handles duplicate attendance.
+     *
+     * Do not insert into any of these tables
+     * separately in this route.
+     */
     const {
-      data:
-        existingCheckin,
-      error:
-        existingCheckinError,
+      data: atomicResult,
+      error: atomicError,
     } =
-      await supabase
-        .from(
-          'event_checkins'
-        )
-        .select(
-          'id'
-        )
-        .eq(
-          'event_id',
-          eventId
-        )
-        .eq(
-          'user_id',
-          user.id
-        )
-        .maybeSingle()
+      await supabase.rpc(
+        'record_roam_event_checkin',
+        {
+          p_event_id:
+            eventId,
+
+          p_rating:
+            rating,
+
+          p_user_lat:
+            userLat,
+
+          p_user_lon:
+            userLon,
+
+          p_accuracy_meters:
+            normalizedLocationAccuracyMeters ??
+            undefined,
+
+          p_device_timestamp:
+            normalizedDeviceTimestamp ??
+            undefined,
+        }
+      )
 
     if (
-      existingCheckinError
+      atomicError
     ) {
+      /**
+       * Expected RPC eligibility errors are client
+       * failures, not internal server failures.
+       *
+       * Keep the error mapping limited to messages
+       * explicitly raised by this RPC.
+       */
+      const eligibilityErrors =
+        new Set([
+          'Event is not active',
+          'Event check-in has not opened yet',
+          'Event check-in window has closed',
+          'Event check-in is disabled',
+        ])
+
+      const validationErrors =
+        new Set([
+          'Event ID is required',
+          'Rating must be between 1 and 5',
+          'Valid geographic coordinates are required',
+          'Location accuracy is insufficient',
+          'Event start time is unavailable',
+          'Event has no check-in venue',
+          'Event venue not found',
+          'Venue has invalid coordinates',
+          'You need to be closer to the event venue',
+        ])
+
+      if (
+        eligibilityErrors.has(
+          atomicError.message
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              atomicError.message,
+          },
+          {
+            status: 403,
+          }
+        )
+      }
+
+      if (
+        validationErrors.has(
+          atomicError.message
+        )
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              atomicError.message,
+          },
+          {
+            status: 400,
+          }
+        )
+      }
+
+      if (
+        atomicError.message ===
+        'Event not found'
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              atomicError.message,
+          },
+          {
+            status: 404,
+          }
+        )
+      }
+
+      if (
+        atomicError.message ===
+        'Authentication required'
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              'Unauthorized',
+          },
+          {
+            status: 401,
+          }
+        )
+      }
+
       console.error(
-        'Existing check-in lookup error:',
-        existingCheckinError
+        '[events/check-in] Atomic check-in failed:',
+        {
+          eventId,
+          userId:
+            user.id,
+          code:
+            atomicError.code,
+          message:
+            atomicError.message,
+          details:
+            atomicError.details,
+        }
       )
 
       return NextResponse.json(
         {
           error:
-            'Failed to verify check-in status',
+            'Failed to complete event check-in.',
 
           details:
-            existingCheckinError.message,
+            atomicError.message,
+        },
+        {
+          status: 500,
+        }
+      )
+    }
+
+    if (
+      !atomicResult ||
+      typeof atomicResult !== 'object' ||
+      Array.isArray(atomicResult)
+    ) {
+      console.error(
+        '[events/check-in] Unexpected atomic RPC response:',
+        atomicResult
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Unexpected event check-in response.',
+        },
+        {
+          status: 500,
+        }
+      )
+    }
+
+    const result =
+      atomicResult as AtomicEventCheckInResult
+
+    if (
+      result.checkedIn !== true ||
+      typeof result.alreadyCheckedIn !== 'boolean' ||
+      typeof result.xpAwarded !== 'number'
+    ) {
+      console.error(
+        '[events/check-in] Invalid atomic RPC result:',
+        atomicResult
+      )
+
+      return NextResponse.json(
+        {
+          error:
+            'Invalid event check-in result.',
         },
         {
           status: 500,
@@ -458,99 +647,86 @@ export async function POST(
     }
 
     /**
-     * Existing event attendance may still be missing its
-     * canonical venue_visits relationship because older versions
-     * of this endpoint did not synchronize it.
+     * Maintain the existing route response shape.
      *
-     * Do not blindly append historical repair visits. Reuse an
-     * existing canonical event_checkin visit when one already
-     * exists for this user and venue.
+     * The RPC includes venueVisit on a new check-in.
+     * For an existing check-in, the RPC returns the
+     * associated venueVisitId. Load that visit when
+     * a canonical relationship already exists.
+     *
+     * Never create a historical repair visit here:
+     * that would bypass the atomic transaction.
      */
+    let venueVisit =
+      result.venueVisit ??
+      null
+
     if (
-      existingCheckin
+      !venueVisit &&
+      result.venueVisitId
     ) {
       const {
-        data:
-          venueVisit,
-        error:
-          venueVisitError,
+        data: linkedVisit,
+        error: linkedVisitError,
       } =
-        await ensureEventVenueVisitExists({
-          supabase,
-
-          userId:
-            user.id,
-
-          venueId:
-            event.venue_id,
-
-          rating,
-
-          visitedAt:
-            now,
-
-          userLat,
-
-          userLon,
-
-          distanceMeters,
-
-          locationAccuracyMeters:
-            normalizedLocationAccuracyMeters,
-
-          deviceTimestamp:
-            normalizedDeviceTimestamp,
-        })
+        await supabase
+          .from(
+            'venue_visits'
+          )
+          .select(`
+            id,
+            venue_id,
+            rating,
+            visited_at,
+            geo_verified,
+            check_in_source
+          `)
+          .eq(
+            'id',
+            result.venueVisitId
+          )
+          .maybeSingle()
 
       if (
-        venueVisitError ||
-        !venueVisit
+        linkedVisitError
       ) {
         console.error(
-          '[events/check-in] Existing event check-in venue visit sync failed:',
-          {
-            userId:
-              user.id,
-
-            eventId,
-
-            venueId:
-              event.venue_id,
-
-            error:
-              venueVisitError,
-          }
+          '[events/check-in] Failed to load linked Passport visit:',
+          linkedVisitError
         )
-
-        return NextResponse.json(
-          {
-            error:
-              'The event check-in exists, but its venue visit could not be recorded.',
-          },
-          {
-            status: 500,
-          }
-        )
+      } else {
+        venueVisit =
+          linkedVisit
       }
+    }
 
-      await refreshPublicPassportStats(
-        user.id
-      )
+    /**
+     * Refresh derived statistics only after
+     * the atomic RPC has committed successfully.
+     */
+    await refreshPublicPassportStats(
+      user.id
+    )
 
-      await safelyRefreshCreatorReputation(
-        user.id,
-        {
-          mutation:
-            'event_check_in_existing',
+    await safelyRefreshCreatorReputation(
+      user.id,
+      {
+        mutation:
+          result.alreadyCheckedIn
+            ? 'event_check_in_existing'
+            : 'event_check_in',
 
-          rankingRefreshMode:
-            'affected',
+        rankingRefreshMode:
+          'affected',
 
-          calculatedAt:
-            now,
-        }
-      )
+        calculatedAt:
+          now,
+      }
+    )
 
+    if (
+      result.alreadyCheckedIn
+    ) {
       return NextResponse.json({
         checkedIn:
           true,
@@ -568,357 +744,6 @@ export async function POST(
       })
     }
 
-    const {
-      error:
-        checkinError,
-    } =
-      await supabase
-        .from(
-          'event_checkins'
-        )
-        .insert({
-          event_id:
-            eventId,
-
-          user_id:
-            user.id,
-
-          social_group_id:
-            event.social_group_id ??
-            null,
-
-          source:
-            'event_page',
-
-          user_lat:
-            userLat,
-
-          user_lon:
-            userLon,
-
-          distance_meters:
-            distanceMeters,
-
-          location_accuracy_meters:
-            normalizedLocationAccuracyMeters,
-
-          geo_verified:
-            true,
-
-          check_in_source:
-            'geo',
-
-          device_timestamp:
-            normalizedDeviceTimestamp,
-        } as any)
-
-    if (
-      checkinError
-    ) {
-      console.error(
-        'Event check-in insert error:',
-        checkinError
-      )
-
-      if (
-        checkinError.code ===
-        '23505'
-      ) {
-        const {
-          data:
-            venueVisit,
-          error:
-            venueVisitError,
-        } =
-          await ensureEventVenueVisitExists({
-            supabase,
-
-            userId:
-              user.id,
-
-            venueId:
-              event.venue_id,
-
-            rating,
-
-            visitedAt:
-              now,
-
-            userLat,
-
-            userLon,
-
-            distanceMeters,
-
-            locationAccuracyMeters:
-              normalizedLocationAccuracyMeters,
-
-            deviceTimestamp:
-              normalizedDeviceTimestamp,
-          })
-
-        if (
-          venueVisitError ||
-          !venueVisit
-        ) {
-          console.error(
-            '[events/check-in] Duplicate event check-in venue visit sync failed:',
-            {
-              userId:
-                user.id,
-
-              eventId,
-
-              venueId:
-                event.venue_id,
-
-              error:
-                venueVisitError,
-            }
-          )
-
-          return NextResponse.json(
-            {
-              error:
-                'The event check-in exists, but its venue visit could not be recorded.',
-            },
-            {
-              status: 500,
-            }
-          )
-        }
-
-        await refreshPublicPassportStats(
-          user.id
-        )
-
-        await safelyRefreshCreatorReputation(
-          user.id,
-          {
-            mutation:
-              'event_check_in_duplicate',
-
-            rankingRefreshMode:
-              'affected',
-
-            calculatedAt:
-              now,
-          }
-        )
-
-        return NextResponse.json({
-          checkedIn:
-            true,
-
-          alreadyCheckedIn:
-            true,
-
-          xpAwarded:
-            0,
-
-          message:
-            'Already checked in',
-
-          venueVisit,
-        })
-      }
-
-      return NextResponse.json(
-        {
-          error:
-            'Failed to check in',
-
-          details:
-            checkinError.message,
-        },
-        {
-          status: 500,
-        }
-      )
-    }
-
-    /**
-     * Synchronize the newly verified event check-in into the
-     * canonical append-only venue_visits history used by Passport
-     * stats and the public Creator Exploration Map.
-     */
-    const {
-      data:
-        venueVisit,
-      error:
-        venueVisitError,
-    } =
-      await insertEventVenueVisit({
-        supabase,
-
-        userId:
-          user.id,
-
-        venueId:
-          event.venue_id,
-
-        rating,
-
-        visitedAt:
-          now,
-
-        userLat,
-
-        userLon,
-
-        distanceMeters,
-
-        locationAccuracyMeters:
-          normalizedLocationAccuracyMeters,
-
-        deviceTimestamp:
-          normalizedDeviceTimestamp,
-      })
-
-    if (
-      venueVisitError ||
-      !venueVisit
-    ) {
-      console.error(
-        '[events/check-in] Venue visit sync failed:',
-        {
-          userId:
-            user.id,
-
-          eventId,
-
-          venueId:
-            event.venue_id,
-
-          error:
-            venueVisitError,
-        }
-      )
-
-      return NextResponse.json(
-        {
-          error:
-            'The event check-in was verified, but the venue visit could not be recorded.',
-        },
-        {
-          status: 500,
-        }
-      )
-    }
-
-    const {
-      error:
-        xpError,
-    } =
-      await supabase
-        .from(
-          'event_xp_ledger'
-        )
-        .insert({
-          user_id:
-            user.id,
-
-          event_id:
-            eventId,
-
-          social_group_id:
-            event.social_group_id ??
-            null,
-
-          xp_amount:
-            xpAwarded,
-
-          reason:
-            'event_checkin',
-        })
-
-    if (
-      xpError
-    ) {
-      console.error(
-        'Event XP ledger insert error:',
-        xpError
-      )
-
-      await refreshPublicPassportStats(
-        user.id
-      )
-
-      await safelyRefreshCreatorReputation(
-        user.id,
-        {
-          mutation:
-            'event_check_in_xp_failure',
-
-          rankingRefreshMode:
-            'affected',
-
-          calculatedAt:
-            now,
-        }
-      )
-
-      if (
-        xpError.code ===
-        '23505'
-      ) {
-        return NextResponse.json({
-          checkedIn:
-            true,
-
-          alreadyCheckedIn:
-            true,
-
-          xpAwarded:
-            0,
-
-          message:
-            'Already checked in',
-
-          venueVisit,
-        })
-      }
-
-      return NextResponse.json(
-        {
-          checkedIn:
-            true,
-
-          xpAwarded:
-            0,
-
-          warning:
-            'Checked in, but XP was not awarded',
-
-          details:
-            xpError.message,
-
-          venueVisit,
-        },
-        {
-          status: 207,
-        }
-      )
-    }
-
-    await refreshPublicPassportStats(
-      user.id
-    )
-
-    await safelyRefreshCreatorReputation(
-      user.id,
-      {
-        mutation:
-          'event_check_in',
-
-        rankingRefreshMode:
-          'affected',
-
-        calculatedAt:
-          now,
-      }
-    )
-
     return NextResponse.json({
       checkedIn:
         true,
@@ -926,15 +751,19 @@ export async function POST(
       alreadyCheckedIn:
         false,
 
-      xpAwarded,
+      xpAwarded:
+        result.xpAwarded,
 
       geoVerified:
         true,
 
       distanceMeters:
-        Math.round(
-          distanceMeters
-        ),
+        typeof result.distanceMeters ===
+          'number'
+          ? result.distanceMeters
+          : Math.round(
+              distanceMeters
+            ),
 
       venueVisit,
     })
@@ -962,172 +791,6 @@ export async function POST(
       }
     )
   }
-}
-
-/* =========================================================
- * Canonical venue-visit synchronization
- * ======================================================= */
-
-type EventVenueVisitInput = {
-  supabase:
-    Awaited<
-      ReturnType<
-        typeof supabaseServerApi
-      >
-    >
-  userId: string
-  venueId: string
-  rating: number
-  visitedAt: string
-  userLat: number
-  userLon: number
-  distanceMeters: number
-  locationAccuracyMeters:
-    number | null
-  deviceTimestamp:
-    string | null
-}
-
-/**
- * Genuine newly verified event attendance creates a new
- * historical venue visit event.
- */
-async function insertEventVenueVisit({
-  supabase,
-  userId,
-  venueId,
-  rating,
-  visitedAt,
-  userLat,
-  userLon,
-  distanceMeters,
-  locationAccuracyMeters,
-  deviceTimestamp,
-}: EventVenueVisitInput) {
-  return supabase
-    .from(
-      'venue_visits'
-    )
-    .insert({
-      user_id:
-        userId,
-
-      venue_id:
-        venueId,
-
-      rating,
-
-      visited_at:
-        visitedAt,
-
-      user_lat:
-        userLat,
-
-      user_lon:
-        userLon,
-
-      distance_meters:
-        distanceMeters,
-
-      location_accuracy_meters:
-        locationAccuracyMeters,
-
-      geo_verified:
-        true,
-
-      check_in_source:
-        'event_checkin',
-
-      device_timestamp:
-        deviceTimestamp,
-
-      updated_at:
-        visitedAt,
-    })
-    .select(`
-      id,
-      venue_id,
-      rating,
-      visited_at,
-      geo_verified,
-      check_in_source
-    `)
-    .single()
-}
-
-/**
- * Historical/duplicate event attendance repair must not blindly
- * append another venue visit.
- *
- * Reuse the latest canonical event_checkin venue visit for the
- * same user and venue when one already exists. Only backfill a
- * row when that canonical relationship is absent.
- */
-async function ensureEventVenueVisitExists({
-  supabase,
-  userId,
-  venueId,
-  rating,
-  visitedAt,
-  userLat,
-  userLon,
-  distanceMeters,
-  locationAccuracyMeters,
-  deviceTimestamp,
-}: EventVenueVisitInput) {
-  const existingResult =
-    await supabase
-      .from(
-        'venue_visits'
-      )
-      .select(`
-        id,
-        venue_id,
-        rating,
-        visited_at,
-        geo_verified,
-        check_in_source
-      `)
-      .eq(
-        'user_id',
-        userId
-      )
-      .eq(
-        'venue_id',
-        venueId
-      )
-      .eq(
-        'check_in_source',
-        'event_checkin'
-      )
-      .order(
-        'visited_at',
-        {
-          ascending: false,
-        }
-      )
-      .limit(1)
-      .maybeSingle()
-
-  if (
-    existingResult.error ||
-    existingResult.data
-  ) {
-    return existingResult
-  }
-
-  return insertEventVenueVisit({
-    supabase,
-    userId,
-    venueId,
-    rating,
-    visitedAt,
-    userLat,
-    userLon,
-    distanceMeters,
-    locationAccuracyMeters,
-    deviceTimestamp,
-  })
 }
 
 /* =========================================================

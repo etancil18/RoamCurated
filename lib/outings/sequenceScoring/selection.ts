@@ -511,21 +511,24 @@ function selectBestCandidateForPass({
       continue
     }
 
-    const supportsRole = candidateSupportsSlot(
-      candidate,
-      slot,
-      context,
-      pass.relaxedRole
-    )
+    const supportsRole =
+      pass.name === "strict"
+        ? candidate.inferredRoles.includes(
+            slot.role
+          )
+        : candidateSupportsSlot(
+            candidate,
+            slot,
+            context,
+            pass.relaxedRole
+          ) ||
+          isContextuallyCompatibleForSlot(
+            candidate,
+            slot,
+            context
+          )
 
-    if (
-      supportsRole ||
-      isContextuallyCompatibleForSlot(
-        candidate,
-        slot,
-        context
-      )
-    ) {
+    if (supportsRole) {
       matchedRole += 1
     }
 
@@ -715,31 +718,45 @@ function evaluateCandidateForPass({
   }
 
   const supportsRole =
-    candidateSupportsSlot(
-      candidate,
-      slot,
-      context,
-      pass.relaxedRole
-    ) ||
-    isContextuallyCompatibleForSlot(
-      candidate,
-      slot,
-      context
-    ) ||
-    isBeforeDinnerFallbackCandidate({
-      candidate,
-      rankedCandidates,
-      slot,
-      timeZone,
-    }) ||
-    (
-      pass.allowWeakRoleMatch &&
-      isWeaklyCompatibleForSlot(
-        candidate,
-        slot,
-        context
+  pass.name === "strict"
+    ? (
+        candidate.inferredRoles.includes(
+          slot.role
+        ) &&
+        !violatesStrictEventAwareMealIntent(
+          candidate,
+          slot,
+          context,
+          false
+        )
       )
-    )
+    : (
+        candidateSupportsSlot(
+          candidate,
+          slot,
+          context,
+          pass.relaxedRole
+        ) ||
+        isContextuallyCompatibleForSlot(
+          candidate,
+          slot,
+          context
+        ) ||
+        isBeforeDinnerFallbackCandidate({
+          candidate,
+          rankedCandidates,
+          slot,
+          timeZone,
+        }) ||
+        (
+          pass.allowWeakRoleMatch &&
+          isWeaklyCompatibleForSlot(
+            candidate,
+            slot,
+            context
+          )
+        )
+      )
 
   if (!supportsRole) {
     return {
@@ -749,7 +766,6 @@ function evaluateCandidateForPass({
   }
 
   if (
-    !pass.relaxedTemporal &&
     hasImpossibleTimeOfDayMismatch(
       candidate,
       slot,

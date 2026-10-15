@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server'
 
 import { createServerClient } from '@/lib/supabase/server'
@@ -41,6 +42,32 @@ type CompetitionSubmissionCandidate = {
 
   eligibleForCompetitionSubmission: boolean
 }
+
+/**
+ * CREATOR COLLECTION COMPLETION XP
+ *
+ * Independent, disabled-by-default integration.
+ *
+ * This flag is deliberately separate from:
+ *
+ *   ROAM_CREATOR_COLLECTION_RECEIPTS_ENABLED
+ *   ROAM_CREATOR_COLLECTION_STOP_XP_ENABLED
+ *
+ * Do not enable until the database completion-certificate
+ * and settlement contracts have been separately verified.
+ */
+const CREATOR_COLLECTION_COMPLETION_XP_ENABLED =
+  process.env.ROAM_CREATOR_COLLECTION_COMPLETION_XP_ENABLED ===
+  'true'
+
+/**
+ * TEMPORARY PRODUCTION TEST GUARD
+ *
+ * Restrict Collection completion settlement attempts to Ghost.
+ * This is an application guard, not a database permission boundary.
+ */
+const CREATOR_COLLECTION_TEST_EXPLORER_ID =
+  'e445970d-edb9-48c0-af97-9764020f7f8e'
 
 function getCompletionBonus(
   source: string | null | undefined
@@ -150,6 +177,87 @@ async function refreshPublicPassportStats(
     console.error(
       '[active-flow/complete] Failed to rebuild public Passport stats:',
       error
+    )
+  }
+}
+
+/**
+ * CREATOR COLLECTION COMPLETION XP — ADDITIVE HOOK
+ *
+ * Runs only after successful canonical Active Flow completion.
+ *
+ * This helper does NOT:
+ *
+ *   - Complete the Active Flow
+ *   - Modify the canonical runtime route
+ *   - Alter Explorer XP or badges
+ *   - Generate completion certificates
+ *   - Reconstruct missing historical attribution
+ *
+ * The database must already have the required trusted
+ * completion certificate before settlement can succeed.
+ *
+ * All failures are non-fatal to the completed explorer Flow.
+ *
+ * Disabled by default and restricted to Ghost during testing.
+ */
+async function safelySettleCreatorCollectionCompletionXp({
+  sessionId,
+  explorerUserId,
+  source,
+}: {
+  sessionId: string
+  explorerUserId: string
+  source: unknown
+}): Promise<void> {
+  if (
+    !CREATOR_COLLECTION_COMPLETION_XP_ENABLED ||
+    explorerUserId !== CREATOR_COLLECTION_TEST_EXPLORER_ID ||
+    source !== 'creator_collection'
+  ) {
+    return
+  }
+
+  try {
+    const admin = getSupabaseAdmin()
+
+    const {
+      data,
+      error,
+    } = await admin.rpc(
+      'settle_creator_collection_completion_xp',
+      {
+        p_session_id:
+          sessionId,
+      }
+    )
+
+    if (error) {
+      console.error(
+        '[active-flow/complete] Creator Collection completion XP settlement failed:',
+        {
+          sessionId,
+          error,
+        }
+      )
+
+      return
+    }
+
+    console.info(
+      '[active-flow/complete] Creator Collection completion XP settlement RPC completed:',
+      {
+        sessionId,
+        result: data,
+      }
+    )
+  } catch (error) {
+    console.error(
+      '[active-flow/complete] Unexpected Creator Collection completion XP settlement failure:',
+      {
+        sessionId,
+        error,
+      }
     )
   }
 }
@@ -1059,6 +1167,27 @@ export async function POST(
       getBadgeUnlocked(
         session.source
       )
+
+    /**
+     * CREATOR COLLECTION COMPLETION XP — ADDITIVE HOOK
+     *
+     * Canonical completion has already succeeded and
+     * the completed session has been reloaded.
+     *
+     * This best-effort settlement is independent from
+     * Explorer XP, badges, Relay, Replay and Competition.
+     *
+     * It does not create completion certificates.
+     * The flag remains disabled until the certificate
+     * and settlement contracts are verified.
+     */
+    await safelySettleCreatorCollectionCompletionXp({
+      sessionId,
+      explorerUserId:
+        user.id,
+      source:
+        session.source,
+    })
 
     /**
      * Relay baton completion:

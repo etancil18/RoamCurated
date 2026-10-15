@@ -43,6 +43,20 @@ type CreatorReplayStopAttributionRow = {
   occurred_at: string | null
 }
 
+
+type CreatorCollectionStopAttributionRow = {
+  attributed: boolean
+  event_id: string | null
+  creator_user_id: string | null
+  explorer_user_id: string
+  collection_id: string | null
+  session_id: string
+  flow_stop_id: string
+  venue_id: string | null
+  occurred_at: string | null
+}
+
+
 type CompetitionFlowBridgeRow = {
   competition_id: string
   competition_entry_id: string
@@ -59,6 +73,19 @@ type CompetitionParticipationProgressRow = {
 const BASE_CHECK_IN_RADIUS_METERS = 125
 const FLEXIBLE_RADIUS_METERS = 75
 const MAX_REASONABLE_ACCURACY_METERS = 250
+
+/*
+ * CREATOR COLLECTION XP
+ *
+ * Separate creator reward pathway.
+ * Disabled until receipt certification, trusted attestation,
+ * and creator XP processing pass staging tests.
+ *
+ * Does not change normal Active Flow check-ins.
+ */
+const CREATOR_COLLECTION_STOP_XP_ENABLED =
+  process.env.ROAM_CREATOR_COLLECTION_STOP_XP_ENABLED ===
+  'true'
 
 async function refreshPublicPassportStats(
   userId: string
@@ -518,6 +545,209 @@ async function recordCreatorReplayStopAttribution({
       {
         sessionId,
         stopIndex,
+        error,
+      }
+    )
+
+    return null
+  }
+}
+
+
+/**
+ * Creator Collection stop attribution:
+ *
+ * Only creator_collection sessions are eligible.
+ *
+ * The canonical database RPC must verify:
+ *
+ * - the authenticated explorer owns the session;
+ * - the session originates from a real creator Collection;
+ * - the creator is not the explorer;
+ * - the flow_stop_id identifies a canonical Collection-origin
+ *   stop, not a Roam-filled, replaced, or Detour stop;
+ * - the explorer has geo-verified that exact runtime stop;
+ * - the creator personally geo-verified the venue before
+ *   the explorer's qualifying check-in;
+ * - lifetime uniqueness by creator, explorer,
+ *   Collection, and venue.
+ *
+ * A creator's unvisited Collection venues earn no stop XP.
+ * This does not affect the separate full-Flow completion reward.
+ *
+ * Attribution failure must never invalidate a successful
+ * physical check-in. Retries may repair missing attribution.
+ */
+/**
+ * CREATOR COLLECTION XP — isolated verified check-in hook.
+ *
+ * Called only after Roam's existing server-side proximity
+ * verification and successful check-in persistence.
+ *
+ * This function never modifies Active Flow, GPS evidence,
+ * venue visits, Replay, competition, or explorer XP.
+ *
+ * Do not call this from an existing-progress repair branch.
+ */
+async function recordCreatorCollectionStopAttribution({
+  sessionId,
+  explorerUserId,
+  flowStopId,
+  source,
+}: {
+  sessionId: string
+  explorerUserId: string
+  flowStopId: string
+  source: unknown
+}): Promise<CreatorCollectionStopAttributionRow | null> {
+  if (
+    !CREATOR_COLLECTION_STOP_XP_ENABLED ||
+    source !== 'creator_collection'
+  ) {
+    return null
+  }
+
+  try {
+    const supabaseUrl =
+      process.env.NEXT_PUBLIC_SUPABASE_URL
+
+    const serviceRoleKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error(
+        '[active-flow/check-in] Creator Collection XP configuration missing.'
+      )
+      return null
+    }
+
+    const serviceSupabase = createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    )
+
+    /*
+     * Migration 002D:
+     * Record trusted check-in evidence for the exact
+     * original Collection stop.
+     *
+     * This call must follow a fresh successful GPS check-in,
+     * never editable historical progress alone.
+     */
+    const {
+      data: attested,
+      error: attestationError,
+    } = await serviceSupabase.rpc(
+      'record_creator_collection_checkin_attestation',
+      {
+        p_session_id: sessionId,
+        p_explorer_user_id: explorerUserId,
+        p_flow_stop_id: flowStopId,
+      }
+    )
+
+    if (attestationError) {
+      console.error(
+        '[active-flow/check-in] Creator Collection attestation failed:',
+        {
+          sessionId,
+          flowStopId,
+          error: attestationError,
+        }
+      )
+      return null
+    }
+
+    if (attested !== true) {
+      return null
+    }
+
+    /*
+     * Migration 002C-1:
+     * Process lifetime-unique creator +10 XP.
+     *
+     * The database verifies creator venue-visit eligibility,
+     * certified Collection provenance, and uniqueness.
+     */
+    const {
+      data: xpAwarded,
+      error: xpError,
+    } = await serviceSupabase.rpc(
+      'process_certified_creator_collection_stop_xp',
+      {
+        p_session_id: sessionId,
+        p_flow_stop_id: flowStopId,
+      }
+    )
+
+    if (xpError) {
+      console.error(
+        '[active-flow/check-in] Creator Collection XP processing failed:',
+        {
+          sessionId,
+          flowStopId,
+          error: xpError,
+        }
+      )
+      return null
+    }
+
+    if (xpAwarded !== 10) {
+      return null
+    }
+
+    /*
+     * Fetch the newly awarded creator identity from the
+     * independent attribution ledger, not browser data.
+     */
+    const {
+      data: event,
+      error: eventError,
+    } = await serviceSupabase
+      .from('creator_collection_attribution_events')
+      .select(
+        'id, creator_user_id, explorer_user_id, collection_id, session_id, flow_stop_id, venue_id, occurred_at'
+      )
+      .eq('session_id', sessionId)
+      .eq('flow_stop_id', flowStopId)
+      .eq('event_type', 'stop')
+      .maybeSingle()
+
+    if (eventError || !event) {
+      console.error(
+        '[active-flow/check-in] Creator XP awarded but event lookup failed:',
+        {
+          sessionId,
+          flowStopId,
+          error: eventError,
+        }
+      )
+      return null
+    }
+
+    return {
+      attributed: true,
+      event_id: event.id,
+      creator_user_id: event.creator_user_id,
+      explorer_user_id: event.explorer_user_id,
+      collection_id: event.collection_id,
+      session_id: event.session_id,
+      flow_stop_id: event.flow_stop_id,
+      venue_id: event.venue_id,
+      occurred_at: event.occurred_at,
+    }
+  } catch (error) {
+    console.error(
+      '[active-flow/check-in] Unexpected Creator Collection attribution failure:',
+      {
+        sessionId,
+        flowStopId,
         error,
       }
     )
@@ -1483,6 +1713,19 @@ const flowCompleted =
             })
           : null
 
+      
+    /*
+ * CREATOR COLLECTION XP — existing progress.
+ *
+ * An existing progress row is not fresh trusted
+ * check-in evidence for new creator attribution.
+ *
+ * Preserve all existing retry and repair behavior,
+ * but do not create new creator XP attestations here.
+ */
+const collectionAttribution:
+  CreatorCollectionStopAttributionRow | null = null
+
       /**
  * A pure retry has not created new canonical evidence for the
  * replaying user and therefore does not need another
@@ -1523,6 +1766,7 @@ if (
     replayAttribution.creator_user_id
   )
 }
+
 
       return NextResponse.json(
         {
@@ -2045,6 +2289,26 @@ const flowCompleted =
           })
         : null
 
+
+  /*
+ * CREATOR COLLECTION XP — fresh verified check-in.
+ *
+ * At this point:
+ * - Existing server GPS verification succeeded.
+ * - Canonical Active Flow progress was saved.
+ * - The canonical venue visit was saved.
+ *
+ * This independent creator-only hook is best-effort.
+ * It never changes the successful explorer check-in.
+ */
+const collectionAttribution =
+  await recordCreatorCollectionStopAttribution({
+    sessionId,
+    explorerUserId: user.id,
+    flowStopId: runtimeStop.id,
+    source: session.source,
+  })
+
     await refreshPublicPassportStats(
   user.id
 )
@@ -2069,6 +2333,17 @@ if (
 ) {
   await refreshPublicPassportStats(
     replayAttribution.creator_user_id
+  )
+}
+
+
+if (
+  collectionAttribution?.creator_user_id &&
+  collectionAttribution.creator_user_id !==
+    user.id
+) {
+  await refreshPublicPassportStats(
+    collectionAttribution.creator_user_id
   )
 }
 

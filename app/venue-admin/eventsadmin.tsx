@@ -351,9 +351,10 @@ export default function EventsAdmin({
         <div className="rounded-lg border p-4 space-y-3">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <label className="font-medium">Enable Event XP</label>
+              <label className="font-medium">Enable Event Check-ins</label>
               <p className="text-sm text-gray-500">
-                Allows users to check in and earn XP for this event.
+                Allows attendees to check in and record a Passport visit.
+                XP is optional and can be set to 0.
               </p>
             </div>
 
@@ -376,7 +377,7 @@ export default function EventsAdmin({
               <label className="block mb-1 font-medium">XP Reward</label>
               <input
                 type="number"
-                min="1"
+                min="0"
                 max="500"
                 value={form.xp_reward}
                 onChange={(e) => setForm({ ...form, xp_reward: e.target.value })}

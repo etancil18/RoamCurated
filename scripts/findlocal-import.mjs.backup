@@ -1,0 +1,173 @@
+
+import { createClient } from '@supabase/supabase-js'
+import { DateTime } from 'luxon'
+
+const apiKey = process.env.FINDLOCAL_API_KEY
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  process.env.SUPABASE_URL
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!apiKey || !supabaseUrl || !serviceKey) {
+  throw new Error(
+    'Missing Find Local or Supabase server credentials'
+  )
+}
+
+const supabase = createClient(
+  supabaseUrl,
+  serviceKey,
+  { auth: { persistSession: false } }
+)
+
+const cities = [
+  {
+    roam: 'atl',
+    api: 'atlanta',
+    timezone: 'America/New_York',
+  },
+  {
+    roam: 'nyc',
+    api: 'new-york',
+    timezone: 'America/New_York',
+  },
+  {
+    roam: 'london',
+    api: 'london',
+    timezone: 'Europe/London',
+  },
+]
+
+function localTimestamp(date, time, zone) {
+  if (!date || !time) return null
+
+  const parsed = DateTime.fromISO(
+    `${date}T${time}`,
+    { zone }
+  )
+
+  return parsed.isValid ? parsed.toUTC().toISO() : null
+}
+
+async function fetchPage(city, page) {
+  const url = new URL('https://findlocal.community/api/events')
+
+  url.searchParams.set('city', city.api)
+  url.searchParams.set('when', 'week')
+  url.searchParams.set('limit', '500')
+  url.searchParams.set('page', String(page))
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      `${city.api} page ${page}: HTTP ${response.status}`
+    )
+  }
+
+  return response.json()
+}
+
+let totalImported = 0
+
+for (const city of cities) {
+  console.log(`\nImporting ${city.api}...`)
+
+  let page = 1
+  let imported = 0
+  let expectedTotal = null
+
+  while (true) {
+    const result = await fetchPage(city, page)
+    const events = result.data ?? []
+
+    if (!Array.isArray(events)) {
+      throw new Error('Unexpected API data format')
+    }
+
+    expectedTotal ??= result.meta?.total ?? null
+
+    if (events.length === 0) break
+
+    const records = events.map((event) => ({
+      provider: 'findlocal',
+      external_event_id: String(event.id),
+      city: city.roam,
+
+      external_venue_id: event.venue_id
+        ? String(event.venue_id)
+        : null,
+      external_venue_name: event.venue_name ?? null,
+      external_venue_address:
+        event.venue_address ?? null,
+
+      title: event.title ?? null,
+      starts_at: localTimestamp(
+        event.event_date,
+        event.start_time,
+        city.timezone
+      ),
+      ends_at: localTimestamp(
+        event.event_date,
+        event.end_time,
+        city.timezone
+      ),
+      timezone: city.timezone,
+
+      source_url: event.detail_page_url ?? null,
+
+      is_deleted: Boolean(event.is_deleted),
+
+      provider_updated_at:
+        event.updated_at || null,
+
+      raw_payload: event,
+      last_synced_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+
+    const { error } = await supabase
+      .from('external_event_staging')
+      .upsert(records, {
+        onConflict: 'provider,external_event_id',
+      })
+
+    if (error) {
+      throw new Error(
+        `${city.api} page ${page}: ${error.message}`
+      )
+    }
+
+    imported += records.length
+
+    console.log(
+      `Page ${page}: ${records.length} records saved`
+    )
+
+    if (expectedTotal !== null &&
+        imported >= expectedTotal) break
+
+    // Fail safely if the API stops making progress.
+    if (page >= 100) {
+      throw new Error('Exceeded pagination safety limit')
+    }
+
+    page++
+  }
+
+  totalImported += imported
+
+  console.log(
+    `${city.api}: ${imported} records staged`
+  )
+}
+
+console.log(
+  `\nCompleted: ${totalImported} events staged`
+)
+console.log('No public events were published.')

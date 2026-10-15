@@ -1,3 +1,4 @@
+
 export type PassportStats = {
   hostedCrawls: number
   joinedCrawls: number
@@ -21,6 +22,28 @@ export type PassportStats = {
    */
   replayedFlowStops?: number
   completedReplayedFlows?: number
+
+  /**
+   * Creator Collection attribution:
+   *
+   * collectionAttributedStops counts verified downstream
+   * execution of Collection-origin venues that the creator
+   * has personally visited and geo-verified.
+   *
+   * completedAttributedCollectionFlows counts completed
+   * Collection-generated Flows executed by other users.
+   * Creator visit history is not required for completion XP.
+   *
+   * These are canonical attribution counts, not XP amounts.
+   * The database attribution ledger owns provenance,
+   * geo-verification, creator visit eligibility,
+   * self-attribution prevention, and deduplication.
+   *
+   * Optional so existing PassportStats producers remain
+   * compatible until Collection attribution is wired.
+   */
+  collectionAttributedStops?: number
+  completedAttributedCollectionFlows?: number
 
   venueVisits: number
   eventXp: number
@@ -156,6 +179,23 @@ const XP_PER_COMPLETED_REPLAYED_FLOW = 50
 
 
 /**
+ * Creator Collection attribution:
+ *
+ * A creator earns 10 XP for a verified Collection-origin stop
+ * only when they have personally geo-verified that venue.
+ *
+ * A creator earns 50 XP when another explorer completes the
+ * entire Collection-generated Flow, regardless of whether
+ * the creator has personally visited its venues.
+ *
+ * Canonical database attribution owns eligibility,
+ * provenance, verification, and exactly-once credit.
+ */
+const XP_PER_COLLECTION_ATTRIBUTED_STOP = 10
+const XP_PER_COMPLETED_ATTRIBUTED_COLLECTION_FLOW = 50
+
+
+/**
  * Duel competition contender attribution:
  *
  * Mirrors creator replay economics because the underlying
@@ -222,8 +262,6 @@ const XP_PER_COMPLETED_ATTRIBUTED_RELAY = 50
 // Passport XP is awarded only for the first recorded visit
 // to each unique venue.
 const XP_PER_UNIQUE_VENUE_VISIT = 5
-
-
 export function calculatePassportXp(
   stats: PassportStats
 ): number {
@@ -289,6 +327,16 @@ export function calculatePassportXp(
         0
     ) *
       XP_PER_COMPLETED_REPLAYED_FLOW +
+    normalizeCount(
+      stats.collectionAttributedStops ??
+        0
+    ) *
+      XP_PER_COLLECTION_ATTRIBUTED_STOP +
+    normalizeCount(
+      stats.completedAttributedCollectionFlows ??
+        0
+    ) *
+      XP_PER_COMPLETED_ATTRIBUTED_COLLECTION_FLOW +
     normalizeCount(stats.venueVisits) *
       XP_PER_UNIQUE_VENUE_VISIT
   )

@@ -191,16 +191,38 @@ export function violatesStrictEventAwareMealIntent(
     return false
   }
 
-  if (
-    slot.role !== "food" ||
-    context.eventExperience.caffeineExposure !== "likely"
-  ) {
+  if (slot.role !== "food") {
     return false
   }
 
   const types = normalizeVenueTypes(candidate.type)
 
+  const timeZone = resolvePlannerTimeZone(context)
+
+  const hour = getHourFractionInTimeZone(
+    slot.targetArrivalAt,
+    timeZone
+  )
+
+  const isMealWindow =
+    (
+      hour >= 11.5 &&
+      hour < 14.5
+    ) ||
+    (
+      hour >= 16.5 &&
+      hour < 21.5
+    )
+
+  if (isMealWindow) {
+    return !hasExplicitMealEvidence(types)
+  }
+
+  const eventLikelyIncludedCaffeine =
+    context.eventExperience.caffeineExposure === "likely"
+
   return (
+    eventLikelyIncludedCaffeine &&
     isCoffeeForwardVenueType(types) &&
     !hasExplicitMealEvidence(types)
   )

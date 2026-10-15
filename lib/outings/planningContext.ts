@@ -992,6 +992,8 @@ function normalizeDesiredRolesForContext(
     context.timeZone
   )
 
+  let normalizedRoles = [...roles]
+
   if (context.eventArchetype === "social_sports") {
     const morningOrMiddayStart = startHour < 13
     const daytimeExit = exitHour < 17
@@ -1000,25 +1002,33 @@ function normalizeDesiredRolesForContext(
       context.mode === "before" &&
       morningOrMiddayStart
     ) {
-      return roles.map((role, index) => {
-        if (index === 0 && role === "drink") {
-          return "coffee"
-        }
+      normalizedRoles = normalizedRoles.map(
+        (role, index) => {
+          if (
+            index === 0 &&
+            role === "drink"
+          ) {
+            return "coffee"
+          }
 
-        if (role === "drink") {
-          return "food"
-        }
+          if (role === "drink") {
+            return "food"
+          }
 
-        return role
-      })
+          return role
+        }
+      )
     }
 
     if (
       context.mode === "after" &&
       daytimeExit
     ) {
-      return roles.map((role) =>
-        role === "drink" ? "food" : role
+      normalizedRoles = normalizedRoles.map(
+        (role) =>
+          role === "drink"
+            ? "food"
+            : role
       )
     }
 
@@ -1026,25 +1036,44 @@ function normalizeDesiredRolesForContext(
       context.mode === "full" &&
       morningOrMiddayStart
     ) {
-      return roles.map((role, index) => {
-        if (index === 0) return "coffee"
+      normalizedRoles = normalizedRoles.map(
+        (role, index) => {
+          if (index === 0) {
+            return "coffee"
+          }
 
-        if (
-          role === "drink" &&
-          daytimeExit
-        ) {
-          return "food"
+          if (
+            role === "drink" &&
+            daytimeExit
+          ) {
+            return "food"
+          }
+
+          return role
         }
-
-        return role
-      })
+      )
     }
   }
 
-  return normalizePostEventRolesForExperience(
-    roles,
-    context
-  )
+  normalizedRoles =
+    normalizePostEventRolesForExperience(
+      normalizedRoles,
+      context
+    )
+
+    normalizedRoles =
+    normalizeRolesForMealCompleteness(
+      normalizedRoles,
+      context
+    )
+
+  normalizedRoles =
+    normalizeRolesForContextualStopCount(
+      normalizedRoles,
+      context
+    )
+
+  return normalizedRoles
 }
 
 /*
@@ -1154,6 +1183,418 @@ function normalizePostEventRolesForExperience(
 
     return role
   })
+}
+
+/*
+ * A surrounding itinerary should not omit a real meal simply because the
+ * archetype's coarse role strategy preferred coffee, drinks, or another
+ * supporting stop.
+ *
+ * The event itself remains authoritative:
+ * - if the event likely provides a meal, no meal role is manufactured;
+ * - stop count and role order are preserved;
+ * - only the relevant before/after phase is changed;
+ * - an existing food role is never duplicated merely to satisfy this rule;
+ * - full-mode meal completeness is route-level, not phase-local;
+ * - candidate scoring remains responsible for choosing the actual venue.
+ */
+function normalizeRolesForMealCompleteness(
+  roles: StopRole[],
+  context: {
+    mode: PlanMode
+    eventExperience: PlanningContext["eventExperience"]
+    startsAt: Date
+    effectiveExitAt: Date
+    timeZone: string
+  }
+): StopRole[] {
+  if (roles.length === 0) {
+    return roles
+  }
+
+  const eventExperience =
+    context.eventExperience
+
+  if (
+    !eventExperience ||
+    eventExperience.foodExposure === "meal"
+  ) {
+    return roles
+  }
+
+  const startHour =
+    getHourFractionInTimeZone(
+      context.startsAt,
+      context.timeZone
+    )
+
+  const exitHour =
+    getHourFractionInTimeZone(
+      context.effectiveExitAt,
+      context.timeZone
+    )
+
+  const normalizedRoles =
+    [...roles]
+
+  const preEventIndexes =
+    context.mode === "before"
+      ? normalizedRoles.map(
+          (_, index) => index
+        )
+      : context.mode === "full" &&
+          normalizedRoles.length > 0
+        ? [0]
+        : []
+
+  const postEventIndexes =
+    context.mode === "after"
+      ? normalizedRoles.map(
+          (_, index) => index
+        )
+      : context.mode === "full"
+        ? normalizedRoles
+            .map((_, index) => index)
+            .filter((index) => index > 0)
+        : []
+
+  const isLunchMealWindow = (
+    hour: number
+  ): boolean =>
+    hour >= 11.5 &&
+    hour < 14.5
+
+  const isDinnerMealWindow = (
+    hour: number
+  ): boolean =>
+    hour >= 16.5 &&
+    hour < 21.5
+
+  const beforeNeedsMeal =
+    preEventIndexes.length > 0 &&
+    (
+      isLunchMealWindow(startHour) ||
+      isDinnerMealWindow(startHour)
+    )
+
+  const afterNeedsMeal =
+    postEventIndexes.length > 0 &&
+    (
+      isLunchMealWindow(exitHour) ||
+      isDinnerMealWindow(exitHour)
+    )
+
+  const phaseHasFood = (
+    indexes: number[]
+  ): boolean =>
+    indexes.some(
+      (index) =>
+        normalizedRoles[index] === "food"
+    )
+
+  const replaceRoleWithFood = (
+    indexes: number[]
+  ): boolean => {
+    if (
+      indexes.length === 0 ||
+      phaseHasFood(indexes)
+    ) {
+      return false
+    }
+
+    const replacementPriority: StopRole[] = [
+      "coffee",
+      "drink",
+      "dessert",
+      "activity",
+    ]
+
+    for (
+      const replacementRole
+      of replacementPriority
+    ) {
+      const replacementIndex =
+        indexes.find(
+          (index) =>
+            normalizedRoles[index] ===
+            replacementRole
+        )
+
+      if (replacementIndex == null) {
+        continue
+      }
+
+      normalizedRoles[replacementIndex] =
+        "food"
+
+      return true
+    }
+
+    return false
+  }
+
+  /*
+   * Meal completeness is route-level.
+   *
+   * If a full outing begins inside a meal window and a pre-event meal can
+   * satisfy that need, do not manufacture another meal after the event merely
+   * because the exit time still falls inside the same lunch/dinner window.
+   */
+  let beforeMealSatisfied = false
+
+  if (beforeNeedsMeal) {
+    beforeMealSatisfied =
+      phaseHasFood(
+        preEventIndexes
+      ) ||
+      replaceRoleWithFood(
+        preEventIndexes
+      )
+  }
+
+  /*
+   * Post-event meal coverage remains valuable when:
+   * - the outing begins outside a meal window, or
+   * - no pre-event meal could satisfy the route-level meal need.
+   */
+  if (
+    afterNeedsMeal &&
+    !beforeMealSatisfied
+  ) {
+    replaceRoleWithFood(
+      postEventIndexes
+    )
+  }
+
+  return normalizedRoles
+}
+
+/*
+ * Planned stop count should reflect experiential value, not slot fullness.
+ *
+ * A second surrounding stop is useful only when it adds a meaningfully distinct
+ * experience. When one role already satisfies the dominant need for that phase,
+ * especially a meal around an afternoon/evening event, supporting hospitality
+ * roles should not be forced merely to preserve the original role count.
+ *
+ * Keep this reconciliation conservative:
+ * - only archetypes where surrounding hospitality is commonly optional are
+ *   affected;
+ * - full mode preserves its event-centered phase split;
+ * - a real meal may stand alone during a meal window;
+ * - late-day coffee is removed when another useful role already exists;
+ * - two roles remain valid when they are genuinely distinct;
+ * - no candidate quality assumptions are made here.
+ */
+function normalizeRolesForContextualStopCount(
+  roles: StopRole[],
+  context: {
+    mode: PlanMode
+    eventArchetype: string
+    eventExperience: PlanningContext["eventExperience"]
+    startsAt: Date
+    effectiveExitAt: Date
+    timeZone: string
+  }
+): StopRole[] {
+  if (roles.length <= 1) {
+    return roles
+  }
+
+  const archetypesWithOptionalSupportingStops =
+    new Set([
+      "music",
+      "nightlife",
+      "comedy",
+      "networking",
+      "arts_culture",
+      "community",
+    ])
+
+  if (
+    !archetypesWithOptionalSupportingStops.has(
+      context.eventArchetype
+    )
+  ) {
+    return roles
+  }
+
+  const startHour =
+    getHourFractionInTimeZone(
+      context.startsAt,
+      context.timeZone
+    )
+
+  const exitHour =
+    getHourFractionInTimeZone(
+      context.effectiveExitAt,
+      context.timeZone
+    )
+
+  const isMealWindow = (
+    hour: number
+  ): boolean =>
+    (
+      hour >= 11.5 &&
+      hour < 14.5
+    ) ||
+    (
+      hour >= 16.5 &&
+      hour < 21.5
+    )
+
+  const normalizePhaseRoles = (
+    phaseRoles: StopRole[],
+    phase: "before" | "after",
+    referenceHour: number
+  ): StopRole[] => {
+    if (phaseRoles.length <= 1) {
+      return phaseRoles
+    }
+
+    let normalizedPhaseRoles =
+      [...phaseRoles]
+
+    /*
+     * Coffee becomes a weak supporting stop later in the day for these
+     * archetypes. Do not keep it simply because the coarse role strategy
+     * originally generated it when another useful role already exists.
+     */
+    const lateDayCoffeeThreshold =
+      16
+
+    if (
+      referenceHour >=
+        lateDayCoffeeThreshold &&
+      normalizedPhaseRoles.length > 1
+    ) {
+      normalizedPhaseRoles =
+        normalizedPhaseRoles.filter(
+          (role) =>
+            role !== "coffee"
+        )
+    }
+
+    if (
+      normalizedPhaseRoles.length <= 1
+    ) {
+      return normalizedPhaseRoles
+    }
+
+    /*
+     * A real meal can fully satisfy the surrounding phase when the event sits
+     * inside a meal window and every other planned role is merely another
+     * hospitality stop.
+     *
+     * This deliberately prefers:
+     *
+     *   dinner -> event
+     *
+     * over:
+     *
+     *   coffee -> dinner -> event
+     *
+     * or:
+     *
+     *   dinner -> drink -> event
+     *
+     * unless another genuinely distinct role such as activity is present.
+     */
+    if (
+      isMealWindow(referenceHour) &&
+      normalizedPhaseRoles.includes(
+        "food"
+      )
+    ) {
+      const nonFoodRoles =
+        normalizedPhaseRoles.filter(
+          (role) =>
+            role !== "food"
+        )
+
+      const containsDistinctExperience =
+        nonFoodRoles.some(
+          (role) =>
+            role === "activity"
+        )
+
+      if (!containsDistinctExperience) {
+        return ["food"]
+      }
+    }
+
+    /*
+     * Nightlife already provides a high-social, alcohol-heavy experience.
+     * When food is planned before the event, another pre-event drink should not
+     * be mandatory simply because the original archetype preset requested one.
+     */
+    if (
+      context.eventArchetype ===
+        "nightlife" &&
+      phase === "before" &&
+      normalizedPhaseRoles.includes(
+        "food"
+      )
+    ) {
+      const withoutDrink =
+        normalizedPhaseRoles.filter(
+          (role) =>
+            role !== "drink"
+        )
+
+      if (withoutDrink.length > 0) {
+        normalizedPhaseRoles =
+          withoutDrink
+      }
+    }
+
+    return normalizedPhaseRoles
+  }
+
+  if (context.mode === "before") {
+    return normalizePhaseRoles(
+      roles,
+      "before",
+      startHour
+    )
+  }
+
+  if (context.mode === "after") {
+    return normalizePhaseRoles(
+      roles,
+      "after",
+      exitHour
+    )
+  }
+
+  /*
+   * Full mode reserves the first role for the pre-event phase and all remaining
+   * roles for the post-event phase.
+   */
+  const beforeRoles =
+    roles.slice(0, 1)
+
+  const afterRoles =
+    roles.slice(1)
+
+  const normalizedBeforeRoles =
+    normalizePhaseRoles(
+      beforeRoles,
+      "before",
+      startHour
+    )
+
+  const normalizedAfterRoles =
+    normalizePhaseRoles(
+      afterRoles,
+      "after",
+      exitHour
+    )
+
+  return [
+    ...normalizedBeforeRoles,
+    ...normalizedAfterRoles,
+  ]
 }
 
 function buildVibePlanningProfile(

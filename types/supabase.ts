@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -4493,6 +4493,186 @@ export type Database = {
           },
         ]
       }
+      creator_collection_attribution_events: {
+        Row: {
+          collection_id: string
+          creator_user_id: string
+          event_type: string
+          explorer_user_id: string
+          flow_stop_id: string | null
+          id: string
+          occurred_at: string
+          session_id: string
+          venue_id: string | null
+          xp_awarded: number
+        }
+        Insert: {
+          collection_id: string
+          creator_user_id: string
+          event_type: string
+          explorer_user_id: string
+          flow_stop_id?: string | null
+          id?: string
+          occurred_at?: string
+          session_id: string
+          venue_id?: string | null
+          xp_awarded: number
+        }
+        Update: {
+          collection_id?: string
+          creator_user_id?: string
+          event_type?: string
+          explorer_user_id?: string
+          flow_stop_id?: string | null
+          id?: string
+          occurred_at?: string
+          session_id?: string
+          venue_id?: string | null
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cc_event_receipt_identity_fk"
+            columns: [
+              "session_id",
+              "collection_id",
+              "creator_user_id",
+              "explorer_user_id",
+            ]
+            isOneToOne: false
+            referencedRelation: "creator_collection_flow_receipts"
+            referencedColumns: [
+              "session_id",
+              "collection_id",
+              "creator_user_id",
+              "explorer_user_id",
+            ]
+          },
+        ]
+      }
+      creator_collection_checkin_attestations: {
+        Row: {
+          explorer_user_id: string
+          flow_stop_id: string
+          id: string
+          session_id: string
+          venue_id: string
+          verified_at: string
+        }
+        Insert: {
+          explorer_user_id: string
+          flow_stop_id: string
+          id?: string
+          session_id: string
+          venue_id: string
+          verified_at?: string
+        }
+        Update: {
+          explorer_user_id?: string
+          flow_stop_id?: string
+          id?: string
+          session_id?: string
+          venue_id?: string
+          verified_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cc_checkin_receipt_fk"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "creator_collection_flow_receipts"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      creator_collection_completion_certificates: {
+        Row: {
+          canonical_completed_at: string
+          certified_at: string
+          executable_original_venue_ids: string[]
+          session_id: string
+        }
+        Insert: {
+          canonical_completed_at: string
+          certified_at?: string
+          executable_original_venue_ids?: string[]
+          session_id: string
+        }
+        Update: {
+          canonical_completed_at?: string
+          certified_at?: string
+          executable_original_venue_ids?: string[]
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_collection_completion_certificates_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "creator_collection_flow_receipts"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      creator_collection_completion_coverage: {
+        Row: {
+          collection_id: string
+          completion_event_id: string
+          covered_at: string
+          creator_user_id: string
+          explorer_user_id: string
+          venue_id: string
+        }
+        Insert: {
+          collection_id: string
+          completion_event_id: string
+          covered_at?: string
+          creator_user_id: string
+          explorer_user_id: string
+          venue_id: string
+        }
+        Update: {
+          collection_id?: string
+          completion_event_id?: string
+          covered_at?: string
+          creator_user_id?: string
+          explorer_user_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cc_coverage_completion_event_fk"
+            columns: ["completion_event_id"]
+            isOneToOne: false
+            referencedRelation: "creator_collection_attribution_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_collection_flow_receipts: {
+        Row: {
+          certified_at: string
+          collection_id: string
+          creator_user_id: string
+          explorer_user_id: string
+          session_id: string
+        }
+        Insert: {
+          certified_at?: string
+          collection_id: string
+          creator_user_id: string
+          explorer_user_id: string
+          session_id: string
+        }
+        Update: {
+          certified_at?: string
+          collection_id?: string
+          creator_user_id?: string
+          explorer_user_id?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       creator_collection_items: {
         Row: {
           collection_id: string
@@ -4606,6 +4786,41 @@ export type Database = {
           },
         ]
       }
+      creator_collection_receipt_stops: {
+        Row: {
+          certified_at: string
+          flow_stop_id: string
+          original_position: number
+          session_id: string
+          stop_origin: string
+          venue_id: string
+        }
+        Insert: {
+          certified_at?: string
+          flow_stop_id: string
+          original_position: number
+          session_id: string
+          stop_origin: string
+          venue_id: string
+        }
+        Update: {
+          certified_at?: string
+          flow_stop_id?: string
+          original_position?: number
+          session_id?: string
+          stop_origin?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cc_receipt_stops_session_fk"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "creator_collection_flow_receipts"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
       creator_collection_venues: {
         Row: {
           collection_id: string
@@ -4651,6 +4866,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      creator_collection_xp_control: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       creator_collections: {
         Row: {
@@ -5130,6 +5366,7 @@ export type Database = {
           user_id: string
           user_lat: number | null
           user_lon: number | null
+          venue_visit_id: string | null
         }
         Insert: {
           check_in_source?: string
@@ -5145,6 +5382,7 @@ export type Database = {
           user_id: string
           user_lat?: number | null
           user_lon?: number | null
+          venue_visit_id?: string | null
         }
         Update: {
           check_in_source?: string
@@ -5160,6 +5398,7 @@ export type Database = {
           user_id?: string
           user_lat?: number | null
           user_lon?: number | null
+          venue_visit_id?: string | null
         }
         Relationships: [
           {
@@ -5174,6 +5413,41 @@ export type Database = {
             columns: ["social_group_id"]
             isOneToOne: false
             referencedRelation: "social_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_checkins_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "community_signal_episode_verified_participation_v1"
+            referencedColumns: ["participation_id"]
+          },
+          {
+            foreignKeyName: "event_checkins_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "community_signal_exposure_participation_alignment_v1"
+            referencedColumns: ["next_participation_id"]
+          },
+          {
+            foreignKeyName: "event_checkins_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "community_signal_exposure_participation_alignment_v1"
+            referencedColumns: ["prior_participation_id"]
+          },
+          {
+            foreignKeyName: "event_checkins_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "community_signal_verified_venue_participation_fact_v1"
+            referencedColumns: ["participation_id"]
+          },
+          {
+            foreignKeyName: "event_checkins_venue_visit_id_fkey"
+            columns: ["venue_visit_id"]
+            isOneToOne: false
+            referencedRelation: "venue_visits"
             referencedColumns: ["id"]
           },
         ]
@@ -6100,6 +6374,8 @@ export type Database = {
           created_at: string | null
           description: string | null
           ends_at: string | null
+          external_event_id: string | null
+          external_provider: string | null
           id: string
           is_active: boolean | null
           permalink: string | null
@@ -6123,6 +6399,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           ends_at?: string | null
+          external_event_id?: string | null
+          external_provider?: string | null
           id?: string
           is_active?: boolean | null
           permalink?: string | null
@@ -6146,6 +6424,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           ends_at?: string | null
+          external_event_id?: string | null
+          external_provider?: string | null
           id?: string
           is_active?: boolean | null
           permalink?: string | null
@@ -6181,6 +6461,199 @@ export type Database = {
           {
             foreignKeyName: "events_venue_id_fkey"
             columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      external_event_source_rules: {
+        Row: {
+          created_at: string
+          event_location_policy: string
+          id: string
+          provider: string
+          reason: string | null
+          source_domain: string
+        }
+        Insert: {
+          created_at?: string
+          event_location_policy: string
+          id?: string
+          provider: string
+          reason?: string | null
+          source_domain: string
+        }
+        Update: {
+          created_at?: string
+          event_location_policy?: string
+          id?: string
+          provider?: string
+          reason?: string | null
+          source_domain?: string
+        }
+        Relationships: []
+      }
+      external_event_staging: {
+        Row: {
+          approved_archetype: string | null
+          archetype_confidence: number | null
+          city: string
+          created_at: string
+          ends_at: string | null
+          external_event_id: string
+          external_venue_address: string | null
+          external_venue_id: string | null
+          external_venue_name: string | null
+          id: string
+          import_status: string
+          is_deleted: boolean
+          last_synced_at: string
+          match_status: string
+          provider: string
+          provider_updated_at: string | null
+          raw_payload: Json
+          roam_event_id: string | null
+          roam_venue_id: string | null
+          source_url: string | null
+          starts_at: string | null
+          suggested_archetype: string | null
+          timezone: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_archetype?: string | null
+          archetype_confidence?: number | null
+          city: string
+          created_at?: string
+          ends_at?: string | null
+          external_event_id: string
+          external_venue_address?: string | null
+          external_venue_id?: string | null
+          external_venue_name?: string | null
+          id?: string
+          import_status?: string
+          is_deleted?: boolean
+          last_synced_at?: string
+          match_status?: string
+          provider: string
+          provider_updated_at?: string | null
+          raw_payload?: Json
+          roam_event_id?: string | null
+          roam_venue_id?: string | null
+          source_url?: string | null
+          starts_at?: string | null
+          suggested_archetype?: string | null
+          timezone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_archetype?: string | null
+          archetype_confidence?: number | null
+          city?: string
+          created_at?: string
+          ends_at?: string | null
+          external_event_id?: string
+          external_venue_address?: string | null
+          external_venue_id?: string | null
+          external_venue_name?: string | null
+          id?: string
+          import_status?: string
+          is_deleted?: boolean
+          last_synced_at?: string
+          match_status?: string
+          provider?: string
+          provider_updated_at?: string | null
+          raw_payload?: Json
+          roam_event_id?: string | null
+          roam_venue_id?: string | null
+          source_url?: string | null
+          starts_at?: string | null
+          suggested_archetype?: string | null
+          timezone?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_event_staging_roam_event_id_fkey"
+            columns: ["roam_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_event_staging_roam_venue_id_fkey"
+            columns: ["roam_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "external_event_staging_roam_venue_id_fkey"
+            columns: ["roam_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      external_venue_mappings: {
+        Row: {
+          city: string
+          created_at: string
+          external_venue_id: string
+          external_venue_name: string | null
+          id: string
+          match_method: string | null
+          match_score: number | null
+          match_status: string
+          provider: string
+          roam_venue_id: string | null
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          external_venue_id: string
+          external_venue_name?: string | null
+          id?: string
+          match_method?: string | null
+          match_score?: number | null
+          match_status?: string
+          provider: string
+          roam_venue_id?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          external_venue_id?: string
+          external_venue_name?: string | null
+          id?: string
+          match_method?: string | null
+          match_score?: number | null
+          match_status?: string
+          provider?: string
+          roam_venue_id?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_venue_mappings_roam_venue_id_fkey"
+            columns: ["roam_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "external_venue_mappings_roam_venue_id_fkey"
+            columns: ["roam_venue_id"]
             isOneToOne: false
             referencedRelation: "venues"
             referencedColumns: ["id"]
@@ -6916,6 +7389,8 @@ export type Database = {
           creator_onboarding_completed_at: string | null
           days_out: string[] | null
           deleted_at: string | null
+          founding_tastemaker_designated_at: string | null
+          founding_tastemaker_designated_by: string | null
           frequency: string | null
           full_name: string | null
           has_seen_roam_intro: boolean
@@ -6925,6 +7400,7 @@ export type Database = {
           intent_level: string | null
           interest_categories: string[] | null
           is_discoverable: boolean
+          is_founding_tastemaker: boolean
           is_public: boolean | null
           onboarding_path: string | null
           onboarding_path_selected_at: string | null
@@ -6951,6 +7427,8 @@ export type Database = {
           creator_onboarding_completed_at?: string | null
           days_out?: string[] | null
           deleted_at?: string | null
+          founding_tastemaker_designated_at?: string | null
+          founding_tastemaker_designated_by?: string | null
           frequency?: string | null
           full_name?: string | null
           has_seen_roam_intro?: boolean
@@ -6960,6 +7438,7 @@ export type Database = {
           intent_level?: string | null
           interest_categories?: string[] | null
           is_discoverable?: boolean
+          is_founding_tastemaker?: boolean
           is_public?: boolean | null
           onboarding_path?: string | null
           onboarding_path_selected_at?: string | null
@@ -6986,6 +7465,8 @@ export type Database = {
           creator_onboarding_completed_at?: string | null
           days_out?: string[] | null
           deleted_at?: string | null
+          founding_tastemaker_designated_at?: string | null
+          founding_tastemaker_designated_by?: string | null
           frequency?: string | null
           full_name?: string | null
           has_seen_roam_intro?: boolean
@@ -6995,6 +7476,7 @@ export type Database = {
           intent_level?: string | null
           interest_categories?: string[] | null
           is_discoverable?: boolean
+          is_founding_tastemaker?: boolean
           is_public?: boolean | null
           onboarding_path?: string | null
           onboarding_path_selected_at?: string | null
@@ -12575,6 +13057,15 @@ export type Database = {
           },
         ]
       }
+      creator_collection_attribution_totals: {
+        Row: {
+          collection_attributed_stops: number | null
+          collection_attribution_xp: number | null
+          completed_attributed_collection_flows: number | null
+          creator_user_id: string | null
+        }
+        Relationships: []
+      }
       creator_replay_attribution_totals: {
         Row: {
           completed_replayed_flows: number | null
@@ -14978,6 +15469,16 @@ export type Database = {
         Args: never
         Returns: string
       }
+      certify_existing_creator_collection_flow: {
+        Args: {
+          p_collection_id: string
+          p_explorer_user_id: string
+          p_session_id: string
+          p_stop_origins: string[]
+          p_venue_ids: string[]
+        }
+        Returns: boolean
+      }
       claim_event_occurrence_response: {
         Args: {
           p_contributor_user_id: string
@@ -15006,6 +15507,17 @@ export type Database = {
       complete_active_flow_session_atomic: {
         Args: { p_session_id: string; p_user_id: string }
         Returns: {
+          completed_at: string
+          completed_stops: number
+          session_id: string
+          total_stops: number
+        }[]
+      }
+      complete_active_flow_with_collection_certificate: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: {
+          certificate_error: string
+          certificate_recorded: boolean
           completed_at: string
           completed_stops: number
           session_id: string
@@ -15067,6 +15579,20 @@ export type Database = {
           visit_date: string
           visited_at: string
         }[]
+      }
+      create_certified_creator_collection_flow: {
+        Args: {
+          p_city?: string
+          p_collection_id: string
+          p_explorer_user_id: string
+          p_metadata?: Json
+          p_stop_origins: string[]
+          p_theme_id?: string
+          p_title?: string
+          p_travel_mode?: string
+          p_venue_ids: string[]
+        }
+        Returns: string
       }
       create_event_occurrence_for_report: {
         Args: { p_report_id: string }
@@ -15641,6 +16167,14 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      process_certified_creator_collection_stop_xp: {
+        Args: { p_flow_stop_id: string; p_session_id: string }
+        Returns: number
+      }
+      publish_approved_findlocal_events: {
+        Args: { p_limit?: number }
+        Returns: number
+      }
       publish_roam_relay: { Args: { p_relay_id: string }; Returns: string }
       raise_scout_integrity_flag: {
         Args: {
@@ -15701,6 +16235,14 @@ export type Database = {
           venue_visit_id: string
         }[]
       }
+      record_creator_collection_checkin_attestation: {
+        Args: {
+          p_explorer_user_id: string
+          p_flow_stop_id: string
+          p_session_id: string
+        }
+        Returns: boolean
+      }
       record_creator_replay_completion: {
         Args: { p_session_id: string }
         Returns: {
@@ -15726,6 +16268,17 @@ export type Database = {
           stop_index: number
           venue_id: string
         }[]
+      }
+      record_roam_event_checkin: {
+        Args: {
+          p_accuracy_meters?: number
+          p_device_timestamp?: string
+          p_event_id: string
+          p_rating: number
+          p_user_lat: number
+          p_user_lon: number
+        }
+        Returns: Json
       }
       redeem_city_market_allocation: {
         Args: {
@@ -15941,6 +16494,10 @@ export type Database = {
           winner_entry_id: string
           winner_user_id: string
         }[]
+      }
+      settle_creator_collection_completion_xp: {
+        Args: { p_session_id: string }
+        Returns: number
       }
       snapshot_roam_relay_competition_scores: {
         Args: { p_competition_id: string }
