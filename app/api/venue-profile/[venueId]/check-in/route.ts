@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 
 import { supabaseServerApi } from '@/lib/supabase/server-api'
@@ -5,6 +6,10 @@ import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { getCityNow } from '@/lib/getCityNow'
 
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+
+import {
+  selectActiveFlowVenueVisitWriter,
+} from '@/lib/active-flow/trustedVenueVisitWriter.server'
 
 type RouteContext = {
   params: Promise<{
@@ -285,6 +290,28 @@ export async function POST(req: NextRequest, context: RouteContext) {
   }
 
   /*
+   * Trusted venue-visit persistence.
+   *
+   * OFF: preserve the existing authenticated writer.
+   * ON: use the server-only writer for the validated visit insert.
+   *
+   * Authentication, GPS validation, reads, XP, and Passport
+   * operations continue using the original Supabase client.
+   */
+  const venueVisitWriteClient =
+    selectActiveFlowVenueVisitWriter({
+      enabled:
+        process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
+        'true',
+      authenticatedClient:
+        supabase,
+      supabaseUrl:
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+      serviceRoleKey:
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+    })
+
+/*
    * Use the venue's configured city clock as the canonical source for both
    * the persisted UTC timestamp and the venue-local calendar date.
    */
@@ -471,7 +498,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
   const {
     data: visit,
     error: insertError,
-  } = await supabase
+  } = await venueVisitWriteClient
     .from('venue_visits')
     .insert({
       user_id: user.id,
@@ -500,7 +527,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     )
     .single()
 
-  if (
+if (
     insertError ||
     !visit
   ) {

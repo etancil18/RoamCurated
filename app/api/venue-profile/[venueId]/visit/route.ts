@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -8,6 +9,10 @@ import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCr
 import { getRoamDay } from '@/lib/roam/roamDay'
 
 import { supabaseServerApi } from '@/lib/supabase/server-api'
+
+import {
+  selectActiveFlowVenueVisitWriter,
+} from '@/lib/active-flow/trustedVenueVisitWriter.server'
 
 type RouteContext = {
   params: Promise<{
@@ -1316,6 +1321,19 @@ export async function POST(
     return geoResult.response
   }
 
+  const venueVisitWriteClient =
+    selectActiveFlowVenueVisitWriter({
+      enabled:
+        process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
+        'true',
+      authenticatedClient:
+        supabase,
+      supabaseUrl:
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+      serviceRoleKey:
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+    })
+
   if (
     existingVisit
       ?.visited_at &&
@@ -1347,7 +1365,7 @@ export async function POST(
   const {
     data,
     error,
-  } = await supabase
+  } = await venueVisitWriteClient
     .from(
       'venue_visits'
     )
@@ -1874,6 +1892,19 @@ export async function PATCH(
       })
     }
 
+    const venueVisitWriteClient =
+      selectActiveFlowVenueVisitWriter({
+        enabled:
+          process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
+          'true',
+        authenticatedClient:
+          supabase,
+        supabaseUrl:
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+        serviceRoleKey:
+          process.env.SUPABASE_SERVICE_ROLE_KEY,
+      })
+
     /*
      * Legacy repair only:
      *
@@ -1883,7 +1914,7 @@ export async function PATCH(
     const {
       data,
       error,
-    } = await supabase
+    } = await venueVisitWriteClient
       .from(
         'venue_visits'
       )
@@ -1990,11 +2021,11 @@ export async function PATCH(
         mutation:
           'venue_visit_patch_active_flow',
 
-        rankingRefreshMode:
-          'affected',
+          rankingRefreshMode:
+            'affected',
 
-        calculatedAt:
-          now,
+          calculatedAt:
+            now,
       }
     )
 

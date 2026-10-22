@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
@@ -16,6 +17,7 @@ type RouteContext = {
 type UpdateSnapshotBody = {
   visibility?: unknown
   replayable?: unknown
+  title?: unknown
 }
 
 type SnapshotRow = {
@@ -173,14 +175,28 @@ export async function PATCH(
         'replayable'
       )
 
+    /*
+     * Saved Roam Naming:
+     *
+     * Title is presentation metadata owned by the snapshot user.
+     * Updating it must not alter visibility, replayability,
+     * source identity, or immutable route evidence.
+     */
+    const hasTitle =
+      Object.prototype.hasOwnProperty.call(
+        body,
+        'title'
+      )
+
     if (
       !hasVisibility &&
-      !hasReplayable
+      !hasReplayable &&
+      !hasTitle
     ) {
       return NextResponse.json(
         {
           error:
-            'Provide visibility or replayable to update the snapshot.',
+            'Provide visibility, replayable, or title to update the snapshot.',
         },
         { status: 400 }
       )
@@ -226,18 +242,41 @@ export async function PATCH(
       )
     }
 
+    const title =
+      hasTitle &&
+      typeof body.title === 'string'
+        ? body.title.trim()
+        : null
+
+    if (
+      hasTitle &&
+      (
+        !title ||
+        title.length > 60
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            'Title must contain between 1 and 60 characters.',
+        },
+        { status: 400 }
+      )
+    }
+
     const {
       data: existingSnapshot,
       error: existingError,
     } = await supabase
       .from('flow_snapshots')
       .select(
-        'id, visibility, replayable, status'
+        'id, title, visibility, replayable, status'
       )
       .eq('id', snapshotId)
       .eq('user_id', user.id)
       .maybeSingle<{
         id: string
+        title: string | null
         visibility: SnapshotVisibility
         replayable: boolean
         status: string
@@ -268,6 +307,11 @@ export async function PATCH(
     const nextVisibility =
       visibility ??
       existingSnapshot.visibility
+
+    const nextTitle =
+      hasTitle
+        ? title
+        : existingSnapshot.title
 
     /*
      * Replay initiative:
@@ -368,7 +412,7 @@ export async function PATCH(
       }
     }
 
-    const visibilityChanged =
+const visibilityChanged =
       existingSnapshot.visibility !==
       nextVisibility
 
@@ -376,9 +420,14 @@ export async function PATCH(
       existingSnapshot.replayable !==
       nextReplayable
 
+    const titleChanged =
+      existingSnapshot.title !==
+      nextTitle
+
     if (
       !visibilityChanged &&
-      !replayableChanged
+      !replayableChanged &&
+      !titleChanged
     ) {
       const {
         data: unchangedSnapshot,
@@ -440,6 +489,8 @@ export async function PATCH(
     } = await supabase
       .from('flow_snapshots')
       .update({
+        title:
+          nextTitle,
         visibility:
           nextVisibility,
         replayable:
@@ -687,7 +738,7 @@ export async function DELETE(
       }
     }
 
-    return NextResponse.json(
+return NextResponse.json(
       {
         deleted: true,
         snapshotId,

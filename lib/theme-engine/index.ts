@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { Venue } from "@/types/venue";
 import { themeById } from "@/lib/crawlConfig";
 import { sortVenuesByScore } from "@/lib/theme-engine/scorer-fixed";
@@ -213,11 +215,16 @@ export async function generateThemeRoute({
         return base;
       });
 
+      // Pass the selected city and expected stage-arrival time
+      // into the scorer without changing the scoring pipeline.
       sorted = sortVenuesByScore(
         candidates,
         theme,
         { lat: lastLat, lon: lastLon },
-        route[route.length - 1] || null
+        route[route.length - 1] || null,
+        city,
+        undefined,
+        currentTime.toMillis()
       );
 
       sorted = sorted.map((v) => {

@@ -61,6 +61,7 @@ type VenueRow = {
 type ExistingRoamSnapshotRow = {
   id: string
   source_id: string
+  title: string | null
   visibility: 'public' | 'private'
   replayable: boolean
   status: string | null
@@ -87,6 +88,7 @@ export type QualifyingRoamStop = {
 
 export type QualifyingRoamSnapshot = {
   id: string
+  title: string | null
   visibility: 'public' | 'private'
   replayable: boolean
   status: string | null
@@ -503,6 +505,7 @@ export async function loadQualifyingRoamDays({
     .select(`
       id,
       source_id,
+      title,
       visibility,
       replayable,
       status,
@@ -547,6 +550,8 @@ export async function loadQualifyingRoamDays({
       {
         id:
           row.id,
+
+        title: row.title,
 
         visibility:
           row.visibility,
@@ -1341,6 +1346,11 @@ function normalizeSnapshotRows(
 
       source_id:
         row.source_id,
+
+      title:
+    typeof row.title === 'string'
+      ? row.title
+      : null,
 
       visibility:
         row.visibility,

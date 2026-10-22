@@ -1,4 +1,6 @@
+
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
 import { createServerClient } from '@/lib/supabase/server'
 
@@ -32,6 +34,26 @@ type ExistingActiveFlowRow = {
   city: string | null
   started_at: string
 }
+
+/*
+ * CERTIFIED REPLAY LINEAGE
+ *
+ * Disabled by default.
+ *
+ * When enabled, the trusted database function must create
+ * the Replay session and inherit established contribution IDs
+ * from the Snapshot's immutable stop lineage in one transaction.
+ *
+ * A missing contribution mapping must never be replaced with
+ * a new contribution attributed to the explorer or publisher.
+ *
+ * Do not enable until the database function and associated
+ * Snapshot lineage persistence have been tested together.
+ *
+ * Existing replay rewards and reputation behavior are unchanged.
+ */
+const REPLAY_LINEAGE_ENABLED =
+  process.env.ROAM_REPLAY_LINEAGE_ENABLED === 'true'
 
 export async function POST(
   _request: NextRequest,
@@ -408,18 +430,99 @@ export async function POST(
       },
     } as any
 
-    const {
-      data: session,
-      error: insertError,
-    } = await supabase
-      .from(
-        'active_flow_sessions'
+    /*
+     * CERTIFIED REPLAY LINEAGE — CONTROLLED WRITE PATH
+     *
+     * When enabled, a server-only database transaction must:
+     *
+     * - Revalidate public/completed/replayable Snapshot status
+     * - Read the immutable ordered Snapshot stops
+     * - Create the Replay session and materialized runtime stops
+     * - Inherit each existing contribution ID unchanged
+     * - Never attribute an unmapped stop to the Snapshot publisher
+     *   or current explorer
+     * - Roll back if any required relationship is inconsistent
+     *
+     * The legacy insert remains the default until the RPC
+     * is installed and tested.
+     */
+    let session: any = null
+    let insertError: any = null
+
+    if (REPLAY_LINEAGE_ENABLED) {
+      const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL
+
+      const serviceRoleKey =
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+
+      if (!supabaseUrl || !serviceRoleKey) {
+        console.error(
+          '[flow-snapshots/[snapshotId]/replay] Certified Replay lineage configuration missing.'
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Certified Flow replay is unavailable.',
+          },
+          { status: 503 }
+        )
+      }
+
+      const serviceSupabase = createClient(
+        supabaseUrl,
+        serviceRoleKey,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        }
       )
-      .insert(
-        insertPayload
+
+      const {
+        data: certifiedSessionId,
+        error: replayError,
+      } = await serviceSupabase.rpc(
+        'create_replay_with_certified_lineage',
+        {
+          p_explorer_user_id: user.id,
+          p_snapshot_id: snapshot.id,
+          p_expected_venue_ids: venueIds,
+        }
       )
-      .select('*')
-      .single()
+
+      insertError = replayError
+
+      if (!insertError && certifiedSessionId) {
+        const {
+          data: persistedSession,
+          error: lookupError,
+        } = await supabase
+          .from('active_flow_sessions')
+          .select('*')
+          .eq('id', certifiedSessionId)
+          .eq('user_id', user.id)
+          .single()
+
+        session = persistedSession
+        insertError = lookupError
+      }
+    } else {
+      const result = await supabase
+        .from(
+          'active_flow_sessions'
+        )
+        .insert(
+          insertPayload
+        )
+        .select('*')
+        .single()
+
+      session = result.data
+      insertError = result.error
+    }
 
     if (
       insertError ||

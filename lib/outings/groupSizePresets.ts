@@ -1,4 +1,5 @@
 // lib/outings/groupSizePresets.ts
+import "server-only"
 
 import type { PlanMode, StopRole } from "./types"
 

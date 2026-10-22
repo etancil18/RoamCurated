@@ -1,0 +1,891 @@
+===== COLLECTION CONTEXT =====
+// lib/routes/collectionRouteContext.ts
+
+import {
+  buildRouteContext,
+  type RouteContext,
+  type RouteContextTravelMode,
+  type RouteTightness,
+} from './buildContext'
+import {
+  type RouteStage,
+  getCandidateStagesAfter,
+  getDayKindFromWeekday,
+  getRouteStageForHour,
+} from './routeStages'
+import {
+  type NormalizedVenueType,
+  normalizeVenueTypes,
+} from './venueTypeNormalization'
+import {
+  coerceDate,
+  getLocalDayKey,
+  getLocalHour,
+  hasValidCoordinates,
+} from './arrivalTime'
+import {
+  extractStringList,
+  normalizeSearchKey,
+  uniqueStrings,
+} from './routeUtils'
+import type { UserRoutePersonalization } from './personalization'
+
+export type CollectionRouteContextVenue = {
+  id?: string | null
+  name?: string | null
+  slug?: string | null
+  city?: string | null
+  lat?: number | null
+  lon?: number | null
+  type?: unknown
+  types?: unknown
+  venue_type?: unknown
+  venue_types?: unknown
+  category?: unknown
+  categories?: unknown
+  tags?: unknown
+  vibe?: unknown
+  price?: string | null
+  hours?: unknown
+  dayParts?: Record<string, string> | null
+  is_active?: boolean | null
+  active?: boolean | null
+  permanently_closed?: boolean | null
+  closed?: boolean | null
+}
+
+export type CollectionRouteContextCollection = {
+  id: string
+  creatorUserId: string
+  title: string
+  description?: string | null
+  city?: string | null
+}
+
+export type CollectionStageInventory = {
+  stage: RouteStage
+  matchingVenueIds: string[]
+  matchingVenueCount: number
+}
+
+export type CollectionRouteContext = {
+  collectionId: string
+  collectionCreatorUserId: string
+  collectionTitle: string
+  collectionDescription: string | null
+  city: string | null
+  plannedStartAt: Date
+  weekdayKey: 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'
+  localHour: number
+  travelMode: RouteContextTravelMode
+  tightness: RouteTightness
+  maxStops: number
+  usableCollectionVenues: CollectionRouteContextVenue[]
+  freshCollectionVenues: CollectionRouteContextVenue[]
+  experiencedCollectionVenues: CollectionRouteContextVenue[]
+  collectionVenueIds: Set<string>
+  freshCollectionVenueIds: Set<string>
+  experiencedCollectionVenueIds: Set<string>
+  dominantTypes: NormalizedVenueType[]
+  preferredVibes: string[]
+  preferredTags: string[]
+  startingStage: RouteStage
+  candidateStages: RouteStage[]
+  stageInventory: CollectionStageInventory[]
+  hasUsableCollectionCoordinates: boolean
+  anchorSeedVenue: CollectionRouteContextVenue | null
+  anchorSeedContext: RouteContext | null
+}
+
+export type BuildCollectionRouteContextParams = {
+  collection: CollectionRouteContextCollection
+  collectionVenues: CollectionRouteContextVenue[]
+  plannedStartAt?: Date | string | null
+  travelMode?: RouteContextTravelMode
+  tightness?: RouteTightness
+  maxStops?: number
+  preferredVibes?: string[]
+  preferredTags?: string[]
+  personalization?: UserRoutePersonalization | null
+  timezone?: string | null
+}
+
+const DEFAULT_MAX_STOPS = 5
+
+export function buildCollectionRouteContext({
+  collection,
+  collectionVenues,
+  plannedStartAt = null,
+  travelMode = 'walking',
+  tightness = 'medium',
+  maxStops = DEFAULT_MAX_STOPS,
+  preferredVibes = [],
+  preferredTags = [],
+  personalization = null,
+  timezone = null,
+}: BuildCollectionRouteContextParams): CollectionRouteContext {
+  const safePlannedStartAt = coerceDate(plannedStartAt ?? new Date())
+  const safeMaxStops = sanitizeMaxStops(maxStops)
+  const weekdayKey = getLocalDayKey(safePlannedStartAt, timezone)
+  const localHour = getLocalHour(safePlannedStartAt, timezone)
+  const dayKind = getDayKindFromWeekday(dayKeyToIsoWeekday(weekdayKey))
+
+  const usableCollectionVenues = dedupeCollectionVenues(
+    collectionVenues.filter(isUsableCollectionVenue)
+  )
+
+  const collectionVenueIds = new Set(
+    usableCollectionVenues
+      .map(getVenueIdentity)
+      .filter((id): id is string => Boolean(id))
+  )
+
+  const experiencedCollectionVenues = usableCollectionVenues.filter((venue) =>
+    isExperiencedVenue(venue, personalization)
+  )
+
+  const experiencedCollectionVenueIds = new Set(
+    experiencedCollectionVenues
+      .map(getVenueIdentity)
+      .filter((id): id is string => Boolean(id))
+  )
+
+  const freshCollectionVenues = usableCollectionVenues.filter(
+    (venue) => !isExperiencedVenue(venue, personalization)
+  )
+
+  const freshCollectionVenueIds = new Set(
+    freshCollectionVenues
+      .map(getVenueIdentity)
+      .filter((id): id is string => Boolean(id))
+  )
+
+  const dominantTypes = getDominantCollectionTypes(usableCollectionVenues)
+
+  const collectionPreferredVibes = deriveCollectionValues(
+    usableCollectionVenues.map((venue) => venue.vibe)
+  )
+
+  const collectionPreferredTags = deriveCollectionValues(
+    usableCollectionVenues.flatMap((venue) => [
+      venue.tags,
+      venue.category,
+      venue.categories,
+    ])
+  )
+
+  const resolvedPreferredVibes = mergePreferenceValues(
+    preferredVibes,
+    collectionPreferredVibes
+  )
+
+  const resolvedPreferredTags = mergePreferenceValues(
+    preferredTags,
+    collectionPreferredTags
+  )
+
+  const anchorSeedVenue = selectAnchorSeedVenue({
+    venues:
+      freshCollectionVenues.length > 0
+        ? freshCollectionVenues
+        : usableCollectionVenues,
+    localHour,
+  })
+
+  const anchorSeedContext = anchorSeedVenue
+    ? buildRouteContext({
+        anchorVenue: anchorSeedVenue,
+        city: collection.city ?? anchorSeedVenue.city ?? null,
+        plannedStartAt: safePlannedStartAt,
+        travelMode,
+        tightness,
+        maxStops: safeMaxStops,
+        preferredVibes: resolvedPreferredVibes,
+        preferredTags: resolvedPreferredTags,
+      })
+    : null
+
+  const startingStage =
+    anchorSeedContext?.startingStage ?? getRouteStageForHour(localHour)
+
+  const candidateStages = getCandidateStagesAfter({
+    stageId: startingStage.id,
+    maxStages: safeMaxStops,
+    includeCurrentStage: true,
+    dayKind,
+    startHour: localHour,
+  })
+
+  const stageInventory = candidateStages.map((stage) =>
+    buildStageInventory(stage, usableCollectionVenues)
+  )
+
+  return {
+    collectionId: collection.id,
+    collectionCreatorUserId: collection.creatorUserId,
+    collectionTitle: collection.title,
+    collectionDescription: collection.description ?? null,
+    city:
+      collection.city ??
+      anchorSeedVenue?.city ??
+      inferCollectionCity(usableCollectionVenues),
+    plannedStartAt: safePlannedStartAt,
+    weekdayKey,
+    localHour,
+    travelMode,
+    tightness,
+    maxStops: safeMaxStops,
+    usableCollectionVenues,
+    freshCollectionVenues,
+    experiencedCollectionVenues,
+    collectionVenueIds,
+    freshCollectionVenueIds,
+    experiencedCollectionVenueIds,
+    dominantTypes,
+    preferredVibes: resolvedPreferredVibes,
+    preferredTags: resolvedPreferredTags,
+    startingStage,
+    candidateStages,
+    stageInventory,
+    hasUsableCollectionCoordinates: usableCollectionVenues.some((venue) =>
+      hasValidCoordinates(venue)
+    ),
+    anchorSeedVenue,
+    anchorSeedContext,
+  }
+}
+
+export function getCollectionStageInventory(
+  context: CollectionRouteContext,
+  stage: RouteStage
+): CollectionStageInventory {
+  return (
+    context.stageInventory.find((item) => item.stage.id === stage.id) ??
+    buildStageInventory(stage, context.usableCollectionVenues)
+  )
+}
+
+export function getFreshCollectionStageVenues(
+  context: CollectionRouteContext,
+  stage: RouteStage
+): CollectionRouteContextVenue[] {
+  return context.freshCollectionVenues.filter((venue) =>
+    venueMatchesCollectionStage(venue, stage)
+  )
+}
+
+export function venueMatchesCollectionStage(
+  venue: CollectionRouteContextVenue,
+  stage: RouteStage
+): boolean {
+  const venueTypes = normalizeVenueTypes(venue)
+
+  if (venueTypes.length === 0 || stage.types.length === 0) {
+    return false
+  }
+
+  const stageTypeKeys = new Set(
+    stage.types.map(normalizeSearchKey).filter(Boolean)
+  )
+
+  return venueTypes.some((type) =>
+    stageTypeKeys.has(normalizeSearchKey(type))
+  )
+}
+
+function buildStageInventory(
+  stage: RouteStage,
+  venues: CollectionRouteContextVenue[]
+): CollectionStageInventory {
+  const matchingVenueIds = venues
+    .filter((venue) => venueMatchesCollectionStage(venue, stage))
+    .map(getVenueIdentity)
+    .filter((id): id is string => Boolean(id))
+
+  return {
+    stage,
+    matchingVenueIds,
+    matchingVenueCount: matchingVenueIds.length,
+  }
+}
+
+function selectAnchorSeedVenue({
+  venues,
+  localHour,
+}: {
+  venues: CollectionRouteContextVenue[]
+  localHour: number
+}): CollectionRouteContextVenue | null {
+  if (venues.length === 0) return null
+
+  const timeStage = getRouteStageForHour(localHour)
+  const contextualMatches = venues.filter((venue) =>
+    venueMatchesCollectionStage(venue, timeStage)
+  )
+
+  if (contextualMatches.length === 0) {
+    return null
+  }
+
+  return (
+    [...contextualMatches].sort((a, b) => {
+      const aCoordinates = hasValidCoordinates(a) ? 1 : 0
+      const bCoordinates = hasValidCoordinates(b) ? 1 : 0
+
+      if (aCoordinates !== bCoordinates) {
+        return bCoordinates - aCoordinates
+      }
+
+      const aTypeCount = normalizeVenueTypes(a).length
+      const bTypeCount = normalizeVenueTypes(b).length
+
+      if (aTypeCount !== bTypeCount) {
+        return bTypeCount - aTypeCount
+      }
+
+      return getStableVenueKey(a).localeCompare(getStableVenueKey(b))
+    })[0] ?? null
+  )
+}
+
+function getDominantCollectionTypes(
+  venues: CollectionRouteContextVenue[]
+): NormalizedVenueType[] {
+  const counts = new Map<NormalizedVenueType, number>()
+
+  for (const venue of venues) {
+    for (const type of normalizeVenueTypes(venue)) {
+      counts.set(type, (counts.get(type) ?? 0) + 1)
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => {
+      if (a[1] !== b[1]) return b[1] - a[1]
+      return a[0].localeCompare(b[0])
+    })
+    .map(([type]) => type)
+}
+
+function deriveCollectionValues(values: unknown[]): string[] {
+  const counts = new Map<string, { value: string; count: number }>()
+
+  for (const rawValue of values) {
+    for (const value of extractStringList(rawValue)) {
+      const key = normalizeSearchKey(value)
+
+      if (!key) continue
+
+      const existing = counts.get(key)
+
+      if (existing) {
+        existing.count += 1
+      } else {
+        counts.set(key, {
+          value: value.trim(),
+          count: 1,
+        })
+      }
+    }
+  }
+
+  return [...counts.entries()]
+    .sort((a, b) => {
+      if (a[1].count !== b[1].count) {
+        return b[1].count - a[1].count
+      }
+
+      return a[0].localeCompare(b[0])
+    })
+    .map(([, item]) => item.value)
+}
+
+function mergePreferenceValues(
+  explicitValues: string[],
+  collectionValues: string[]
+): string[] {
+  const explicit = uniqueStrings(
+    explicitValues.map((value) => value.trim()).filter(Boolean)
+  )
+
+  if (explicit.length > 0) {
+    return explicit
+  }
+
+  return collectionValues
+}
+
+function isUsableCollectionVenue(
+  venue: CollectionRouteContextVenue
+): boolean {
+  if (!getVenueIdentity(venue)) return false
+  if (venue.is_active === false) return false
+  if (venue.active === false) return false
+  if (venue.permanently_closed === true) return false
+  if (venue.closed === true) return false
+
+  return true
+}
+
+function isExperiencedVenue(
+  venue: CollectionRouteContextVenue,
+  personalization: UserRoutePersonalization | null
+): boolean {
+  if (!personalization) return false
+
+  const id = normalizeOptionalIdentity(venue.id)
+  const slug = normalizeOptionalIdentity(venue.slug)
+
+  return (
+    matchesPersonalizationIdentity(
+      id,
+      personalization.visitedVenueIds
+    ) ||
+    matchesPersonalizationIdentity(
+      slug,
+      personalization.visitedVenueSlugs
+    ) ||
+    matchesPersonalizationIdentity(
+      id,
+      personalization.completedVenueIds
+    ) ||
+    matchesPersonalizationIdentity(
+      slug,
+      personalization.completedVenueSlugs
+    )
+  )
+}
+
+function matchesPersonalizationIdentity(
+  value: string | null,
+  candidates?: string[] | null
+): boolean {
+  if (!value || !Array.isArray(candidates)) return false
+
+  const normalizedValue = normalizeSearchKey(value)
+
+  return candidates.some(
+    (candidate) => normalizeSearchKey(candidate) === normalizedValue
+  )
+}
+
+function dedupeCollectionVenues(
+  venues: CollectionRouteContextVenue[]
+): CollectionRouteContextVenue[] {
+  const seen = new Set<string>()
+
+  return venues.filter((venue) => {
+    const key = getVenueIdentity(venue)
+
+    if (!key) return false
+    if (seen.has(key)) return false
+
+    seen.add(key)
+    return true
+  })
+}
+
+function getVenueIdentity(
+  venue: CollectionRouteContextVenue
+): string | null {
+  const id = normalizeOptionalIdentity(venue.id)
+
+  if (id) return `id:${normalizeSearchKey(id)}`
+
+  const slug = normalizeOptionalIdentity(venue.slug)
+
+  if (slug) return `slug:${normalizeSearchKey(slug)}`
+
+  return null
+}
+
+function normalizeOptionalIdentity(value?: string | null): string | null {
+  if (typeof value !== 'string') return null
+
+  const trimmed = value.trim()
+  return trimmed || null
+}
+
+function getStableVenueKey(venue: CollectionRouteContextVenue): string {
+  return (
+    getVenueIdentity(venue) ??
+    normalizeSearchKey(venue.name ?? '') ??
+    ''
+  )
+}
+
+function inferCollectionCity(
+  venues: CollectionRouteContextVenue[]
+): string | null {
+  const cityCounts = new Map<string, { city: string; count: number }>()
+
+  for (const venue of venues) {
+    const city = venue.city?.trim()
+
+    if (!city) continue
+
+    const key = normalizeSearchKey(city)
+
+    if (!key) continue
+
+    const existing = cityCounts.get(key)
+
+    if (existing) {
+      existing.count += 1
+    } else {
+      cityCounts.set(key, {
+        city,
+        count: 1,
+      })
+    }
+  }
+
+  return (
+    [...cityCounts.entries()]
+      .sort((a, b) => {
+        if (a[1].count !== b[1].count) {
+          return b[1].count - a[1].count
+        }
+
+        return a[0].localeCompare(b[0])
+      })[0]?.[1].city ?? null
+  )
+}
+
+function dayKeyToIsoWeekday(
+  dayKey: 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'
+): number {
+  switch (dayKey) {
+    case 'mon':
+      return 1
+    case 'tue':
+      return 2
+    case 'wed':
+      return 3
+    case 'thu':
+      return 4
+    case 'fri':
+      return 5
+    case 'sat':
+      return 6
+    case 'sun':
+      return 7
+  }
+}
+
+function sanitizeMaxStops(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_MAX_STOPS
+  return Math.max(3, Math.min(8, Math.round(value)))
+}===== COLLECTION CANDIDATE POOL =====
+// lib/routes/collectionCandidatePool.ts
+
+import type { RouteStage } from './routeStages'
+import {
+  filterRouteCandidates,
+  summarizeRejections,
+  type CandidateFilterReason,
+  type CandidateFilterRejectedVenue,
+  type CandidateFilterTravelMode,
+  type CandidateFilterVenue,
+} from './candidateFilter'
+
+export type CollectionCandidateOrigin = 'collection' | 'roam_fill'
+
+export type CollectionCandidatePoolVenue = CandidateFilterVenue
+
+export type CollectionCandidatePool = {
+  collectionCandidates: CollectionCandidatePoolVenue[]
+  fallbackCandidates: CollectionCandidatePoolVenue[]
+  collectionRejected: CandidateFilterRejectedVenue[]
+  fallbackRejected: CandidateFilterRejectedVenue[]
+  collectionRejectionCounts: Partial<Record<CandidateFilterReason, number>>
+  fallbackRejectionCounts: Partial<Record<CandidateFilterReason, number>>
+  collectionMaxDistanceMeters: number
+  fallbackMaxDistanceMeters: number
+}
+
+export type BuildCollectionCandidatePoolParams = {
+  collectionVenues: CollectionCandidatePoolVenue[]
+  fallbackVenues: CollectionCandidatePoolVenue[]
+  anchorVenue: CollectionCandidatePoolVenue
+  previousStop?: CollectionCandidatePoolVenue | null
+  stage: RouteStage
+  arrivalAt: Date
+  selectedVenueIds?: Set<string>
+  excludedVenueIds?: Set<string> | string[]
+  travelMode?: CandidateFilterTravelMode
+  maxDistanceMeters: number
+  collectionDistanceMultiplier?: number
+  timezone?: string | null
+}
+
+export const DEFAULT_COLLECTION_DISTANCE_MULTIPLIER = 1.25
+export const MAX_COLLECTION_DISTANCE_MULTIPLIER = 1.5
+
+export function buildCollectionCandidatePool({
+  collectionVenues,
+  fallbackVenues,
+  anchorVenue,
+  previousStop = null,
+  stage,
+  arrivalAt,
+  selectedVenueIds = new Set<string>(),
+  excludedVenueIds = new Set<string>(),
+  travelMode = 'walking',
+  maxDistanceMeters,
+  collectionDistanceMultiplier = DEFAULT_COLLECTION_DISTANCE_MULTIPLIER,
+  timezone = null,
+}: BuildCollectionCandidatePoolParams): CollectionCandidatePool {
+  const safeMaxDistanceMeters = sanitizeMaxDistanceMeters(maxDistanceMeters)
+  const safeCollectionDistanceMultiplier =
+    sanitizeCollectionDistanceMultiplier(collectionDistanceMultiplier)
+
+  const collectionMaxDistanceMeters =
+    safeMaxDistanceMeters * safeCollectionDistanceMultiplier
+
+  const collectionResult = filterRouteCandidates({
+    venues: collectionVenues,
+    anchorVenue,
+    previousStop,
+    stage,
+    arrivalAt,
+    selectedVenueIds,
+    excludedVenueIds,
+    travelMode,
+    maxDistanceMeters: collectionMaxDistanceMeters,
+    requireStageMatch: true,
+    excludeLikelyClosed: true,
+    timezone,
+  })
+
+  const fallbackResult = filterRouteCandidates({
+    venues: fallbackVenues,
+    anchorVenue,
+    previousStop,
+    stage,
+    arrivalAt,
+    selectedVenueIds,
+    excludedVenueIds,
+    travelMode,
+    maxDistanceMeters: safeMaxDistanceMeters,
+    requireStageMatch: true,
+    excludeLikelyClosed: true,
+    timezone,
+  })
+
+  return {
+    collectionCandidates: collectionResult.candidates,
+    fallbackCandidates: fallbackResult.candidates,
+    collectionRejected: collectionResult.rejected,
+    fallbackRejected: fallbackResult.rejected,
+    collectionRejectionCounts: summarizeRejections(collectionResult.rejected),
+    fallbackRejectionCounts: summarizeRejections(fallbackResult.rejected),
+    collectionMaxDistanceMeters,
+    fallbackMaxDistanceMeters: safeMaxDistanceMeters,
+  }
+}
+
+export function hasCollectionCandidates(
+  pool: CollectionCandidatePool
+): boolean {
+  return pool.collectionCandidates.length > 0
+}
+
+export function hasFallbackCandidates(
+  pool: CollectionCandidatePool
+): boolean {
+  return pool.fallbackCandidates.length > 0
+}
+
+export function hasAnyCollectionCandidatePoolCandidates(
+  pool: CollectionCandidatePool
+): boolean {
+  return hasCollectionCandidates(pool) || hasFallbackCandidates(pool)
+}
+
+export function getCollectionCandidateOrigin(
+  venue: CollectionCandidatePoolVenue,
+  collectionVenueIds: Set<string>
+): CollectionCandidateOrigin {
+  return venue.id && collectionVenueIds.has(venue.id)
+    ? 'collection'
+    : 'roam_fill'
+}
+
+function sanitizeMaxDistanceMeters(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(
+      'buildCollectionCandidatePool requires a positive maxDistanceMeters.'
+    )
+  }
+
+  return value
+}
+
+function sanitizeCollectionDistanceMultiplier(value: number): number {
+  if (!Number.isFinite(value) || value < 1) {
+    return DEFAULT_COLLECTION_DISTANCE_MULTIPLIER
+  }
+
+  return Math.min(value, MAX_COLLECTION_DISTANCE_MULTIPLIER)
+}===== COLLECTION MUTATION LOCATIONS =====
+app/profile/creator/collections/media-actions.ts:1438:        visibility:
+app/profile/creator/collections/media-actions.ts:1465:        'id, slug, visibility'
+app/profile/creator/collections/media-actions.ts:1511:  const visibility =
+app/profile/creator/collections/media-actions.ts:1513:      ?.visibility ===
+app/profile/creator/collections/media-actions.ts:1516:      ?.visibility ===
+app/profile/creator/collections/media-actions.ts:1519:          .visibility
+app/profile/creator/collections/media-actions.ts:1526:    !visibility
+app/profile/creator/collections/media-actions.ts:1543:      visibility,
+app/profile/creator/collections/[collectionId]/page.tsx:94:  visibility:
+app/profile/creator/collections/[collectionId]/page.tsx:216:    collection.visibility ===
+app/profile/creator/collections/[collectionId]/page.tsx:525:              visibility={
+app/profile/creator/collections/[collectionId]/page.tsx:526:                collection.visibility
+app/profile/creator/collections/[collectionId]/page.tsx:560:  visibility,
+app/profile/creator/collections/[collectionId]/page.tsx:562:  visibility:
+app/profile/creator/collections/[collectionId]/page.tsx:567:    visibility === 'public'
+app/profile/creator/collections/[collectionId]/page.tsx:857:            name="visibility"
+app/profile/creator/collections/[collectionId]/page.tsx:860:              collection.visibility ===
+app/profile/creator/collections/[collectionId]/page.tsx:882:            name="visibility"
+app/profile/creator/collections/[collectionId]/page.tsx:885:              collection.visibility ===
+app/profile/creator/collections/[collectionId]/page.tsx:1068:    collection.visibility ===
+app/profile/creator/collections/[collectionId]/page.tsx:1104:            name="visibility"
+app/profile/creator/collections/[collectionId]/page.tsx:1114:            {collection.visibility}
+app/profile/creator/collections/[collectionId]/page.tsx:1359:      visibility:
+app/profile/creator/collections/[collectionId]/page.tsx:1361:          'visibility'
+app/profile/creator/collections/[collectionId]/page.tsx:1407:        visibility:
+app/profile/creator/collections/[collectionId]/page.tsx:1409:            'visibility'
+app/profile/creator/collections/[collectionId]/page.tsx:1418:      'Collection visibility updated successfully.',
+app/profile/creator/collections/[collectionId]/page.tsx:1597:        visibility,
+app/profile/creator/collections/[collectionId]/page.tsx:2093:    'visibility',
+app/profile/creator/collections/[collectionId]/page.tsx:2248:  const visibility =
+app/profile/creator/collections/[collectionId]/page.tsx:2249:    value.visibility ===
+app/profile/creator/collections/[collectionId]/page.tsx:2251:    value.visibility ===
+app/profile/creator/collections/[collectionId]/page.tsx:2253:      ? value.visibility
+app/profile/creator/collections/[collectionId]/page.tsx:2273:    !visibility ||
+app/profile/creator/collections/[collectionId]/page.tsx:2311:    visibility,
+app/profile/creator/collections/actions.ts:50:    | 'visibility'
+app/profile/creator/collections/actions.ts:87:  visibility: 'public' | 'private'
+app/profile/creator/collections/actions.ts:118:    visibility: 'public' | 'private'
+app/profile/creator/collections/actions.ts:212:  visibility?: 'public' | 'private'
+app/profile/creator/collections/actions.ts:224:  visibility: 'public' | 'private'
+app/profile/creator/collections/actions.ts:239:  visibility: 'public' | 'private'
+app/profile/creator/collections/actions.ts:390:const visibilitySchema = z.enum([
+app/profile/creator/collections/actions.ts:429:    visibility:
+app/profile/creator/collections/actions.ts:430:      visibilitySchema.default('private'),
+app/profile/creator/collections/actions.ts:465:    visibility:
+app/profile/creator/collections/actions.ts:466:      visibilitySchema,
+app/profile/creator/collections/actions.ts:516:    visibility:
+app/profile/creator/collections/actions.ts:517:      visibilitySchema,
+app/profile/creator/collections/actions.ts:748:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:841:          visibility:
+app/profile/creator/collections/actions.ts:842:            parsed.data.visibility,
+app/profile/creator/collections/actions.ts:886:        collection.visibility ===
+app/profile/creator/collections/actions.ts:1025:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:1037:        visibility:
+app/profile/creator/collections/actions.ts:1038:          parsed.data.visibility,
+app/profile/creator/collections/actions.ts:1117:    existing.visibility ===
+app/profile/creator/collections/actions.ts:1119:    collection.visibility ===
+app/profile/creator/collections/actions.ts:1196:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:1241:      .visibility ===
+app/profile/creator/collections/actions.ts:1312:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:1453: * Set visibility
+app/profile/creator/collections/actions.ts:1500:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:1502:        visibility:
+app/profile/creator/collections/actions.ts:1503:          parsed.data.visibility,
+app/profile/creator/collections/actions.ts:1517:        'set_creator_collection_visibility',
+app/profile/creator/collections/actions.ts:1528:        'Collection visibility could not be updated. Please try again.',
+app/profile/creator/collections/actions.ts:1555:      .visibility !==
+app/profile/creator/collections/actions.ts:1556:    parsed.data.visibility
+app/profile/creator/collections/actions.ts:1562:          'creator_collection_visibility_changed',
+app/profile/creator/collections/actions.ts:1578:      visibility:
+app/profile/creator/collections/actions.ts:1579:        parsed.data.visibility,
+app/profile/creator/collections/actions.ts:1633:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:2482:    collection.visibility ===
+app/profile/creator/collections/actions.ts:2726:      .visibility ===
+app/profile/creator/collections/actions.ts:3144:        visibility:
+app/profile/creator/collections/actions.ts:3165:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:3167:        'id, slug, visibility'
+app/profile/creator/collections/actions.ts:3192:  const visibility =
+app/profile/creator/collections/actions.ts:3194:      ?.visibility ===
+app/profile/creator/collections/actions.ts:3197:      ?.visibility ===
+app/profile/creator/collections/actions.ts:3199:      ? result.data.visibility
+app/profile/creator/collections/actions.ts:3208:    !visibility
+app/profile/creator/collections/actions.ts:3225:      visibility,
+app/profile/creator/collections/actions.ts:3237:        visibility:
+app/profile/creator/collections/actions.ts:3258:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:3260:        'id, slug, city, visibility'
+app/profile/creator/collections/actions.ts:3295:  const visibility =
+app/profile/creator/collections/actions.ts:3297:      ?.visibility ===
+app/profile/creator/collections/actions.ts:3300:      ?.visibility ===
+app/profile/creator/collections/actions.ts:3302:      ? result.data.visibility
+app/profile/creator/collections/actions.ts:3308:    !visibility
+app/profile/creator/collections/actions.ts:3329:      visibility,
+app/profile/creator/collections/actions.ts:3347:      .from('creator_collections')
+app/profile/creator/collections/actions.ts:3482:  visibility,
+app/profile/creator/collections/actions.ts:3511:  const visibility =
+app/profile/creator/collections/actions.ts:3512:    value.visibility ===
+app/profile/creator/collections/actions.ts:3514:    value.visibility ===
+app/profile/creator/collections/actions.ts:3516:      ? value.visibility
+app/profile/creator/collections/actions.ts:3533:    !visibility ||
+app/profile/creator/collections/actions.ts:3565:    visibility,
+app/profile/creator/collections/actions.ts:4063:      'visibility' ||
+app/profile/creator/collections/new/page.tsx:416:            name="visibility"
+app/profile/creator/collections/new/page.tsx:437:            name="visibility"
+app/profile/creator/collections/new/page.tsx:582:      visibility:
+app/profile/creator/collections/new/page.tsx:583:        formData.get('visibility'),
+app/profile/creator/collections/new/page.tsx:657:      .from('creator_collections')
+app/profile/creator/collections/new/page.tsx:766:    'visibility',
+app/profile/creator/collections/page.tsx:62:  visibility: 'public' | 'private'
+app/profile/creator/collections/page.tsx:112:        collection.visibility === 'public'
+app/profile/creator/collections/page.tsx:118:        collection.visibility === 'public' &&
+app/profile/creator/collections/page.tsx:576:  visibility,
+app/profile/creator/collections/page.tsx:578:  visibility:
+app/profile/creator/collections/page.tsx:583:    visibility === 'public'
+app/profile/creator/collections/page.tsx:628:    collection.visibility === 'public'
+app/profile/creator/collections/page.tsx:647:              visibility={
+app/profile/creator/collections/page.tsx:648:                collection.visibility
+app/profile/creator/collections/page.tsx:969:            name="visibility"
+app/profile/creator/collections/page.tsx:973:              collection.visibility ===
+app/profile/creator/collections/page.tsx:994:            name="visibility"
+app/profile/creator/collections/page.tsx:997:              collection?.visibility ===
+app/profile/creator/collections/page.tsx:1094:    collection.visibility === 'public'
+app/profile/creator/collections/page.tsx:1113:        name="visibility"
+app/profile/creator/collections/page.tsx:1123:        {collection.visibility}
+app/profile/creator/collections/page.tsx:1327:      visibility:
+app/profile/creator/collections/page.tsx:1328:        formData.get('visibility'),
+app/profile/creator/collections/page.tsx:1378:      visibility:
+app/profile/creator/collections/page.tsx:1379:        formData.get('visibility'),
+app/profile/creator/collections/page.tsx:1451:        visibility:
+app/profile/creator/collections/page.tsx:1453:            'visibility'
+app/profile/creator/collections/page.tsx:1461:      'Collection visibility updated.',
+app/profile/creator/collections/page.tsx:1637:      .from('creator_collections')
+app/profile/creator/collections/page.tsx:1647:        visibility,
+app/profile/creator/collections/page.tsx:1964:  const visibility =
+app/profile/creator/collections/page.tsx:1965:    value.visibility === 'public' ||
+app/profile/creator/collections/page.tsx:1966:    value.visibility === 'private'
+app/profile/creator/collections/page.tsx:1967:      ? value.visibility
+app/profile/creator/collections/page.tsx:1975:    !visibility ||
+app/profile/creator/collections/page.tsx:2008:    visibility,
+components/profile/creator/collections/CollectionList.tsx:48:  visibility: 'public' | 'private'
+components/profile/creator/collections/CollectionList.tsx:111:      type: 'visibility'
+components/profile/creator/collections/CollectionList.tsx:113:      visibility: 'public' | 'private'
+components/profile/creator/collections/CollectionList.tsx:127:  | 'visibility'
+components/profile/creator/collections/CollectionList.tsx:296:    const visibility =
+components/profile/creator/collections/CollectionList.tsx:297:      collection.visibility ===
+components/profile/creator/collections/CollectionList.tsx:304:        type: 'visibility',
+components/profile/creator/collections/CollectionList.tsx:310:        type: 'visibility',
+components/profile/creator/collections/CollectionList.tsx:313:        visibility,
+components/profile/creator/collections/CollectionList.tsx:321:            visibility,
+components/profile/creator/collections/CollectionList.tsx:326:        visibility === 'public'
+components/profile/creator/collections/CollectionList.tsx:749:    collection.visibility ===
+components/profile/creator/collections/CollectionList.tsx:802:                  visibility={
+components/profile/creator/collections/CollectionList.tsx:803:                    collection.visibility
+components/profile/creator/collections/CollectionList.tsx:903:              {collection.visibility ===
+components/profile/creator/collections/CollectionList.tsx:1072:  visibility,
+components/profile/creator/collections/CollectionList.tsx:1074:  visibility:
+components/profile/creator/collections/CollectionList.tsx:1079:    visibility === 'public'
+components/profile/creator/collections/CollectionList.tsx:1265:    case 'visibility':
+components/profile/creator/collections/CollectionList.tsx:1272:                visibility:
+components/profile/creator/collections/CollectionList.tsx:1273:                  action.visibility,
+components/profile/creator/collections/CollectionList.tsx:1403:  const visibility =

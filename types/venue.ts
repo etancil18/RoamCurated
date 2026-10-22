@@ -1,4 +1,12 @@
-export type HoursNumeric = Record<string, { open: number; close: number } | null>;
+export type HoursInterval = {
+  open: number;
+  close: number;
+};
+
+export type HoursNumeric = Record<
+  string,
+  HoursInterval | HoursInterval[] | null
+>;
 
 export type DateEvent = {
   date: string;

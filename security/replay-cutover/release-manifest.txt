@@ -1,0 +1,18 @@
+RoamCurated Replay Security Release
+Prepared: 2026-10-20
+
+Git revision:
+1c97f6ea62ec3885302330958709dfbdc7168a46
+
+Database prerequisite:
+supabase/migrations/20261020_replay_checkin_attestations.sql
+
+Coordinated enforcement artifact:
+security/replay-cutover/atomic-cutover-PREPARATION-ONLY.sql
+
+Deployment flags:
+ROAM_TRUSTED_FLOW_PROGRESS_WRITES_ENABLED
+ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED
+ROAM_TRUSTED_REPLAY_ATTESTATIONS_ENABLED
+
+Production execution authorized: NO

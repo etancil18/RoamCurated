@@ -1,0 +1,79 @@
+===== SNAPSHOT AND REPLAY ROUTES =====
+app/api/flow-snapshots/[snapshotId]/replay/route.ts
+app/api/flow-snapshots/[snapshotId]/route.ts
+app/api/flow-snapshots/save/route.ts
+app/api/outings/[outingId]/share/route.ts
+app/api/routes/save/route.ts
+app/flow/[session_id]/components/FlowShareActions.tsx
+app/flow/[session_id]/components/FlowShareCard.tsx
+lib/active-flow/trustedReplayAttestation.persistence.test.ts
+lib/active-flow/trustedReplayAttestation.server.test.ts
+lib/active-flow/trustedReplayAttestation.server.ts
+===== PROVENANCE WRITERS AND READERS =====
+app/api/generate-from-collection/route.ts:579:      source_id: collection.id,
+app/api/generate-from-collection/route.ts:580:      source_creator_user_id: collection.user_id,
+app/api/active-flow/cancel/route.ts:36:      .select('id, user_id, status, source, source_id, title, city, metadata')
+app/api/active-flow/cancel/route.ts:70:          sourceId: session.source_id ?? null,
+app/api/active-flow/cancel/route.ts:102:        sourceId: updatedSession.source_id ?? null,
+app/api/active-flow/check-in/route.ts:1012:        'id, user_id, venue_ids, status, source, source_id, title, city, metadata, completed_stops'
+app/api/active-flow/check-in/route.ts:1891:            session.source_id ??
+app/api/active-flow/check-in/route.ts:2302:        typeof session.source_id !== 'string' ||
+app/api/active-flow/check-in/route.ts:2303:        !session.source_id ||
+app/api/active-flow/check-in/route.ts:2316:            snapshotId: session.source_id,
+app/api/active-flow/check-in/route.ts:2586:          session.source_id ??
+app/api/active-flow/complete/route.ts:540:        'id, user_id, venue_ids, status, started_at, completed_at, source, source_id, title, city, metadata, completed_stops'
+app/api/active-flow/complete/route.ts:603:          session.source_id,
+app/api/active-flow/complete/route.ts:1207:        session.source_id,
+app/api/active-flow/complete/route.ts:1340:          session.source_id ??
+app/api/active-flow/start/route.ts:8:  source_id?: string | null
+app/api/active-flow/start/route.ts:65:      typeof body.source_id === 'string' && body.source_id.trim().length > 0
+app/api/active-flow/start/route.ts:66:        ? body.source_id.trim()
+app/api/active-flow/start/route.ts:107:      source_id: sourceId,
+app/api/flow-snapshots/[snapshotId]/route.ts:25:  source_id: string
+app/api/flow-snapshots/[snapshotId]/route.ts:68:      .from('flow_snapshots')
+app/api/flow-snapshots/[snapshotId]/route.ts:73:        source_id,
+app/api/flow-snapshots/[snapshotId]/route.ts:233:      .from('flow_snapshots')
+app/api/flow-snapshots/[snapshotId]/route.ts:333:        .from('flow_snapshot_stops')
+app/api/flow-snapshots/[snapshotId]/route.ts:387:        .from('flow_snapshots')
+app/api/flow-snapshots/[snapshotId]/route.ts:392:          source_id,
+app/api/flow-snapshots/[snapshotId]/route.ts:441:      .from('flow_snapshots')
+app/api/flow-snapshots/[snapshotId]/route.ts:456:        source_id,
+app/api/flow-snapshots/[snapshotId]/route.ts:581:      .from('flow_snapshots')
+app/api/flow-snapshots/[snapshotId]/route.ts:586:        source_id,
+app/api/flow-snapshots/[snapshotId]/route.ts:596:        source_id: string
+app/api/flow-snapshots/[snapshotId]/route.ts:625:        .from('flow_snapshots')
+app/api/flow-snapshots/[snapshotId]/route.ts:667:          snapshot.source_id,
+app/api/flow-snapshots/[snapshotId]/replay/route.ts:15:  source_id: string
+app/api/flow-snapshots/[snapshotId]/replay/route.ts:94:      .from('flow_snapshots')
+app/api/flow-snapshots/[snapshotId]/replay/route.ts:99:        source_id,
+app/api/flow-snapshots/[snapshotId]/replay/route.ts:190:        'flow_snapshot_stops'
+app/api/flow-snapshots/[snapshotId]/replay/route.ts:355:     * source_creator_user_id is deliberately persisted on the
+app/api/flow-snapshots/[snapshotId]/replay/route.ts:381:      source_id:
+app/api/flow-snapshots/[snapshotId]/replay/route.ts:384:      source_creator_user_id:
+app/api/flow-snapshots/[snapshotId]/replay/route.ts:407:          snapshot.source_id,
+app/api/flow-snapshots/save/route.ts:100:      formData.get('source_id')
+app/api/flow-snapshots/save/route.ts:167:        { error: 'Missing source_id.' },
+app/api/flow-snapshots/save/route.ts:220:      .from('flow_snapshots')
+app/api/flow-snapshots/save/route.ts:226:      .eq('source_id', sourceId)
+app/api/flow-snapshots/save/route.ts:263:     * flow_snapshot_stops. Existing snapshot stops are never
+app/api/flow-snapshots/save/route.ts:512:     * represented by source_id. Then ask the canonical loader to
+app/api/flow-snapshots/save/route.ts:528:              'Invalid roam history source_id.',
+app/api/flow-snapshots/save/route.ts:716:      source_id: sourceId,
+app/api/flow-snapshots/save/route.ts:737:      .from('flow_snapshots')
+app/api/flow-snapshots/save/route.ts:740:          'user_id,source_type,source_id',
+app/api/flow-snapshots/save/route.ts:746:        source_id,
+app/api/flow-snapshots/save/route.ts:816:        .from('flow_snapshot_stops')
+app/api/flow-snapshots/save/route.ts:834:          .from('flow_snapshots')
+app/api/relay/team/[teamId]/complete/route.ts:289:   * - flow_snapshots
+app/api/relay/leg/start/route.ts:248:   * - source_id = team_slot.id
+app/api/relay/artifact/materialize/route.ts:263:   * - flow_snapshots
+app/api/relay/artifact/materialize/route.ts:264:   * - flow_snapshot_stops
+app/api/venue-profile/[venueId]/check-in/route.ts:613:          source_id:
+app/api/venue-profile/[venueId]/check-in/route.ts:666:            'user_id,event_type,venue_id,source_id',
+app/flow/[session_id]/components/FlowShareActions.tsx:776:        'source_id',
+lib/active-flow/opportunityCandidates.ts:180:  source_id: string | null
+lib/active-flow/opportunityCandidates.ts:375:      'id, user_id, status, title, theme_id, source, source_id, travel_mode'
+lib/active-flow/opportunityCandidates.ts:648:        session.source_id,
+lib/active-flow/trustedReplayAttestation.server.ts:159:    .select('id, user_id, source, source_id')
+lib/active-flow/trustedReplayAttestation.server.ts:163:    .eq('source_id', payload.snapshot_id)
+lib/active-flow/trustedReplayAttestation.server.ts:181:    .from('flow_snapshot_stops')

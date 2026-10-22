@@ -1,0 +1,494 @@
+diff --git a/app/api/active-flow/check-in/route.ts b/app/api/active-flow/check-in/route.ts
+index 040ce60..dc7a971 100644
+--- a/app/api/active-flow/check-in/route.ts
++++ b/app/api/active-flow/check-in/route.ts
+@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server'
+ import { createClient } from '@supabase/supabase-js'
+ 
+ import { createServerClient } from '@/lib/supabase/server'
++import { selectActiveFlowProgressWriter } from '@/lib/active-flow/trustedProgressWriter.server'
++import { selectActiveFlowVenueVisitWriter } from '@/lib/active-flow/trustedVenueVisitWriter.server'
++import {
++  persistTrustedReplayAttestation,
++} from '@/lib/active-flow/trustedReplayAttestation.server'
+ 
+ import { loadActiveFlowRuntimeRoute } from '@/lib/active-flow/runtimeRoute.server'
+ 
+@@ -87,6 +92,47 @@ const CREATOR_COLLECTION_STOP_XP_ENABLED =
+   process.env.ROAM_CREATOR_COLLECTION_STOP_XP_ENABLED ===
+   'true'
+ 
++/**
++ * Trusted Active Flow progress persistence.
++ *
++ * Disabled by default to preserve the current check-in path.
++ * When enabled, only the verified progress upsert uses a
++ * server-only Supabase service-role client.
++ *
++ * Do not revoke authenticated progress writes until this
++ * pathway passes core Flow regression testing.
++ */
++const TRUSTED_FLOW_PROGRESS_WRITES_ENABLED =
++  process.env.ROAM_TRUSTED_FLOW_PROGRESS_WRITES_ENABLED ===
++  'true'
++
++/**
++ * Trusted Active Flow venue-visit persistence.
++ *
++ * Disabled by default.
++ *
++ * When enabled, the fresh check-in and existing-progress
++ * repair paths use trusted server-only persistence for
++ * venue_visits inserts.
++ *
++ * Does not alter visit reads, ratings, or Flow completion.
++ */
++const TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED =
++  process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
++  'true'
++
++/**
++ * Forward-only trusted Snapshot Replay evidence.
++ *
++ * Disabled by default.
++ * Must not be enabled before the protected table exists,
++ * both evidence writers use trusted persistence,
++ * and Replay attribution enforcement is coordinated.
++ */
++const TRUSTED_REPLAY_ATTESTATIONS_ENABLED =
++  process.env.ROAM_TRUSTED_REPLAY_ATTESTATIONS_ENABLED ===
++  'true'
++
+ async function refreshPublicPassportStats(
+   userId: string
+ ) {
+@@ -785,6 +831,47 @@ export async function POST(
+       )
+     }
+ 
++
++    /**
++     * Venue-visit persistence authority.
++     *
++     * The authenticated client remains responsible for
++     * authentication, eligibility checks, reads, ratings,
++     * route calculations, and downstream attribution.
++     *
++     * Only venue_visits INSERT operations use this writer.
++     */
++    let venueVisitWriteClient = supabase
++
++    if (TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED) {
++      try {
++        venueVisitWriteClient =
++          selectActiveFlowVenueVisitWriter({
++            enabled: true,
++            authenticatedClient: supabase,
++            supabaseUrl:
++              process.env.NEXT_PUBLIC_SUPABASE_URL,
++            serviceRoleKey:
++              process.env.SUPABASE_SERVICE_ROLE_KEY,
++          })
++      } catch (error) {
++        console.error(
++          '[active-flow/check-in] Trusted venue-visit persistence unavailable:',
++          error
++        )
++
++        return NextResponse.json(
++          {
++            error:
++              'Could not initialize check-in persistence.',
++          },
++          {
++            status: 500,
++          }
++        )
++      }
++    }
++
+     const body =
+       (await req.json()) as
+         CheckInActiveFlowBody
+@@ -1458,7 +1545,7 @@ export async function POST(
+             repairedVenueVisitRow,
+           error:
+             repairedVenueVisitError,
+-        } = await supabase
++        } = await venueVisitWriteClient
+           .from(
+             'venue_visits'
+           )
+@@ -1966,10 +2053,49 @@ if (
+       )
+     }
+ 
++        /**
++     * Trusted persistence boundary.
++     *
++     * All existing authentication, canonical runtime-stop
++     * validation, GPS verification, retry checks, and rating
++     * checks have already passed at this point.
++     *
++     * The feature flag changes only the database authority
++     * used for the new verified-progress upsert.
++     */
++        let progressWriteClient = supabase
++
++    if (TRUSTED_FLOW_PROGRESS_WRITES_ENABLED) {
++      try {
++        progressWriteClient =
++          selectActiveFlowProgressWriter({
++            enabled: true,
++            authenticatedClient: supabase,
++            supabaseUrl:
++              process.env.NEXT_PUBLIC_SUPABASE_URL,
++            serviceRoleKey:
++              process.env.SUPABASE_SERVICE_ROLE_KEY,
++          })
++      } catch (error) {
++        console.error(
++          '[active-flow/check-in] Trusted progress persistence unavailable:',
++          error
++        )
++
++        return NextResponse.json(
++          {
++            error:
++              'Could not save verified check-in.',
++          },
++          { status: 500 }
++        )
++      }
++    }
++
+     const {
+       data: progress,
+       error: upsertError,
+-    } = await supabase
++    } = await progressWriteClient
+       .from(
+         'active_flow_progress'
+       )
+@@ -2056,7 +2182,7 @@ if (
+     const {
+       data: venueVisit,
+       error: venueVisitError,
+-    } = await supabase
++    } = await venueVisitWriteClient
+       .from(
+         'venue_visits'
+       )
+@@ -2144,6 +2270,66 @@ if (
+       )
+     }
+ 
++
++    /**
++     * Forward-only trusted Snapshot Replay attestation.
++     *
++     * Only fresh, successful GPS-verified check-ins qualify.
++     *
++     * Never invoke this from existing-progress retries,
++     * legacy visit repair, or historical visit creation.
++     *
++     * Both canonical evidence writes must use trusted
++     * persistence before attestation may be recorded.
++     *
++     * Failure remains non-fatal to the explorer's physical
++     * check-in. Attribution enforcement is a separately
++     * coordinated database release step.
++     */
++    if (
++      TRUSTED_REPLAY_ATTESTATIONS_ENABLED &&
++      session.source === 'flow_snapshot'
++    ) {
++      if (
++        !TRUSTED_FLOW_PROGRESS_WRITES_ENABLED ||
++        !TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED
++      ) {
++        console.error(
++          '[active-flow/check-in] Replay attestation blocked: trusted evidence writers are not both enabled.'
++        )
++      } else if (
++        canonicalProgressStopIndex === null ||
++        typeof session.source_id !== 'string' ||
++        !session.source_id ||
++        typeof progress.id !== 'string' ||
++        typeof progress.checked_in_at !== 'string'
++      ) {
++        console.error(
++          '[active-flow/check-in] Replay attestation blocked: canonical evidence identity is incomplete.',
++          { sessionId, venueId }
++        )
++      } else {
++        try {
++          await persistTrustedReplayAttestation({
++            sessionId,
++            replayUserId: user.id,
++            snapshotId: session.source_id,
++            flowStopId: runtimeStop.id,
++            progressId: progress.id,
++            venueVisitId: venueVisit.id,
++            stopIndex: canonicalProgressStopIndex,
++            venueId,
++            verifiedAt: progress.checked_in_at,
++          })
++        } catch (error) {
++          console.error(
++            '[active-flow/check-in] Trusted Replay attestation failed:',
++            { sessionId, venueId, error }
++          )
++        }
++      }
++    }
++
+     /**
+  * 016I.2 — Canonical adaptive completion projection.
+  *
+diff --git a/app/api/crawl-progress/check-in/route.ts b/app/api/crawl-progress/check-in/route.ts
+index a58f88c..7d3bbf5 100644
+--- a/app/api/crawl-progress/check-in/route.ts
++++ b/app/api/crawl-progress/check-in/route.ts
+@@ -1,7 +1,11 @@
++
+ import { NextResponse } from 'next/server'
+ import { createServerClient } from '@/lib/supabase/server'
+ import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+ import { getRoamDay } from '@/lib/roam/roamDay'
++import {
++  selectActiveFlowVenueVisitWriter,
++} from '@/lib/active-flow/trustedVenueVisitWriter.server'
+ 
+ type CheckInCrawlProgressBody = {
+   crawl_id?: string
+@@ -272,6 +276,29 @@ export async function POST(req: Request) {
+       )
+     }
+ 
++    /**
++     * Trusted venue-visit persistence.
++     *
++     * OFF: preserve the existing authenticated Supabase writer.
++     * ON: use the server-only service-role writer for the two
++     * canonical venue_visits INSERT operations below.
++     *
++     * Authentication, GPS validation, reads, crawl_progress writes,
++     * RSVP updates, and Passport behavior are unchanged.
++     */
++    const venueVisitWriteClient =
++      selectActiveFlowVenueVisitWriter({
++        enabled:
++          process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
++          'true',
++        authenticatedClient:
++          supabase,
++        supabaseUrl:
++          process.env.NEXT_PUBLIC_SUPABASE_URL,
++        serviceRoleKey:
++          process.env.SUPABASE_SERVICE_ROLE_KEY,
++      })
++
+     const now =
+       new Date().toISOString()
+ 
+@@ -455,7 +482,7 @@ export async function POST(req: Request) {
+             repairedVenueVisit,
+           error:
+             repairedVenueVisitError,
+-        } = await supabase
++        } = await venueVisitWriteClient
+           .from('venue_visits')
+           .insert({
+             user_id:
+@@ -661,7 +688,7 @@ export async function POST(req: Request) {
+           insertedVenueVisit,
+         error:
+           venueVisitError,
+-      } = await supabase
++      } = await venueVisitWriteClient
+         .from('venue_visits')
+         .insert({
+           user_id:
+@@ -1036,4 +1063,4 @@ function degreesToRadians(
+     value *
+     Math.PI
+   ) / 180
+-}
+\ No newline at end of file
++}
+diff --git a/app/api/venue-profile/[venueId]/check-in/route.ts b/app/api/venue-profile/[venueId]/check-in/route.ts
+index c63d297..0a655f0 100644
+--- a/app/api/venue-profile/[venueId]/check-in/route.ts
++++ b/app/api/venue-profile/[venueId]/check-in/route.ts
+@@ -1,3 +1,4 @@
++
+ import { NextRequest, NextResponse } from 'next/server'
+ 
+ import { supabaseServerApi } from '@/lib/supabase/server-api'
+@@ -6,6 +7,10 @@ import { getCityNow } from '@/lib/getCityNow'
+ 
+ import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
+ 
++import {
++  selectActiveFlowVenueVisitWriter,
++} from '@/lib/active-flow/trustedVenueVisitWriter.server'
++
+ type RouteContext = {
+   params: Promise<{
+     venueId: string
+@@ -285,6 +290,28 @@ export async function POST(req: NextRequest, context: RouteContext) {
+   }
+ 
+   /*
++   * Trusted venue-visit persistence.
++   *
++   * OFF: preserve the existing authenticated writer.
++   * ON: use the server-only writer for the validated visit insert.
++   *
++   * Authentication, GPS validation, reads, XP, and Passport
++   * operations continue using the original Supabase client.
++   */
++  const venueVisitWriteClient =
++    selectActiveFlowVenueVisitWriter({
++      enabled:
++        process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
++        'true',
++      authenticatedClient:
++        supabase,
++      supabaseUrl:
++        process.env.NEXT_PUBLIC_SUPABASE_URL,
++      serviceRoleKey:
++        process.env.SUPABASE_SERVICE_ROLE_KEY,
++    })
++
++/*
+    * Use the venue's configured city clock as the canonical source for both
+    * the persisted UTC timestamp and the venue-local calendar date.
+    */
+@@ -471,7 +498,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
+   const {
+     data: visit,
+     error: insertError,
+-  } = await supabase
++  } = await venueVisitWriteClient
+     .from('venue_visits')
+     .insert({
+       user_id: user.id,
+@@ -500,7 +527,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
+     )
+     .single()
+ 
+-  if (
++if (
+     insertError ||
+     !visit
+   ) {
+@@ -675,4 +702,4 @@ export async function POST(req: NextRequest, context: RouteContext) {
+     visitDate,
+     venueTimeZone,
+   })
+-}
+\ No newline at end of file
++}
+diff --git a/app/api/venue-profile/[venueId]/visit/route.ts b/app/api/venue-profile/[venueId]/visit/route.ts
+index c3d7e7a..988b4ec 100644
+--- a/app/api/venue-profile/[venueId]/visit/route.ts
++++ b/app/api/venue-profile/[venueId]/visit/route.ts
+@@ -1,3 +1,4 @@
++
+ import { NextRequest, NextResponse } from 'next/server'
+ import { createClient } from '@supabase/supabase-js'
+ 
+@@ -9,6 +10,10 @@ import { getRoamDay } from '@/lib/roam/roamDay'
+ 
+ import { supabaseServerApi } from '@/lib/supabase/server-api'
+ 
++import {
++  selectActiveFlowVenueVisitWriter,
++} from '@/lib/active-flow/trustedVenueVisitWriter.server'
++
+ type RouteContext = {
+   params: Promise<{
+     venueId: string
+@@ -1316,6 +1321,19 @@ export async function POST(
+     return geoResult.response
+   }
+ 
++  const venueVisitWriteClient =
++    selectActiveFlowVenueVisitWriter({
++      enabled:
++        process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
++        'true',
++      authenticatedClient:
++        supabase,
++      supabaseUrl:
++        process.env.NEXT_PUBLIC_SUPABASE_URL,
++      serviceRoleKey:
++        process.env.SUPABASE_SERVICE_ROLE_KEY,
++    })
++
+   if (
+     existingVisit
+       ?.visited_at &&
+@@ -1347,7 +1365,7 @@ export async function POST(
+   const {
+     data,
+     error,
+-  } = await supabase
++  } = await venueVisitWriteClient
+     .from(
+       'venue_visits'
+     )
+@@ -1874,6 +1892,19 @@ export async function PATCH(
+       })
+     }
+ 
++    const venueVisitWriteClient =
++      selectActiveFlowVenueVisitWriter({
++        enabled:
++          process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
++          'true',
++        authenticatedClient:
++          supabase,
++        supabaseUrl:
++          process.env.NEXT_PUBLIC_SUPABASE_URL,
++        serviceRoleKey:
++          process.env.SUPABASE_SERVICE_ROLE_KEY,
++      })
++
+     /*
+      * Legacy repair only:
+      *
+@@ -1883,7 +1914,7 @@ export async function PATCH(
+     const {
+       data,
+       error,
+-    } = await supabase
++    } = await venueVisitWriteClient
+       .from(
+         'venue_visits'
+       )
+@@ -1990,11 +2021,11 @@ export async function PATCH(
+         mutation:
+           'venue_visit_patch_active_flow',
+ 
+-        rankingRefreshMode:
+-          'affected',
++          rankingRefreshMode:
++            'affected',
+ 
+-        calculatedAt:
+-          now,
++          calculatedAt:
++            now,
+       }
+     )
+ 
+@@ -2116,4 +2147,4 @@ export async function DELETE(
+     rating:
+       null,
+   })
+-}
+\ No newline at end of file
++}

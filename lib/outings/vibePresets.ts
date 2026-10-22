@@ -1,4 +1,5 @@
 // lib/outings/vibePresets.ts
+import "server-only"
 
 import type {
   PlanMode,

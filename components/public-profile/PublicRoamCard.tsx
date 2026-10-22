@@ -1,3 +1,4 @@
+
 import ReplayRoamButton from '@/components/flows/ReplayRoamButton'
 import PublicRoamRoutePreview, {
   type PublicRoamRouteStop,
@@ -117,6 +118,10 @@ export default function PublicRoamCard({
    *
    * Fall back to the raw flow_snapshot_stops relationship shape
    * only when the normalized public route was not supplied.
+   *
+   * Importantly, the resulting stops preserve canonical
+   * stop_index order. PublicRoamRoutePreview owns resolving
+   * these ordered stop coordinates into routed street geometry.
    */
   const canonicalStops =
     normalizeCanonicalStops(
@@ -135,6 +140,27 @@ export default function PublicRoamCard({
     canonicalStops.length > 0
       ? canonicalStops
       : fallbackSnapshotStops
+
+  /*
+   * A routed public preview requires at least two canonical stops
+   * with actual venue coordinates.
+   *
+   * We intentionally do not pretend an incomplete coordinate set
+   * is a routable historical route.
+   */
+  const routableStops =
+    renderedStops.filter(
+      hasValidRouteCoordinate
+    )
+
+  const hasCanonicalRoute =
+    renderedStops.length >=
+      2
+
+  const hasRoutableCanonicalRoute =
+    hasCanonicalRoute &&
+    routableStops.length ===
+      renderedStops.length
 
   const displayedStopCount =
     renderedStops.length > 0
@@ -165,14 +191,26 @@ export default function PublicRoamCard({
       snapshot.source_type
     )
 
+  /*
+   * Public date privacy:
+   *
+   * Show only month and year. Never place the full snapshot
+   * timestamp in the public card's <time> metadata.
+   */
   const dateLabel =
     formatSnapshotDate(
       snapshot.created_at
     )
 
-  const hasCanonicalRoute =
-    renderedStops.length >=
-    2
+  const dateMonth =
+    dateLabel
+      ? new Date(
+          snapshot.created_at
+        ).toISOString().slice(
+          0,
+          7
+        )
+      : null
 
   return (
     <article
@@ -184,11 +222,11 @@ export default function PublicRoamCard({
         .join(' ')}
     >
       <div className="relative overflow-hidden">
-        {hasCanonicalRoute ? (
+        {hasRoutableCanonicalRoute ? (
           <div className="relative aspect-[16/10] overflow-hidden bg-[#05070d]">
             <PublicRoamRoutePreview
               stops={
-                renderedStops
+                routableStops
               }
               title={
                 title
@@ -295,7 +333,8 @@ export default function PublicRoamCard({
               {dateLabel ? (
                 <time
                   dateTime={
-                    snapshot.created_at
+                    dateMonth ??
+                    undefined
                   }
                   className="shrink-0"
                 >
@@ -307,7 +346,7 @@ export default function PublicRoamCard({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col">
+<div className="flex flex-1 flex-col">
         <div className="flex-1 px-4 py-4 sm:px-5">
           {renderedStops.length >
           0 ? (
@@ -347,33 +386,6 @@ export default function PublicRoamCard({
               </p>
             </div>
           )}
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            {displayedStopCount >
-            0 ? (
-              <SnapshotMetric
-                label={
-                  displayedStopCount ===
-                  1
-                    ? '1 stop'
-                    : `${displayedStopCount} stops`
-                }
-              />
-            ) : null}
-
-            {hasCanonicalRoute ? (
-              <SnapshotMetric
-                label="Route preserved"
-              />
-            ) : null}
-
-            {replayable ? (
-              <SnapshotMetric
-                label="Replay enabled"
-                tone="cyan"
-              />
-            ) : null}
-          </div>
         </div>
 
         {replayable ? (
@@ -400,20 +412,11 @@ export default function PublicRoamCard({
 
 function SnapshotMetric({
   label,
-  tone = 'neutral',
 }: {
   label: string
-  tone?: 'neutral' | 'cyan'
 }) {
   return (
-    <span
-      className={[
-        'inline-flex min-h-7 items-center rounded-full border px-2.5 py-1 text-[10px] font-medium',
-        tone === 'cyan'
-          ? 'border-cyan-500/20 bg-cyan-500/[0.07] text-cyan-300'
-          : 'border-neutral-800 bg-neutral-900/70 text-neutral-500',
-      ].join(' ')}
-    >
+    <span className="inline-flex min-h-7 items-center rounded-full border border-neutral-800 bg-neutral-900/70 px-2.5 py-1 text-[10px] font-medium text-neutral-500">
       {label}
     </span>
   )
@@ -429,7 +432,7 @@ function SnapshotFallback() {
 
       <div
         aria-hidden="true"
-        className="absolute bottom-[-25%] right-[-5%] h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"
+        className="absolute bottom-[-25%] right-[-5%] h-64 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl"
       />
 
       <div
@@ -504,7 +507,7 @@ function normalizeCanonicalStops(
       !venue ||
       typeof venue !==
         'object'
-    ) {
+      ) {
       continue
     }
 
@@ -600,7 +603,7 @@ function normalizeSnapshotStops(
       !row ||
       typeof row !==
         'object'
-    ) {
+      ) {
       continue
     }
 
@@ -640,7 +643,7 @@ function normalizeSnapshotStops(
       continue
     }
 
-    normalized.push({
+normalized.push({
       stopIndex:
         row.stop_index,
 
@@ -787,22 +790,55 @@ function finalizeCanonicalStops(
   return result
 }
 
+/*
+ * A public route preview should only be asked to resolve routing
+ * geometry when every immutable stop has a usable venue
+ * coordinate.
+ *
+ * PublicRoamRoutePreview then uses those ordered coordinates to
+ * resolve the actual street-following route.
+ */
+function hasValidRouteCoordinate(
+  stop:
+    PublicRoamRouteStop
+): boolean {
+  return (
+    typeof stop.lat ===
+      'number' &&
+    Number.isFinite(
+      stop.lat
+    ) &&
+    stop.lat >=
+      -90 &&
+    stop.lat <=
+      90 &&
+    typeof stop.lon ===
+      'number' &&
+    Number.isFinite(
+      stop.lon
+    ) &&
+    stop.lon >=
+      -180 &&
+    stop.lon <=
+      180
+  )
+}
+
 function buildCanonicalRouteSummary(
   stops:
     PublicRoamRouteStop[]
 ): string {
   const labels =
-    stops
-      .map(
-        (
-          stop,
-          index
-        ) =>
-          normalizeNullableText(
-            stop.title
-          ) ??
-          `Stop ${index + 1}`
-      )
+    stops.map(
+      (
+        stop,
+        index
+      ) =>
+        normalizeNullableText(
+          stop.title
+        ) ??
+        `Stop ${index + 1}`
+    )
 
   if (
     labels.length ===
@@ -899,19 +935,28 @@ function formatSnapshotDate(
     return null
   }
 
-  return new Intl.DateTimeFormat(
-    'en-US',
-    {
-      month:
-        'short',
+  /*
+   * Public date privacy:
+   *
+   * A public Roam card exposes only the month and year,
+   * never the exact snapshot creation day.
+   */
+  const monthYear =
+    new Intl.DateTimeFormat(
+      'en-US',
+      {
+        month:
+          'short',
 
-      day:
-        'numeric',
+        year:
+          'numeric',
+      }
+    ).format(date)
 
-      year:
-        'numeric',
-    }
-  ).format(date)
+  return monthYear.replace(
+    /^Sep /,
+    'Sept '
+  )
 }
 
 function normalizeNullableText(
@@ -919,7 +964,7 @@ function normalizeNullableText(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }

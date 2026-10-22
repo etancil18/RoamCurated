@@ -1,0 +1,1594 @@
+
+-- ============================================================
+-- Roam: Stop-level creator lineage
+-- PREPARATION ONLY — DO NOT APPLY TO PRODUCTION
+--
+-- Existing Snapshot and Replay behavior remains unchanged.
+-- No backfill, XP changes, reward changes, or feature activation.
+--
+-- This schema provides:
+--   1. Permanent original contribution identities
+--   2. Immutable stop-to-contribution mappings
+--   3. Database-enforced matching venue identities
+--   4. Restricted server-side writes
+--
+-- Trusted certification and atomic Snapshot persistence
+-- must be implemented separately before activation.
+-- ============================================================
+
+BEGIN;
+
+-- ------------------------------------------------------------
+-- 1. Original contribution identity
+-- ------------------------------------------------------------
+
+CREATE TABLE public.flow_contributions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  venue_id uuid NOT NULL
+    REFERENCES public.venues(id)
+    ON DELETE RESTRICT,
+
+  origin text NOT NULL
+    CHECK (
+      origin IN ('collection', 'manual', 'platform')
+    ),
+
+  creator_user_id uuid,
+
+  origin_collection_id uuid,
+
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT flow_contributions_origin_consistency
+    CHECK (
+      (
+        origin = 'collection'
+        AND creator_user_id IS NOT NULL
+        AND origin_collection_id IS NOT NULL
+      )
+      OR
+      (
+        origin = 'manual'
+        AND creator_user_id IS NOT NULL
+        AND origin_collection_id IS NULL
+      )
+      OR
+      (
+        origin = 'platform'
+        AND creator_user_id IS NULL
+        AND origin_collection_id IS NULL
+      )
+    ),
+
+  -- Required for a composite foreign key that verifies
+  -- the contribution belongs to the claimed venue.
+  CONSTRAINT flow_contributions_id_venue_unique
+    UNIQUE (id, venue_id)
+);
+
+COMMENT ON TABLE public.flow_contributions IS
+  'Server-certified original stop contributions. Creator attribution must not be inferred from Snapshot ownership.';
+
+-- ------------------------------------------------------------
+-- 2. Enable composite validation against canonical stops
+--
+-- The existing primary key is on id alone.
+-- This additional UNIQUE constraint does not change which
+-- stop records are allowed; it supports an FK on (id,venue_id).
+-- ------------------------------------------------------------
+
+ALTER TABLE public.flow_snapshot_stops
+  ADD CONSTRAINT flow_snapshot_stops_id_venue_unique
+  UNIQUE (id, venue_id);
+
+-- ------------------------------------------------------------
+-- 3. Snapshot stop -> original contribution
+--
+-- venue_id is deliberately repeated here so BOTH foreign
+-- keys can enforce that the stop and contribution refer
+-- to the exact same canonical venue.
+-- ------------------------------------------------------------
+
+CREATE TABLE public.flow_snapshot_stop_contributions (
+  snapshot_stop_id uuid PRIMARY KEY,
+
+  contribution_id uuid NOT NULL,
+
+  venue_id uuid NOT NULL,
+
+  created_at timestamptz NOT NULL DEFAULT now(),
+
+  CONSTRAINT lineage_snapshot_stop_venue_fk
+    FOREIGN KEY (snapshot_stop_id, venue_id)
+    REFERENCES public.flow_snapshot_stops(id, venue_id)
+    ON DELETE CASCADE,
+
+  CONSTRAINT lineage_contribution_venue_fk
+    FOREIGN KEY (contribution_id, venue_id)
+    REFERENCES public.flow_contributions(id, venue_id)
+    ON DELETE RESTRICT
+);
+
+CREATE INDEX flow_snapshot_stop_contributions_contribution_idx
+  ON public.flow_snapshot_stop_contributions(contribution_id);
+
+COMMENT ON TABLE public.flow_snapshot_stop_contributions IS
+  'Immutable mapping between a canonical Snapshot stop and its original creator contribution. Missing mapping means attribution is not yet certified.';
+
+-- ------------------------------------------------------------
+-- 4. Make established lineage immutable
+--
+-- UPDATE is rejected, even for privileged writers.
+--
+-- DELETE on the mapping is intentionally not blocked by a
+-- trigger because existing Snapshot deletion cascades to
+-- its stops. The mapping must follow that deletion.
+--
+-- Original contribution records do not cascade-delete.
+-- Normal API roles receive no DELETE grants.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.reject_flow_lineage_update()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  RAISE EXCEPTION
+    'Established Flow contribution lineage is immutable';
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.reject_flow_lineage_update()
+  FROM PUBLIC;
+
+CREATE TRIGGER flow_contributions_reject_update
+BEFORE UPDATE ON public.flow_contributions
+FOR EACH ROW
+EXECUTE FUNCTION public.reject_flow_lineage_update();
+
+CREATE TRIGGER flow_snapshot_lineage_reject_update
+BEFORE UPDATE ON public.flow_snapshot_stop_contributions
+FOR EACH ROW
+EXECUTE FUNCTION public.reject_flow_lineage_update();
+
+-- ------------------------------------------------------------
+-- 5. Restrict database access
+--
+-- No direct authenticated-client or anonymous-client
+-- SELECT, INSERT, UPDATE, or DELETE privileges.
+--
+-- Future read APIs must expose only authorized attribution.
+-- ------------------------------------------------------------
+
+ALTER TABLE public.flow_contributions
+  ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.flow_snapshot_stop_contributions
+  ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON public.flow_contributions
+  FROM PUBLIC, anon, authenticated;
+
+REVOKE ALL ON public.flow_snapshot_stop_contributions
+  FROM PUBLIC, anon, authenticated;
+
+GRANT SELECT, INSERT
+  ON public.flow_contributions
+  TO service_role;
+
+GRANT SELECT, INSERT
+  ON public.flow_snapshot_stop_contributions
+  TO service_role;
+
+-- ------------------------------------------------------------
+-- 6. Validate a canonical Snapshot stop/contribution pair.
+--
+-- This function is internal preparation for the trusted
+-- transactional writer.
+--
+-- It does not certify original authorship. The writer must
+-- independently establish creator and origin identities.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.flow_lineage_venue_matches(
+  p_snapshot_stop_id uuid,
+  p_contribution_id uuid
+)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.flow_snapshot_stops AS stop
+    JOIN public.flow_contributions AS contribution
+      ON contribution.venue_id = stop.venue_id
+    WHERE stop.id = p_snapshot_stop_id
+      AND contribution.id = p_contribution_id
+  );
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.flow_lineage_venue_matches(uuid, uuid)
+  FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE
+  ON FUNCTION public.flow_lineage_venue_matches(uuid, uuid)
+  TO service_role;
+
+-- ------------------------------------------------------------
+-- 7. Active Flow stop -> certified contribution
+--
+-- Links the exact runtime stop identity to an original
+-- contribution identity.
+--
+-- active_flow_stops.venue_id is TEXT.
+-- flow_contributions.venue_id is UUID.
+--
+-- The validation trigger compares canonical venue identities
+-- without modifying either existing table's column type.
+--
+-- This mapping is an attribution bridge, not a certificate
+-- of authorship. Trusted generation-time certification must
+-- establish the contribution before inserting the mapping.
+-- ------------------------------------------------------------
+
+CREATE TABLE public.active_flow_stop_contributions (
+  active_flow_stop_id uuid PRIMARY KEY
+    REFERENCES public.active_flow_stops(id)
+    ON DELETE CASCADE,
+
+  contribution_id uuid NOT NULL
+    REFERENCES public.flow_contributions(id)
+    ON DELETE RESTRICT,
+
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX active_flow_stop_contributions_contribution_idx
+  ON public.active_flow_stop_contributions(contribution_id);
+
+COMMENT ON TABLE public.active_flow_stop_contributions IS
+  'Trusted mapping from an exact Active Flow runtime stop to its original creator contribution.';
+
+-- ------------------------------------------------------------
+-- 7A. Verify canonical venue identity at insertion.
+--
+-- A stop at venue A cannot inherit a contribution recorded
+-- for venue D.
+--
+-- This rejects mismatches but does not establish creator
+-- ownership; certification must happen separately.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.validate_active_flow_stop_contribution()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+DECLARE
+  v_stop_venue_id text;
+  v_contribution_venue_id uuid;
+BEGIN
+  SELECT venue_id
+  INTO v_stop_venue_id
+  FROM public.active_flow_stops
+  WHERE id = NEW.active_flow_stop_id;
+
+  SELECT venue_id
+  INTO v_contribution_venue_id
+  FROM public.flow_contributions
+  WHERE id = NEW.contribution_id;
+
+  IF v_stop_venue_id IS NULL
+     OR v_contribution_venue_id IS NULL
+     OR v_stop_venue_id IS DISTINCT FROM
+        v_contribution_venue_id::text
+  THEN
+    RAISE EXCEPTION
+      'Active Flow stop and contribution venue mismatch';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.validate_active_flow_stop_contribution()
+  FROM PUBLIC;
+
+CREATE TRIGGER active_flow_stop_contribution_validate_insert
+BEFORE INSERT
+ON public.active_flow_stop_contributions
+FOR EACH ROW
+EXECUTE FUNCTION public.validate_active_flow_stop_contribution();
+
+-- ------------------------------------------------------------
+-- 7B. Preserve attribution immutability.
+--
+-- Reuse the immutable-lineage trigger function from
+-- Section 4. Existing mappings cannot be reassigned.
+--
+-- Deletion through the parent Active Flow stop remains
+-- compatible with existing ON DELETE CASCADE behavior.
+-- Published Snapshot lineage must survive independently.
+-- ------------------------------------------------------------
+
+CREATE TRIGGER active_flow_stop_contribution_reject_update
+BEFORE UPDATE
+ON public.active_flow_stop_contributions
+FOR EACH ROW
+EXECUTE FUNCTION public.reject_flow_lineage_update();
+
+-- ------------------------------------------------------------
+-- 7C. Restrict client access.
+-- ------------------------------------------------------------
+
+ALTER TABLE public.active_flow_stop_contributions
+  ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL
+  ON public.active_flow_stop_contributions
+  FROM PUBLIC, anon, authenticated;
+
+GRANT SELECT, INSERT
+  ON public.active_flow_stop_contributions
+  TO service_role;
+
+-- ------------------------------------------------------------
+-- 8. Atomic, server-only Collection Flow creation.
+--
+-- This is independent of receipt/XP certification.
+-- Only service_role can invoke it.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.create_certified_collection_flow(
+  p_explorer_user_id uuid,
+  p_collection_id uuid,
+  p_title text,
+  p_city text,
+  p_travel_mode text,
+  p_planned_start_at text,
+  p_venue_ids text[],
+  p_stop_origins text[]
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+DECLARE
+  v_creator_user_id uuid;
+  v_visibility text;
+  v_session_id uuid;
+  v_contribution_id uuid;
+  v_stop record;
+  v_runtime_stop_id uuid;
+  v_stop_origins_json jsonb := '[]'::jsonb;
+  v_venue_id uuid;
+BEGIN
+  IF p_explorer_user_id IS NULL
+     OR p_collection_id IS NULL
+     OR p_venue_ids IS NULL
+     OR p_stop_origins IS NULL
+     OR cardinality(p_venue_ids) < 2
+     OR cardinality(p_venue_ids) > 8
+     OR cardinality(p_venue_ids) <> cardinality(p_stop_origins)
+     OR p_travel_mode NOT IN ('walking', 'cycling', 'driving')
+  THEN
+    RAISE EXCEPTION 'CERTIFIED_COLLECTION_FLOW_INVALID_INPUT';
+  END IF;
+
+  SELECT c.user_id, c.visibility
+  INTO v_creator_user_id, v_visibility
+  FROM public.creator_collections AS c
+  WHERE c.id = p_collection_id
+  FOR SHARE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'CERTIFIED_COLLECTION_FLOW_COLLECTION_NOT_FOUND';
+  END IF;
+
+  -- Self-exploration retains original authorship.
+  -- Public exploration must still satisfy creator eligibility.
+  IF v_creator_user_id IS DISTINCT FROM p_explorer_user_id THEN
+    IF v_visibility IS DISTINCT FROM 'public'
+       OR NOT EXISTS (
+         SELECT 1
+         FROM public.profiles AS p
+         WHERE p.id = v_creator_user_id
+           AND p.creator_mode_enabled IS TRUE
+           AND p.is_public IS NOT FALSE
+           AND p.deleted_at IS NULL
+       )
+    THEN
+      RAISE EXCEPTION 'CERTIFIED_COLLECTION_FLOW_NOT_ACCESSIBLE';
+    END IF;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM unnest(p_venue_ids) AS candidate(venue_id)
+    WHERE candidate.venue_id IS NULL
+       OR candidate.venue_id !~
+          '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+  ) THEN
+    RAISE EXCEPTION 'CERTIFIED_COLLECTION_FLOW_INVALID_VENUE';
+  END IF;
+
+  IF (
+    SELECT count(DISTINCT venue_id)
+    FROM unnest(p_venue_ids) AS candidate(venue_id)
+  ) <> cardinality(p_venue_ids) THEN
+    RAISE EXCEPTION 'CERTIFIED_COLLECTION_FLOW_DUPLICATE_VENUE';
+  END IF;
+
+  FOR v_stop IN
+    SELECT
+      candidate.venue_id,
+      candidate.stop_origin,
+      (candidate.ordinality - 1)::integer AS stop_index
+    FROM unnest(p_venue_ids, p_stop_origins)
+      WITH ORDINALITY AS candidate(
+        venue_id,
+        stop_origin,
+        ordinality
+      )
+    ORDER BY candidate.ordinality
+  LOOP
+    IF v_stop.stop_origin IS NULL
+       OR v_stop.stop_origin NOT IN ('collection', 'roam_fill')
+    THEN
+      RAISE EXCEPTION 'CERTIFIED_COLLECTION_FLOW_INVALID_ORIGIN';
+    END IF;
+
+    v_venue_id := v_stop.venue_id::uuid;
+
+    
+    -- The declared origin must match canonical Collection
+    -- membership at certification time.
+    --
+    -- A Collection venue may not be mislabeled as platform
+    -- filler to erase its original creator.
+    --
+    -- A nonmember may not be certified as Collection-authored.
+    PERFORM 1
+    FROM public.creator_collection_venues AS member
+    WHERE member.collection_id = p_collection_id
+      AND member.venue_id = v_venue_id
+    FOR SHARE;
+
+    IF FOUND THEN
+      IF v_stop.stop_origin <> 'collection' THEN
+        RAISE EXCEPTION
+          'CERTIFIED_COLLECTION_FLOW_MEMBER_ORIGIN_MISMATCH';
+      END IF;
+    ELSE
+      IF v_stop.stop_origin <> 'roam_fill' THEN
+        RAISE EXCEPTION
+          'CERTIFIED_COLLECTION_FLOW_NONMEMBER_ORIGIN_MISMATCH';
+      END IF;
+    END IF;
+
+
+    v_stop_origins_json :=
+      v_stop_origins_json || jsonb_build_array(
+        jsonb_build_object(
+          'venueId', v_stop.venue_id,
+          'stopIndex', v_stop.stop_index,
+          'origin', v_stop.stop_origin
+        )
+      );
+  END LOOP;
+
+  -- The existing INSERT trigger materializes canonical runtime stops.
+  -- The existing partial unique index guards concurrent active Flows.
+  INSERT INTO public.active_flow_sessions (
+    user_id,
+    title,
+    city,
+    source,
+    source_id,
+    source_creator_user_id,
+    venue_ids,
+    travel_mode,
+    status,
+    started_at,
+    metadata
+  )
+  VALUES (
+    p_explorer_user_id,
+    COALESCE(NULLIF(btrim(p_title), ''), 'Roam Flow'),
+    p_city,
+    'creator_collection',
+    p_collection_id,
+    v_creator_user_id,
+    p_venue_ids,
+    p_travel_mode,
+    'active',
+    now(),
+    jsonb_build_object(
+      'collectionTitle', p_title,
+      'plannedStartAt', p_planned_start_at,
+      'stopOrigins', v_stop_origins_json
+    )
+  )
+  RETURNING id INTO v_session_id;
+
+  FOR v_stop IN
+    SELECT
+      candidate.venue_id,
+      candidate.stop_origin,
+      (candidate.ordinality - 1)::integer AS stop_index
+    FROM unnest(p_venue_ids, p_stop_origins)
+      WITH ORDINALITY AS candidate(
+        venue_id,
+        stop_origin,
+        ordinality
+      )
+    ORDER BY candidate.ordinality
+  LOOP
+    SELECT st.id
+    INTO STRICT v_runtime_stop_id
+    FROM public.active_flow_stops AS st
+    WHERE st.session_id = v_session_id
+      AND st.position = v_stop.stop_index
+      AND st.venue_id = v_stop.venue_id
+      AND st.origin = 'original'
+      AND st.original_stop_id IS NULL
+      AND st.status = 'planned';
+
+    INSERT INTO public.flow_contributions (
+      venue_id,
+      origin,
+      creator_user_id,
+      origin_collection_id
+    )
+    VALUES (
+      v_stop.venue_id::uuid,
+      CASE
+        WHEN v_stop.stop_origin = 'collection'
+          THEN 'collection'
+        ELSE 'platform'
+      END,
+      CASE
+        WHEN v_stop.stop_origin = 'collection'
+          THEN v_creator_user_id
+        ELSE NULL
+      END,
+      CASE
+        WHEN v_stop.stop_origin = 'collection'
+          THEN p_collection_id
+        ELSE NULL
+      END
+    )
+    RETURNING id INTO v_contribution_id;
+
+    INSERT INTO public.active_flow_stop_contributions (
+      active_flow_stop_id,
+      contribution_id
+    )
+    VALUES (
+      v_runtime_stop_id,
+      v_contribution_id
+    );
+  END LOOP;
+
+  RETURN v_session_id;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.create_certified_collection_flow(
+    uuid, uuid, text, text, text, text, text[], text[]
+  )
+  FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE
+  ON FUNCTION public.create_certified_collection_flow(
+    uuid, uuid, text, text, text, text, text[], text[]
+  )
+  TO service_role;
+
+-- ------------------------------------------------------------
+-- 9. Atomic Snapshot persistence with certified lineage
+--
+-- Existing Snapshot routes remain canonical.
+-- Missing lineage is not interpreted as human authorship.
+-- Resaving never rewrites established Snapshot stops.
+--
+-- Service-role only. No XP or reward operations.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.save_snapshot_with_certified_lineage(
+  p_explorer_user_id uuid,
+  p_source_flow_id uuid,
+  p_expected_venue_ids text[],
+  p_snapshot_payload jsonb
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+DECLARE
+  v_source public.active_flow_sessions%ROWTYPE;
+  v_snapshot public.flow_snapshots%ROWTYPE;
+  v_existing_snapshot_id uuid;
+  v_stop record;
+  v_source_stop_id uuid;
+  v_contribution_id uuid;
+  v_snapshot_stop_id uuid;
+  v_stop_count integer;
+  v_checked_in_count integer;
+  v_status text;
+  v_visibility text;
+BEGIN
+  IF p_explorer_user_id IS NULL
+     OR p_source_flow_id IS NULL
+     OR p_expected_venue_ids IS NULL
+     OR p_snapshot_payload IS NULL
+  THEN
+    RAISE EXCEPTION
+      'CERTIFIED_SNAPSHOT_REQUIRED_INPUT_MISSING';
+  END IF;
+
+  SELECT s.*
+  INTO v_source
+  FROM public.active_flow_sessions AS s
+  WHERE s.id = p_source_flow_id
+    AND s.user_id = p_explorer_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'CERTIFIED_SNAPSHOT_SOURCE_NOT_FOUND';
+  END IF;
+
+  v_stop_count := cardinality(v_source.venue_ids);
+
+  IF v_stop_count < 2
+     OR p_expected_venue_ids IS DISTINCT FROM v_source.venue_ids
+     OR (
+       SELECT count(DISTINCT venue_id)
+       FROM unnest(v_source.venue_ids) AS route(venue_id)
+     ) <> v_stop_count
+  THEN
+    RAISE EXCEPTION
+      'CERTIFIED_SNAPSHOT_ROUTE_MISMATCH';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM unnest(v_source.venue_ids) AS route(venue_id)
+    WHERE route.venue_id IS NULL
+       OR route.venue_id !~
+          '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+  ) THEN
+    RAISE EXCEPTION
+      'CERTIFIED_SNAPSHOT_INVALID_VENUE';
+  END IF;
+
+  SELECT count(DISTINCT pr.stop_index)::integer
+  INTO v_checked_in_count
+  FROM public.active_flow_progress AS pr
+  WHERE pr.session_id = p_source_flow_id
+    AND pr.user_id = p_explorer_user_id
+    AND pr.stop_index >= 0
+    AND pr.stop_index < v_stop_count;
+
+  v_status :=
+    CASE
+      WHEN v_source.status = 'completed' THEN 'completed'
+      WHEN v_source.status = 'cancelled' THEN 'cancelled'
+      WHEN v_source.status = 'active'
+           AND v_checked_in_count > 0 THEN 'partial'
+      WHEN v_source.status = 'active' THEN 'active'
+      ELSE NULL
+    END;
+
+  IF v_status IS NULL THEN
+    RAISE EXCEPTION
+      'CERTIFIED_SNAPSHOT_INVALID_SOURCE_STATUS';
+  END IF;
+
+  IF p_snapshot_payload ->> 'user_id'
+       IS DISTINCT FROM p_explorer_user_id::text
+     OR p_snapshot_payload ->> 'source_type'
+       IS DISTINCT FROM 'active_flow'
+     OR p_snapshot_payload ->> 'source_id'
+       IS DISTINCT FROM p_source_flow_id::text
+     OR p_snapshot_payload ->> 'status'
+       IS DISTINCT FROM v_status
+     OR (p_snapshot_payload ->> 'total_stops')::integer
+       IS DISTINCT FROM v_stop_count
+     OR (p_snapshot_payload ->> 'checked_in_count')::integer
+       IS DISTINCT FROM v_checked_in_count
+  THEN
+    RAISE EXCEPTION
+      'CERTIFIED_SNAPSHOT_PAYLOAD_MISMATCH';
+  END IF;
+
+  v_visibility := p_snapshot_payload ->> 'visibility';
+
+  IF v_visibility NOT IN ('public', 'private')
+     OR v_visibility IS NULL
+  THEN
+    RAISE EXCEPTION
+      'CERTIFIED_SNAPSHOT_INVALID_VISIBILITY';
+  END IF;
+
+  -- Lock an existing Snapshot before changing its metadata.
+  -- The unique constraint handles concurrent first saves.
+  SELECT snap.id
+  INTO v_existing_snapshot_id
+  FROM public.flow_snapshots AS snap
+  WHERE snap.user_id = p_explorer_user_id
+    AND snap.source_type = 'active_flow'
+    AND snap.source_id = p_source_flow_id::text
+  FOR UPDATE;
+
+  INSERT INTO public.flow_snapshots AS snap (
+    user_id,
+    source_type,
+    source_id,
+    title,
+    city,
+    status,
+    cover_image_url,
+    route_summary,
+    checked_in_count,
+    total_stops,
+    visibility,
+    updated_at
+  )
+  VALUES (
+    p_explorer_user_id,
+    'active_flow',
+    p_source_flow_id::text,
+    NULLIF(btrim(v_source.title), ''),
+    NULLIF(btrim(v_source.city), ''),
+    v_status,
+    p_snapshot_payload ->> 'cover_image_url',
+    p_snapshot_payload ->> 'route_summary',
+    v_checked_in_count,
+    v_stop_count,
+    v_visibility,
+    now()
+  )
+  ON CONFLICT (user_id, source_type, source_id)
+  DO UPDATE SET
+    title = EXCLUDED.title,
+    city = EXCLUDED.city,
+    status = EXCLUDED.status,
+    cover_image_url = EXCLUDED.cover_image_url,
+    route_summary = EXCLUDED.route_summary,
+    checked_in_count = EXCLUDED.checked_in_count,
+    total_stops = EXCLUDED.total_stops,
+    visibility = snap.visibility,
+    updated_at = EXCLUDED.updated_at
+  RETURNING *
+  INTO v_snapshot;
+
+  IF v_existing_snapshot_id IS NULL THEN
+    -- Only a newly created Snapshot receives its initial
+    -- ordered stop rows and certified lineage.
+    FOR v_stop IN
+      SELECT
+        route.venue_id,
+        (route.ordinality - 1)::integer AS stop_index
+      FROM unnest(v_source.venue_ids)
+        WITH ORDINALITY AS route(venue_id, ordinality)
+      ORDER BY route.ordinality
+    LOOP
+      INSERT INTO public.flow_snapshot_stops (
+        snapshot_id,
+        venue_id,
+        stop_index
+      )
+      VALUES (
+        v_snapshot.id,
+        v_stop.venue_id::uuid,
+        v_stop.stop_index
+      )
+      RETURNING id
+      INTO v_snapshot_stop_id;
+
+      -- Find the original planned stop corresponding to
+      -- this canonical position and venue.
+      SELECT st.id
+      INTO v_source_stop_id
+      FROM public.active_flow_stops AS st
+      WHERE st.session_id = p_source_flow_id
+        AND st.position = v_stop.stop_index
+        AND st.venue_id = v_stop.venue_id
+        AND st.origin = 'original'
+        AND st.original_stop_id IS NULL;
+
+      IF NOT FOUND THEN
+        RAISE EXCEPTION
+          'CERTIFIED_SNAPSHOT_SOURCE_STOP_MISSING';
+      END IF;
+
+      -- Copy only an existing venue-consistent certificate.
+      -- No mapping means no certified individual author.
+      v_contribution_id := NULL;
+
+      SELECT mapping.contribution_id
+      INTO v_contribution_id
+      FROM public.active_flow_stop_contributions AS mapping
+      JOIN public.flow_contributions AS contribution
+        ON contribution.id = mapping.contribution_id
+      WHERE mapping.active_flow_stop_id = v_source_stop_id
+        AND contribution.venue_id = v_stop.venue_id::uuid;
+
+      IF v_contribution_id IS NOT NULL THEN
+        INSERT INTO public.flow_snapshot_stop_contributions (
+          snapshot_stop_id,
+          contribution_id,
+          venue_id
+        )
+        VALUES (
+          v_snapshot_stop_id,
+          v_contribution_id,
+          v_stop.venue_id::uuid
+        );
+      END IF;
+    END LOOP;
+  
+  ELSE
+    -- Existing Snapshot route evidence is immutable.
+    -- Never rebuild, substitute, or silently repair it.
+    IF (
+      SELECT array_agg(
+        existing_stop.venue_id::text
+        ORDER BY existing_stop.stop_index
+      )
+      FROM public.flow_snapshot_stops AS existing_stop
+      WHERE existing_stop.snapshot_id = v_snapshot.id
+    ) IS DISTINCT FROM v_source.venue_ids THEN
+      RAISE EXCEPTION
+        'CERTIFIED_SNAPSHOT_EXISTING_ROUTE_MISMATCH';
+    END IF;
+
+    IF EXISTS (
+      SELECT 1
+      FROM (
+        SELECT
+          existing_stop.stop_index,
+          row_number() OVER (
+            ORDER BY existing_stop.stop_index
+          ) - 1 AS expected_index
+        FROM public.flow_snapshot_stops AS existing_stop
+        WHERE existing_stop.snapshot_id = v_snapshot.id
+      ) AS ordered_stops
+      WHERE ordered_stops.stop_index
+        <> ordered_stops.expected_index
+    ) THEN
+      RAISE EXCEPTION
+        'CERTIFIED_SNAPSHOT_EXISTING_ROUTE_ORDER_INVALID';
+    END IF;
+  END IF;
+
+  -- Route certification is separate from contributor mappings.
+  -- A zero-attribution Snapshot must still be route-immutable.
+  --
+  -- Only certify newly created Snapshots. A historical legacy
+  -- Snapshot is not retroactively certified on re-save.
+  IF v_existing_snapshot_id IS NULL THEN
+    INSERT INTO public.flow_snapshot_route_certifications (
+      snapshot_id
+    )
+    VALUES (v_snapshot.id);
+  END IF;
+
+  RETURN to_jsonb(v_snapshot);
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.save_snapshot_with_certified_lineage(
+    uuid, uuid, text[], jsonb
+  )
+  FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE
+  ON FUNCTION public.save_snapshot_with_certified_lineage(
+    uuid, uuid, text[], jsonb
+  )
+  TO service_role;
+
+-- ------------------------------------------------------------
+-- 10. Atomic Replay creation with lineage inheritance
+--
+-- Snapshot publisher remains distinct from stop authors.
+-- Existing contribution IDs are inherited unchanged.
+-- Unknown stop attribution remains unknown.
+--
+-- Service-role only. No XP or reward operations.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.create_replay_with_certified_lineage(
+  p_explorer_user_id uuid,
+  p_snapshot_id uuid,
+  p_expected_venue_ids text[]
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+DECLARE
+  v_snapshot public.flow_snapshots%ROWTYPE;
+  v_session_id uuid;
+  v_venue_ids text[];
+  v_stop_count integer;
+  v_stop record;
+  v_runtime_stop_id uuid;
+BEGIN
+  IF p_explorer_user_id IS NULL
+     OR p_snapshot_id IS NULL
+     OR p_expected_venue_ids IS NULL
+  THEN
+    RAISE EXCEPTION
+      'CERTIFIED_REPLAY_REQUIRED_INPUT_MISSING';
+  END IF;
+
+  SELECT snap.*
+  INTO v_snapshot
+  FROM public.flow_snapshots AS snap
+  WHERE snap.id = p_snapshot_id
+    AND snap.visibility = 'public'
+    AND snap.status = 'completed'
+    AND snap.replayable IS TRUE
+  FOR SHARE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'CERTIFIED_REPLAY_SNAPSHOT_NOT_AVAILABLE';
+  END IF;
+
+  SELECT
+    array_agg(
+      st.venue_id::text
+      ORDER BY st.stop_index
+    ),
+    count(*)::integer
+  INTO
+    v_venue_ids,
+    v_stop_count
+  FROM public.flow_snapshot_stops AS st
+  WHERE st.snapshot_id = p_snapshot_id;
+
+  IF v_stop_count < 2
+     OR v_venue_ids IS DISTINCT FROM p_expected_venue_ids
+     OR (
+       v_snapshot.total_stops IS NOT NULL
+       AND v_snapshot.total_stops <> v_stop_count
+     )
+  THEN
+    RAISE EXCEPTION
+      'CERTIFIED_REPLAY_ROUTE_MISMATCH';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      SELECT
+        st.stop_index,
+        row_number() OVER (
+          ORDER BY st.stop_index
+        ) - 1 AS expected_position
+      FROM public.flow_snapshot_stops AS st
+      WHERE st.snapshot_id = p_snapshot_id
+    ) AS ordered_stops
+    WHERE ordered_stops.stop_index
+      <> ordered_stops.expected_position
+  ) THEN
+    RAISE EXCEPTION
+      'CERTIFIED_REPLAY_INVALID_STOP_ORDER';
+  END IF;
+
+  IF (
+    SELECT count(DISTINCT st.venue_id)
+    FROM public.flow_snapshot_stops AS st
+    WHERE st.snapshot_id = p_snapshot_id
+  ) <> v_stop_count THEN
+    RAISE EXCEPTION
+      'CERTIFIED_REPLAY_DUPLICATE_VENUE';
+  END IF;
+
+  -- Existing session trigger materializes original route stops.
+  -- Existing partial unique index enforces one active Flow.
+  INSERT INTO public.active_flow_sessions (
+    user_id,
+    title,
+    city,
+    source,
+    source_id,
+    source_creator_user_id,
+    venue_ids,
+    travel_mode,
+    status,
+    started_at,
+    metadata
+  )
+  VALUES (
+    p_explorer_user_id,
+    COALESCE(NULLIF(btrim(v_snapshot.title), ''), 'Roam Flow'),
+    v_snapshot.city,
+    'flow_snapshot',
+    p_snapshot_id,
+    CASE
+      WHEN v_snapshot.source_type = 'roam_relay' THEN NULL
+      ELSE v_snapshot.user_id
+    END,
+    v_venue_ids,
+    'walking',
+    'active',
+    now(),
+    jsonb_build_object(
+      'replay', true,
+      'snapshotSourceType', v_snapshot.source_type,
+      'snapshotSourceId', v_snapshot.source_id
+    )
+  )
+  RETURNING id INTO v_session_id;
+
+  -- Inherit existing contribution IDs without reassigning
+  -- their creator to the explorer or Snapshot publisher.
+  FOR v_stop IN
+    SELECT
+      snapshot_stop.stop_index,
+      snapshot_stop.venue_id,
+      lineage.contribution_id
+    FROM public.flow_snapshot_stops AS snapshot_stop
+    LEFT JOIN public.flow_snapshot_stop_contributions AS lineage
+      ON lineage.snapshot_stop_id = snapshot_stop.id
+    WHERE snapshot_stop.snapshot_id = p_snapshot_id
+    ORDER BY snapshot_stop.stop_index
+  LOOP
+    SELECT runtime_stop.id
+    INTO STRICT v_runtime_stop_id
+    FROM public.active_flow_stops AS runtime_stop
+    WHERE runtime_stop.session_id = v_session_id
+      AND runtime_stop.position = v_stop.stop_index
+      AND runtime_stop.venue_id = v_stop.venue_id::text
+      AND runtime_stop.origin = 'original'
+      AND runtime_stop.original_stop_id IS NULL;
+
+    IF v_stop.contribution_id IS NOT NULL THEN
+      INSERT INTO public.active_flow_stop_contributions (
+        active_flow_stop_id,
+        contribution_id
+      )
+      VALUES (
+        v_runtime_stop_id,
+        v_stop.contribution_id
+      );
+    END IF;
+  END LOOP;
+
+  RETURN v_session_id;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.create_replay_with_certified_lineage(
+    uuid, uuid, text[]
+  )
+  FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE
+  ON FUNCTION public.create_replay_with_certified_lineage(
+    uuid, uuid, text[]
+  )
+  TO service_role;
+
+-- ------------------------------------------------------------
+-- 11. Protect certified provenance and immutable Snapshot routes
+--
+-- ADDITIVE HARDENING:
+--
+-- 11A. Freeze canonical session identity after certification.
+-- 11B. Freeze certified original runtime-stop identity.
+-- 11C. Freeze saved Snapshot stop identity for every Snapshot.
+-- 11D. Keep saved Snapshot metadata consistent with its route.
+--
+-- Legitimate status, progress, completion, and timestamps are
+-- not modified by these triggers.
+--
+-- No changes to check-in, Relay, reputation, XP, or scoring.
+-- ------------------------------------------------------------
+
+-- ------------------------------------------------------------
+-- 11A. Certified Active Flow session identity
+--
+-- Once this session has at least one certified stop mapping,
+-- its canonical route and original provenance cannot change.
+--
+-- This does not block:
+--   status
+--   completed_at
+--   completed_stops
+--   updated_at
+--   unrelated mutable metadata keys
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.protect_certified_flow_session_identity()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF
+    OLD.user_id IS NOT DISTINCT FROM NEW.user_id
+    AND OLD.source IS NOT DISTINCT FROM NEW.source
+    AND OLD.source_id IS NOT DISTINCT FROM NEW.source_id
+    AND OLD.source_creator_user_id
+      IS NOT DISTINCT FROM NEW.source_creator_user_id
+    AND OLD.venue_ids IS NOT DISTINCT FROM NEW.venue_ids
+    AND OLD.metadata -> 'stopOrigins'
+      IS NOT DISTINCT FROM NEW.metadata -> 'stopOrigins'
+  THEN
+    RETURN NEW;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.active_flow_stops AS st
+    JOIN public.active_flow_stop_contributions AS lineage
+      ON lineage.active_flow_stop_id = st.id
+    WHERE st.session_id = OLD.id
+  ) THEN
+    RAISE EXCEPTION
+      'Certified Flow route and provenance are immutable';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.protect_certified_flow_session_identity()
+  FROM PUBLIC;
+
+CREATE TRIGGER protect_certified_flow_session_identity
+BEFORE UPDATE OF
+  user_id,
+  source,
+  source_id,
+  source_creator_user_id,
+  venue_ids,
+  metadata
+ON public.active_flow_sessions
+FOR EACH ROW
+EXECUTE FUNCTION public.protect_certified_flow_session_identity();
+
+-- ------------------------------------------------------------
+-- 11B. Certified original runtime-stop identity
+--
+-- Do not allow a certified stop to change its venue,
+-- session, position, origin, or original-stop relationship.
+--
+-- For an already-certified Flow, protect all canonical
+-- original stops, including any without an individual
+-- contribution mapping.
+--
+-- Runtime status changes remain permitted:
+--   planned -> completed
+--   planned -> replaced
+--   planned -> removed
+--
+-- Detour, Swap, and Community Signal insertion semantics
+-- are not changed.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.protect_certified_runtime_stop_identity()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF
+    OLD.session_id IS NOT DISTINCT FROM NEW.session_id
+    AND OLD.venue_id IS NOT DISTINCT FROM NEW.venue_id
+    AND OLD.position IS NOT DISTINCT FROM NEW.position
+    AND OLD.origin IS NOT DISTINCT FROM NEW.origin
+    AND OLD.original_stop_id
+      IS NOT DISTINCT FROM NEW.original_stop_id
+  THEN
+    RETURN NEW;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.active_flow_stops AS st
+    JOIN public.active_flow_stop_contributions AS lineage
+      ON lineage.active_flow_stop_id = st.id
+    WHERE st.session_id = OLD.session_id
+  )
+  AND OLD.origin = 'original'
+  THEN
+    RAISE EXCEPTION
+      'Certified original runtime-stop identity is immutable';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.active_flow_stop_contributions AS lineage
+    WHERE lineage.active_flow_stop_id = OLD.id
+  ) THEN
+    RAISE EXCEPTION
+      'Certified runtime-stop contribution identity is immutable';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.protect_certified_runtime_stop_identity()
+  FROM PUBLIC;
+
+CREATE TRIGGER protect_certified_runtime_stop_identity
+BEFORE UPDATE OF
+  session_id,
+  venue_id,
+  position,
+  origin,
+  original_stop_id
+ON public.active_flow_stops
+FOR EACH ROW
+EXECUTE FUNCTION public.protect_certified_runtime_stop_identity();
+
+-- ------------------------------------------------------------
+-- 11C. Immutable ordered Snapshot stop evidence
+--
+-- Every saved Snapshot stop becomes immutable, regardless
+-- of whether individual creator lineage is certified.
+--
+-- This protects legacy Snapshots as well as new ones.
+--
+-- Parent Snapshot deletion and its existing ON DELETE
+-- CASCADE behavior are deliberately not altered.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.protect_snapshot_stop_identity()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF
+    OLD.snapshot_id IS DISTINCT FROM NEW.snapshot_id
+    OR OLD.venue_id IS DISTINCT FROM NEW.venue_id
+    OR OLD.stop_index IS DISTINCT FROM NEW.stop_index
+  THEN
+    RAISE EXCEPTION
+      'Saved Snapshot stop identity is immutable';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.protect_snapshot_stop_identity()
+  FROM PUBLIC;
+
+CREATE TRIGGER protect_snapshot_stop_identity
+BEFORE UPDATE OF
+  snapshot_id,
+  venue_id,
+  stop_index
+ON public.flow_snapshot_stops
+FOR EACH ROW
+EXECUTE FUNCTION public.protect_snapshot_stop_identity();
+
+-- ------------------------------------------------------------
+-- 11D. Preserve consistency between Snapshot route metadata
+-- and its already-persisted canonical stop evidence.
+--
+-- This is intentionally a BEFORE UPDATE trigger only.
+--
+-- On initial Snapshot creation, ordered stops are inserted
+-- after the parent Snapshot, so the parent has no route rows
+-- yet. The trigger does not interfere with that sequence.
+--
+-- Once route rows exist, changing total_stops to a value
+-- different from the saved route is rejected.
+--
+-- Changing the Snapshot's source identity is also rejected
+-- after the route exists, preventing relabeling of evidence.
+--
+-- Status, visibility, cover image, route summary, check-in
+-- count, and updated_at retain their current write behavior.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.protect_snapshot_route_metadata()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+DECLARE
+  v_saved_stop_count integer;
+BEGIN
+  SELECT count(*)::integer
+  INTO v_saved_stop_count
+  FROM public.flow_snapshot_stops AS st
+  WHERE st.snapshot_id = OLD.id;
+
+  IF v_saved_stop_count = 0 THEN
+    RETURN NEW;
+  END IF;
+
+  IF
+    OLD.user_id IS DISTINCT FROM NEW.user_id
+    OR OLD.source_type IS DISTINCT FROM NEW.source_type
+    OR OLD.source_id IS DISTINCT FROM NEW.source_id
+  THEN
+    RAISE EXCEPTION
+      'Saved Snapshot source identity is immutable';
+  END IF;
+
+  IF NEW.total_stops IS DISTINCT FROM v_saved_stop_count THEN
+    RAISE EXCEPTION
+      'Snapshot total_stops does not match saved canonical route';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.protect_snapshot_route_metadata()
+  FROM PUBLIC;
+
+CREATE TRIGGER protect_snapshot_route_metadata
+BEFORE UPDATE OF
+  user_id,
+  source_type,
+  source_id,
+  total_stops
+ON public.flow_snapshots
+FOR EACH ROW
+EXECUTE FUNCTION public.protect_snapshot_route_metadata();
+
+
+-- ------------------------------------------------------------
+-- 12. Prevent deletion of established route evidence
+--
+-- Protect individual canonical stops while their parent
+-- session or Snapshot still exists.
+--
+-- Preserve existing parent-deletion cascade behavior.
+-- No change to check-ins, stop status, Relay, or XP.
+-- ------------------------------------------------------------
+
+-- ------------------------------------------------------------
+-- 12A. Protect certified Active Flow stop evidence.
+--
+-- Direct deletion is prohibited for:
+--   - Any runtime stop with a certified contribution
+--   - Canonical original stops in a certified session
+--
+-- This does not block normal status changes, Detours,
+-- Swaps, or removal of uncertified runtime stops.
+--
+-- When a parent session is deleted, PostgreSQL's existing
+-- ON DELETE CASCADE may clean up its child stops.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.protect_certified_runtime_stop_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  -- Parent deletion cascades must remain operational.
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.active_flow_sessions AS session
+    WHERE session.id = OLD.session_id
+  ) THEN
+    RETURN OLD;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.active_flow_stop_contributions AS lineage
+    WHERE lineage.active_flow_stop_id = OLD.id
+  ) THEN
+    RAISE EXCEPTION
+      'Certified runtime-stop evidence cannot be deleted';
+  END IF;
+
+  IF OLD.origin = 'original'
+     AND EXISTS (
+       SELECT 1
+       FROM public.active_flow_stops AS st
+       JOIN public.active_flow_stop_contributions AS lineage
+         ON lineage.active_flow_stop_id = st.id
+       WHERE st.session_id = OLD.session_id
+     )
+  THEN
+    RAISE EXCEPTION
+      'Canonical stops in a certified Flow cannot be deleted';
+  END IF;
+
+  RETURN OLD;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.protect_certified_runtime_stop_delete()
+  FROM PUBLIC;
+
+CREATE TRIGGER protect_certified_runtime_stop_delete
+BEFORE DELETE
+ON public.active_flow_stops
+FOR EACH ROW
+EXECUTE FUNCTION public.protect_certified_runtime_stop_delete();
+
+-- ------------------------------------------------------------
+-- 12B. Protect immutable Snapshot stops.
+--
+-- Direct deletion of a Snapshot stop is prohibited while
+-- its parent Snapshot exists.
+--
+-- Parent Snapshot deletion continues to cascade through
+-- the existing foreign keys.
+--
+-- This applies to both legacy and certified Snapshots.
+-- ------------------------------------------------------------
+
+CREATE FUNCTION public.protect_snapshot_stop_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  -- Allow cleanup initiated by deletion of the parent.
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.flow_snapshots AS snapshot
+    WHERE snapshot.id = OLD.snapshot_id
+  ) THEN
+    RETURN OLD;
+  END IF;
+
+  RAISE EXCEPTION
+    'Saved Snapshot route stops cannot be deleted individually';
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.protect_snapshot_stop_delete()
+  FROM PUBLIC;
+
+CREATE TRIGGER protect_snapshot_stop_delete
+BEFORE DELETE
+ON public.flow_snapshot_stops
+FOR EACH ROW
+EXECUTE FUNCTION public.protect_snapshot_stop_delete();
+
+
+-- ------------------------------------------------------------
+-- SECTION 13: CERTIFIED SNAPSHOT ROUTE CLOSURE
+--
+-- Certification records are distinct from creator contributions.
+-- A Snapshot can be certified with zero attributed stops.
+--
+-- Only the transactional Snapshot writer creates certification.
+-- Historical legacy Snapshots remain uncertified.
+--
+-- All statements belong to the existing preparation transaction.
+-- ------------------------------------------------------------
+
+CREATE TABLE public.flow_snapshot_route_certifications (
+  snapshot_id uuid PRIMARY KEY
+    REFERENCES public.flow_snapshots(id)
+    ON DELETE CASCADE,
+  certified_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.flow_snapshot_route_certifications
+  ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL
+  ON public.flow_snapshot_route_certifications
+  FROM PUBLIC, anon, authenticated;
+
+GRANT SELECT, INSERT
+  ON public.flow_snapshot_route_certifications
+  TO service_role;
+
+-- A certification cannot be altered or removed while the
+-- parent Snapshot remains present.
+--
+-- Parent Snapshot deletion is allowed to cascade, matching
+-- the existing immutable Snapshot-stop deletion behavior.
+CREATE FUNCTION public.protect_snapshot_route_certification()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    IF NOT EXISTS (
+      SELECT 1
+      FROM public.flow_snapshots AS snapshot
+      WHERE snapshot.id = OLD.snapshot_id
+    ) THEN
+      RETURN OLD;
+    END IF;
+  END IF;
+
+  RAISE EXCEPTION
+    'Certified Snapshot route certification is immutable';
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.protect_snapshot_route_certification()
+  FROM PUBLIC;
+
+CREATE TRIGGER protect_snapshot_route_certification
+BEFORE UPDATE OR DELETE
+ON public.flow_snapshot_route_certifications
+FOR EACH ROW
+EXECUTE FUNCTION
+  public.protect_snapshot_route_certification();
+
+-- Prevent any further stop insertion after certification.
+--
+-- Locking the parent Snapshot serializes this test with the
+-- transactional Snapshot writer and other insert attempts.
+--
+-- SECURITY DEFINER lets the trigger inspect the protected
+-- certification table without granting client SELECT access.
+-- The migration must be installed by the trusted DB owner.
+CREATE FUNCTION public.protect_certified_snapshot_stop_insert()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
+  PERFORM 1
+  FROM public.flow_snapshots AS snapshot
+  WHERE snapshot.id = NEW.snapshot_id
+  FOR UPDATE;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.flow_snapshot_route_certifications AS cert
+    WHERE cert.snapshot_id = NEW.snapshot_id
+  ) THEN
+    RAISE EXCEPTION
+      'Certified Snapshot route stops cannot be extended';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL
+  ON FUNCTION public.protect_certified_snapshot_stop_insert()
+  FROM PUBLIC;
+
+CREATE TRIGGER protect_certified_snapshot_stop_insert
+BEFORE INSERT
+ON public.flow_snapshot_stops
+FOR EACH ROW
+EXECUTE FUNCTION
+  public.protect_certified_snapshot_stop_insert();
+
+COMMIT;

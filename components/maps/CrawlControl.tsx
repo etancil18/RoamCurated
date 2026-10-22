@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import type { Venue } from '@/types/venue'
-import { themeById } from '@/lib/crawlConfig'
+import { publicThemeDescriptions } from '@/lib/publicThemeDescriptions'
 import { findSimilarVenuesNearby } from '@/utils/findSimilarVenues'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useInterestedEvents } from '@/hooks/useInterestedEvents'
@@ -213,7 +213,7 @@ export default function CrawlControl({
   }
 
   const themeName = selectedThemeId
-    ? themeById[selectedThemeId]?.description
+    ? publicThemeDescriptions[selectedThemeId] ?? null
     : null
 
   const hasRoute = Array.isArray(route) && route.length > 0

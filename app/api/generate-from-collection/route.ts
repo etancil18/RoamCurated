@@ -115,6 +115,64 @@ const VENUE_SELECT = `
   cover,
   profile_status
 `
+/*
+ * COLLECTION FLOW RESPONSE PROTECTION
+ *
+ * Preserve public route explanations and provenance while
+ * removing internal ranking scores, diagnostic metadata,
+ * and numeric scoring contributions.
+ *
+ * The original route object is not mutated.
+ */
+function sanitizeCollectionRouteResponse(
+  route: ReturnType<typeof generateRouteFromCollection>
+) {
+  const { debug: _debug, ...publicRoute } = route
+  void _debug
+
+  const sanitizeReasons = <
+    T extends {
+      delta?: number
+    },
+  >(
+    reasons: T[]
+  ) =>
+    reasons.map((reason) => {
+      const {
+        delta: _delta,
+        ...publicReason
+      } = reason
+
+      void _delta
+      return publicReason
+    })
+
+  return {
+    ...publicRoute,
+    stops: route.stops.map((stop) => {
+      const {
+        score: _score,
+        normalizedScore: _normalizedScore,
+        openConfidence: _openConfidence,
+        candidateTypes: _candidateTypes,
+        ...publicStop
+      } = stop
+
+      void _score
+      void _normalizedScore
+      void _openConfidence
+      void _candidateTypes
+
+      return {
+        ...publicStop,
+        reasons: sanitizeReasons(stop.reasons ?? []),
+        personalizationReasons: sanitizeReasons(
+          stop.personalizationReasons ?? []
+        ),
+      }
+    }),
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -176,7 +234,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    /*
+/*
      * Collection generation can involve multiple inventory and
      * personalization queries plus route scoring.
      *
@@ -318,7 +376,7 @@ export async function POST(req: NextRequest) {
       ),
     ]
 
-    let collectionVenueRows: VenueRow[] = []
+let collectionVenueRows: VenueRow[] = []
 
     if (collectionVenueIds.length > 0) {
       const {
@@ -414,7 +472,7 @@ export async function POST(req: NextRequest) {
       }),
     ])
 
-    if (broaderVenueError) {
+if (broaderVenueError) {
       console.error(
         '[generate-from-collection] Broader venue inventory fetch failed:',
         broaderVenueError
@@ -458,7 +516,7 @@ export async function POST(req: NextRequest) {
           ? preferredTags
           : personalization.interestCategories ?? [],
       personalization,
-      includeDebug: true,
+      includeDebug: false,
       timezone,
     })
 
@@ -479,7 +537,7 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         {
-          route,
+          route: sanitizeCollectionRouteResponse(route),
           error:
             'No executable Flow could be built from this Collection.',
         },
@@ -533,14 +591,103 @@ export async function POST(req: NextRequest) {
       },
     } as any
 
-    const {
-      data: session,
-      error: insertError,
-    } = await supabase
-      .from('active_flow_sessions')
-      .insert(insertPayload)
-      .select('*')
-      .single()
+    /*
+     * CERTIFIED COLLECTION LINEAGE — CONTROLLED WRITE PATH
+     *
+     * When enabled, a server-only RPC creates the Active Flow
+     * session, its materialized stops, and original contribution
+     * mappings within one database transaction.
+     *
+     * The existing insert remains the default until the RPC
+     * and its schema have been tested and explicitly enabled.
+     *
+     * Creator receipts and XP remain separately controlled.
+     */
+    const lineageEnabled =
+      process.env.ROAM_CERTIFIED_COLLECTION_LINEAGE_ENABLED ===
+      'true'
+
+    let session: any = null
+    let insertError: any = null
+
+    if (lineageEnabled) {
+      const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL
+
+      const serviceRoleKey =
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+
+      if (!supabaseUrl || !serviceRoleKey) {
+        console.error(
+          '[generate-from-collection] Certified lineage configuration missing.'
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Certified Collection Flow creation is unavailable.',
+          },
+          { status: 503 }
+        )
+      }
+
+      const serviceSupabase = createClient(
+        supabaseUrl,
+        serviceRoleKey,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        }
+      )
+
+      const {
+        data: certifiedSessionId,
+        error: certificationError,
+      } = await serviceSupabase.rpc(
+        'create_certified_collection_flow',
+        {
+          p_explorer_user_id: user.id,
+          p_collection_id: collection.id,
+          p_title: insertPayload.title,
+          p_city: insertPayload.city,
+          p_travel_mode: travelMode,
+          p_planned_start_at:
+            route.context.plannedStartAt ?? null,
+          p_venue_ids: venueIds,
+          p_stop_origins: stopOrigins.map(
+            (stop) => stop.origin
+          ),
+        }
+      )
+
+      insertError = certificationError
+
+      if (!insertError && certifiedSessionId) {
+        const {
+          data: persistedSession,
+          error: lookupError,
+        } = await supabase
+          .from('active_flow_sessions')
+          .select('*')
+          .eq('id', certifiedSessionId)
+          .eq('user_id', user.id)
+          .single()
+
+        session = persistedSession
+        insertError = lookupError
+      }
+    } else {
+      const result = await supabase
+        .from('active_flow_sessions')
+        .insert(insertPayload)
+        .select('*')
+        .single()
+
+      session = result.data
+      insertError = result.error
+    }
 
     if (insertError || !session) {
       /*
@@ -632,7 +779,7 @@ export async function POST(req: NextRequest) {
             }
           )
 
-          const {
+const {
             data: receiptCertified,
             error: receiptError,
           } = await serviceSupabase.rpc(
@@ -691,7 +838,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         session,
-        route,
+        route: sanitizeCollectionRouteResponse(route),
         redirectTo: `/flow/${session.id}`,
       },
       { status: 201 }

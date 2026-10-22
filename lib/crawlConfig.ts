@@ -1,3 +1,5 @@
+import "server-only";
+
 import { CrawlTheme } from "@/lib/theme-engine/types"; 
 
 export const crawlThemes: CrawlTheme[] = [

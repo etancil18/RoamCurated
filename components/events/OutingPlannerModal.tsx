@@ -6,15 +6,16 @@ import { useRouter } from "next/navigation"
 import UberRideButton from "@/components/rideshare/UberRideButton"
 import VenueBookingButtons from "@/components/venue-profile/VenueBookingButtons"
 import { logEvent } from "@/lib/logEvent"
+
 import {
   getGroupSizePresetOptions,
   type GroupSizePresetId,
-} from "@/lib/outings/groupSizePresets"
+} from "@/lib/outings/publicGroupSizePresets"
 import {
-  expandVibeTags,
   getVibePresetOptions,
   type VibePresetId,
-} from "@/lib/outings/vibePresets"
+} from "@/lib/outings/publicVibePresets"
+
 
 type PlanMode = "before" | "after" | "full"
 type Budget = "$" | "$$" | "$$$" | "$$$$"
@@ -494,9 +495,7 @@ export default function OutingPlannerModal({
       const nextPresetId =
         previousPresetId === presetId ? null : presetId
 
-      const nextTags = nextPresetId
-        ? expandVibeTags(nextPresetId)
-        : []
+      const nextTags: string[] = []
 
       setVibeTags(nextTags)
       setPlanDirty(true)

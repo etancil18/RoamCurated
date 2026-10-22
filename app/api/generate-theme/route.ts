@@ -1,10 +1,22 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { generateThemeRoute, generateMultipleThemeRoutes } from "@/lib/theme-engine";
 import { fetchLiveEventsForCity } from "@/lib/events/fetchLiveEvents";
+import { resolveThemeVenues } from "@/lib/venues/resolveThemeVenues.server";
 import type { Venue } from "@/types/venue";
 import type { ThemeRouteOptions } from "@/lib/theme-engine/types";
 import { CITY_CONFIGS } from "@/config/cities";
+
+// Remove internal scoring metadata from venues returned to the browser.
+// This does not modify the venue objects used by the theme engine.
+function stripInternalScores(venue: Venue): Venue {
+  const { _score, _eventBoost, ...publicVenue } = venue as Venue & {
+    _eventBoost?: number;
+  };
+
+  return publicVenue as Venue;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -74,6 +86,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Resolve browser-requested IDs against the canonical
+    // server-owned venue dataset for the selected city.
+    // All client-submitted venue attributes are discarded.
+    const requestedVenueIds = venues
+      .map((v) => v?.id)
+      .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+    const canonicalVenues = resolveThemeVenues(city, requestedVenueIds);
+
+    if (canonicalVenues.length === 0) {
+      return NextResponse.json(
+        {
+          error: "No recognized venues were found for the selected city.",
+        },
+        { status: 422 }
+      );
+    }
+
     const timezone = CITY_CONFIGS[city].timezone;
 
     const plannedStartAt =
@@ -120,7 +150,10 @@ export async function POST(req: NextRequest) {
     let eventVenues: Venue[] = [];
 
     if (includeEvents || eventOnly) {
-      const liveEvents = await fetchLiveEventsForCity(city);
+      const liveEvents = await fetchLiveEventsForCity(
+        city,
+        startTime?.toISO() ?? undefined
+      );
 
       eventVenues = liveEvents.map((ev) => ({
         ...ev,
@@ -129,7 +162,7 @@ export async function POST(req: NextRequest) {
     }
 
     const allVenuesMap = new Map<string, Venue>();
-    venues.forEach((v) => allVenuesMap.set(v.id, v));
+    canonicalVenues.forEach((v) => allVenuesMap.set(v.id, v));
     eventVenues.forEach((ev) => allVenuesMap.set(ev.id, ev));
     const mergedVenues = Array.from(allVenuesMap.values());
 
@@ -163,8 +196,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      route,
-      alternatives: altRoutes,
+      route: route.map(stripInternalScores),
+      alternatives: altRoutes.map((alternative) =>
+        alternative.map(stripInternalScores)
+      ),
       fallbackUsed: false,
       plannedStartAt: startTime?.toISO() ?? null,
     });

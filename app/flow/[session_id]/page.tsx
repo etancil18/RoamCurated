@@ -1,3 +1,4 @@
+
 // app/flow/[session_id]/page.tsx
 
 import { notFound, redirect } from 'next/navigation'
@@ -542,7 +543,7 @@ export default async function ActiveFlowPage({
       bookingData ?? []
     )
 
-  /*
+/*
    * Venue order must always follow the canonical executable runtime-stop route.
    *
    * Database `.in(...)` results are not guaranteed to preserve input order.
@@ -782,13 +783,15 @@ export default async function ActiveFlowPage({
           />
         </div>
 
-        <ActiveFlowOpportunitySurface
-          sessionId={
-            session.id
-          }
-        />
+        {session.status === 'active' && (
+          <ActiveFlowOpportunitySurface
+            sessionId={
+              session.id
+            }
+          />
+        )}
 
-        <section
+<section
           aria-labelledby="active-flow-route-title"
           className="mt-8 min-w-0"
         >

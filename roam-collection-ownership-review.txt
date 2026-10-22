@@ -1,0 +1,706 @@
+===== COLLECTION ACTION AUTH AND HELPERS =====
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['venueIds'],
+        message:
+          'The venue selection contains duplicate IDs.',
+      })
+    }
+  })
+
+const removeCreatorCollectionVenueSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    collectionVenueId:
+      collectionVenueIdSchema,
+  })
+  .strict()
+
+const reorderCreatorCollectionVenuesSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    collectionVenueIds: z
+      .array(
+        collectionVenueIdSchema
+      )
+      .max(
+        COLLECTION_LIMITS.maximumVenueReorderBatch,
+        `You can reorder at most ${COLLECTION_LIMITS.maximumVenueReorderBatch} venues at once.`
+      ),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const uniqueIds = new Set(
+      value.collectionVenueIds
+    )
+
+    if (
+      uniqueIds.size !==
+      value.collectionVenueIds.length
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [
+          'collectionVenueIds',
+        ],
+        message:
+          'Venue order contains duplicate IDs.',
+      })
+    }
+  })
+
+const addCreatorCollectionItemsSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    items: z
+      .array(
+        z
+          .object({
+            itemType: z.enum([
+              'venue',
+              'property',
+              'flow',
+              'snapshot',
+              'custom',
+            ]),
+
+            itemId:
+              venueIdSchema,
+          })
+          .strict()
+      )
+      .min(
+        1,
+        'Select at least one venue.'
+      )
+      .max(
+        COLLECTION_LIMITS.maximumVenueSelectionBatch,
+        `You can add at most ${COLLECTION_LIMITS.maximumVenueSelectionBatch} venues at once.`
+      ),
+  })
+  .strict()
+
+const removeCreatorCollectionItemSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    collectionItemId:
+      collectionVenueIdSchema,
+  })
+  .strict()
+
+const reorderCreatorCollectionItemsSchema = z
+  .object({
+    collectionId:
+      collectionIdSchema,
+
+    collectionItemIds: z
+      .array(
+        collectionVenueIdSchema
+      )
+      .max(
+        COLLECTION_LIMITS.maximumVenueReorderBatch,
+        `You can reorder at most ${COLLECTION_LIMITS.maximumVenueReorderBatch} venues at once.`
+      ),
+  })
+  .strict()
+
+/* =========================================================
+ * Create collection
+ * ======================================================= */
+
+export async function createCreatorCollectionAction(
+  input: unknown
+): Promise<CreateCreatorCollectionResult> {
+  const parsed =
+    createCreatorCollectionSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    return schemaFailure(parsed.error)
+  }
+
+    const city =
+    normalizeCollectionCity(
+      parsed.data.city
+    )
+
+  if (
+    city &&
+    !isSupportedCityKey(city)
+  ) {
+    return {
+      success: false,
+      error:
+        'Select a supported city.',
+      fieldErrors: {
+        city: [
+          'Select a supported city.',
+        ],
+      },
+    }
+  }
+  
+  const supabase =
+    await createServerClient()
+
+  const authentication =
+    await requireAuthenticatedUser(
+      supabase
+    )
+
+  if (!authentication.success) {
+    return authentication.result
+  }
+
+  const userId =
+    authentication.userId
+
+  const collectionCountResult =
+    await supabase
+      .from('creator_collections')
+      .select('id', {
+        count: 'exact',
+        head: true,
+      })
+      .eq('user_id', userId)
+
+  if (collectionCountResult.error) {
+    logDatabaseError({
+      operation:
+        'count_creator_collections',
+      userId,
+      error:
+        collectionCountResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'Your collections could not be checked. Please try again.',
+    }
+  }
+
+  if (
+    (collectionCountResult.count ??
+      0) >=
+    COLLECTION_LIMITS.maximumCollectionsPerCreator
+  ) {
+    return {
+      success: false,
+      error: `You can create at most ${COLLECTION_LIMITS.maximumCollectionsPerCreator} collections.`,
+    }
+  }
+===== COLLECTION CREATE / UPDATE =====
+    return {
+      success: false,
+      error:
+        'The collection order could not be determined. Please try again.',
+    }
+  }
+
+  const username =
+    await loadProfileUsername({
+      supabase,
+      userId,
+    })
+
+  const now =
+    new Date().toISOString()
+
+  const baseSlug =
+    createSlug(
+      parsed.data.title
+    ) || 'collection'
+
+  for (
+    let attempt = 1;
+    attempt <=
+    MAXIMUM_SLUG_ATTEMPTS;
+    attempt += 1
+  ) {
+    const slug =
+      buildSlugCandidate({
+        baseSlug,
+        attempt,
+      })
+
+    const insertResult =
+      await supabase
+        .from(
+          'creator_collections'
+        )
+        .insert({
+          user_id: userId,
+          title:
+            parsed.data.title,
+          slug,
+          description:
+            parsed.data.description,
+          cover_image_url:
+            parsed.data
+              .cover_image_url,
+          city,
+          category:
+            parsed.data.category,
+          visibility:
+            parsed.data.visibility,
+          featured:
+            parsed.data.featured,
+          sort_order:
+            nextSortOrder,
+          updated_at: now,
+        })
+        .select(
+          COLLECTION_SELECT
+        )
+        .single()
+
+    if (
+      !insertResult.error &&
+      insertResult.data
+    ) {
+      const collection =
+        normalizeCollectionRecord(
+          insertResult.data
+        )
+
+      if (!collection) {
+        logInvalidDatabaseData({
+          operation:
+            'create_creator_collection',
+          userId,
+          value:
+            insertResult.data,
+        })
+
+        return {
+          success: false,
+          error:
+            'The collection was created but its response was invalid. Refresh the page before trying again.',
+        }
+      }
+
+            revalidateCreatorCollectionPaths({
+        username,
+        slug:
+          collection.slug,
+      })
+
+      if (
+        collection.visibility ===
+        'public'
+      ) {
+        await safelyRefreshCreatorReputation(
+          userId,
+          {
+            mutation:
+              'creator_collection_created',
+
+            rankingRefreshMode:
+              'affected',
+
+            calculatedAt:
+              now,
+          }
+        )
+      }
+
+      return {
+        success: true,
+        data: {
+          collection,
+        },
+      }
+    }
+
+    if (
+      isUniqueConstraintViolation(
+        insertResult.error
+      )
+    ) {
+      continue
+    }
+
+    logDatabaseError({
+      operation:
+        'create_creator_collection',
+      userId,
+      error:
+        insertResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The collection could not be created. Please try again.',
+    }
+  }
+
+  return {
+    success: false,
+    error:
+      'A unique collection URL could not be generated. Change the title and try again.',
+    fieldErrors: {
+      title: [
+        'Use a more distinctive collection title.',
+      ],
+    },
+  }
+}
+
+/* =========================================================
+ * Update collection
+ * ======================================================= */
+
+export async function updateCreatorCollectionAction(
+  input: unknown
+): Promise<UpdateCreatorCollectionResult> {
+  const parsed =
+    updateCreatorCollectionSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    return schemaFailure(parsed.error)
+  }
+
+    const city =
+    normalizeCollectionCity(
+      parsed.data.city
+    )
+
+  if (
+    city &&
+    !isSupportedCityKey(city)
+  ) {
+    return {
+      success: false,
+      error:
+        'Select a supported city.',
+      fieldErrors: {
+        city: [
+          'Select a supported city.',
+        ],
+      },
+    }
+  }
+
+  const supabase =
+    await createServerClient()
+
+  const authentication =
+    await requireAuthenticatedUser(
+      supabase
+    )
+
+  if (!authentication.success) {
+    return authentication.result
+  }
+
+  const userId =
+    authentication.userId
+
+  const existingResult =
+    await loadOwnedCollection({
+      supabase,
+      userId,
+      collectionId:
+        parsed.data.collectionId,
+    })
+
+  if (!existingResult.success) {
+    return existingResult.result
+  }
+
+  const existing =
+    existingResult.collection
+
+  const username =
+    await loadProfileUsername({
+      supabase,
+      userId,
+    })
+
+  const now =
+    new Date().toISOString()
+
+  const updateResult =
+    await supabase
+      .from('creator_collections')
+      .update({
+        title:
+          parsed.data.title,
+        description:
+          parsed.data.description,
+        cover_image_url:
+          parsed.data
+            .cover_image_url,
+        city,
+        category:
+          parsed.data.category,
+        visibility:
+          parsed.data.visibility,
+        featured:
+          parsed.data.featured,
+        sort_order:
+          parsed.data.sort_order,
+        updated_at: now,
+      })
+      .eq(
+        'id',
+        parsed.data.collectionId
+      )
+      .eq('user_id', userId)
+      .select(COLLECTION_SELECT)
+      .maybeSingle()
+
+  if (updateResult.error) {
+    logDatabaseError({
+      operation:
+        'update_creator_collection',
+      userId,
+      collectionId:
+        parsed.data.collectionId,
+      error:
+        updateResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'The collection could not be updated. Please try again.',
+    }
+  }
+
+  if (!updateResult.data) {
+    return {
+      success: false,
+      error:
+        'The collection was not found or you no longer have permission to edit it.',
+    }
+  }
+
+  const collection =
+    normalizeCollectionRecord(
+      updateResult.data
+    )
+
+  if (!collection) {
+    logInvalidDatabaseData({
+      operation:
+        'update_creator_collection',
+      userId,
+      value:
+        updateResult.data,
+    })
+
+    return {
+      success: false,
+      error:
+        'The collection was updated but its response was invalid. Refresh the page.',
+    }
+  }
+
+    revalidateCreatorCollectionPaths({
+    username,
+    slug: existing.slug,
+  })
+
+  if (
+    collection.slug !==
+    existing.slug
+  ) {
+    revalidateCreatorCollectionPaths({
+      username,
+      slug:
+        collection.slug,
+    })
+  }
+
+  if (
+    existing.visibility ===
+      'public' ||
+    collection.visibility ===
+      'public'
+  ) {
+    await safelyRefreshCreatorReputation(
+      userId,
+      {
+        mutation:
+          'creator_collection_updated',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
+    )
+  }
+
+  return {
+    success: true,
+    data: {
+      collection,
+===== COLLECTION VISIBILITY =====
+}
+
+/* =========================================================
+ * Set visibility
+ * ======================================================= */
+
+export async function setCreatorCollectionVisibilityAction(
+  input: unknown
+): Promise<SetCreatorCollectionVisibilityResult> {
+  const parsed =
+    setCreatorCollectionVisibilitySchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    return schemaFailure(parsed.error)
+  }
+
+  const supabase =
+    await createServerClient()
+
+  const authentication =
+    await requireAuthenticatedUser(
+      supabase
+    )
+
+  if (!authentication.success) {
+    return authentication.result
+  }
+
+  const userId =
+    authentication.userId
+
+  const existingResult =
+    await loadOwnedCollection({
+      supabase,
+      userId,
+      collectionId:
+        parsed.data.collectionId,
+    })
+
+  if (!existingResult.success) {
+    return existingResult.result
+  }
+
+  const now =
+    new Date().toISOString()
+
+  const updateResult =
+    await supabase
+      .from('creator_collections')
+      .update({
+        visibility:
+          parsed.data.visibility,
+        updated_at: now,
+      })
+      .eq(
+        'id',
+        parsed.data.collectionId
+      )
+      .eq('user_id', userId)
+      .select('id')
+      .maybeSingle()
+
+  if (updateResult.error) {
+    logDatabaseError({
+      operation:
+        'set_creator_collection_visibility',
+      userId,
+      collectionId:
+        parsed.data.collectionId,
+      error:
+        updateResult.error,
+    })
+
+    return {
+      success: false,
+      error:
+        'Collection visibility could not be updated. Please try again.',
+    }
+  }
+
+  if (!updateResult.data) {
+    return {
+      success: false,
+      error:
+        'The collection was not found or you no longer have permission to edit it.',
+    }
+  }
+
+  const username =
+    await loadProfileUsername({
+      supabase,
+      userId,
+    })
+
+    revalidateCreatorCollectionPaths({
+    username,
+    slug:
+      existingResult.collection
+        .slug,
+  })
+
+  if (
+    existingResult.collection
+      .visibility !==
+    parsed.data.visibility
+  ) {
+    await safelyRefreshCreatorReputation(
+      userId,
+      {
+        mutation:
+          'creator_collection_visibility_changed',
+
+        rankingRefreshMode:
+          'affected',
+
+        calculatedAt:
+          now,
+      }
+    )
+  }
+
+  return {
+    success: true,
+    data: {
+      collectionId:
+        parsed.data.collectionId,
+      visibility:
+        parsed.data.visibility,
+      updatedAt: now,
+    },
+  }
+}
+
+/* =========================================================
+ * Set featured status
+ * ======================================================= */
+
+export async function setCreatorCollectionFeaturedAction(
+  input: unknown
+): Promise<SetCreatorCollectionFeaturedResult> {
+  const parsed =
+    setCreatorCollectionFeaturedSchema.safeParse(
+      input
+    )
+
+  if (!parsed.success) {
+    return schemaFailure(parsed.error)
+  }
+

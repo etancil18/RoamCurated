@@ -1,4 +1,4 @@
-console.log("Loaded nyc.ts");
+
 
 const nycData = [
   {
@@ -43214,6 +43214,5 @@ const nycData = [
   }
 ];
 
-console.log("Exporting nycData", nycData); // Add this
 export default nycData;
 

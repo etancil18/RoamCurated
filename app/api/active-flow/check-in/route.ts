@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 import { createServerClient } from '@/lib/supabase/server'
+import { selectActiveFlowProgressWriter } from '@/lib/active-flow/trustedProgressWriter.server'
+import { selectActiveFlowVenueVisitWriter } from '@/lib/active-flow/trustedVenueVisitWriter.server'
+import {
+  persistTrustedReplayAttestation,
+} from '@/lib/active-flow/trustedReplayAttestation.server'
 
 import { loadActiveFlowRuntimeRoute } from '@/lib/active-flow/runtimeRoute.server'
 
@@ -85,6 +90,47 @@ const MAX_REASONABLE_ACCURACY_METERS = 250
  */
 const CREATOR_COLLECTION_STOP_XP_ENABLED =
   process.env.ROAM_CREATOR_COLLECTION_STOP_XP_ENABLED ===
+  'true'
+
+/**
+ * Trusted Active Flow progress persistence.
+ *
+ * Disabled by default to preserve the current check-in path.
+ * When enabled, only the verified progress upsert uses a
+ * server-only Supabase service-role client.
+ *
+ * Do not revoke authenticated progress writes until this
+ * pathway passes core Flow regression testing.
+ */
+const TRUSTED_FLOW_PROGRESS_WRITES_ENABLED =
+  process.env.ROAM_TRUSTED_FLOW_PROGRESS_WRITES_ENABLED ===
+  'true'
+
+/**
+ * Trusted Active Flow venue-visit persistence.
+ *
+ * Disabled by default.
+ *
+ * When enabled, the fresh check-in and existing-progress
+ * repair paths use trusted server-only persistence for
+ * venue_visits inserts.
+ *
+ * Does not alter visit reads, ratings, or Flow completion.
+ */
+const TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED =
+  process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
+  'true'
+
+/**
+ * Forward-only trusted Snapshot Replay evidence.
+ *
+ * Disabled by default.
+ * Must not be enabled before the protected table exists,
+ * both evidence writers use trusted persistence,
+ * and Replay attribution enforcement is coordinated.
+ */
+const TRUSTED_REPLAY_ATTESTATIONS_ENABLED =
+  process.env.ROAM_TRUSTED_REPLAY_ATTESTATIONS_ENABLED ===
   'true'
 
 async function refreshPublicPassportStats(
@@ -785,6 +831,47 @@ export async function POST(
       )
     }
 
+
+    /**
+     * Venue-visit persistence authority.
+     *
+     * The authenticated client remains responsible for
+     * authentication, eligibility checks, reads, ratings,
+     * route calculations, and downstream attribution.
+     *
+     * Only venue_visits INSERT operations use this writer.
+     */
+    let venueVisitWriteClient = supabase
+
+    if (TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED) {
+      try {
+        venueVisitWriteClient =
+          selectActiveFlowVenueVisitWriter({
+            enabled: true,
+            authenticatedClient: supabase,
+            supabaseUrl:
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+            serviceRoleKey:
+              process.env.SUPABASE_SERVICE_ROLE_KEY,
+          })
+      } catch (error) {
+        console.error(
+          '[active-flow/check-in] Trusted venue-visit persistence unavailable:',
+          error
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Could not initialize check-in persistence.',
+          },
+          {
+            status: 500,
+          }
+        )
+      }
+    }
+
     const body =
       (await req.json()) as
         CheckInActiveFlowBody
@@ -1458,7 +1545,7 @@ export async function POST(
             repairedVenueVisitRow,
           error:
             repairedVenueVisitError,
-        } = await supabase
+        } = await venueVisitWriteClient
           .from(
             'venue_visits'
           )
@@ -1966,10 +2053,49 @@ if (
       )
     }
 
+        /**
+     * Trusted persistence boundary.
+     *
+     * All existing authentication, canonical runtime-stop
+     * validation, GPS verification, retry checks, and rating
+     * checks have already passed at this point.
+     *
+     * The feature flag changes only the database authority
+     * used for the new verified-progress upsert.
+     */
+        let progressWriteClient = supabase
+
+    if (TRUSTED_FLOW_PROGRESS_WRITES_ENABLED) {
+      try {
+        progressWriteClient =
+          selectActiveFlowProgressWriter({
+            enabled: true,
+            authenticatedClient: supabase,
+            supabaseUrl:
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+            serviceRoleKey:
+              process.env.SUPABASE_SERVICE_ROLE_KEY,
+          })
+      } catch (error) {
+        console.error(
+          '[active-flow/check-in] Trusted progress persistence unavailable:',
+          error
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Could not save verified check-in.',
+          },
+          { status: 500 }
+        )
+      }
+    }
+
     const {
       data: progress,
       error: upsertError,
-    } = await supabase
+    } = await progressWriteClient
       .from(
         'active_flow_progress'
       )
@@ -2056,7 +2182,7 @@ if (
     const {
       data: venueVisit,
       error: venueVisitError,
-    } = await supabase
+    } = await venueVisitWriteClient
       .from(
         'venue_visits'
       )
@@ -2142,6 +2268,66 @@ if (
             500,
         }
       )
+    }
+
+
+    /**
+     * Forward-only trusted Snapshot Replay attestation.
+     *
+     * Only fresh, successful GPS-verified check-ins qualify.
+     *
+     * Never invoke this from existing-progress retries,
+     * legacy visit repair, or historical visit creation.
+     *
+     * Both canonical evidence writes must use trusted
+     * persistence before attestation may be recorded.
+     *
+     * Failure remains non-fatal to the explorer's physical
+     * check-in. Attribution enforcement is a separately
+     * coordinated database release step.
+     */
+    if (
+      TRUSTED_REPLAY_ATTESTATIONS_ENABLED &&
+      session.source === 'flow_snapshot'
+    ) {
+      if (
+        !TRUSTED_FLOW_PROGRESS_WRITES_ENABLED ||
+        !TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED
+      ) {
+        console.error(
+          '[active-flow/check-in] Replay attestation blocked: trusted evidence writers are not both enabled.'
+        )
+      } else if (
+        canonicalProgressStopIndex === null ||
+        typeof session.source_id !== 'string' ||
+        !session.source_id ||
+        typeof progress.id !== 'string' ||
+        typeof progress.checked_in_at !== 'string'
+      ) {
+        console.error(
+          '[active-flow/check-in] Replay attestation blocked: canonical evidence identity is incomplete.',
+          { sessionId, venueId }
+        )
+      } else {
+        try {
+          await persistTrustedReplayAttestation({
+            sessionId,
+            replayUserId: user.id,
+            snapshotId: session.source_id,
+            flowStopId: runtimeStop.id,
+            progressId: progress.id,
+            venueVisitId: venueVisit.id,
+            stopIndex: canonicalProgressStopIndex,
+            venueId,
+            verifiedAt: progress.checked_in_at,
+          })
+        } catch (error) {
+          console.error(
+            '[active-flow/check-in] Trusted Replay attestation failed:',
+            { sessionId, venueId, error }
+          )
+        }
+      }
     }
 
     /**

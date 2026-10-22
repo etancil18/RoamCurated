@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useMemo, useState } from 'react'
@@ -52,6 +53,19 @@ export default function ProfileSnapshotLibrary({
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
+  /*
+   * Saved Roam Naming:
+   *
+   * Keep title editing local to the snapshot library.
+   * The existing owner-scoped snapshot PATCH endpoint remains
+   * authoritative for validation and persistence.
+   */
+  const [editingSnapshotId, setEditingSnapshotId] =
+    useState<string | null>(null)
+
+  const [draftSnapshotTitle, setDraftSnapshotTitle] =
+    useState('')
+
   const publicCount = useMemo(
     () =>
       snapshots.filter(
@@ -63,6 +77,124 @@ export default function ProfileSnapshotLibrary({
   const clearMessages = () => {
     setError(null)
     setNotice(null)
+  }
+
+  const beginTitleEdit = (
+    snapshot: ProfileSnapshot
+  ) => {
+    if (busySnapshotId) {
+      return
+    }
+
+    clearMessages()
+    setEditingSnapshotId(snapshot.id)
+    setDraftSnapshotTitle(snapshot.title ?? '')
+  }
+
+  const cancelTitleEdit = () => {
+    if (busySnapshotId) {
+      return
+    }
+
+    setEditingSnapshotId(null)
+    setDraftSnapshotTitle('')
+  }
+
+  const updateTitle = async (
+    snapshot: ProfileSnapshot
+  ) => {
+    if (
+      busySnapshotId ||
+      editingSnapshotId !== snapshot.id
+    ) {
+      return
+    }
+
+    const title = draftSnapshotTitle.trim()
+
+    if (!title || title.length > 60) {
+      setError(
+        'Snapshot name must contain between 1 and 60 characters.'
+      )
+      setNotice(null)
+      return
+    }
+
+    if (title === snapshot.title) {
+      setEditingSnapshotId(null)
+      setDraftSnapshotTitle('')
+      return
+    }
+
+    clearMessages()
+    setBusySnapshotId(snapshot.id)
+
+    try {
+      const response = await fetch(
+        `/api/flow-snapshots/${encodeURIComponent(snapshot.id)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title,
+          }),
+        }
+      )
+
+      const payload = (await response.json().catch(() => null)) as
+        | SnapshotMutationResponse
+        | null
+
+      if (!response.ok) {
+        throw new Error(
+          buildMutationErrorMessage({
+            payload,
+            fallback: `Failed to update snapshot name (${response.status}).`,
+          })
+        )
+      }
+
+      const updatedSnapshot = payload?.snapshot
+
+      if (!updatedSnapshot) {
+        throw new Error(
+          'The snapshot name was updated but no snapshot record was returned.'
+        )
+      }
+
+      setSnapshots((current) =>
+        current.map((item) =>
+          item.id === updatedSnapshot.id
+            ? normalizeSnapshot(updatedSnapshot)
+            : item
+        )
+      )
+
+      setSelectedSnapshot((current) =>
+        current?.id === updatedSnapshot.id
+          ? normalizeSnapshot(updatedSnapshot)
+          : current
+      )
+
+      setEditingSnapshotId(null)
+      setDraftSnapshotTitle('')
+      setNotice('Snapshot name updated.')
+    } catch (err) {
+      console.error(
+        '[ProfileSnapshotLibrary] Title update failed:',
+        err
+      )
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to update snapshot name.'
+      )
+    } finally {
+      setBusySnapshotId(null)
+    }
   }
 
   const updateVisibility = async (
@@ -285,7 +417,7 @@ export default function ProfileSnapshotLibrary({
           </div>
         ) : null}
 
-        {snapshots.length === 0 ? (
+{snapshots.length === 0 ? (
           <EmptySnapshotLibrary />
         ) : (
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -293,6 +425,9 @@ export default function ProfileSnapshotLibrary({
               const busy = busySnapshotId === snapshot.id
               const isPublic =
                 snapshot.visibility === 'public'
+
+              const editing =
+                editingSnapshotId === snapshot.id
 
               return (
                 <article
@@ -367,6 +502,77 @@ export default function ProfileSnapshotLibrary({
                         Preview
                       </button>
                     </div>
+
+                    {editing ? (
+                      <form
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          void updateTitle(snapshot)
+                        }}
+                        className="space-y-2 rounded-xl border border-indigo-500/25 bg-indigo-950/15 p-3"
+                      >
+                        <label
+                          htmlFor={`snapshot-title-${snapshot.id}`}
+                          className="block text-xs font-semibold text-neutral-300"
+                        >
+                          Snapshot name
+                        </label>
+
+                        <input
+                          id={`snapshot-title-${snapshot.id}`}
+                          type="text"
+                          value={draftSnapshotTitle}
+                          onChange={(event) =>
+                            setDraftSnapshotTitle(
+                              event.target.value
+                            )
+                          }
+                          maxLength={60}
+                          disabled={busy}
+                          autoFocus
+                          autoComplete="off"
+                          placeholder="Name this Roam"
+                          className="min-h-10 w-full min-w-0 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm text-white outline-none transition placeholder:text-neutral-600 focus:border-indigo-400 disabled:opacity-60"
+                        />
+
+                        <p className="text-right text-[11px] text-neutral-500">
+                          {draftSnapshotTitle.length}/60
+                        </p>
+
+                        <div className="flex gap-2">
+                          <button
+                            type="submit"
+                            disabled={
+                              busy ||
+                              !draftSnapshotTitle.trim() ||
+                              draftSnapshotTitle.trim().length > 60
+                            }
+                            className="min-h-10 flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {busy ? 'Saving…' : 'Save name'}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={cancelTitleEdit}
+                            disabled={busy}
+                            className="min-h-10 flex-1 rounded-lg border border-neutral-700 px-3 py-2 text-xs font-semibold text-neutral-300 transition hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => beginTitleEdit(snapshot)}
+                        disabled={Boolean(busySnapshotId)}
+                        className="flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-indigo-400/25 bg-indigo-400/[0.06] px-3 py-2 text-xs font-semibold text-indigo-200 transition hover:bg-indigo-400/[0.12] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <span aria-hidden="true">✎</span>
+                        Edit name
+                      </button>
+                    )}
 
                     <button
                       type="button"
@@ -540,7 +746,7 @@ function SnapshotPreviewModal({
             />
           </div>
 
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+<div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <button
               type="button"
               onClick={() =>

@@ -1,3 +1,4 @@
+
 import { supabaseServerApi } from "@/lib/supabase/server-api";
 import type { Venue, DateEvent } from "@/types/venue";
 
@@ -14,14 +15,32 @@ type EventRecord = {
 /**
  * Fetch upcoming live events for the given city,
  * and return them as enriched Venue objects for crawl logic.
+ *
+ * When plannedStartAt is provided, fetch events beginning
+ * at or after the requested itinerary start time.
+ *
+ * Existing callers that omit plannedStartAt retain the
+ * original current-time behavior.
  */
 export async function fetchLiveEventsForCity(
-  city: "atl" | "nyc" | "lisbon" | "porto" | "london" | "la"
+  city: "atl" | "nyc" | "lisbon" | "porto" | "london" | "la",
+  plannedStartAt?: string | Date
 ): Promise<Venue[]> {
   const supabase = await supabaseServerApi();
 
   const now = new Date();
-  const nowISO = now.toISOString();
+
+  const plannedDate =
+    plannedStartAt instanceof Date
+      ? plannedStartAt
+      : typeof plannedStartAt === "string"
+        ? new Date(plannedStartAt)
+        : null;
+
+  const nowISO =
+    plannedDate && !Number.isNaN(plannedDate.getTime())
+      ? plannedDate.toISOString()
+      : now.toISOString();
 
   const { data, error } = await supabase
     .from("events")

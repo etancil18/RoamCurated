@@ -1,4 +1,5 @@
-// lib/venues/normalizeVenue.ts
+
+ // lib/venues/normalizeVenue.ts
 
 import type {
   DateEvent,
@@ -87,7 +88,7 @@ function normalizeRequiredString(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -106,7 +107,7 @@ function normalizeOptionalString(
 ): string | undefined {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return undefined
   }
@@ -198,7 +199,7 @@ function collectNormalizedStrings(
     if (
       typeof value ===
         'string'
-    ) {
+      ) {
       for (
         const part of
         value.split(',')
@@ -475,42 +476,82 @@ function normalizeHoursNumeric(
       continue
     }
 
-    let candidate:
-      unknown =
-      rawHours
-
+    /**
+     * Preserve every valid daily opening interval.
+     *
+     * Single-interval objects retain their existing shape.
+     * Multiple intervals retain their array representation.
+     *
+     * This prevents split schedules such as lunch and
+     * dinner from losing their later opening periods.
+     */
     if (
       Array.isArray(
         rawHours
       )
     ) {
-      candidate =
-        rawHours[0]
+      const validPairs:
+        Array<{
+          open:
+            number
+          close:
+            number
+        }> = []
 
-      if (
-        rawHours.length >
-        1
+      for (
+        const rawPair of
+        rawHours
       ) {
-        reportIssue(
-          context,
-          {
-            code:
-              'truncated-hours-intervals',
-            message:
-              `Venue "${venueId}" has multiple hours intervals for "${day}", but HoursNumeric currently supports one interval per day.`,
-            venueId,
-            field:
-              `hoursNumeric.${day}`,
-            value:
-              rawHours,
-          }
+        const pair =
+          normalizeHoursPair(
+            rawPair
+          )
+
+        if (
+          !pair
+        ) {
+          reportIssue(
+            context,
+            {
+              code:
+                'invalid-hours-interval',
+              message:
+                `Venue "${venueId}" has an invalid hours interval for "${day}".`,
+              venueId,
+              field:
+                `hoursNumeric.${day}`,
+              value:
+                rawPair,
+            }
+          )
+
+          continue
+        }
+
+        validPairs.push(
+          pair
         )
       }
+
+      if (
+        validPairs.length ===
+        0
+      ) {
+        continue
+      }
+
+      normalized[day] =
+        validPairs.length === 1
+          ? validPairs[0]
+          : validPairs
+
+      hasEntries = true
+      continue
     }
 
     const pair =
       normalizeHoursPair(
-        candidate
+        rawHours
       )
 
     if (!pair) {
@@ -826,8 +867,7 @@ export function normalizeRawVenue(
           'legacy-types-field',
         message:
           `Venue "${id}" uses legacy "types"; it was normalized into canonical "type".`,
-        venueId:
-          id,
+        venueId: id,
         field:
           'types',
         value:
@@ -836,7 +876,7 @@ export function normalizeRawVenue(
     )
   }
 
-  const type =
+const type =
     normalizeStringField(
       input.type,
       legacyTypes
@@ -1067,7 +1107,7 @@ export function normalizeRawVenue(
       hasUpcomingEvents
   }
 
-  const liveEvent =
+const liveEvent =
     normalizeBoolean(
       input.liveEvent
     )

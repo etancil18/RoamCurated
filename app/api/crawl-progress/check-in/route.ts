@@ -1,7 +1,11 @@
+
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 import { getRoamDay } from '@/lib/roam/roamDay'
+import {
+  selectActiveFlowVenueVisitWriter,
+} from '@/lib/active-flow/trustedVenueVisitWriter.server'
 
 type CheckInCrawlProgressBody = {
   crawl_id?: string
@@ -272,6 +276,29 @@ export async function POST(req: Request) {
       )
     }
 
+    /**
+     * Trusted venue-visit persistence.
+     *
+     * OFF: preserve the existing authenticated Supabase writer.
+     * ON: use the server-only service-role writer for the two
+     * canonical venue_visits INSERT operations below.
+     *
+     * Authentication, GPS validation, reads, crawl_progress writes,
+     * RSVP updates, and Passport behavior are unchanged.
+     */
+    const venueVisitWriteClient =
+      selectActiveFlowVenueVisitWriter({
+        enabled:
+          process.env.ROAM_TRUSTED_FLOW_VENUE_VISIT_WRITES_ENABLED ===
+          'true',
+        authenticatedClient:
+          supabase,
+        supabaseUrl:
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+        serviceRoleKey:
+          process.env.SUPABASE_SERVICE_ROLE_KEY,
+      })
+
     const now =
       new Date().toISOString()
 
@@ -455,7 +482,7 @@ export async function POST(req: Request) {
             repairedVenueVisit,
           error:
             repairedVenueVisitError,
-        } = await supabase
+        } = await venueVisitWriteClient
           .from('venue_visits')
           .insert({
             user_id:
@@ -661,7 +688,7 @@ export async function POST(req: Request) {
           insertedVenueVisit,
         error:
           venueVisitError,
-      } = await supabase
+      } = await venueVisitWriteClient
         .from('venue_visits')
         .insert({
           user_id:

@@ -1,11 +1,14 @@
 // app/api/events/[eventId]/plan-outing/route.ts
-// Fully ready to drop in.
 
 import { NextResponse } from "next/server"
 
 import { CITY_CONFIGS } from "@/config/cities"
 import { generateEventOutingPlan } from "@/lib/outings/generateEventOutingPlan"
 import { buildPlanningContext } from "@/lib/outings/planningContext"
+import {
+  expandVibeTags,
+  getVibePreset,
+} from "@/lib/outings/vibePresets"
 import { persistGeneratedOutingPlan } from "@/lib/outings/persistGeneratedOutingPlan"
 import {
   qualifiesForLateNightReducedFullFallback,
@@ -118,7 +121,9 @@ export async function POST(
       )
     }
 
-    const body = (await safeJson(req)) as PlanOutingRequestBody
+    const body = (await safeJson(req)) as PlanOutingRequestBody & {
+      vibePresetId?: string | null
+    }
 
     const mode = normalizeMode(body.mode)
     const groupSize = normalizeGroupSize(body.groupSize)
@@ -126,13 +131,26 @@ export async function POST(
     const mobility = normalizeMobility(body.mobility)
 
     /*
-     * Preserve the user's original preset IDs here.
+     * Resolve explicitly selected vibe presets on the server.
      *
-     * Do not call expandVibeTags() in the API route. PlanningContext and the
-     * feature-scoring layer need the canonical preset ID, such as "chill" or
-     * "romantic", so they can retrieve the correct preset configuration.
+     * Preserve the current modal's effective planning input by expanding the
+     * canonical preset and applying the same eight-token API normalization.
+     *
+     * Requests without a valid explicit preset continue using the existing
+     * vibeTags normalization path for backward compatibility.
+     *
+     * Do not change downstream scoring or planning semantics here.
      */
-    const vibeTags = normalizeVibeTags(body.vibeTags)
+    const selectedVibePreset =
+      typeof body.vibePresetId === "string"
+        ? getVibePreset(body.vibePresetId)
+        : null
+
+    const vibeTags = normalizeVibeTags(
+      selectedVibePreset
+        ? expandVibeTags(selectedVibePreset.id)
+        : body.vibeTags
+    )
 
     const leaveEarlyByHours = normalizeLeaveEarlyByHours(
       body.leaveEarlyByHours
@@ -638,18 +656,12 @@ export async function POST(
           2
         )
       )
-
       return NextResponse.json(
         {
           error: plannerErrorMessage,
           code: plannerFailureCode,
           suggestedModes:
             plannerSuggestedModes,
-          debug:
-            generatedPlan.debug ?? null,
-          scoreBreakdown:
-            generatedPlan.scoreBreakdown,
-          candidateCoverage,
         },
         {
           status: 422,
@@ -815,12 +827,6 @@ export async function POST(
         slotIndex:
           stop.metadata?.slotIndex ??
           stop.stopOrder - 1,
-        vibeMatchedTypes:
-          stop.metadata?.vibeMatchedTypes ?? [],
-        vibeScore:
-          stop.metadata?.vibeScore ?? null,
-        vibeConfidence:
-          stop.metadata?.vibeConfidence ?? null,
       }))
 
     return NextResponse.json({
@@ -871,11 +877,6 @@ export async function POST(
       },
       stops:
         responseStops,
-      candidateCoverage,
-      debug:
-        generatedPlan.debug ?? undefined,
-      scoreBreakdown:
-        generatedPlan.scoreBreakdown,
     })
   } catch (error) {
     console.error(

@@ -1,4 +1,6 @@
+
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 import {
@@ -8,6 +10,24 @@ import {
 
 const SNAPSHOT_BUCKET = 'flow-snapshots'
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024
+
+/*
+ * CERTIFIED SNAPSHOT LINEAGE
+ *
+ * Disabled by default.
+ *
+ * When enabled for an Active Flow, the database RPC must
+ * atomically persist the Snapshot, canonical stops, and
+ * independently certified original contribution mappings.
+ *
+ * Do not enable until the RPC has been installed and tested
+ * in a nonproduction environment.
+ *
+ * Hosted Flow and Roam-history saving retain their existing
+ * behavior. No creator XP or reward changes are made here.
+ */
+const SNAPSHOT_LINEAGE_ENABLED =
+  process.env.ROAM_SNAPSHOT_LINEAGE_ENABLED === 'true'
 
 const ALLOWED_SOURCE_TYPES = new Set([
   'active_flow',
@@ -730,32 +750,119 @@ export async function POST(request: Request) {
       updated_at: now,
     }
 
-    const {
-      data: snapshot,
-      error: snapshotError,
-    } = await supabase
-      .from('flow_snapshots')
-      .upsert(snapshotPayload as any, {
-        onConflict:
-          'user_id,source_type,source_id',
-      })
-      .select(`
-        id,
-        user_id,
-        source_type,
-        source_id,
-        title,
-        city,
-        status,
-        cover_image_url,
-        route_summary,
-        checked_in_count,
-        total_stops,
-        visibility,
-        created_at,
-        updated_at
-      `)
-      .single()
+    /*
+     * CERTIFIED SNAPSHOT LINEAGE — TRANSACTIONAL WRITE PATH
+     *
+     * The RPC must independently verify source ownership and
+     * canonical stop identities within its database transaction.
+     *
+     * It must inherit only established contribution IDs from
+     * active_flow_stop_contributions. Missing certification
+     * remains unattributed, never assigned to the Snapshot owner.
+     *
+     * Existing snapshot stops and mappings must not be replaced
+     * or rewritten on re-save.
+     *
+     * This path is disabled until its database function has
+     * been implemented and tested.
+     */
+    const useCertifiedLineage =
+      SNAPSHOT_LINEAGE_ENABLED &&
+      sourceType === 'active_flow'
+
+    let snapshot: any = null
+    let snapshotError: any = null
+
+    if (useCertifiedLineage) {
+      const supabaseUrl =
+        process.env.NEXT_PUBLIC_SUPABASE_URL
+
+      const serviceRoleKey =
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+
+      if (!supabaseUrl || !serviceRoleKey) {
+        console.error(
+          '[flow-snapshots/save] Certified Snapshot lineage configuration missing.'
+        )
+
+        return NextResponse.json(
+          {
+            error:
+              'Certified Snapshot saving is unavailable.',
+          },
+          { status: 503 }
+        )
+      }
+
+      const serviceSupabase = createClient(
+        supabaseUrl,
+        serviceRoleKey,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+          },
+        }
+      )
+
+      const result = await serviceSupabase.rpc(
+        'save_snapshot_with_certified_lineage',
+        {
+          p_explorer_user_id: user.id,
+          p_source_flow_id: sourceId,
+          p_expected_venue_ids:
+            canonicalSource.venueIds,
+          p_snapshot_payload:
+            snapshotPayload,
+        }
+      )
+
+      snapshot = result.data
+      snapshotError = result.error
+
+      if (
+        !snapshotError &&
+        (
+          !snapshot ||
+          typeof snapshot !== 'object' ||
+          Array.isArray(snapshot) ||
+          typeof snapshot.id !== 'string'
+        )
+      ) {
+        snapshot = null
+        snapshotError = {
+          message:
+            'Transactional Snapshot writer returned an invalid result.',
+        }
+      }
+    } else {
+      const result = await supabase
+        .from('flow_snapshots')
+        .upsert(snapshotPayload as any, {
+          onConflict:
+            'user_id,source_type,source_id',
+        })
+        .select(`
+          id,
+          user_id,
+          source_type,
+          source_id,
+          title,
+          city,
+          status,
+          cover_image_url,
+          route_summary,
+          checked_in_count,
+          total_stops,
+          visibility,
+          created_at,
+          updated_at
+        `)
+        .single()
+
+      snapshot = result.data
+      snapshotError = result.error
+    }
 
     if (snapshotError || !snapshot) {
       console.error(
@@ -799,8 +906,12 @@ export async function POST(request: Request) {
      *
      * Persist immutable ordered route evidence only when this
      * snapshot is first created.
+     *
+     * When certified lineage is enabled, the transactional
+     * database writer has already persisted these stops and
+     * any inherited contribution mappings in the same commit.
      */
-    if (!existingSnapshot) {
+    if (!existingSnapshot && !useCertifiedLineage) {
       const snapshotStopRows =
         canonicalSource.venueIds.map(
           (venueId, stopIndex) => ({

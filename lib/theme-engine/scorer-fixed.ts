@@ -1,3 +1,4 @@
+
 import type { Venue } from "@/types/venue";
 import type { CrawlTheme } from "@/lib/theme-engine/types";
 import { getDistanceMeters } from "@/utils/geoUtils";
@@ -53,7 +54,12 @@ function isBlockedForTheme(venue: Venue, theme: CrawlTheme): boolean {
 }
 
 /**
- * City-specific curved distance scoring
+ * City-specific curved distance scoring.
+ *
+ * IMPORTANT:
+ * The calling engine must explicitly pass the selected city.
+ * Otherwise, computeScore and sortVenuesByScore retain
+ * their existing "atl" default for backward compatibility.
  */
 function distanceScore(
   city: SupportedCity,
@@ -109,6 +115,12 @@ function distanceScore(
 /**
  * Computes a weighted score for a venue based on theme relevance,
  * vibe continuity, distance, and event timing.
+ *
+ * referenceTime is optional and represents the expected itinerary
+ * arrival time for event-scoring purposes.
+ *
+ * Existing callers that omit referenceTime retain Date.now()
+ * behavior for backward compatibility.
  */
 export function computeScore(
   venue: Venue,
@@ -121,7 +133,8 @@ export function computeScore(
     tag?: number;
     keyword?: number;
     dist?: number;
-  }
+  },
+  referenceTime?: Date | number
 ): number {
   if (isBlockedForTheme(venue, theme)) {
     return Number.NEGATIVE_INFINITY;
@@ -142,6 +155,7 @@ export function computeScore(
   );
 
   // 🎭 Vibe continuity (semantic, normalized)
+  // Preserve the existing 0.6 first-stop baseline.
   const vibeSim = lastVenue
     ? vibeSimilarityVerbose(lastVenue, venue).score
     : 0.6;
@@ -159,7 +173,20 @@ export function computeScore(
   let eventBonus = 0;
   if ((venue as any).liveEvent) {
     const startsAt = new Date((venue as any).starts_at).getTime();
-    const now = Date.now();
+
+    // Use the expected itinerary arrival time when provided.
+    // Otherwise preserve the original current-time behavior.
+    const referenceTimestamp =
+      referenceTime instanceof Date
+        ? referenceTime.getTime()
+        : typeof referenceTime === "number"
+          ? referenceTime
+          : Date.now();
+
+    const now = Number.isFinite(referenceTimestamp)
+      ? referenceTimestamp
+      : Date.now();
+
     const timeUntilStart = startsAt - now;
 
     if (timeUntilStart > 0 && timeUntilStart <= 2 * 60 * 60 * 1000) {
@@ -194,6 +221,13 @@ export function computeScore(
 /**
  * Sorts venues descending by computed score.
  * Adds _score for downstream inspection.
+ *
+ * IMPORTANT:
+ * _score is internal scoring metadata. Server-side API
+ * response handlers should exclude it from public responses.
+ *
+ * referenceTime is optional and forwarded to computeScore.
+ * Existing callers remain backward compatible.
  */
 export function sortVenuesByScore(
   venues: Venue[],
@@ -206,13 +240,22 @@ export function sortVenuesByScore(
     tag?: number;
     keyword?: number;
     dist?: number;
-  }
+  },
+  referenceTime?: Date | number
 ): Venue[] {
   return venues
     .filter((venue) => !isBlockedForTheme(venue, theme))
     .map((v) => ({
       ...v,
-      _score: computeScore(v, theme, origin, lastVenue, city, weight),
+      _score: computeScore(
+        v,
+        theme,
+        origin,
+        lastVenue,
+        city,
+        weight,
+        referenceTime
+      ),
     }))
     .sort((a, b) => (b._score || 0) - (a._score || 0));
 }
