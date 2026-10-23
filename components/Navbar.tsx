@@ -1,3 +1,4 @@
+
 'use client'
 
 import Link from 'next/link'
@@ -124,6 +125,21 @@ export default function Navbar() {
               className="absolute right-0 z-[5002] mt-2 w-56 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900"
             >
               <div className="py-2">
+                {/*
+                 * Public Discover navigation:
+                 *
+                 * Available to guests and authenticated users.
+                 * Account-specific navigation remains protected
+                 * by the existing user conditional below.
+                 */}
+                <Link
+                  href="/discover"
+                  onClick={() => handleNavClick('discover')}
+                  className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                >
+                  Find Explorers
+                </Link>
+
                 {user ? (
                   <>
 
@@ -141,14 +157,6 @@ export default function Navbar() {
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Map
-                    </Link>
-
-                    <Link
-                      href="/discover"
-                      onClick={() => handleNavClick('discover')}
-                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
-                    >
-                      Find Explorers
                     </Link>
 
                     <Link

@@ -145,7 +145,65 @@ export type PassportStats = {
 }
 
 
-const XP_PER_LEVEL = 250
+/* =========================================================
+ * Passport level progression
+ *
+ * Level 1 -> 2 requires 100 XP.
+ * Each subsequent level requires 5% more XP, rounded
+ * independently to the nearest whole XP.
+ *
+ * XP is cumulative; only within-level progress resets.
+ * ======================================================= */
+
+const XP_PER_LEVEL = 100
+const XP_LEVEL_GROWTH_RATE = 1.05
+
+function getXpRequiredForLevel(
+  level: number
+): number {
+  const normalizedLevel = Math.max(
+    1,
+    Math.floor(level)
+  )
+
+  return Math.round(
+    XP_PER_LEVEL *
+      XP_LEVEL_GROWTH_RATE ** (normalizedLevel - 1)
+  )
+}
+
+function getPassportLevelProgress(
+  xp: number
+) {
+  const normalizedXp = normalizeXp(xp)
+
+  let level = 1
+  let remainingXp = normalizedXp
+  let requiredXp =
+    getXpRequiredForLevel(level)
+
+  while (
+    remainingXp >= requiredXp &&
+    Number.isFinite(requiredXp) &&
+    requiredXp > 0
+  ) {
+    remainingXp -= requiredXp
+    level += 1
+    requiredXp =
+      getXpRequiredForLevel(level)
+  }
+
+  return {
+    level,
+    progressToNextLevel: remainingXp,
+    xpRequiredForNextLevel: requiredXp,
+    progressPercent:
+      Number.isFinite(requiredXp) &&
+      requiredXp > 0
+        ? (remainingXp / requiredXp) * 100
+        : 0,
+  }
+}
 
 
 const XP_PER_HOSTED_CRAWL = 75
@@ -258,7 +316,6 @@ const XP_PER_COMPLETED_RELAY_TEAM_PARTICIPATION = 100
 const XP_PER_RELAY_ATTRIBUTED_STOP = 10
 const XP_PER_COMPLETED_ATTRIBUTED_RELAY = 50
 
-
 // Passport XP is awarded only for the first recorded visit
 // to each unique venue.
 const XP_PER_UNIQUE_VENUE_VISIT = 5
@@ -343,33 +400,30 @@ export function calculatePassportXp(
 }
 
 
+/* =========================================================
+ * Progressive Passport level and progress calculations
+ * ======================================================= */
+
 export function calculatePassportLevel(
   xp: number
 ): number {
-  const normalizedXp = normalizeXp(xp)
-
-
-  return Math.max(
-    1,
-    Math.floor(normalizedXp / XP_PER_LEVEL) + 1
-  )
+  return getPassportLevelProgress(xp).level
 }
 
 
 export function calculateProgressToNextLevel(
   xp: number
 ): number {
-  return normalizeXp(xp) % XP_PER_LEVEL
+  return getPassportLevelProgress(xp)
+    .progressToNextLevel
 }
 
 
 export function calculateProgressPercent(
   xp: number
 ): number {
-  return (
-    calculateProgressToNextLevel(xp) /
-    XP_PER_LEVEL
-  ) * 100
+  return getPassportLevelProgress(xp)
+    .progressPercent
 }
 
 
@@ -377,17 +431,19 @@ export function getPassportSnapshot(
   stats: PassportStats
 ) {
   const xp = calculatePassportXp(stats)
-  const level = calculatePassportLevel(xp)
-  const progressToNextLevel =
-    calculateProgressToNextLevel(xp)
-  const progressPercent =
-    calculateProgressPercent(xp)
 
+  const {
+    level,
+    progressToNextLevel,
+    xpRequiredForNextLevel,
+    progressPercent,
+  } = getPassportLevelProgress(xp)
 
   return {
     xp,
     level,
     progressToNextLevel,
+    xpRequiredForNextLevel,
     progressPercent,
   }
 }

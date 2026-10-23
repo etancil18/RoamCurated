@@ -1,3 +1,4 @@
+
 'use client'
 
 import Link from 'next/link'
@@ -35,6 +36,15 @@ type LeaderboardUser = {
   interest_categories: string[] | null
 
   passport_level: number
+
+  /**
+   * Canonical persisted Passport XP, supplied by the
+   * updated leaderboard API.
+   *
+   * Optional for backward compatibility.
+   */
+  passport_xp?: number | null
+
   followers_count: number
   completed_flows_count: number
   venue_visits_count: number
@@ -102,6 +112,14 @@ type LeaderboardCityOption = {
 type LeaderboardResponse = {
   users?: LeaderboardUser[]
   currentUserId?: string | null
+
+  /**
+   * Independently returned personal standing.
+   *
+   * The API resolves this before limiting the leaderboard
+   * preview to five eligible creators.
+   */
+  currentUserStanding?: LeaderboardUser | null
 
   filters?: {
     categoryId?: string | null
@@ -244,6 +262,13 @@ const REPUTATION_LEVEL_LABELS = {
 >
 
 /* =========================================================
+ * Discover initiative: bounded reputation preview
+ * ======================================================= */
+
+const LEADERBOARD_DISPLAY_LIMIT =
+  5
+
+/* =========================================================
  * Component
  * ======================================================= */
 
@@ -262,6 +287,20 @@ export default function RoamLeaderboard() {
   ] =
     useState<
       string | null
+    >(null)
+
+  /**
+   * Separate personal standing is not derived from users.
+   *
+   * The users array now contains only the Top 5 eligible
+   * reputation leaders.
+   */
+  const [
+    currentUserStanding,
+    setCurrentUserStanding,
+  ] =
+    useState<
+      LeaderboardUser | null
     >(null)
 
   const [
@@ -435,6 +474,54 @@ export default function RoamLeaderboard() {
                   []
               : []
 
+          /**
+           * The API already returns at most five eligible
+           * leaders. Retain a defensive frontend limit
+           * without changing canonical rank values.
+           */
+          const previewUsers =
+            normalizedUsers
+              .filter(
+                (
+                  user
+                ) =>
+                  normalizePositiveInteger(
+                    user.reputation_rank
+                  ) !==
+                  null
+              )
+              .slice(
+                0,
+                LEADERBOARD_DISPLAY_LIMIT
+              )
+
+          /**
+           * Prefer the dedicated personal-standing response.
+           *
+           * The fallback keeps the component compatible with
+           * older API responses while migrating.
+           */
+          const returnedCurrentUserId =
+            payload
+              ?.currentUserId ??
+              null
+
+          const returnedCurrentUserStanding =
+            payload
+              ?.currentUserStanding ??
+            (
+              returnedCurrentUserId
+                ? normalizedUsers.find(
+                    (
+                      user
+                    ) =>
+                      user.id ===
+                      returnedCurrentUserId
+                  ) ??
+                  null
+                : null
+            )
+
           const normalizedCategories =
             normalizeCategoryOptions(
               payload
@@ -461,13 +548,15 @@ export default function RoamLeaderboard() {
             )
 
           setUsers(
-            normalizedUsers
+            previewUsers
           )
 
           setCurrentUserId(
-            payload
-              ?.currentUserId ??
-              null
+            returnedCurrentUserId
+          )
+
+          setCurrentUserStanding(
+            returnedCurrentUserStanding
           )
 
           setResponseFilters(
@@ -479,7 +568,7 @@ export default function RoamLeaderboard() {
           setEligiblePopulation(
             deriveEligiblePopulation({
               users:
-                normalizedUsers,
+                previewUsers,
 
               explicitPopulation:
                 payload
@@ -542,6 +631,10 @@ export default function RoamLeaderboard() {
 
           setUsers(
             []
+          )
+
+          setCurrentUserStanding(
+            null
           )
 
           setEligiblePopulation(
@@ -675,41 +768,35 @@ export default function RoamLeaderboard() {
       ]
     )
 
-  const buildingReputationUsers =
-    useMemo(
-      () =>
-        users.filter(
-          (
-            user
-          ) =>
-            normalizePositiveInteger(
-              user.reputation_rank
-            ) ===
-            null
-        ),
-      [
-        users,
-      ]
+  /**
+   * Never derive the personal standing exclusively from the
+   * preview. The API resolves it from the full population.
+   */
+  const currentUser =
+    currentUserStanding
+
+  /**
+   * When the current user already appears in the Top 5,
+   * their row is visibly highlighted in the leaders list.
+   *
+   * Avoid repeating the same full card in a separate section.
+   */
+  const currentUserIsFeatured =
+    Boolean(
+      currentUser &&
+      reputationLeaders.some(
+        (
+          leader
+        ) =>
+          leader.id ===
+          currentUser.id
+      )
     )
 
-  const currentUser =
-    useMemo(
-      () =>
-        currentUserId
-          ? users.find(
-              (
-                user
-              ) =>
-                user.id ===
-                currentUserId
-            ) ??
-            null
-          : null,
-      [
-        users,
-        currentUserId,
-      ]
-    )
+  const showPersonalStandingCard =
+    currentUser !==
+      null &&
+    !currentUserIsFeatured
 
   return (
     <section className="relative overflow-hidden rounded-[2rem] border border-neutral-800 bg-neutral-950 p-4 sm:p-6">
@@ -730,15 +817,13 @@ export default function RoamLeaderboard() {
             </h2>
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-400">
-              See how Roamers compare
-              globally or within cities
-              that are live on Roam.
-              Qualifying reputation
-              leaders are ranked by earned
-              category credibility, while
-              other active Roamers can
-              keep building toward
-              eligibility.
+              Explore the top five
+              eligible Roamers for
+              this category and area.
+              Rankings reflect earned,
+              verified category
+              reputation—not Passport
+              XP or follower counts.
             </p>
 
             {eligiblePopulation !==
@@ -840,23 +925,10 @@ export default function RoamLeaderboard() {
 
         {!loading &&
         !isCitySelectionMissing &&
-        users.length ===
-          0 &&
-        !error ? (
-          <div className="mt-5">
-            <EmptyLeaderboardState
-              message="No Roamers are available here yet. Check another category or city."
-            />
-          </div>
-        ) : null}
-
-        {!loading &&
-        !isCitySelectionMissing &&
-        users.length >
-          0 &&
         !error ? (
           <div className="mt-6 space-y-8">
-            {currentUser ? (
+            {showPersonalStandingCard &&
+            currentUser ? (
               <div>
                 <LeaderboardGroupHeading
                   eyebrow="Your standing"
@@ -899,13 +971,28 @@ export default function RoamLeaderboard() {
               </div>
             ) : null}
 
+            {currentUserIsFeatured &&
+            currentUser ? (
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/[0.055] px-4 py-3 text-xs leading-5 text-cyan-200">
+                Your standing is
+                highlighted in the
+                leaders below
+                {normalizePositiveInteger(
+                  currentUser.reputation_rank
+                ) !== null
+                  ? ` · #${currentUser.reputation_rank}`
+                  : ''}
+                .
+              </div>
+            ) : null}
+
             {reputationLeaders.length >
             0 ? (
               <div>
                 <LeaderboardGroupHeading
                   eyebrow="Leaders"
                   title={`${selectedCategoryLabel} reputation leaders`}
-                  description={`Eligible Roamers ranked by earned ${selectedCategoryLabel.toLowerCase()} reputation in the selected area.`}
+                  description={`Up to five eligible Roamers ranked by earned ${selectedCategoryLabel.toLowerCase()} reputation in the selected area.`}
                 />
 
                 <div className="mt-3 space-y-2.5">
@@ -938,50 +1025,11 @@ export default function RoamLeaderboard() {
                   )}
                 </div>
               </div>
-            ) : null}
-
-            {buildingReputationUsers.length >
-            0 ? (
-              <div>
-                <LeaderboardGroupHeading
-                  eyebrow="Building reputation"
-                  title={`Roamers building ${selectedCategoryLabel} credibility`}
-                  description="These Roamers are discoverable in this area but have not yet qualified for a category reputation rank."
-                />
-
-                <div className="mt-3 space-y-2.5">
-                  {buildingReputationUsers.map(
-                    (
-                      user
-                    ) => (
-                      <LeaderboardUserCard
-                        key={
-                          user.id
-                        }
-                        user={
-                          user
-                        }
-                        currentUserId={
-                          currentUserId
-                        }
-                        selectedCategoryLabel={
-                          selectedCategoryLabel
-                        }
-                        selectedScope={
-                          selectedScope
-                        }
-                        selectedGeographyLabel={
-                          selectedGeographyLabel
-                        }
-                        showReputationRank={
-                          false
-                        }
-                      />
-                    )
-                  )}
-                </div>
-              </div>
-            ) : null}
+            ) : (
+              <EmptyLeaderboardState
+                message="No Roamers have earned an eligible category reputation rank here yet. Try another category or city."
+              />
+            )}
           </div>
         ) : null}
       </div>
@@ -1926,7 +1974,7 @@ function deriveEligiblePopulation({
   for (
     const user of
       users
-  ) {
+    ) {
     const population =
       normalizeNonNegativeInteger(
         user
@@ -1939,7 +1987,7 @@ function deriveEligiblePopulation({
 
     if (
       population ===
-      null
+        null
     ) {
       continue
     }

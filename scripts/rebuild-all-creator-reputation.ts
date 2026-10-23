@@ -372,6 +372,22 @@ async function main():
             })
           )
 
+                    if (
+            error instanceof Error &&
+            'issues' in error
+          ) {
+            console.error(
+              '[creator reputation] Evidence validation issues:',
+              JSON.stringify(
+                (error as Error & {
+                  issues: unknown
+                }).issues,
+                null,
+                2
+              )
+            )
+          }
+          
           console.error(
             [
               '',

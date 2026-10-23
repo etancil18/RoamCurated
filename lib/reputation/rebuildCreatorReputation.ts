@@ -494,8 +494,51 @@ function buildVenueEvidence({
 
   rebuiltAt: string
 }): CreatorReputationVenueEvidenceInput[] {
+    /**
+     * Creator venue reputation is earned once per distinct venue.
+     *
+     * Canonical venue_visits remains append-only and preserves
+     * every verified visit. Select one stable representative visit
+     * per venue before expanding into reputation categories.
+     *
+     * The earliest verified visit preserves initial provenance.
+     * Visit ID breaks timestamp ties deterministically.
+     */
+    const earliestVisitByVenueId =
+      new Map<
+        string,
+        NormalizedVenueVisit
+      >()
+
+    for (const visit of venueVisits) {
+      const existing =
+        earliestVisitByVenueId.get(
+          visit.venueId
+        )
+
+      if (
+        !existing ||
+        visit.visitedAt <
+          existing.visitedAt ||
+        (
+          visit.visitedAt ===
+            existing.visitedAt &&
+          visit.id.localeCompare(
+            existing.id
+          ) < 0
+        )
+      ) {
+        earliestVisitByVenueId.set(
+          visit.venueId,
+          visit
+        )
+      }
+    }
+
+    const distinctVenueVisits =
+      [...earliestVisitByVenueId.values()]
   const rawEvidence =
-    venueVisits.flatMap(
+    distinctVenueVisits.flatMap(
       (
         visit
       ) => {

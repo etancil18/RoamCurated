@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 import { getRoamDay } from '@/lib/roam/roamDay'
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
 import {
   selectActiveFlowVenueVisitWriter,
 } from '@/lib/active-flow/trustedVenueVisitWriter.server'
@@ -318,7 +319,7 @@ export async function POST(req: Request) {
         ? deviceTimestamp
         : null
 
-    const checkInPayload = {
+const checkInPayload = {
       crawl_id:
         crawlId,
       user_id:
@@ -572,7 +573,7 @@ export async function POST(req: Request) {
           )
         }
 
-        venueVisit =
+venueVisit =
           repairedVenueVisit
 
         createdCanonicalVisit =
@@ -791,7 +792,7 @@ export async function POST(req: Request) {
         null
       )
 
-    if (rsvpUpdateError) {
+if (rsvpUpdateError) {
       console.error(
         '[crawl-progress/check-in] RSVP attendance summary update failed:',
         rsvpUpdateError
@@ -866,6 +867,12 @@ export async function POST(req: Request) {
       await refreshPublicPassportStats(
         user.id
       )
+
+      if (venueVisit?.geo_verified === true) {
+        await safelyRefreshCreatorReputation(
+          user.id
+        )
+      }
     }
 
     return NextResponse.json(
@@ -992,7 +999,7 @@ function calculateDistanceMeters({
   const earthRadiusMeters =
     6371000
 
-  const fromLatRad =
+const fromLatRad =
     degreesToRadians(
       fromLat
     )

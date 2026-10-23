@@ -1,3 +1,4 @@
+
 import {
   beforeEach,
   describe,
@@ -5,6 +6,15 @@ import {
   it,
   vi,
 } from 'vitest'
+
+/**
+ * Vitest runs outside the Next.js Server Component runtime.
+ *
+ * Preserve the production `server-only` boundary while
+ * allowing this server-side rebuild module to be tested
+ * in isolation.
+ */
+vi.mock('server-only', () => ({}))
 
 const mocks = vi.hoisted(() => ({
   getSupabaseAdmin: vi.fn(),
@@ -103,6 +113,14 @@ type QueryBuilder =
         unknown
       >
     ) => QueryBuilder
+
+    /**
+     * Supabase single-row query terminator.
+     *
+     * Resolves the result already selected for this
+     * query without consuming another table-plan entry.
+     */
+    maybeSingle: () => Promise<QueryResult>
   }
 
 type MockSupabase = {
@@ -379,6 +397,20 @@ function createSupabaseMock(
             })
 
           return builder
+        },
+
+        /**
+         * Supabase's maybeSingle() terminates the current
+         * select chain.
+         *
+         * Reuse activeResult so select-result queues are
+         * consumed exactly once and call tracking remains
+         * unchanged.
+         */
+        maybeSingle() {
+          return Promise.resolve(
+            activeResult
+          )
         },
 
         then(
@@ -856,9 +888,27 @@ describe(
           completedFlowStops: 4,
           hostedFlowStops: 2,
           completedHostedFlows: 1,
+
           venueVisits: 2,
           eventXp: 25,
           eventCheckins: 4,
+
+          // Creator replay attribution
+          replayedFlowStops: 0,
+          completedReplayedFlows: 0,
+
+          // Competition attribution and win XP
+          competitionAttributedStops: 0,
+          completedCompetitionAttributedFlows: 0,
+          competitionWinXp: 0,
+
+          // Relay participant execution
+          completedRelayParticipantStops: 0,
+          completedRelayTeamParticipations: 0,
+
+          // Relay contributor attribution
+          relayAttributedStops: 0,
+          completedAttributedRelays: 0,
         })
 
         expect(

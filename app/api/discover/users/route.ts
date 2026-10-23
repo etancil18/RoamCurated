@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
@@ -75,6 +76,16 @@ type ReputationCategoryRow = {
   id: string
   label: string | null
   is_active: boolean | null
+}
+
+/* =========================================================
+ * Discover Passport context
+ * ======================================================= */
+
+type DiscoverPassportStatsRow = {
+  user_id: string
+  passport_xp: number | string | null
+  passport_level: number | string | null
 }
 
 type CreatorReputationStatsRow = {
@@ -170,6 +181,20 @@ type DiscoverUser =
       boolean
 
     /**
+     * Canonical public Passport progression from
+     * profile_public_stats.
+     *
+     * Null means no valid persisted value was available.
+     * These values never influence reputation ranking or
+     * recommendation ordering.
+     */
+    passport_xp:
+      number | null
+
+    passport_level:
+      number | null
+
+    /**
      * Canonical reputation context appended for Discover cards.
      *
      * Existing consumers may ignore this field without changing
@@ -229,6 +254,13 @@ type RankedReputationRow =
 
 const DISCOVER_RESULT_LIMIT =
   12
+
+/* =========================================================
+ * Suggested creator preview limit
+ * ======================================================= */
+
+const SUGGESTED_RESULT_LIMIT =
+  6
 
 const SUGGESTED_CANDIDATE_LIMIT =
   100
@@ -468,127 +500,151 @@ export async function GET(
     }
 
     const [
-  followResult,
-  followingResult,
-  categoriesResult,
-  reputationRowsResult,
-  discoverableProfilesResult,
-] =
-  await Promise.all([
-    supabase
-      .from(
-        'user_follows'
-      )
-      .select(
-        'following_id'
-      )
-      .in(
-        'following_id',
-        profileIds
-      ),
-
-    user
-      ? supabase
+      followResult,
+      followingResult,
+      categoriesResult,
+      reputationRowsResult,
+      discoverableProfilesResult,
+      passportStatsResult,
+    ] =
+      await Promise.all([
+        supabase
           .from(
             'user_follows'
           )
           .select(
             'following_id'
           )
-          .eq(
-            'follower_id',
-            user.id
-          )
           .in(
             'following_id',
             profileIds
+          ),
+
+        user
+          ? supabase
+              .from(
+                'user_follows'
+              )
+              .select(
+                'following_id'
+              )
+              .eq(
+                'follower_id',
+                user.id
+              )
+              .in(
+                'following_id',
+                profileIds
+              )
+          : Promise.resolve({
+              data:
+                [] as Array<{
+                  following_id:
+                    string
+                }>,
+
+              error:
+                null,
+            }),
+
+        admin
+          .from(
+            'reputation_categories'
           )
-      : Promise.resolve({
-          data:
-            [] as Array<{
-              following_id:
-                string
-            }>,
+          .select(`
+            id,
+            label,
+            is_active
+          `)
+          .eq(
+            'is_active',
+            true
+          ),
 
-          error:
-            null,
-        }),
+        /**
+         * All current reputation rows are loaded so ranks and
+         * percentiles are calculated against the full eligible
+         * comparison population rather than only the users in
+         * the current search response.
+         */
+        admin
+          .from(
+            'creator_reputation_stats'
+          )
+          .select(`
+            user_id,
+            category_id,
+            scope,
+            city_key,
+            reputation_level,
+            reputation_score,
+            verified_venue_count,
+            weighted_venue_count,
+            city_count,
+            public_collection_count,
+            curated_venue_count,
+            public_snapshot_count,
+            completed_flow_count,
+            recency_score,
+            quality_score,
+            policy_version,
+            calculated_at
+          `)
+          .order(
+            'policy_version',
+            {
+              ascending:
+                false,
+            }
+          )
+          .limit(
+            10000
+          ),
 
-    admin
-      .from(
-        'reputation_categories'
-      )
-      .select(`
-        id,
-        label,
-        is_active
-      `)
-      .eq(
-        'is_active',
-        true
-      ),
+        admin
+          .from(
+            'profiles'
+          )
+          .select(
+            'id'
+          )
+          .eq(
+            'is_public',
+            true
+          )
+          .eq(
+            'is_discoverable',
+            true
+          )
+          .not(
+            'username',
+            'is',
+            null
+          ),
 
-    /**
-     * All current reputation rows are loaded so ranks and
-     * percentiles are calculated against the full eligible
-     * comparison population rather than only the users in
-     * the current search response.
-     */
-    admin
-      .from(
-        'creator_reputation_stats'
-      )
-      .select(`
-        user_id,
-        category_id,
-        scope,
-        city_key,
-        reputation_level,
-        reputation_score,
-        verified_venue_count,
-        weighted_venue_count,
-        city_count,
-        public_collection_count,
-        curated_venue_count,
-        public_snapshot_count,
-        completed_flow_count,
-        recency_score,
-        quality_score,
-        policy_version,
-        calculated_at
-      `)
-      .order(
-        'policy_version',
-        {
-          ascending:
-            false,
-        }
-      )
-      .limit(
-        10000
-      ),
-
-    admin
-      .from(
-        'profiles'
-      )
-      .select(
-        'id'
-      )
-      .eq(
-        'is_public',
-        true
-      )
-      .eq(
-        'is_discoverable',
-        true
-      )
-      .not(
-        'username',
-        'is',
-        null
-      ),
-  ])
+        /**
+         * Read persisted Passport XP and level only for the
+         * already-selected public/discoverable profiles.
+         *
+         * This does not recompute XP or change candidate ranking.
+         */
+        supabase
+          .from(
+            'profile_public_stats'
+          )
+          .select(`
+            user_id,
+            passport_xp,
+            passport_level
+          `)
+          .in(
+            'user_id',
+            profileIds
+          )
+          .returns<
+            DiscoverPassportStatsRow[]
+          >(),
+      ])
 
     if (
       followResult.error
@@ -627,13 +683,22 @@ export async function GET(
     }
 
     if (
-  discoverableProfilesResult.error
-) {
-  console.error(
-    'Discover reputation-population profile lookup error:',
-    discoverableProfilesResult.error
-  )
-}
+      discoverableProfilesResult.error
+    ) {
+      console.error(
+        'Discover reputation-population profile lookup error:',
+        discoverableProfilesResult.error
+      )
+    }
+
+    if (
+      passportStatsResult.error
+    ) {
+      console.error(
+        'Discover Passport statistics lookup error:',
+        passportStatsResult.error
+      )
+    }
 
     const followRows =
       followResult.data ??
@@ -652,7 +717,7 @@ export async function GET(
     for (
       const row of
         followRows
-    ) {
+      ) {
       const followingId =
         normalizeRequiredText(
           row.following_id
@@ -696,6 +761,64 @@ export async function GET(
           )
       )
 
+    /* =====================================================
+     * Persisted Passport context by profile
+     * =================================================== */
+
+    const passportByUserId =
+      new Map<
+        string,
+        {
+          passport_xp: number | null
+          passport_level: number | null
+        }
+      >()
+
+    if (
+      !passportStatsResult.error
+    ) {
+      for (
+        const row of
+          passportStatsResult.data ??
+          []
+      ) {
+        const passportUserId =
+          normalizeRequiredText(
+            row.user_id
+          )
+
+        if (
+          !passportUserId
+        ) {
+          continue
+        }
+
+        const normalizedXp =
+          normalizeFiniteNumber(
+            row.passport_xp
+          )
+
+        const normalizedLevel =
+          normalizePositiveInteger(
+            row.passport_level
+          )
+
+        passportByUserId.set(
+          passportUserId,
+          {
+            passport_xp:
+              normalizedXp !== null &&
+              normalizedXp >= 0
+                ? normalizedXp
+                : null,
+
+            passport_level:
+              normalizedLevel,
+          }
+        )
+      }
+    }
+
     const categoriesById =
       normalizeReputationCategories(
         categoriesResult.error
@@ -704,56 +827,56 @@ export async function GET(
       )
 
     const normalizedReputationRows =
-  normalizeReputationRows(
-    reputationRowsResult.error
-      ? []
-      : reputationRowsResult.data
-  )
-
-const discoverableProfileIds =
-  new Set(
-    discoverableProfilesResult.error
-      ? []
-      : (
-          discoverableProfilesResult.data ??
-          []
-        )
-          .map(
-            (
-              profile
-            ) =>
-              normalizeRequiredText(
-                profile.id
-              )
-          )
-          .filter(
-            (
-              value
-            ): value is string =>
-              value !==
-              null
-          )
-  )
-
-const currentPolicyRows =
-  normalizedReputationRows.filter(
-    (
-      row
-    ) =>
-      row.policyVersion ===
-        REPUTATION_POLICY_VERSION &&
-      discoverableProfileIds.has(
-        row.userId
+      normalizeReputationRows(
+        reputationRowsResult.error
+          ? []
+          : reputationRowsResult.data
       )
-  )
 
-const rankedReputationRows =
-  rankEligibleReputationRows({
-    rows:
-      currentPolicyRows,
+    const discoverableProfileIds =
+      new Set(
+        discoverableProfilesResult.error
+          ? []
+          : (
+              discoverableProfilesResult.data ??
+              []
+            )
+              .map(
+                (
+                  profile
+                ) =>
+                  normalizeRequiredText(
+                    profile.id
+                  )
+              )
+              .filter(
+                (
+                  value
+                ): value is string =>
+                  value !==
+                  null
+              )
+      )
 
-    categoriesById,
-  })
+    const currentPolicyRows =
+      normalizedReputationRows.filter(
+        (
+          row
+        ) =>
+          row.policyVersion ===
+            REPUTATION_POLICY_VERSION &&
+          discoverableProfileIds.has(
+            row.userId
+          )
+      )
+
+    const rankedReputationRows =
+      rankEligibleReputationRows({
+        rows:
+          currentPolicyRows,
+
+        categoriesById,
+      })
 
     const reputationByUserId =
       buildReputationSummariesByUserId(
@@ -780,6 +903,12 @@ const rankedReputationRows =
               ) ??
               null
 
+            const passport =
+              passportByUserId.get(
+                profile.id
+              ) ??
+              null
+
             return {
               ...profile,
 
@@ -793,6 +922,14 @@ const rankedReputationRows =
                 followingIds.has(
                   profile.id
                 ),
+
+              passport_xp:
+                passport?.passport_xp ??
+                null,
+
+              passport_level:
+                passport?.passport_level ??
+                null,
 
               reputation,
 
@@ -849,7 +986,9 @@ const rankedReputationRows =
         )
         .slice(
           0,
-          DISCOVER_RESULT_LIMIT
+          suggested
+            ? SUGGESTED_RESULT_LIMIT
+            : DISCOVER_RESULT_LIMIT
         )
 
     return NextResponse.json(
@@ -887,8 +1026,8 @@ const rankedReputationRows =
       {
         status:
           500,
-      }
-    )
+        }
+      )
   }
 }
 
@@ -1085,15 +1224,15 @@ function compareSuggestedUsers(
         second.interest_categories
       )
 
-    if (
-      firstSharedInterestCount !==
-      secondSharedInterestCount
-    ) {
-      return (
-        secondSharedInterestCount -
-        firstSharedInterestCount
-      )
-    }
+      if (
+        firstSharedInterestCount !==
+          secondSharedInterestCount
+      ) {
+        return (
+          secondSharedInterestCount -
+          firstSharedInterestCount
+        )
+      }
 
     const firstSharedVibeCount =
       countRecommendationOverlap(
@@ -1201,7 +1340,7 @@ function countRecommendationOverlap(
     ) {
       overlapCount +=
         1
-    }
+      }
   }
 
   return overlapCount
@@ -1326,7 +1465,7 @@ function normalizeReputationCategories(
 
     if (
       category.is_active ===
-      false
+        false
     ) {
       continue
     }
@@ -1410,36 +1549,36 @@ function normalizeReputationRows(
       )
 
     const scope =
-  isReputationScope(
-    row.scope
-  )
-    ? row.scope
-    : null
+      isReputationScope(
+        row.scope
+      )
+        ? row.scope
+        : null
 
-const reputationLevel =
-  isReputationLevel(
-    row.reputation_level
-  )
-    ? row.reputation_level
-    : null
+    const reputationLevel =
+      isReputationLevel(
+        row.reputation_level
+      )
+        ? row.reputation_level
+        : null
 
-const policyVersion =
-  normalizePositiveInteger(
-    row.policy_version
-  )
+    const policyVersion =
+      normalizePositiveInteger(
+        row.policy_version
+      )
 
-        if (
-          !userId ||
-          !isReputationCategoryId(
-            categoryId
-          ) ||
-          !scope ||
-          !reputationLevel ||
-          policyVersion ===
-            null
-        ) {
-          continue
-        }
+    if (
+      !userId ||
+      !isReputationCategoryId(
+        categoryId
+      ) ||
+      !scope ||
+      !reputationLevel ||
+      policyVersion ===
+        null
+    ) {
+      continue
+    }
 
     const normalizedCityKey =
       normalizeCityKey(
@@ -1484,52 +1623,52 @@ const policyVersion =
           row.verified_venue_count
         ),
 
-          weightedVenueCount:
-      normalizeNonNegativeNumber(
-        row.weighted_venue_count
-      ),
+      weightedVenueCount:
+        normalizeNonNegativeNumber(
+          row.weighted_venue_count
+        ),
 
-    cityCount:
-      normalizeNonNegativeInteger(
-        row.city_count
-      ),
+      cityCount:
+        normalizeNonNegativeInteger(
+          row.city_count
+        ),
 
-    publicCollectionCount:
-      normalizeNonNegativeInteger(
-        row.public_collection_count
-      ),
+      publicCollectionCount:
+        normalizeNonNegativeInteger(
+          row.public_collection_count
+        ),
 
-    curatedVenueCount:
-      normalizeNonNegativeInteger(
-        row.curated_venue_count
-      ),
+      curatedVenueCount:
+        normalizeNonNegativeInteger(
+          row.curated_venue_count
+        ),
 
-    publicSnapshotCount:
-      normalizeNonNegativeInteger(
-        row.public_snapshot_count
-      ),
+      publicSnapshotCount:
+        normalizeNonNegativeInteger(
+          row.public_snapshot_count
+        ),
 
-    completedFlowCount:
-      normalizeNonNegativeInteger(
-        row.completed_flow_count
-      ),
+      completedFlowCount:
+        normalizeNonNegativeInteger(
+          row.completed_flow_count
+        ),
 
-    recencyScore:
-      normalizeNonNegativeNumber(
-        row.recency_score
-      ),
+      recencyScore:
+        normalizeNonNegativeNumber(
+          row.recency_score
+        ),
 
-    qualityScore:
-      normalizeNonNegativeNumber(
-        row.quality_score
-      ),
+      qualityScore:
+        normalizeNonNegativeNumber(
+          row.quality_score
+        ),
 
-    policyVersion,
+      policyVersion,
 
-    calculatedAt:
-      normalizeIsoTimestamp(
-        row.calculated_at
-      ),
+      calculatedAt:
+        normalizeIsoTimestamp(
+          row.calculated_at
+        ),
     })
   }
 
@@ -1713,7 +1852,7 @@ function rankEligibleReputationRows({
     for (
       const ranking of
         rankings
-    ) {
+      ) {
       const row =
         rowsByUserId.get(
           ranking.userId
@@ -1735,108 +1874,108 @@ function rankEligibleReputationRows({
         )
 
       const reputation:
-  UserCategoryReputation = {
-  userId:
-    row.userId,
+        UserCategoryReputation = {
+        userId:
+          row.userId,
 
-  categoryId:
-    row.categoryId,
+        categoryId:
+          row.categoryId,
 
-  scope:
-    row.scope,
+        scope:
+          row.scope,
 
-  cityKey:
-    row.cityKey,
+        cityKey:
+          row.cityKey,
 
-  score:
-    row.reputationScore,
+        score:
+          row.reputationScore,
 
-  level:
-    row.reputationLevel,
+        level:
+          row.reputationLevel,
 
-  components: {
-    verifiedVenueCount:
-      row.verifiedVenueCount,
+        components: {
+          verifiedVenueCount:
+            row.verifiedVenueCount,
 
-    weightedVenueCount:
-      row.weightedVenueCount,
+          weightedVenueCount:
+            row.weightedVenueCount,
 
-    cityCount:
-      row.cityCount,
+          cityCount:
+            row.cityCount,
 
-    publicCollectionCount:
-      row.publicCollectionCount,
+          publicCollectionCount:
+            row.publicCollectionCount,
 
-    curatedVenueCount:
-      row.curatedVenueCount,
+          curatedVenueCount:
+            row.curatedVenueCount,
 
-    publicSnapshotCount:
-      row.publicSnapshotCount,
+          publicSnapshotCount:
+            row.publicSnapshotCount,
 
-    completedFlowCount:
-      row.completedFlowCount,
+          completedFlowCount:
+            row.completedFlowCount,
 
-    recencyScore:
-      row.recencyScore,
+          recencyScore:
+            row.recencyScore,
 
-    qualityScore:
-      row.qualityScore,
-  },
+          qualityScore:
+            row.qualityScore,
+        },
 
-  latestEvidenceAt:
-    null,
+        latestEvidenceAt:
+          null,
 
-  calculatedAt:
-    row.calculatedAt ??
-    calculatedAt,
-}
+        calculatedAt:
+          row.calculatedAt ??
+          calculatedAt,
+      }
 
-const publicClaim =
-  buildPublicReputationClaim({
-    reputation,
+      const publicClaim =
+        buildPublicReputationClaim({
+          reputation,
 
-    ranking,
+          ranking,
 
-    categoryLabel,
+          categoryLabel,
 
-    cityLabel:
-      row.scope ===
-        'city' &&
-      row.cityKey
-        ? formatIdentifier(
+          cityLabel:
+            row.scope ===
+              'city' &&
             row.cityKey
-          )
-        : null,
-  })
+              ? formatIdentifier(
+                  row.cityKey
+                )
+              : null,
+        })
 
-if (
-  !publicClaim ||
-  publicClaim.rank ===
-    null ||
-  publicClaim.percentile ===
-    null
-) {
-  continue
-}
+      if (
+        !publicClaim ||
+        publicClaim.rank ===
+          null ||
+        publicClaim.percentile ===
+          null
+      ) {
+        continue
+      }
 
-rankedRows.push({
-  ...row,
+      rankedRows.push({
+        ...row,
 
-  categoryLabel,
+        categoryLabel,
 
-  rank:
-    publicClaim.rank,
+        rank:
+          publicClaim.rank,
 
-  eligibleCreatorCount:
-    publicClaim.eligibleUserCount,
+        eligibleCreatorCount:
+          publicClaim.eligibleUserCount,
 
-  topPercent:
-    publicClaim.percentile,
+        topPercent:
+          publicClaim.percentile,
 
-  rankLabel:
-    publicClaim.label,
-})
-    }
+        rankLabel:
+          publicClaim.label,
+      })
+      }
   }
 
   return rankedRows
@@ -2406,8 +2545,8 @@ function isRecord(
       'object' &&
     value !==
       null &&
-    !Array.isArray(
-      value
-    )
+      !Array.isArray(
+        value
+      )
   )
 }

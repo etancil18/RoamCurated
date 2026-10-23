@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -19,6 +20,13 @@ type DiscoverUsersResponse = {
   error?: string
   details?: string
 }
+
+/* =========================================================
+ * Discover initiative: bounded suggested preview
+ * ======================================================= */
+
+const SUGGESTED_DISPLAY_LIMIT =
+  6
 
 /* =========================================================
  * Component
@@ -123,9 +131,14 @@ export default function SuggestedRoamers() {
               payload
                 ?.users
             )
-              ? payload
-                  ?.users ??
+              ? (
+                  payload
+                    ?.users ??
                   []
+                ).slice(
+                  0,
+                  SUGGESTED_DISPLAY_LIMIT
+                )
               : []
           )
 
@@ -191,6 +204,7 @@ export default function SuggestedRoamers() {
             {users.length.toLocaleString(
               'en-US'
             )}{' '}
+            suggested{' '}
             {users.length ===
             1
               ? 'person'

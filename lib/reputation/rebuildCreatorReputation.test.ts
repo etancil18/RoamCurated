@@ -26,6 +26,9 @@ const mocks = vi.hoisted(() => {
     calculateCreatorReputation:
       vi.fn(),
 
+    assertValidReputationEvidenceBatch:
+      vi.fn(),
+
     validateReputationEvidence:
       vi.fn(),
 
@@ -53,6 +56,17 @@ vi.mock(
 )
 
 vi.mock(
+  '@/lib/supabase/admin-runtime',
+  () => ({
+    supabaseAdmin:
+      mocks.supabaseClient,
+
+    getSupabaseAdmin:
+      mocks.getSupabaseAdmin,
+  })
+)
+
+vi.mock(
   '@/lib/reputation/calculateCreatorReputation',
   () => ({
     calculateCreatorReputation:
@@ -62,10 +76,33 @@ vi.mock(
 
 vi.mock(
   '@/lib/reputation/validateReputationEvidence',
-  () => ({
-    validateReputationEvidence:
-      mocks.validateReputationEvidence,
-  })
+  async (importOriginal) => {
+    const actual = await importOriginal<
+      typeof import('@/lib/reputation/validateReputationEvidence')
+    >()
+
+    return {
+      ...actual,
+
+      validateReputationEvidence:
+        mocks.validateReputationEvidence,
+
+      assertValidReputationEvidenceBatch:
+        (
+          ...args: Parameters<
+            typeof actual.assertValidReputationEvidenceBatch
+          >
+        ) => {
+          mocks.assertValidReputationEvidenceBatch(
+            ...args
+          )
+
+          return actual.assertValidReputationEvidenceBatch(
+            ...args
+          )
+        },
+    }
+  }
 )
 
 vi.mock(
@@ -191,7 +228,7 @@ const VENUE_ID =
   '53e6df3f-8a26-4422-96b2-f943636240ae'
 
 const POLICY_VERSION =
-  1
+  2
 
 const CALCULATED_AT =
   '2026-07-29T12:00:00.000Z'
@@ -218,6 +255,7 @@ const DEFAULT_EVIDENCE = {
   cityCount:
     1,
 }
+
 
 const DEFAULT_CALCULATION = {
   reputationScore:
@@ -246,7 +284,119 @@ const DEFAULT_CALCULATION = {
 
   cityCount:
     1,
+
+  categoryReputations: [
+    {
+      userId:
+        USER_ID,
+
+      categoryId:
+        'coffee',
+
+      scope:
+        'global',
+
+      cityKey:
+        null,
+
+      score:
+        42.5,
+
+      level:
+        'established',
+
+      components: {
+        verifiedVenueCount:
+          5,
+
+        weightedVenueCount:
+          7,
+
+        publicCollectionCount:
+          2,
+
+        curatedVenueCount:
+          12,
+
+        publicSnapshotCount:
+          3,
+
+        completedFlowCount:
+          4,
+
+        cityCount:
+          1,
+
+        recencyScore:
+          0,
+
+        qualityScore:
+          0,
+      },
+
+      latestEvidenceAt:
+        '2026-07-20T12:00:00.000Z',
+
+      calculatedAt:
+        CALCULATED_AT,
+    },
+    {
+      userId:
+        USER_ID,
+
+      categoryId:
+        'coffee',
+
+      scope:
+        'city',
+
+      cityKey:
+        'atl',
+
+      score:
+        42.5,
+
+      level:
+        'established',
+
+      components: {
+        verifiedVenueCount:
+          5,
+
+        weightedVenueCount:
+          7,
+
+        publicCollectionCount:
+          2,
+
+        curatedVenueCount:
+          12,
+
+        publicSnapshotCount:
+          3,
+
+        completedFlowCount:
+          4,
+
+        cityCount:
+          1,
+
+        recencyScore:
+          0,
+
+        qualityScore:
+          0,
+      },
+
+      latestEvidenceAt:
+        '2026-07-20T12:00:00.000Z',
+
+      calculatedAt:
+        CALCULATED_AT,
+    },
+  ],
 }
+
 
 /* =========================================================
  * Setup
@@ -268,6 +418,9 @@ beforeEach(() => {
       DEFAULT_EVIDENCE
     )
 
+  mocks.assertValidReputationEvidenceBatch
+    .mockReset()
+
   mocks.isEligibleForReputation
     .mockReturnValue({
       eligible:
@@ -283,10 +436,25 @@ beforeEach(() => {
         [],
   })
 
-  mocks.calculateCreatorReputation
-    .mockReturnValue(
+  
+mocks.calculateCreatorReputation
+  .mockReturnValue({
+    ...DEFAULT_CALCULATION,
+
+    reputationScore: 73.25,
+    reputationLevel: 'expert',
+
+    categoryReputations:
       DEFAULT_CALCULATION
-    )
+        .categoryReputations
+        .map(
+          (reputation) => ({
+            ...reputation,
+            score: 73.25,
+            level: 'expert',
+          })
+        ),
+  })
 
   mocks.rebuildReputationRankings
     .mockResolvedValue({
@@ -329,7 +497,6 @@ describe(
       undefined,
       '',
       '   ',
-      'not-a-uuid',
       123,
       {},
       [],
@@ -365,17 +532,38 @@ describe(
     )
 
     it(
-      'rejects an invalid policy version',
+      'does not allow a legacy policy version override',
       async () => {
-        await expect(
-          invokeRebuild({
-            userId:
-              USER_ID,
+        const result =
+          await invokeRebuild({
+            userId: USER_ID,
+            policyVersion: -1,
+          }) as {
+            policyVersion: number
+          }
 
-            policyVersion:
-              -1,
-          })
-        ).rejects.toThrow()
+        expect(
+          result.policyVersion
+        ).toBe(POLICY_VERSION)
+
+        const payloads =
+          flattenPayloadRecords(
+            writeOperationsForTable(
+              'creator_reputation_stats'
+            )
+          )
+
+        expect(
+          payloads.length
+        ).toBeGreaterThan(0)
+
+        expect(
+          payloads.every(
+            (payload) =>
+              payload.policy_version ===
+              POLICY_VERSION
+          )
+        ).toBe(true)
       }
     )
   }
@@ -531,16 +719,12 @@ describe(
         const callOrder:
           string[] = []
 
-        mocks.validateReputationEvidence
+        mocks.assertValidReputationEvidenceBatch
           .mockImplementation(
-            (
-              value
-            ) => {
+            () => {
               callOrder.push(
                 'validate'
               )
-
-              return value
             }
           )
 
@@ -561,27 +745,16 @@ describe(
         })
 
         expect(
-          callOrder.indexOf(
-            'validate'
-          )
-        ).toBeGreaterThanOrEqual(
-          0
-        )
-
-        expect(
-          callOrder.indexOf(
-            'calculate'
-          )
-        ).toBeGreaterThan(
-          callOrder.indexOf(
-            'validate'
-          )
-        )
+          callOrder
+        ).toEqual([
+          'validate',
+          'calculate',
+        ])
       }
     )
 
     it(
-      'checks reputation eligibility',
+      'passes canonical evidence into reputation calculation',
       async () => {
         await invokeRebuild({
           userId:
@@ -589,49 +762,57 @@ describe(
         })
 
         expect(
-          mocks.isEligibleForReputation
-        ).toHaveBeenCalled()
+          mocks.calculateCreatorReputation
+        ).toHaveBeenCalledTimes(1)
+
+        const calculationInput =
+          mocks.calculateCreatorReputation
+            .mock.calls[0]?.[0] as
+              Record<string, unknown>
+
+        expect(
+          calculationInput.userId
+        ).toBe(USER_ID)
+
+        expect(
+          Array.isArray(
+            calculationInput.venueEvidence
+          )
+        ).toBe(true)
+
+        expect(
+          (
+            calculationInput.venueEvidence as unknown[]
+          ).length
+        ).toBeGreaterThan(0)
       }
     )
 
     it(
-      'calculates reputation using validated evidence',
+      'calculates reputation using canonical verified venue evidence',
       async () => {
-        const validatedEvidence = {
-          ...DEFAULT_EVIDENCE,
-
-          verifiedVenueCount:
-            9,
-        }
-
-        mocks.validateReputationEvidence
-          .mockReturnValue(
-            validatedEvidence
-          )
-
         await invokeRebuild({
           userId:
             USER_ID,
         })
 
         expect(
+          mocks.assertValidReputationEvidenceBatch
+        ).toHaveBeenCalled()
+
+        expect(
           mocks.calculateCreatorReputation
         ).toHaveBeenCalled()
 
-        const calculationCalls =
+        const calculationInput =
           mocks.calculateCreatorReputation
-            .mock.calls
+            .mock.calls[0]?.[0]
 
         expect(
-          calculationCalls.some(
-            (
-              call
-            ) =>
-              containsNestedValue(
-                call,
-                'verifiedVenueCount',
-                9
-              )
+          containsNestedValue(
+            calculationInput,
+            'venueId',
+            VENUE_ID
           )
         ).toBe(true)
       }
@@ -640,7 +821,7 @@ describe(
     it(
       'does not persist calculated reputation when evidence validation fails',
       async () => {
-        mocks.validateReputationEvidence
+        mocks.assertValidReputationEvidenceBatch
           .mockImplementation(
             () => {
               throw new Error(
@@ -659,6 +840,10 @@ describe(
         )
 
         expect(
+          mocks.calculateCreatorReputation
+        ).not.toHaveBeenCalled()
+
+        expect(
           writeOperationsForTable(
             'creator_reputation_stats'
           )
@@ -667,6 +852,7 @@ describe(
     )
   }
 )
+
 
 /* =========================================================
  * Canonical writes
@@ -738,6 +924,23 @@ describe(
 
             reputationLevel:
               'expert',
+
+            categoryReputations:
+              DEFAULT_CALCULATION
+                .categoryReputations
+                .map(
+                  (
+                    reputation
+                  ) => ({
+                    ...reputation,
+
+                    score:
+                      73.25,
+
+                    level:
+                      'expert',
+                  })
+                ),
           })
 
         await invokeRebuild({
@@ -867,35 +1070,12 @@ describe(
           upsert
         ).toBeDefined()
 
-        const serializedOptions =
-          JSON.stringify(
-            upsert?.options ??
-              {}
-          )
-
         expect(
-          serializedOptions
-        ).toContain(
-          'user_id'
-        )
-
-        expect(
-          serializedOptions
-        ).toContain(
-          'category_id'
-        )
-
-        expect(
-          serializedOptions
-        ).toContain(
-          'scope'
-        )
-
-        expect(
-          serializedOptions
-        ).toContain(
-          'policy_version'
-        )
+          upsert?.options
+        ).toEqual({
+          onConflict:
+            'user_id,category_id,scope,scope_city_key',
+        })
       }
     )
 
@@ -1350,6 +1530,7 @@ describe(
   }
 )
 
+
 /* =========================================================
  * Invocation adapter
  * ======================================================= */
@@ -1420,37 +1601,27 @@ async function invokeRebuild({
   }
 
   /**
-   * Supported signatures:
-   *
-   * rebuildCreatorReputation({
-   *   userId,
-   *   policyVersion,
-   *   ...
-   * })
+   * Canonical Creator Reputation v2 signature:
    *
    * rebuildCreatorReputation(
    *   userId,
    *   options
    * )
+   *
+   * Do not inspect Function.length.
+   *
+   * The production function declares a default value
+   * for its second parameter, so Function.length is 1
+   * even though the function accepts two arguments.
    */
-  if (
-    rebuildCreatorReputation.length >=
-    2
-  ) {
-    return Promise.resolve(
-      rebuildCreatorReputation(
-        userId,
-        options
-      )
-    )
-  }
-
   return Promise.resolve(
     rebuildCreatorReputation(
+      userId,
       options
     )
   )
 }
+
 
 /* =========================================================
  * Supabase fixture setup
@@ -1508,6 +1679,9 @@ function defaultFixtures(): QueryFixture[] {
       response: {
         data: [
           {
+            id:
+              '79d8de6c-6bb5-4f34-ab28-f57234542d08',
+
             user_id:
               USER_ID,
 
@@ -1563,7 +1737,7 @@ function defaultFixtures(): QueryFixture[] {
             category_id:
               'coffee',
 
-            weight:
+            mapping_weight:
               1,
           },
         ],

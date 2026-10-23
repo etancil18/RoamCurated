@@ -1,3 +1,4 @@
+
 import 'server-only'
 
 import {
@@ -11,6 +12,10 @@ import {
 import {
   rebuildPublicPassportStats,
 } from '@/lib/passport/rebuildPublicPassportStats'
+
+import {
+  safelyRefreshCreatorReputation,
+} from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 // ============================================================
 // ROUTE CONTRACT
@@ -332,7 +337,7 @@ export async function POST(
       )
     }
 
-    // =========================================================
+// =========================================================
     // ATOMIC HISTORICAL VISIT WRITE
     //
     // IMPORTANT:
@@ -526,6 +531,51 @@ export async function POST(
           status: 500,
         }
       )
+    }
+
+    // =========================================================
+    // CREATOR REPUTATION REFRESH
+    //
+    // The historical visit has persisted successfully.
+    // Refresh the visited user's earned reputation when the
+    // canonical visit is geo-verified.
+    //
+    // The RPC is idempotent, so a successful replay may also
+    // repair stale reputation without creating another visit.
+    //
+    // Reputation refresh failures must not invalidate the
+    // canonical historical visit or its Passport rebuild.
+    // =========================================================
+
+    if (historicalVisit.geo_verified) {
+      const reputationRefresh =
+        await safelyRefreshCreatorReputation(
+          targetUserId,
+          {
+            mutation:
+              'admin_historical_venue_visit',
+          }
+        )
+
+      if (!reputationRefresh.ok) {
+        console.error(
+          '[admin/venues/historical-visits] Historical visit persisted but reputation refresh failed:',
+          {
+            venueId,
+
+            targetUserId,
+
+            venueVisitId:
+              historicalVisit.venue_visit_id,
+
+            stage:
+              reputationRefresh.error.stage,
+
+            message:
+              reputationRefresh.error.message,
+          }
+        )
+      }
     }
 
     // =========================================================

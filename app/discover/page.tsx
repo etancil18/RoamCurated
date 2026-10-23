@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useEffect, useRef } from 'react'
@@ -90,17 +91,44 @@ export default function DiscoverPage() {
               id="discover-people-title"
               className="mt-4 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-5xl sm:leading-[1.03]"
             >
-              Find people who know the
-              places you care about.
+              Find your people.
             </h1>
+
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-400 sm:text-base sm:leading-7">
+              Discover Roamers who share your interests,
+              explore the places you care about, and
+              know your city.
+            </p>
 
             <div className="mt-6 max-w-3xl">
               <UserSearch />
             </div>
+
+            <div className="mt-5 flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/[0.065] pt-4 text-[11px] text-neutral-500">
+              <span className="inline-flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-1.5 w-1.5 rounded-full bg-amber-300/80"
+                />
+
+                Passport XP reflects exploration
+                and participation.
+              </span>
+
+              <span className="inline-flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-1.5 w-1.5 rounded-full bg-cyan-300/80"
+                />
+
+                Reputation reflects verified
+                category expertise.
+              </span>
+            </div>
           </div>
         </section>
 
-        <div className="mt-10 space-y-16 sm:mt-14 sm:space-y-20">
+        <div className="mt-9 space-y-12 sm:mt-11 sm:space-y-14">
           <section
             id="suggested-roamers"
             aria-labelledby="suggested-roamers-title"
@@ -110,6 +138,7 @@ export default function DiscoverPage() {
               id="suggested-roamers-title"
               eyebrow="Discover"
               title="People to discover"
+              description="A focused selection of up to six Roamers, recommended through shared interests, local connections, and earned reputation."
             />
 
             <div className="mt-5">
@@ -124,8 +153,9 @@ export default function DiscoverPage() {
           >
             <DiscoverSectionHeading
               id="roam-leaderboard-title"
-              eyebrow="Reputation"
-              title="Who knows this place?"
+              eyebrow="Creator reputation"
+              title="Who knows these places best?"
+              description="Explore five leading verified creators by category and city, with your own reputation standing available separately."
             />
 
             <div className="mt-5">
@@ -146,10 +176,12 @@ function DiscoverSectionHeading({
   id,
   eyebrow,
   title,
+  description,
 }: {
   id: string
   eyebrow: string
   title: string
+  description?: string
 }) {
   return (
     <div className="min-w-0">
@@ -167,6 +199,12 @@ function DiscoverSectionHeading({
       >
         {title}
       </h2>
+
+      {description ? (
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-500">
+          {description}
+        </p>
+      ) : null}
     </div>
   )
 }

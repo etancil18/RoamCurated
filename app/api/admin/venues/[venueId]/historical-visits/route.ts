@@ -1,3 +1,4 @@
+
 import 'server-only'
 
 import {
@@ -11,6 +12,10 @@ import {
 import {
   rebuildPublicPassportStats,
 } from '@/lib/passport/rebuildPublicPassportStats'
+
+import {
+  safelyRefreshCreatorReputation,
+} from '@/lib/reputation/safelyRefreshCreatorReputation'
 
 // ============================================================
 // ROUTE CONTRACT
@@ -306,7 +311,7 @@ export async function POST(
       )
     }
 
-    // =========================================================
+// =========================================================
     // ATOMIC HISTORICAL VISIT WRITE
     // =========================================================
 
@@ -466,6 +471,51 @@ export async function POST(
     }
 
     // =========================================================
+    // CREATOR REPUTATION REFRESH
+    //
+    // The historical visit has persisted successfully.
+    // Refresh the target user's reputation only when the
+    // canonical visit is geo-verified.
+    //
+    // The RPC is idempotent, so replays can repair stale
+    // reputation without creating duplicate visit evidence.
+    //
+    // A refresh failure must not invalidate the saved visit,
+    // its Passport rebuild, or the existing response contract.
+    // =========================================================
+
+    if (historicalVisit.geo_verified) {
+      const reputationRefresh =
+        await safelyRefreshCreatorReputation(
+          targetUserId,
+          {
+            mutation:
+              'admin_historical_venue_visit',
+          }
+        )
+
+      if (!reputationRefresh.ok) {
+        console.error(
+          '[admin/venues/historical-visits] Historical visit persisted but reputation refresh failed:',
+          {
+            venueId,
+
+            targetUserId,
+
+            venueVisitId:
+              historicalVisit.venue_visit_id,
+
+            stage:
+              reputationRefresh.error.stage,
+
+            message:
+              reputationRefresh.error.message,
+          }
+        )
+      }
+    }
+
+    // =========================================================
     // RESPONSE
     // =========================================================
 
@@ -588,7 +638,7 @@ function readHistoricalVisitRpcRow(
       ? record.created
       : null
 
-  if (
+if (
     !assertionId ||
     !venueVisitId ||
     !userId ||

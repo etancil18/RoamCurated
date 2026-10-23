@@ -67,84 +67,44 @@ const calculateCreatorReputation =
     CALCULATION_EXPORT_NAMES
   )
 
+
 /* =========================================================
  * Canonical fixture factory
  * ======================================================= */
+
+const USER_ID =
+  'b25fbdac-8385-48fa-8133-fe57f03bd4e2'
+
+const CALCULATED_AT =
+  '2026-07-29T12:00:00.000Z'
+
+const EVIDENCE_AT =
+  '2026-07-20T12:00:00.000Z'
 
 function createInput(
   overrides: UnknownRecord = {}
 ): UnknownRecord {
   return {
     userId:
-      'b25fbdac-8385-48fa-8133-fe57f03bd4e2',
+      USER_ID,
 
-    categoryId:
-      'coffee',
-
-    scope:
-      'city',
-
-    cityKey:
+    primaryCityKey:
       'atl',
 
-    policyVersion:
-      1,
+    venueEvidence:
+      [],
 
-    evidence: {
-      verifiedVenueCount:
-        0,
+    publicCollectionContributions:
+      [],
 
-      weightedVenueCount:
-        0,
+    publicSnapshotContributions:
+      [],
 
-      publicCollectionCount:
-        0,
+    completedFlowContributions:
+      [],
 
-      curatedVenueCount:
-        0,
-
-      publicSnapshotCount:
-        0,
-
-      completedFlowCount:
-        0,
-
-      cityCount:
-        0,
-
-      recencyScore:
-        0,
-
-      qualityScore:
-        0,
-    },
-
-    verifiedVenueCount:
-      0,
-
-    weightedVenueCount:
-      0,
-
-    publicCollectionCount:
-      0,
-
-    curatedVenueCount:
-      0,
-
-    publicSnapshotCount:
-      0,
-
-    completedFlowCount:
-      0,
-
-    cityCount:
-      0,
-
-    recencyScore:
-      0,
-
-    qualityScore:
-      0,
+    calculatedAt:
+      CALCULATED_AT,
 
     ...overrides,
   }
@@ -154,39 +114,151 @@ function createEvidenceInput(
   evidence: UnknownRecord,
   overrides: UnknownRecord = {}
 ): UnknownRecord {
+  const count = (
+    value: unknown
+  ): number =>
+    typeof value === 'number' &&
+    Number.isFinite(value)
+      ? Math.max(
+          0,
+          Math.trunc(value)
+        )
+      : 0
+
+  const verifiedVenueCount =
+    count(
+      evidence.verifiedVenueCount
+    )
+
+  const weightedVenueCount =
+    count(
+      evidence.weightedVenueCount
+    )
+
+  const publicCollectionCount =
+    count(
+      evidence.publicCollectionCount
+    )
+
+  const curatedVenueCount =
+    count(
+      evidence.curatedVenueCount
+    )
+
+  const publicSnapshotCount =
+    count(
+      evidence.publicSnapshotCount
+    )
+
+  const completedFlowCount =
+    count(
+      evidence.completedFlowCount
+    )
+
+  const venueEvidence =
+    Array.from(
+      {
+        length:
+          verifiedVenueCount,
+      },
+      (_, index) => ({
+        venueId:
+          `verified-venue-${index + 1}`,
+
+        categoryId:
+          'coffee',
+
+        cityKey:
+          'atl',
+
+        attributionWeight:
+          index <
+          weightedVenueCount
+            ? 1
+            : 0,
+
+        occurredAt:
+          EVIDENCE_AT,
+      })
+    )
+
+  const curatedVenueIds =
+    Array.from(
+      {
+        length:
+          curatedVenueCount,
+      },
+      (_, index) =>
+        `curated-venue-${index + 1}`
+    )
+
+  const publicCollectionContributions =
+    Array.from(
+      {
+        length:
+          publicCollectionCount,
+      },
+      (_, index) => ({
+        collectionId:
+          `public-collection-${index + 1}`,
+
+        categoryId:
+          'coffee',
+
+        cityKey:
+          'atl',
+
+        venueIds:
+          index === 0
+            ? curatedVenueIds
+            : [],
+      })
+    )
+
+  const publicSnapshotContributions =
+    Array.from(
+      {
+        length:
+          publicSnapshotCount,
+      },
+      (_, index) => ({
+        snapshotId:
+          `public-snapshot-${index + 1}`,
+
+        categoryId:
+          'coffee',
+
+        cityKey:
+          'atl',
+      })
+    )
+
+  const completedFlowContributions =
+    Array.from(
+      {
+        length:
+          completedFlowCount,
+      },
+      (_, index) => ({
+        flowId:
+          `completed-flow-${index + 1}`,
+
+        categoryId:
+          'coffee',
+
+        cityKey:
+          'atl',
+      })
+    )
+
   return createInput({
-    ...evidence,
+    venueEvidence,
 
-    evidence: {
-      verifiedVenueCount:
-        0,
+    publicCollectionContributions,
 
-      weightedVenueCount:
-        0,
+    publicSnapshotContributions,
 
-      publicCollectionCount:
-        0,
-
-      curatedVenueCount:
-        0,
-
-      publicSnapshotCount:
-        0,
-
-      completedFlowCount:
-        0,
-
-      cityCount:
-        0,
-
-      recencyScore:
-        0,
-
-      qualityScore:
-        0,
-
-      ...evidence,
-    },
+    completedFlowContributions,
 
     ...overrides,
   })
@@ -310,6 +382,7 @@ describe(
   }
 )
 
+
 /* =========================================================
  * Evidence preservation
  * ======================================================= */
@@ -327,7 +400,7 @@ describe(
                 7,
 
               weightedVenueCount:
-                9,
+                7,
 
               publicCollectionCount:
                 3,
@@ -342,7 +415,7 @@ describe(
                 5,
 
               cityCount:
-                2,
+                1,
             })
           )
 
@@ -352,7 +425,7 @@ describe(
 
         expect(
           result.weightedVenueCount
-        ).toBe(9)
+        ).toBe(7)
 
         expect(
           result.publicCollectionCount
@@ -372,80 +445,67 @@ describe(
 
         expect(
           result.cityCount
-        ).toBe(2)
+        ).toBe(1)
       }
     )
 
     it(
-      'normalizes fractional count evidence to whole non-negative values',
+      'normalizes fractional attribution weights to finite, bounded values',
       async () => {
         const result =
           await runNormalizedCalculation(
-            createEvidenceInput({
-              verifiedVenueCount:
-                4.9,
+            createInput({
+              venueEvidence: [
+                {
+                  venueId:
+                    'fractional-venue-1',
 
-              weightedVenueCount:
-                8.7,
+                  categoryId:
+                    'coffee',
 
-              publicCollectionCount:
-                2.8,
+                  cityKey:
+                    'atl',
 
-              curatedVenueCount:
-                13.6,
+                  attributionWeight:
+                    0.75,
 
-              publicSnapshotCount:
-                3.4,
+                  occurredAt:
+                    EVIDENCE_AT,
+                },
 
-              completedFlowCount:
-                5.9,
+                {
+                  venueId:
+                    'fractional-venue-2',
 
-              cityCount:
-                2.2,
+                  categoryId:
+                    'coffee',
+
+                  cityKey:
+                    'atl',
+
+                  attributionWeight:
+                    0.5,
+
+                  occurredAt:
+                    EVIDENCE_AT,
+                },
+              ],
             })
           )
 
         expect(
-          Number.isInteger(
-            result.verifiedVenueCount
-          )
-        ).toBe(true)
+          result.verifiedVenueCount
+        ).toBe(2)
 
         expect(
-          Number.isInteger(
+          Number.isFinite(
             result.weightedVenueCount
           )
         ).toBe(true)
 
         expect(
-          Number.isInteger(
-            result.publicCollectionCount
-          )
-        ).toBe(true)
-
-        expect(
-          Number.isInteger(
-            result.curatedVenueCount
-          )
-        ).toBe(true)
-
-        expect(
-          Number.isInteger(
-            result.publicSnapshotCount
-          )
-        ).toBe(true)
-
-        expect(
-          Number.isInteger(
-            result.completedFlowCount
-          )
-        ).toBe(true)
-
-        expect(
-          Number.isInteger(
-            result.cityCount
-          )
-        ).toBe(true)
+          result.weightedVenueCount
+        ).toBe(1.25)
       }
     )
   }
@@ -1135,57 +1195,71 @@ async function runNormalizedCalculation(
  * Result normalization
  * ======================================================= */
 
+
 function normalizeCalculationResult(
   value: unknown
 ): NormalizedCalculation {
   if (!isRecord(value)) {
     throw new Error(
-      [
-        'calculateCreatorReputation must return an object.',
-        `Received: ${describeValue(
-          value
-        )}.`,
-      ].join(' ')
+      'calculateCreatorReputation must return an object.'
     )
   }
 
-  const evidence =
-    isRecord(
-      value.evidence
+  const summary =
+    isRecord(value.summary)
+      ? value.summary
+      : null
+
+  if (!summary) {
+    throw new Error(
+      'Calculation result is missing the canonical summary.'
     )
-      ? value.evidence
-      : value
+  }
 
   const reputationScore =
     normalizeFiniteNumber(
-      firstDefined(
-        value.reputationScore,
-        value.reputation_score,
-        value.score
-      )
+      summary.overallScore
     )
 
   if (
     reputationScore === null
   ) {
     throw new Error(
-      [
-        'Calculation result is missing a finite reputation score.',
-        'Expected one of:',
-        'reputationScore, reputation_score, score.',
-      ].join(' ')
+      'Calculation summary is missing a finite overallScore.'
     )
   }
 
   const reputationLevel =
     normalizeLevel(
-      firstDefined(
-        value.reputationLevel,
-        value.reputation_level,
-        value.level,
-        value.tier
-      )
+      summary.overallLevel
     )
+
+  const globalCategories =
+    Array.isArray(
+      value.globalCategories
+    )
+      ? value.globalCategories
+      : []
+
+  const globalCoffeeCategory =
+    globalCategories.find(
+      (category) =>
+        isRecord(category) &&
+        category.categoryId ===
+          'coffee' &&
+        category.scope ===
+          'global'
+    )
+
+  const components =
+    isRecord(
+      globalCoffeeCategory
+    ) &&
+    isRecord(
+      globalCoffeeCategory.components
+    )
+      ? globalCoffeeCategory.components
+      : {}
 
   return {
     reputationScore,
@@ -1194,82 +1268,41 @@ function normalizeCalculationResult(
 
     verifiedVenueCount:
       normalizeCount(
-        firstDefined(
-          evidence.verifiedVenueCount,
-          evidence.verified_venue_count,
-          value.verifiedVenueCount,
-          value.verified_venue_count
-        )
+        summary.totalVerifiedVenueCount
       ),
 
     weightedVenueCount:
-      normalizeCount(
-        firstDefined(
-          evidence.weightedVenueCount,
-          evidence.weighted_venue_count,
-          value.weightedVenueCount,
-          value.weighted_venue_count
-        )
-      ),
+      normalizeFiniteNumber(
+        components.weightedVenueCount
+      ) ?? 0,
 
     publicCollectionCount:
       normalizeCount(
-        firstDefined(
-          evidence.publicCollectionCount,
-          evidence.public_collection_count,
-          value.publicCollectionCount,
-          value.public_collection_count
-        )
+        summary.totalPublicCollectionCount
       ),
 
     curatedVenueCount:
       normalizeCount(
-        firstDefined(
-          evidence.curatedVenueCount,
-          evidence.curated_venue_count,
-          value.curatedVenueCount,
-          value.curated_venue_count
-        )
+        summary.totalCuratedVenueCount
       ),
 
     publicSnapshotCount:
       normalizeCount(
-        firstDefined(
-          evidence.publicSnapshotCount,
-          evidence.public_snapshot_count,
-          value.publicSnapshotCount,
-          value.public_snapshot_count
-        )
+        summary.totalPublicSnapshotCount
       ),
 
     completedFlowCount:
       normalizeCount(
-        firstDefined(
-          evidence.completedFlowCount,
-          evidence.completed_flow_count,
-          value.completedFlowCount,
-          value.completed_flow_count
-        )
+        summary.totalCompletedFlowCount
       ),
 
     cityCount:
       normalizeCount(
-        firstDefined(
-          evidence.cityCount,
-          evidence.city_count,
-          value.cityCount,
-          value.city_count
-        )
+        summary.qualifyingCityCount
       ),
 
     eligible:
-      normalizeNullableBoolean(
-        firstDefined(
-          value.eligible,
-          value.isEligible,
-          value.is_eligible
-        )
-      ),
+      null,
   }
 }
 

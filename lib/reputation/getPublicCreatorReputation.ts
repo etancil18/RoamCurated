@@ -1,9 +1,21 @@
+
 import 'server-only'
 
 import {
   getCityLabel,
   normalizeCityKey,
 } from '@/lib/cities/normalizeCity'
+import {
+  buildPublicReputationClaim,
+  calculatePercentileRank,
+} from '@/lib/reputation/policy'
+import {
+  rankReputationCandidates,
+  type ReputationRankingCandidate,
+} from '@/lib/reputation/rebuildReputationRankings'
+import type {
+  UserCategoryReputation,
+} from '@/lib/reputation/types'
 import {
   createEmptyPublicCreatorReputationSnapshot,
   type PublicCreatorReputationCategorySummary,
@@ -166,11 +178,12 @@ const REPUTATION_LEVEL_PRIORITY:
  * - prevents duplicate category presentation
  * - derives one defensible primary status
  * - sanitizes every value crossing into public UI
+ * - obtains public standings through canonical ranking policy
  *
  * It does not:
  *
  * - rebuild creator reputation
- * - recalculate rankings
+ * - modify persisted reputation scores or ranking populations
  * - expose internal score weights
  * - expose raw evidence rows
  * - expose moderation or fraud signals
@@ -411,15 +424,37 @@ export async function getPublicCreatorReputation(
     }
   }
 
+  /**
+   * Public standing initiative:
+   *
+   * Individual ranks are calculated by the canonical ranking
+   * function but are not persisted by the ranking rebuild.
+   *
+   * Resolve them against the same public/discoverable creator
+   * population used by Discover.
+   *
+   * Never treat an existing percentile-standing field as a
+   * Top X% value.
+   */
+  const rowsWithPublicStandings =
+    await attachCanonicalPublicStandings({
+      supabase,
+      rows:
+        rowsWithCategories,
+      policyVersion:
+        availablePolicyVersion,
+      categoriesById,
+    })
+
   const primaryCityKey =
     determinePrimaryCityKey(
-      rowsWithCategories
+      rowsWithPublicStandings
     )
 
   const selectedRows =
     selectBestRowPerCategory({
       rows:
-        rowsWithCategories,
+        rowsWithPublicStandings,
       primaryCityKey,
     })
 
@@ -516,7 +551,7 @@ export async function getPublicCreatorReputation(
 
   const evidence =
     buildCreatorWideEvidence(
-      rowsWithCategories
+      rowsWithPublicStandings
     )
 
   const highestLevel =
@@ -526,7 +561,7 @@ export async function getPublicCreatorReputation(
 
   const calculatedAt =
     findNewestCalculatedAt(
-      rowsWithCategories
+      rowsWithPublicStandings
     )
 
   const primaryCityLabel =
@@ -900,7 +935,7 @@ function selectBestRowPerCategory({
 
   for (
     const categoryRows of
-      groupedRows.values()
+    groupedRows.values()
   ) {
     const primaryCityRow =
       primaryCityKey
@@ -1591,8 +1626,10 @@ function normalizeNonNegativeNumber(
     )
 
   if (
-    normalized === null ||
-    normalized <= 0
+    normalized ===
+      null ||
+    normalized <=
+      0
   ) {
     return 0
   }
@@ -1725,4 +1762,634 @@ function removeExplorerSuffix(
       .trim()
 
   return normalized || value
+}
+
+/* =========================================================
+ * Canonical public standing integration
+ * ======================================================= */
+
+/**
+ * Reads the exact ranking populations relevant to this
+ * creator's already-selected reputation records.
+ *
+ * Discover only compares public and discoverable profiles.
+ * Reusing that population avoids conflicting public claims.
+ *
+ * Rankings are calculated in memory by the canonical ranking
+ * function and are never persisted by this public loader.
+ */
+async function attachCanonicalPublicStandings({
+  supabase,
+  rows,
+  policyVersion,
+  categoriesById,
+}: {
+  supabase:
+    ReturnType<typeof getSupabaseAdmin>
+
+  rows:
+    NormalizedReputationRow[]
+
+  policyVersion:
+    number
+
+  categoriesById:
+    Map<
+      string,
+      PublicReputationCategory
+    >
+}): Promise<
+  NormalizedReputationRow[]
+> {
+  const withoutStandings =
+    rows.map(
+      (row) => ({
+        ...row,
+        rank:
+          null,
+        eligibleCreatorCount:
+          0,
+        topPercent:
+          null,
+        rankLabel:
+          null,
+        rankDisplay:
+          'hidden' as const,
+      })
+    )
+
+  const requestedPopulations =
+    new Set(
+      rows.map(
+        createPublicRankingPopulationKey
+      )
+    )
+
+  const categoryIds = [
+    ...new Set(
+      rows.map(
+        (row) =>
+          row.categoryId
+      )
+    ),
+  ]
+
+  if (
+    categoryIds.length === 0
+  ) {
+    return withoutStandings
+  }
+
+  const populationRows:
+    NormalizedReputationRow[] =
+    []
+
+  const pageSize =
+    500
+
+  let offset =
+    0
+
+  while (true) {
+    const {
+      data,
+      error,
+    } =
+      await supabase
+        .from(
+          'creator_reputation_stats'
+        )
+        .select('*')
+        .eq(
+          'policy_version',
+          policyVersion
+        )
+        .in(
+          'category_id',
+          categoryIds
+        )
+        .order(
+          'user_id',
+          {
+            ascending:
+              true,
+          }
+        )
+        .order(
+          'category_id',
+          {
+            ascending:
+              true,
+          }
+        )
+        .order(
+          'scope',
+          {
+            ascending:
+              true,
+          }
+        )
+        .order(
+          'scope_city_key',
+          {
+            ascending:
+              true,
+          }
+        )
+        .range(
+          offset,
+          offset +
+            pageSize -
+            1
+        )
+
+    if (error) {
+      throw new Error(
+        buildDatabaseErrorMessage(
+          'public reputation ranking candidates',
+          error
+        )
+      )
+    }
+
+    const page =
+      Array.isArray(data)
+        ? data as CreatorReputationStatsRow[]
+        : []
+
+    for (const rawRow of page) {
+      const normalized =
+        normalizeReputationRow(
+          rawRow
+        )
+
+      if (
+        normalized &&
+        normalized.policyVersion ===
+          policyVersion &&
+        requestedPopulations.has(
+          createPublicRankingPopulationKey(
+            normalized
+          )
+        )
+      ) {
+        populationRows.push(
+          normalized
+        )
+      }
+    }
+
+    if (
+      page.length <
+      pageSize
+    ) {
+      break
+    }
+
+    offset +=
+      pageSize
+  }
+
+  if (
+    populationRows.length ===
+    0
+  ) {
+    return withoutStandings
+  }
+
+  const candidateUserIds = [
+    ...new Set(
+      populationRows.map(
+        (row) =>
+          row.userId
+      )
+    ),
+  ]
+
+  const publicUserIds =
+    new Set<string>()
+
+  const profileBatchSize =
+    250
+
+  for (
+    let index = 0;
+    index <
+    candidateUserIds.length;
+    index +=
+    profileBatchSize
+  ) {
+    const batch =
+      candidateUserIds.slice(
+        index,
+        index +
+          profileBatchSize
+      )
+
+    const {
+      data,
+      error,
+    } =
+      await supabase
+        .from(
+          'profiles'
+        )
+        .select(
+          'id'
+        )
+        .in(
+          'id',
+          batch
+        )
+        .eq(
+          'is_public',
+          true
+        )
+        .eq(
+          'is_discoverable',
+          true
+        )
+        .not(
+          'username',
+          'is',
+          null
+        )
+
+    if (error) {
+      throw new Error(
+        buildDatabaseErrorMessage(
+          'public reputation ranking profiles',
+          error
+        )
+      )
+    }
+
+    for (
+      const profile of
+      data ??
+      []
+    ) {
+      if (
+        typeof profile.id ===
+        'string'
+      ) {
+        publicUserIds.add(
+          profile.id
+        )
+      }
+    }
+  }
+
+  const rowsByPopulation =
+    new Map<
+      string,
+      NormalizedReputationRow[]
+    >()
+
+  for (
+    const row of populationRows
+  ) {
+    if (
+      !publicUserIds.has(
+        row.userId
+      )
+    ) {
+      continue
+    }
+
+    const key =
+      createPublicRankingPopulationKey(
+        row
+      )
+
+    const existing =
+      rowsByPopulation.get(
+        key
+      ) ??
+      []
+
+    existing.push(
+      row
+    )
+
+    rowsByPopulation.set(
+      key,
+      existing
+    )
+  }
+
+  const standingsByIdentity =
+    new Map<
+      string,
+      {
+        rank: number
+        eligibleCreatorCount: number
+        topPercent: number
+        rankLabel: string
+      }
+    >()
+
+  for (
+    const population of
+    rowsByPopulation.values()
+  ) {
+    const calculatedAt =
+      findNewestCalculatedAt(
+        population
+      ) ??
+      new Date(0).toISOString()
+
+    const candidates:
+      ReputationRankingCandidate[] =
+      population.map(
+        (row) => ({
+          userId:
+            row.userId,
+
+          categoryId:
+            row.categoryId as ReputationRankingCandidate['categoryId'],
+
+          scope:
+            row.scope,
+
+          cityKey:
+            row.cityKey,
+
+          verifiedVenueCount:
+            row.evidence
+              .verifiedVenueCount,
+
+          weightedVenueCount:
+            row.evidence
+              .weightedVenueCount,
+
+          cityCount:
+            row.evidence
+              .cityCount,
+
+          publicCollectionCount:
+            row.evidence
+              .publicCollectionCount,
+
+          curatedVenueCount:
+            row.evidence
+              .curatedVenueCount,
+
+          publicSnapshotCount:
+            row.evidence
+              .publicSnapshotCount,
+
+          completedFlowCount:
+            row.evidence
+              .completedFlowCount,
+
+          recencyScore:
+            0,
+
+          qualityScore:
+            0,
+
+          reputationScore:
+            row.reputationScore,
+
+          reputationLevel:
+            row.reputationLevel,
+
+          policyVersion:
+            row.policyVersion,
+
+          calculatedAt:
+            row.calculatedAt,
+        })
+      )
+
+    const {
+      rankings,
+    } =
+      rankReputationCandidates({
+        candidates,
+        calculatedAt,
+      })
+
+    const populationByUserId =
+      new Map(
+        population.map(
+          (row) => [
+            row.userId,
+            row,
+          ] as const
+        )
+      )
+
+    for (
+      const ranking of
+      rankings
+    ) {
+      const row =
+        populationByUserId.get(
+          ranking.userId
+        )
+
+      if (!row) {
+        continue
+      }
+
+      const category =
+        categoriesById.get(
+          row.categoryId
+        )
+
+      if (!category) {
+        continue
+      }
+
+      const reputation:
+        UserCategoryReputation = {
+        userId:
+          row.userId,
+
+        categoryId:
+          row.categoryId as UserCategoryReputation['categoryId'],
+
+        scope:
+          row.scope,
+
+        cityKey:
+          row.cityKey,
+
+        score:
+          row.reputationScore,
+
+        level:
+          row.reputationLevel,
+
+        components: {
+          verifiedVenueCount:
+            row.evidence
+              .verifiedVenueCount,
+
+          weightedVenueCount:
+            row.evidence
+              .weightedVenueCount,
+
+          cityCount:
+            row.evidence
+              .cityCount,
+
+          publicCollectionCount:
+            row.evidence
+              .publicCollectionCount,
+
+          curatedVenueCount:
+            row.evidence
+              .curatedVenueCount,
+
+          publicSnapshotCount:
+            row.evidence
+              .publicSnapshotCount,
+
+          completedFlowCount:
+            row.evidence
+              .completedFlowCount,
+
+          recencyScore:
+            0,
+
+          qualityScore:
+            0,
+        },
+
+        latestEvidenceAt:
+          null,
+
+        calculatedAt:
+          row.calculatedAt,
+      }
+
+      const publicClaim =
+        buildPublicReputationClaim({
+          reputation,
+          ranking,
+          categoryLabel:
+            category.label,
+          cityLabel:
+            row.cityLabel,
+        })
+
+      if (
+        !publicClaim ||
+        publicClaim.rank ===
+          null ||
+        publicClaim.percentile ===
+          null
+      ) {
+        continue
+      }
+
+      /**
+       * Use rank-position percentage, not percentile standing.
+       *
+       * The canonical policy permits an ordinary numerical
+       * Top X% claim beginning with one eligible creator.
+       */
+      const topPercent =
+        calculatePercentileRank({
+          rank:
+            publicClaim.rank,
+          eligibleUserCount:
+            publicClaim
+              .eligibleUserCount,
+        })
+
+      standingsByIdentity.set(
+        createPublicRankingIdentityKey(
+          row
+        ),
+        {
+          rank:
+            publicClaim.rank,
+
+          eligibleCreatorCount:
+            publicClaim
+              .eligibleUserCount,
+
+          topPercent,
+
+          rankLabel:
+            `Top ${formatTopPercent(
+              topPercent
+            )}%`,
+        }
+      )
+    }
+  }
+
+  return withoutStandings.map(
+    (row) => {
+      const standing =
+        standingsByIdentity.get(
+          createPublicRankingIdentityKey(
+            row
+          )
+        )
+
+      if (!standing) {
+        return row
+      }
+
+      return {
+        ...row,
+
+        rank:
+          standing.rank,
+
+        eligibleCreatorCount:
+          standing
+            .eligibleCreatorCount,
+
+        topPercent:
+          standing.topPercent,
+
+        rankLabel:
+          standing.rankLabel,
+
+        rankDisplay:
+          'percentile' as const,
+      }
+    }
+  )
+}
+
+function createPublicRankingPopulationKey(
+  row: {
+    categoryId: string
+    scope: PublicCreatorReputationScope
+    cityKey: string | null
+  }
+): string {
+  return [
+    row.categoryId,
+    row.scope,
+    row.scope ===
+      'city'
+      ? row.cityKey ??
+        '__missing_city__'
+      : '__global__',
+  ].join(':')
+}
+
+function createPublicRankingIdentityKey(
+  row: {
+    userId: string
+    categoryId: string
+    scope: PublicCreatorReputationScope
+    cityKey: string | null
+  }
+): string {
+  return [
+    row.userId,
+    createPublicRankingPopulationKey(
+      row
+    ),
+  ].join(':')
 }

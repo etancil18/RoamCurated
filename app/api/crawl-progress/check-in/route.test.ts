@@ -34,6 +34,10 @@ vi.mock(
   })
 )
 
+vi.mock('@/lib/reputation/safelyRefreshCreatorReputation', () => ({
+  safelyRefreshCreatorReputation: vi.fn(),
+}))
+
 vi.mock('@/lib/roam/roamDay', () => ({
   getRoamDay: mocks.getRoamDay,
 }))

@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server'
 
 import {
@@ -55,6 +56,18 @@ type ProfileRow = {
   preferred_vibes: string[] | null
   interest_categories: string[] | null
   is_public: boolean | null
+}
+
+/**
+ * Persisted canonical public Passport snapshot.
+ *
+ * This is read-only Discover presentation context.
+ * XP never changes Creator Reputation ranking order.
+ */
+type PublicPassportStatsRow = {
+  user_id: string
+  passport_xp: number | string | null
+  passport_level: number | string | null
 }
 
 type ReputationStatsRow = {
@@ -145,6 +158,15 @@ type LeaderboardUser = {
   interest_categories: string[] | null
 
   passport_level: number
+
+  /**
+   * Canonical persisted Passport XP.
+   *
+   * Null means no valid public Passport aggregate
+   * was available. It is not interpreted as zero XP.
+   */
+  passport_xp: number | null
+
   followers_count: number
   completed_flows_count: number
   venue_visits_count: number
@@ -182,8 +204,25 @@ type LeaderboardCityOption = {
 }
 
 type LeaderboardResponse = {
+  /**
+   * Discover preview: at most five eligible
+   * Creator Reputation leaders.
+   */
   users: LeaderboardUser[]
+
   currentUserId: string | null
+
+  /**
+   * Independently resolved from the complete original
+   * leaderboard population, before the Top 5 slice.
+   *
+   * An eligible creator ranked below fifth place
+   * therefore retains their actual standing.
+   *
+   * An unranked public/discoverable creator can
+   * retain their existing building-reputation state.
+   */
+  currentUserStanding: LeaderboardUser | null
 
   filters: {
     scope: LeaderboardScope
@@ -220,6 +259,13 @@ const LEADERBOARD_CITY_OPTIONS:
   )
 
 /* =========================================================
+ * Discover expertise preview
+ * ======================================================= */
+
+const LEADERBOARD_PREVIEW_LIMIT =
+  5
+
+/* =========================================================
  * Endpoint
  * ======================================================= */
 
@@ -248,43 +294,43 @@ export async function GET(
       )
 
     const {
-  data:
-    profilesRaw,
+      data:
+        profilesRaw,
 
-  error:
-    profilesError,
-} =
-  await supabase
-    .from(
-      'profiles'
-    )
-    .select(`
-      id,
-      username,
-      full_name,
-      avatar_url,
-      bio,
-      home_neighborhood,
-      preferred_vibes,
-      interest_categories,
-      is_public
-    `)
-    .eq(
-      'is_public',
-      true
-    )
-    .eq(
-      'is_discoverable',
-      true
-    )
-    .not(
-      'username',
-      'is',
-      null
-    )
-    .returns<
-      ProfileRow[]
-    >()
+      error:
+        profilesError,
+    } =
+      await supabase
+        .from(
+          'profiles'
+        )
+        .select(`
+          id,
+          username,
+          full_name,
+          avatar_url,
+          bio,
+          home_neighborhood,
+          preferred_vibes,
+          interest_categories,
+          is_public
+        `)
+        .eq(
+          'is_public',
+          true
+        )
+        .eq(
+          'is_discoverable',
+          true
+        )
+        .not(
+          'username',
+          'is',
+          null
+        )
+        .returns<
+          ProfileRow[]
+        >()
 
     if (
       profilesError
@@ -310,12 +356,12 @@ export async function GET(
     }
 
     /**
- * Public, discoverable users form the shared
- * leaderboard population.
- */
-const profiles =
-  profilesRaw ??
-  []
+     * Public, discoverable users form the shared
+     * leaderboard population.
+     */
+    const profiles =
+      profilesRaw ??
+      []
 
     const profileIds =
       profiles.map(
@@ -336,6 +382,9 @@ const profiles =
 
         currentUserId:
           user?.id ??
+          null,
+
+        currentUserStanding:
           null,
 
         filters: {
@@ -423,6 +472,7 @@ const profiles =
       },
       reputationStatsResult,
       reputationCategoriesResult,
+      passportStatsResult,
     ] =
       await Promise.all([
         supabase
@@ -622,6 +672,30 @@ const profiles =
           .returns<
             ReputationCategoryRow[]
           >(),
+
+        /**
+         * Read canonical materialized Passport values.
+         *
+         * Keep the existing activity queries and fallback
+         * snapshot intact to preserve all prior behavior
+         * whenever a persisted row is unavailable.
+         */
+        supabase
+          .from(
+            'profile_public_stats'
+          )
+          .select(`
+            user_id,
+            passport_xp,
+            passport_level
+          `)
+          .in(
+            'user_id',
+            profileIds
+          )
+          .returns<
+            PublicPassportStatsRow[]
+          >(),
       ])
 
     if (
@@ -640,6 +714,75 @@ const profiles =
         'Leaderboard reputation category lookup error:',
         reputationCategoriesResult.error
       )
+    }
+
+    if (
+      passportStatsResult.error
+    ) {
+      console.error(
+        'Leaderboard public Passport lookup error:',
+        passportStatsResult.error
+      )
+    }
+
+    /**
+     * Persisted public Passport values do not change
+     * reputation rank calculations.
+     *
+     * Missing or malformed snapshot values are kept
+     * distinct from genuine zero XP.
+     */
+    const publicPassportByUserId =
+      new Map<
+        string,
+        {
+          xp: number | null
+          level: number | null
+        }
+      >()
+
+    if (
+      !passportStatsResult.error
+    ) {
+      for (
+        const row of
+          passportStatsResult.data ??
+          []
+      ) {
+        const passportUserId =
+          normalizeNullableText(
+            row.user_id
+          )
+
+        if (
+          !passportUserId
+        ) {
+          continue
+        }
+
+        const xp =
+          normalizeFiniteNumber(
+            row.passport_xp
+          )
+
+        const level =
+          normalizePositiveInteger(
+            row.passport_level
+          )
+
+        publicPassportByUserId.set(
+          passportUserId,
+          {
+            xp:
+              xp !== null &&
+              xp >= 0
+                ? xp
+                : null,
+
+            level,
+          }
+        )
+      }
     }
 
     const xpByUserId =
@@ -1278,6 +1421,12 @@ const profiles =
             ) ??
             null
 
+          const persistedPassport =
+            publicPassportByUserId.get(
+              profile.id
+            ) ??
+            null
+
           return {
             id:
               profile.id,
@@ -1304,7 +1453,14 @@ const profiles =
               profile.interest_categories,
 
             passport_level:
+              persistedPassport
+                ?.level ??
               passportLevel,
+
+            passport_xp:
+              persistedPassport
+                ?.xp ??
+              null,
 
             followers_count:
               followersByUserId.get(
@@ -1449,6 +1605,9 @@ const profiles =
      * users with qualifying category reputation appear first;
      * users still building the category use Passport fallback
      * ordering beneath them.
+     *
+     * This full ordering is retained internally so individual
+     * standing remains accurate independently of the preview.
      */
     const rankedUsers =
       mappedUsers
@@ -1490,14 +1649,71 @@ const profiles =
           })
         )
 
+    /* =====================================================
+     * Discover initiative: bounded expertise preview
+     * =================================================== */
+
+    /**
+     * The authenticated user's standing is resolved against
+     * the full, originally ordered population.
+     *
+     * Never derive it from the Top 5 response slice:
+     * doing so would hide users ranked outside fifth place.
+     *
+     * The existing public/discoverable and city-participation
+     * filters remain in force.
+     */
+    const currentUserStanding =
+      user
+        ? rankedUsers.find(
+            (
+              profile
+            ) =>
+              profile.id ===
+              user.id
+          ) ??
+          null
+        : null
+
+    /**
+     * Only creators with canonical publishable reputation
+     * ranks qualify for the expertise preview.
+     *
+     * All reputation ranks and eligible-population counts
+     * have already been calculated above, before slicing.
+     *
+     * No Passport fallback users are inserted into the
+     * expertise leaderboard.
+     */
+    const reputationLeaders =
+      rankedUsers
+        .filter(
+          (
+            profile
+          ) =>
+            profile.reputation_rank !==
+              null &&
+            Number.isInteger(
+              profile.reputation_rank
+            ) &&
+            profile.reputation_rank >
+              0
+        )
+        .slice(
+          0,
+          LEADERBOARD_PREVIEW_LIMIT
+        )
+
     const response:
       LeaderboardResponse = {
       users:
-        rankedUsers,
+        reputationLeaders,
 
       currentUserId:
         user?.id ??
         null,
+
+      currentUserStanding,
 
       filters: {
         scope:
@@ -1690,10 +1906,10 @@ function normalizeReputationCategories(
 
     if (
       row.is_active ===
-      false
-    ) {
-      continue
-    }
+        false
+      ) {
+        continue
+      }
 
     const id =
       normalizeIdentifier(
@@ -1798,23 +2014,23 @@ function normalizeReputationRows(
       )
 
     const scope =
-  isReputationScope(
-    row.scope
-  )
-    ? row.scope
-    : null
+      isReputationScope(
+        row.scope
+      )
+        ? row.scope
+        : null
 
-const reputationLevel =
-  isReputationLevel(
-    row.reputation_level
-  )
-    ? row.reputation_level
-    : null
+    const reputationLevel =
+      isReputationLevel(
+        row.reputation_level
+      )
+        ? row.reputation_level
+        : null
 
-const policyVersion =
-  normalizePositiveInteger(
-    row.policy_version
-  )
+    const policyVersion =
+      normalizePositiveInteger(
+        row.policy_version
+      )
 
     if (
       !userId ||
@@ -1836,7 +2052,7 @@ const policyVersion =
 
     const cityKey =
       scope ===
-      'city' &&
+        'city' &&
       isSupportedCityKey(
         normalizedCityKey
       )
@@ -1872,52 +2088,52 @@ const policyVersion =
           row.verified_venue_count
         ),
 
-          weightedVenueCount:
-      normalizeNonNegativeNumber(
-        row.weighted_venue_count
-      ),
+      weightedVenueCount:
+        normalizeNonNegativeNumber(
+          row.weighted_venue_count
+        ),
 
-    cityCount:
-      normalizeNonNegativeInteger(
-        row.city_count
-      ),
+      cityCount:
+        normalizeNonNegativeInteger(
+          row.city_count
+        ),
 
-    publicCollectionCount:
-      normalizeNonNegativeInteger(
-        row.public_collection_count
-      ),
+      publicCollectionCount:
+        normalizeNonNegativeInteger(
+          row.public_collection_count
+        ),
 
-    curatedVenueCount:
-      normalizeNonNegativeInteger(
-        row.curated_venue_count
-      ),
+      curatedVenueCount:
+        normalizeNonNegativeInteger(
+          row.curated_venue_count
+        ),
 
-    publicSnapshotCount:
-      normalizeNonNegativeInteger(
-        row.public_snapshot_count
-      ),
+      publicSnapshotCount:
+        normalizeNonNegativeInteger(
+          row.public_snapshot_count
+        ),
 
-    completedFlowCount:
-      normalizeNonNegativeInteger(
-        row.completed_flow_count
-      ),
+      completedFlowCount:
+        normalizeNonNegativeInteger(
+          row.completed_flow_count
+        ),
 
-    recencyScore:
-      normalizeNonNegativeNumber(
-        row.recency_score
-      ),
+      recencyScore:
+        normalizeNonNegativeNumber(
+          row.recency_score
+        ),
 
-    qualityScore:
-      normalizeNonNegativeNumber(
-        row.quality_score
-      ),
+      qualityScore:
+        normalizeNonNegativeNumber(
+          row.quality_score
+        ),
 
-    calculatedAt:
-      normalizeNullableText(
-        row.calculated_at
-      ),
+      calculatedAt:
+        normalizeNullableText(
+          row.calculated_at
+        ),
 
-    policyVersion,
+      policyVersion,
     })
   }
 
@@ -2158,140 +2374,140 @@ function buildReputationRankings({
       }
 
       const reputation:
-  UserCategoryReputation = {
-  userId:
-    row.userId,
+        UserCategoryReputation = {
+        userId:
+          row.userId,
 
-  categoryId:
-    row.categoryId,
+        categoryId:
+          row.categoryId,
 
-  scope:
-    row.scope,
+        scope:
+          row.scope,
 
-  cityKey:
-    row.cityKey,
+        cityKey:
+          row.cityKey,
 
-  score:
-    row.reputationScore,
+        score:
+          row.reputationScore,
 
-  level:
-    row.reputationLevel,
+        level:
+          row.reputationLevel,
 
-  components: {
-    verifiedVenueCount:
-      row.verifiedVenueCount,
+        components: {
+          verifiedVenueCount:
+            row.verifiedVenueCount,
 
-    weightedVenueCount:
-      row.weightedVenueCount,
+          weightedVenueCount:
+            row.weightedVenueCount,
 
-    cityCount:
-      row.cityCount,
+          cityCount:
+            row.cityCount,
 
-    publicCollectionCount:
-      row.publicCollectionCount,
+          publicCollectionCount:
+            row.publicCollectionCount,
 
-    curatedVenueCount:
-      row.curatedVenueCount,
+          curatedVenueCount:
+            row.curatedVenueCount,
 
-    publicSnapshotCount:
-      row.publicSnapshotCount,
+          publicSnapshotCount:
+            row.publicSnapshotCount,
 
-    completedFlowCount:
-      row.completedFlowCount,
+          completedFlowCount:
+            row.completedFlowCount,
 
-    recencyScore:
-      row.recencyScore,
+          recencyScore:
+            row.recencyScore,
 
-    qualityScore:
-      row.qualityScore,
-  },
+          qualityScore:
+            row.qualityScore,
+        },
 
-  latestEvidenceAt:
-    null,
+        latestEvidenceAt:
+          null,
 
-  calculatedAt:
-    row.calculatedAt ??
-    calculatedAt,
-}
+        calculatedAt:
+          row.calculatedAt ??
+          calculatedAt,
+      }
 
-const publicClaim =
-  buildPublicReputationClaim({
-    reputation,
+      const publicClaim =
+        buildPublicReputationClaim({
+          reputation,
 
-    ranking,
+          ranking,
 
-    categoryLabel:
-      category.label,
+          categoryLabel:
+            category.label,
 
-    cityLabel:
-      row.scope ===
-        'city' &&
-      row.cityKey
-        ? formatIdentifier(
+          cityLabel:
+            row.scope ===
+              'city' &&
             row.cityKey
-          )
-        : null,
-  })
+              ? formatIdentifier(
+                  row.cityKey
+                )
+              : null,
+        })
 
-if (
-  !publicClaim ||
-  publicClaim.rank ===
-    null ||
-  publicClaim.percentile ===
-    null
-) {
-  continue
-}
+      if (
+        !publicClaim ||
+        publicClaim.rank ===
+          null ||
+        publicClaim.percentile ===
+          null
+      ) {
+        continue
+      }
 
-rankedRows.push({
-  userId:
-    row.userId,
+      rankedRows.push({
+        userId:
+          row.userId,
 
-  categoryId:
-    row.categoryId,
+        categoryId:
+          row.categoryId,
 
-  categoryLabel:
-    category.label,
+        categoryLabel:
+          category.label,
 
-  categoryShortLabel:
-    category.shortLabel,
+        categoryShortLabel:
+          category.shortLabel,
 
-  scope:
-    row.scope,
+        scope:
+          row.scope,
 
-  cityKey:
-    row.cityKey,
+        cityKey:
+          row.cityKey,
 
-  reputationLevel:
-    row.reputationLevel,
+        reputationLevel:
+          row.reputationLevel,
 
-  reputationScore:
-    row.reputationScore,
+        reputationScore:
+          row.reputationScore,
 
-  verifiedVenueCount:
-    row.verifiedVenueCount,
+        verifiedVenueCount:
+          row.verifiedVenueCount,
 
-  weightedVenueCount:
-    row.weightedVenueCount,
+        weightedVenueCount:
+          row.weightedVenueCount,
 
-  completedFlowCount:
-    row.completedFlowCount,
+        completedFlowCount:
+          row.completedFlowCount,
 
-  reputationRank:
-    publicClaim.rank,
+        reputationRank:
+          publicClaim.rank,
 
-  eligibleCreatorCount:
-    publicClaim.eligibleUserCount,
+        eligibleCreatorCount:
+          publicClaim.eligibleUserCount,
 
-  topPercent:
-    publicClaim.percentile,
+        topPercent:
+          publicClaim.percentile,
 
-  percentileStanding:
-    ranking.percentile,
+        percentileStanding:
+          ranking.percentile,
 
-  rankLabel:
-    publicClaim.label,
-})
+        rankLabel:
+          publicClaim.label,
+      })
     }
   }
 
@@ -2486,7 +2702,7 @@ function normalizeIdentifier(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -2515,7 +2731,7 @@ function normalizeNullableText(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }

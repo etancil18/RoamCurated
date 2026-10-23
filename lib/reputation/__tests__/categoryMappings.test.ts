@@ -1,385 +1,181 @@
+
 import {
   describe,
   expect,
   it,
 } from 'vitest'
 
-import * as categoryMappingsModule from '@/lib/reputation/categoryMappings'
+import {
+  REPUTATION_CATEGORY_IDS,
+  isReputationCategoryId,
+} from '@/lib/reputation/types'
+
+import {
+  MAX_REPUTATION_CATEGORY_MAPPING_WEIGHT,
+  MAX_VENUE_TYPE_KEY_LENGTH,
+  MIN_REPUTATION_CATEGORY_MAPPING_WEIGHT,
+  aggregateVenueTypeCategoryMappings,
+  buildVenueCategoryMappingIndex,
+  getReputationCategoryMappingsForVenueType,
+  getVenueCategoryMappings,
+  hasVenueCategoryMapping,
+  isVenueCategoryMapping,
+  mapVenueTypeToReputationCategories,
+  normalizeCategoryMappingWeight,
+  normalizeVenueCategoryMapping,
+  normalizeVenueCategoryMappings,
+  normalizeVenueCategoryMappingsDetailed,
+  normalizeVenueReputationCategoryMappings,
+  normalizeVenueTypeKey,
+} from '@/lib/reputation/categoryMappings'
 
 /* =========================================================
- * Test-local contracts
+ * Canonical fixtures
  * ======================================================= */
 
-type UnknownRecord = Record<
-  string,
-  unknown
->
+const RAW_MAPPINGS = [
+  {
+    venue_type:
+      'Coffee Shop',
 
-type CategoryDefinition = {
-  id: string
-  label: string
-  shortLabel?: string | null
-  description?: string | null
-  sortOrder?: number | null
-  aliases?: readonly string[] | null
-}
+    category_id:
+      'coffee',
 
-type CategoryNormalizer = (
-  value: unknown
-) => string | null
+    mapping_weight:
+      1,
 
-type CategoryPredicate = (
-  value: unknown
-) => boolean
+    sort_order:
+      1,
+  },
+  {
+    venue_type:
+      'Coffee Shop',
 
-type CategoryLookup = (
-  value: unknown
-) => unknown
+    category_id:
+      'bakeries_desserts',
 
-type VenueCategoryResolver = (
-  value: unknown
-) => unknown
+    mapping_weight:
+      0.5,
 
-/* =========================================================
- * Supported public-export names
- * ======================================================= */
+    sort_order:
+      2,
+  },
+  {
+    venue_type:
+      'Wine Bar',
 
-/**
- * This adapter keeps the test compatible with the naming
- * variants used while the reputation initiative is rolling out.
- *
- * Once categoryMappings.ts has a permanently frozen public API,
- * this section may be reduced to the canonical export names.
- */
+    category_id:
+      'wine_bars',
 
-const REGISTRY_EXPORT_NAMES = [
-  'REPUTATION_CATEGORIES',
-  'REPUTATION_CATEGORY_DEFINITIONS',
-  'REPUTATION_CATEGORY_REGISTRY',
-  'CATEGORY_MAPPINGS',
-] as const
+    mapping_weight:
+      1,
 
-const NORMALIZER_EXPORT_NAMES = [
-  'normalizeReputationCategoryId',
-  'normalizeCategoryId',
-  'resolveReputationCategoryId',
-] as const
+    sort_order:
+      1,
+  },
+  {
+    venue_type:
+      'Wine Bar',
 
-const PREDICATE_EXPORT_NAMES = [
-  'isReputationCategoryId',
-  'isSupportedReputationCategoryId',
-  'isKnownReputationCategoryId',
-] as const
+    category_id:
+      'restaurants',
 
-const LOOKUP_EXPORT_NAMES = [
-  'getReputationCategoryById',
-  'getReputationCategoryDefinition',
-  'findReputationCategory',
-] as const
+    mapping_weight:
+      0.25,
 
-const VENUE_RESOLVER_EXPORT_NAMES = [
-  'resolveVenueReputationCategoryIds',
-  'getVenueReputationCategoryIds',
-  'mapVenueToReputationCategories',
-  'resolveReputationCategoriesForVenue',
+    sort_order:
+      2,
+  },
 ] as const
 
 /* =========================================================
- * Module normalization
- * ======================================================= */
-
-const moduleRecord =
-  categoryMappingsModule as UnknownRecord
-
-const categoryDefinitions =
-  loadCategoryDefinitions(
-    moduleRecord
-  )
-
-const normalizeCategoryId =
-  loadOptionalFunction<
-    CategoryNormalizer
-  >(
-    moduleRecord,
-    NORMALIZER_EXPORT_NAMES
-  )
-
-const isCategoryId =
-  loadOptionalFunction<
-    CategoryPredicate
-  >(
-    moduleRecord,
-    PREDICATE_EXPORT_NAMES
-  )
-
-const getCategory =
-  loadOptionalFunction<
-    CategoryLookup
-  >(
-    moduleRecord,
-    LOOKUP_EXPORT_NAMES
-  )
-
-const resolveVenueCategories =
-  loadOptionalFunction<
-    VenueCategoryResolver
-  >(
-    moduleRecord,
-    VENUE_RESOLVER_EXPORT_NAMES
-  )
-
-/* =========================================================
- * Registry tests
+ * Canonical category identity
  * ======================================================= */
 
 describe(
-  'reputation category mappings',
+  'reputation category registry',
   () => {
     it(
-      'exports a non-empty canonical category registry',
+      'defines the canonical reputation categories',
       () => {
         expect(
-          categoryDefinitions.length
-        ).toBeGreaterThan(0)
+          REPUTATION_CATEGORY_IDS
+        ).toHaveLength(14)
+
+        expect(
+          REPUTATION_CATEGORY_IDS
+        ).toContain('coffee')
+
+        expect(
+          REPUTATION_CATEGORY_IDS
+        ).toContain('restaurants')
       }
     )
 
     it(
-      'contains the canonical coffee category',
+      'uses unique and normalized category IDs',
       () => {
-        const coffee =
-          categoryDefinitions.find(
-            (category) =>
-              category.id ===
-              'coffee'
-          )
-
-        expect(coffee).toBeDefined()
-
         expect(
-          coffee?.label
-            .trim()
-            .length
-        ).toBeGreaterThan(0)
-      }
-    )
+          new Set(
+            REPUTATION_CATEGORY_IDS
+          ).size
+        ).toBe(
+          REPUTATION_CATEGORY_IDS.length
+        )
 
-    it(
-      'uses normalized, stable category IDs',
-      () => {
         for (
-          const category of
-            categoryDefinitions
+          const categoryId of
+            REPUTATION_CATEGORY_IDS
         ) {
           expect(
-            category.id
+            categoryId
           ).toMatch(
-            /^[a-z0-9]+(?:[_-][a-z0-9]+)*$/
+            /^[a-z0-9]+(?:_[a-z0-9]+)*$/
           )
 
           expect(
-            category.id
+            categoryId
           ).toBe(
-            category.id.trim()
-          )
-
-          expect(
-            category.id
-          ).toBe(
-            category.id.toLowerCase()
+            categoryId.trim()
           )
         }
       }
     )
 
     it(
-      'does not define duplicate category IDs',
-      () => {
-        const ids =
-          categoryDefinitions.map(
-            (category) =>
-              category.id
-          )
-
-        expect(
-          new Set(ids).size
-        ).toBe(ids.length)
-      }
-    )
-
-    it(
-      'defines a non-empty public label for every category',
+      'recognizes every canonical category',
       () => {
         for (
-          const category of
-            categoryDefinitions
+          const categoryId of
+            REPUTATION_CATEGORY_IDS
         ) {
           expect(
-            category.label
-              .trim()
-              .length
-          ).toBeGreaterThan(0)
-        }
-      }
-    )
-
-    it(
-      'does not define duplicate labels after normalization',
-      () => {
-        const normalizedLabels =
-          categoryDefinitions.map(
-            (category) =>
-              normalizeText(
-                category.label
-              )
-          )
-
-        expect(
-          new Set(
-            normalizedLabels
-          ).size
-        ).toBe(
-          normalizedLabels.length
-        )
-      }
-    )
-
-    it(
-      'uses unique non-negative sort orders when sort orders are provided',
-      () => {
-        const categoriesWithSortOrder =
-          categoryDefinitions.filter(
-            (
-              category
-            ): category is CategoryDefinition & {
-              sortOrder: number
-            } =>
-              typeof category.sortOrder ===
-                'number' &&
-              Number.isFinite(
-                category.sortOrder
-              )
-          )
-
-        if (
-          categoriesWithSortOrder.length ===
-          0
-        ) {
-          return
-        }
-
-        const sortOrders =
-          categoriesWithSortOrder.map(
-            (category) => {
-              expect(
-                Number.isInteger(
-                  category.sortOrder
-                )
-              ).toBe(true)
-
-              expect(
-                category.sortOrder
-              ).toBeGreaterThanOrEqual(
-                0
-              )
-
-              return category.sortOrder
-            }
-          )
-
-        expect(
-          new Set(
-            sortOrders
-          ).size
-        ).toBe(
-          sortOrders.length
-        )
-      }
-    )
-
-    it(
-      'does not define an alias for more than one category',
-      () => {
-        const aliasOwners =
-          new Map<
-            string,
-            string
-          >()
-
-        for (
-          const category of
-            categoryDefinitions
-        ) {
-          for (
-            const alias of
-              normalizeAliases(
-                category.aliases
-              )
-          ) {
-            const comparisonKey =
-              normalizeText(alias)
-
-            const existingOwner =
-              aliasOwners.get(
-                comparisonKey
-              )
-
-            expect(
-              existingOwner,
-              `Alias "${alias}" is assigned to both "${existingOwner}" and "${category.id}".`
-            ).toBeUndefined()
-
-            aliasOwners.set(
-              comparisonKey,
-              category.id
+            isReputationCategoryId(
+              categoryId
             )
-          }
+          ).toBe(true)
         }
       }
     )
 
     it(
-      'does not use another canonical category ID as an alias',
+      'rejects unsupported category identifiers',
       () => {
-        const canonicalIds =
-          new Set(
-            categoryDefinitions.map(
-              (category) =>
-                normalizeText(
-                  category.id
-                )
-            )
-          )
-
         for (
-          const category of
-            categoryDefinitions
+          const value of [
+            '__unsupported_category__',
+            '',
+            null,
+            undefined,
+            123,
+            {},
+          ]
         ) {
-          for (
-            const alias of
-              normalizeAliases(
-                category.aliases
-              )
-          ) {
-            const normalizedAlias =
-              normalizeText(alias)
-
-            if (
-              normalizedAlias ===
-              normalizeText(
-                category.id
-              )
-            ) {
-              continue
-            }
-
-            expect(
-              canonicalIds.has(
-                normalizedAlias
-              ),
-              `Alias "${alias}" on "${category.id}" conflicts with another canonical category ID.`
-            ).toBe(false)
-          }
+          expect(
+            isReputationCategoryId(
+              value
+            )
+          ).toBe(false)
         }
       }
     )
@@ -387,161 +183,162 @@ describe(
 )
 
 /* =========================================================
- * Category normalization tests
+ * Venue type normalization
  * ======================================================= */
 
 describe(
-  'reputation category normalization',
+  'venue type normalization',
   () => {
     it(
-      'normalizes every canonical ID to itself',
+      'normalizes whitespace, punctuation, and casing',
       () => {
-        if (
-          !normalizeCategoryId
-        ) {
-          return
-        }
+        expect(
+          normalizeVenueTypeKey(
+            '  Coffee Shop  '
+          )
+        ).toBe('coffee_shop')
 
+        expect(
+          normalizeVenueTypeKey(
+            'coffee-shop'
+          )
+        ).toBe('coffee_shop')
+
+        expect(
+          normalizeVenueTypeKey(
+            'NIGHT CLUB'
+          )
+        ).toBe('night_club')
+
+        expect(
+          normalizeVenueTypeKey(
+            "Chef's Table"
+          )
+        ).toBe('chefs_table')
+      }
+    )
+
+    it(
+      'normalizes accented characters',
+      () => {
+        expect(
+          normalizeVenueTypeKey(
+            'Café'
+          )
+        ).toBe('cafe')
+      }
+    )
+
+    it(
+      'rejects unusable values',
+      () => {
         for (
-          const category of
-            categoryDefinitions
+          const value of [
+            null,
+            undefined,
+            '',
+            '   ',
+            '!!!',
+            123,
+            {},
+            [],
+          ]
         ) {
           expect(
-            normalizeCategoryId(
-              category.id
+            normalizeVenueTypeKey(
+              value
             )
-          ).toBe(
-            category.id
-          )
+          ).toBeNull()
         }
       }
     )
 
     it(
-      'normalizes surrounding whitespace and casing',
+      'enforces the maximum venue type length',
       () => {
-        if (
-          !normalizeCategoryId
-        ) {
-          return
-        }
+        const normalized =
+          normalizeVenueTypeKey(
+            'a'.repeat(
+              MAX_VENUE_TYPE_KEY_LENGTH +
+                100
+            )
+          )
 
         expect(
-          normalizeCategoryId(
-            '  COFFEE  '
-          )
-        ).toBe(
-          'coffee'
+          normalized
+        ).not.toBeNull()
+
+        expect(
+          normalized!.length
+        ).toBeLessThanOrEqual(
+          MAX_VENUE_TYPE_KEY_LENGTH
         )
       }
     )
+  }
+)
+
+/* =========================================================
+ * Mapping weight normalization
+ * ======================================================= */
+
+describe(
+  'category mapping weights',
+  () => {
+    it(
+      'uses a positive mapping weight range capped at one',
+      () => {
+        expect(
+          MIN_REPUTATION_CATEGORY_MAPPING_WEIGHT
+        ).toBeGreaterThan(0)
+
+        expect(
+          MAX_REPUTATION_CATEGORY_MAPPING_WEIGHT
+        ).toBe(1)
+      }
+    )
 
     it(
-      'normalizes every configured alias to its canonical category ID',
+      'accepts valid numeric and numeric-string weights',
       () => {
-        if (
-          !normalizeCategoryId
-        ) {
-          return
-        }
+        expect(
+          normalizeCategoryMappingWeight(
+            1
+          )
+        ).toBe(1)
 
+        expect(
+          normalizeCategoryMappingWeight(
+            0.75
+          )
+        ).toBe(0.75)
+
+        expect(
+          normalizeCategoryMappingWeight(
+            '0.5'
+          )
+        ).toBe(0.5)
+      }
+    )
+
+    it(
+      'rejects zero, negative, and excessive weights',
+      () => {
         for (
-          const category of
-            categoryDefinitions
-        ) {
-          for (
-            const alias of
-              normalizeAliases(
-                category.aliases
-              )
-          ) {
-            expect(
-              normalizeCategoryId(
-                alias
-              )
-            ).toBe(
-              category.id
-            )
-          }
-        }
-      }
-    )
-
-    it(
-      'returns null for empty and unsupported category values',
-      () => {
-        if (
-          !normalizeCategoryId
-        ) {
-          return
-        }
-
-        expect(
-          normalizeCategoryId(
-            null
-          )
-        ).toBeNull()
-
-        expect(
-          normalizeCategoryId(
-            undefined
-          )
-        ).toBeNull()
-
-        expect(
-          normalizeCategoryId(
-            ''
-          )
-        ).toBeNull()
-
-        expect(
-          normalizeCategoryId(
-            '   '
-          )
-        ).toBeNull()
-
-        expect(
-          normalizeCategoryId(
-            '__unsupported_category__'
-          )
-        ).toBeNull()
-      }
-    )
-
-    it(
-      'does not throw for malformed input',
-      () => {
-        if (
-          !normalizeCategoryId
-        ) {
-          return
-        }
-
-        const malformedValues: unknown[] =
-          [
-            123,
-            true,
-            false,
-            {},
-            [],
-            Symbol(
-              'category'
-            ),
+          const value of [
+            0,
+            -0.25,
+            1.01,
+            Number.NaN,
+            Number.POSITIVE_INFINITY,
+            Number.NEGATIVE_INFINITY,
+            'not-a-number',
+            null,
+            undefined,
           ]
-
-        for (
-          const value of
-            malformedValues
         ) {
           expect(
-            () =>
-              normalizeCategoryId(
-                value
-              )
-          ).not.toThrow()
-
-          expect(
-            normalizeCategoryId(
+            normalizeCategoryMappingWeight(
               value
             )
           ).toBeNull()
@@ -552,828 +349,1076 @@ describe(
 )
 
 /* =========================================================
- * Predicate tests
+ * Single mapping normalization
  * ======================================================= */
 
 describe(
-  'reputation category predicate',
+  'single venue category mapping',
   () => {
     it(
-      'accepts every canonical category ID',
+      'normalizes snake_case database rows',
       () => {
-        if (!isCategoryId) {
-          return
-        }
+        expect(
+          normalizeVenueCategoryMapping({
+            venue_type:
+              'Coffee Shop',
 
-        for (
-          const category of
-            categoryDefinitions
-        ) {
-          expect(
-            isCategoryId(
-              category.id
-            )
-          ).toBe(true)
-        }
+            category_id:
+              'coffee',
+
+            mapping_weight:
+              0.75,
+
+            sort_order:
+              3,
+          })
+        ).toEqual({
+          venueType:
+            'coffee_shop',
+
+          categoryId:
+            'coffee',
+
+          weight:
+            0.75,
+
+          sortOrder:
+            3,
+        })
       }
     )
 
     it(
-      'rejects unsupported and malformed category IDs',
+      'normalizes camelCase application rows',
       () => {
-        if (!isCategoryId) {
-          return
-        }
-
         expect(
-          isCategoryId(
-            '__unsupported_category__'
-          )
-        ).toBe(false)
+          normalizeVenueCategoryMapping({
+            venueType:
+              'Wine Bar',
 
-        expect(
-          isCategoryId(
-            ''
-          )
-        ).toBe(false)
+            categoryId:
+              'wine_bars',
 
-        expect(
-          isCategoryId(
-            null
-          )
-        ).toBe(false)
+            mappingWeight:
+              1,
 
-        expect(
-          isCategoryId(
-            123
-          )
-        ).toBe(false)
+            sortOrder:
+              2,
+          })
+        ).toEqual({
+          venueType:
+            'wine_bar',
 
-        expect(
-          isCategoryId(
-            {}
-          )
-        ).toBe(false)
-      }
-    )
-  }
-)
+          categoryId:
+            'wine_bars',
 
-/* =========================================================
- * Definition lookup tests
- * ======================================================= */
+          weight:
+            1,
 
-describe(
-  'reputation category definition lookup',
-  () => {
-    it(
-      'returns the canonical definition for every category ID',
-      () => {
-        if (!getCategory) {
-          return
-        }
-
-        for (
-          const expected of
-            categoryDefinitions
-        ) {
-          const actual =
-            normalizeCategoryDefinition(
-              getCategory(
-                expected.id
-              )
-            )
-
-          expect(
-            actual?.id
-          ).toBe(
-            expected.id
-          )
-
-          expect(
-            actual?.label
-          ).toBe(
-            expected.label
-          )
-        }
+          sortOrder:
+            2,
+        })
       }
     )
 
     it(
-      'returns no category for unsupported input',
+      'defaults missing sort order to zero',
       () => {
-        if (!getCategory) {
-          return
-        }
-
         const result =
-          getCategory(
-            '__unsupported_category__'
-          )
+          normalizeVenueCategoryMapping({
+            venueType:
+              'coffee_shop',
+
+            categoryId:
+              'coffee',
+
+            weight:
+              1,
+          })
 
         expect(
-          result === null ||
-            result === undefined
-        ).toBe(true)
-      }
-    )
-  }
-)
-
-/* =========================================================
- * Venue mapping tests
- * ======================================================= */
-
-describe(
-  'venue reputation-category resolution',
-  () => {
-    it(
-      'maps explicit coffee category evidence to coffee',
-      () => {
-        if (
-          !resolveVenueCategories
-        ) {
-          return
-        }
-
-        const resolved =
-          normalizeResolvedCategoryIds(
-            resolveVenueCategories({
-              category:
-                'coffee',
-
-              tier:
-                'coffee',
-
-              categories: [
-                'coffee',
-              ],
-
-              tags: [
-                'coffee',
-              ],
-            })
-          )
-
-        expect(
-          resolved
-        ).toContain(
-          'coffee'
-        )
+          result?.sortOrder
+        ).toBe(0)
       }
     )
 
     it(
-      'deduplicates repeated category evidence',
+      'normalizes negative and fractional sort orders',
       () => {
-        if (
-          !resolveVenueCategories
-        ) {
-          return
-        }
+        const negative =
+          normalizeVenueCategoryMapping({
+            venueType:
+              'coffee_shop',
 
-        const resolved =
-          normalizeResolvedCategoryIds(
-            resolveVenueCategories({
-              category:
-                'coffee',
+            categoryId:
+              'coffee',
 
-              tier:
-                'coffee',
+            weight:
+              1,
 
-              categories: [
-                'coffee',
-                'coffee',
-              ],
+            sortOrder:
+              -5,
+          })
 
-              tags: [
-                'coffee',
-                'coffee',
-              ],
-            })
-          )
+        const fractional =
+          normalizeVenueCategoryMapping({
+            venueType:
+              'coffee_shop',
+
+            categoryId:
+              'coffee',
+
+            weight:
+              1,
+
+            sortOrder:
+              2.9,
+          })
 
         expect(
-          new Set(
-            resolved
-          ).size
-        ).toBe(
-          resolved.length
-        )
+          negative?.sortOrder
+        ).toBe(0)
+
+        expect(
+          fractional?.sortOrder
+        ).toBe(2)
       }
     )
 
     it(
-      'returns only canonical supported category IDs',
+      'rejects explicitly inactive mappings',
       () => {
-        if (
-          !resolveVenueCategories
-        ) {
-          return
-        }
-
-        const supportedIds =
-          new Set(
-            categoryDefinitions.map(
-              (category) =>
-                category.id
-            )
-          )
-
-        const resolved =
-          normalizeResolvedCategoryIds(
-            resolveVenueCategories({
-              category:
-                'coffee',
-
-              tier:
-                '__unsupported_category__',
-
-              categories: [
-                'coffee',
-                '__unsupported_category__',
-              ],
-
-              tags: [
-                '__unsupported_category__',
-              ],
-            })
-          )
-
         for (
-          const categoryId of
-            resolved
-        ) {
-          expect(
-            supportedIds.has(
-              categoryId
-            )
-          ).toBe(true)
-        }
-      }
-    )
-
-    it(
-      'ignores unsupported venue taxonomy values',
-      () => {
-        if (
-          !resolveVenueCategories
-        ) {
-          return
-        }
-
-        const resolved =
-          normalizeResolvedCategoryIds(
-            resolveVenueCategories({
-              category:
-                '__unsupported_category__',
-
-              tier:
-                '__unsupported_tier__',
-
-              categories: [
-                '__unsupported_category__',
-              ],
-
-              tags: [
-                '__unsupported_tag__',
-              ],
-            })
-          )
-
-        expect(
-          resolved
-        ).toEqual([])
-      }
-    )
-
-    it(
-      'does not throw for incomplete venue records',
-      () => {
-        if (
-          !resolveVenueCategories
-        ) {
-          return
-        }
-
-        const malformedInputs: unknown[] =
-          [
-            null,
-            undefined,
-            {},
+          const inactiveField of [
             {
-              category: null,
+              active: false,
             },
             {
-              categories:
-                'coffee',
+              isActive: false,
             },
             {
-              tags: [
-                null,
-                123,
-                {},
-              ],
+              is_active: false,
             },
           ]
+        ) {
+          expect(
+            normalizeVenueCategoryMapping({
+              venueType:
+                'coffee_shop',
 
+              categoryId:
+                'coffee',
+
+              weight:
+                1,
+
+              ...inactiveField,
+            })
+          ).toBeNull()
+        }
+      }
+    )
+
+    it(
+      'rejects invalid category IDs and weights',
+      () => {
+        expect(
+          normalizeVenueCategoryMapping({
+            venueType:
+              'coffee_shop',
+
+            categoryId:
+              'unknown_category',
+
+            weight:
+              1,
+          })
+        ).toBeNull()
+
+        expect(
+          normalizeVenueCategoryMapping({
+            venueType:
+              'coffee_shop',
+
+            categoryId:
+              'coffee',
+
+            weight:
+              0,
+          })
+        ).toBeNull()
+      }
+    )
+
+    it(
+      'does not throw on malformed inputs',
+      () => {
         for (
-          const value of
-            malformedInputs
+          const value of [
+            null,
+            undefined,
+            123,
+            false,
+            'coffee',
+            [],
+          ]
         ) {
           expect(
             () =>
-              resolveVenueCategories(
+              normalizeVenueCategoryMapping(
                 value
               )
           ).not.toThrow()
+
+          expect(
+            normalizeVenueCategoryMapping(
+              value
+            )
+          ).toBeNull()
         }
       }
     )
 
     it(
-      'returns deterministic category ordering',
+      'provides a canonical mapping predicate',
       () => {
-        if (
-          !resolveVenueCategories
-        ) {
-          return
-        }
+        expect(
+          isVenueCategoryMapping({
+            venueType:
+              'Coffee Shop',
 
-        const venue = {
-          category:
-            'coffee',
+            categoryId:
+              'coffee',
 
-          tier:
-            'coffee',
-
-          categories: [
-            'coffee',
-          ],
-
-          tags: [
-            'coffee',
-          ],
-        }
-
-        const first =
-          normalizeResolvedCategoryIds(
-            resolveVenueCategories(
-              venue
-            )
-          )
-
-        const second =
-          normalizeResolvedCategoryIds(
-            resolveVenueCategories(
-              venue
-            )
-          )
+            weight:
+              1,
+          })
+        ).toBe(true)
 
         expect(
-          second
-        ).toEqual(first)
+          isVenueCategoryMapping({
+            venueType:
+              'Coffee Shop',
+
+            categoryId:
+              'unsupported',
+
+            weight:
+              1,
+          })
+        ).toBe(false)
       }
     )
   }
 )
 
 /* =========================================================
- * Export-contract test
+ * Batch normalization
+ * ======================================================= */
+
+describe(
+  'venue category mapping batches',
+  () => {
+    it(
+      'normalizes and sorts multiple mappings',
+      () => {
+        const result =
+          normalizeVenueCategoryMappings(
+            RAW_MAPPINGS
+          )
+
+        expect(
+          result
+        ).toHaveLength(4)
+
+        expect(
+          result.map(
+            (
+              mapping
+            ) =>
+              mapping.venueType
+          )
+        ).toEqual([
+          'coffee_shop',
+          'coffee_shop',
+          'wine_bar',
+          'wine_bar',
+        ])
+
+        expect(
+          result.map(
+            (
+              mapping
+            ) =>
+              mapping.categoryId
+          )
+        ).toEqual([
+          'coffee',
+          'bakeries_desserts',
+          'wine_bars',
+          'restaurants',
+        ])
+      }
+    )
+
+    it(
+      'deduplicates by venue type and category ID',
+      () => {
+        const result =
+          normalizeVenueCategoryMappings([
+            {
+              venueType:
+                'Coffee Shop',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                0.3,
+
+              sortOrder:
+                1,
+            },
+            {
+              venueType:
+                'coffee-shop',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                0.9,
+
+              sortOrder:
+                5,
+            },
+            {
+              venueType:
+                'coffee_shop',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                0.6,
+
+              sortOrder:
+                2,
+            },
+          ])
+
+        expect(
+          result
+        ).toEqual([
+          {
+            venueType:
+              'coffee_shop',
+
+            categoryId:
+              'coffee',
+
+            weight:
+              0.9,
+
+            sortOrder:
+              5,
+          },
+        ])
+      }
+    )
+
+    it(
+      'prefers the lowest sort order when duplicate weights match',
+      () => {
+        const result =
+          normalizeVenueCategoryMappings([
+            {
+              venueType:
+                'coffee_shop',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                0.75,
+
+              sortOrder:
+                9,
+            },
+            {
+              venueType:
+                'Coffee Shop',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                0.75,
+
+              sortOrder:
+                2,
+            },
+          ])
+
+        expect(
+          result
+        ).toEqual([
+          {
+            venueType:
+              'coffee_shop',
+
+            categoryId:
+              'coffee',
+
+            weight:
+              0.75,
+
+            sortOrder:
+              2,
+          },
+        ])
+      }
+    )
+
+    it(
+      'returns deterministic results regardless of input order',
+      () => {
+        const forward =
+          normalizeVenueCategoryMappings(
+            RAW_MAPPINGS
+          )
+
+        const reversed =
+          normalizeVenueCategoryMappings(
+            [
+              ...RAW_MAPPINGS,
+            ].reverse()
+          )
+
+        expect(
+          reversed
+        ).toEqual(
+          forward
+        )
+      }
+    )
+
+    it(
+      'reports rejection reasons and source indexes',
+      () => {
+        const result =
+          normalizeVenueCategoryMappingsDetailed([
+            null,
+            {
+              venueType:
+                'coffee_shop',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                1,
+
+              active:
+                false,
+            },
+            {
+              venueType:
+                '!!!',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                1,
+            },
+            {
+              venueType:
+                'coffee_shop',
+
+              categoryId:
+                'unsupported',
+
+              weight:
+                1,
+            },
+            {
+              venueType:
+                'coffee_shop',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                0,
+            },
+            {
+              venueType:
+                'coffee_shop',
+
+              categoryId:
+                'coffee',
+
+              weight:
+                1,
+            },
+          ])
+
+        expect(
+          result.mappings
+        ).toHaveLength(1)
+
+        expect(
+          result.rejected.map(
+            ({
+              index,
+              reason,
+            }) => ({
+              index,
+              reason,
+            })
+          )
+        ).toEqual([
+          {
+            index: 0,
+            reason: 'invalid_record',
+          },
+          {
+            index: 1,
+            reason: 'inactive',
+          },
+          {
+            index: 2,
+            reason: 'invalid_venue_type',
+          },
+          {
+            index: 3,
+            reason: 'invalid_category_id',
+          },
+          {
+            index: 4,
+            reason: 'invalid_weight',
+          },
+        ])
+      }
+    )
+
+    it(
+      'handles non-array batch input defensively',
+      () => {
+        expect(
+          normalizeVenueCategoryMappings(
+            null
+          )
+        ).toEqual([])
+
+        expect(
+          normalizeVenueCategoryMappingsDetailed(
+            null
+          )
+        ).toEqual({
+          mappings: [],
+          rejected: [
+            {
+              index: -1,
+              value: null,
+              reason: 'invalid_record',
+            },
+          ],
+        })
+      }
+    )
+
+    it(
+      'preserves the compatibility alias',
+      () => {
+        expect(
+          normalizeVenueReputationCategoryMappings(
+            RAW_MAPPINGS
+          )
+        ).toEqual(
+          normalizeVenueCategoryMappings(
+            RAW_MAPPINGS
+          )
+        )
+      }
+    )
+  }
+)
+
+/* =========================================================
+ * Indexing and lookup
+ * ======================================================= */
+
+describe(
+  'venue category mapping index and lookup',
+  () => {
+    it(
+      'builds an index using canonical venue keys',
+      () => {
+        const index =
+          buildVenueCategoryMappingIndex(
+            RAW_MAPPINGS
+          )
+
+        expect(
+          index.has(
+            'coffee_shop'
+          )
+        ).toBe(true)
+
+        expect(
+          index.has(
+            'wine_bar'
+          )
+        ).toBe(true)
+
+        expect(
+          index.get(
+            'coffee_shop'
+          )
+        ).toHaveLength(2)
+
+        expect(
+          index.has(
+            'unsupported_type'
+          )
+        ).toBe(false)
+      }
+    )
+
+    it(
+      'freezes stored mapping arrays',
+      () => {
+        const index =
+          buildVenueCategoryMappingIndex(
+            RAW_MAPPINGS
+          )
+
+        const mappings =
+          index.get(
+            'coffee_shop'
+          )
+
+        expect(
+          mappings
+        ).toBeDefined()
+
+        expect(
+          Object.isFrozen(
+            mappings
+          )
+        ).toBe(true)
+      }
+    )
+
+    it(
+      'resolves contributions from raw mappings',
+      () => {
+        const result =
+          mapVenueTypeToReputationCategories({
+            venueType:
+              '  COFFEE SHOP  ',
+
+            mappings:
+              RAW_MAPPINGS,
+          })
+
+        expect(
+          result
+        ).toEqual([
+          {
+            categoryId:
+              'coffee',
+
+            weight:
+              1,
+          },
+          {
+            categoryId:
+              'bakeries_desserts',
+
+            weight:
+              0.5,
+          },
+        ])
+      }
+    )
+
+    it(
+      'resolves the same contributions using a prebuilt index',
+      () => {
+        const index =
+          buildVenueCategoryMappingIndex(
+            RAW_MAPPINGS
+          )
+
+        expect(
+          getReputationCategoryMappingsForVenueType({
+            venueType:
+              'coffee-shop',
+
+            index,
+          })
+        ).toEqual(
+          mapVenueTypeToReputationCategories({
+            venueType:
+              'coffee_shop',
+
+            mappings:
+              RAW_MAPPINGS,
+          })
+        )
+      }
+    )
+
+    it(
+      'retrieves complete normalized mapping rows',
+      () => {
+        const index =
+          buildVenueCategoryMappingIndex(
+            RAW_MAPPINGS
+          )
+
+        expect(
+          getVenueCategoryMappings({
+            venueType:
+              'Wine Bar',
+
+            index,
+          })
+        ).toEqual([
+          {
+            venueType:
+              'wine_bar',
+
+            categoryId:
+              'wine_bars',
+
+            weight:
+              1,
+
+            sortOrder:
+              1,
+          },
+          {
+            venueType:
+              'wine_bar',
+
+            categoryId:
+              'restaurants',
+
+            weight:
+              0.25,
+
+            sortOrder:
+              2,
+          },
+        ])
+      }
+    )
+
+    it(
+      'checks category membership accurately',
+      () => {
+        const index =
+          buildVenueCategoryMappingIndex(
+            RAW_MAPPINGS
+          )
+
+        expect(
+          hasVenueCategoryMapping({
+            venueType:
+              'Coffee Shop',
+
+            categoryId:
+              'coffee',
+
+            index,
+          })
+        ).toBe(true)
+
+        expect(
+          hasVenueCategoryMapping({
+            venueType:
+              'Coffee Shop',
+
+            categoryId:
+              'wine_bars',
+
+            index,
+          })
+        ).toBe(false)
+
+        expect(
+          hasVenueCategoryMapping({
+            venueType:
+              'Coffee Shop',
+
+            categoryId:
+              'unsupported',
+
+            index,
+          })
+        ).toBe(false)
+      }
+    )
+
+    it(
+      'returns no mappings for unknown or invalid venue types',
+      () => {
+        expect(
+          mapVenueTypeToReputationCategories({
+            venueType:
+              'unsupported_type',
+
+            mappings:
+              RAW_MAPPINGS,
+          })
+        ).toEqual([])
+
+        expect(
+          mapVenueTypeToReputationCategories({
+            venueType:
+              null,
+
+            mappings:
+              RAW_MAPPINGS,
+          })
+        ).toEqual([])
+
+        expect(
+          getVenueCategoryMappings({
+            venueType:
+              'unsupported_type',
+
+            mappings:
+              RAW_MAPPINGS,
+          })
+        ).toEqual([])
+      }
+    )
+  }
+)
+
+/* =========================================================
+ * Aggregation
+ * ======================================================= */
+
+describe(
+  'venue type category aggregation',
+  () => {
+    it(
+      'combines weights across distinct venue types',
+      () => {
+        const mappings = [
+          {
+            venueType:
+              'coffee_shop',
+
+            categoryId:
+              'coffee',
+
+            weight:
+              0.75,
+
+            sortOrder:
+              0,
+          },
+          {
+            venueType:
+              'cafe',
+
+            categoryId:
+              'coffee',
+
+            weight:
+              0.5,
+
+            sortOrder:
+              0,
+          },
+          {
+            venueType:
+              'cafe',
+
+            categoryId:
+              'bakeries_desserts',
+
+            weight:
+              0.25,
+
+            sortOrder:
+              1,
+          },
+        ]
+
+        expect(
+          aggregateVenueTypeCategoryMappings({
+            venueTypes: [
+              'Coffee Shop',
+              'Cafe',
+            ],
+
+            mappings,
+          })
+        ).toEqual([
+          {
+            categoryId:
+              'coffee',
+
+            weight:
+              1.25,
+          },
+          {
+            categoryId:
+              'bakeries_desserts',
+
+            weight:
+              0.25,
+          },
+        ])
+      }
+    )
+
+    it(
+      'ignores duplicate venue types',
+      () => {
+        const mappings = [
+          {
+            venueType:
+              'coffee_shop',
+
+            categoryId:
+              'coffee',
+
+            weight:
+              0.75,
+          },
+        ]
+
+        expect(
+          aggregateVenueTypeCategoryMappings({
+            venueTypes: [
+              'Coffee Shop',
+              'coffee-shop',
+              'coffee_shop',
+            ],
+
+            mappings,
+          })
+        ).toEqual([
+          {
+            categoryId:
+              'coffee',
+
+            weight:
+              0.75,
+          },
+        ])
+      }
+    )
+
+    it(
+      'sorts aggregated categories by descending weight',
+      () => {
+        const result =
+          aggregateVenueTypeCategoryMappings({
+            venueTypes: [
+              'Coffee Shop',
+              'Wine Bar',
+            ],
+
+            mappings:
+              RAW_MAPPINGS,
+          })
+
+        expect(
+          result
+        ).toEqual([
+          {
+            categoryId:
+              'coffee',
+
+            weight:
+              1,
+          },
+          {
+            categoryId:
+              'wine_bars',
+
+            weight:
+              1,
+          },
+          {
+            categoryId:
+              'bakeries_desserts',
+
+            weight:
+              0.5,
+          },
+          {
+            categoryId:
+              'restaurants',
+
+            weight:
+              0.25,
+          },
+        ])
+      }
+    )
+
+    it(
+      'handles malformed venue-type collections',
+      () => {
+        expect(
+          aggregateVenueTypeCategoryMappings({
+            venueTypes:
+              null as unknown as readonly unknown[],
+
+            mappings:
+              RAW_MAPPINGS,
+          })
+        ).toEqual([])
+      }
+    )
+  }
+)
+
+/* =========================================================
+ * Public contract
  * ======================================================= */
 
 describe(
   'categoryMappings public contract',
   () => {
     it(
-      'exposes at least one supported category operation',
+      'exports the canonical mapping operations',
       () => {
-        const operationCount = [
-          normalizeCategoryId,
-          isCategoryId,
-          getCategory,
-          resolveVenueCategories,
-        ].filter(Boolean).length
+        expect(
+          normalizeVenueCategoryMapping
+        ).toBeTypeOf('function')
 
         expect(
-          operationCount,
-          [
-            'categoryMappings.ts must expose at least one supported',
-            'normalizer, predicate, lookup, or venue resolver.',
-            `Supported normalizer names: ${NORMALIZER_EXPORT_NAMES.join(
-              ', '
-            )}.`,
-            `Supported predicate names: ${PREDICATE_EXPORT_NAMES.join(
-              ', '
-            )}.`,
-            `Supported lookup names: ${LOOKUP_EXPORT_NAMES.join(
-              ', '
-            )}.`,
-            `Supported resolver names: ${VENUE_RESOLVER_EXPORT_NAMES.join(
-              ', '
-            )}.`,
-          ].join(' ')
-        ).toBeGreaterThan(0)
+          normalizeVenueCategoryMappings
+        ).toBeTypeOf('function')
+
+        expect(
+          normalizeVenueCategoryMappingsDetailed
+        ).toBeTypeOf('function')
+
+        expect(
+          buildVenueCategoryMappingIndex
+        ).toBeTypeOf('function')
+
+        expect(
+          mapVenueTypeToReputationCategories
+        ).toBeTypeOf('function')
+
+        expect(
+          aggregateVenueTypeCategoryMappings
+        ).toBeTypeOf('function')
       }
     )
   }
 )
-
-/* =========================================================
- * Registry loading
- * ======================================================= */
-
-function loadCategoryDefinitions(
-  moduleValue: UnknownRecord
-): CategoryDefinition[] {
-  for (
-    const exportName of
-      REGISTRY_EXPORT_NAMES
-  ) {
-    const candidate =
-      moduleValue[
-        exportName
-      ]
-
-    const normalized =
-      normalizeCategoryRegistry(
-        candidate
-      )
-
-    if (
-      normalized.length > 0
-    ) {
-      return normalized
-    }
-  }
-
-  throw new Error(
-    [
-      'Unable to locate the reputation category registry.',
-      `Expected one of: ${REGISTRY_EXPORT_NAMES.join(
-        ', '
-      )}.`,
-      `Available exports: ${Object.keys(
-        moduleValue
-      ).join(', ') || '(none)'}.`,
-    ].join(' ')
-  )
-}
-
-function normalizeCategoryRegistry(
-  value: unknown
-): CategoryDefinition[] {
-  if (Array.isArray(value)) {
-    return value
-      .map(
-        normalizeCategoryDefinition
-      )
-      .filter(
-        (
-          category
-        ): category is CategoryDefinition =>
-          category !== null
-      )
-  }
-
-  if (!isRecord(value)) {
-    return []
-  }
-
-  return Object.entries(value)
-    .map(
-      ([
-        recordKey,
-        recordValue,
-      ]) => {
-        if (
-          typeof recordValue ===
-          'string'
-        ) {
-          return normalizeCategoryDefinition({
-            id: recordKey,
-            label:
-              recordValue,
-          })
-        }
-
-        if (
-          isRecord(
-            recordValue
-          )
-        ) {
-          return normalizeCategoryDefinition({
-            id:
-              recordValue.id ??
-              recordValue.categoryId ??
-              recordValue.category_id ??
-              recordKey,
-
-            ...recordValue,
-          })
-        }
-
-        return null
-      }
-    )
-    .filter(
-      (
-        category
-      ): category is CategoryDefinition =>
-        category !== null
-    )
-}
-
-function normalizeCategoryDefinition(
-  value: unknown
-): CategoryDefinition | null {
-  if (!isRecord(value)) {
-    return null
-  }
-
-  const id =
-    normalizeNullableText(
-      firstDefined(
-        value.id,
-        value.categoryId,
-        value.category_id,
-        value.slug,
-        value.key
-      )
-    )
-
-  const label =
-    normalizeNullableText(
-      firstDefined(
-        value.label,
-        value.categoryLabel,
-        value.category_label,
-        value.name,
-        value.title
-      )
-    )
-
-  if (!id || !label) {
-    return null
-  }
-
-  return {
-    id,
-    label,
-
-    shortLabel:
-      normalizeNullableText(
-        firstDefined(
-          value.shortLabel,
-          value.short_label
-        )
-      ),
-
-    description:
-      normalizeNullableText(
-        value.description
-      ),
-
-    sortOrder:
-      normalizeNonNegativeInteger(
-        firstDefined(
-          value.sortOrder,
-          value.sort_order
-        )
-      ),
-
-    aliases:
-      normalizeAliases(
-        firstDefined(
-          value.aliases,
-          value.synonyms,
-          value.sourceValues,
-          value.source_values
-        )
-      ),
-  }
-}
-
-/* =========================================================
- * Function loading
- * ======================================================= */
-
-function loadOptionalFunction<
-  TFunction extends (
-    ...args: never[]
-  ) => unknown,
->(
-  moduleValue: UnknownRecord,
-  names: readonly string[]
-): TFunction | null {
-  for (const name of names) {
-    const candidate =
-      moduleValue[name]
-
-    if (
-      typeof candidate ===
-      'function'
-    ) {
-      return candidate as TFunction
-    }
-  }
-
-  return null
-}
-
-/* =========================================================
- * Resolver output normalization
- * ======================================================= */
-
-function normalizeResolvedCategoryIds(
-  value: unknown
-): string[] {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  const normalized: string[] = []
-
-  for (const item of value) {
-    const categoryId =
-      typeof item ===
-        'string'
-        ? normalizeNullableText(
-            item
-          )
-        : isRecord(item)
-          ? normalizeNullableText(
-              firstDefined(
-                item.id,
-                item.categoryId,
-                item.category_id,
-                item.slug
-              )
-            )
-          : null
-
-    if (
-      categoryId &&
-      !normalized.includes(
-        categoryId
-      )
-    ) {
-      normalized.push(
-        categoryId
-      )
-    }
-  }
-
-  return normalized
-}
-
-/* =========================================================
- * Primitive helpers
- * ======================================================= */
-
-function normalizeAliases(
-  value: unknown
-): string[] {
-  if (!Array.isArray(value)) {
-    return []
-  }
-
-  return [
-    ...new Set(
-      value
-        .map(
-          normalizeNullableText
-        )
-        .filter(
-          (
-            alias
-          ): alias is string =>
-            alias !== null
-        )
-    ),
-  ]
-}
-
-function normalizeNullableText(
-  value: unknown
-): string | null {
-  if (
-    typeof value !==
-    'string'
-  ) {
-    return null
-  }
-
-  const normalized =
-    value
-      .trim()
-      .replace(
-        /\s+/g,
-        ' '
-      )
-
-  return normalized.length > 0
-    ? normalized
-    : null
-}
-
-function normalizeText(
-  value: string
-): string {
-  return value
-    .normalize('NFKD')
-    .replace(
-      /[\u0300-\u036f]/g,
-      ''
-    )
-    .trim()
-    .toLocaleLowerCase(
-      'en-US'
-    )
-    .replace(
-      /[_-]+/g,
-      ' '
-    )
-    .replace(
-      /\s+/g,
-      ' '
-    )
-}
-
-function normalizeNonNegativeInteger(
-  value: unknown
-): number | null {
-  const normalized =
-    normalizeFiniteNumber(
-      value
-    )
-
-  if (
-    normalized === null ||
-    normalized < 0
-  ) {
-    return null
-  }
-
-  return Math.trunc(
-    normalized
-  )
-}
-
-function normalizeFiniteNumber(
-  value: unknown
-): number | null {
-  if (
-    typeof value ===
-      'number' &&
-    Number.isFinite(
-      value
-    )
-  ) {
-    return value
-  }
-
-  if (
-    typeof value ===
-      'string' &&
-    value.trim().length >
-      0
-  ) {
-    const parsed =
-      Number(value)
-
-    return Number.isFinite(
-      parsed
-    )
-      ? parsed
-      : null
-  }
-
-  return null
-}
-
-function firstDefined(
-  ...values: unknown[]
-): unknown {
-  for (const value of values) {
-    if (
-      value !== null &&
-      value !== undefined
-    ) {
-      return value
-    }
-  }
-
-  return null
-}
-
-function isRecord(
-  value: unknown
-): value is UnknownRecord {
-  return (
-    typeof value ===
-      'object' &&
-    value !== null &&
-    !Array.isArray(value)
-  )
-}

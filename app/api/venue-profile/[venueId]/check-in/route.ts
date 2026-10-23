@@ -7,6 +7,8 @@ import { getCityNow } from '@/lib/getCityNow'
 
 import { rebuildPublicPassportStats } from '@/lib/passport/rebuildPublicPassportStats'
 
+import { safelyRefreshCreatorReputation } from '@/lib/reputation/safelyRefreshCreatorReputation'
+
 import {
   selectActiveFlowVenueVisitWriter,
 } from '@/lib/active-flow/trustedVenueVisitWriter.server'
@@ -289,7 +291,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     return geoResult.response
   }
 
-  /*
+/*
    * Trusted venue-visit persistence.
    *
    * OFF: preserve the existing authenticated writer.
@@ -489,7 +491,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
     )
   }
 
-  /*
+/*
    * Every eligible check-in now creates a new historical visit row.
    *
    * Ratings are optional on repeat visits so a later check-in does not
@@ -675,7 +677,11 @@ if (
     }
   }
 
-  await refreshPublicPassportStats(
+await refreshPublicPassportStats(
+    user.id
+  )
+
+  await safelyRefreshCreatorReputation(
     user.id
   )
 

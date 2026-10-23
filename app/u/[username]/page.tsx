@@ -1148,6 +1148,7 @@ function ProfileSectionHeading({
   )
 }
 
+
 /* =========================================================
  * Public creator reputation presentation
  * ======================================================= */
@@ -1166,160 +1167,545 @@ function CreatorReputationSection({
     return null
   }
 
+  const featuredIdentity =
+    formatPublicReputationIdentity(
+      normalized.headline
+    )
+
+  const friendlySummary =
+    formatPublicReputationSummary(
+      normalized.summary
+    )
+
   return (
     <section
       aria-labelledby="creator-reputation-title"
-      className="relative min-w-0 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-300/[0.055] via-white/[0.025] to-indigo-400/[0.05] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.07] sm:p-6"
+      className="relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.075] bg-[#0c1015] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.22)] sm:p-7 lg:p-8"
     >
-      <div className="pointer-events-none absolute right-[-5rem] top-[-6rem] h-52 w-52 rounded-full bg-cyan-300/[0.07] blur-[90px]" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_95%_0%,rgba(91,193,216,0.085),transparent_42%),radial-gradient(ellipse_at_0%_100%,rgba(99,102,241,0.045),transparent_42%)]"
+      />
 
-      <div className="relative z-10 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
-            Earned identity
-          </p>
+      <div className="relative z-10 min-w-0">
+        {/* Section introduction */}
 
-          <h2
-            id="creator-reputation-title"
-            className="mt-2 text-2xl font-black tracking-[-0.035em] text-white"
-          >
-            {normalized.headline ??
-              'What their city history supports'}
-          </h2>
+        {/* Primary earned identity */}
 
-          {normalized.summary ? (
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500">
-              {normalized.summary}
-            </p>
-          ) : null}
-        </div>
+        {featuredIdentity ||
+        friendlySummary ||
+        normalized.highestLevel ? (
+          <div className="relative mt-6 min-w-0 overflow-hidden rounded-[1.65rem] border border-cyan-200/[0.11] bg-gradient-to-br from-[#14232a] via-[#101920] to-[#131626] p-5 sm:p-6">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-cyan-300/[0.075] blur-[75px]"
+            />
 
-        {normalized.highestLevel ? (
-          <span className="inline-flex w-fit shrink-0 rounded-full bg-cyan-300 px-3 py-1.5 text-xs font-black text-black">
-            {formatReputationLevel(
-              normalized.highestLevel
-            )}
-          </span>
-        ) : null}
-      </div>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-24 right-20 h-48 w-48 rounded-full bg-indigo-400/[0.065] blur-[75px]"
+            />
 
-      {normalized.categories.length > 0 ? (
-        <div className="relative z-10 mt-6 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {normalized.categories.map(
-            (
-              category,
-              index
-            ) => {
-              const standing =
-                buildPublicReputationStanding(
-                  category
-                )
+            <div className="relative z-10 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold tracking-[0.035em] text-cyan-200/75">
+                  Best known for
+                </p>
 
-              return (
-                <article
-                  key={
-                    category.key ??
-                    `${category.label}-${index}`
-                  }
-                  className="min-w-0 rounded-[1.5rem] bg-black/30 p-4 ring-1 ring-white/[0.055]"
+                <p className="mt-2 break-words text-[clamp(1.5rem,3.2vw,2.35rem)] font-black leading-tight tracking-[-0.045em] text-white">
+                  {featuredIdentity ??
+                    'Real places, real experiences'}
+                </p>
+
+                {friendlySummary ? (
+                  <p className="mt-3 text-sm leading-6 text-zinc-300">
+                    {friendlySummary}
+                  </p>
+                ) : null}
+              </div>
+
+              {normalized.highestLevel ? (
+                <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/[0.09] px-3.5 py-2 text-xs font-bold text-cyan-100">
+                  <span
+                    aria-hidden="true"
+                    className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.65)]"
+                  />
+
+                  {formatPublicReputationLevel(
+                    normalized.highestLevel
+                  )}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="relative z-10 mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/[0.09] pt-4">
+              <span className="inline-flex items-center gap-2 text-xs text-zinc-400">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4 shrink-0 text-cyan-300/80"
                 >
-                  <div className="flex min-w-0 items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="break-words text-sm font-black text-white">
-                        {category.label}
-                      </p>
+                  <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
 
-                      <p className="mt-1 text-[11px] text-zinc-600">
-                        {buildPublicReputationScopeLabel(
-                          category
-                        )}
-                      </p>
-                    </div>
+                Based on verified visits
+              </span>
 
-                    {category.level ? (
-                      <span className="shrink-0 rounded-full bg-white/[0.05] px-2.5 py-1 text-[10px] font-bold text-zinc-400 ring-1 ring-white/[0.065]">
-                        {formatReputationLevel(
-                          category.level
-                        )}
-                      </span>
-                    ) : null}
-                  </div>
+              <span className="inline-flex items-center gap-2 text-xs text-zinc-400">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4 shrink-0 text-cyan-300/80"
+                >
+                  <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
 
-                  <div className="mt-4 rounded-[1.25rem] bg-cyan-300/[0.055] p-3.5 ring-1 ring-cyan-300/10">
-                    <p className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-600">
-                      Standing
-                    </p>
+                Places and local experience
+              </span>
+            </div>
+          </div>
+        ) : null}
 
-                    <p
-                      className={[
-                        'mt-1 break-words font-black tracking-tight',
-                        standing.available
-                          ? 'text-xl text-cyan-200'
-                          : 'text-sm text-zinc-400',
-                      ].join(' ')}
+        {/* Category specialties */}
+
+        {normalized.categories.length > 0 ? (
+          <div className="mt-7 min-w-0">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h3 className="text-base font-bold tracking-[-0.025em] text-white">
+                  Their specialties
+                </h3>
+
+                <p className="mt-1 text-xs leading-5 text-zinc-500">
+                  Where their real-world
+                  experience stands out.
+                </p>
+              </div>
+
+              <span className="rounded-full border border-white/[0.075] bg-white/[0.035] px-3 py-1.5 text-[11px] font-medium text-zinc-400">
+                {normalized.categories.length}{' '}
+                {normalized.categories.length === 1
+                  ? 'specialty'
+                  : 'specialties'}
+              </span>
+            </div>
+
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+              {normalized.categories.map(
+                (category, index) => {
+                  const standing =
+                    buildPublicReputationStanding(
+                      category
+                    )
+
+                  const placeCount =
+                    category.verifiedVenueCount
+
+                  const placeLabel =
+                    placeCount === null
+                      ? null
+                      : `${placeCount.toLocaleString(
+                          'en-US'
+                        )} verified ${
+                          placeCount === 1
+                            ? 'place'
+                            : 'places'
+                        }`
+
+                  const friendlyCategoryLabel =
+                    formatPublicReputationCategoryLabel(
+                      category.label
+                    )
+
+                  const friendlyScope =
+                    formatPublicReputationScope(
+                      category
+                    )
+
+                  const friendlyRankContext =
+                    formatPublicReputationRankContext(
+                      category
+                    )
+
+                  return (
+                    <article
+                      key={
+                        category.key ??
+                        `${category.label}-${index}`
+                      }
+                      className="group relative flex min-w-0 flex-col overflow-hidden rounded-[1.4rem] border border-white/[0.075] bg-[#11151b] p-4 transition-colors duration-200 hover:border-white/[0.13] hover:bg-[#151b22] sm:p-5"
                     >
-                      {standing.primary}
-                    </p>
+                      <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute right-0 top-0 h-24 w-28 bg-gradient-to-bl from-cyan-300/[0.035] to-transparent"
+                      />
 
-                    {standing.secondary ? (
-                      <p className="mt-1.5 text-[11px] leading-5 text-zinc-600">
-                        {standing.secondary}
-                      </p>
-                    ) : null}
-                  </div>
+                      <div className="relative z-10 flex min-w-0 items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h4 className="break-words text-[15px] font-bold leading-5 tracking-[-0.02em] text-white">
+                            {friendlyCategoryLabel}
+                          </h4>
 
-                  <div className="mt-3 flex min-w-0 items-center justify-between gap-3 border-t border-white/[0.055] pt-3">
-                    <div className="min-w-0">
-                      <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-700">
-                        Verified
-                      </p>
+                          <p className="mt-1 text-[11px] leading-4 text-zinc-500">
+                            {friendlyScope}
+                          </p>
+                        </div>
 
-                      <p className="mt-1 text-xs font-semibold text-zinc-400">
-                        {category.verifiedVenueCount !==
-                        null
-                          ? `${category.verifiedVenueCount.toLocaleString(
-                              'en-US'
-                            )} ${
-                              category.verifiedVenueCount ===
-                              1
-                                ? 'place'
-                                : 'places'
-                            }`
-                          : 'Not published'}
-                      </p>
-                    </div>
+                        {category.level ? (
+                          <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-white/[0.085] bg-white/[0.045] px-2.5 py-1.5 text-[10px] font-semibold text-zinc-300">
+                            <span
+                              aria-hidden="true"
+                              className="h-1 w-1 rounded-full bg-cyan-300/75"
+                            />
 
-                    {category.eligibleCreatorCount !==
-                    null ? (
-                      <div className="min-w-0 text-right">
-                        <p className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-700">
-                          Compared with
-                        </p>
-
-                        <p className="mt-1 text-xs font-semibold text-zinc-400">
-                          {category.eligibleCreatorCount.toLocaleString(
-                            'en-US'
-                          )}{' '}
-                          {category.eligibleCreatorCount ===
-                          1
-                            ? 'creator'
-                            : 'creators'}
-                        </p>
+                            {formatPublicReputationLevel(
+                              category.level
+                            )}
+                          </span>
+                        ) : null}
                       </div>
-                    ) : null}
-                  </div>
-                </article>
-              )
-            }
-          )}
-        </div>
-      ) : null}
 
-      <p className="relative z-10 mt-4 text-[11px] leading-5 text-zinc-600">
-        Reputation compares verified activity within the same category and geographic scope. City and global standings remain separate.
-      </p>
+                      <div className="relative z-10 mt-6 flex-1">
+                        {standing.available ? (
+                          <>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                              Their standing
+                            </p>
+
+                            <p className="mt-1.5 break-words text-[clamp(1.55rem,3vw,2rem)] font-black leading-tight tracking-[-0.045em] text-cyan-200">
+                              {standing.primary}
+                            </p>
+
+                            {friendlyRankContext ? (
+                              <p className="mt-1.5 text-xs leading-5 text-zinc-400">
+                                {friendlyRankContext}
+                              </p>
+                            ) : standing.secondary ? (
+                              <p className="mt-1.5 text-xs leading-5 text-zinc-400">
+                                {standing.secondary}
+                              </p>
+                            ) : null}
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
+                              Their journey
+                            </p>
+
+                            <p className="mt-2 text-lg font-bold tracking-[-0.03em] text-zinc-200">
+                              Still exploring
+                            </p>
+
+                            <p className="mt-1.5 max-w-xs text-xs leading-5 text-zinc-500">
+                              Their experience here
+                              is growing. A local
+                              ranking isn&apos;t
+                              available yet.
+                            </p>
+                          </>
+                        )}
+                      </div>
+
+                      {placeLabel ? (
+                        <div className="relative z-10 mt-5 border-t border-white/[0.075] pt-3.5">
+                          <div className="flex items-center gap-2">
+                            <svg
+                              aria-hidden="true"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.7"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="h-3.5 w-3.5 shrink-0 text-cyan-300/70"
+                            >
+                              <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+                              <circle
+                                cx="12"
+                                cy="10"
+                                r="2.5"
+                              />
+                            </svg>
+
+                            <p className="text-xs font-medium text-zinc-400">
+                              {placeLabel}
+                            </p>
+                          </div>
+                        </div>
+                      ) : null}
+                    </article>
+                  )
+                }
+              )}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Plain-language explanation */}
+
+        <div className="mt-6 flex items-start gap-2.5 border-t border-white/[0.075] pt-4">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11v5" />
+            <path d="M12 8h.01" />
+          </svg>
+
+          <p className="max-w-3xl text-[11px] leading-[1.7] text-zinc-500">
+            These highlights come from real,
+            verified visits. Rankings compare
+            people exploring the same kinds
+            of places in the same city.
+            Worldwide rankings are kept
+            separate.
+          </p>
+        </div>
+      </div>
     </section>
   )
+}
+
+/* =========================================================
+ * Friendly public reputation copy
+ *
+ * Presentation-only helpers.
+ * The underlying reputation levels, scores,
+ * eligibility, and ranking data are unchanged.
+ * ======================================================= */
+
+function formatPublicReputationLevel(
+  level: string
+): string {
+  switch (
+    level.trim().toLowerCase()
+  ) {
+    case 'emerging':
+      return 'Getting started'
+
+    case 'established':
+      return 'Well explored'
+
+    case 'expert':
+      return 'Expert'
+
+    case 'elite':
+      return 'Standout'
+
+    default:
+      return formatReputationLevel(
+        level
+      )
+  }
+}
+
+function formatPublicReputationIdentity(
+  headline: string | null
+): string | null {
+  if (!headline) {
+    return null
+  }
+
+  const simplified =
+    headline
+      .replace(
+        /\s+(emerging|established|expert|elite)$/i,
+        ''
+      )
+      .trim()
+
+  if (!simplified) {
+    return null
+  }
+
+  const friendly =
+    simplified
+      .replace(
+        /\bRestaurant$/i,
+        'Restaurants'
+      )
+      .replace(
+        /\bCocktail Bar$/i,
+        'Cocktail Bars'
+      )
+      .replace(
+        /\bBar & Pub$/i,
+        'Bars & Pubs'
+      )
+      .replace(
+        /\bMarket & Shopping$/i,
+        'Markets & Shopping'
+      )
+
+  return friendly
+}
+
+function formatPublicReputationSummary(
+  summary: string | null
+): string | null {
+  if (!summary) {
+    return null
+  }
+
+  return summary
+    .replace(
+      /\bverified venues\b/gi,
+      'verified places'
+    )
+    .replace(
+      /\bverified venue\b/gi,
+      'verified place'
+    )
+    .replace(
+      /\bcompleted Flows\b/gi,
+      'Flows completed'
+    )
+    .replace(
+      /\bcompleted Flow\b/gi,
+      'Flow completed'
+    )
+}
+
+function formatPublicReputationCategoryLabel(
+  label: string
+): string {
+  return label
+    .replace(
+      /\s+(emerging|established|expert|elite)$/i,
+      ''
+    )
+    .replace(
+      /\s+Explorer$/i,
+      ''
+    )
+    .replace(
+      /^Atlanta\s+/i,
+      ''
+    )
+    .replace(
+      /\bRestaurant$/i,
+      'Restaurants'
+    )
+    .replace(
+      /\bCocktail Bar$/i,
+      'Cocktail Bars'
+    )
+    .replace(
+      /\bBar & Pub$/i,
+      'Bars & Pubs'
+    )
+    .replace(
+      /\bMarket & Shopping$/i,
+      'Markets & Shopping'
+    )
+    .trim()
+}
+
+function formatPublicReputationScope(
+  category:
+    NormalizedPublicCreatorReputationCategory
+): string {
+  if (
+    category.scope ===
+    'city'
+  ) {
+    const city =
+      category.cityLabel ??
+      (
+        category.cityKey
+          ? formatReputationLevel(
+              category.cityKey === 'atl'
+                ? 'Atlanta'
+                : category.cityKey === 'nyc'
+                  ? 'New York City'
+                  : category.cityKey
+            )
+          : null
+      ) ??
+      'Your city'
+
+    return `In ${city}`
+  }
+
+  if (
+    category.scope ===
+    'global'
+  ) {
+    return 'Worldwide'
+  }
+
+  return 'Their experience'
+}
+
+function formatPublicReputationRankContext(
+  category:
+    NormalizedPublicCreatorReputationCategory
+): string | null {
+  if (
+    category.rank !==
+      null &&
+    category.eligibleCreatorCount !==
+      null &&
+    category.eligibleCreatorCount >
+      0
+  ) {
+    const city =
+      category.scope ===
+      'city'
+        ? category.cityLabel ??
+          (
+            category.cityKey === 'atl'
+              ? 'Atlanta'
+              : category.cityKey === 'nyc'
+                ? 'New York City'
+                : null
+          )
+        : null
+
+    const location =
+      category.scope ===
+      'global'
+        ? 'worldwide'
+        : city
+          ? `in ${city}`
+          : 'in this category'
+
+    return `#${category.rank.toLocaleString(
+      'en-US'
+    )} of ${category.eligibleCreatorCount.toLocaleString(
+      'en-US'
+    )} ${location}`
+  }
+
+  if (
+    category.rank !==
+    null
+  ) {
+    return `#${category.rank.toLocaleString(
+      'en-US'
+    )}`
+  }
+
+  return null
 }
 
 type NormalizedPublicCreatorReputation = {
@@ -2077,7 +2463,8 @@ function nullablePercentage(
     )
 
   if (
-    normalized === null ||
+    normalized ===
+      null ||
     normalized < 0
   ) {
     return null

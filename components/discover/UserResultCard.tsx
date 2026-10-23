@@ -1,3 +1,4 @@
+
 'use client'
 
 import Link from 'next/link'
@@ -81,6 +82,16 @@ export type DiscoverUser = {
   interest_categories?: string[] | null
   followers_count?: number | null
   is_following?: boolean | null
+
+  /**
+   * Canonical persisted Passport progression returned by
+   * the Discover API from profile_public_stats.
+   *
+   * Optional for backward compatibility with existing callers.
+   * Null means no valid persisted value is available.
+   */
+  passport_xp?: number | null
+  passport_level?: number | null
 
   /**
    * Canonical discovery reputation context returned by the
@@ -184,6 +195,26 @@ export default function UserResultCard({
       user.followers_count
     )
 
+  /**
+   * Passport progression is display-only.
+   *
+   * Do not derive XP from reputation, follower counts,
+   * visit counts, or Passport level.
+   */
+  const passportXp =
+    normalizeNonNegativeInteger(
+      user.passport_xp
+    )
+
+  const passportLevel =
+    normalizePositiveInteger(
+      user.passport_level
+    )
+
+  const hasPassportProgression =
+    passportXp !== null ||
+    passportLevel !== null
+
   return (
     <article className="group relative w-full min-w-0 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 transition duration-200 hover:border-cyan-500/35 hover:bg-neutral-950/95">
       <div
@@ -222,6 +253,48 @@ export default function UserResultCard({
                     homeNeighborhood
                   }
                 />
+
+                {hasPassportProgression ? (
+                  <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px]">
+                    {passportXp !== null ? (
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-amber-300">
+                        <span
+                          aria-hidden="true"
+                          className="text-xs leading-none"
+                        >
+                          ⚡
+                        </span>
+
+                        <span>
+                          {passportXp.toLocaleString(
+                            'en-US'
+                          )}{' '}
+                          XP
+                        </span>
+                      </span>
+                    ) : null}
+
+                    {passportLevel !== null ? (
+                      <span className="inline-flex items-center gap-1.5 text-neutral-400">
+                        <span
+                          aria-hidden="true"
+                          className="text-xs leading-none"
+                        >
+                          🧭
+                        </span>
+
+                        <span>
+                          Passport Level{' '}
+                          <span className="font-semibold text-neutral-200">
+                            {passportLevel.toLocaleString(
+                              'en-US'
+                            )}
+                          </span>
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 {reputationSignal ? (
                   <p className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/[0.07] px-2.5 py-1 text-[10px] font-semibold text-cyan-200">
@@ -678,7 +751,7 @@ function DiscoverySignal({
 }) {
   const styles =
     tone ===
-    'vibe'
+      'vibe'
       ? 'border-indigo-500/20 bg-indigo-500/[0.07] text-indigo-200'
       : 'border-neutral-800 bg-black/30 text-neutral-400'
 
@@ -823,33 +896,33 @@ function buildReputationSignal(
           : 'Global'
 
       const topPercent =
-  normalizePercentage(
-    canonicalStanding
-      .topPercent
-  )
-
-if (
-  topPercent !==
-    null
-) {
-  return [
-    `Top ${formatPercent(
-      topPercent
-    )}%`,
-    scopeLabel
-      ? formatSignalLabel(
-          scopeLabel
+        normalizePercentage(
+          canonicalStanding
+            .topPercent
         )
-      : null,
-    categoryLabel,
-  ]
-    .filter(
-      Boolean
-    )
-    .join(
-      ' · '
-    )
-}
+
+      if (
+        topPercent !==
+          null
+      ) {
+        return [
+          `Top ${formatPercent(
+            topPercent
+          )}%`,
+          scopeLabel
+            ? formatSignalLabel(
+                scopeLabel
+              )
+            : null,
+          categoryLabel,
+        ]
+          .filter(
+            Boolean
+          )
+          .join(
+            ' · '
+          )
+      }
 
       return [
         scopeLabel
@@ -944,7 +1017,7 @@ function normalizeNullableText(
 ): string | null {
   if (
     typeof value !==
-    'string'
+      'string'
   ) {
     return null
   }
@@ -1043,6 +1116,27 @@ function normalizeNonNegativeInteger(
   return Math.trunc(
     normalized
   )
+}
+
+/**
+ * Passport levels begin at 1.
+ *
+ * Keep this separate from the existing nonnegative integer
+ * normalization so follower-count behavior is unaffected.
+ */
+function normalizePositiveInteger(
+  value:
+    unknown
+): number | null {
+  const normalized =
+    normalizeNonNegativeInteger(
+      value
+    )
+
+  return normalized !== null &&
+    normalized > 0
+    ? normalized
+    : null
 }
 
 function normalizePercentage(
