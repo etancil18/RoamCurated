@@ -137,7 +137,16 @@ export default function Navbar() {
                   onClick={() => handleNavClick('discover')}
                   className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                 >
-                  Find Explorers
+                  Tastemakers
+                </Link>
+
+                {/* Public Explore Places navigation */}
+                <Link
+                  href="/explore"
+                  onClick={() => handleNavClick('explore')}
+                  className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                >
+                  Explore Places
                 </Link>
 
                 {user ? (
@@ -154,7 +163,7 @@ export default function Navbar() {
                     <Link
                       href="/"
                       onClick={() => handleNavClick('maps')}
-                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:bg-zinc-900 dark:text-gray-200 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Map
                     </Link>
@@ -165,14 +174,6 @@ export default function Navbar() {
                       className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
                     >
                       Events
-                    </Link>
-
-                    <Link
-                      href="/sponsor-crawl"
-                      onClick={() => handleNavClick('sponsor-crawl')}
-                      className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
-                    >
-                      Group Flow
                     </Link>
 
                     <Link

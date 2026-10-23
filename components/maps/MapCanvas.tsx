@@ -252,6 +252,7 @@ function MapViewportTracker({
 type Props = {
   route?: Venue[]
   venueToRestore?: Venue | null
+  autoGenerateFlowVenueId?: string | null
   travelMode:
     | 'walking'
     | 'cycling'
@@ -284,6 +285,7 @@ type Props = {
 export default function MapCanvas({
   route,
   venueToRestore = null,
+  autoGenerateFlowVenueId = null,
   travelMode,
   themeId,
   searchTerm = '',
@@ -388,6 +390,25 @@ export default function MapCanvas({
 
   const restoredVenueIdRef =
     useRef<string | null>(null)
+
+    /**
+   * Explore Places → Map Flow generation.
+   *
+   * Prevent duplicate generation for the same
+   * incoming request, including React effect reruns.
+   */
+  const autoFlowRequestRef =
+    useRef<string | null>(null)
+
+  const [
+    isGeneratingExploreFlow,
+    setIsGeneratingExploreFlow,
+  ] = useState(false)
+
+  const [
+    exploreFlowError,
+    setExploreFlowError,
+  ] = useState<string | null>(null)
 
   useEffect(() => {
     if (!venueToRestore?.id) {
@@ -1648,6 +1669,97 @@ export default function MapCanvas({
       ]
     )
 
+    /* =======================================================
+   * Explore Places → automatic map Flow generation
+   *
+   * Reuses the exact venue-preview generation handler.
+   * Never substitutes another venue for the requested ID.
+   * ===================================================== */
+
+  useEffect(() => {
+    if (
+      !autoGenerateFlowVenueId ||
+      !selectedCity ||
+      !venueToRestore ||
+      venueToRestore.id !== autoGenerateFlowVenueId
+    ) {
+      return
+    }
+
+    const matchingVenue =
+      allVenues.find(
+        (venue) =>
+          venue.id === autoGenerateFlowVenueId
+      )
+
+    if (!matchingVenue) {
+      return
+    }
+
+    if (
+      autoFlowRequestRef.current ===
+      autoGenerateFlowVenueId
+    ) {
+      return
+    }
+
+    // Claim this request synchronously before starting
+    // an asynchronous operation. Prevents duplicate
+    // generation during subsequent effect executions.
+    autoFlowRequestRef.current =
+      autoGenerateFlowVenueId
+
+    setIsGeneratingExploreFlow(true)
+    setExploreFlowError(null)
+
+    void handleGenerateFlowFromPreview(
+      matchingVenue
+    )
+      .then(() => {
+        // The existing callback dispatches
+        // roam:generated-route-from-venue, which
+        // is already handled by MapCanvas and
+        // forwarded to MapWrapper.
+        setIsGeneratingExploreFlow(false)
+
+        // The request has been consumed.
+        // Prevent a browser refresh from starting
+        // the same automatic generation again.
+        const url = new URL(
+          window.location.href
+        )
+
+        url.searchParams.delete('buildFlow')
+
+        window.history.replaceState(
+          null,
+          '',
+          url.toString()
+        )
+      })
+      .catch((error: unknown) => {
+        setIsGeneratingExploreFlow(false)
+
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Could not build a Flow from this venue.'
+
+        setExploreFlowError(message)
+
+        console.error(
+          '[MapCanvas] Explore Flow generation failed:',
+          error
+        )
+      })
+  }, [
+    autoGenerateFlowVenueId,
+    selectedCity,
+    venueToRestore,
+    allVenues,
+    handleGenerateFlowFromPreview,
+  ])
+
   const filteredVenues =
     useMemo(() => {
       const term =
@@ -2278,6 +2390,132 @@ export default function MapCanvas({
 
   return (
     <div className="relative h-dvh w-full overflow-hidden">
+            {(isGeneratingExploreFlow ||
+        exploreFlowError) && (
+        <div
+          className="
+            pointer-events-none
+            absolute
+            left-1/2
+            top-20
+            z-[5000]
+            w-[calc(100%-2rem)]
+            max-w-md
+            -translate-x-1/2
+          "
+        >
+          <div
+            role={
+              exploreFlowError
+                ? 'alert'
+                : 'status'
+            }
+            aria-live={
+              exploreFlowError
+                ? 'assertive'
+                : 'polite'
+            }
+            className={`
+              pointer-events-auto
+              rounded-2xl
+              border
+              px-5
+              py-4
+              text-center
+              text-sm
+              font-semibold
+              shadow-2xl
+              backdrop-blur-xl
+              ${
+                exploreFlowError
+                  ? 'border-red-500/30 bg-red-950/95 text-red-100'
+                  : 'border-cyan-500/30 bg-zinc-950/95 text-white'
+              }
+            `}
+          >
+            {exploreFlowError ? (
+              <>
+                <p>{exploreFlowError}</p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExploreFlowError(null)
+
+                    autoFlowRequestRef.current = null
+
+                    const matchingVenue =
+                      allVenues.find(
+                        (venue) =>
+                          venue.id ===
+                          autoGenerateFlowVenueId
+                      )
+
+                    if (!matchingVenue) {
+                      setExploreFlowError(
+                        'The selected venue is not available in the current map data.'
+                      )
+                      return
+                    }
+
+                    setIsGeneratingExploreFlow(true)
+
+                    autoFlowRequestRef.current =
+                      autoGenerateFlowVenueId
+
+                    void handleGenerateFlowFromPreview(
+                      matchingVenue
+                    )
+                      .then(() => {
+                        setIsGeneratingExploreFlow(false)
+
+                        const url = new URL(
+                          window.location.href
+                        )
+
+                        url.searchParams.delete(
+                          'buildFlow'
+                        )
+
+                        window.history.replaceState(
+                          null,
+                          '',
+                          url.toString()
+                        )
+                      })
+                      .catch((error: unknown) => {
+                        setIsGeneratingExploreFlow(false)
+
+                        setExploreFlowError(
+                          error instanceof Error
+                            ? error.message
+                            : 'Could not build a Flow from this venue.'
+                        )
+                      })
+                  }}
+                  className="
+                    mt-3
+                    rounded-lg
+                    border
+                    border-red-300/30
+                    px-4
+                    py-2
+                    text-xs
+                    font-semibold
+                    text-white
+                    transition
+                    hover:bg-white/10
+                  "
+                >
+                  Try again
+                </button>
+              </>
+            ) : (
+              <p>Building your Flow from this place…</p>
+            )}
+          </div>
+        </div>
+      )}
       <MapContainer
         center={mapCenter}
         zoom={mapZoom}

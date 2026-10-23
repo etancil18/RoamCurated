@@ -179,6 +179,21 @@ export default function MapWrapper() {
     null
   )
 
+    /**
+   * Explore Places → Map Flow generation.
+   *
+   * A venue-specific request is accepted only when
+   * buildFlow=1 and a venue ID are both present.
+   *
+   * Ordinary venue-profile restoration remains unchanged.
+   */
+  const [
+    autoGenerateFlowVenueId,
+    setAutoGenerateFlowVenueId,
+  ] = useState<string | null>(
+    null
+  )
+
   const [
     searchTerm,
     setSearchTerm,
@@ -532,6 +547,18 @@ export default function MapWrapper() {
 
       const venueParam =
         params.get('venue')?.trim()
+
+      const shouldBuildFlow =
+        params.get('buildFlow') === '1'
+
+      if (
+        shouldBuildFlow &&
+        venueParam
+      ) {
+        setAutoGenerateFlowVenueId(
+          venueParam
+        )
+      }
 
       if (venueParam && params.has('route')) {
         const url = new URL(window.location.href)
@@ -2169,6 +2196,9 @@ export default function MapWrapper() {
             }
             venueToRestore={
               venueToRestore
+            }
+            autoGenerateFlowVenueId={
+              autoGenerateFlowVenueId
             }
             onMapClick={
               handleMapClick
