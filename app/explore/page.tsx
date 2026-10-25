@@ -883,8 +883,6 @@ export default function ExplorePage() {
   const [trendingInsufficient, setTrendingInsufficient] =
     useState(false)
 
-  const [trendingRetry, setTrendingRetry] = useState(0)
-
   const [location, setLocation] =
     useState<UserCoordinates | null>(null)
 
@@ -1150,6 +1148,9 @@ export default function ExplorePage() {
    *
    * This endpoint returns no venues when verified activity
    * falls below the server's minimum evidence threshold.
+   *
+   * The request and eligibility handling remain unchanged.
+   * Rendering is gated on successful, eligible results.
    * ===================================================== */
 
   useEffect(() => {
@@ -1207,7 +1208,7 @@ export default function ExplorePage() {
     return () => {
       controller.abort()
     }
-  }, [trendingRetry])
+  }, [])
 
   /* =======================================================
    * Pagination controls
@@ -1542,10 +1543,6 @@ export default function ExplorePage() {
                     : 'Use my location'}
                 </button>
               )}
-
-              <span className="text-xs text-neutral-500">
-                Distances are straight-line miles, not travel times.
-              </span>
             </div>
 
             {hasActiveFilters && (
@@ -1571,93 +1568,54 @@ export default function ExplorePage() {
 
         {/* -------------------------------------------------
          * Verified trending
+         *
+         * Only show when the server returns qualifying
+         * trending venues. Hide the entire section for
+         * loading, errors, and insufficient data.
          * ------------------------------------------------- */}
 
-        <section
-          aria-labelledby="explore-trending-heading"
-          className="mt-12"
-        >
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="h-px w-5 bg-cyan-300/60" />
-
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
-                  Verified activity
-                </p>
-              </div>
-
-              <h2
-                id="explore-trending-heading"
-                className="mt-3 text-2xl font-black tracking-[-0.035em] text-white sm:text-[2rem]"
-              >
-                Trending Places
-              </h2>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-500">
-                Ranked from verified venue visits over the
-                past seven days—not paid placements or
-                invented popularity.
-              </p>
-            </div>
-          </div>
-
-          {trendingStatus === 'loading' ||
-          trendingStatus === 'idle' ? (
-            <div
-              className="mt-5 rounded-2xl bg-white/[0.035] p-6 text-sm text-neutral-400 ring-1 ring-white/[0.07]"
-              role="status"
+        {trendingStatus === 'success' &&
+          !trendingInsufficient &&
+          trending.length > 0 && (
+            <section
+              aria-labelledby="explore-trending-heading"
+              className="mt-12"
             >
-              Checking verified venue activity...
-            </div>
-          ) : trendingStatus === 'error' ? (
-            <div className="mt-5 rounded-2xl bg-white/[0.035] p-6 ring-1 ring-white/[0.07]">
-              <p className="text-sm leading-6 text-neutral-400">
-                Trending activity is temporarily unavailable.
-                You can still browse all places below.
-              </p>
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-px w-5 bg-cyan-300/60" />
 
-              <button
-                type="button"
-                onClick={() =>
-                  setTrendingRetry((count) => count + 1)
-                }
-                className="mt-3 text-sm font-semibold text-cyan-200 underline underline-offset-4 hover:text-cyan-100"
-              >
-                Retry trending
-              </button>
-            </div>
-          ) : trendingInsufficient ||
-            trending.length === 0 ? (
-            <div className="relative mt-5 overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.055] via-white/[0.028] to-indigo-400/[0.025] p-6 ring-1 ring-white/[0.07] sm:p-8">
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent"
-              />
-              <div className="relative max-w-2xl">
-                <p className="text-base font-semibold text-white">
-                  Trending is building.
-                </p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
+                      Verified activity
+                    </p>
+                  </div>
 
-                <p className="mt-2 text-sm leading-6 text-neutral-400">
-                  There are not enough verified visits yet
-                  to identify trending places reliably.
-                  Explore the live venue directory below
-                  while activity grows.
-                </p>
+                  <h2
+                    id="explore-trending-heading"
+                    className="mt-3 text-2xl font-black tracking-[-0.035em] text-white sm:text-[2rem]"
+                  >
+                    Trending Places
+                  </h2>
+
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-500">
+                    Ranked from verified venue visits over the
+                    past seven days—not paid placements or
+                    invented popularity.
+                  </p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {trending.map((venue) => (
-                <TrendingCard
-                  key={venue.id}
-                  venue={venue}
-                />
-              ))}
-            </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {trending.map((venue) => (
+                  <TrendingCard
+                    key={venue.id}
+                    venue={venue}
+                  />
+                ))}
+              </div>
+            </section>
           )}
-        </section>
 
         {/* -------------------------------------------------
          * All Places
@@ -1818,20 +1776,6 @@ export default function ExplorePage() {
               </nav>
             )}
         </section>
-
-        {/* -------------------------------------------------
-         * Footer
-         * ------------------------------------------------- */}
-
-        <footer className="mt-20 border-t border-white/[0.075] pt-7">
-          <p className="max-w-2xl text-xs leading-relaxed text-neutral-500">
-            Places are sourced from RoamCurated's live venue
-            directory. Trending rankings use eligible,
-            geographically verified visits and appear only
-            when there is sufficient evidence. Distance
-            estimates are straight-line measurements.
-          </p>
-        </footer>
       </div>
 
       {/* -------------------------------------------------

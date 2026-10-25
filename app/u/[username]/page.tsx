@@ -420,14 +420,16 @@ if (followingResult.error) {
     publicStatsResult.data
 
   const followersCount =
-  followersResult.error
-    ? (publicStats?.followers_count ?? 0)
-    : (followersResult.count ?? 0)
+  publicStats?.followers_count ??
+  (followersResult.error
+    ? 0
+    : followersResult.count ?? 0)
 
 const followingCount =
-  followingResult.error
-    ? (publicStats?.following_count ?? 0)
-    : (followingResult.count ?? 0)
+  publicStats?.following_count ??
+  (followingResult.error
+    ? 0
+    : followingResult.count ?? 0)
 
   const socialGroupsCount =
     socialGroupsResult.count ?? 0
