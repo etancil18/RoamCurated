@@ -1,10 +1,13 @@
 
+// app/explore/page.tsx
+
 'use client'
 
 import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 
@@ -13,6 +16,7 @@ import Link from 'next/link'
 import RoamAuthSheet from '@/components/auth/RoamAuthSheet'
 import { useUser } from '@/hooks/useUser'
 import { getAppDownloadLink } from '@/lib/constants/appLinks'
+import { logEvent } from '@/lib/logEvent'
 
 /* =========================================================
  * Explore Places
@@ -24,7 +28,7 @@ import { getAppDownloadLink } from '@/lib/constants/appLinks'
  *   GET /api/explore/trending
  *
  * No static city datasets.
- * No direct Supabase browser queries.
+ * No direct Supabase browser queries for venue data.
  * No raw venue_visits access.
  * No authentication required for browsing.
  *
@@ -183,6 +187,37 @@ const EMPTY_PAGINATION: ExplorePagination = {
   total: 0,
   totalPages: 0,
   hasMore: false,
+}
+
+/* =========================================================
+ * Explore analytics
+ *
+ * Uses the existing user_impressions logger.
+ * Analytics must never block a visitor's interaction.
+ * ======================================================= */
+
+function safeLogExploreEvent(
+  eventName: string,
+  metadata: Record<string, unknown> = {},
+  venueId?: string
+) {
+  try {
+    void Promise.resolve(
+      logEvent(eventName, {
+        ...(venueId ? { venue_id: venueId } : {}),
+        metadata: {
+          page: 'explore',
+          pathname: '/explore',
+          ...metadata,
+        },
+      })
+    )
+  } catch (error) {
+    console.warn(
+      '[ExplorePage] Analytics logging failed:',
+      error
+    )
+  }
 }
 
 /* =========================================================
@@ -572,6 +607,16 @@ function PlaceCard({
       <Link
         href={venue.profileHref}
         aria-label={`View ${venue.name}`}
+        onClick={() => {
+          safeLogExploreEvent(
+            'explore_view_place_clicked',
+            {
+              city: venue.city,
+              source: 'card_image',
+            },
+            venue.id
+          )
+        }}
         className="block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
       >
         <VenueCover
@@ -605,6 +650,16 @@ function PlaceCard({
 
         <Link
           href={venue.profileHref}
+          onClick={() => {
+            safeLogExploreEvent(
+              'explore_view_place_clicked',
+              {
+                city: venue.city,
+                source: 'card_title',
+              },
+              venue.id
+            )
+          }}
           className="w-fit rounded-sm text-lg font-semibold leading-snug tracking-tight text-white hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
         >
           {venue.name}
@@ -648,6 +703,16 @@ function PlaceCard({
         <div className="mt-auto grid grid-cols-2 gap-2 pt-5">
           <Link
             href={venue.profileHref}
+            onClick={() => {
+              safeLogExploreEvent(
+                'explore_view_place_clicked',
+                {
+                  city: venue.city,
+                  source: 'view_place_button',
+                },
+                venue.id
+              )
+            }}
             className="flex min-h-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.045] px-3 text-center text-sm font-semibold text-white transition hover:bg-white/[0.085] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
           >
             View Place
@@ -656,6 +721,17 @@ function PlaceCard({
           {isAuthenticated ? (
             <Link
               href={getMapFlowHref(venue)}
+              onClick={() => {
+                safeLogExploreEvent(
+                  'explore_build_flow_clicked',
+                  {
+                    city: venue.city,
+                    authenticated: true,
+                    source: 'place_card',
+                  },
+                  venue.id
+                )
+              }}
               className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 px-3 text-center text-sm font-black text-white shadow-[0_12px_30px_rgba(34,211,238,0.12)] transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
             >
               Build a Flow
@@ -665,7 +741,19 @@ function PlaceCard({
             <button
               type="button"
               disabled={authLoading}
-              onClick={() => onGuestBuildFlow(venue)}
+              onClick={() => {
+                safeLogExploreEvent(
+                  'explore_build_flow_clicked',
+                  {
+                    city: venue.city,
+                    authenticated: false,
+                    source: 'place_card',
+                  },
+                  venue.id
+                )
+
+                onGuestBuildFlow(venue)
+              }}
               className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 px-3 text-center text-sm font-black text-white shadow-[0_12px_30px_rgba(34,211,238,0.12)] transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-wait disabled:opacity-60"
             >
               Build a Flow
@@ -689,6 +777,16 @@ function TrendingCard({
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.065] to-white/[0.025] shadow-[0_18px_50px_rgba(0,0,0,0.22)] ring-1 ring-white/[0.075]">
       <Link
         href={venue.profileHref}
+        onClick={() => {
+          safeLogExploreEvent(
+            'explore_view_place_clicked',
+            {
+              city: venue.city,
+              source: 'trending_card_image',
+            },
+            venue.id
+          )
+        }}
         className="relative block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300"
         aria-label={`View ${venue.name}`}
       >
@@ -710,6 +808,16 @@ function TrendingCard({
 
         <Link
           href={venue.profileHref}
+          onClick={() => {
+            safeLogExploreEvent(
+              'explore_view_place_clicked',
+              {
+                city: venue.city,
+                source: 'trending_card_title',
+              },
+              venue.id
+            )
+          }}
           className="mt-1 text-base font-semibold text-white hover:underline"
         >
           {venue.name}
@@ -738,6 +846,16 @@ function TrendingCard({
 
         <Link
           href={venue.profileHref}
+          onClick={() => {
+            safeLogExploreEvent(
+              'explore_view_place_clicked',
+              {
+                city: venue.city,
+                source: 'trending_card_button',
+              },
+              venue.id
+            )
+          }}
           className="mt-auto flex min-h-11 items-center gap-2 pt-4 text-sm font-semibold text-cyan-200 hover:text-cyan-100 hover:underline"
         >
           Explore place
@@ -893,6 +1011,22 @@ export default function ExplorePage() {
     useState<string | null>(null)
 
   /* =======================================================
+   * Explore page-view analytics
+   * ===================================================== */
+
+  const pageViewLoggedRef = useRef(false)
+
+  useEffect(() => {
+    if (pageViewLoggedRef.current) {
+      return
+    }
+
+    pageViewLoggedRef.current = true
+
+    safeLogExploreEvent('explore_page_viewed')
+  }, [])
+
+  /* =======================================================
    * Debounced server search
    * ===================================================== */
 
@@ -906,6 +1040,39 @@ export default function ExplorePage() {
     }
   }, [search])
 
+  /* =======================================================
+   * Debounced search analytics
+   *
+   * Only log a completed, non-empty search after the
+   * existing debounce has settled. Do not log each key.
+   * ===================================================== */
+
+  const lastLoggedSearchRef = useRef('')
+
+  useEffect(() => {
+    if (!debouncedSearch) {
+      lastLoggedSearchRef.current = ''
+      return
+    }
+
+    if (lastLoggedSearchRef.current === debouncedSearch) {
+      return
+    }
+
+    lastLoggedSearchRef.current = debouncedSearch
+
+    safeLogExploreEvent(
+      'explore_search_performed',
+      {
+        query: debouncedSearch,
+        city: city || null,
+        category: category || null,
+        vibe: vibe || null,
+        sort,
+      }
+    )
+  }, [debouncedSearch, city, category, vibe, sort])
+
   /**
    * Search/filter changes reset pagination.
    * Page changes themselves do not affect filtering.
@@ -916,26 +1083,51 @@ export default function ExplorePage() {
   }, [])
 
   const updateCity = useCallback((value: string) => {
+    safeLogExploreEvent(
+      'explore_city_filter_changed',
+      { city: value || null }
+    )
+
     setCity(value)
     setPage(1)
   }, [])
 
   const updateCategory = useCallback((value: string) => {
+    safeLogExploreEvent(
+      'explore_category_filter_changed',
+      { category: value || null }
+    )
+
     setCategory(value)
     setPage(1)
   }, [])
 
   const updateVibe = useCallback((value: string) => {
+    safeLogExploreEvent(
+      'explore_vibe_filter_changed',
+      { vibe: value || null }
+    )
+
     setVibe(value)
     setPage(1)
   }, [])
 
   const updateSort = useCallback((value: ExploreSort) => {
+    safeLogExploreEvent(
+      'explore_sort_changed',
+      { sort: value }
+    )
+
     setSort(value)
     setPage(1)
   }, [])
 
   const clearFilters = useCallback(() => {
+    safeLogExploreEvent(
+      'explore_filters_cleared',
+      { source: 'clear_filters' }
+    )
+
     setSearch('')
     setDebouncedSearch('')
     setCity('')
@@ -962,6 +1154,11 @@ export default function ExplorePage() {
    * ===================================================== */
 
   const requestLocation = useCallback(() => {
+    safeLogExploreEvent(
+      'explore_location_requested',
+      { source: 'use_my_location_button' }
+    )
+
     if (
       typeof navigator === 'undefined' ||
       !navigator.geolocation
@@ -1028,6 +1225,11 @@ export default function ExplorePage() {
   }, [])
 
   const clearLocation = useCallback(() => {
+    safeLogExploreEvent(
+      'explore_location_removed',
+      { source: 'remove_location_button' }
+    )
+
     setLocation(null)
     setLocationStatus('idle')
     setLocationMessage(null)
@@ -1360,7 +1562,7 @@ export default function ExplorePage() {
               maxLength={120}
               autoComplete="off"
               placeholder="Search coffee, rooftops, cozy, date night..."
-              className="h-14 w-full rounded-2xl border border-white/10 bg-black/30 pl-12 pr-4 text-base text-white outline-none transition placeholder:text-neutral-500 focus:border-cyan-300/50 focus:bg-white/[0.045] focus:ring-2 focus:ring-cyan-300/10"
+              className="h-14 w-full rounded-2xl border border-white/10 bg-black/30 pl-12 pr-4 !text-[16px] text-white outline-none transition placeholder:text-neutral-500 focus:border-cyan-300/50 focus:bg-white/[0.045] focus:ring-2 focus:ring-cyan-300/10"
             />
           </div>
 

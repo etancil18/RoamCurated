@@ -4,15 +4,45 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { CITY_CONFIGS } from '@/config/cities'
 import { buildRouteContext } from '@/lib/routes/buildContext'
-import { estimateArrivalTime } from '@/lib/routes/arrivalTime'
+import { getLocalHour } from '@/lib/routes/arrivalTime'
 import {
   filterRouteCandidates,
   summarizeRejections,
+  venueMatchesStage,
+  isLikelyClosedAtArrival,
 } from '@/lib/routes/candidateFilter'
 import { explainRoute } from '@/lib/routes/explainRoute'
 import { scorePersonalization } from '@/lib/routes/personalization'
 import { scoreVenue } from '@/lib/routes/scoreVenue'
+import {
+  ROUTE_STAGES,
+  isHourWithinStageWindow,
+  type RouteStage,
+} from '@/lib/routes/routeStages'
 import { normalizeVenueTypes } from '@/lib/routes/venueTypeNormalization'
+
+/* =========================================================
+ * CONTEXTUAL FLOW INTELLIGENCE
+ * ======================================================= */
+
+import {
+  resolveExperienceRole,
+  evaluateExperienceSuitability,
+} from '@/lib/routes/experienceRoles'
+
+import {
+  evaluateContextualConstraints,
+  type ContextualExperienceVisit,
+} from '@/lib/routes/contextualConstraints'
+
+import {
+  createAnchorTimelineStop,
+  appendItineraryTimelineStop,
+  summarizeItineraryTimeline,
+  validateItineraryTimeline,
+  type ItineraryTimelineStop,
+} from '@/lib/routes/itineraryTimeline'
+
 import type {
   GeneratedRoute,
   GenerateRouteFromVenueRequest,
@@ -52,12 +82,166 @@ type VenueRow = {
   closed?: boolean | null
 }
 
-type GenerateRouteFromVenueRequestWithRetry = GenerateRouteFromVenueRequest & {
-  retrySeed?: string | number | null
-  retryAttempt?: number | null
-}
+type GenerateRouteFromVenueRequestWithRetry =
+  GenerateRouteFromVenueRequest & {
+    retrySeed?: string | number | null
+    retryAttempt?: number | null
+  }
 
 const DEFAULT_MAX_STOPS = 5
+
+/* =========================================================
+ * ROUTE QUALITY: Whole-route walking budget
+ *
+ * Preserve the existing configured distances.
+ * These are straight-line estimates, not pedestrian
+ * routing-network distances.
+ *
+ * Cycling and driving remain unchanged.
+ * ======================================================= */
+
+const WALKING_DISTANCE_BUDGET_METERS: Record<
+  RouteTightness,
+  number
+> = {
+  tight: .5 * 1609.344,
+  medium: 1 * 1609.344,
+  loose: 2.25 * 1609.344,
+}
+
+/* =========================================================
+ * ROUTE QUALITY: Geographic progression
+ *
+ * Preserve the existing direction-change penalty.
+ * ======================================================= */
+
+function getDirectionChangePenalty({
+  previousPreviousStop,
+  previousStop,
+  candidate,
+}: {
+  previousPreviousStop: VenueRow | null
+  previousStop: VenueRow
+  candidate: VenueRow
+}): number {
+  if (
+    !previousPreviousStop ||
+    !hasUsableCoordinates(previousPreviousStop) ||
+    !hasUsableCoordinates(previousStop) ||
+    !hasUsableCoordinates(candidate)
+  ) {
+    return 0
+  }
+
+  const latitudeRadians =
+    (previousStop.lat! * Math.PI) / 180
+
+  const longitudeScale =
+    Math.cos(latitudeRadians)
+
+  const firstX =
+    (previousStop.lon! - previousPreviousStop.lon!) *
+    longitudeScale
+
+  const firstY =
+    previousStop.lat! - previousPreviousStop.lat!
+
+  const secondX =
+    (candidate.lon! - previousStop.lon!) *
+    longitudeScale
+
+  const secondY =
+    candidate.lat! - previousStop.lat!
+
+  const firstLength =
+    Math.hypot(firstX, firstY)
+
+  const secondLength =
+    Math.hypot(secondX, secondY)
+
+  if (
+    firstLength < 0.000001 ||
+    secondLength < 0.000001
+  ) {
+    return 0
+  }
+
+  const cosine =
+    Math.max(
+      -1,
+      Math.min(
+        1,
+        (
+          firstX * secondX +
+          firstY * secondY
+        ) / (firstLength * secondLength)
+      )
+    )
+
+  if (cosine <= -0.5) {
+    return -42
+  }
+
+  if (cosine < 0) {
+    return -18
+  }
+
+  return 0
+}
+
+/* =========================================================
+ * ROUTE QUALITY: Display rhythm from selected venue types
+ *
+ * Preserve the existing explanation-stage fallback.
+ * ======================================================= */
+
+function getExplanationStage({
+  venue,
+  assignedStage,
+  arriveAt,
+  timezone,
+}: {
+  venue: VenueRow
+  assignedStage: RouteStage | undefined
+  arriveAt: string | null
+  timezone: string | null
+}): RouteStage | undefined {
+  if (
+    assignedStage &&
+    venueMatchesStage(venue, assignedStage)
+  ) {
+    return assignedStage
+  }
+
+  if (!arriveAt) {
+    return assignedStage
+  }
+
+  const localHour = getLocalHour(
+    new Date(arriveAt),
+    timezone
+  )
+
+  const matchingStages = ROUTE_STAGES.filter(
+    (stage) =>
+      venueMatchesStage(venue, stage) &&
+      isHourWithinStageWindow(localHour, stage)
+  )
+
+  if (matchingStages.length === 0) {
+    return assignedStage
+  }
+
+  if (!assignedStage) {
+    return matchingStages[0]
+  }
+
+  return [...matchingStages].sort(
+    (a, b) =>
+      Math.abs(a.order - assignedStage.order) -
+      Math.abs(b.order - assignedStage.order)
+  )[0]
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -105,18 +289,26 @@ export async function POST(req: NextRequest) {
     }
 
     const city = body.city ?? anchorVenue.city ?? null
+
     const timezone =
       city && CITY_CONFIGS[city]?.timezone
         ? CITY_CONFIGS[city].timezone
         : null
 
+    // The map uses canonical city slugs (e.g. "la"),
+    // while venue rows may store full city names
+    // (e.g. "los angeles").
+    const venueQueryCity =
+      anchorVenue.city?.trim() || city
+
     let venuesQuery = supabase.from('venues').select('*')
 
-    if (city) {
-      venuesQuery = venuesQuery.eq('city', city)
+    if (venueQueryCity) {
+      venuesQuery = venuesQuery.eq('city', venueQueryCity)
     }
 
-    const { data: venuesData, error: venuesError } = await venuesQuery
+    const { data: venuesData, error: venuesError } =
+      await venuesQuery
 
     if (venuesError) {
       return errorResponse('Failed to load venues', 500)
@@ -135,6 +327,7 @@ export async function POST(req: NextRequest) {
 
     const context = buildRouteContext({
       anchorVenue,
+      timezone,
       city,
       plannedStartAt: body.plannedStartAt ?? new Date().toISOString(),
       travelMode,
@@ -150,6 +343,64 @@ export async function POST(req: NextRequest) {
         [],
     })
 
+    /* =====================================================
+     * CONTEXTUAL FLOW INTELLIGENCE:
+     * Resolve the anchor's actual visit role.
+     *
+     * Do not confuse all available venue types with
+     * what the guest is doing at this particular time.
+     * =================================================== */
+
+    const anchorExperience = resolveExperienceRole({
+      venue: anchorVenue,
+      arrivalAt: context.plannedStartAt,
+      timezone,
+      stage: context.startingStage,
+    })
+
+    /* =====================================================
+     * CONTEXTUAL FLOW INTELLIGENCE:
+     * Schedule the anchor before considering candidates.
+     *
+     * This fixes the old zero-dwell anchor and prevents
+     * next-stop arrivals before the anchor visit ends.
+     * =================================================== */
+
+    const anchorTimelineStop =
+      createAnchorTimelineStop({
+        anchor: {
+          venue: anchorVenue,
+          role: anchorExperience,
+        },
+        plannedStartAt: context.plannedStartAt,
+      })
+
+    let previousTimelineStop: ItineraryTimelineStop =
+      anchorTimelineStop
+
+    const timelineStops: ItineraryTimelineStop[] = [
+      anchorTimelineStop,
+    ]
+
+    /* =====================================================
+     * CONTEXTUAL FLOW INTELLIGENCE:
+     * Maintain the primary experience at every prior stop.
+     *
+     * The anchor must be included so the FIRST transition
+     * is checked, including dinner-to-dinner.
+     * =================================================== */
+
+    const contextualVisits: ContextualExperienceVisit[] = [
+      {
+        venueId: anchorVenue.id,
+        venue: anchorVenue,
+        role: anchorExperience,
+        arriveAt: anchorTimelineStop.arriveAt,
+        departAt: anchorTimelineStop.departAt,
+        dwellMinutes: anchorTimelineStop.dwellMinutes,
+      },
+    ]
+
     const selectedVenueIds = new Set<string>([anchorVenue.id])
     const selectedStops: RouteStop[] = []
     const stageAttempts: NonNullable<
@@ -157,26 +408,58 @@ export async function POST(req: NextRequest) {
     > = []
 
     let previousStop: VenueRow = anchorVenue
-    let currentStartAt = context.plannedStartAt
+
     let totalDistanceMeters = 0
     let totalTravelMinutes = 0
-    let totalDwellMinutes = 0
+
+    // Include the anchor's real dwell duration.
+    let totalDwellMinutes =
+      anchorTimelineStop.dwellMinutes
+
     let rejectedCount = 0
     let candidateCount = 0
+
+    /* =====================================================
+     * ROUTE QUALITY: Track geographic direction and budget
+     * =================================================== */
+
+    let previousPreviousStop: VenueRow | null = null
+
+    const walkingDistanceBudget =
+      travelMode === 'walking'
+        ? WALKING_DISTANCE_BUDGET_METERS[tightness]
+        : null
 
     for (const stage of context.candidateStages) {
       if (selectedStops.length >= maxStops - 1) break
 
-      const arrivalSeed = estimateArrivalTime({
-        fromVenue: previousStop,
-        toVenue: previousStop,
-        startAt: currentStartAt,
-        dwellMinutes:
-          selectedStops.length === 0
-            ? 0
-            : stage.dwellMinutes,
-        travelMode,
-      })
+      /* ===================================================
+       * ROUTE QUALITY: Stop expanding an exhausted route.
+       * ================================================= */
+
+      const remainingWalkingDistance =
+        walkingDistanceBudget === null
+          ? null
+          : walkingDistanceBudget - totalDistanceMeters
+
+      if (
+        remainingWalkingDistance !== null &&
+        remainingWalkingDistance <= 0
+      ) {
+        break
+      }
+
+      /* ===================================================
+       * CONTEXTUAL FLOW INTELLIGENCE:
+       * The next available travel period starts when the
+       * previous venue visit actually ends.
+       *
+       * The exact next arrival depends on each candidate's
+       * distance and is calculated separately below.
+       * ================================================= */
+
+      const previousDepartureAt =
+        new Date(previousTimelineStop.departAt)
 
       const passes = [
         {
@@ -203,6 +486,7 @@ export async function POST(req: NextRequest) {
 
       let selected: any = null
       let selectedPass: string | null = null
+
       const passDebug: NonNullable<
         NonNullable<
           RouteGenerationDebug['stageAttempts']
@@ -210,48 +494,191 @@ export async function POST(req: NextRequest) {
       > = []
 
       for (const pass of passes) {
+        /* =================================================
+         * ROUTE QUALITY: Enforce remaining walking budget
+         * at the existing candidate-filter boundary.
+         * =============================================== */
+
+        const effectiveMaxDistanceMeters =
+          remainingWalkingDistance === null
+            ? pass.maxDistanceMeters
+            : Math.min(
+                pass.maxDistanceMeters,
+                remainingWalkingDistance
+              )
+
+        /* =================================================
+         * CONTEXTUAL FLOW INTELLIGENCE:
+         *
+         * Preserve all existing candidate eligibility
+         * checks except premature opening-hours exclusion.
+         *
+         * Opening hours are checked below using each
+         * candidate's projected arrival, not an estimated
+         * arrival at the previous venue.
+         * =============================================== */
+
         const { candidates, rejected } =
           filterRouteCandidates({
             venues,
             anchorVenue,
             previousStop,
             stage,
-            arrivalAt: arrivalSeed.arriveAt,
+            arrivalAt: previousDepartureAt,
             selectedVenueIds,
             travelMode,
             maxDistanceMeters:
-              pass.maxDistanceMeters,
+              effectiveMaxDistanceMeters,
             requireStageMatch:
               pass.requireStageMatch,
-            excludeLikelyClosed:
-              pass.excludeLikelyClosed,
+            excludeLikelyClosed: false,
             timezone,
           })
 
         rejectedCount += rejected.length
         candidateCount += candidates.length
 
+        let contextualRejectedCount = 0
+        let closedAtArrivalCount = 0
+
+        /* =================================================
+         * CONTEXTUAL FLOW INTELLIGENCE:
+         * Build and evaluate complete candidate visits.
+         *
+         * flatMap allows ineligible candidates to be
+         * excluded BEFORE any winner is selected.
+         * =============================================== */
+
         const scored = candidates
-          .map((candidate) => {
-            const arrivalEstimate =
-              estimateArrivalTime({
-                fromVenue: previousStop,
-                toVenue: candidate,
-                startAt: currentStartAt,
-                dwellMinutes:
-                  selectedStops.length === 0
-                    ? 0
-                    : stage.dwellMinutes,
-                travelMode,
+          .flatMap((candidate) => {
+            const candidateVenue =
+              candidate as VenueRow
+
+            /* =============================================
+             * Compute expected arrival from the previous
+             * venue's actual departure.
+             *
+             * The initial role is used to assign a duration.
+             * Arrival itself does not depend on that duration.
+             * =========================================== */
+
+            const initialExperience =
+              resolveExperienceRole({
+                venue: candidateVenue,
+                arrivalAt: previousDepartureAt,
+                timezone,
+                stage,
               })
+
+            const initialTimelineStop =
+              appendItineraryTimelineStop({
+                previousStop: previousTimelineStop,
+                nextVisit: {
+                  venue: candidateVenue,
+                  role: initialExperience,
+                },
+                travelMode,
+                missingCoordinatesPolicy: 'reject',
+              })
+
+            /* =============================================
+             * Resolve the visit role at ACTUAL arrival time.
+             *
+             * This matters for mixed-use places serving
+             * different experiences across the day.
+             * =========================================== */
+
+            const candidateExperience =
+              resolveExperienceRole({
+                venue: candidateVenue,
+                arrivalAt:
+                  initialTimelineStop.arriveAt,
+                timezone,
+                stage,
+              })
+
+            const candidateTimelineStop =
+              appendItineraryTimelineStop({
+                previousStop: previousTimelineStop,
+                nextVisit: {
+                  venue: candidateVenue,
+                  role: candidateExperience,
+                },
+                travelMode,
+                missingCoordinatesPolicy: 'reject',
+              })
+
+            const candidateArrivalAt =
+              new Date(candidateTimelineStop.arriveAt)
+
+            /* =============================================
+             * Check the venue's opening hours at its
+             * actual anticipated arrival time.
+             *
+             * Existing strict missing-hours behavior
+             * remains unchanged.
+             * =========================================== */
+
+            if (
+              pass.excludeLikelyClosed &&
+              isLikelyClosedAtArrival(
+                candidateVenue,
+                candidateArrivalAt,
+                timezone
+              )
+            ) {
+              closedAtArrivalCount += 1
+              return []
+            }
+
+            /* =============================================
+             * Prevent invalid experiential sequences.
+             *
+             * Includes:
+             * - Duplicate substantial meals
+             * - Insufficient spacing between meals
+             * - Consecutive coffee experiences
+             * - Invalid chronology
+             * - Repeated venues
+             *
+             * Standard Flow policy is used deliberately.
+             * No food-crawl behavior is inferred.
+             * =========================================== */
+
+            const contextualDecision =
+              evaluateContextualConstraints({
+                previousVisits: contextualVisits,
+                candidate: {
+                  venueId: candidateVenue.id,
+                  venue: candidateVenue,
+                  role: candidateExperience,
+                  arriveAt:
+                    candidateTimelineStop.arriveAt,
+                  departAt:
+                    candidateTimelineStop.departAt,
+                  dwellMinutes:
+                    candidateTimelineStop.dwellMinutes,
+                },
+                flowIntent: 'standard',
+              })
+
+            if (!contextualDecision.eligible) {
+              contextualRejectedCount += 1
+              return []
+            }
+
+            /* =============================================
+             * Preserve the existing venue scoring system.
+             *
+             * Use the actual candidate arrival timestamp.
+             * =========================================== */
 
             const baseScore = scoreVenue({
               candidate,
               previousStop,
               anchorVenue,
               stage,
-              arrivalAt:
-                arrivalEstimate.arriveAt,
+              arrivalAt: candidateArrivalAt,
               travelMode,
               selectedVenueIds,
               previousRouteTypes:
@@ -278,16 +705,59 @@ export async function POST(req: NextRequest) {
                 personalization,
               })
 
-            return {
-              candidate,
-              arrivalEstimate,
-              baseScore,
-              finalScore:
-                baseScore.score +
-                personalizationScore.score,
-              personalizationReasons:
-                personalizationScore.reasons,
-            }
+            /* =================================================
+              * CONTEXTUAL FLOW INTELLIGENCE:
+              * Prefer venues whose primary format genuinely
+              * suits the assigned experience role.
+              *
+              * Example:
+              * A dedicated cocktail destination should generally
+              * outrank a restaurant that merely serves cocktails,
+              * assuming other scoring factors are comparable.
+              * ================================================= */
+
+              const experienceSuitability =
+                evaluateExperienceSuitability({
+                  venue: candidateVenue,
+                  role: candidateExperience,
+                })
+
+            /* =============================================
+             * Preserve geographic direction scoring.
+             * =========================================== */
+
+            const directionPenalty =
+              travelMode === 'walking'
+                ? getDirectionChangePenalty({
+                    previousPreviousStop,
+                    previousStop,
+                    candidate: candidateVenue,
+                  })
+                : 0
+
+            /* =============================================
+             * Add contextual preference adjustments.
+             *
+             * This rewards natural experiential contrast
+             * without replacing existing scores.
+             * =========================================== */
+
+            return [
+              {
+                candidate,
+                candidateExperience,
+                candidateTimelineStop,
+                baseScore,
+                finalScore:
+                  baseScore.score +
+                  personalizationScore.score +
+                  directionPenalty +
+                  contextualDecision.scoreAdjustment +
+                  experienceSuitability.scoreAdjustment,
+                personalizationReasons:
+                  personalizationScore.reasons,
+              },
+            ]
           })
           .sort(
             (a, b) =>
@@ -302,11 +772,15 @@ export async function POST(req: NextRequest) {
           candidateCount:
             candidates.length,
           rejectedCount:
-            rejected.length,
-          rejectionCounts:
-            summarizeRejections(
-              rejected
-            ),
+            rejected.length +
+            contextualRejectedCount +
+            closedAtArrivalCount,
+          rejectionCounts: {
+            ...summarizeRejections(rejected),
+            likely_closed:
+              (summarizeRejections(rejected).likely_closed ?? 0) +
+              closedAtArrivalCount,
+          },
           topScore:
             top?.finalScore ??
             null,
@@ -317,6 +791,10 @@ export async function POST(req: NextRequest) {
             top?.candidate.name ??
             null,
         })
+
+        rejectedCount +=
+          contextualRejectedCount +
+          closedAtArrivalCount
 
         if (
           top &&
@@ -360,12 +838,40 @@ export async function POST(req: NextRequest) {
         continue
       }
 
+      /* ===================================================
+       * ROUTE QUALITY: Keep the actual selected leg within
+       * the whole-route walking budget.
+       * ================================================= */
+
+      if (
+        walkingDistanceBudget !== null &&
+        totalDistanceMeters +
+          (
+            selected.candidateTimelineStop
+              .distanceMetersFromPrevious ?? 0
+          ) >
+          walkingDistanceBudget
+      ) {
+        continue
+      }
+
       selectedVenueIds.add(
         selected.candidate.id
       )
 
       const selectedCandidate =
         selected.candidate as VenueRow
+
+      /* ===================================================
+       * CONTEXTUAL FLOW INTELLIGENCE:
+       * The selected timeline belongs to THIS venue.
+       *
+       * Its arrival, departure and dwell times are now
+       * chronologically consistent.
+       * ================================================= */
+
+      const selectedTimelineStop =
+        selected.candidateTimelineStop as ItineraryTimelineStop
 
       const routeStop: RouteStop = {
         id: `${anchorVenue.id}-${selected.candidate.id}-${selectedStops.length + 1}`,
@@ -378,15 +884,15 @@ export async function POST(req: NextRequest) {
         stageId: stage.id,
         stageLabel: stage.label,
         arriveAt:
-          selected.arrivalEstimate.arriveAt.toISOString(),
+          selectedTimelineStop.arriveAt,
         departAt:
-          selected.arrivalEstimate.departAt.toISOString(),
+          selectedTimelineStop.departAt,
         dwellMinutes:
-          selected.arrivalEstimate.dwellMinutes,
+          selectedTimelineStop.dwellMinutes,
         travelMinutesFromPrevious:
-          selected.arrivalEstimate.travelMinutes,
+          selectedTimelineStop.travelMinutesFromPrevious,
         distanceMetersFromPrevious:
-          selected.arrivalEstimate.distanceMeters,
+          selectedTimelineStop.distanceMetersFromPrevious,
         score:
           selected.finalScore,
         normalizedScore:
@@ -405,22 +911,56 @@ export async function POST(req: NextRequest) {
         routeStop
       )
 
+      /* ===================================================
+       * CONTEXTUAL FLOW INTELLIGENCE:
+       * Record the selected experience for future stops.
+       * ================================================= */
+
+      contextualVisits.push({
+        venueId: selectedCandidate.id,
+        venue: selectedCandidate,
+        role: selected.candidateExperience,
+        arriveAt:
+          selectedTimelineStop.arriveAt,
+        departAt:
+          selectedTimelineStop.departAt,
+        dwellMinutes:
+          selectedTimelineStop.dwellMinutes,
+      })
+
+      timelineStops.push(
+        selectedTimelineStop
+      )
+
+      previousTimelineStop =
+        selectedTimelineStop
+
       totalDistanceMeters +=
-        selected.arrivalEstimate.distanceMeters ??
-        0
+        selectedTimelineStop
+          .distanceMetersFromPrevious ?? 0
 
       totalTravelMinutes +=
-        selected.arrivalEstimate.travelMinutes
+        selectedTimelineStop
+          .travelMinutesFromPrevious ?? 0
 
       totalDwellMinutes +=
-        selected.arrivalEstimate.dwellMinutes
+        selectedTimelineStop.dwellMinutes
+
+      /* ===================================================
+       * ROUTE QUALITY: Retain the last two locations for
+       * geographic progression scoring on the next leg.
+       * ================================================= */
+
+      previousPreviousStop = previousStop
 
       previousStop =
         selectedCandidate
-
-      currentStartAt =
-        selected.arrivalEstimate.arriveAt
     }
+
+    /* =====================================================
+     * CONTEXTUAL FLOW INTELLIGENCE:
+     * The anchor now uses its real scheduled timeline.
+     * =================================================== */
 
     const anchorStop: RouteStop = {
       id: `${anchorVenue.id}-anchor`,
@@ -434,11 +974,11 @@ export async function POST(req: NextRequest) {
       stageLabel:
         context.startingStage.label,
       arriveAt:
-        context.plannedStartAt.toISOString(),
+        anchorTimelineStop.arriveAt,
       departAt:
-        context.plannedStartAt.toISOString(),
+        anchorTimelineStop.departAt,
       dwellMinutes:
-        context.startingStage.dwellMinutes,
+        anchorTimelineStop.dwellMinutes,
       travelMinutesFromPrevious:
         null,
       distanceMetersFromPrevious:
@@ -460,32 +1000,82 @@ export async function POST(req: NextRequest) {
       ...selectedStops,
     ]
 
+    /* =====================================================
+     * CONTEXTUAL FLOW INTELLIGENCE:
+     * Validate itinerary chronology before responding.
+     * =================================================== */
+
+    const timelineValidation =
+      validateItineraryTimeline(
+        timelineStops
+      )
+
+    if (!timelineValidation.valid) {
+      console.error(
+        '[generate-from-venue] Invalid itinerary timeline:',
+        timelineValidation.issues
+      )
+
+      return errorResponse(
+        'Generated route has an invalid itinerary timeline',
+        500
+      )
+    }
+
+    /* =====================================================
+     * CONTEXTUAL FLOW INTELLIGENCE:
+     * Calculate route totals from the actual visit schedule.
+     *
+     * This includes the starting venue's dwell time.
+     * =================================================== */
+
+    const timelineTotals =
+      summarizeItineraryTimeline(
+        timelineStops
+      )
+
     const explanation = explainRoute({
       anchorVenue,
       stops: selectedStops.map(
-        (stop) => ({
-          venue: stop.venue,
-          stage:
+        (stop) => {
+          const assignedStage =
             context.candidateStages.find(
               (stage) =>
-                stage.id ===
-                stop.stageId
-            ),
-          arriveAt:
-            stop.arriveAt,
-          departAt:
-            stop.departAt,
-          dwellMinutes:
-            stop.dwellMinutes,
-          travelMinutesFromPrevious:
-            stop.travelMinutesFromPrevious,
-          distanceMetersFromPrevious:
-            stop.distanceMetersFromPrevious,
-          score:
-            stop.score,
-          reasons:
-            stop.reasons,
-        })
+                stage.id === stop.stageId
+            )
+
+          /* ===============================================
+           * ROUTE QUALITY: Explain the venue actually
+           * chosen, particularly after relaxed matching.
+           * ============================================= */
+
+          const explanationStage =
+            getExplanationStage({
+              venue: stop.venue as VenueRow,
+              assignedStage,
+              arriveAt: stop.arriveAt,
+              timezone,
+            })
+
+          return {
+            venue: stop.venue,
+            stage: explanationStage,
+            arriveAt:
+              stop.arriveAt,
+            departAt:
+              stop.departAt,
+            dwellMinutes:
+              stop.dwellMinutes,
+            travelMinutesFromPrevious:
+              stop.travelMinutesFromPrevious,
+            distanceMetersFromPrevious:
+              stop.distanceMetersFromPrevious,
+            score:
+              stop.score,
+            reasons:
+              stop.reasons,
+          }
+        }
       ),
       startedAt:
         context.plannedStartAt,
@@ -541,12 +1131,21 @@ export async function POST(req: NextRequest) {
       explanation,
       totalStops:
         stops.length,
-      totalDistanceMeters,
-      totalTravelMinutes,
-      totalDwellMinutes,
+
+      /* =================================================
+       * CONTEXTUAL FLOW INTELLIGENCE:
+       * Use internally consistent itinerary aggregates.
+       * =============================================== */
+
+      totalDistanceMeters:
+        timelineTotals.totalDistanceMeters,
+      totalTravelMinutes:
+        timelineTotals.totalTravelMinutes,
+      totalDwellMinutes:
+        timelineTotals.totalDwellMinutes,
       totalRouteMinutes:
-        totalTravelMinutes +
-        totalDwellMinutes,
+        timelineTotals.totalRouteMinutes,
+
       createdAt:
         new Date().toISOString(),
       debug:

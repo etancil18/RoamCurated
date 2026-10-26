@@ -98,7 +98,7 @@ const DEFAULT_MAX_DISTANCE_METERS_BY_MODE: Record<ScoreVenueTravelMode, number> 
 }
 
 const DEFAULT_IDEAL_DISTANCE_METERS_BY_MODE: Record<ScoreVenueTravelMode, number> = {
-  walking: 650,
+  walking: 850,
   cycling: 1800,
   driving: 3500,
 }
