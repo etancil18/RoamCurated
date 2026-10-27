@@ -676,135 +676,93 @@ const followingCount =
           <section className="relative overflow-hidden rounded-[2.25rem] bg-gradient-to-br from-white/[0.07] via-white/[0.035] to-transparent p-5 shadow-[0_30px_100px_rgba(0,0,0,0.3)] ring-1 ring-white/[0.075] sm:p-7">
             <div className="pointer-events-none absolute right-[-5rem] top-[-6rem] h-56 w-56 rounded-full bg-cyan-400/[0.08] blur-3xl" />
 
-            <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.75rem] bg-white/[0.05] text-4xl ring-1 ring-white/[0.08]">
-                {profile.avatar_url ? (
-                  <img
-                    src={
-                      profile.avatar_url
-                    }
-                    alt=""
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span>⌖</span>
-                )}
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
-
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
-                    Roam Passport
-                  </p>
+            <div className="relative z-10">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+                <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-[1.75rem] bg-white/[0.05] text-4xl ring-1 ring-white/[0.08]">
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span>⌖</span>
+                  )}
                 </div>
 
-                <h1 className="mt-4 break-words text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-                  {profile.full_name ??
-                    profile.username}
-                </h1>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.045] px-3 py-1.5 ring-1 ring-white/[0.07]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
 
-                <p className="mt-1.5 break-words text-sm text-zinc-500">
-                  @{profile.username}
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-200">
+                          Roam Passport
+                        </p>
+                      </div>
 
-                  {profile.home_neighborhood
-                    ? ` · ${profile.home_neighborhood}`
-                    : ''}
-                </p>
+                      <h1 className="mt-4 break-words text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+                        {profile.full_name ??
+                          profile.username}
+                      </h1>
 
-                {profile.bio ? (
-                  <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-6 text-zinc-400">
-                    {profile.bio}
-                  </p>
-                ) : null}
+                      <p className="mt-1.5 break-words text-sm text-zinc-500">
+                        @{profile.username}
+
+                        {profile.home_neighborhood
+                          ? ` · ${profile.home_neighborhood}`
+                          : ''}
+                      </p>
+                    </div>
+
+                    {!isOwnProfile ? (
+                      <FollowButton
+                        userId={profile.id}
+                        initialIsFollowing={
+                          Boolean(existingFollow)
+                        }
+                        initialFollowersCount={
+                          followersCount
+                        }
+                        disabled={!user}
+                      />
+                    ) : null}
+                  </div>
+
+                  {profile.bio ? (
+                    <p className="mt-5 max-w-2xl whitespace-pre-line text-sm leading-6 text-zinc-400">
+                      {profile.bio}
+                    </p>
+                  ) : null}
+                </div>
               </div>
 
-              {!isOwnProfile ? (
-                <FollowButton
-                  userId={profile.id}
-                  initialIsFollowing={
-                    Boolean(
-                      existingFollow
-                    )
-                  }
-                  initialFollowersCount={
-                    followersCount
-                  }
-                  disabled={!user}
+              <div className="mt-7 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                <Stat
+                  label="Followers"
+                  value={followersCount}
                 />
-              ) : null}
+
+                <Stat
+                  label="Following"
+                  value={followingCount}
+                />
+
+                {profile.show_xp !== false ? (
+                  <Stat
+                    label="Passport level"
+                    value={passportLevel}
+                  />
+                ) : null}
+
+                <Stat
+                  label="Places explored"
+                  value={venueVisitsCount}
+                />
+              </div>
             </div>
           </section>
         )}
-
-        {!isCreator ? (
-          <section
-            aria-label="Profile stats"
-            className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6"
-          >
-            <Stat
-              label="Followers"
-              value={
-                followersCount
-              }
-            />
-
-            <Stat
-              label="Following"
-              value={
-                followingCount
-              }
-            />
-
-            {profile.show_xp !== false ? (
-              <Stat
-                label="Passport level"
-                value={passportLevel}
-              />
-            ) : null}
-
-            {profile.show_completed_flows !==
-            false ? (
-              <Stat
-                label="Flows"
-                value={
-                  completedFlowsCount
-                }
-              />
-            ) : null}
-
-            {profile.show_checkins !==
-            false ? (
-              <Stat
-                label="Check-ins"
-                value={
-                  eventCheckinsCount
-                }
-              />
-            ) : null}
-
-            {profile.show_saved_guides !==
-            false ? (
-              <Stat
-                label="Saved guides"
-                value={
-                  savedPropertiesCount
-                }
-              />
-            ) : null}
-
-            {profile.show_social_groups !==
-            false ? (
-              <Stat
-                label="Groups"
-                value={
-                  socialGroupsCount
-                }
-              />
-            ) : null}
-          </section>
-        ) : null}
 
         {isCreator ? (
           <div className="mt-10 space-y-20 sm:mt-14 sm:space-y-24">

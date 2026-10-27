@@ -492,11 +492,6 @@ export default function MapCanvas({
             city?: string
           }>
 
-        console.log(
-          '[MapCanvas received generated route event]',
-          customEvent.detail
-        )
-
         const directRoute =
           customEvent.detail?.route
 
@@ -514,24 +509,6 @@ export default function MapCanvas({
           directRoute.length > 0
             ? directRoute
             : fallbackRoute
-
-        console.log(
-          '[MapCanvas generated route resolved]',
-          {
-            directRouteLength:
-              Array.isArray(directRoute)
-                ? directRoute.length
-                : 0,
-            fallbackRouteLength:
-              Array.isArray(fallbackRoute)
-                ? fallbackRoute.length
-                : 0,
-            nextRouteLength:
-              Array.isArray(nextRoute)
-                ? nextRoute.length
-                : 0,
-          }
-        )
 
         if (
           !Array.isArray(nextRoute) ||
@@ -1614,7 +1591,7 @@ export default function MapCanvas({
                   maxStops: 5,
                   source:
                     'map_marker',
-                  debug: true,
+                  debug: false,
                 }),
             }
           )

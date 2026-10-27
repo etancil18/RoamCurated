@@ -165,17 +165,19 @@ const CITY_OPTIONS = [
  */
 const CATEGORY_SUGGESTIONS = [
   'coffee',
-  'restaurant',
-  'bar',
-  'cocktails',
+  'dinner',
+  'wine bar',
+  'bookstore',
+  'cocktail',
   'bakery',
-  'museum',
+  'gallery',
 ] as const
 
 const VIBE_SUGGESTIONS = [
   'cozy',
   'romantic',
   'lively',
+  'curated',
   'chill',
   'modern',
   'local',
@@ -1515,13 +1517,6 @@ export default function ExplorePage() {
             <h1 className="mt-4 max-w-3xl text-3xl font-black tracking-[-0.045em] text-white sm:text-5xl sm:leading-[1.03]">
               Find somewhere worth going.
             </h1>
-
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-400 sm:text-base sm:leading-7">
-              Explore restaurants, coffee shops, bars, hidden
-              gems, and neighborhood favorites. Find the right
-              place, open its profile, or make it the starting
-              point of your next Flow.
-            </p>
           </div>
         </header>
 
@@ -1611,7 +1606,7 @@ export default function ExplorePage() {
                 }
                 maxLength={80}
                 placeholder="Any category"
-                className="h-11 w-full rounded-xl border border-white/10 bg-black/30 px-3 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
+                className="h-11 w-full rounded-xl border border-white/10 bg-black/30 px-3 text-base text-white outline-none placeholder:text-neutral-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
               />
             </div>
 
@@ -1632,7 +1627,7 @@ export default function ExplorePage() {
                 }
                 maxLength={80}
                 placeholder="Any vibe"
-                className="h-11 w-full rounded-xl border border-white/10 bg-black/30 px-3 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
+                className="h-11 w-full rounded-xl border border-white/10 bg-black/30 px-3 text-base text-white outline-none placeholder:text-neutral-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
               />
             </div>
 

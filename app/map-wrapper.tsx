@@ -951,25 +951,6 @@ export default function MapWrapper() {
             ? nextRoute
             : fallbackRoute
 
-        console.log(
-          '[MapWrapper received generated route]',
-          {
-            nextRouteLength:
-              Array.isArray(
-                nextRoute
-              )
-                ? nextRoute.length
-                : 0,
-            fallbackRouteLength:
-              Array.isArray(
-                fallbackRoute
-              )
-                ? fallbackRoute.length
-                : 0,
-            generatedRoute,
-          }
-        )
-
         const ids =
           extractRouteVenueIds(
             sourceRoute
@@ -1124,7 +1105,7 @@ export default function MapWrapper() {
                         anchorVenue.id,
                       retryAttempt:
                         nextAttempt,
-                      debug: true,
+                      debug: false,
                     }
                   ),
               }
