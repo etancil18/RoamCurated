@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -10,11 +11,50 @@ import FeaturedPropertyGuidePreview from '@/components/property/FeaturedProperty
 const HOST_CITY_OPTIONS = [
   { value: 'atl', label: 'Atlanta' },
   { value: 'nyc', label: 'New York City' },
+  { value: 'la', label: 'Los Angeles' },
+  { value: 'london', label: 'London' },
   { value: 'porto', label: 'Porto' },
   { value: 'lisbon', label: 'Lisbon' },
 ] as const
 
 const FEATURED_GUIDE_IMAGE_SRC = '/images/host-guide-preview-colony-square.png'
+
+/* ------------------------------------------------ */
+/* Host Favorites                                   */
+/* ------------------------------------------------ */
+
+const MAX_HOST_FAVORITES = 10
+const FAVORITES_SEARCH_PAGE_SIZE = 24
+const FAVORITES_SEARCH_DEBOUNCE_MS = 300
+
+type HostVenue = {
+  id: string
+  name: string
+  city: string
+  canonicalCity: string | null
+  description: string | null
+  address: string | null
+  cover: string | null
+  type: string[]
+}
+
+type HostFavorite = {
+  venue: HostVenue
+  label: string
+  description: string
+}
+
+type ExploreVenuesResponse = {
+  venues?: HostVenue[]
+  pagination?: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasMore: boolean
+  }
+  error?: string
+}
 
 function safeLogEvent(eventName: string, metadata: Record<string, unknown> = {}) {
   try {
@@ -33,6 +73,23 @@ export default function HostsPage() {
   const [loading, setLoading] = useState(false)
   const [welcomeDescription, setWelcomeDescription] = useState('')
   const [featuredPreviewAvailable, setFeaturedPreviewAvailable] = useState(false)
+
+  /* ------------------------------------------------ */
+  /* Host Favorites state                             */
+  /* ------------------------------------------------ */
+
+  const [favoriteSearch, setFavoriteSearch] = useState('')
+  const [favoriteSearchPage, setFavoriteSearchPage] = useState(1)
+  const [favoriteSearchResults, setFavoriteSearchResults] = useState<HostVenue[]>([])
+  const [favoriteSearchTotalPages, setFavoriteSearchTotalPages] = useState(0)
+  const [favoriteSearchTotal, setFavoriteSearchTotal] = useState(0)
+  const [favoriteSearchLoading, setFavoriteSearchLoading] = useState(false)
+  const [favoriteSearchError, setFavoriteSearchError] = useState<string | null>(null)
+  const [selectedFavorites, setSelectedFavorites] = useState<HostFavorite[]>([])
+  const [createError, setCreateError] = useState<string | null>(null)
+
+  const selectedCityLabel =
+    HOST_CITY_OPTIONS.find((option) => option.value === city)?.label ?? ''
 
   useEffect(() => {
     safeLogEvent('host_guide_page_viewed')
@@ -65,6 +122,156 @@ export default function HostsPage() {
     }
   }, [])
 
+  /* ------------------------------------------------ */
+  /* Search the existing public Explore venue API     */
+  /* ------------------------------------------------ */
+
+  useEffect(() => {
+    if (!city) {
+      setFavoriteSearchResults([])
+      setFavoriteSearchTotalPages(0)
+      setFavoriteSearchTotal(0)
+      setFavoriteSearchLoading(false)
+      setFavoriteSearchError(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    // Clear previous-city/page results immediately.
+    setFavoriteSearchResults([])
+    setFavoriteSearchTotalPages(0)
+    setFavoriteSearchTotal(0)
+    setFavoriteSearchLoading(true)
+    setFavoriteSearchError(null)
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({
+          city,
+          q: favoriteSearch.trim(),
+          sort: favoriteSearch.trim() ? 'relevance' : 'name',
+          page: String(favoriteSearchPage),
+          limit: String(FAVORITES_SEARCH_PAGE_SIZE),
+        })
+
+        const response = await fetch(
+          `/api/explore/venues?${params.toString()}`,
+          {
+            method: 'GET',
+            cache: 'no-store',
+            signal: controller.signal,
+          }
+        )
+
+        const data = (await response.json()) as ExploreVenuesResponse
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Unable to search venues.')
+        }
+
+        if (controller.signal.aborted) return
+
+        setFavoriteSearchResults(
+          Array.isArray(data.venues) ? data.venues : []
+        )
+        setFavoriteSearchTotalPages(data.pagination?.totalPages ?? 0)
+        setFavoriteSearchTotal(data.pagination?.total ?? 0)
+      } catch (error) {
+        if (controller.signal.aborted) return
+
+        setFavoriteSearchResults([])
+        setFavoriteSearchTotalPages(0)
+        setFavoriteSearchTotal(0)
+        setFavoriteSearchError(
+          error instanceof Error
+            ? error.message
+            : 'Unable to search venues.'
+        )
+      } finally {
+        if (!controller.signal.aborted) {
+          setFavoriteSearchLoading(false)
+        }
+      }
+    }, FAVORITES_SEARCH_DEBOUNCE_MS)
+
+    return () => {
+      window.clearTimeout(timer)
+      controller.abort()
+    }
+  }, [city, favoriteSearch, favoriteSearchPage])
+
+  function toggleFavorite(venue: HostVenue) {
+    const alreadySelected = selectedFavorites.some(
+      (favorite) => favorite.venue.id === venue.id
+    )
+
+    if (alreadySelected) {
+      setSelectedFavorites((current) =>
+        current.filter((favorite) => favorite.venue.id !== venue.id)
+      )
+
+      safeLogEvent('host_guide_favorite_removed', {
+        city,
+        venue_id: venue.id,
+      })
+
+      return
+    }
+
+    if (selectedFavorites.length >= MAX_HOST_FAVORITES) {
+      return
+    }
+
+    setSelectedFavorites((current) => [
+      ...current,
+      {
+        venue,
+        label: '',
+        description: '',
+      },
+    ])
+
+    safeLogEvent('host_guide_favorite_added', {
+      city,
+      venue_id: venue.id,
+    })
+  }
+
+  function moveFavorite(index: number, direction: -1 | 1) {
+    const nextIndex = index + direction
+
+    if (
+      nextIndex < 0 ||
+      nextIndex >= selectedFavorites.length
+    ) {
+      return
+    }
+
+    setSelectedFavorites((current) => {
+      const next = [...current]
+      const moved = next[index]
+
+      next[index] = next[nextIndex]
+      next[nextIndex] = moved
+
+      return next
+    })
+  }
+
+  function updateFavoriteDescription(venueId: string, description: string) {
+    setSelectedFavorites((current) =>
+      current.map((favorite) =>
+        favorite.venue.id === venueId
+          ? {
+              ...favorite,
+              description,
+            }
+          : favorite
+      )
+    )
+  }
+
   async function submit() {
     safeLogEvent('host_guide_create_clicked', {
       city,
@@ -72,15 +279,28 @@ export default function HostsPage() {
       has_address: Boolean(address.trim()),
       has_website: Boolean(website.trim()),
       has_welcome_description: Boolean(welcomeDescription.trim()),
+      favorite_count: selectedFavorites.length,
     })
 
+    setCreateError(null)
     setLoading(true)
 
     try {
       const res = await fetch('/api/hosts/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, city, address, website, welcomeDescription }),
+        body: JSON.stringify({
+          name,
+          city,
+          address,
+          website,
+          welcomeDescription,
+          favorites: selectedFavorites.map((favorite) => ({
+            venueId: favorite.venue.id,
+            label: favorite.label.trim() || null,
+            description: favorite.description.trim() || null,
+          })),
+        }),
       })
 
       const data = await res.json()
@@ -108,6 +328,7 @@ export default function HostsPage() {
             city: resolvedCity,
             slug,
             guide_url: redirectLink,
+            favorite_count: selectedFavorites.length,
           })
         } catch {
           const baseUrl =
@@ -122,9 +343,16 @@ export default function HostsPage() {
             city,
             guide_url: fallbackLink,
             used_fallback_url_resolution: true,
+            favorite_count: selectedFavorites.length,
           })
         }
       } else {
+        setCreateError(
+          typeof data.error === 'string'
+            ? data.error
+            : 'We could not create your guide. Please try again.'
+        )
+
         safeLogEvent('host_guide_create_failed', {
           city,
           status: res.status,
@@ -133,6 +361,12 @@ export default function HostsPage() {
       }
     } catch (error) {
       setLoading(false)
+
+      setCreateError(
+        error instanceof Error
+          ? error.message
+          : 'We could not create your guide. Please try again.'
+      )
 
       safeLogEvent('host_guide_create_error', {
         city,
@@ -302,6 +536,13 @@ export default function HostsPage() {
                 onChange={(e) => {
                   const nextCity = e.target.value
                   setCity(nextCity)
+
+                  // Favorites must always belong to the selected city.
+                  setFavoriteSearch('')
+                  setFavoriteSearchPage(1)
+                  setSelectedFavorites([])
+                  setCreateError(null)
+
                   safeLogEvent('host_guide_city_selected', { city: nextCity })
                 }}
                 className="h-12 w-full rounded-md border border-white/10 bg-black/45 px-3 py-2 text-sm text-white outline-none"
@@ -345,6 +586,308 @@ export default function HostsPage() {
                   For Brooklyn, Queens, or Manhattan, select New York City.
                 </p>
               </div>
+
+              {/* ------------------------------------------------ */}
+              {/* Host Favorites — city-scoped venue curation       */}
+              {/* ------------------------------------------------ */}
+
+              <div className="space-y-5 rounded-2xl border border-white/10 bg-black/25 p-4 sm:col-span-2 sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-200">
+                      Make it personal
+                    </p>
+
+                    <h3 className="mt-2 text-xl font-black text-white">
+                      Your local favorites
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                      Pick the places you personally recommend to guests.
+                      Your selections will appear as Host Picks on your property guide.
+                    </p>
+                  </div>
+
+                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-100">
+                    {selectedFavorites.length}/{MAX_HOST_FAVORITES} selected
+                  </span>
+                </div>
+
+                {!city ? (
+                  <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] p-5 text-center">
+                    <p className="text-sm font-semibold text-slate-200">
+                      Select your property city first.
+                    </p>
+
+                    <p className="mt-2 text-xs leading-5 text-slate-400">
+                      We'll show you searchable venues from that city's Roam catalog.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="host-favorite-venue-search"
+                        className="text-sm font-semibold text-slate-100"
+                      >
+                        Search venues in {selectedCityLabel}
+                      </label>
+
+                      <Input
+                        id="host-favorite-venue-search"
+                        type="search"
+                        placeholder="Search by venue name, type, or vibe..."
+                        value={favoriteSearch}
+                        onChange={(e) => {
+                          setFavoriteSearch(e.target.value)
+                          setFavoriteSearchPage(1)
+                        }}
+                        className="h-12 border-white/10 bg-black/45 text-white placeholder:text-slate-500"
+                      />
+                    </div>
+
+                    {favoriteSearchError ? (
+                      <div
+                        role="alert"
+                        className="rounded-xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-200"
+                      >
+                        {favoriteSearchError}
+                      </div>
+                    ) : null}
+
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-300">
+                          Available places
+                        </p>
+
+                        {!favoriteSearchLoading && !favoriteSearchError ? (
+                          <span className="text-xs text-slate-400">
+                            {favoriteSearchTotal} matching venues
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {favoriteSearchLoading ? (
+                        <p
+                          role="status"
+                          className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-5 text-sm text-slate-400"
+                        >
+                          Finding places in {selectedCityLabel}...
+                        </p>
+                      ) : !favoriteSearchError && favoriteSearchResults.length === 0 ? (
+                        <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-5 text-sm text-slate-400">
+                          No venues matched your search. Try a different name or category.
+                        </p>
+                      ) : (
+                        <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+                          {favoriteSearchResults.map((venue) => {
+                            const isSelected = selectedFavorites.some(
+                              (favorite) => favorite.venue.id === venue.id
+                            )
+
+                            const selectionLimitReached =
+                              selectedFavorites.length >= MAX_HOST_FAVORITES
+
+                            return (
+                              <div
+                                key={venue.id}
+                                className={[
+                                  'flex items-start justify-between gap-3 rounded-xl border p-3',
+                                  isSelected
+                                    ? 'border-cyan-400/35 bg-cyan-400/[0.08]'
+                                    : 'border-white/10 bg-white/[0.03]',
+                                ].join(' ')}
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-bold text-white">
+                                    {venue.name}
+                                  </p>
+
+                                  {venue.type?.length ? (
+                                    <p className="mt-1 text-xs text-cyan-200">
+                                      {venue.type.slice(0, 3).join(' · ')}
+                                    </p>
+                                  ) : null}
+
+                                  {venue.address ? (
+                                    <p className="mt-1 text-xs leading-5 text-slate-400">
+                                      {venue.address}
+                                    </p>
+                                  ) : null}
+                                </div>
+
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => toggleFavorite(venue)}
+                                  disabled={!isSelected && selectionLimitReached}
+                                  aria-label={
+                                    isSelected
+                                      ? `Remove ${venue.name} from favorites`
+                                      : `Add ${venue.name} to favorites`
+                                  }
+                                  className={[
+                                    'shrink-0 border-white/15 text-xs font-bold',
+                                    isSelected
+                                      ? 'bg-cyan-400 text-black hover:bg-cyan-300'
+                                      : 'bg-white/5 text-white hover:bg-white/10',
+                                  ].join(' ')}
+                                >
+                                  {isSelected ? 'Selected ✓' : '+ Add'}
+                                </Button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+
+                      {!favoriteSearchLoading &&
+                        !favoriteSearchError &&
+                        favoriteSearchTotalPages > 1 ? (
+                        <div className="flex items-center justify-between gap-3 pt-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={favoriteSearchPage <= 1}
+                            onClick={() =>
+                              setFavoriteSearchPage((page) => Math.max(1, page - 1))
+                            }
+                            className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                          >
+                            Previous
+                          </Button>
+
+                          <span className="text-xs text-slate-400">
+                            Page {favoriteSearchPage} of {favoriteSearchTotalPages}
+                          </span>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={favoriteSearchPage >= favoriteSearchTotalPages}
+                            onClick={() =>
+                              setFavoriteSearchPage((page) => page + 1)
+                            }
+                            className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {selectedFavorites.length > 0 ? (
+                      <div className="space-y-3 border-t border-white/10 pt-5">
+                        <div>
+                          <h4 className="text-base font-black text-white">
+                            Your selected Host Picks
+                          </h4>
+
+                          <p className="mt-1 text-xs leading-5 text-slate-400">
+                            Reorder your favorites to control their priority.
+                            You can also add a short personal recommendation.
+                          </p>
+                        </div>
+
+                        {selectedFavorites.map((favorite, index) => (
+                          <div
+                            key={favorite.venue.id}
+                            className="rounded-xl border border-white/10 bg-white/[0.04] p-3"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex min-w-0 items-start gap-3">
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-400/15 text-xs font-black text-cyan-200">
+                                  {index + 1}
+                                </span>
+
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-white">
+                                    {favorite.venue.name}
+                                  </p>
+
+                                  {favorite.venue.type?.length ? (
+                                    <p className="mt-1 text-xs text-slate-400">
+                                      {favorite.venue.type.slice(0, 2).join(' · ')}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </div>
+
+                              <div className="flex shrink-0 items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => moveFavorite(index, -1)}
+                                  disabled={index === 0}
+                                  aria-label={`Move ${favorite.venue.name} up`}
+                                  className="rounded-md border border-white/10 px-2 py-1 text-xs text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+                                >
+                                  ↑
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => moveFavorite(index, 1)}
+                                  disabled={index === selectedFavorites.length - 1}
+                                  aria-label={`Move ${favorite.venue.name} down`}
+                                  className="rounded-md border border-white/10 px-2 py-1 text-xs text-slate-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30"
+                                >
+                                  ↓
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => toggleFavorite(favorite.venue)}
+                                  aria-label={`Remove ${favorite.venue.name}`}
+                                  className="rounded-md border border-rose-400/20 px-2 py-1 text-xs text-rose-200 hover:bg-rose-400/10"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            </div>
+
+                            <textarea
+                              value={favorite.description}
+                              onChange={(e) =>
+                                updateFavoriteDescription(
+                                  favorite.venue.id,
+                                  e.target.value
+                                )
+                              }
+                              maxLength={500}
+                              rows={2}
+                              placeholder="Why do you recommend this place? (optional)"
+                              aria-label={`Your recommendation for ${favorite.venue.name}`}
+                              className="mt-3 w-full rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="border-t border-white/10 pt-4 text-xs leading-5 text-slate-400">
+                        No favorites selected yet. Guests will still receive Roam's
+                        automatically generated nearby recommendations.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* ------------------------------------------------ */}
+              {/* Existing guide creation action                   */}
+              {/* ------------------------------------------------ */}
+
+              {createError ? (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-200 sm:col-span-2"
+                >
+                  {createError}
+                </p>
+              ) : null}
 
               <Button
                 className="h-12 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-sm font-black text-white hover:from-indigo-400 hover:to-cyan-400 sm:col-span-2"

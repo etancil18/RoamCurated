@@ -1,3 +1,4 @@
+
 // app/onboarding/creator/page.tsx
 
 'use client'
@@ -570,6 +571,44 @@ export default function CreatorOnboardingPage() {
     })
   }
 
+  /* ------------------------------------------------ */
+  /* Optional creator onboarding exit — NEW          */
+  /* ------------------------------------------------ */
+
+  function handleSkipForNow() {
+    // Do not navigate during an active save or completion.
+    if (
+      isCompleting ||
+      answers.some(
+        (answer) =>
+          answer.saveStatus === 'saving'
+      )
+    ) {
+      return
+    }
+
+    const hasUnsavedChanges =
+      answers.some(
+        (answer) =>
+          isAnswerDirty(answer)
+      )
+
+    if (hasUnsavedChanges) {
+      const shouldLeave =
+        window.confirm(
+          'You have unsaved changes. Previously saved answers will still be here when you return. Skip creator setup and explore Roam?'
+        )
+
+      if (!shouldLeave) {
+        return
+      }
+    }
+
+    // Skipping does not mark onboarding complete.
+    // Existing persisted answers remain available later.
+    router.replace('/explore')
+  }
+
   async function handleConfirmAnswer() {
     const saved = await persistAnswer({
       index: activeIndex,
@@ -736,6 +775,32 @@ export default function CreatorOnboardingPage() {
       <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:44px_44px]" />
 
       <div className="relative mx-auto grid min-h-screen w-full max-w-7xl gap-8 px-4 py-24 lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start">
+
+        {/* -------------------------------------------- */}
+        {/* Optional creator onboarding exit — NEW       */}
+        {/* -------------------------------------------- */}
+
+        <div className="col-span-full -mb-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs leading-5 text-neutral-400">
+            Creator setup is optional. You can finish it later from your profile.
+          </p>
+
+          <button
+            type="button"
+            onClick={handleSkipForNow}
+            disabled={
+              isCompleting ||
+              answers.some(
+                (answer) =>
+                  answer.saveStatus === 'saving'
+              )
+            }
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-5 py-2.5 text-sm font-semibold text-white transition hover:border-cyan-300/40 hover:bg-white/[0.10] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Skip for now · Explore Roam →
+          </button>
+        </div>
+
         <aside className="lg:sticky lg:top-24">
           <div className="rounded-[2rem] border border-white/10 bg-white/[0.08] p-6 shadow-2xl backdrop-blur-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300">
@@ -745,14 +810,6 @@ export default function CreatorOnboardingPage() {
             <h1 className="mt-4 text-4xl font-black leading-tight tracking-tight">
               Teach Roam your point of view.
             </h1>
-
-            <p className="mt-4 text-sm leading-7 text-neutral-300">
-              Share the places, neighborhoods, and
-              experiences that define your perspective.
-              These original answers remain yours and can
-              later power your Creator Agent only with your
-              permission.
-            </p>
 
             <div className="mt-8 rounded-2xl border border-white/10 bg-black/30 p-4">
               <div className="flex items-center justify-between text-xs text-neutral-400">
@@ -904,12 +961,6 @@ export default function CreatorOnboardingPage() {
                 />
 
                 <div className="mt-2 flex items-start justify-between gap-4 text-xs text-neutral-500">
-                  <span>
-                    Write naturally and be specific.
-                    Roam preserves this original answer as
-                    your source material.
-                  </span>
-
                   <span className="shrink-0">
                     {activeAnswerLength}/
                     {

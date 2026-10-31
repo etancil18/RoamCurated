@@ -8,6 +8,7 @@ import RecurringEventAdmin from './recurringeventadmin'
 import EventsAdmin from './eventsadmin'
 import EventJourneysAdmin from './EventJourneysAdmin'
 import PropertyGuidesAdmin from './PropertyGuidesAdmin'
+import HotelShorttermRental from './HotelShorttermRental'
 import SocialGroupsAdmin from './components/SocialGroupsAdmin'
 import CompetitionEntrySelector from './components/CompetitionEntrySelector'
 import HistoricalVenueVisitAdmin from './HistoricalVenueVisitAdmin'
@@ -26,6 +27,7 @@ type AdminWorkspace =
   | 'founding-tastemakers'
   | 'social-groups'
   | 'property-guides'
+  | 'hotel-shortterm-rental'
   | 'event-journeys'
   | 'relay'
   | 'competitions'
@@ -71,6 +73,12 @@ const ADMIN_WORKSPACES: Array<{
     label: 'Property guides',
     eyebrow: 'Editorial',
     description: 'Manage guide content.',
+  },
+  {
+    id: 'hotel-shortterm-rental',
+    label: 'Hotels & Short-Term Rentals',
+    eyebrow: 'Property operations',
+    description: 'Manage hotel and rental guest guides.',
   },
   {
     id: 'event-journeys',
@@ -394,6 +402,15 @@ export default function VenueAdminPage() {
                     />
 
                     <AdminTaskCard
+                      title="Hotels & Short-Term Rentals"
+                      description="Search every property, identify unassigned guides, and open the shared property editor."
+                      accent="cyan"
+                      onClick={() =>
+                        setActiveWorkspace('hotel-shortterm-rental')
+                      }
+                    />
+
+                    <AdminTaskCard
                       title="Event journeys"
                       description="Create and manage guided event journeys."
                       accent="violet"
@@ -558,6 +575,18 @@ export default function VenueAdminPage() {
             >
               <AdminModuleFrame>
                 <PropertyGuidesAdmin />
+              </AdminModuleFrame>
+            </section>
+
+            {/* =================================================
+                HOTELS & SHORT-TERM RENTALS
+            ================================================== */}
+
+            <section
+              hidden={activeWorkspace !== 'hotel-shortterm-rental'}
+            >
+              <AdminModuleFrame>
+                <HotelShorttermRental />
               </AdminModuleFrame>
             </section>
 

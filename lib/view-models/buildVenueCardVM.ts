@@ -1,9 +1,18 @@
+
 export type VenueCardVM = {
   id: string
   name: string
   href: string
   imageUrl: string | null
   description: string | null
+
+  // Explore-style venue metadata
+  address: string | null
+  price: string | null
+  distanceMiles: number | null
+  types: string[]
+  vibes: string[]
+
   distanceMeters: number | null
   distanceLabel: string | null
   walkTimeMinutes: number | null
@@ -26,6 +35,11 @@ export type VenueCardLike = {
   link?: string | null
   cover?: string | null
   description?: string | null
+
+  // Optional source metadata for Explore-style cards
+  address?: string | null
+  price?: string | null
+
   type?: string | string[] | null
   tags?: string[] | string | null
   vibe?: string | null
@@ -341,6 +355,42 @@ export function buildVenueCardVM(
     description:
       cleanDescription(
         venue.description
+      ),
+
+    // Additional Explore-style display metadata.
+    // No new queries or changes to existing calculations.
+    address:
+      cleanText(
+        venue.address
+      ),
+
+    price:
+      cleanText(
+        venue.price
+      ),
+
+    distanceMiles:
+      distanceMeters !== null
+        ? distanceMeters / 1609.344
+        : null,
+
+    types:
+      asStringArray(
+        venue.type
+      ),
+
+    vibes:
+      Array.from(
+        new Set(
+          [
+            ...asStringArray(
+              venue.vibe
+            ),
+            ...asStringArray(
+              venue.vibes
+            ),
+          ]
+        )
       ),
 
     distanceMeters,

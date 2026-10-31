@@ -33,8 +33,6 @@ export async function GET() {
     .map((entry) => entry.event_id)
     .filter((id): id is string => typeof id === 'string' && !!id)
 
-  console.log('👉 event_interests for user', user.id, '→', eventIds)
-
   if (eventIds.length === 0) {
     return NextResponse.json({ events: [] })
   }
@@ -72,8 +70,6 @@ export async function GET() {
       { status: 500 }
     )
   }
-
-  console.log('✅ eventsData returned for interested events:', eventsData)
 
   // Return ordinary Events — even if venue is null, so front-end can inspect.
   return NextResponse.json({ events: eventsData ?? [] })

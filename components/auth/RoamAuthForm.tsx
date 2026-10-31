@@ -1,6 +1,8 @@
+
 'use client'
 
 import {
+  useEffect,
   useMemo,
   useState,
   type FormEvent,
@@ -10,6 +12,8 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { User } from '@supabase/supabase-js'
 
 import type { Database } from '@/types/supabase'
+
+import LegalPolicyModal from '@/components/auth/LegalPolicyModal'
 
 export type RoamAuthFormMode =
   | 'standalone'
@@ -31,10 +35,59 @@ export type RoamAuthFormProps = {
   className?: string
 }
 
+/* =========================================================
+ * Legal initiative
+ *
+ * Sign In remains available to existing users without
+ * requiring a new agreement.
+ *
+ * Create Account requires an affirmative legal checkbox.
+ *
+ * Policy documents open in an in-app modal and are
+ * retrieved from the same-origin sanitized HTML endpoint.
+ *
+ * The checkbox does NOT create a Supabase legal
+ * acceptance record. That must be handled by the
+ * secure legal-acceptance onboarding workflow.
+ * ======================================================= */
+
+type AuthIntent =
+  | 'sign_in'
+  | 'sign_up'
+
+type LegalPolicyKey =
+  | 'terms'
+  | 'community-guidelines'
+  | 'privacy'
+
+type LegalPolicyContent = {
+  html: string
+  effectiveDate: string | null
+}
+
+const LEGAL_POLICY_TITLES: Record<
+  LegalPolicyKey,
+  string
+> = {
+  terms: 'Terms of Service',
+  'community-guidelines':
+    'Community Guidelines',
+  privacy: 'Privacy Policy',
+}
+
+const LEGAL_POLICY_PATHS: Record<
+  LegalPolicyKey,
+  string
+> = {
+  terms: '/terms',
+  'community-guidelines':
+    '/community-guidelines',
+  privacy: '/privacy',
+}
+
 export default function RoamAuthForm({
   mode = 'standalone',
   title = 'Enter Roam',
-  description = 'Sign in to explore your city, continue your Passport, manage your saved places, and build your public point of view.',
   submitLabel = 'Continue to Roam',
   postAuthPath = '/welcome',
   passwordResetPath = '/auth/update-password',
@@ -62,6 +115,326 @@ export default function RoamAuthForm({
     successMessage,
     setSuccessMessage,
   ] = useState('')
+
+  /* =========================================================
+   * Registration and legal policy viewer state
+   * ======================================================= */
+
+  const [
+    authIntent,
+    setAuthIntent,
+  ] =
+    useState<AuthIntent>(
+      'sign_in'
+    )
+
+  const [
+    legalAccepted,
+    setLegalAccepted,
+  ] =
+    useState(false)
+
+  const [
+    activePolicy,
+    setActivePolicy,
+  ] =
+    useState<LegalPolicyKey | null>(
+      null
+    )
+
+  const [
+    policyContents,
+    setPolicyContents,
+  ] =
+    useState<
+      Partial<
+        Record<
+          LegalPolicyKey,
+          LegalPolicyContent
+        >
+      >
+    >({})
+
+  const [
+    policyLoading,
+    setPolicyLoading,
+  ] =
+    useState(false)
+
+  const [
+    policyError,
+    setPolicyError,
+  ] =
+    useState<string | null>(
+      null
+    )
+
+  const legalBaseUrl =
+    useMemo(
+      () =>
+        getPublicLegalBaseUrl(),
+      []
+    )
+
+  const legalLinksAvailable =
+    legalBaseUrl !== null
+
+  const isSignUp =
+    authIntent ===
+    'sign_up'
+
+  const activePolicyTitle =
+    activePolicy
+      ? LEGAL_POLICY_TITLES[
+          activePolicy
+        ]
+      : ''
+
+  const activePolicyUrl =
+    activePolicy &&
+    legalBaseUrl
+      ? new URL(
+          LEGAL_POLICY_PATHS[
+            activePolicy
+          ],
+          legalBaseUrl
+        ).toString()
+      : ''
+
+  const activePolicyContent =
+    activePolicy
+      ? policyContents[
+          activePolicy
+        ]
+      : undefined
+
+  /* =========================================================
+   * Load sanitized policy content
+   *
+   * Expected endpoint:
+   *
+   * GET /api/legal/policy?policy=terms
+   * GET /api/legal/policy?policy=community-guidelines
+   * GET /api/legal/policy?policy=privacy
+   *
+   * Expected JSON:
+   * {
+   *   html: string,
+   *   effectiveDate?: string | null
+   * }
+   *
+   * SECURITY:
+   * The endpoint must sanitize the HTML on the server
+   * before sending it to this component.
+   *
+   * This client intentionally does not fetch or inject
+   * arbitrary third-party website HTML directly.
+   * ======================================================= */
+
+  useEffect(() => {
+    if (
+      !activePolicy ||
+      !legalBaseUrl
+    ) {
+      return
+    }
+
+    const cachedPolicy =
+      policyContents[
+        activePolicy
+      ]
+
+    if (
+      cachedPolicy
+    ) {
+      setPolicyLoading(
+        false
+      )
+      setPolicyError(
+        null
+      )
+      return
+    }
+
+    const controller =
+      new AbortController()
+
+    const policyKey =
+      activePolicy
+
+    async function loadPolicy() {
+      setPolicyLoading(
+        true
+      )
+
+      setPolicyError(
+        null
+      )
+
+      try {
+        const params =
+          new URLSearchParams({
+            policy:
+              policyKey,
+          })
+
+        const response =
+          await fetch(
+            `/api/legal/policy?${params.toString()}`,
+            {
+              method:
+                'GET',
+              credentials:
+                'same-origin',
+              cache:
+                'no-store',
+              signal:
+                controller.signal,
+              headers: {
+                Accept:
+                  'application/json',
+              },
+            }
+          )
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            'The policy could not be loaded.'
+          )
+        }
+
+        const payload:
+          unknown =
+          await response.json()
+
+        if (
+          !isLegalPolicyPayload(
+            payload
+          )
+        ) {
+          throw new Error(
+            'The policy response was not valid.'
+          )
+        }
+
+        if (
+          controller.signal.aborted
+        ) {
+          return
+        }
+
+        setPolicyContents(
+          (
+            current
+          ) => ({
+            ...current,
+            [policyKey]: {
+              html:
+                payload.html,
+              effectiveDate:
+                payload.effectiveDate ??
+                null,
+            },
+          })
+        )
+      } catch (
+        loadError
+      ) {
+        if (
+          controller.signal.aborted
+        ) {
+          return
+        }
+
+        console.error(
+          '[roam auth form] Failed to load legal policy:',
+          policyKey,
+          loadError
+        )
+
+        setPolicyError(
+          'We could not display this policy inside Roam. You can still read the complete document on our public website.'
+        )
+      } finally {
+        if (
+          !controller.signal.aborted
+        ) {
+          setPolicyLoading(
+            false
+          )
+        }
+      }
+    }
+
+    void loadPolicy()
+
+    return () => {
+      controller.abort()
+    }
+  }, [
+    activePolicy,
+    legalBaseUrl,
+    policyContents,
+  ])
+
+  function openLegalPolicy(
+    policy:
+      LegalPolicyKey
+  ) {
+    if (
+      !legalBaseUrl
+    ) {
+      return
+    }
+
+    setPolicyError(
+      null
+    )
+
+    setActivePolicy(
+      policy
+    )
+  }
+
+  function closeLegalPolicy() {
+    setActivePolicy(
+      null
+    )
+
+    setPolicyError(
+      null
+    )
+
+    setPolicyLoading(
+      false
+    )
+  }
+
+  function changeAuthIntent(
+    nextIntent:
+      AuthIntent
+  ) {
+    if (
+      loading ||
+      googleLoading ||
+      resetLoading
+    ) {
+      return
+    }
+
+    setAuthIntent(
+      nextIntent
+    )
+
+    setLegalAccepted(
+      false
+    )
+
+    setError('')
+    setSuccessMessage('')
+  }
 
   const supabase =
     useMemo(
@@ -180,47 +553,94 @@ export default function RoamAuthForm({
       return
     }
 
-    setLoading(true)
+    /* =====================================================
+     * New-user signup agreement requirement
+     *
+     * This only controls registration submission.
+     * It does not persist acceptance.
+     * =================================================== */
 
-    try {
-      const {
-        data: signInData,
-        error: signInError,
-      } =
-        await supabase.auth
-          .signInWithPassword({
-            email:
-              normalizedEmail,
-            password,
-          })
-
+    if (
+      isSignUp
+    ) {
       if (
-        !signInError &&
-        signInData.user &&
-        signInData.session
+        !legalLinksAvailable
       ) {
-        await completeAuthentication(
-          signInData.user
+        setError(
+          'Account registration is temporarily unavailable because Roam’s legal policy links are not configured.'
         )
         return
       }
 
-      if (!signInError) {
-        const authenticatedUser =
-          await getAuthenticatedUser()
+      if (
+        !legalAccepted
+      ) {
+        setError(
+          'Please confirm that you are at least 18 and agree to Roam’s Terms of Service and Community Guidelines.'
+        )
+        return
+      }
+    }
 
-        if (authenticatedUser) {
+    setLoading(true)
+
+    try {
+      /* =====================================================
+       * Existing user sign-in
+       * =================================================== */
+
+      if (
+        authIntent ===
+        'sign_in'
+      ) {
+        const {
+          data: signInData,
+          error: signInError,
+        } =
+          await supabase.auth
+            .signInWithPassword({
+              email:
+                normalizedEmail,
+              password,
+            })
+
+        if (
+          !signInError &&
+          signInData.user &&
+          signInData.session
+        ) {
           await completeAuthentication(
-            authenticatedUser
+            signInData.user
+          )
+          return
+        }
+
+        if (!signInError) {
+          const authenticatedUser =
+            await getAuthenticatedUser()
+
+          if (authenticatedUser) {
+            await completeAuthentication(
+              authenticatedUser
+            )
+            return
+          }
+
+          setError(
+            'Roam could not establish your authenticated session. Please try again.'
           )
           return
         }
 
         setError(
-          'Roam could not establish your authenticated session. Please try again.'
+          signInError.message
         )
         return
       }
+
+      /* =====================================================
+       * Explicit new-user registration
+       * =================================================== */
 
       const {
         data: signUpData,
@@ -234,12 +654,7 @@ export default function RoamAuthForm({
 
       if (signUpError) {
         setError(
-          getAuthenticationErrorMessage({
-            signInMessage:
-              signInError.message,
-            signUpMessage:
-              signUpError.message,
-          })
+          signUpError.message
         )
         return
       }
@@ -280,7 +695,7 @@ export default function RoamAuthForm({
       }
 
       setError(
-        'Roam could not sign you in or create your account. Please try again.'
+        'Roam could not create your account. Please try again.'
       )
     } catch (authError) {
       console.error(
@@ -450,10 +865,62 @@ export default function RoamAuthForm({
         <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white sm:text-3xl">
           {title}
         </h2>
+      </div>
 
-        <p className="mx-auto max-w-sm text-sm leading-6 text-zinc-600 dark:text-zinc-400">
-          {description}
-        </p>
+      {/* ===================================================
+          Explicit Sign In / Create Account selection
+          ================================================= */}
+
+      <div
+        role="group"
+        aria-label="Account access"
+        className="mb-5 grid grid-cols-2 gap-1 rounded-xl border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-800 dark:bg-zinc-900"
+      >
+        <button
+          type="button"
+          onClick={() =>
+            changeAuthIntent(
+              'sign_in'
+            )
+          }
+          disabled={busy}
+          aria-pressed={
+            authIntent ===
+            'sign_in'
+          }
+          className={[
+            'min-h-11 rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
+            authIntent ===
+            'sign_in'
+              ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-700 dark:text-white'
+              : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
+          ].join(' ')}
+        >
+          Sign In
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            changeAuthIntent(
+              'sign_up'
+            )
+          }
+          disabled={busy}
+          aria-pressed={
+            authIntent ===
+            'sign_up'
+          }
+          className={[
+            'min-h-11 rounded-lg px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
+            authIntent ===
+            'sign_up'
+              ? 'bg-white text-zinc-950 shadow-sm dark:bg-zinc-700 dark:text-white'
+              : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white',
+          ].join(' ')}
+        >
+          Create Account
+        </button>
       </div>
 
       <button
@@ -547,7 +1014,11 @@ export default function RoamAuthForm({
           <input
             id="roam-auth-password"
             type="password"
-            autoComplete="current-password"
+            autoComplete={
+              isSignUp
+                ? 'new-password'
+                : 'current-password'
+            }
             placeholder="Password"
             value={
               password
@@ -565,18 +1036,128 @@ export default function RoamAuthForm({
           />
         </div>
 
+        {/* =================================================
+            Registration-only legal agreement
+            ================================================= */}
+
+        {isSignUp ? (
+          <div className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
+            {legalLinksAvailable ? (
+              <>
+                <div className="flex items-start gap-3">
+                  <input
+                    id="roam-legal-acceptance"
+                    type="checkbox"
+                    checked={
+                      legalAccepted
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setLegalAccepted(
+                        event.target.checked
+                      )
+                    }
+                    disabled={busy}
+                    required
+                    className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-cyan-500"
+                  />
+
+                  <div className="min-w-0 space-y-2">
+                    <label
+                      htmlFor="roam-legal-acceptance"
+                      className="block cursor-pointer text-sm leading-6 text-zinc-700 dark:text-zinc-300"
+                    >
+                      I confirm that I am at least 18 years old and agree to Roam&apos;s Terms of Service and Community Guidelines.
+                    </label>
+
+                    <p className="text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                      Review the{' '}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openLegalPolicy(
+                            'terms'
+                          )
+                        }
+                        className="font-semibold text-cyan-700 underline underline-offset-2 transition hover:text-cyan-600 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:text-cyan-300"
+                      >
+                        Terms of Service
+                      </button>
+                      {' '}and{' '}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openLegalPolicy(
+                            'community-guidelines'
+                          )
+                        }
+                        className="font-semibold text-cyan-700 underline underline-offset-2 transition hover:text-cyan-600 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:text-cyan-300"
+                      >
+                        Community Guidelines
+                      </button>
+                      .
+                    </p>
+                  </div>
+                </div>
+
+                <p className="border-t border-zinc-200 pt-3 text-xs leading-5 text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+                  By creating an account, you acknowledge Roam&apos;s{' '}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openLegalPolicy(
+                        'privacy'
+                      )
+                    }
+                    className="font-semibold text-cyan-700 underline underline-offset-2 transition hover:text-cyan-600 focus-visible:rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-500 dark:text-cyan-300"
+                  >
+                    Privacy Policy
+                  </button>
+                  .
+                </p>
+              </>
+            ) : (
+              <p
+                role="alert"
+                className="text-xs leading-5 text-amber-700 dark:text-amber-300"
+              >
+                Account registration is temporarily unavailable because Roam&apos;s public legal policy links are not configured.
+              </p>
+            )}
+          </div>
+        ) : null}
+
         <button
           type="submit"
-          disabled={busy}
+          disabled={
+            busy ||
+            (
+              isSignUp &&
+              (
+                !legalAccepted ||
+                !legalLinksAvailable
+              )
+            )
+          }
           className={`min-h-12 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all ${
-            busy
+            busy ||
+            (
+              isSignUp &&
+              (
+                !legalAccepted ||
+                !legalLinksAvailable
+              )
+            )
               ? 'cursor-not-allowed bg-zinc-400 dark:bg-zinc-600'
               : 'bg-gradient-to-r from-cyan-500 to-indigo-600 shadow-cyan-500/20 hover:-translate-y-0.5 hover:from-cyan-400 hover:to-indigo-500'
           }`}
         >
           {loading
             ? 'Processing...'
-            : submitLabel}
+            : isSignUp
+              ? 'Create Roam Account'
+              : submitLabel}
         </button>
       </form>
 
@@ -654,7 +1235,143 @@ export default function RoamAuthForm({
           </p>
         </div>
       ) : null}
+
+      {/* =================================================
+          In-app legal policy modal
+
+          Renders outside the form so its controls never
+          trigger registration submission.
+
+          Reading a policy does not constitute agreement.
+          ================================================= */}
+
+      <LegalPolicyModal
+        open={
+          activePolicy !==
+          null
+        }
+        onClose={
+          closeLegalPolicy
+        }
+        title={
+          activePolicyTitle
+        }
+        html={
+          activePolicyContent?.html ??
+          null
+        }
+        externalUrl={
+          activePolicyUrl
+        }
+        effectiveDate={
+          activePolicyContent
+            ?.effectiveDate ??
+          null
+        }
+        loading={
+          policyLoading
+        }
+        error={
+          policyError
+        }
+      />
     </div>
+  )
+}
+
+/* =========================================================
+ * Public legal website configuration
+ * ======================================================= */
+
+function getPublicLegalBaseUrl():
+  string | null {
+  const configuredWebsite =
+    process.env
+      .NEXT_PUBLIC_ROAM_LEGAL_BASE_URL
+      ?.trim()
+
+  if (
+    !configuredWebsite
+  ) {
+    return null
+  }
+
+  try {
+    const parsed =
+      new URL(
+        configuredWebsite
+      )
+
+    if (
+      parsed.username ||
+      parsed.password ||
+      parsed.search ||
+      parsed.hash
+    ) {
+      return null
+    }
+
+    if (
+      parsed.protocol !==
+      'https:' &&
+      !(
+        process.env.NODE_ENV !==
+          'production' &&
+        parsed.protocol ===
+          'http:'
+      )
+    ) {
+      return null
+    }
+
+    return parsed.origin
+  } catch {
+    return null
+  }
+}
+
+/* =========================================================
+ * Legal API response validation
+ *
+ * This checks the response shape only.
+ * HTML sanitization MUST happen server-side.
+ * ======================================================= */
+
+function isLegalPolicyPayload(
+  value: unknown
+): value is {
+  html: string
+  effectiveDate?: string | null
+} {
+  if (
+    !value ||
+    typeof value !==
+      'object'
+  ) {
+    return false
+  }
+
+  const payload =
+    value as Record<
+      string,
+      unknown
+    >
+
+  if (
+    typeof payload.html !==
+      'string' ||
+    !payload.html.trim()
+  ) {
+    return false
+  }
+
+  return (
+    payload.effectiveDate ===
+      undefined ||
+    payload.effectiveDate ===
+      null ||
+    typeof payload.effectiveDate ===
+      'string'
   )
 }
 
@@ -662,7 +1379,8 @@ function normalizeInternalPath(
   value: unknown
 ): string | null {
   if (
-    typeof value !== 'string'
+    typeof value !==
+    'string'
   ) {
     return null
   }

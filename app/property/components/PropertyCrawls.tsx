@@ -1,3 +1,4 @@
+
 'use client'
 
 import Link from 'next/link'
@@ -57,15 +58,8 @@ export default function PropertyCrawls({
 
   return (
     <section className="space-y-4 text-white">
-      <div className="space-y-1">
-        <h2 className="text-sm font-semibold text-white">Suggested Routes</h2>
-        <p className="text-sm leading-6 text-neutral-400">
-          Contextual nearby flows ranked for the current day, time, walkability,
-          and sequence quality.
-        </p>
-      </div>
-
-      <div className="grid gap-4">
+      {/* Simple, responsive concierge-style route cards */}
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         {crawls.map(({ crawl, vm }, index) => (
           <PropertyCrawlCardView
             key={vm.id}
@@ -98,6 +92,12 @@ function PropertyCrawlCardView({
   totalCrawls: number
 }) {
   const impressionLoggedRef = useRef(false)
+
+  /* ------------------------------------------------ */
+  /* Compact Flow details visibility                  */
+  /* ------------------------------------------------ */
+
+  const [detailsExpanded, setDetailsExpanded] = useState(false)
 
   const [replacementsByStopIndex, setReplacementsByStopIndex] = useState<
     Record<number, NearbyVenueOption>
@@ -250,37 +250,87 @@ function PropertyCrawlCardView({
   }
 
   return (
-    <Card className="overflow-hidden border border-neutral-800 bg-neutral-950 text-white shadow-2xl shadow-black/30">
-      <CardContent className="space-y-4 p-4 sm:p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <Chip tone="strong">{routeContext.label}</Chip>
-              <Chip>{routeContext.confidence}</Chip>
+    <Card className="overflow-hidden rounded-[1.5rem] border border-[#c5a57a]/20 bg-[#151a19] text-white shadow-xl shadow-black/20 transition-colors hover:border-[#c5a57a]/35">
+      <CardContent className="space-y-5 p-5 sm:p-6">
+        {/* =================================================
+            SIMPLE CONCIERGE SUMMARY
+            ================================================= */}
 
-              {vm.chips.map((chip) => (
-                <Chip key={chip}>{chip}</Chip>
-              ))}
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="text-lg text-[#c5a57a]"
+            >
+              ✦
+            </span>
 
-            <div className="space-y-1">
-              <h3 className="text-xl font-semibold tracking-tight text-white sm:text-lg">
-                {vm.title}
-              </h3>
-
-              <p className="max-w-2xl text-sm leading-6 text-neutral-300">
-                {vm.subtitle}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-3 text-sm leading-6 text-neutral-300">
-              <span className="font-semibold text-white">Why this works:</span>{' '}
-              {routeContext.reason}
-            </div>
+            <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#c5a57a]">
+              Your local itinerary
+            </span>
           </div>
 
+          <div className="space-y-2">
+            <h3 className="font-serif text-2xl font-normal leading-tight tracking-tight text-[#f7f0e5] sm:text-[1.75rem]">
+              {vm.title}
+            </h3>
+
+            {vm.subtitle && (
+              <p className="line-clamp-2 text-sm leading-6 text-[#c9c7c1]">
+                {vm.subtitle}
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium text-[#d8cfbf]">
+            <span>
+              {venueIds.length}{' '}
+              {venueIds.length === 1 ? 'stop' : 'stops'}
+            </span>
+
+            {typeof vm.totalWalkMinutes === 'number' && (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="text-[#8d897f]"
+                >
+                  ·
+                </span>
+
+                <span>
+                  {vm.totalWalkMinutes} min walking
+                </span>
+              </>
+            )}
+
+            {Object.keys(replacementsByStopIndex).length > 0 && (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="text-[#8d897f]"
+                >
+                  ·
+                </span>
+
+                <span className="text-[#e7d0ac]">
+                  {Object.keys(replacementsByStopIndex).length}{' '}
+                  {Object.keys(replacementsByStopIndex).length === 1
+                    ? 'stop changed'
+                    : 'stops changed'}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* =================================================
+            PRIMARY ACTION
+            Existing StartFlowButton behavior retained.
+            ================================================= */}
+
+        <div className="space-y-3">
           <div
-            className="w-full shrink-0 md:w-auto"
+            className="w-full min-w-0"
             onClickCapture={handleStartCrawlClick}
           >
             <StartFlowButton
@@ -291,7 +341,7 @@ function PropertyCrawlCardView({
               venueIds={venueIds}
               source="property_crawl"
               travelMode="walking"
-              label="Start Flow"
+              label="Start exploring"
               metadata={{
                 property_id: property.id,
                 property_name: property.name,
@@ -308,145 +358,196 @@ function PropertyCrawlCardView({
               }}
             />
           </div>
+
+          <button
+            type="button"
+            aria-expanded={detailsExpanded}
+            aria-controls={`property-flow-details-${vm.id}`}
+            onClick={() => setDetailsExpanded((prev) => !prev)}
+            className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-[#dfd0b8] transition hover:bg-[#c5a57a]/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c5a57a]"
+          >
+            <span>
+              {detailsExpanded
+                ? 'Hide the stops'
+                : 'See the stops'}
+            </span>
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className={[
+                'shrink-0 transition-transform',
+                detailsExpanded ? 'rotate-180' : '',
+              ].join(' ')}
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
         </div>
 
-        <div className="space-y-3 border-t border-neutral-800 pt-4">
-          {vm.stops.map((stop, stopIndex) => {
-            const currentVenue = effectiveVenues[stopIndex]
+        {/* =================================================
+            QUIET STOP DETAILS
+            All stop linking and swapping logic preserved.
+            ================================================= */}
 
-            const currentVenueDescription =
-              currentVenue?.description ?? stop.description
+        {detailsExpanded && (
+          <div
+            id={`property-flow-details-${vm.id}`}
+            className="space-y-3 border-t border-[#c5a57a]/15 pt-5"
+          >
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c5a57a]">
+              Your stops
+            </p>
 
-            const hasReplacement = Boolean(replacementsByStopIndex[stopIndex])
+            {vm.stops.map((stop, stopIndex) => {
+              const currentVenue = effectiveVenues[stopIndex]
 
-            const swapCandidates = getSwapCandidates({
-              nearbyVenues,
-              currentStopIndex: stopIndex,
-              crawl,
-              effectiveVenues,
-            })
+              const currentVenueDescription =
+                currentVenue?.description ?? stop.description
 
-            return (
-              <div
-                key={stop.id}
-                className="flex items-start gap-3 rounded-xl border border-neutral-800 bg-neutral-900 p-3 transition hover:border-cyan-400/50 hover:bg-neutral-900/90"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-400 text-xs font-black text-neutral-950">
-                  {stop.order}
-                </div>
+              const hasReplacement = Boolean(replacementsByStopIndex[stopIndex])
 
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-cyan-300">
-                      {stop.stageLabel}
-                    </span>
+              const swapCandidates = getSwapCandidates({
+                nearbyVenues,
+                currentStopIndex: stopIndex,
+                crawl,
+                effectiveVenues,
+              })
 
-                    {stop.walkTimeFromPreviousLabel && (
-                      <Chip>{stop.walkTimeFromPreviousLabel}</Chip>
-                    )}
-
-                    {hasReplacement && <Chip tone="accent">Swapped</Chip>}
+              return (
+                <div
+                  key={stop.id}
+                  className="flex items-start gap-3 rounded-xl border border-[#c5a57a]/10 bg-black/15 p-3.5 transition hover:border-[#c5a57a]/25"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c5a57a]/30 bg-[#c5a57a]/10 text-xs font-bold text-[#e7d0ac]">
+                    {stop.order}
                   </div>
 
-                  <Link
-                    href={currentVenue?.link ?? stop.venueHref}
-                    onClick={() => {
-                      void logEvent('property_crawl_stop_clicked', {
-                        venue_id: currentVenue?.id ?? stop.id,
-                        metadata: {
-                          property_id: property.id,
-                          property_name: property.name,
-                          property_slug: property.slug ?? null,
-                          city: property.city,
-                          crawl_vm_id: vm.id,
-                          crawl_title: vm.title,
-                          stop_id: currentVenue?.id ?? stop.id,
-                          stop_order: stop.order,
-                          stop_name: currentVenue?.name ?? stop.venueName,
-                          stop_stage_label: stop.stageLabel,
-                          venue_href: currentVenue?.link ?? stop.venueHref,
-                          was_swapped: hasReplacement,
-                        },
-                      })
-                    }}
-                    className="block text-base font-semibold leading-snug text-white hover:text-cyan-200 hover:underline"
-                  >
-                    {currentVenue?.name ?? stop.venueName}
-                  </Link>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#c5a57a]">
+                        {stop.stageLabel}
+                      </span>
 
-                  {currentVenueDescription && (
-                    <StopDescription description={currentVenueDescription} />
-                  )}
+                      {stop.walkTimeFromPreviousLabel && (
+                        <span className="text-xs text-[#a9a59c]">
+                          · {stop.walkTimeFromPreviousLabel}
+                        </span>
+                      )}
 
-                  {nearbyVenues.length > 0 && swapCandidates.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap gap-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenSwapStopIndex((prev) =>
-                              prev === stopIndex ? null : stopIndex
-                            )
-                          }
-                          className="text-xs font-semibold text-cyan-300 underline underline-offset-4 hover:text-cyan-100"
-                        >
-                          {openSwapStopIndex === stopIndex
-                            ? 'Hide nearby swaps'
-                            : `Swap with nearby ${getStageSwapLabel(
-                                stop.stageLabel
-                              )}`}
-                        </button>
-
-                        {hasReplacement && (
-                          <button
-                            type="button"
-                            onClick={() => handleResetStop(stopIndex)}
-                            className="text-xs font-semibold text-neutral-300 underline underline-offset-4 hover:text-white"
-                          >
-                            Reset stop
-                          </button>
-                        )}
-                      </div>
-
-                      {openSwapStopIndex === stopIndex && (
-                        <div className="space-y-2 rounded-lg border border-neutral-800 bg-neutral-950 p-3">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
-                            Nearby replacements
-                          </p>
-
-                          <div className="space-y-2">
-                            {swapCandidates.map((candidate) => (
-                              <button
-                                key={candidate.id}
-                                type="button"
-                                onClick={() =>
-                                  handleSwapStop(stopIndex, candidate)
-                                }
-                                className="block w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-left transition hover:border-cyan-400/50 hover:bg-neutral-800"
-                              >
-                                <div className="space-y-1">
-                                  <p className="text-sm font-semibold text-white">
-                                    {candidate.name}
-                                  </p>
-
-                                  {candidate.description && (
-                                    <p className="line-clamp-2 text-xs leading-5 text-neutral-400">
-                                      {candidate.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                      {hasReplacement && (
+                        <span className="text-[10px] font-medium text-emerald-300">
+                          Changed
+                        </span>
                       )}
                     </div>
-                  )}
+
+                    <Link
+                      href={currentVenue?.link ?? stop.venueHref}
+                      onClick={() => {
+                        void logEvent('property_crawl_stop_clicked', {
+                          venue_id: currentVenue?.id ?? stop.id,
+                          metadata: {
+                            property_id: property.id,
+                            property_name: property.name,
+                            property_slug: property.slug ?? null,
+                            city: property.city,
+                            crawl_vm_id: vm.id,
+                            crawl_title: vm.title,
+                            stop_id: currentVenue?.id ?? stop.id,
+                            stop_order: stop.order,
+                            stop_name: currentVenue?.name ?? stop.venueName,
+                            stop_stage_label: stop.stageLabel,
+                            venue_href: currentVenue?.link ?? stop.venueHref,
+                            was_swapped: hasReplacement,
+                          },
+                        })
+                      }}
+                      className="block text-sm font-semibold leading-snug text-[#f7f0e5] transition hover:text-[#e7d0ac] hover:underline"
+                    >
+                      {currentVenue?.name ?? stop.venueName}
+                    </Link>
+
+                    {currentVenueDescription && (
+                      <StopDescription description={currentVenueDescription} />
+                    )}
+
+                    {nearbyVenues.length > 0 && swapCandidates.length > 0 && (
+                      <div className="space-y-2 pt-1">
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenSwapStopIndex((prev) =>
+                                prev === stopIndex ? null : stopIndex
+                              )
+                            }
+                            className="text-xs font-semibold text-[#d9c6a7] underline decoration-[#c5a57a]/35 underline-offset-4 transition hover:text-white"
+                          >
+                            {openSwapStopIndex === stopIndex
+                              ? 'Hide alternatives'
+                              : 'Change this stop'}
+                          </button>
+
+                          {hasReplacement && (
+                            <button
+                              type="button"
+                              onClick={() => handleResetStop(stopIndex)}
+                              className="text-xs font-semibold text-neutral-400 underline underline-offset-4 transition hover:text-white"
+                            >
+                              Reset stop
+                            </button>
+                          )}
+                        </div>
+
+                        {openSwapStopIndex === stopIndex && (
+                          <div className="space-y-2 rounded-lg border border-[#c5a57a]/15 bg-[#101514] p-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-[#c5a57a]">
+                              Nearby alternatives
+                            </p>
+
+                            <div className="space-y-2">
+                              {swapCandidates.map((candidate) => (
+                                <button
+                                  key={candidate.id}
+                                  type="button"
+                                  onClick={() =>
+                                    handleSwapStop(stopIndex, candidate)
+                                  }
+                                  className="block w-full rounded-lg border border-white/10 bg-white/[0.035] px-3 py-3 text-left transition hover:border-[#c5a57a]/30 hover:bg-white/[0.06]"
+                                >
+                                  <div className="space-y-1">
+                                    <p className="text-sm font-semibold text-white">
+                                      {candidate.name}
+                                    </p>
+
+                                    {candidate.description && (
+                                      <p className="line-clamp-2 text-xs leading-5 text-neutral-400">
+                                        {candidate.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -460,9 +561,9 @@ function StopDescription({ description }: { description: string }) {
       <button
         type="button"
         onClick={() => setExpanded((prev) => !prev)}
-        className="text-xs font-semibold text-cyan-300 underline underline-offset-4 hover:text-cyan-100"
+        className="text-xs font-semibold text-[#d9c6a7] underline decoration-[#c5a57a]/35 underline-offset-4 transition hover:text-white"
       >
-        {expanded ? 'Hide Description' : 'View Description'}
+        {expanded ? 'Hide description' : 'About this stop'}
       </button>
 
       {expanded && (

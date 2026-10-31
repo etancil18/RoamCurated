@@ -1,3 +1,4 @@
+
 import { DateTime } from 'luxon'
 
 import { createServerClient } from '@/lib/supabase/server'
@@ -10,7 +11,7 @@ import {
   type PropertyCrawlCard,
 } from '@/lib/property/buildPropertyCrawlCards'
 
-const PROPERTY_NEARBY_VENUE_RADIUS_KM = 5
+const PROPERTY_NEARBY_VENUE_RADIUS_KM = 2.5
 
 type PropertyRow = {
   id: string
@@ -36,6 +37,11 @@ type VenueLike = {
   cover?: string | null
   type?: string | string[] | null
   description?: string | null
+
+  // Additional metadata used by Nearby Check-ins cards.
+  address?: string | null
+  price?: string | null
+
   [key: string]: unknown
 }
 
@@ -52,7 +58,8 @@ type EventJourneyRecord = {
   city: string
   title: string
   slug: string
-  event_id: string | null
+  event_id: string
+  | null
   property_id: string | null
   event_name: string
   event_start_at: string
@@ -249,6 +256,51 @@ function normalizeVenue(v: VenueLike): NormalizedVenue {
     lat: toNumber(v.lat),
     lon: toNumber(v.lon),
     link: `/venue-profile/${v.id}`,
+  }
+}
+
+/* -------------------------------------------------------
+ * Nearby Check-ins metadata hydration
+ *
+ * The existing database venue query already retrieves
+ * complete venue records.
+ *
+ * Use database-backed address, price, and description
+ * values when available, without changing nearby venue
+ * selection, coordinates, ordering, or classification.
+ *
+ * Fall back to existing inventory metadata when a
+ * database value is unavailable.
+ * ----------------------------------------------------- */
+
+function hydrateNearbyVenueDetails(
+  venue: NormalizedVenue,
+  databaseVenue?: VenueLike
+): NormalizedVenue {
+  if (!databaseVenue) {
+    return venue
+  }
+
+  return {
+    ...venue,
+
+    address:
+      typeof databaseVenue.address === 'string' &&
+      databaseVenue.address.trim()
+        ? databaseVenue.address
+        : venue.address ?? null,
+
+    price:
+      typeof databaseVenue.price === 'string' &&
+      databaseVenue.price.trim()
+        ? databaseVenue.price
+        : venue.price ?? null,
+
+    description:
+      typeof databaseVenue.description === 'string' &&
+      databaseVenue.description.trim()
+        ? databaseVenue.description
+        : venue.description ?? null,
   }
 }
 
@@ -572,7 +624,10 @@ export async function getPropertyGuideData({
     )
     .map(
       ({ venue }) =>
-        venue
+        hydrateNearbyVenueDetails(
+          venue,
+          dbCityVenueById.get(venue.id)
+        )
     )
 
   const coffeeNearby = nearbyVenues.filter(
@@ -614,8 +669,33 @@ export async function getPropertyGuideData({
       ])
   )
 
+  /* -------------------------------------------------------
+   * Property map venue hydration
+   *
+   * Preserve Host Pick ordering and property-specific
+   * editorial metadata, while taking marker classification,
+   * availability, and other venue fields from the shared
+   * canonical city venue inventory whenever available.
+   *
+   * This affects mapVenues only. The existing favorite,
+   * nearby, crawl, and event collections remain unchanged.
+   * ----------------------------------------------------- */
+
   const mapVenues = uniqueById([
-    ...favoriteVenues,
+    ...favoriteVenues.map((favorite) => {
+      const canonicalVenue =
+        allCityVenueById.get(favorite.id)
+
+      if (!canonicalVenue) {
+        return favorite
+      }
+
+      return {
+        ...canonicalVenue,
+        label: favorite.label,
+        description: favorite.description,
+      }
+    }),
     ...nearbyVenues,
   ])
 

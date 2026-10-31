@@ -34385,42 +34385,6 @@ const atlantaData = [
     "duration": 1
   },
   {
-    "slug": "rina-old-fourth-ward",
-    "name": "Rina - Old Fourth Ward",
-    "id": "f26b54c6-2550-4816-9217-d0454e6dd9c1",
-"vibe": "Italian, social, vibrant, warm, modern, friendly",
-    "type": ["lunch", "dinner", "cocktail"],
-    "lat": "33.7726586",
-    "lon": "-84.3643038",
-    "link": "https://www.instagram.com/rina.atl/?hl=en",
-    "cover": "img/venues/Rina - Old Fourth Ward.jpg",
-    "openNow": "TRUE",
-    "hours": [
-      "Sunday: 11:00 AM–9:00 PM",
-      "Monday: 11:00 AM–9:00 PM",
-      "Tuesday: 11:00 AM–9:00 PM",
-      "Wednesday: 11:00 AM–9:00 PM",
-      "Thursday: 11:00 AM–9:00 PM",
-      "Friday: 11:00 AM–10:00 PM",
-      "Saturday: 11:00 AM–10:00 PM"
-    ],
-    "hoursNumeric": {
-      "sun": [{ "open": 11, "close": 21 }],
-      "mon": [{ "open": 11, "close": 21 }],
-      "tue": [{ "open": 11, "close": 21 }],
-      "wed": [{ "open": 11, "close": 21 }],
-      "thu": [{ "open": 11, "close": 21 }],
-      "fri": [{ "open": 11, "close": 22 }],
-      "sat": [{ "open": 11, "close": 22 }]
-    },
-    "dayParts": { "mon": "A", "tue": "A", "wed": "A", "thu": "A", "fri": "HH", "sat": "HH", "sun": "A" },
-    "timeCategory": "Afternoon, Happy Hour",
-    "energyRamp": 2,
-    "tags": "Italian, pasta, wine, date‑night, dinner, cozy, classic, neighborhood, bar, dinner, shared, rustic",
-    "price": "$$",
-    "duration": 1.5
-  },
-  {
     "slug": "yonder-yoga-midtown",
     "name": "Yonder Yoga - Midtown",
     "id": "d012c661-25d3-4972-a4d9-080265fa106c",
@@ -34641,7 +34605,7 @@ const atlantaData = [
     "name": "City Winery Atlanta",
     "id": "c1771882-7f43-4a6c-8012-fc36e7b8e84c",
 "vibe": "musical, winery, social, refined, lush, scenic",
-    "type": ["brunch", "dinner", "show"],
+    "type": ["music"],
     "lat": "33.7716908",
     "lon": "-84.3668292",
     "link": "https://www.instagram.com/citywineryatl/?hl=en",

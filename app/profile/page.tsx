@@ -1392,17 +1392,153 @@ export default function UserProfilePage() {
               title="Profile & settings"
             />
 
-            <div className="mt-5">
+            <div className="mt-5 space-y-3">
               <ProfileDisclosure
                 eyebrow="Profile"
                 title="Edit your details"
               >
                 <ProfileForm />
               </ProfileDisclosure>
+                
+              <ProfileDisclosure
+                eyebrow="Information"
+                title="Legal & Transparency"
+              >
+                <ProfileLegalLinks />
+              </ProfileDisclosure>
             </div>
           </section>
         </div>
       </div>
+    </div>
+  )
+}
+
+
+/* =========================================================
+ * Legal & Transparency
+ *
+ * Public policies are hosted on Roam's company website.
+ * No legal text is duplicated inside the application.
+ * ======================================================= */
+
+const LEGAL_POLICIES = [
+  {
+    label: "Terms of Service",
+    path: "/terms",
+  },
+  {
+    label: "Privacy Policy",
+    path: "/privacy",
+  },
+  {
+    label: "Community Guidelines",
+    path: "/community-guidelines",
+  },
+  {
+    label: "Copyright & Intellectual Property",
+    path: "/copyright",
+  },
+  {
+    label: "Our Curation & Recommendations",
+    path: "/curation",
+  },
+] as const
+
+function ProfileLegalLinks() {
+  const configuredWebsite =
+    process.env.NEXT_PUBLIC_ROAM_LEGAL_BASE_URL?.trim()
+
+  let websiteUrl: URL | null = null
+
+  if (configuredWebsite) {
+    try {
+      const parsed = new URL(configuredWebsite)
+
+      if (
+        parsed.protocol === "https:" ||
+        (process.env.NODE_ENV !== "production" &&
+          parsed.protocol === "http:")
+      ) {
+        websiteUrl = parsed
+      }
+    } catch {
+      websiteUrl = null
+    }
+  }
+
+  if (!websiteUrl) {
+    return (
+      <p className="rounded-xl bg-white/[0.035] px-4 py-4 text-sm leading-6 text-zinc-400 ring-1 ring-white/[0.06]">
+        Legal documents are not yet available.
+      </p>
+    )
+  }
+
+  return (
+    <div className="w-full min-w-0">
+      <p className="mb-4 text-xs leading-5 text-zinc-500">
+        Learn about Roam&apos;s policies, community
+        standards, and how we curate experiences.
+      </p>
+
+      <nav
+        aria-label="Legal and transparency policies"
+        className="overflow-hidden rounded-[1.25rem] bg-black/20 ring-1 ring-white/[0.06]"
+      >
+        {LEGAL_POLICIES.map((policy, index) => {
+          const href = new URL(
+            policy.path,
+            websiteUrl
+          ).toString()
+
+          return (
+            <a
+              key={policy.path}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                safeLogEvent(
+                  "profile_legal_policy_clicked",
+                  {
+                    policy: policy.path,
+                    source: "profile_settings",
+                  }
+                )
+              }}
+              className={[
+                "group flex min-h-14 items-center justify-between gap-4 px-4 py-3 transition hover:bg-white/[0.045] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-cyan-300 sm:px-5",
+                index > 0
+                  ? "border-t border-white/[0.055]"
+                  : "",
+              ].join(" ")}
+            >
+              <span className="min-w-0 text-sm font-semibold leading-5 text-zinc-200 transition group-hover:text-white">
+                {policy.label}
+              </span>
+
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4 shrink-0 text-zinc-500 transition group-hover:text-cyan-300"
+              >
+                <path d="M7 17 17 7M8 7h9v9" />
+              </svg>
+            </a>
+          )
+        })}
+      </nav>
+
+      <p className="mt-3 text-[11px] leading-5 text-zinc-600">
+        Policies open on Roam&apos;s public company
+        website.
+      </p>
     </div>
   )
 }

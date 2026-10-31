@@ -222,10 +222,15 @@ export async function GET(
 
       if (query.city) {
         databaseQuery =
-          databaseQuery.eq(
-            'city',
-            query.city
-          )
+          query.city === 'la'
+            ? databaseQuery.eq(
+                'canonical_city',
+                'la'
+              )
+            : databaseQuery.eq(
+                'city',
+                query.city
+              )
       }
 
       const {

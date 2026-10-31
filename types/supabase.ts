@@ -234,6 +234,39 @@ export type Database = {
         }
         Relationships: []
       }
+      active_flow_stop_contributions: {
+        Row: {
+          active_flow_stop_id: string
+          contribution_id: string
+          created_at: string
+        }
+        Insert: {
+          active_flow_stop_id: string
+          contribution_id: string
+          created_at?: string
+        }
+        Update: {
+          active_flow_stop_id?: string
+          contribution_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_flow_stop_contributions_active_flow_stop_id_fkey"
+            columns: ["active_flow_stop_id"]
+            isOneToOne: true
+            referencedRelation: "active_flow_stops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_flow_stop_contributions_contribution_id_fkey"
+            columns: ["contribution_id"]
+            isOneToOne: false
+            referencedRelation: "flow_contributions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       active_flow_stops: {
         Row: {
           created_at: string
@@ -6518,6 +6551,7 @@ export type Database = {
           source_url: string | null
           starts_at: string | null
           suggested_archetype: string | null
+          sync_review_reason: string | null
           timezone: string | null
           title: string | null
           updated_at: string
@@ -6545,6 +6579,7 @@ export type Database = {
           source_url?: string | null
           starts_at?: string | null
           suggested_archetype?: string | null
+          sync_review_reason?: string | null
           timezone?: string | null
           title?: string | null
           updated_at?: string
@@ -6572,6 +6607,7 @@ export type Database = {
           source_url?: string | null
           starts_at?: string | null
           suggested_archetype?: string | null
+          sync_review_reason?: string | null
           timezone?: string | null
           title?: string | null
           updated_at?: string
@@ -6699,6 +6735,152 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "venues"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      findlocal_sync_runs: {
+        Row: {
+          error_message: string | null
+          events_failed: number
+          events_fetched: number
+          events_missing_time: number
+          events_valid: number
+          finished_at: string | null
+          id: string
+          manual_review_required: number
+          outcome_summary: Json
+          run_type: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          error_message?: string | null
+          events_failed?: number
+          events_fetched?: number
+          events_missing_time?: number
+          events_valid?: number
+          finished_at?: string | null
+          id?: string
+          manual_review_required?: number
+          outcome_summary?: Json
+          run_type: string
+          started_at?: string
+          status: string
+        }
+        Update: {
+          error_message?: string | null
+          events_failed?: number
+          events_fetched?: number
+          events_missing_time?: number
+          events_valid?: number
+          finished_at?: string | null
+          id?: string
+          manual_review_required?: number
+          outcome_summary?: Json
+          run_type?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      flow_contributions: {
+        Row: {
+          created_at: string
+          creator_user_id: string | null
+          id: string
+          origin: string
+          origin_collection_id: string | null
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          creator_user_id?: string | null
+          id?: string
+          origin: string
+          origin_collection_id?: string | null
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          creator_user_id?: string | null
+          id?: string
+          origin?: string
+          origin_collection_id?: string | null
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_contributions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "flow_contributions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flow_snapshot_route_certifications: {
+        Row: {
+          certified_at: string
+          snapshot_id: string
+        }
+        Insert: {
+          certified_at?: string
+          snapshot_id: string
+        }
+        Update: {
+          certified_at?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_snapshot_route_certifications_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            isOneToOne: true
+            referencedRelation: "flow_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flow_snapshot_stop_contributions: {
+        Row: {
+          contribution_id: string
+          created_at: string
+          snapshot_stop_id: string
+          venue_id: string
+        }
+        Insert: {
+          contribution_id: string
+          created_at?: string
+          snapshot_stop_id: string
+          venue_id: string
+        }
+        Update: {
+          contribution_id?: string
+          created_at?: string
+          snapshot_stop_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lineage_contribution_venue_fk"
+            columns: ["contribution_id", "venue_id"]
+            isOneToOne: false
+            referencedRelation: "flow_contributions"
+            referencedColumns: ["id", "venue_id"]
+          },
+          {
+            foreignKeyName: "lineage_snapshot_stop_venue_fk"
+            columns: ["snapshot_stop_id", "venue_id"]
+            isOneToOne: false
+            referencedRelation: "flow_snapshot_stops"
+            referencedColumns: ["id", "venue_id"]
           },
         ]
       }
@@ -7507,6 +7689,7 @@ export type Database = {
           lat: number
           lon: number
           name: string
+          owner_user_id: string | null
           slug: string
           website: string | null
           welcome_description: string | null
@@ -7523,6 +7706,7 @@ export type Database = {
           lat: number
           lon: number
           name: string
+          owner_user_id?: string | null
           slug: string
           website?: string | null
           welcome_description?: string | null
@@ -7539,6 +7723,7 @@ export type Database = {
           lat?: number
           lon?: number
           name?: string
+          owner_user_id?: string | null
           slug?: string
           website?: string | null
           welcome_description?: string | null
@@ -9626,6 +9811,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_legal_acceptances: {
+        Row: {
+          acceptance_context: string
+          accepted_at: string
+          guidelines_version: string
+          id: string
+          terms_version: string
+          user_id: string
+        }
+        Insert: {
+          acceptance_context: string
+          accepted_at?: string
+          guidelines_version: string
+          id?: string
+          terms_version: string
+          user_id: string
+        }
+        Update: {
+          acceptance_context?: string
+          accepted_at?: string
+          guidelines_version?: string
+          id?: string
+          terms_version?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_routes: {
         Row: {
@@ -15440,6 +15652,7 @@ export type Database = {
           xp_amount: number
         }[]
       }
+      begin_findlocal_scheduled_sync: { Args: never; Returns: string }
       can_read_roam_relay_team_members: {
         Args: { p_team_id: string }
         Returns: boolean
@@ -15580,6 +15793,19 @@ export type Database = {
           visited_at: string
         }[]
       }
+      create_certified_collection_flow: {
+        Args: {
+          p_city: string
+          p_collection_id: string
+          p_explorer_user_id: string
+          p_planned_start_at: string
+          p_stop_origins: string[]
+          p_title: string
+          p_travel_mode: string
+          p_venue_ids: string[]
+        }
+        Returns: string
+      }
       create_certified_creator_collection_flow: {
         Args: {
           p_city?: string
@@ -15600,6 +15826,14 @@ export type Database = {
           occurrence_id: string
           report_id: string
         }[]
+      }
+      create_replay_with_certified_lineage: {
+        Args: {
+          p_expected_venue_ids: string[]
+          p_explorer_user_id: string
+          p_snapshot_id: string
+        }
+        Returns: string
       }
       create_roam_relay_definition: {
         Args: {
@@ -15713,6 +15947,23 @@ export type Database = {
           temporal_basis: string
           temporal_distance_seconds: number
         }[]
+      }
+      finish_findlocal_scheduled_sync: {
+        Args: {
+          p_error_message?: string
+          p_run_id: string
+          p_success: boolean
+          p_summary?: Json
+        }
+        Returns: string
+      }
+      flag_findlocal_missing_start_time: {
+        Args: { p_city: string; p_event: Json }
+        Returns: string
+      }
+      flow_lineage_venue_matches: {
+        Args: { p_contribution_id: string; p_snapshot_stop_id: string }
+        Returns: boolean
       }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
@@ -15923,6 +16174,18 @@ export type Database = {
           eligibility_reason: string
           occurrence_id: string
           resolved_event_id: string
+        }[]
+      }
+      get_explore_trending_aggregates: {
+        Args: { p_as_of?: string }
+        Returns: {
+          current_unique_visitors: number
+          current_verified_visits: number
+          last_verified_visit_at: string
+          previous_unique_visitors: number
+          previous_verified_visits: number
+          recent_verified_visits: number
+          venue_id: string
         }[]
       }
       get_nearby_crawls: {
@@ -16432,6 +16695,15 @@ export type Database = {
       save_roam_relay_template: {
         Args: { p_relay_id: string; p_slots: Json }
         Returns: string
+      }
+      save_snapshot_with_certified_lineage: {
+        Args: {
+          p_expected_venue_ids: string[]
+          p_explorer_user_id: string
+          p_snapshot_payload: Json
+          p_source_flow_id: string
+        }
+        Returns: Json
       }
       set_roam_relay_competition_winner_and_award_xp: {
         Args: { p_competition_id: string; p_relay_winner_entry_id: string }
@@ -17207,6 +17479,16 @@ export type Database = {
         }
         Returns: number
       }
+      sync_findlocal_event: {
+        Args: {
+          p_city: string
+          p_ends_at?: string
+          p_event: Json
+          p_starts_at: string
+          p_timezone: string
+        }
+        Returns: string
+      }
       sync_scout_forecast_evidence: {
         Args: { p_cycle_id?: string; p_market_id?: string }
         Returns: {
@@ -17454,7 +17736,6 @@ export const Constants = {
     },
   },
 } as const
-
 
 
 // -----------------------
