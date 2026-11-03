@@ -75,6 +75,23 @@ export default async function PropertyPage({
     )
   }
 
+  /* =========================================================
+   * PROPERTY WEBSITE — NEW
+   *
+   * Reuse the website already stored on the property.
+   * Only valid HTTP(S) URLs are displayed.
+   *
+   * The property data loader must include the website
+   * column in its returned property object.
+   * ======================================================= */
+
+  const propertyWebsiteUrl =
+    getSafePropertyWebsiteUrl(
+      'website' in guide.property
+        ? guide.property.website
+        : null
+    )
+
   const origin = {
     lat: guide.property.lat,
     lon: guide.property.lon,
@@ -344,6 +361,50 @@ export default async function PropertyPage({
                     >
                       View QR
                     </a>
+
+                    {/* =================================================
+                        PROPERTY WEBSITE — NEW
+
+                        External HTTP(S) link.
+
+                        target="_blank" requests a separate
+                        browser context. rel="external" signals
+                        that this is an external destination.
+
+                        Native wrappers must support external
+                        links opening in the system browser.
+                        ================================================= */}
+
+                    {propertyWebsiteUrl && (
+                      <a
+                        href={propertyWebsiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer external"
+                        data-analytics-action="open_property_website"
+                        aria-label={`Visit ${guide.property.name} website (opens externally)`}
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-[#c5a57a]/30 bg-[#c5a57a]/10 px-4 py-2 text-sm font-semibold text-[#f1dfc4] transition hover:border-[#c5a57a]/60 hover:bg-[#c5a57a]/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c5a57a]"
+                      >
+                        Website
+
+                        <svg
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="15"
+                          height="15"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4 shrink-0"
+                        >
+                          <path d="M15 3h6v6" />
+                          <path d="M10 14 21 3" />
+                          <path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" />
+                        </svg>
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -649,6 +710,82 @@ export default async function PropertyPage({
       </main>
     </PropertyGuideInteractionTracker>
   )
+}
+
+/* ------------------------------------------------ */
+/* Property website URL validation — NEW            */
+/* ------------------------------------------------ */
+
+/**
+ * Normalize the owner-provided website address.
+ *
+ * Examples:
+ *   example.com          -> https://example.com/
+ *   www.example.com      -> https://www.example.com/
+ *   https://example.com  -> https://example.com/
+ *
+ * Never render unsupported schemes such as
+ * javascript:, data:, or file: as website links.
+ */
+function getSafePropertyWebsiteUrl(
+  value: unknown
+): string | null {
+  if (
+    typeof value !== 'string'
+  ) {
+    return null
+  }
+
+  const rawUrl = value.trim()
+
+  if (!rawUrl) {
+    return null
+  }
+
+  const hasScheme =
+    /^[a-z][a-z0-9+.-]*:/i.test(
+      rawUrl
+    )
+
+  if (
+    hasScheme &&
+    !/^https?:\/\//i.test(
+      rawUrl
+    )
+  ) {
+    return null
+  }
+
+  const normalizedUrl =
+    /^https?:\/\//i.test(
+      rawUrl
+    )
+      ? rawUrl
+      : `https://${rawUrl}`
+
+  try {
+    const parsedUrl =
+      new URL(normalizedUrl)
+
+    if (
+      parsedUrl.protocol !== 'http:' &&
+      parsedUrl.protocol !== 'https:'
+    ) {
+      return null
+    }
+
+    if (
+      !parsedUrl.hostname ||
+      parsedUrl.username ||
+      parsedUrl.password
+    ) {
+      return null
+    }
+
+    return parsedUrl.href
+  } catch {
+    return null
+  }
 }
 
 function SectionShell({

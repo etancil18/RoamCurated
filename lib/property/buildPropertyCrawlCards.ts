@@ -1,3 +1,4 @@
+
 import type { DateTime } from 'luxon'
 
 import {
@@ -352,57 +353,118 @@ function degreesToRadians(value: number) {
 /* Context-aware theme copy                         */
 /* ------------------------------------------------ */
 
+/**
+ * Property-only presentation alignment.
+ *
+ * These times mirror PROPERTY_THEME_START_TIMES
+ * in lib/crawls/crawlGenerator.ts.
+ *
+ * They are used ONLY to determine whether the
+ * generator is planning an outing for today or
+ * tomorrow. No specific clock time is displayed
+ * to the guest.
+ *
+ * Keep this mapping aligned with the generator
+ * if its internal planning windows ever change.
+ */
+const PROPERTY_COPY_PLANNING_WINDOWS: Record<
+  string,
+  {
+    hour: number
+    minute: number
+  }
+> = {
+  morningFlow: {
+    hour: 9,
+    minute: 0,
+  },
+  soloExplorer: {
+    hour: 11,
+    minute: 0,
+  },
+  dateNight: {
+    hour: 18,
+    minute: 30,
+  },
+  nightOut: {
+    hour: 20,
+    minute: 30,
+  },
+}
+
+/**
+ * Return the calendar day on which the generator
+ * plans the next outing for this theme.
+ *
+ * The same DateTime zone supplied to the generator
+ * is preserved. This avoids relying on the
+ * browser's or server's separate local clock.
+ *
+ * This helper does not affect actual crawl
+ * selection or operating-hour validation.
+ */
+function isPropertyThemePlannedForToday(
+  theme: string,
+  now: DateTime
+): boolean {
+  const window =
+    PROPERTY_COPY_PLANNING_WINDOWS[theme]
+
+  if (!window) {
+    return true
+  }
+
+  const plannedToday = now.set({
+    hour: window.hour,
+    minute: window.minute,
+    second: 0,
+    millisecond: 0,
+  })
+
+  return plannedToday.toMillis() >= now.toMillis()
+}
+
+/**
+ * Best-time chips describe an intuitive occasion,
+ * not a fixed appointment or guaranteed opening.
+ */
 function getBestTimeLabelForTheme(
   theme: string,
   now: DateTime
 ) {
-  const hour = getDecimalHour(now)
+  const today =
+    isPropertyThemePlannedForToday(theme, now)
 
   if (theme === 'morningFlow') {
-    return hour < 12
-      ? 'Best right now'
+    return today
+      ? 'Good for this morning'
       : 'Best tomorrow morning'
   }
 
   if (theme === 'soloExplorer') {
-    if (hour >= 10 && hour < 17) {
-      return 'Good right now'
-    }
-
-    if (hour < 10) {
-      return 'Best late morning'
-    }
-
-    return 'Best tomorrow daytime'
+    return today
+      ? 'Great for a daytime wander'
+      : 'Great tomorrow daytime'
   }
 
   if (theme === 'dateNight') {
-    if (hour >= 17 && hour < 21.5) {
-      return 'Best tonight'
-    }
-
-    if (hour < 17) {
-      return 'Best after 6 PM'
-    }
-
-    return 'Best tomorrow night'
+    return today
+      ? 'A good one for tonight'
+      : 'A good one for tomorrow night'
   }
 
   if (theme === 'nightOut') {
-    if (hour >= 19 && hour <= 23.5) {
-      return 'Best tonight'
-    }
-
-    if (hour < 19) {
-      return 'Best later tonight'
-    }
-
-    return 'Best tomorrow night'
+    return today
+      ? 'Best later tonight'
+      : 'Best tomorrow night'
   }
 
   return null
 }
 
+/**
+ * Existing presentation ordering remains unchanged.
+ */
 function getThemeContextScore(
   theme: string,
   now: DateTime
@@ -460,59 +522,104 @@ function getThemeContextScore(
   return 99
 }
 
+/**
+ * Titles now reflect the actual planned day.
+ *
+ * Avoid "Now" because a route evaluated for a
+ * future planning window is not necessarily ready
+ * to start at the moment the page is opened.
+ */
 function getTitleOverrides(
   now: DateTime
 ): Partial<Record<string, string>> {
-  const hour = getDecimalHour(now)
-
   return {
     morningFlow:
-      hour < 12
+      isPropertyThemePlannedForToday(
+        'morningFlow',
+        now
+      )
         ? 'This Morning Flow'
         : 'Tomorrow Morning Reset',
 
     soloExplorer:
-      hour >= 10 && hour < 17
-        ? 'Explore Near Here Now'
-        : 'Easy Local Explore',
+      isPropertyThemePlannedForToday(
+        'soloExplorer',
+        now
+      )
+        ? 'Today’s Solo Explorer'
+        : 'Tomorrow’s Solo Explorer',
 
     dateNight:
-      hour >= 16.5
+      isPropertyThemePlannedForToday(
+        'dateNight',
+        now
+      )
         ? 'Tonight’s Date Night Flow'
-        : 'Date Night Near Here',
+        : 'Tomorrow Night’s Date Night Flow',
 
     nightOut:
-      hour >= 18.5
+      isPropertyThemePlannedForToday(
+        'nightOut',
+        now
+      )
         ? 'Tonight’s Night Out Flow'
-        : 'Night Out Near Here',
+        : 'Tomorrow Night’s Night Out Flow',
   }
 }
 
+/**
+ * Subtitles retain the experiential promise
+ * without implying an exact departure, booking,
+ * or a venue category that has not been verified
+ * for every selected stop.
+ */
 function getSubtitleOverrides(
   now: DateTime
 ): Partial<Record<string, string>> {
-  const hour = getDecimalHour(now)
+  const morningToday =
+    isPropertyThemePlannedForToday(
+      'morningFlow',
+      now
+    )
+
+  const soloToday =
+    isPropertyThemePlannedForToday(
+      'soloExplorer',
+      now
+    )
+
+  const dateToday =
+    isPropertyThemePlannedForToday(
+      'dateNight',
+      now
+    )
+
+  const nightToday =
+    isPropertyThemePlannedForToday(
+      'nightOut',
+      now
+    )
 
   return {
     morningFlow:
-      hour < 12
-        ? 'A timely nearby sequence for coffee, reset, and a clean start to the day.'
-        : 'A low-friction morning plan to save for the next good start.',
+      morningToday
+        ? 'Ease into the morning with a nearby refreshment stop and a little local discovery.'
+        : 'An easy morning reset to look forward to, with a refreshing start and room to wander.',
 
     soloExplorer:
-      hour >= 10 && hour < 17
-        ? 'A daytime-friendly route for getting oriented without overcommitting.'
-        : 'A flexible local route for browsing, coffee, and an easy solo stop.',
+      soloToday
+        ? 'Discover something interesting nearby, then settle into an easy second stop.'
+        : 'A low-pressure daytime route for browsing, discovering, and lingering on your own terms.',
 
     dateNight:
-      hour >= 16.5
-        ? 'A dinner-and-drinks sequence that fits the current evening window.'
-        : 'A polished nearby evening route for when you want the plan ready.',
+      dateToday
+        ? 'A dinner worth making time for, followed by a thoughtfully chosen drinks stop.'
+        : 'An inviting dinner-and-drinks plan to keep in mind for tomorrow evening.',
 
     nightOut:
-      hour >= 18.5
-        ? 'A social route that builds energy while keeping the stops walkable.'
-        : 'A higher-energy route to keep in your pocket for later tonight.',
+      nightToday
+        ? 'Ease into the evening, then discover a livelier local spot.'
+        : 'A social evening route for tomorrow, with distinct stops that work well together.',
   }
 }
 
