@@ -1220,7 +1220,7 @@ const nycData = [
         "lat": "40.7297972",
     "lon": "-73.9597789",
     "link": "https://www.instagram.com/el_pinguino_greenpoint/?hl=en",
-    "cover": "img/venues/El Pingüino.jpg",
+    "cover": "img/venues/el-pinguino.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 4:00 PM–12:00 AM",
@@ -1400,7 +1400,7 @@ const nycData = [
         "lat": "40.6834003",
     "lon": "-73.9346878",
     "link": "https://www.instagram.com/barlunatico/?hl=en",
-    "cover": "img/venues/LunÀtico.jpg",
+    "cover": "img/venues/lunatico.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 5:00 PM–1:00 AM",
@@ -3762,7 +3762,7 @@ const nycData = [
         "lat": "40.7440519",
     "lon": "-73.9989809",
     "link": "https://www.instagram.com/cafeflornyc/?hl=en",
-    "cover": "img/venues/Café-Flor : Bar 21.jpg",
+    "cover": "img/venues/cafe-flor-bar-21.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 8:00 AM–12:00 AM",
@@ -6937,7 +6937,7 @@ const nycData = [
         "lat": "40.767004",
     "lon": "-73.9693969",
     "link": "https://www.instagram.com/levygorvydayan/?hl=en",
-    "cover": "img/venues/Lévy Gorvy Dayan.jpg",
+    "cover": "img/venues/levy-gorvy-dayan.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: Closed",
@@ -8400,7 +8400,7 @@ const nycData = [
         "lat": "40.6848548",
     "lon": "-73.9861081",
     "link": "https://www.instagram.com/anaiswinebk/?hl=en",
-    "cover": "img/venues/Anaïs.jpg",
+    "cover": "img/venues/anais.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 9:00 AM–11:00 PM",
@@ -8895,7 +8895,7 @@ const nycData = [
         "lat": "40.728543",
     "lon": "-73.985416",
     "link": "https://www.instagram.com/theimmigrant_nyc/",
-    "cover": "",
+    "cover": "img/venues/The Immigrant.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 4:00 PM–12:45 AM",
@@ -10245,7 +10245,7 @@ const nycData = [
         "lat": "40.7273544",
     "lon": "-73.9573996",
     "link": "https://www.instagram.com/greenburgcafe/",
-    "cover": "img/venues/Greenburg Café.jpg",
+    "cover": "img/venues/greenberg-cafe.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 7:00 AM–7:00 PM",
@@ -11949,7 +11949,7 @@ const nycData = [
         "lat": "40.7212979",
     "lon": "-73.9951978",
     "link": "https://www.instagram.com/ma_de.nyc/",
-    "cover": "img/venues/Ma-dé.jpg",
+    "cover": "img/venues/made.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 12:00 PM–9:30 PM",
@@ -12039,7 +12039,7 @@ const nycData = [
         "lat": "40.7221985",
     "lon": "-73.996049",
     "link": "https://www.instagram.com/explore/search/keyword/?q=Caf%C3%A9%20Leon%20Dore",
-    "cover": "img/venues/Café Leon Dore.jpg",
+    "cover": "img/venues/cafe-leon-dore.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 9:00 AM–6:00 PM",
@@ -12792,7 +12792,7 @@ const nycData = [
         "lat": "40.7113802",
     "lon": "-73.9446198",
     "link": "https://www.instagram.com/ammazzacaffe.nyc/",
-    "cover": "img/venues/Ammazzacaffè.jpg",
+    "cover": "img/venues/ammazzacaffe.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 12:00 PM–3:00 PM; 5:00 PM–10:00 PM",
@@ -14347,7 +14347,7 @@ const nycData = [
         "lat": "40.72437788",
     "lon": "-73.95469863",
     "link": "https://www.instagram.com/caffepanna/",
-    "cover": "img/venues/Caffè Panna.jpg",
+    "cover": "img/venues/caffe-panna.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 1:30 PM–9:30 PM",
@@ -14392,7 +14392,7 @@ const nycData = [
         "lat": "40.7170163",
     "lon": "-73.99325241",
     "link": "https://www.instagram.com/mam.nyc/",
-    "cover": "img/venues/Mắm.jpg",
+    "cover": "img/venues/mam.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 12:00 PM–3:45 PM",
@@ -15347,7 +15347,7 @@ const nycData = [
         "lat": "40.7189329",
     "lon": "-73.961364",
     "link": "https://www.instagram.com/koibabrooklyn/?hl=en",
-    "cover": "img/venues/Koi Bā.jpg",
+    "cover": "img/venues/koi-ba.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 6:00 PM–11:00 PM",
@@ -18264,7 +18264,7 @@ const nycData = [
         "lat": "40.7326969",
     "lon": "-73.9976557",
     "link": "https://www.instagram.com/ameliebistronyc/",
-    "cover": "img/venues/Amélie West Village.jpg",
+    "cover": "img/venues/amelie-west-village-restaurant-bistro-wine-bar.jpg",
     "openNow": "TRUE",
     "hours": [
     "Sunday: 11:00 AM–11:00 PM",
@@ -23788,7 +23788,7 @@ const nycData = [
         "lat": 40.723611,
     "lon": -74.010487,
     "link": "https://www.instagram.com/fouquets.newyork/",
-    "cover": "img/venues/Élysée's.jpg",
+    "cover": "img/venues/elysees.jpg",
     "openNow": true,
     "hours": [
       "Sunday: Closed",
@@ -25031,7 +25031,7 @@ const nycData = [
     "lat": 40.732182,
     "lon": -74.000915,
     "link": "https://www.instagram.com/lechenenyc/",
-    "cover": "img/venues/Le Chêne.jpg",
+    "cover": "img/venues/le-chene.jpg",
     "openNow": true,
     "hours": [
       "Sunday: Closed",
@@ -26549,7 +26549,7 @@ const nycData = [
     "lat": 40.6868258,
     "lon": -73.9628829,
     "link": "https://www.instagram.com/placedesfetesbrooklyn/",
-    "cover": "img/venues/Place des Fêtes.jpg",
+    "cover": "img/venues/place-des-fetes.jpg",
     "openNow": true,
     "hours": [
       "Sunday: 5:30 PM–10:00 PM",
@@ -29184,7 +29184,7 @@ const nycData = [
     "lat": "40.74728",
     "lon": "-74.0047984",
     "link": "https://www.instagram.com/tia_pol/",
-    "cover": "img/venues/Tía Pol.jpg",
+    "cover": "img/venues/tia-pol.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–4:00 PM; 5:00 PM–9:00 PM",
@@ -29419,7 +29419,7 @@ const nycData = [
     "lat": "40.71862695",
     "lon": "-73.99141395",
     "link": "https://www.instagram.com/colmadocoffee/",
-    "cover": "img/venues/Café Colmado.jpg",
+    "cover": "img/venues/cafe-colmado.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 9:00 AM–6:00 PM",
@@ -30454,7 +30454,7 @@ const nycData = [
     "lat": "40.7159389",
     "lon": "-73.9875609",
     "link": "https://www.instagram.com/francoisghebaly/?hl=en",
-    "cover": "img/venues/François Ghebaly New York.jpeg",
+    "cover": "img/venues/francois-ghebaly-new-york.jpeg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -32126,7 +32126,7 @@ const nycData = [
     "lat": "40.7181814",
     "lon": "-73.9900497",
     "link": "https://www.instagram.com/lepere/",
-    "cover": "img/venues/le PÈRE.jpg",
+    "cover": "img/venues/le-pere.jpg",
     "openNow": "TRUE",
     "hours": {
       "Sunday": "12:00 PM–6:00 PM",
@@ -35295,7 +35295,7 @@ const nycData = [
     "lat": "40.6753101",
     "lon": "-73.9814311",
     "link": "https://www.instagram.com/aldilabrooklyn/?hl=en",
-    "cover": "img/venues/al di là Trattoria.jpg",
+    "cover": "img/venues/al-di-la-trattoria.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: Closed",
@@ -37981,7 +37981,7 @@ const nycData = [
 "lat": "40.6897156",
 "lon": "-73.971783",
 "link": "https://www.instagram.com/saraghinacaffe/?hl=en",
-"cover": "img/venues/Saraghina Caffè.jpg",
+"cover": "img/venues/saraghina-caffe.jpg",
     "openNow": "TRUE",
 "hours": [
 "Sunday: 9:00 AM–9:00 PM",
@@ -38729,7 +38729,7 @@ const nycData = [
 "lat": "40.7279459",
 "lon": "-73.9993703",
 "link": "https://www.instagram.com/cafehabibti/",
-"cover": "img/venues/Café Habibti.jpg",
+"cover": "img/venues/cafe-habibti.jpg",
     "openNow": "TRUE",
 "hours": [
 "Sunday: 9:00 AM–7:00 PM",
@@ -38817,7 +38817,7 @@ const nycData = [
 "lat": "40.7256319",
 "lon": "-74.0021447",
 "link": "https://www.instagram.com/ansacoffeenyc/?hl=en",
-"cover": "img/venues/ansā Micro Coffee Roastery.jpg",
+"cover": "img/venues/ansa-micro-coffee-roastery.jpg",
     "openNow": "TRUE",
 "hours": [
 "Sunday: 9:00 AM–6:00 PM",
@@ -39037,7 +39037,7 @@ const nycData = [
 "lat": "40.6829615",
 "lon": "-73.9928946",
 "link": "https://www.instagram.com/barbetebk/",
-"cover": "img/venues/Bar Bête.jpg",
+"cover": "img/venues/bar-bete.jpg",
     "openNow": "TRUE",
 "hours": [
 "Sunday: Closed",
@@ -39081,7 +39081,7 @@ const nycData = [
 "lat": "40.683254",
 "lon": "-73.995664",
 "link": "https://www.instagram.com/liftfloats/?hl=en",
-"cover": "img/venues/Lift / Next Level Floats.jpg",
+"cover": "img/venues/Lift-Next Level Floats.jpg",
     "openNow": "TRUE",
 "hours": [
 "Sunday: 9:30 AM–10:00 PM",
@@ -39565,7 +39565,7 @@ const nycData = [
 "lat": "40.7231824",
 "lon": "-73.9423553",
 "link": "https://www.instagram.com/littledokebibk/?hl=en",
-"cover": "img/venues/Little Dokebi.jpg",
+"cover": "img/venues/little-dokebi.jpg",
     "openNow": "TRUE",
 "hours": [
 "Sunday: 12:00 PM–11:00 PM",
@@ -40357,7 +40357,7 @@ const nycData = [
     "lat": "40.6937446",
     "lon": "-73.9227736",
     "link": "https://www.instagram.com/sunrisesunsetbk/?hl=en",
-    "cover": "img/venues/Sunrise/Sunset.jpg",
+    "cover": "img/venues/sunrise-sunset.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 8:00 AM–12:00 AM",
@@ -40401,7 +40401,7 @@ const nycData = [
     "lat": "40.6858772",
     "lon": "-73.9230808",
     "link": "https://www.instagram.com/onetwoonecafe/?hl=en",
-    "cover": "img/venues/OneTwoOne Café.jpg",
+    "cover": "img/venues/onetwoone-cafe.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 10:00 AM–7:00 PM",
@@ -43397,7 +43397,7 @@ const nycData = [
     "lat": "40.7194011",
     "lon": "-73.9889486",
     "link": "https://www.instagram.com/tinsnyc/?hl=en",
-    "cover": "img/venues/.jpg",
+    "cover": "img/venues/tins-nyc.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 5:00 PM–11:00 PM",
@@ -43617,7 +43617,7 @@ const nycData = [
     "lat": "40.7167453",
     "lon": "-73.9653485",
     "link": "https://www.instagram.com/sususnyc/",
-    "cover": "img/venues/.jpg",
+    "cover": "img/venues/susus-nyc.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–12:00 AM",
@@ -43925,7 +43925,7 @@ const nycData = [
     "lat": "40.7220131",
     "lon": "-73.9493582",
     "link": "https://www.instagram.com/thesnailnyc/?hl=en",
-    "cover": "img/venues/.jpg",
+    "cover": "img/venues/the-snail-nyc.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 12:00 PM–10:00 PM",
@@ -44409,7 +44409,7 @@ const nycData = [
     "lat": "40.7282564",
     "lon": "-73.9816488",
     "link": "https://www.instagram.com/therabbitbooksandbar/?hl=en",
-    "cover": "img/venues/.jpg",
+    "cover": "img/venues/the-rabbit-books-and-bar-nyc.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 8:00 AM–11:00 PM",
@@ -44453,7 +44453,7 @@ const nycData = [
     "lat": "40.6624945",
     "lon": "-73.9925297",
     "link": "https://www.instagram.com/sunrise_espresso/?hl=en",
-    "cover": "img/venues/.jpg",
+    "cover": "img/venues/sunrise-espresso-bar-nyc.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 7:00 AM–7:00 PM",
