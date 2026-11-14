@@ -149,6 +149,15 @@ export default function Navbar() {
                   Explore Places
                 </Link>
 
+                {/* Public Roam Editions navigation */}
+                <Link
+                  href="/editions"
+                  onClick={() => handleNavClick('editions')}
+                  className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-gray-50 hover:text-black dark:text-gray-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+                >
+                  Editions
+                </Link>
+
                 {user ? (
                   <>
 

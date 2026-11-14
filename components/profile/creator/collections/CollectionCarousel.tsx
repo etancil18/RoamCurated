@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -7,6 +8,8 @@ import {
   useRef,
   useState,
 } from 'react'
+
+import Link from 'next/link'
 
 /* =========================================================
  * Public contracts
@@ -44,6 +47,17 @@ export type CollectionCarouselMedia = {
   durationSeconds:
     | number
     | null
+
+  /*
+   * Optional canonical Roam venue attribution.
+   *
+   * Existing carousel callers may omit this property.
+   */
+  venue?: {
+    id: string
+    name: string
+    href: string
+  } | null
 }
 
 type Props = {
@@ -645,13 +659,55 @@ export default function CollectionCarousel({
           </span>
         </div>
 
-        {activeMedia.caption ? (
+        {activeMedia.caption ||
+        activeMedia.venue ? (
           <div className="border-t border-neutral-800/80 bg-neutral-950 px-4 py-4 sm:px-5">
-            <p className="break-words text-sm leading-6 text-neutral-300">
-              {
-                activeMedia.caption
-              }
-            </p>
+            {activeMedia.caption ? (
+              <p className="break-words text-sm leading-6 text-neutral-300">
+                {
+                  activeMedia.caption
+                }
+              </p>
+            ) : null}
+
+            {activeMedia.venue ? (
+              <div
+                className={
+                  activeMedia.caption
+                    ? 'mt-3'
+                    : ''
+                }
+              >
+                <Link
+                  href={
+                    activeMedia.venue.href
+                  }
+                  className="inline-flex max-w-full items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/[0.06] px-3 py-2 text-xs font-semibold text-cyan-200 transition hover:border-cyan-400/50 hover:bg-cyan-500/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+                  aria-label={`Explore ${activeMedia.venue.name} on Roam`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0"
+                  >
+                    📍
+                  </span>
+
+                  <span className="min-w-0 break-words">
+                    Tagged at:{' '}
+                    {
+                      activeMedia.venue.name
+                    }
+                  </span>
+
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0"
+                  >
+                    →
+                  </span>
+                </Link>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -894,6 +950,60 @@ function normalizeCarouselMediaItem(
       normalizeNonNegativeNumber(
         value.durationSeconds
       ),
+
+    venue:
+      normalizeCarouselVenue(
+        value.venue
+      ),
+  }
+}
+
+/* =========================================================
+ * Canonical venue attribution
+ * ======================================================= */
+
+function normalizeCarouselVenue(
+  value: unknown
+): NonNullable<
+  CollectionCarouselMedia['venue']
+> | null {
+  if (!isRecord(value)) {
+    return null
+  }
+
+  const id =
+    normalizeRequiredText(
+      value.id,
+      36
+    )
+
+  const name =
+    normalizeRequiredText(
+      value.name,
+      240
+    )
+
+  if (
+    !id ||
+    !name ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      id
+    )
+  ) {
+    return null
+  }
+
+  /*
+   * Construct the canonical Roam profile path from
+   * venues.id rather than trusting an arbitrary href.
+   */
+  return {
+    id,
+    name,
+    href:
+      `/venue-profile/${encodeURIComponent(
+        id
+      )}`,
   }
 }
 

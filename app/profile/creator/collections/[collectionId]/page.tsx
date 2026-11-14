@@ -1,3 +1,4 @@
+
 import type {
   Metadata,
 } from 'next'
@@ -27,6 +28,10 @@ import {
   updateCreatorCollectionAction,
   type CollectionActionFailure,
 } from '../actions'
+
+import {
+  suggestCreatorVenueAction,
+} from '../suggestVenueAction'
 
 import type {
   CreatorCollectionMediaRecord,
@@ -100,10 +105,20 @@ type CreatorCollectionRow = {
   updated_at: string
 }
 
-type CreatorCollectionVenueRow = {
+/**
+ * Unified editorial presentation record.
+ *
+ * The ID is creator_collection_items.id, never the
+ * creator_collection_venues relationship ID.
+ */
+type CreatorCollectionPresentationRow = {
   id: string
   collection_id: string
-  venue_id: string
+  source_type: 'venue' | 'venue_submission'
+  source_id: string
+  custom_title: string | null
+  creator_note: string | null
+  image_url: string | null
   sort_order: number
   created_at: string
 }
@@ -119,6 +134,17 @@ type VenueRow = {
     | string
     | null
   created_at: string | null
+}
+
+type CreatorVenueSubmissionRow = {
+  id: string
+  creator_id: string
+  venue_name: string
+  city: string
+  address: string | null
+  category: string | null
+  creator_note: string | null
+  created_at: string
 }
 
 type CollectionPageData = {
@@ -222,8 +248,18 @@ export default async function CreatorCollectionPage({
         )}`
       : null
 
+  /**
+   * The picker only accepts canonical venues.id values.
+   *
+   * Suggested-place IDs are submission UUIDs and must
+   * never be included in the official venue picker.
+   */
   const existingVenueIds =
     selectedVenues
+      .filter(
+        (item) =>
+          item.item_type === 'venue'
+      )
       .map(
         (venue) =>
           venue.item_id
@@ -578,7 +614,7 @@ function VisibilityBadge({
       <span
         aria-hidden="true"
         className={[
-          'h-2 w-2 rounded-full',
+          'h-2 w-2 shrink-0 rounded-full',
           isPublic
             ? 'bg-emerald-400'
             : 'bg-neutral-600',
@@ -778,11 +814,11 @@ function CollectionEditor({
                     defaultValue={
                       collection.category ??
                       ''
-                    }
-                    className={
-                      inputClassName
-                    }
-                  />
+                  }
+                  className={
+                    inputClassName
+                  }
+                />
                 </FormField>
               </div>
             </div>
@@ -820,7 +856,7 @@ function CollectionEditor({
           <div className="flex flex-wrap gap-3">
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950"
+              className="inline-flex items-center justify-center rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-neutral-950"
             >
               Save Changes
             </button>
@@ -962,7 +998,7 @@ function CollectionVenueManager({
     >
       <div className="border-b border-neutral-800/80 px-4 py-4 sm:px-5">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
-          Collection venues
+          Collection places
         </p>
 
         <div className="mt-1 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -972,26 +1008,26 @@ function CollectionVenueManager({
               className="text-lg font-semibold text-white"
             >
               Build this collection
-              with venues
+              with places
             </h2>
 
             <p className="mt-1 max-w-2xl text-xs leading-5 text-neutral-500">
               {collection.city
-                ? `Choose venues located in ${
+                ? `Add places in ${
                     getCityLabel(
                       collection.city
-                    ) ?? collection.city
-                  }. Selected venues link to their Roam venue profiles.`
-                : 'Save a city on this collection before selecting venues.'}
+                    ) ??
+                    collection.city
+                  }. Official Roam venues link to their venue profiles; creator-suggested places appear as editorial recommendations.`
+                : 'Save a city on this collection before adding places.'}
             </p>
           </div>
 
           <span className="w-fit shrink-0 rounded-full border border-neutral-800 bg-black/30 px-3 py-1.5 text-xs font-medium text-neutral-400">
             {selectedVenues.length.toLocaleString()}{' '}
-            {selectedVenues.length ===
-            1
-              ? 'venue'
-              : 'venues'}
+            {selectedVenues.length === 1
+              ? 'place'
+              : 'places'}
           </span>
         </div>
       </div>
@@ -1030,6 +1066,12 @@ function CollectionVenueManager({
               }
               initialType="venue"
               selectionLimit={25}
+              suggestionCity={
+                collection.city
+              }
+              suggestPlaceAction={
+                suggestCreatorVenueAction
+              }
             />
           </div>
         ) : (
@@ -1053,7 +1095,6 @@ function CollectionVenueManager({
   )
 }
 
-
 /* =========================================================
  * Publishing controls
  * ======================================================= */
@@ -1066,7 +1107,7 @@ function CollectionPublishingControls({
 }) {
   const nextVisibility =
     collection.visibility ===
-    'public'
+      'public'
       ? 'private'
       : 'public'
 
@@ -1714,6 +1755,7 @@ async function loadCollectionMediaLayer({
         poster_path,
         caption,
         alt_text,
+        venue_id,
         width,
         height,
         duration_seconds,
@@ -1767,7 +1809,13 @@ async function loadCollectionMediaLayer({
 }
 
 /* =========================================================
- * Focused venue loader
+ * Unified collection presentation loader
+ *
+ * creator_collection_items is the editorial ordering
+ * source for canonical and suggested places.
+ *
+ * Canonical Roam venue relationships remain exclusively
+ * in creator_collection_venues.
  * ======================================================= */
 
 async function loadCollectionVenueLayer({
@@ -1783,15 +1831,19 @@ async function loadCollectionVenueLayer({
   selectedVenues:
     CollectionItemListItem[]
 }> {
-  const relationshipsResult =
+  const itemsResult =
     await supabase
       .from(
-        'creator_collection_venues'
+        'creator_collection_items'
       )
       .select(`
         id,
         collection_id,
-        venue_id,
+        source_type,
+        source_id,
+        custom_title,
+        creator_note,
+        image_url,
         sort_order,
         created_at
       `)
@@ -1799,50 +1851,115 @@ async function loadCollectionVenueLayer({
         'collection_id',
         collection.id
       )
-      .order('sort_order', {
-        ascending: true,
-      })
-      .order('created_at', {
-        ascending: true,
-      })
+      .order(
+        'sort_order',
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        'created_at',
+        {
+          ascending: true,
+        }
+      )
+      .order(
+        'id',
+        {
+          ascending: true,
+        }
+      )
 
-  if (
-    relationshipsResult.error
-  ) {
+  if (itemsResult.error) {
     console.error(
-      '[creator collection page] Collection venue relationship query failed:',
+      '[creator collection page] Presentation items query failed:',
       {
         userId,
         collectionId:
           collection.id,
         error:
-          relationshipsResult.error,
+          itemsResult.error,
       }
     )
 
     throw new Error(
-      'Collection venues could not be loaded.'
+      'Collection items could not be loaded.'
     )
   }
 
-  const relationships =
-    normalizeCollectionVenueRows(
-      relationshipsResult.data,
+  const rawItems =
+    itemsResult.data ?? []
+
+  /**
+   * Do not silently omit unsupported item types.
+   * The reorder RPC validates the complete item list,
+   * and dropping items from this projection would
+   * make successful reordering impossible.
+   */
+  if (
+    rawItems.some(
+      (item) =>
+        item.source_type !==
+          'venue' &&
+        item.source_type !==
+          'venue_submission'
+    )
+  ) {
+    throw new Error(
+      'This collection contains an unsupported item type.'
+    )
+  }
+
+  const items =
+    normalizeCollectionPresentationRows(
+      rawItems,
       collection.id
     )
 
-  const selectedVenueIds = [
+  if (
+    items.length !== rawItems.length
+  ) {
+    throw new Error(
+      'Some collection presentation records are invalid.'
+    )
+  }
+
+  const canonicalVenueIds = [
     ...new Set(
-      relationships.map(
-        (relationship) =>
-          relationship.venue_id
-      )
+      items
+        .filter(
+          (item) =>
+            item.source_type ===
+            'venue'
+        )
+        .map(
+          (item) =>
+            item.source_id
+        )
     ),
   ]
 
-  const selectedVenueResult =
-    selectedVenueIds.length > 0
-      ? await supabase
+  const submissionIds = [
+    ...new Set(
+      items
+        .filter(
+          (item) =>
+            item.source_type ===
+            'venue_submission'
+        )
+        .map(
+          (item) =>
+            item.source_id
+        )
+    ),
+  ]
+
+  const [
+    selectedVenueResult,
+    submissionsResult,
+  ] = await Promise.all([
+    canonicalVenueIds.length > 0
+      ? supabase
           .from('venues')
           .select(`
             id,
@@ -1854,16 +1971,43 @@ async function loadCollectionVenueLayer({
           `)
           .in(
             'id',
-            selectedVenueIds
+            canonicalVenueIds
           )
-      : {
+      : Promise.resolve({
           data: [],
           error: null,
-        }
+        }),
 
-  if (
-    selectedVenueResult.error
-  ) {
+    submissionIds.length > 0
+      ? supabase
+          .from(
+            'creator_venue_submissions'
+          )
+          .select(`
+            id,
+            creator_id,
+            venue_name,
+            city,
+            address,
+            category,
+            creator_note,
+            created_at
+          `)
+          .eq(
+            'creator_id',
+            userId
+          )
+          .in(
+            'id',
+            submissionIds
+          )
+      : Promise.resolve({
+          data: [],
+          error: null,
+        }),
+  ])
+
+  if (selectedVenueResult.error) {
     console.error(
       '[creator collection page] Selected venue query failed:',
       {
@@ -1880,6 +2024,23 @@ async function loadCollectionVenueLayer({
     )
   }
 
+  if (submissionsResult.error) {
+    console.error(
+      '[creator collection page] Suggested place query failed:',
+      {
+        userId,
+        collectionId:
+          collection.id,
+        error:
+          submissionsResult.error,
+      }
+    )
+
+    throw new Error(
+      'Suggested collection places could not be loaded.'
+    )
+  }
+
   const selectedVenueRows =
     normalizeVenueRows(
       selectedVenueResult.data
@@ -1891,28 +2052,55 @@ async function loadCollectionVenueLayer({
         (venue) => [
           venue.id,
           venue,
-        ]
+        ] as const
       )
     )
 
+  const submissionRows =
+    normalizeCreatorVenueSubmissionRows(
+      submissionsResult.data,
+      userId
+    )
+
+  const submissionById =
+    new Map(
+      submissionRows.map(
+        (submission) => [
+          submission.id,
+          submission,
+        ] as const
+      )
+    )
+
+  /**
+   * Presentation IDs are authoritative for both
+   * removal and transactional reordering.
+   *
+   * The canonical venue's venues.id is kept separately
+   * as item_id for venue profile links and the picker.
+   */
   const selectedVenues =
-    relationships
-      .map(
-        (
-          relationship
-        ): CollectionItemListItem | null => {
+    items.map(
+      (
+        item
+      ): CollectionItemListItem => {
+        if (
+          item.source_type ===
+          'venue'
+        ) {
           const venue =
             selectedVenueById.get(
-              relationship.venue_id
+              item.source_id
             )
 
           if (!venue) {
-            return null
+            throw new Error(
+              'A canonical collection venue could not be resolved.'
+            )
           }
 
           return {
-            id:
-              relationship.id,
+            id: item.id,
 
             collection_id:
               collection.id,
@@ -1930,9 +2118,11 @@ async function loadCollectionVenueLayer({
               venue.category,
 
             description:
+              item.creator_note ??
               venue.description,
 
             image_url:
+              item.image_url ??
               venue.cover_image_url,
 
             href:
@@ -1944,21 +2134,76 @@ async function loadCollectionVenueLayer({
               venue.city,
 
             sort_order:
-              relationship.sort_order,
+              item.sort_order,
 
             created_at:
-              relationship.created_at,
+              item.created_at,
 
             updated_at: null,
           }
         }
-      )
-      .filter(
-        (
-          venue
-        ): venue is CollectionItemListItem =>
-          venue !== null
-      )
+
+        const submission =
+          submissionById.get(
+            item.source_id
+          )
+
+        if (!submission) {
+          throw new Error(
+            'A suggested collection place could not be resolved.'
+          )
+        }
+
+        return {
+          id: item.id,
+
+          collection_id:
+            collection.id,
+
+          item_type:
+            'venue_submission',
+
+          /**
+           * Submission UUID, not venues.id.
+           * This must never become a Flow venue ID.
+           */
+          item_id:
+            submission.id,
+
+          title:
+            item.custom_title ??
+            submission.venue_name,
+
+          subtitle:
+            submission.category ??
+            submission.address,
+
+          description:
+            item.creator_note ??
+            submission.creator_note,
+
+          image_url:
+            item.image_url,
+
+          /**
+           * Suggested places are editorial entries.
+           * No canonical venue profile is fabricated.
+           */
+          href: null,
+
+          city:
+            submission.city,
+
+          sort_order:
+            item.sort_order,
+
+          created_at:
+            item.created_at,
+
+          updated_at: null,
+        }
+      }
+    )
 
   return {
     selectedVenues,
@@ -2426,6 +2671,11 @@ function normalizeCollectionMediaRows(
               row.alt_text
             ),
 
+          venue_id:
+            normalizeUuid(
+              row.venue_id
+            ),
+
           width:
             normalizePositiveInteger(
               row.width
@@ -2496,19 +2746,26 @@ function normalizeCollectionMediaRows(
     )
 }
 
-function normalizeCollectionVenueRows(
+/**
+ * Validate presentation records without silently
+ * dropping invalid IDs from the ordered sequence.
+ *
+ * This is important because the reorder RPC requires
+ * the complete set of presentation-item UUIDs.
+ */
+function normalizeCollectionPresentationRows(
   value: unknown,
   expectedCollectionId: string
-): CreatorCollectionVenueRow[] {
+): CreatorCollectionPresentationRow[] {
   if (!Array.isArray(value)) {
     return []
   }
 
-  return value
-    .map(
+  const rows =
+    value.map(
       (
         row
-      ): CreatorCollectionVenueRow | null => {
+      ): CreatorCollectionPresentationRow | null => {
         if (!isRecord(row)) {
           return null
         }
@@ -2523,9 +2780,15 @@ function normalizeCollectionVenueRows(
             row.collection_id
           )
 
-        const venueId =
+        const sourceType =
+          row.source_type === 'venue' ||
+          row.source_type === 'venue_submission'
+            ? row.source_type
+            : null
+
+        const sourceId =
           normalizeUuid(
-            row.venue_id
+            row.source_id
           )
 
         const createdAt =
@@ -2537,7 +2800,8 @@ function normalizeCollectionVenueRows(
           !id ||
           collectionId !==
             expectedCollectionId ||
-          !venueId ||
+          !sourceType ||
+          !sourceId ||
           !createdAt
         ) {
           return null
@@ -2545,14 +2809,139 @@ function normalizeCollectionVenueRows(
 
         return {
           id,
+
           collection_id:
             collectionId,
-          venue_id:
-            venueId,
+
+          source_type:
+            sourceType,
+
+          source_id:
+            sourceId,
+
+          custom_title:
+            normalizeNullableText(
+              row.custom_title
+            ),
+
+          creator_note:
+            normalizeNullableText(
+              row.creator_note
+            ),
+
+          image_url:
+            normalizeNullableText(
+              row.image_url
+            ),
+
           sort_order:
             normalizeNonNegativeInteger(
               row.sort_order
             ),
+
+          created_at:
+            createdAt,
+        }
+      }
+    )
+
+  /**
+   * The caller compares lengths and refuses to render
+   * a partial collection if a record is invalid.
+   */
+  return rows.filter(
+    (
+      row
+    ): row is CreatorCollectionPresentationRow =>
+      row !== null
+  )
+}
+
+/**
+ * Normalize creator-suggested places from the existing
+ * owner-scoped submission table.
+ *
+ * No administrative review metadata is needed here.
+ */
+function normalizeCreatorVenueSubmissionRows(
+  value: unknown,
+  expectedCreatorId: string
+): CreatorVenueSubmissionRow[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map(
+      (
+        row
+      ): CreatorVenueSubmissionRow | null => {
+        if (!isRecord(row)) {
+          return null
+        }
+
+        const id =
+          normalizeUuid(
+            row.id
+          )
+
+        const creatorId =
+          normalizeUuid(
+            row.creator_id
+          )
+
+        const venueName =
+          normalizeRequiredText(
+            row.venue_name
+          )
+
+        const city =
+          normalizeRequiredText(
+            row.city
+          )
+
+        const createdAt =
+          normalizeIsoDate(
+            row.created_at
+          )
+
+        if (
+          !id ||
+          creatorId !==
+            expectedCreatorId ||
+          !venueName ||
+          !city ||
+          !createdAt
+        ) {
+          return null
+        }
+
+        return {
+          id,
+
+          creator_id:
+            creatorId,
+
+          venue_name:
+            venueName,
+
+          city,
+
+          address:
+            normalizeNullableText(
+              row.address
+            ),
+
+          category:
+            normalizeNullableText(
+              row.category
+            ),
+
+          creator_note:
+            normalizeNullableText(
+              row.creator_note
+            ),
+
           created_at:
             createdAt,
         }
@@ -2561,42 +2950,8 @@ function normalizeCollectionVenueRows(
     .filter(
       (
         row
-      ): row is CreatorCollectionVenueRow =>
+      ): row is CreatorVenueSubmissionRow =>
         row !== null
-    )
-    .sort(
-      (
-        first,
-        second
-      ) => {
-        if (
-          first.sort_order !==
-          second.sort_order
-        ) {
-          return (
-            first.sort_order -
-            second.sort_order
-          )
-        }
-
-        const createdComparison =
-          Date.parse(
-            first.created_at
-          ) -
-          Date.parse(
-            second.created_at
-          )
-
-        if (
-          createdComparison !== 0
-        ) {
-          return createdComparison
-        }
-
-        return first.id.localeCompare(
-          second.id
-        )
-      }
     )
 }
 
@@ -2810,7 +3165,7 @@ function normalizeRequiredText(
 ): string | null {
   if (
     typeof value !==
-      'string'
+    'string'
   ) {
     return null
   }
@@ -2828,7 +3183,7 @@ function normalizeNullableText(
 ): string | null {
   if (
     typeof value !==
-      'string'
+    'string'
   ) {
     return null
   }
@@ -2848,7 +3203,7 @@ function normalizeStoragePath(
 ): string | null {
   if (
     typeof value !==
-      'string'
+    'string'
   ) {
     return null
   }
@@ -2988,7 +3343,7 @@ function isRecord(
 > {
   return (
     typeof value ===
-      'object' &&
+    'object' &&
     value !== null &&
     !Array.isArray(value)
   )

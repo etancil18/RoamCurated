@@ -13,6 +13,7 @@ import SocialGroupsAdmin from './components/SocialGroupsAdmin'
 import CompetitionEntrySelector from './components/CompetitionEntrySelector'
 import HistoricalVenueVisitAdmin from './HistoricalVenueVisitAdmin'
 import FoundingTastemakerAdmin from './FoundingTastemakerAdmin'
+import RoamEditionsAdmin from './components/RoamEditionsAdmin'
 import type { Database } from '@/types/supabase'
 
 export type VenueSummary = Pick<
@@ -28,6 +29,7 @@ type AdminWorkspace =
   | 'social-groups'
   | 'property-guides'
   | 'hotel-shortterm-rental'
+  | 'editorial-editions'
   | 'event-journeys'
   | 'relay'
   | 'competitions'
@@ -79,6 +81,13 @@ const ADMIN_WORKSPACES: Array<{
     label: 'Hotels & Short-Term Rentals',
     eyebrow: 'Property operations',
     description: 'Manage hotel and rental guest guides.',
+  },
+  {
+    id: 'editorial-editions',
+    label: 'Roam Editions',
+    eyebrow: 'Editorial Studio',
+    description:
+      'Create curated social stories and feature Roam creators.',
   },
   {
     id: 'event-journeys',
@@ -376,6 +385,14 @@ export default function VenueAdminPage() {
                     description="Manage the content and community systems people experience across Roam."
                   >
                     <AdminTaskCard
+                      title="Roam Editions"
+                      description="Create creator-powered editorial stories and prepare branded social content."
+                      accent="cyan"
+                      onClick={() =>
+                        setActiveWorkspace('editorial-editions')
+                      }
+                    />
+                    <AdminTaskCard
                       title="Founding Tastemakers"
                       description="Designate or remove the founding identity shown on a creator’s public profile."
                       accent="amber"
@@ -590,6 +607,18 @@ export default function VenueAdminPage() {
               </AdminModuleFrame>
             </section>
 
+            {/* =================================================
+                ROAM EDITIONS
+            ================================================== */}
+
+            {activeWorkspace === 'editorial-editions' && (
+              <section className="space-y-5">
+                <AdminModuleFrame>
+                  <RoamEditionsAdmin />
+                </AdminModuleFrame>
+              </section>
+            )}
+            
             {/* =================================================
                 EVENT JOURNEYS
             ================================================== */}

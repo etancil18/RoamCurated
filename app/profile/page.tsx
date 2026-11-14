@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -20,6 +21,12 @@ import VisitHistorySection from "@/components/profile/VisitHistorySection"
 import ProfileSnapshotLibrary, {
   type ProfileSnapshot,
 } from "@/components/profile/ProfileSnapshotLibrary"
+
+import SuggestMissingPlaceForm from "@/components/profile/creator/collections/SuggestMissingPlaceForm"
+
+import {
+  suggestCreatorVenueAction,
+} from "@/app/profile/creator/collections/suggestVenueAction"
 
 import {
   CREATOR_ROUTES,
@@ -449,7 +456,6 @@ export default function UserProfilePage() {
             []
           ) as RelayInvitationMembershipRow[]
 
-
         if (
           invitationMemberships.length ===
           0
@@ -469,7 +475,6 @@ export default function UserProfilePage() {
                 )
               )
             )
-
 
           const [
             teamsResult,
@@ -515,11 +520,9 @@ export default function UserProfilePage() {
                 ),
             ])
 
-
           if (cancelled) {
             return
           }
-
 
           if (
             teamsResult.error
@@ -539,7 +542,6 @@ export default function UserProfilePage() {
                 []
               ) as RelayInvitationTeamRow[]
 
-
             const relayIds =
               Array.from(
                 new Set(
@@ -551,7 +553,6 @@ export default function UserProfilePage() {
                   )
                 )
               )
-
 
             if (
               relayIds.length ===
@@ -579,11 +580,9 @@ export default function UserProfilePage() {
                     relayIds
                   )
 
-
               if (cancelled) {
                 return
               }
-
 
               if (
                 relaysResult.error
@@ -606,20 +605,17 @@ export default function UserProfilePage() {
                   )
                 }
 
-
                 const invitationRelays =
                   (
                     relaysResult.data ??
                     []
                   ) as RelayInvitationRelayRow[]
 
-
                 const joinedMembers =
                   (
                     joinedMembersResult.data ??
                     []
                   ) as RelayInvitationJoinedMemberRow[]
-
 
                 const teamById =
                   new Map(
@@ -633,7 +629,6 @@ export default function UserProfilePage() {
                     )
                   )
 
-
                 const relayById =
                   new Map(
                     invitationRelays.map(
@@ -646,13 +641,11 @@ export default function UserProfilePage() {
                     )
                   )
 
-
                 const joinedCountByTeamId =
                   new Map<
                     string,
                     number
                   >()
-
 
                 joinedMembers.forEach(
                   (
@@ -671,7 +664,6 @@ export default function UserProfilePage() {
                   }
                 )
 
-
                 const normalizedRelayInvitations =
                   invitationMemberships.flatMap(
                     (
@@ -682,26 +674,22 @@ export default function UserProfilePage() {
                           membership.team_id
                         )
 
-
                       if (
                         !team
                       ) {
                         return []
                       }
 
-
                       const relay =
                         relayById.get(
                           team.relay_id
                         )
-
 
                       if (
                         !relay
                       ) {
                         return []
                       }
-
 
                       return [
                         {
@@ -745,11 +733,9 @@ export default function UserProfilePage() {
                     }
                   )
 
-
                 setRelayInvitations(
                   normalizedRelayInvitations
                 )
-
 
                 if (
                   normalizedRelayInvitations.length >
@@ -995,14 +981,12 @@ export default function UserProfilePage() {
     }
   }, [])
 
-
   async function acceptRelayInvitation(
     teamId:
       string
   ) {
     const supabase =
       supabaseBrowser()
-
 
     const result =
       await (
@@ -1015,7 +999,6 @@ export default function UserProfilePage() {
         }
       )
 
-
     if (
       result.error
     ) {
@@ -1032,12 +1015,10 @@ export default function UserProfilePage() {
           .filter(Boolean)
           .join(" | ")
 
-
       throw new Error(
         `[profile/page] join_roam_relay_team failed: ${details}`
       )
     }
-
 
     setRelayInvitations(
       (
@@ -1052,7 +1033,6 @@ export default function UserProfilePage() {
         )
     )
 
-
     safeLogEvent(
       "profile_relay_invitation_accepted",
       {
@@ -1061,12 +1041,10 @@ export default function UserProfilePage() {
       }
     )
 
-
     return {
       teamId,
     }
   }
-
 
   async function declineRelayInvitation(
     teamId:
@@ -1074,7 +1052,6 @@ export default function UserProfilePage() {
   ) {
     const supabase =
       supabaseBrowser()
-
 
     const result =
       await (
@@ -1087,7 +1064,6 @@ export default function UserProfilePage() {
         }
       )
 
-
     if (
       result.error
     ) {
@@ -1104,12 +1080,10 @@ export default function UserProfilePage() {
           .filter(Boolean)
           .join(" | ")
 
-
       throw new Error(
         `[profile/page] decline_roam_relay_team_invitation failed: ${details}`
       )
     }
-
 
     setRelayInvitations(
       (
@@ -1124,7 +1098,6 @@ export default function UserProfilePage() {
         )
     )
 
-
     safeLogEvent(
       "profile_relay_invitation_declined",
       {
@@ -1133,12 +1106,10 @@ export default function UserProfilePage() {
       }
     )
 
-
     return {
       teamId,
     }
   }
-
 
   const navigationItems:
     ProfileNavigationItem[] = [
@@ -1399,7 +1370,7 @@ export default function UserProfilePage() {
               >
                 <ProfileForm />
               </ProfileDisclosure>
-                
+
               <ProfileDisclosure
                 eyebrow="Information"
                 title="Legal & Transparency"
@@ -1413,7 +1384,6 @@ export default function UserProfilePage() {
     </div>
   )
 }
-
 
 /* =========================================================
  * Legal & Transparency
@@ -1743,7 +1713,7 @@ function OwnerReputationPanel({
         ?.headline
     ) ||
     details.length >
-      0
+    0
 
   if (
     !hasReputation &&
@@ -2424,6 +2394,84 @@ function CreatorModeEntryCard({
           )
       : null
 
+  /*
+   * Standalone suggestion eligibility is determined
+   * by the existing server-side creator readiness
+   * authority, not Creator Mode alone.
+   */
+  const [
+    canSuggestStandalone,
+    setCanSuggestStandalone,
+  ] = useState(false)
+
+  useEffect(() => {
+    if (!enabled) {
+      setCanSuggestStandalone(false)
+      return
+    }
+
+    const controller =
+      new AbortController()
+
+    async function loadSuggestionEligibility() {
+      try {
+        const response = await fetch(
+          "/api/profile/creator/suggestion-eligibility",
+          {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store",
+            headers: {
+              Accept: "application/json",
+            },
+            signal: controller.signal,
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(
+            `Eligibility request failed: ${response.status}`
+          )
+        }
+
+        const result: unknown =
+          await response.json()
+
+        if (controller.signal.aborted) {
+          return
+        }
+
+        const eligible =
+          typeof result === "object" &&
+          result !== null &&
+          !Array.isArray(result) &&
+          "canSuggestStandalone" in result &&
+          result.canSuggestStandalone === true
+
+        setCanSuggestStandalone(eligible)
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return
+        }
+
+        console.error(
+          "[profile/page] Creator suggestion eligibility failed:",
+          error
+        )
+
+        setCanSuggestStandalone(false)
+      }
+    }
+
+    setCanSuggestStandalone(false)
+
+    void loadSuggestionEligibility()
+
+    return () => {
+      controller.abort()
+    }
+  }, [enabled])
+
   return (
     <div className="w-full min-w-0 space-y-3">
       <div
@@ -2532,6 +2580,16 @@ function CreatorModeEntryCard({
         </Link>
       </div>
 
+      {canSuggestStandalone ? (
+        <SuggestMissingPlaceForm
+          collectionId={null}
+          city=""
+          suggestPlaceAction={
+            suggestCreatorVenueAction
+          }
+        />
+      ) : null}
+
       {!username ? (
         <p className="rounded-xl bg-amber-400/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-100/70 ring-1 ring-amber-300/15">
           Add a username in Profile
@@ -2579,7 +2637,7 @@ function SavedLibraryShell() {
 
             "[&_li]:!min-w-0 [&_li]:!rounded-[1.25rem] [&_li]:!border-transparent [&_li]:!bg-white/[0.04] [&_li]:!p-3 [&_li]:!shadow-none [&_li]:!ring-1 [&_li]:!ring-white/[0.055]",
 
-            "[&_h3]:!text-sm [&_h3]:!font-bold [&_h3]:!text-white",
+            "[&_h3]:!text-sm [&_h3]:!font-bold [&_h3]:text-white",
 
             "[&_p]:!text-xs [&_p]:!text-zinc-500",
 

@@ -4766,6 +4766,7 @@ export type Database = {
           storage_path: string
           updated_at: string
           user_id: string
+          venue_id: string | null
           width: number | null
         }
         Insert: {
@@ -4783,6 +4784,7 @@ export type Database = {
           storage_path: string
           updated_at?: string
           user_id: string
+          venue_id?: string | null
           width?: number | null
         }
         Update: {
@@ -4800,6 +4802,7 @@ export type Database = {
           storage_path?: string
           updated_at?: string
           user_id?: string
+          venue_id?: string | null
           width?: number | null
         }
         Relationships: [
@@ -4815,6 +4818,20 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_collection_media_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "creator_collection_media_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
             referencedColumns: ["id"]
           },
         ]
@@ -5378,6 +5395,89 @@ export type Database = {
           {
             foreignKeyName: "creator_social_links_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_venue_submissions: {
+        Row: {
+          address: string | null
+          category: string | null
+          city: string
+          created_at: string
+          creator_id: string
+          creator_note: string | null
+          id: string
+          instagram_url: string | null
+          resolved_venue_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          venue_name: string
+          website_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          city: string
+          created_at?: string
+          creator_id: string
+          creator_note?: string | null
+          id?: string
+          instagram_url?: string | null
+          resolved_venue_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          venue_name: string
+          website_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          city?: string
+          created_at?: string
+          creator_id?: string
+          creator_note?: string | null
+          id?: string
+          instagram_url?: string | null
+          resolved_venue_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          venue_name?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_venue_submissions_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_venue_submissions_resolved_venue_id_fkey"
+            columns: ["resolved_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "creator_venue_submissions_resolved_venue_id_fkey"
+            columns: ["resolved_venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_venue_submissions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -8091,6 +8191,217 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      roam_editorial_edition_items: {
+        Row: {
+          badge: string | null
+          created_at: string
+          display_title: string | null
+          edition_id: string
+          editorial_blurb: string | null
+          id: string
+          image_override_url: string | null
+          origin: string
+          position: number
+          source_collection_item_id: string | null
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          badge?: string | null
+          created_at?: string
+          display_title?: string | null
+          edition_id: string
+          editorial_blurb?: string | null
+          id?: string
+          image_override_url?: string | null
+          origin?: string
+          position?: number
+          source_collection_item_id?: string | null
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          badge?: string | null
+          created_at?: string
+          display_title?: string | null
+          edition_id?: string
+          editorial_blurb?: string | null
+          id?: string
+          image_override_url?: string | null
+          origin?: string
+          position?: number
+          source_collection_item_id?: string | null
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_editorial_edition_items_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_editorial_editions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_editorial_edition_items_source_collection_item_id_fkey"
+            columns: ["source_collection_item_id"]
+            isOneToOne: false
+            referencedRelation: "creator_collection_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_editorial_edition_items_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venue_rsvps_view"
+            referencedColumns: ["venue_id"]
+          },
+          {
+            foreignKeyName: "roam_editorial_edition_items_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_editorial_editions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          city: string | null
+          created_at: string
+          created_by: string
+          creator_permission_recorded_at: string | null
+          creator_permission_status: string
+          credit_mode: string
+          description: string | null
+          design_settings: Json
+          edition_type: string
+          featured_creator_id: string | null
+          id: string
+          is_public: boolean
+          published_at: string | null
+          source_collection_id: string | null
+          status: string
+          subtitle: string | null
+          template_key: string
+          theme_key: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          city?: string | null
+          created_at?: string
+          created_by: string
+          creator_permission_recorded_at?: string | null
+          creator_permission_status?: string
+          credit_mode?: string
+          description?: string | null
+          design_settings?: Json
+          edition_type?: string
+          featured_creator_id?: string | null
+          id?: string
+          is_public?: boolean
+          published_at?: string | null
+          source_collection_id?: string | null
+          status?: string
+          subtitle?: string | null
+          template_key?: string
+          theme_key?: string | null
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string
+          creator_permission_recorded_at?: string | null
+          creator_permission_status?: string
+          credit_mode?: string
+          description?: string | null
+          design_settings?: Json
+          edition_type?: string
+          featured_creator_id?: string | null
+          id?: string
+          is_public?: boolean
+          published_at?: string | null
+          source_collection_id?: string | null
+          status?: string
+          subtitle?: string | null
+          template_key?: string
+          theme_key?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_editorial_editions_featured_creator_id_fkey"
+            columns: ["featured_creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roam_editorial_editions_source_collection_id_fkey"
+            columns: ["source_collection_id"]
+            isOneToOne: false
+            referencedRelation: "creator_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roam_editorial_exports: {
+        Row: {
+          edition_id: string
+          format: string
+          id: string
+          render_snapshot: Json
+          rendered_at: string
+          rendered_by: string
+          storage_path: string
+          template_version: number
+          version: number
+        }
+        Insert: {
+          edition_id: string
+          format: string
+          id?: string
+          render_snapshot: Json
+          rendered_at?: string
+          rendered_by: string
+          storage_path: string
+          template_version?: number
+          version: number
+        }
+        Update: {
+          edition_id?: string
+          format?: string
+          id?: string
+          render_snapshot?: Json
+          rendered_at?: string
+          rendered_by?: string
+          storage_path?: string
+          template_version?: number
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roam_editorial_exports_edition_id_fkey"
+            columns: ["edition_id"]
+            isOneToOne: false
+            referencedRelation: "roam_editorial_editions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       roam_relay_artifact_slots: {
         Row: {
@@ -16676,6 +16987,33 @@ export type Database = {
         }[]
       }
       roam_city_timezone: { Args: { city_value: string }; Returns: string }
+      roam_editorial_import_collection: {
+        Args: {
+          p_actor_id: string
+          p_collection_id: string
+          p_edition_id: string
+        }
+        Returns: Json
+      }
+      roam_editorial_reorder_items: {
+        Args: { p_edition_id: string; p_item_ids: string[] }
+        Returns: undefined
+      }
+      roam_editorial_search_venues: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          city: string
+          id: string
+          matched_on: string
+          name: string
+        }[]
+      }
+      roam_public_collection_creator_verified_venues: {
+        Args: { p_collection_id: string }
+        Returns: {
+          venue_id: string
+        }[]
+      }
       roam_relay_flow_snapshot_identity_embargoed: {
         Args: { p_snapshot_id: string }
         Returns: boolean
@@ -16691,6 +17029,28 @@ export type Database = {
       roam_relay_venue_matches_category: {
         Args: { p_category_constraint: string; p_venue_id: string }
         Returns: boolean
+      }
+      roam_reorder_creator_collection_items: {
+        Args: { p_collection_id: string; p_item_ids: string[] }
+        Returns: undefined
+      }
+      roam_submit_creator_venue: {
+        Args: {
+          p_address?: string
+          p_category?: string
+          p_city: string
+          p_collection_id?: string
+          p_creator_id: string
+          p_creator_note?: string
+          p_instagram_url?: string
+          p_venue_name: string
+          p_website_url?: string
+        }
+        Returns: {
+          collection_item_id: string
+          reused: boolean
+          submission_id: string
+        }[]
       }
       save_roam_relay_template: {
         Args: { p_relay_id: string; p_slots: Json }
@@ -17736,6 +18096,7 @@ export const Constants = {
     },
   },
 } as const
+
 
 
 // -----------------------

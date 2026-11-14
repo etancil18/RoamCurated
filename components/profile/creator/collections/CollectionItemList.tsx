@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -30,6 +31,7 @@ import {
 
 export type CollectionItemType =
   | 'venue'
+  | 'venue_submission'
   | 'property'
   | 'flow'
   | 'snapshot'
@@ -342,7 +344,7 @@ export default function CollectionItemList({
     })
 
     startTransition(() => {
-      void reorderItemsAction({
+      void reorderItemsAction!({
         collectionId:
           normalizedCollectionId,
         collectionItemIds,
@@ -401,7 +403,8 @@ export default function CollectionItemList({
     if (
       !canRemove ||
       !normalizedCollectionId ||
-      isBusy
+      isBusy ||
+      item.item_type === 'venue_submission'
     ) {
       return
     }
@@ -447,7 +450,7 @@ export default function CollectionItemList({
     })
 
     startTransition(() => {
-      void removeItemAction({
+      void removeItemAction!({
         collectionId:
           normalizedCollectionId,
         collectionItemId:
@@ -612,7 +615,7 @@ export default function CollectionItemList({
                     }
                     pendingType={
                       itemPending
-                        ? pendingOperation.type
+                        ? pendingOperation!.type
                         : null
                     }
                     onMoveUp={() =>
@@ -760,23 +763,27 @@ function CollectionItemCard({
   canRemove: boolean
   pending: boolean
   pendingType:
-  | PendingOperationType
-  | null
+    | PendingOperationType
+    | null
   onMoveUp: () => void
   onMoveDown: () => void
   onRemove: () => void
 }) {
   const internalHref =
-    normalizeInternalHref(
-      item.href
-    )
-
-  const externalHref =
-    internalHref
+    item.item_type === 'venue_submission'
       ? null
-      : normalizeExternalHref(
+      : normalizeInternalHref(
           item.href
         )
+
+  const externalHref =
+    item.item_type === 'venue_submission'
+      ? null
+      : internalHref
+        ? null
+        : normalizeExternalHref(
+            item.href
+          )
 
   return (
     <article
@@ -923,7 +930,8 @@ function CollectionItemCard({
                 />
               </ItemIconButton>
 
-              {canRemove ? (
+              {canRemove &&
+              item.item_type !== 'venue_submission' ? (
                 <ItemIconButton
                   label="Remove item from collection"
                   disabled={pending}
@@ -1020,6 +1028,14 @@ function ItemTypeIcon({
         />
       )
 
+    case 'venue_submission':
+      return (
+        <MapPin
+          aria-hidden="true"
+          className={className}
+        />
+      )
+
     case 'property':
       return (
         <MapPin
@@ -1060,6 +1076,9 @@ function getItemTypeLabel(
   switch (itemType) {
     case 'venue':
       return 'Venue'
+
+    case 'venue_submission':
+      return 'Suggested place'
 
     case 'property':
       return 'Property'
@@ -1401,9 +1420,11 @@ function normalizeCollectionItem({
       ),
 
     href:
-      normalizeItemHref(
-        item.href
-      ),
+      item.item_type === 'venue_submission'
+        ? null
+        : normalizeItemHref(
+            item.href
+          ),
 
     city:
       normalizeOptionalText(
@@ -1468,6 +1489,7 @@ function isCollectionItemType(
 ): value is CollectionItemType {
   return (
     value === 'venue' ||
+    value === 'venue_submission' ||
     value === 'property' ||
     value === 'flow' ||
     value === 'snapshot' ||

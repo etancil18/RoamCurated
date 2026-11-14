@@ -1,3 +1,4 @@
+
 'use server'
 
 import {
@@ -34,6 +35,7 @@ export type CreatorCollectionMediaActionFailure = {
       | 'mimeType'
       | 'caption'
       | 'altText'
+      | 'venueId'
       | 'width'
       | 'height'
       | 'durationSeconds'
@@ -134,6 +136,20 @@ const nullableAltTextSchema =
       )
       .nullable()
   )
+
+/*
+ * Venue tagging:
+ *
+ * Omitted venueId leaves the existing venue association unchanged.
+ * A valid UUID sets the tag.
+ * Explicit null removes the tag.
+ *
+ * Venue existence is verified separately before saving.
+ */
+const optionalVenueIdSchema =
+  uuidSchema
+    .nullable()
+    .optional()
 
 const nullablePositiveIntegerSchema =
   z.preprocess(
@@ -268,6 +284,9 @@ const updateMediaSchema =
 
     altText:
       nullableAltTextSchema,
+
+    venueId:
+      optionalVenueIdSchema,
   })
 
 const reorderMediaSchema =
@@ -574,6 +593,7 @@ export async function updateCreatorCollectionMediaAction(
     mediaId,
     caption,
     altText,
+    venueId,
   } = parsed.data
 
   const supabase =
@@ -645,6 +665,60 @@ export async function updateCreatorCollectionMediaAction(
     }
   }
 
+  /*
+   * Only validate a venue when the caller is setting a tag.
+   *
+   * Undefined preserves the existing association.
+   * Null explicitly clears it.
+   */
+  if (
+    venueId !== undefined &&
+    venueId !== null
+  ) {
+    const venueResult =
+      await supabase
+        .from('venues')
+        .select('id')
+        .eq(
+          'id',
+          venueId
+        )
+        .maybeSingle()
+
+    if (
+      venueResult.error
+    ) {
+      console.error(
+        '[creator collection media] Failed to verify tagged venue:',
+        serializeDatabaseError(
+          venueResult.error
+        )
+      )
+
+      return {
+        success: false,
+        error:
+          'The selected Roam venue could not be verified. Please try again.',
+      }
+    }
+
+    if (
+      !venueResult.data
+    ) {
+      return {
+        success: false,
+        error:
+          'The selected Roam venue was not found or is unavailable.',
+
+        fieldErrors: {
+          venueId: [
+            'Select a valid Roam venue.',
+          ],
+        },
+      }
+    }
+  }
+
   const updateResult =
     await supabase
       .from(
@@ -654,6 +728,17 @@ export async function updateCreatorCollectionMediaAction(
         caption,
         alt_text:
           altText,
+
+        /*
+         * Preserve existing venue tags for callers that
+         * do not provide venueId.
+         */
+        ...(venueId !== undefined
+          ? {
+              venue_id:
+                venueId,
+            }
+          : {}),
       })
       .eq(
         'id',
@@ -1658,6 +1743,7 @@ const MEDIA_SELECT = `
   poster_path,
   caption,
   alt_text,
+  venue_id,
   width,
   height,
   duration_seconds,
@@ -1751,6 +1837,11 @@ function normalizeMediaRecord(
     alt_text:
       normalizeNullableText(
         value.alt_text
+      ),
+
+    venue_id:
+      normalizeUuid(
+        value.venue_id
       ),
 
     width:
@@ -1858,6 +1949,7 @@ function isMediaFieldErrorKey(
     'mimeType',
     'caption',
     'altText',
+    'venueId',
     'width',
     'height',
     'durationSeconds',

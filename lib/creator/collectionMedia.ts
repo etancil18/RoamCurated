@@ -1,3 +1,4 @@
+
 /* =========================================================
  * Public contracts
  * ======================================================= */
@@ -28,6 +29,9 @@ export type CreatorCollectionMediaRecord = {
     | string
     | null
   alt_text:
+    | string
+    | null
+  venue_id:
     | string
     | null
   width:

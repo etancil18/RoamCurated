@@ -1,3 +1,4 @@
+
 'use client'
 
 import {
@@ -25,6 +26,16 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
+
+/* =========================================================
+ * Missing-place suggestion integration
+ * ======================================================= */
+
+import SuggestMissingPlaceForm from './SuggestMissingPlaceForm'
+
+import type {
+  SuggestCreatorVenueResult,
+} from '@/app/profile/creator/collections/suggestVenueAction'
 
 /* =========================================================
  * Public contracts
@@ -223,6 +234,32 @@ export type CollectionItemPickerProps = {
   disabled?: boolean
 
   /**
+   * City used for an in-collection missing-place
+   * suggestion. The city is verified by the server.
+   */
+  suggestionCity?: string | null
+
+  /**
+   * Trusted server action for creating an editorial
+   * suggested-place entry.
+   *
+   * This is independent of canonical venue search
+   * and selection.
+   */
+  suggestPlaceAction?: (
+    input: {
+      collectionId: string | null
+      venueName: string
+      city: string
+      address: string | null
+      category: string | null
+      websiteUrl: string | null
+      instagramUrl: string | null
+      creatorNote: string | null
+    }
+  ) => Promise<SuggestCreatorVenueResult>
+
+  /**
    * Optional wrapper classes.
    */
   className?: string
@@ -272,6 +309,8 @@ export default function CollectionItemPicker({
   onCancel,
   submitLabel = 'Add Selected Items',
   disabled = false,
+  suggestionCity = null,
+  suggestPlaceAction,
   className = '',
 }: CollectionItemPickerProps) {
   const normalizedCollectionId =
@@ -985,6 +1024,25 @@ export default function CollectionItemPicker({
           </ul>
         )}
       </div>
+
+      {/* Missing-place suggestions are separate from
+          canonical venue search and multi-selection. */}
+      {suggestPlaceAction &&
+      suggestionCity?.trim() ? (
+        <div className="px-4 pb-5 sm:px-5">
+          <SuggestMissingPlaceForm
+            collectionId={
+              normalizedCollectionId
+            }
+            city={suggestionCity}
+            searchQuery={query}
+            disabled={isBusy}
+            suggestPlaceAction={
+              suggestPlaceAction
+            }
+          />
+        </div>
+      ) : null}
 
       <PickerFooter
         selectionCount={

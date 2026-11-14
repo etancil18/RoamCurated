@@ -2541,17 +2541,26 @@ export async function removeCreatorCollectionVenueAction(
 /**
  * Compatibility wrapper for CollectionItemList.tsx.
  */
+
+/**
+ * CollectionItemList.tsx compatibility action.
+ *
+ * Supports:
+ *   - legacy official relationship IDs
+ *   - new official presentation IDs
+ *
+ * Manual entries are deliberately not removed here
+ * until the trusted manual-association removal RPC
+ * has been installed.
+ */
 export async function removeCreatorCollectionItemAction(
   input: unknown
 ): Promise<CreatorCollectionItemMutationResult> {
   const parsed =
-    removeCreatorCollectionItemSchema.safeParse(
-      input
-    )
+    removeCreatorCollectionItemSchema.safeParse(input)
 
   if (!parsed.success) {
-    const failure =
-      schemaFailure(parsed.error)
+    const failure = schemaFailure(parsed.error)
 
     return {
       success: false,
@@ -2559,12 +2568,87 @@ export async function removeCreatorCollectionItemAction(
     }
   }
 
+  const {
+    collectionId,
+    collectionItemId,
+  } = parsed.data
+
+  const supabase = await createServerClient()
+
+  const authentication =
+    await requireAuthenticatedUser(supabase)
+
+  if (!authentication.success) {
+    return authentication.result
+  }
+
+  const userId = authentication.userId
+
+  const collectionResult =
+    await loadOwnedCollection({
+      supabase,
+      userId,
+      collectionId,
+    })
+
+  if (!collectionResult.success) {
+    return collectionResult.result
+  }
+
+  // First check whether this is a new presentation ID.
+  const { data: presentationItem, error: itemError } =
+    await supabase
+      .from('creator_collection_items')
+      .select('id, source_type, source_id')
+      .eq('id', collectionItemId)
+      .eq('collection_id', collectionId)
+      .maybeSingle()
+
+  if (itemError) {
+    return {
+      success: false,
+      error:
+        'The collection item could not be verified. Please try again.',
+    }
+  }
+
+  let legacyRelationshipId = collectionItemId
+
+  if (presentationItem) {
+    if (presentationItem.source_type !== 'venue') {
+      return {
+        success: false,
+        error:
+          'Manual place removal is not available yet.',
+      }
+    }
+
+    const { data: relationship, error: relationshipError } =
+      await supabase
+        .from('creator_collection_venues')
+        .select('id')
+        .eq('collection_id', collectionId)
+        .eq('venue_id', presentationItem.source_id)
+        .maybeSingle()
+
+    if (relationshipError || !relationship) {
+      return {
+        success: false,
+        error:
+          'The official venue relationship could not be verified. Refresh the page.',
+      }
+    }
+
+    legacyRelationshipId = relationship.id
+  }
+
+  // The canonical removal path remains unchanged.
+  // Migration 002B's DELETE trigger removes its
+  // corresponding presentation entry atomically.
   const result =
     await performRemoveCreatorCollectionVenue({
-      collectionId:
-        parsed.data.collectionId,
-      collectionVenueId:
-        parsed.data.collectionItemId,
+      collectionId,
+      collectionVenueId: legacyRelationshipId,
     })
 
   return result.success
@@ -2779,17 +2863,27 @@ export async function reorderCreatorCollectionVenuesAction(
 /**
  * Compatibility wrapper for CollectionItemList.tsx.
  */
+
+/**
+ * Compatibility action for CollectionItemList.tsx.
+ *
+ * Current manager:
+ *   Sends creator_collection_venues.id values.
+ *
+ * Future mixed manager:
+ *   Sends creator_collection_items.id values.
+ *
+ * Both are resolved to presentation IDs before calling
+ * the transactional reorder RPC.
+ */
 export async function reorderCreatorCollectionItemsAction(
   input: unknown
 ): Promise<CreatorCollectionItemMutationResult> {
   const parsed =
-    reorderCreatorCollectionItemsSchema.safeParse(
-      input
-    )
+    reorderCreatorCollectionItemsSchema.safeParse(input)
 
   if (!parsed.success) {
-    const failure =
-      schemaFailure(parsed.error)
+    const failure = schemaFailure(parsed.error)
 
     return {
       success: false,
@@ -2797,24 +2891,26 @@ export async function reorderCreatorCollectionItemsAction(
     }
   }
 
-  const result =
-    await performReorderCreatorCollectionVenues({
-      collectionId:
-        parsed.data.collectionId,
-      collectionVenueIds:
-        parsed.data.collectionItemIds,
-    })
-
-  return result.success
-    ? {
-        success: true,
-      }
-    : {
-        success: false,
-        error: result.error,
-      }
+  return performTransactionalCollectionItemReorder({
+    collectionId: parsed.data.collectionId,
+    submittedIds: parsed.data.collectionItemIds,
+    mode: 'compatible',
+  })
 }
 
+
+
+
+/**
+ * Legacy venue-specific compatibility action.
+ *
+ * Preserves the existing public action contract while
+ * routing actual writes through the transactional
+ * presentation-item reorder RPC.
+ *
+ * Once a collection contains manual entries, callers
+ * must submit the complete mixed presentation order.
+ */
 async function performReorderCreatorCollectionVenues({
   collectionId,
   collectionVenueIds,
@@ -2822,20 +2918,71 @@ async function performReorderCreatorCollectionVenues({
   collectionId: string
   collectionVenueIds: string[]
 }): Promise<ReorderCreatorCollectionVenuesResult> {
-  const supabase =
-    await createServerClient()
+  const result =
+    await performTransactionalCollectionItemReorder({
+      collectionId,
+      submittedIds: collectionVenueIds,
+      mode: 'legacy',
+    })
+
+  if (!result.success) {
+    return {
+      success: false,
+      error: result.error,
+    }
+  }
+
+  return {
+    success: true,
+    data: {
+      collectionId,
+      collectionVenueIds,
+      updatedAt: new Date().toISOString(),
+    },
+  }
+}
+
+/**
+ * The single application-side entry point for
+ * transactional collection-item reordering.
+ *
+ * mode = 'compatible':
+ *   Accept either a complete presentation ID sequence
+ *   or a complete legacy venue-relationship sequence.
+ *
+ * mode = 'legacy':
+ *   Accept only legacy venue-relationship IDs.
+ *
+ * Legacy orders are accepted only when the collection
+ * has no manual/non-venue presentation entries.
+ *
+ * The database RPC:
+ *   - verifies ownership again
+ *   - locks the collection
+ *   - validates the complete item set
+ *   - updates the mixed presentation order
+ *   - updates canonical-only venue ordering
+ *   - commits atomically
+ */
+async function performTransactionalCollectionItemReorder({
+  collectionId,
+  submittedIds,
+  mode,
+}: {
+  collectionId: string
+  submittedIds: string[]
+  mode: 'compatible' | 'legacy'
+}): Promise<CreatorCollectionItemMutationResult> {
+  const supabase = await createServerClient()
 
   const authentication =
-    await requireAuthenticatedUser(
-      supabase
-    )
+    await requireAuthenticatedUser(supabase)
 
   if (!authentication.success) {
     return authentication.result
   }
 
-  const userId =
-    authentication.userId
+  const userId = authentication.userId
 
   const collectionResult =
     await loadOwnedCollection({
@@ -2849,201 +2996,193 @@ async function performReorderCreatorCollectionVenues({
   }
 
   if (
-    collectionVenueIds.length ===
-    0
+    submittedIds.length >
+    COLLECTION_LIMITS.maximumVenueReorderBatch
   ) {
-    const existingCountResult =
-      await supabase
-        .from(
-          'creator_collection_venues'
-        )
-        .select('id', {
-          count: 'exact',
-          head: true,
-        })
-        .eq(
-          'collection_id',
-          collectionId
-        )
-
-    if (existingCountResult.error) {
-      logDatabaseError({
-        operation:
-          'verify_empty_creator_collection_venue_reorder',
-        userId,
-        collectionId,
-        error:
-          existingCountResult.error,
-      })
-
-      return {
-        success: false,
-        error:
-          'The venue order could not be verified. Please try again.',
-      }
+    return {
+      success: false,
+      error:
+        'Too many collection items were submitted for reordering.',
     }
+  }
 
+  if (
+    new Set(submittedIds).size !==
+    submittedIds.length
+  ) {
+    return {
+      success: false,
+      error:
+        'The collection order contains duplicate IDs.',
+    }
+  }
+
+  const [
+    presentationResult,
+    legacyResult,
+  ] = await Promise.all([
+    supabase
+      .from('creator_collection_items')
+      .select('id, source_type, source_id')
+      .eq('collection_id', collectionId),
+
+    supabase
+      .from('creator_collection_venues')
+      .select('id, venue_id')
+      .eq('collection_id', collectionId),
+  ])
+
+  if (
+    presentationResult.error ||
+    legacyResult.error
+  ) {
+    console.error(
+      '[creator collection actions] Reorder data load failed:',
+      {
+        collectionId,
+        userId,
+        presentationError:
+          presentationResult.error,
+        legacyError:
+          legacyResult.error,
+      }
+    )
+
+    return {
+      success: false,
+      error:
+        'The collection order could not be verified. Please try again.',
+    }
+  }
+
+  const presentationItems =
+    presentationResult.data ?? []
+
+  const legacyVenues =
+    legacyResult.data ?? []
+
+  const submittedSet =
+    new Set(submittedIds)
+
+  const presentationIds =
+    new Set(
+      presentationItems.map((item) => item.id)
+    )
+
+  const legacyIds =
+    new Set(
+      legacyVenues.map((venue) => venue.id)
+    )
+
+  const matchesCompletePresentationOrder =
+    mode === 'compatible' &&
+    submittedSet.size === presentationIds.size &&
+    submittedIds.every((id) =>
+      presentationIds.has(id)
+    )
+
+  const matchesCompleteLegacyOrder =
+    submittedSet.size === legacyIds.size &&
+    submittedIds.every((id) =>
+      legacyIds.has(id)
+    )
+
+  let presentationOrder: string[]
+
+  if (matchesCompletePresentationOrder) {
+    // Future mixed manager: already using correct IDs.
+    presentationOrder = submittedIds
+  } else if (matchesCompleteLegacyOrder) {
+    // The legacy manager cannot describe where manual
+    // places belong. Reject rather than silently move
+    // or drop them from the submitted order.
     if (
-      (existingCountResult.count ??
-        0) !== 0
+      presentationItems.length !== legacyVenues.length ||
+      presentationItems.some(
+        (item) => item.source_type !== 'venue'
+      )
     ) {
       return {
         success: false,
         error:
-          'The submitted venue order is incomplete. Refresh the page and try again.',
+          'This collection contains additional items. Refresh the page before reordering.',
       }
     }
 
+    const presentationIdByVenueId =
+      new Map(
+        presentationItems.map(
+          (item) => [
+            item.source_id,
+            item.id,
+          ] as const
+        )
+      )
+
+    const venueIdByLegacyId =
+      new Map(
+        legacyVenues.map(
+          (venue) => [
+            venue.id,
+            venue.venue_id,
+          ] as const
+        )
+      )
+
+    const resolvedOrder =
+      submittedIds.map((legacyId) => {
+        const venueId =
+          venueIdByLegacyId.get(legacyId)
+
+        return venueId
+          ? presentationIdByVenueId.get(venueId)
+          : undefined
+      })
+
+    if (
+      resolvedOrder.some((id) => !id)
+    ) {
+      return {
+        success: false,
+        error:
+          'Some collection venues could not be resolved. Refresh the page.',
+      }
+    }
+
+    presentationOrder =
+      resolvedOrder as string[]
+  } else {
     return {
-      success: true,
-      data: {
+      success: false,
+      error:
+        'The submitted collection order is incomplete or outdated. Refresh the page.',
+    }
+  }
+
+  const { error: reorderError } =
+    await supabase.rpc(
+      'roam_reorder_creator_collection_items',
+      {
+        p_collection_id: collectionId,
+        p_item_ids: presentationOrder,
+      }
+    )
+
+  if (reorderError) {
+    console.error(
+      '[creator collection actions] Transactional reorder failed:',
+      {
         collectionId,
-        collectionVenueIds: [],
-        updatedAt:
-          new Date().toISOString(),
-      },
-    }
-  }
-
-  const ownershipResult =
-    await supabase
-      .from(
-        'creator_collection_venues'
-      )
-      .select('id')
-      .eq(
-        'collection_id',
-        collectionId
-      )
-
-  if (ownershipResult.error) {
-    logDatabaseError({
-      operation:
-        'verify_creator_collection_venue_reorder',
-      userId,
-      collectionId,
-      error:
-        ownershipResult.error,
-    })
+        userId,
+        code: reorderError.code,
+        message: reorderError.message,
+      }
+    )
 
     return {
       success: false,
       error:
-        'The venue order could not be verified. Please try again.',
-    }
-  }
-
-  const ownedCollectionVenueIds =
-    new Set(
-      (
-        ownershipResult.data ??
-        []
-      )
-        .map((row) =>
-          normalizeUuid(
-            row.id
-          )
-        )
-        .filter(
-          (
-            value
-          ): value is string =>
-            value !== null
-        )
-    )
-
-  if (
-    ownedCollectionVenueIds
-      .size !==
-    collectionVenueIds.length
-  ) {
-    return {
-      success: false,
-      error:
-        'The submitted venue order is incomplete. Refresh the page and try again.',
-      fieldErrors: {
-        collectionVenueIds: [
-          'Every venue in the collection must be included exactly once.',
-        ],
-      },
-    }
-  }
-
-  const containsForeignOrMissingId =
-    collectionVenueIds.some(
-      (collectionVenueId) =>
-        !ownedCollectionVenueIds.has(
-          collectionVenueId
-        )
-    )
-
-  if (
-    containsForeignOrMissingId
-  ) {
-    return {
-      success: false,
-      error:
-        'One or more venues could not be reordered because they were not found in this collection.',
-      fieldErrors: {
-        collectionVenueIds: [
-          'Refresh the page before reordering venues again.',
-        ],
-      },
-    }
-  }
-
-  const reorderResults =
-    await Promise.all(
-      collectionVenueIds.map(
-        async (
-          collectionVenueId,
-          index
-        ) => {
-          return supabase
-            .from(
-              'creator_collection_venues'
-            )
-            .update({
-              sort_order: index,
-            })
-            .eq(
-              'id',
-              collectionVenueId
-            )
-            .eq(
-              'collection_id',
-              collectionId
-            )
-            .select('id')
-            .maybeSingle()
-        }
-      )
-    )
-
-  const failedResult =
-    reorderResults.find(
-      (result) =>
-        result.error ||
-        !result.data
-    )
-
-  if (failedResult) {
-    logDatabaseError({
-      operation:
-        'reorder_creator_collection_venues',
-      userId,
-      collectionId,
-      error:
-        failedResult.error ??
-        new Error(
-          'A collection venue was not updated during reordering.'
-        ),
-    })
-
-    return {
-      success: false,
-      error:
-        'The venue order could not be saved completely. Refresh the page and try again.',
+        'The collection order could not be saved. Refresh the page and try again.',
     }
   }
 
@@ -3053,26 +3192,18 @@ async function performReorderCreatorCollectionVenues({
       userId,
     })
 
-  const now =
-    new Date().toISOString()
-
   revalidateCreatorCollectionPaths({
     username,
-    slug:
-      collectionResult.collection
-        .slug,
+    slug: collectionResult.collection.slug,
     collectionId,
   })
 
   return {
     success: true,
-    data: {
-      collectionId,
-      collectionVenueIds,
-      updatedAt: now,
-    },
   }
 }
+
+
 
 /* =========================================================
  * Authentication

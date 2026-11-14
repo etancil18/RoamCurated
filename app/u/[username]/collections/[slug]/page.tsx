@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -82,6 +83,7 @@ type CreatorCollectionMediaRow = {
   poster_path: string | null
   caption: string | null
   alt_text: string | null
+  venue_id: string | null
   width: number | null
   height: number | null
   duration_seconds: number | null
@@ -90,12 +92,34 @@ type CreatorCollectionMediaRow = {
   updated_at: string
 }
 
-type CreatorCollectionVenueRow = {
+/**
+ * Editorial presentation sequence.
+ *
+ * The source_type distinguishes canonical Roam
+ * venues from creator-submitted recommendations.
+ */
+type CreatorCollectionPresentationRow = {
   id: string
   collection_id: string
-  venue_id: string
+  source_type:
+    | 'venue'
+    | 'venue_submission'
+  source_id: string
+  custom_title: string | null
+  creator_note: string | null
+  image_url: string | null
   sort_order: number
   created_at: string
+}
+
+type CreatorVenueSubmissionRow = {
+  id: string
+  creator_id: string
+  venue_name: string
+  city: string
+  address: string | null
+  category: string | null
+  creator_note: string | null
 }
 
 type VenueRow = {
@@ -113,6 +137,7 @@ type VenueRow = {
 
 type PublicCollectionItemType =
   | 'venue'
+  | 'venue_submission'
   | 'property'
   | 'flow'
   | 'snapshot'
@@ -303,7 +328,7 @@ export default async function PublicCreatorCollectionPage({
       includeItems: true,
     })
 
-    if (!data) {
+  if (!data) {
     notFound()
   }
 
@@ -326,24 +351,40 @@ export default async function PublicCreatorCollectionPage({
   } =
     await supabase.auth.getUser()
 
-  const experiencedVenueIds =
-    await loadViewerExperiencedVenueIds({
+  /**
+   * Suggested places are never passed into
+   * creator verified-visit queries.
+   */
+  const canonicalVenueIds =
+    items
+      .filter(
+        (item) =>
+          item.item_type ===
+            'venue' &&
+          item.item_id !== null
+      )
+      .map(
+        (item) =>
+          item.item_id as string
+      )
+
+  /**
+   * This resolves the COLLECTION CREATOR'S
+   * verified visits, not the current viewer's.
+   *
+   * The public RPC returns venue IDs only,
+   * after enforcing public-collection scope.
+   */
+  const creatorVerifiedVenueIds =
+    await loadCreatorVerifiedVenueIds({
+      collectionId:
+        collection.id,
       venueIds:
-        items
-          .filter(
-            (item) =>
-              item.item_type ===
-                'venue' &&
-              item.item_id !== null
-          )
-          .map(
-            (item) =>
-              item.item_id as string
-          ),
+        canonicalVenueIds,
     })
 
-  const experiencedCount =
-    experiencedVenueIds
+  const creatorVerifiedCount =
+    creatorVerifiedVenueIds
       ? items.reduce(
           (
             count,
@@ -352,7 +393,7 @@ export default async function PublicCreatorCollectionPage({
             item.item_type ===
               'venue' &&
             item.item_id &&
-            experiencedVenueIds.has(
+            creatorVerifiedVenueIds.has(
               item.item_id
             )
               ? count + 1
@@ -389,6 +430,11 @@ export default async function PublicCreatorCollectionPage({
         mediaRecords,
     })
 
+  /**
+   * The existing share contract calls this venueCount.
+   * It must remain the canonical venue count rather
+   * than silently treating submissions as venues.
+   */
   const shareData:
     PublicCollectionShareData = {
       collectionId:
@@ -402,7 +448,7 @@ export default async function PublicCreatorCollectionPage({
       city:
         collection.city,
       venueCount:
-        items.length,
+        canonicalVenueIds.length,
       coverImageUrl:
         heroImageUrl,
       creator: {
@@ -414,7 +460,7 @@ export default async function PublicCreatorCollectionPage({
       },
     }
 
-    return (
+  return (
     <main className="min-h-screen w-full overflow-x-clip bg-black px-4 pb-16 pt-[calc(4rem+env(safe-area-inset-top)+1rem)] text-white sm:px-6">
       <PublicCollectionViewLogger
         collectionId={
@@ -501,11 +547,11 @@ export default async function PublicCreatorCollectionPage({
             collectionTitle={
               collection.title
             }
-            experiencedVenueIds={
-              experiencedVenueIds
+            creatorVerifiedVenueIds={
+              creatorVerifiedVenueIds
             }
-            experiencedCount={
-              experiencedCount
+            creatorVerifiedCount={
+              creatorVerifiedCount
             }
           />
 
@@ -680,17 +726,27 @@ function CollectionHero({
 function PublicCollectionItems({
   items,
   collectionTitle,
-  experiencedVenueIds,
-  experiencedCount,
+  creatorVerifiedVenueIds,
+  creatorVerifiedCount,
 }: {
   items:
     PublicCollectionItem[]
   collectionTitle: string
-  experiencedVenueIds:
+  creatorVerifiedVenueIds:
     Set<string> | null
-  experiencedCount:
+  creatorVerifiedCount:
     number | null
 }) {
+  /**
+   * Only canonical venues are eligible for
+   * creator verified-visit indicators.
+   */
+  const canonicalVenueCount =
+    items.filter(
+      (item) =>
+        item.item_type === 'venue'
+    ).length
+
   return (
     <section
       aria-labelledby="public-collection-items-title"
@@ -709,19 +765,21 @@ function PublicCollectionItems({
             Places and recommendations
           </h2>
 
-          {experiencedCount !== null ? (
+          {creatorVerifiedCount !== null &&
+          canonicalVenueCount > 0 ? (
             <p className="mt-2 text-sm font-medium text-neutral-400">
-              You&apos;ve experienced{' '}
+              Creator has verified visits to{' '}
               <span className="text-white">
-                {experiencedCount.toLocaleString()}
+                {creatorVerifiedCount.toLocaleString()}
               </span>{' '}
               of{' '}
               <span className="text-white">
-                {items.length.toLocaleString()}
+                {canonicalVenueCount.toLocaleString()}
               </span>{' '}
-              {items.length === 1
-                ? 'place'
-                : 'places'}
+              official Roam{' '}
+              {canonicalVenueCount === 1
+                ? 'venue'
+                : 'venues'}
             </p>
           ) : null}
         </div>
@@ -765,17 +823,17 @@ function PublicCollectionItems({
                   position={
                     index + 1
                   }
-                  experienced={
+                  creatorVerified={
                     item.item_type ===
                       'venue' &&
                     item.item_id !==
                       null &&
-                    experiencedVenueIds !==
+                    creatorVerifiedVenueIds !==
                       null
-                      ? experiencedVenueIds.has(
+                      ? creatorVerifiedVenueIds.has(
                           item.item_id
                         )
-                      : null
+                      : false
                   }
                 />
               </li>
@@ -790,25 +848,34 @@ function PublicCollectionItems({
 function PublicCollectionItemCard({
   item,
   position,
-  experienced,
+  creatorVerified,
 }: {
   item:
     PublicCollectionItem
   position: number
-  experienced:
-    boolean | null
+  creatorVerified: boolean
 }) {
+  /**
+   * Never turn a creator submission into a
+   * navigable official venue profile.
+   */
   const internalHref =
-    normalizeInternalHref(
-      item.href
-    )
-
-  const externalHref =
-    internalHref
+    item.item_type ===
+    'venue_submission'
       ? null
-      : normalizeExternalHref(
+      : normalizeInternalHref(
           item.href
         )
+
+  const externalHref =
+    item.item_type ===
+    'venue_submission'
+      ? null
+      : internalHref
+        ? null
+        : normalizeExternalHref(
+            item.href
+          )
 
   const card = (
     <article className="group relative min-w-0 overflow-hidden rounded-[1.5rem] border border-neutral-800/90 bg-neutral-950/80 transition hover:border-neutral-700">
@@ -833,12 +900,6 @@ function PublicCollectionItemCard({
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
 
-          <span className="absolute left-3 top-3 rounded-full border border-white/10 bg-black/65 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white backdrop-blur-md">
-            {getItemTypeLabel(
-              item.item_type
-            )}
-          </span>
-
           <span className="absolute bottom-3 left-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/65 text-xs font-semibold text-white backdrop-blur-md">
             {position}
           </span>
@@ -850,28 +911,15 @@ function PublicCollectionItemCard({
               {item.title}
             </h3>
 
-            {experienced !== null ? (
+            {item.item_type === 'venue' &&
+            creatorVerified ? (
               <span
-                aria-label={
-                  experienced
-                    ? 'Experienced'
-                    : 'Not yet experienced'
-                }
-                title={
-                  experienced
-                    ? 'Experienced'
-                    : 'Not yet experienced'
-                }
-                className={
-                  experienced
-                    ? 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/15 text-sm font-semibold text-emerald-300'
-                    : 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-neutral-700 bg-black/30 text-sm font-semibold text-neutral-600'
-                }
+                aria-label="Creator verified visit"
+                title="Creator verified visit"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/15 text-sm font-semibold text-emerald-300"
               >
                 <span aria-hidden="true">
-                  {experienced
-                    ? '✓'
-                    : '○'}
+                  ✓
                 </span>
               </span>
             ) : null}
@@ -886,6 +934,14 @@ function PublicCollectionItemCard({
           {item.description ? (
             <p className="mt-3 line-clamp-4 break-words text-sm leading-6 text-neutral-500">
               {item.description}
+            </p>
+          ) : null}
+
+          {item.item_type ===
+          'venue_submission' ? (
+            <p className="mt-3 text-xs leading-5 text-cyan-300/75">
+              Recommended by this creator.
+              Not an official Roam venue.
             </p>
           ) : null}
 
@@ -1241,15 +1297,26 @@ async function loadPublicCollection({
     }
   }
 
-  const collectionVenuesResult =
+  /**
+   * The published editorial sequence is the source
+   * of truth for public collection presentation.
+   *
+   * This table does not confer canonical venue
+   * membership or Flow eligibility.
+   */
+  const presentationResult =
     await supabase
       .from(
-        'creator_collection_venues'
+        'creator_collection_items'
       )
       .select(`
         id,
         collection_id,
-        venue_id,
+        source_type,
+        source_id,
+        custom_title,
+        creator_note,
+        image_url,
         sort_order,
         created_at
       `)
@@ -1269,13 +1336,17 @@ async function loadPublicCollection({
           ascending: true,
         }
       )
+      .order(
+        'id',
+        {
+          ascending: true,
+        }
+      )
 
-  if (
-    collectionVenuesResult.error
-  ) {
+  if (presentationResult.error) {
     console.error(
-      '[public creator collection] Collection-venue query failed:',
-      collectionVenuesResult.error
+      '[public creator collection] Presentation query failed:',
+      presentationResult.error
     )
 
     return {
@@ -1288,16 +1359,16 @@ async function loadPublicCollection({
     }
   }
 
-  const collectionVenues =
-    normalizeCollectionVenueRows({
+  const presentationRows =
+    normalizeCollectionPresentationRows({
       value:
-        collectionVenuesResult.data,
+        presentationResult.data,
       collectionId:
         collection.id,
     })
 
   if (
-    collectionVenues.length === 0
+    presentationRows.length === 0
   ) {
     return {
       profile,
@@ -1311,29 +1382,86 @@ async function loadPublicCollection({
 
   const venueIds = [
     ...new Set(
-      collectionVenues.map(
-        (relationship) =>
-          relationship.venue_id
-      )
+      presentationRows
+        .filter(
+          (item) =>
+            item.source_type ===
+            'venue'
+        )
+        .map(
+          (item) =>
+            item.source_id
+        )
     ),
   ]
 
-  const venuesResult =
-    await supabase
-      .from('venues')
-      .select(`
-        id,
-        name,
-        slug,
-        city,
-        category:tier,
-        description,
-        cover_image_url:cover
-      `)
-      .in(
-        'id',
-        venueIds
-      )
+  const submissionIds = [
+    ...new Set(
+      presentationRows
+        .filter(
+          (item) =>
+            item.source_type ===
+            'venue_submission'
+        )
+        .map(
+          (item) =>
+            item.source_id
+        )
+    ),
+  ]
+
+  const [
+    venuesResult,
+    submissionsResult,
+  ] = await Promise.all([
+    venueIds.length > 0
+      ? supabase
+          .from('venues')
+          .select(`
+            id,
+            name,
+            slug,
+            city,
+            category:tier,
+            description,
+            cover_image_url:cover
+          `)
+          .in(
+            'id',
+            venueIds
+          )
+      : Promise.resolve({
+          data: [],
+          error: null,
+        }),
+
+    submissionIds.length > 0
+      ? supabase
+          .from(
+            'creator_venue_submissions'
+          )
+          .select(`
+            id,
+            creator_id,
+            venue_name,
+            city,
+            address,
+            category,
+            creator_note
+          `)
+          .eq(
+            'creator_id',
+            profile.id
+          )
+          .in(
+            'id',
+            submissionIds
+          )
+      : Promise.resolve({
+          data: [],
+          error: null,
+        }),
+  ])
 
   if (venuesResult.error) {
     const {
@@ -1364,10 +1492,39 @@ async function loadPublicCollection({
     }
   }
 
+  if (submissionsResult.error) {
+    console.error(
+      '[public creator collection] Suggested-place query failed:',
+      {
+        collectionId:
+          collection.id,
+        error:
+          submissionsResult.error,
+      }
+    )
+
+    return {
+      profile,
+      collection,
+      media,
+      mediaRecords,
+      items: [],
+      supabaseUrl,
+    }
+  }
+
   const venues =
     normalizeVenueRows(
       venuesResult.data
     )
+
+  const submissions =
+    normalizeCreatorVenueSubmissionRows({
+      value:
+        submissionsResult.data,
+      creatorId:
+        profile.id,
+    })
 
   return {
     profile,
@@ -1375,19 +1532,29 @@ async function loadPublicCollection({
     media,
     mediaRecords,
     items:
-      buildPublicVenueItems({
+      buildPublicPresentationItems({
         collection,
-        relationships:
-          collectionVenues,
+        presentationRows,
         venues,
+        submissions,
       }),
     supabaseUrl,
   }
 }
 
-async function loadViewerExperiencedVenueIds({
+/* =========================================================
+ * Public-safe creator verified visits
+ *
+ * Requires the narrowly scoped SQL RPC included
+ * with this initiative. No direct public read of
+ * venue_visits is performed.
+ * ======================================================= */
+
+async function loadCreatorVerifiedVenueIds({
+  collectionId,
   venueIds,
 }: {
+  collectionId: string
   venueIds: string[]
 }): Promise<Set<string> | null> {
   const uniqueVenueIds = [
@@ -1408,81 +1575,62 @@ async function loadViewerExperiencedVenueIds({
     ),
   ]
 
-  const supabase =
-    await createServerClient()
-
-  const {
-    data: {
-      user,
-    },
-    error:
-      userError,
-  } =
-    await supabase.auth.getUser()
-
-  if (
-    userError ||
-    !user
-  ) {
-    return null
-  }
-
   if (
     uniqueVenueIds.length === 0
   ) {
     return new Set()
   }
 
-  const visitsResult =
-    await supabase
-      .from('venue_visits')
-      .select('venue_id')
-      .eq(
-        'user_id',
-        user.id
-      )
-      .eq(
-        'geo_verified',
-        true
-      )
-      .in(
-        'venue_id',
-        uniqueVenueIds
-      )
+  const supabase =
+    await createServerClient()
 
-  if (visitsResult.error) {
+  const result =
+    await supabase.rpc(
+      'roam_public_collection_creator_verified_venues',
+      {
+        p_collection_id:
+          collectionId,
+      }
+    )
+
+  if (result.error) {
     console.error(
-      '[public creator collection] Verified venue-history query failed:',
-      visitsResult.error
+      '[public creator collection] Creator verification RPC failed:',
+      result.error
     )
 
     return null
   }
 
-  const experiencedVenueIds =
+  const eligibleVenueIds =
+    new Set(uniqueVenueIds)
+
+  const verifiedVenueIds =
     new Set<string>()
 
-  for (
-    const visit of
-    visitsResult.data ?? []
-  ) {
-    if (!isRecord(visit)) {
+  for (const row of result.data ?? []) {
+    if (!isRecord(row)) {
       continue
     }
 
     const venueId =
       normalizeIdentifier(
-        visit.venue_id
+        row.venue_id
       )
 
-    if (venueId) {
-      experiencedVenueIds.add(
+    if (
+      venueId &&
+      eligibleVenueIds.has(
+        venueId
+      )
+    ) {
+      verifiedVenueIds.add(
         venueId
       )
     }
   }
 
-  return experiencedVenueIds
+  return verifiedVenueIds
 }
 
 /* =========================================================
@@ -1520,6 +1668,7 @@ async function loadPublicCollectionMedia({
         poster_path,
         caption,
         alt_text,
+        venue_id,
         width,
         height,
         duration_seconds,
@@ -1568,6 +1717,64 @@ async function loadPublicCollectionMedia({
       userId,
     })
 
+  /*
+   * Resolve canonical Roam venues associated with
+   * collection photos and videos.
+   *
+   * This does not add venues to the collection's
+   * editorial items or affect verified visits.
+   */
+  const taggedVenueIds = [
+    ...new Set(
+      rows
+        .map(
+          (row) =>
+            row.venue_id
+        )
+        .filter(
+          (venueId): venueId is string =>
+            venueId !== null
+        )
+    ),
+  ]
+
+  const taggedVenuesResult =
+    taggedVenueIds.length > 0
+      ? await supabase
+          .from('venues')
+          .select('id, name')
+          .in(
+            'id',
+            taggedVenueIds
+          )
+      : null
+
+  if (taggedVenuesResult?.error) {
+    console.error(
+      '[public creator collection] Tagged venue lookup failed:',
+      taggedVenuesResult.error
+    )
+  }
+
+  const taggedVenueById =
+    new Map<string, string>()
+
+  for (
+    const venue of
+      taggedVenuesResult?.data ?? []
+  ) {
+    if (
+      typeof venue.id === 'string' &&
+      typeof venue.name === 'string' &&
+      venue.name.trim().length > 0
+    ) {
+      taggedVenueById.set(
+        venue.id,
+        venue.name.trim()
+      )
+    }
+  }
+
   const media =
     rows
       .map(
@@ -1610,6 +1817,31 @@ async function loadPublicCollectionMedia({
 
             altText:
               row.alt_text,
+
+            /*
+             * Optional canonical venue attribution
+             * for this specific photo or video.
+             */
+            venue:
+              row.venue_id &&
+              taggedVenueById.has(
+                row.venue_id
+              )
+                ? {
+                    id:
+                      row.venue_id,
+
+                    name:
+                      taggedVenueById.get(
+                        row.venue_id
+                      )!,
+
+                    href:
+                      `/venue-profile/${encodeURIComponent(
+                        row.venue_id
+                      )}`,
+                  }
+                : null,
 
             width:
               row.width,
@@ -1937,6 +2169,11 @@ function normalizeCollectionMediaRows({
                 500
               ),
 
+            venue_id:
+              normalizeIdentifier(
+                row.venue_id
+              ),
+
             width:
               normalizePositiveInteger(
                 row.width
@@ -1994,13 +2231,17 @@ function normalizeCollectionMediaRows({
   )
 }
 
-function normalizeCollectionVenueRows({
+/* =========================================================
+ * Mixed editorial item normalization
+ * ======================================================= */
+
+function normalizeCollectionPresentationRows({
   value,
   collectionId,
 }: {
   value: unknown
   collectionId: string
-}): CreatorCollectionVenueRow[] {
+}): CreatorCollectionPresentationRow[] {
   if (!Array.isArray(value)) {
     return []
   }
@@ -2010,7 +2251,7 @@ function normalizeCollectionVenueRows({
       .map(
         (
           row
-        ): CreatorCollectionVenueRow | null => {
+        ): CreatorCollectionPresentationRow | null => {
           if (!isRecord(row)) {
             return null
           }
@@ -2025,9 +2266,17 @@ function normalizeCollectionVenueRows({
               row.collection_id
             )
 
-          const venueId =
+          const sourceType =
+            row.source_type ===
+              'venue' ||
+            row.source_type ===
+              'venue_submission'
+              ? row.source_type
+              : null
+
+          const sourceId =
             normalizeIdentifier(
-              row.venue_id
+              row.source_id
             )
 
           const createdAt =
@@ -2039,7 +2288,8 @@ function normalizeCollectionVenueRows({
             !id ||
             rowCollectionId !==
               collectionId ||
-            !venueId ||
+            !sourceType ||
+            !sourceId ||
             !createdAt
           ) {
             return null
@@ -2051,8 +2301,28 @@ function normalizeCollectionVenueRows({
             collection_id:
               rowCollectionId,
 
-            venue_id:
-              venueId,
+            source_type:
+              sourceType,
+
+            source_id:
+              sourceId,
+
+            custom_title:
+              normalizeOptionalText(
+                row.custom_title,
+                240
+              ),
+
+            creator_note:
+              normalizeOptionalText(
+                row.creator_note,
+                600
+              ),
+
+            image_url:
+              normalizePublicUrl(
+                row.image_url
+              ),
 
             sort_order:
               normalizeSortOrder(
@@ -2067,14 +2337,14 @@ function normalizeCollectionVenueRows({
       .filter(
         (
           row
-        ): row is CreatorCollectionVenueRow =>
+        ): row is CreatorCollectionPresentationRow =>
           row !== null
       )
 
   const byId =
     new Map<
       string,
-      CreatorCollectionVenueRow
+      CreatorCollectionPresentationRow
     >()
 
   for (const row of rows) {
@@ -2086,8 +2356,132 @@ function normalizeCollectionVenueRows({
   return [
     ...byId.values(),
   ].sort(
-    compareCollectionVenueRows
+    (
+      first,
+      second
+    ) => {
+      if (
+        first.sort_order !==
+        second.sort_order
+      ) {
+        return (
+          first.sort_order -
+          second.sort_order
+        )
+      }
+
+      const createdComparison =
+        Date.parse(
+          first.created_at
+        ) -
+        Date.parse(
+          second.created_at
+        )
+
+      if (
+        createdComparison !== 0
+      ) {
+        return createdComparison
+      }
+
+      return first.id.localeCompare(
+        second.id
+      )
+    }
   )
+}
+
+/**
+ * Only fields necessary for public editorial
+ * presentation are requested and normalized.
+ *
+ * Staff review, status, evidence, and ingestion
+ * metadata are deliberately excluded.
+ */
+function normalizeCreatorVenueSubmissionRows({
+  value,
+  creatorId,
+}: {
+  value: unknown
+  creatorId: string
+}): CreatorVenueSubmissionRow[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const byId =
+    new Map<
+      string,
+      CreatorVenueSubmissionRow
+    >()
+
+  for (const row of value) {
+    if (!isRecord(row)) {
+      continue
+    }
+
+    const id =
+      normalizeIdentifier(
+        row.id
+      )
+
+    const ownerId =
+      normalizeIdentifier(
+        row.creator_id
+      )
+
+    const venueName =
+      normalizeRequiredText(
+        row.venue_name,
+        240
+      )
+
+    const city =
+      normalizeRequiredText(
+        row.city,
+        160
+      )
+
+    if (
+      !id ||
+      ownerId !== creatorId ||
+      !venueName ||
+      !city
+    ) {
+      continue
+    }
+
+    byId.set(id, {
+      id,
+      creator_id:
+        ownerId,
+      venue_name:
+        venueName,
+      city,
+
+      address:
+        normalizeOptionalText(
+          row.address,
+          300
+        ),
+
+      category:
+        normalizeOptionalText(
+          row.category,
+          160
+        ),
+
+      creator_note:
+        normalizeOptionalText(
+          row.creator_note,
+          600
+        ),
+    })
+  }
+
+  return [
+    ...byId.values(),
+  ]
 }
 
 function normalizeVenueRows(
@@ -2152,7 +2546,7 @@ function normalizeVenueRows(
         ),
 
       cover_image_url:
-        normalizePublicUrl(
+        normalizeVenueCoverUrl(
           row.cover_image_url
         ),
 
@@ -2168,16 +2562,23 @@ function normalizeVenueRows(
   ]
 }
 
-function buildPublicVenueItems({
+/* =========================================================
+ * Mixed public item projection
+ * ======================================================= */
+
+function buildPublicPresentationItems({
   collection,
-  relationships,
+  presentationRows,
   venues,
+  submissions,
 }: {
   collection:
     CreatorCollectionRow
-  relationships:
-    CreatorCollectionVenueRow[]
+  presentationRows:
+    CreatorCollectionPresentationRow[]
   venues: VenueRow[]
+  submissions:
+    CreatorVenueSubmissionRow[]
 }): PublicCollectionItem[] {
   const venueById =
     new Map(
@@ -2185,62 +2586,143 @@ function buildPublicVenueItems({
         (venue) => [
           venue.id,
           venue,
-        ]
+        ] as const
       )
     )
 
-  return relationships
+  const submissionById =
+    new Map(
+      submissions.map(
+        (submission) => [
+          submission.id,
+          submission,
+        ] as const
+      )
+    )
+
+  return presentationRows
     .map(
       (
-        relationship
+        item
       ): PublicCollectionItem | null => {
-        const venue =
-          venueById.get(
-            relationship.venue_id
+        if (
+          item.source_type ===
+          'venue'
+        ) {
+          const venue =
+            venueById.get(
+              item.source_id
+            )
+
+          if (!venue) {
+            return null
+          }
+
+          return {
+            id:
+              item.id,
+
+            collection_id:
+              collection.id,
+
+            item_type:
+              'venue',
+
+            item_id:
+              venue.id,
+
+            title:
+              venue.name,
+
+            subtitle:
+              venue.category,
+
+            description:
+              item.creator_note ??
+              venue.description,
+
+            /**
+             * Use the editorial image override when
+             * present; otherwise use the canonical
+             * venue's actual cover photo.
+             */
+            image_url:
+              item.image_url ??
+              venue.cover_image_url,
+
+            href:
+              buildVenueProfileHref(
+                venue
+              ),
+
+            city:
+              venue.city,
+
+            sort_order:
+              item.sort_order,
+
+            created_at:
+              item.created_at,
+
+            updated_at:
+              null,
+          }
+        }
+
+        const submission =
+          submissionById.get(
+            item.source_id
           )
 
-        if (!venue) {
+        if (!submission) {
           return null
         }
 
+        /**
+         * Suggested places are editorial-only.
+         *
+         * The source UUID must never be interpreted
+         * as venues.id by public experience logic.
+         */
         return {
           id:
-            relationship.id,
+            item.id,
 
           collection_id:
             collection.id,
 
           item_type:
-            'venue',
+            'venue_submission',
 
           item_id:
-            venue.id,
+            submission.id,
 
           title:
-            venue.name,
+            item.custom_title ??
+            submission.venue_name,
 
           subtitle:
-            venue.category,
+            submission.category ??
+            submission.address,
 
           description:
-            venue.description,
+            item.creator_note ??
+            submission.creator_note,
 
           image_url:
-            venue.cover_image_url,
+            item.image_url,
 
           href:
-            buildVenueProfileHref(
-              venue
-            ),
+            null,
 
           city:
-            venue.city,
+            submission.city,
 
           sort_order:
-            relationship.sort_order,
+            item.sort_order,
 
           created_at:
-            relationship.created_at,
+            item.created_at,
 
           updated_at:
             null,
@@ -2261,41 +2743,6 @@ function compareCollectionMediaRows(
     CreatorCollectionMediaRow,
   second:
     CreatorCollectionMediaRow
-): number {
-  if (
-    first.sort_order !==
-    second.sort_order
-  ) {
-    return (
-      first.sort_order -
-      second.sort_order
-    )
-  }
-
-  const createdComparison =
-    Date.parse(
-      first.created_at
-    ) -
-    Date.parse(
-      second.created_at
-    )
-
-  if (
-    createdComparison !== 0
-  ) {
-    return createdComparison
-  }
-
-  return first.id.localeCompare(
-    second.id
-  )
-}
-
-function compareCollectionVenueRows(
-  first:
-    CreatorCollectionVenueRow,
-  second:
-    CreatorCollectionVenueRow
 ): number {
   if (
     first.sort_order !==
@@ -2385,6 +2832,9 @@ function getItemTypeLabel(
     case 'venue':
       return 'Venue'
 
+    case 'venue_submission':
+      return 'Suggested place'
+
     case 'property':
       return 'Property'
 
@@ -2406,6 +2856,9 @@ function getItemTypeEmoji(
   switch (itemType) {
     case 'venue':
       return '📍'
+
+    case 'venue_submission':
+      return '📌'
 
     case 'property':
       return '🏙️'
@@ -2661,6 +3114,58 @@ function normalizeIsoDate(
   return new Date(
     timestamp
   ).toISOString()
+}
+
+function normalizeVenueCoverUrl(
+  value: unknown
+): string | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const normalized = value.trim()
+
+  if (!normalized) {
+    return null
+  }
+
+  // Preserve existing complete, safe image URLs.
+  const absoluteUrl =
+    normalizePublicUrl(normalized)
+
+  if (absoluteUrl) {
+    return absoluteUrl
+  }
+
+  // Resolve venue assets stored under /public/img/venues.
+  const path = normalized.replace(/^\/+/, '')
+
+  if (
+    !path.startsWith('img/venues/') ||
+    path.includes('\\') ||
+    path.includes('?') ||
+    path.includes('#') ||
+    /[\r\n]/.test(path)
+  ) {
+    return null
+  }
+
+  const segments = path.split('/')
+
+  if (
+    segments.some(
+      (segment) =>
+        !segment ||
+        segment === '.' ||
+        segment === '..'
+    )
+  ) {
+    return null
+  }
+
+  return `/${segments
+    .map(encodeURIComponent)
+    .join('/')}`
 }
 
 function normalizePublicUrl(

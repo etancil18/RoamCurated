@@ -1,6 +1,8 @@
+
 'use client'
 
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -44,8 +46,8 @@ export type CollectionMediaManagerProps = {
     CreatorCollectionMediaRecord[]
 
   initialCoverMediaId:
-  | string
-  | null
+    | string
+    | null
 
   className?: string
 }
@@ -116,14 +118,14 @@ export default function CollectionMediaManager({
     )
 
   const [
-  selectedCoverMediaId,
-  setSelectedCoverMediaId,
-] =
-  useState<
-    string | null
-  >(
-    initialCoverMediaId
-  )
+    selectedCoverMediaId,
+    setSelectedCoverMediaId,
+  ] =
+    useState<
+      string | null
+    >(
+      initialCoverMediaId
+    )
 
   const [
     uploading,
@@ -770,6 +772,21 @@ export default function CollectionMediaManager({
               formData.get(
                 'altText'
               ),
+
+            /*
+             * Venue tagging:
+             *
+             * The picker submits a canonical venues.id UUID.
+             * An empty selection explicitly clears the tag.
+             */
+            venueId:
+              formData.get(
+                'venueId'
+              ) === ''
+                ? null
+                : formData.get(
+                    'venueId'
+                  ),
           }
         )
 
@@ -1105,6 +1122,9 @@ export default function CollectionMediaManager({
                       ).data
                       .publicUrl
                   }
+                  supabase={
+                    supabase
+                  }
                   isCover={
                     selectedCoverMediaId ===
                     item.id
@@ -1190,6 +1210,7 @@ function CollectionMediaCard({
   index,
   total,
   publicUrl,
+  supabase,
   isCover,
   busy,
   disabled,
@@ -1204,6 +1225,10 @@ function CollectionMediaCard({
   index: number
   total: number
   publicUrl: string
+  supabase:
+    ReturnType<
+      typeof createSupabaseBrowserClient
+    >
   isCover: boolean
   busy: boolean
   disabled: boolean
@@ -1413,6 +1438,22 @@ function CollectionMediaCard({
               />
             </div>
 
+            {/* Optional association with a canonical Roam venue. */}
+            <VenueTagPicker
+              supabase={
+                supabase
+              }
+              mediaId={
+                item.id
+              }
+              initialVenueId={
+                item.venue_id
+              }
+              disabled={
+                disabled
+              }
+            />
+
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800/80 pt-4">
               <button
                 type="submit"
@@ -1443,6 +1484,524 @@ function CollectionMediaCard({
         </div>
       </div>
     </article>
+  )
+}
+
+/* =========================================================
+ * Canonical Roam venue tagging
+ *
+ * A media item may reference one canonical venues.id.
+ *
+ * Search text never becomes a tag by itself.
+ * The creator must select an actual venue result.
+ *
+ * The hidden input submits the selected UUID through
+ * the existing Save details form.
+ * ======================================================= */
+
+type VenueTagOption = {
+  id: string
+  name: string
+  city: string | null
+}
+
+function VenueTagPicker({
+  supabase,
+  mediaId,
+  initialVenueId,
+  disabled,
+}: {
+  supabase:
+    ReturnType<
+      typeof createSupabaseBrowserClient
+    >
+  mediaId: string
+  initialVenueId:
+    | string
+    | null
+  disabled: boolean
+}) {
+  const [
+    selectedVenueId,
+    setSelectedVenueId,
+  ] =
+    useState<
+      string | null
+    >(
+      initialVenueId
+    )
+
+  const [
+    selectedVenue,
+    setSelectedVenue,
+  ] =
+    useState<
+      VenueTagOption | null
+    >(null)
+
+  const [
+    searchText,
+    setSearchText,
+  ] =
+    useState('')
+
+  const [
+    searchResults,
+    setSearchResults,
+  ] =
+    useState<
+      VenueTagOption[]
+    >([])
+
+  const [
+    searching,
+    setSearching,
+  ] =
+    useState(false)
+
+  const [
+    searchError,
+    setSearchError,
+  ] =
+    useState<
+      string | null
+    >(null)
+
+  const searchRequestRef =
+    useRef(0)
+
+  /*
+   * Resolve the name of an existing saved tag.
+   *
+   * The media record stores a canonical venue UUID,
+   * not duplicated venue-name text.
+   */
+  useEffect(
+    () => {
+      let active =
+        true
+
+      setSelectedVenueId(
+        initialVenueId
+      )
+
+      setSelectedVenue(
+        null
+      )
+
+      if (
+        !initialVenueId
+      ) {
+        return () => {
+          active =
+            false
+        }
+      }
+
+      async function loadSelectedVenue() {
+        const result =
+          await supabase
+            .from('venues')
+            .select(
+              'id, name, city'
+            )
+            .eq(
+              'id',
+              initialVenueId!
+            )
+            .maybeSingle()
+
+        if (
+          !active
+        ) {
+          return
+        }
+
+        /*
+         * Venue names are nullable in the generated
+         * Supabase types. Only named canonical venues
+         * can populate a VenueTagOption.
+         */
+        if (
+          result.error ||
+          !result.data ||
+          !result.data.name
+        ) {
+          return
+        }
+
+        setSelectedVenue({
+          id:
+            result.data.id,
+
+          name:
+            result.data.name,
+
+          city:
+            result.data.city ??
+            null,
+        })
+      }
+
+      void loadSelectedVenue()
+
+      return () => {
+        active =
+          false
+      }
+    },
+    [
+      initialVenueId,
+      supabase,
+    ]
+  )
+
+  async function handleSearchChange(
+    value: string
+  ) {
+    setSearchText(
+      value
+    )
+
+    setSearchError(
+      null
+    )
+
+    const requestId =
+      ++searchRequestRef.current
+
+    const query =
+      value.trim()
+
+    if (
+      query.length <
+      2
+    ) {
+      setSearchResults(
+        []
+      )
+
+      setSearching(
+        false
+      )
+
+      return
+    }
+
+    setSearching(
+      true
+    )
+
+    const result =
+      await supabase
+        .from('venues')
+        .select(
+          'id, name, city'
+        )
+        .ilike(
+          'name',
+          `%${query}%`
+        )
+        .order(
+          'name',
+          {
+            ascending: true,
+          }
+        )
+        .limit(12)
+
+    /*
+     * Ignore results from older requests if the
+     * creator has continued typing.
+     */
+    if (
+      requestId !==
+      searchRequestRef.current
+    ) {
+      return
+    }
+
+    setSearching(
+      false
+    )
+
+    if (
+      result.error
+    ) {
+      console.error(
+        '[CollectionMediaManager] Venue tag search failed:',
+        result.error
+      )
+
+      setSearchResults(
+        []
+      )
+
+      setSearchError(
+        'Could not search Roam venues. Please try again.'
+      )
+
+      return
+    }
+
+    /*
+     * Exclude venues without a usable name.
+     * This preserves the non-null VenueTagOption
+     * contract without changing database types.
+     */
+    setSearchResults(
+      (result.data ?? [])
+        .filter(
+          (
+            venue
+          ): venue is typeof venue & {
+            name: string
+          } =>
+            typeof venue.name ===
+              'string' &&
+            venue.name.trim().length >
+              0
+        )
+        .map(
+          (venue) => ({
+            id:
+              venue.id,
+
+            name:
+              venue.name,
+
+            city:
+              venue.city ??
+              null,
+          })
+        )
+    )
+  }
+
+  function handleSelectVenue(
+    venue: VenueTagOption
+  ) {
+    ++searchRequestRef.current
+
+    setSelectedVenueId(
+      venue.id
+    )
+
+    setSelectedVenue(
+      venue
+    )
+
+    setSearchText(
+      ''
+    )
+
+    setSearchResults(
+      []
+    )
+
+    setSearching(
+      false
+    )
+
+    setSearchError(
+      null
+    )
+  }
+
+  function handleClearVenue() {
+    ++searchRequestRef.current
+
+    setSelectedVenueId(
+      null
+    )
+
+    setSelectedVenue(
+      null
+    )
+
+    setSearchText(
+      ''
+    )
+
+    setSearchResults(
+      []
+    )
+
+    setSearching(
+      false
+    )
+
+    setSearchError(
+      null
+    )
+  }
+
+  return (
+    <div className="min-w-0">
+      <label
+        htmlFor={`collection-media-venue-${mediaId}`}
+        className="text-xs font-medium text-neutral-300"
+      >
+        Tag a Place
+      </label>
+
+      <p className="mt-1 text-xs leading-5 text-neutral-600">
+        Connect this media
+        to an official Roam
+        venue. Optional.
+      </p>
+
+      {/*
+       * Empty string means clear the venue tag.
+       * Only a selected canonical UUID is submitted.
+       */}
+      <input
+        type="hidden"
+        name="venueId"
+        value={
+          selectedVenueId ??
+          ''
+        }
+      />
+
+      {selectedVenueId ? (
+        <div className="mt-3 flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-500/25 bg-cyan-500/[0.06] px-3 py-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-cyan-400">
+              Selected place
+            </p>
+
+            <p className="mt-1 break-words text-sm font-medium text-cyan-100">
+              {selectedVenue?.name ??
+                'Tagged Roam venue'}
+            </p>
+
+            {selectedVenue?.city ? (
+              <p className="mt-1 text-xs text-neutral-500">
+                {
+                  selectedVenue.city
+                }
+              </p>
+            ) : null}
+          </div>
+
+          <button
+            type="button"
+            disabled={
+              disabled
+            }
+            onClick={
+              handleClearVenue
+            }
+            className="shrink-0 rounded-full border border-neutral-700 px-3 py-1.5 text-xs font-semibold text-neutral-300 transition hover:border-red-400/40 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Clear tag
+          </button>
+        </div>
+      ) : null}
+
+      <input
+        id={`collection-media-venue-${mediaId}`}
+        type="search"
+        autoComplete="off"
+        value={
+          searchText
+        }
+        onChange={(
+          event
+        ) => {
+          void handleSearchChange(
+            event.target.value
+          )
+        }}
+        disabled={
+          disabled
+        }
+        placeholder={
+          selectedVenueId
+            ? 'Search to change the place…'
+            : 'Search Roam venues by name…'
+        }
+        className={
+          mediaInputClassName
+        }
+      />
+
+      {searching ? (
+        <p className="mt-2 text-xs text-neutral-500">
+          Searching places…
+        </p>
+      ) : null}
+
+      {searchError ? (
+        <p
+          role="alert"
+          className="mt-2 text-xs text-red-300"
+        >
+          {searchError}
+        </p>
+      ) : null}
+
+      {!searching &&
+      !searchError &&
+      searchText.trim().length >= 2 &&
+      searchResults.length === 0 ? (
+        <p className="mt-2 text-xs text-neutral-600">
+          No matching Roam
+          venues found.
+        </p>
+      ) : null}
+
+      {searchResults.length >
+      0 ? (
+        <div
+          aria-label="Matching Roam venues"
+          className="mt-2 max-h-56 space-y-1 overflow-y-auto rounded-xl border border-neutral-800 bg-neutral-950 p-1"
+        >
+          {searchResults.map(
+            (venue) => (
+              <button
+                key={
+                  venue.id
+                }
+                type="button"
+                disabled={
+                  disabled
+                }
+                onClick={() =>
+                  handleSelectVenue(
+                    venue
+                  )
+                }
+                className="flex w-full min-w-0 flex-col rounded-lg px-3 py-2 text-left transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <span className="break-words text-sm font-medium text-neutral-200">
+                  {
+                    venue.name
+                  }
+                </span>
+
+                {venue.city ? (
+                  <span className="mt-0.5 text-xs text-neutral-500">
+                    {
+                      venue.city
+                    }
+                  </span>
+                ) : null}
+              </button>
+            )
+          )}
+        </div>
+      ) : null}
+
+      <p className="mt-2 text-[11px] leading-5 text-neutral-600">
+        Choose a venue from
+        the search results,
+        then select Save details.
+        Typing a name alone
+        does not create a tag.
+      </p>
+    </div>
   )
 }
 
