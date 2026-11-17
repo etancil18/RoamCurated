@@ -87,8 +87,8 @@ export function mergeStaticWithDb(
       cover: sv.cover ?? match?.cover ?? undefined,
 
       type:
-        toStringOrArray(sv.type) ??
         toStringOrArray(match?.type) ??
+        toStringOrArray(sv.type) ??
         undefined,
 
       timeCategory:

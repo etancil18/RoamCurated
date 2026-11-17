@@ -28284,7 +28284,6 @@ const atlantaData = [
     "type": [
       "breakfast",
       "coffee",
-      "dinner",
       "cocktail"
     ],
     "lat": 33.7683763,
@@ -34537,7 +34536,7 @@ const atlantaData = [
     "lat": "33.7743893",
     "lon": "-84.3849071",
     "link": "https://www.instagram.com/elvinedolocal/?hl=en",
-    "cover": "img/venues/El Viñedo Local.jpg",
+    "cover": "img/venues/el-vinedo-local.jpg",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 8:00 AM–9:00 PM",

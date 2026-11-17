@@ -630,43 +630,84 @@ export async function getPropertyGuideData({
         )
     )
 
-  const coffeeNearby = nearbyVenues.filter(
-    (venue) =>
-      venueMatchesAnyType(venue as any, [
-        'coffee',
-        'cafe',
-        'café',
-        'bakery',
-      ])
+  /* -------------------------------------------------------
+   * Nearby Check-ins — exclusive category assignment
+   *
+   * A venue may match multiple types, but is assigned
+   * to only one Nearby Check-ins category.
+   *
+   * Assignment priority:
+   *   1. Dinner
+   *   2. Bars
+   *   3. Coffee
+   *   4. Wellness
+   *
+   * Preserve existing type predicates and distance order.
+   * Do not modify the shared nearbyVenues inventory,
+   * Host Picks, map, crawls, or event journeys.
+   * ----------------------------------------------------- */
+
+  const assignedNearbyVenueIds = new Set<string>()
+
+  function assignNearbyCategory(
+    matchingVenues: NormalizedVenue[]
+  ): NormalizedVenue[] {
+    return matchingVenues.filter((venue) => {
+      if (assignedNearbyVenueIds.has(venue.id)) {
+        return false
+      }
+
+      assignedNearbyVenueIds.add(venue.id)
+      return true
+    })
+  }
+
+  const dinnerNearby = assignNearbyCategory(
+    nearbyVenues.filter(
+      (venue) =>
+        venueMatchesAnyType(venue as any, [
+          'restaurant',
+          'dinner',
+          'kitchen',
+        ])
+    )
   )
 
-  const barsNearby = nearbyVenues.filter(
-    (venue) =>
-      venueMatchesAnyType(venue as any, [
-        'bar',
-        'wine bar',
-        'cocktail',
-        'pub',
-        'brewery',
-      ])
+  const barsNearby = assignNearbyCategory(
+    nearbyVenues.filter(
+      (venue) =>
+        venueMatchesAnyType(venue as any, [
+          'bar',
+          'wine bar',
+          'cocktail',
+          'pub',
+          'brewery',
+        ])
+    )
   )
 
-  const dinnerNearby = nearbyVenues.filter(
-    (venue) =>
-      venueMatchesAnyType(venue as any, [
-        'restaurant',
-        'dinner',
-        'kitchen',
-      ])
+  const coffeeNearby = assignNearbyCategory(
+    nearbyVenues.filter(
+      (venue) =>
+        venueMatchesAnyType(venue as any, [
+          'coffee',
+          'cafe',
+          'café',
+          'bakery',
+        ])
+    )
   )
 
-  const wellnessNearby = nearbyVenues.filter(
-    (venue) =>
-      venueMatchesAnyType(venue as any, [
-        'fitness',
-        'yoga',
-        'spa',
-      ])
+  const wellnessNearby = assignNearbyCategory(
+    nearbyVenues.filter(
+      (venue) =>
+        venueMatchesAnyType(venue as any, [
+          'fitness',
+          'yoga',
+          'pilates',
+          'spa',
+        ])
+    )
   )
 
   /* -------------------------------------------------------
