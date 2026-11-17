@@ -1,4 +1,5 @@
-// app/venue-profile/[venueId]/page.tsx
+
+ // app/venue-profile/[venueId]/page.tsx
 
 import { notFound } from 'next/navigation'
 import { supabaseServerApi } from '@/lib/supabase/server-api'
@@ -16,6 +17,12 @@ import VenueVisitButton from '@/components/venue-profile/VenueVisitButton'
 import VenueBookingButtons from '@/components/venue-profile/VenueBookingButtons'
 import VenuePartnerBadge from '@/components/venue-profile/VenuePartnerBadge'
 import VenueProfileCommunitySignals from '@/components/venue-profile/VenueProfileCommunitySignals'
+
+// ============================================================
+// VENUE PROFILE — BUILD A FLOW
+// ============================================================
+
+import VenueBuildFlowButton from '@/components/venue-profile/VenueBuildFlowButton'
 
 import BackToRouteButton from '@/app/flow/[session_id]/components/BackToRouteButton'
 
@@ -605,6 +612,24 @@ export default async function VenueProfilePage({
                     venueName={
                       normalizedVenue.name
                     }
+                  />
+                </div>
+
+                {/* ==================================================
+                    VENUE PROFILE — BUILD A FLOW
+
+                    Reuses Explore's existing venue-specific
+                    Flow handoff and guest authentication.
+
+                    Kept separate from venue visits and
+                    reservation functionality.
+                    ================================================== */}
+
+                <div className="rounded-2xl border border-white/10 bg-black/30 p-3 shadow-lg shadow-black/20">
+                  <VenueBuildFlowButton
+                    venueId={normalizedVenue.id}
+                    venueName={normalizedVenue.name}
+                    city={normalizedVenue.city ?? null}
                   />
                 </div>
 

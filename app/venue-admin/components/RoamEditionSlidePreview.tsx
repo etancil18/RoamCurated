@@ -317,6 +317,153 @@ async function waitForSlideImages(
   )
 }
 
+// =====================================================
+// PNG EXPORT — EMBED VENUE PHOTOGRAPH FOR CAPTURE
+//
+// CSS background images can display normally in the
+// browser while failing to embed through html-to-image.
+//
+// Only venue slides with an assigned photograph use
+// this helper. The original inline background style
+// is restored after PNG capture.
+//
+// No saved image URLs or preview data are modified.
+// =====================================================
+
+async function prepareVenueImageForExport(
+  slideElement: HTMLElement,
+  item: EditionItem,
+): Promise<() => void> {
+  const imageUrl =
+    item.image_override_url ||
+    item.venue_cover_url ||
+    item.image_url
+
+  // Preserve the existing designed fallback for
+  // venues without an assigned photograph.
+  if (!imageUrl) {
+    return () => {}
+  }
+
+  const backgroundElement =
+    slideElement.querySelector<HTMLElement>(
+      '.bg-cover.bg-center',
+    )
+
+  const venueName =
+    item.display_title ||
+    item.venue_name
+
+  if (!backgroundElement) {
+    throw new Error(
+      `Unable to export "${venueName}": the venue photo element was not found.`,
+    )
+  }
+
+  const originalBackgroundImage =
+    backgroundElement.style.backgroundImage
+
+  try {
+    // Fetch the exact image chosen by the existing
+    // venue-slide rendering priority.
+    const response = await fetch(imageUrl, {
+      method: 'GET',
+      cache: 'no-store',
+    })
+
+    if (!response.ok) {
+      throw new Error(
+        `Image request failed (${response.status}).`,
+      )
+    }
+
+    const blob = await response.blob()
+
+    if (
+      !blob.type.startsWith('image/') ||
+      blob.size === 0
+    ) {
+      throw new Error(
+        'The image URL did not return valid image data.',
+      )
+    }
+
+    // Convert the image to an inline data URL so
+    // html-to-image does not need to refetch the
+    // original CSS background image.
+    const dataUrl = await new Promise<string>(
+      (resolve, reject) => {
+        const reader = new FileReader()
+
+        reader.onload = () => {
+          if (
+            typeof reader.result !== 'string' ||
+            !reader.result.startsWith('data:image/')
+          ) {
+            reject(
+              new Error(
+                'The venue photograph could not be embedded.',
+              ),
+            )
+
+            return
+          }
+
+          resolve(reader.result)
+        }
+
+        reader.onerror = () => {
+          reject(
+            reader.error ??
+              new Error(
+                'The venue photograph could not be read.',
+              ),
+          )
+        }
+
+        reader.readAsDataURL(blob)
+      },
+    )
+
+    // Verify decoding before allowing capture.
+    const image = new window.Image()
+
+    image.src = dataUrl
+
+    await image.decode()
+
+    if (
+      image.naturalWidth === 0 ||
+      image.naturalHeight === 0
+    ) {
+      throw new Error(
+        'The venue photograph has invalid dimensions.',
+      )
+    }
+
+    // Replace only the live DOM style being captured.
+    // React state, venue data, and saved URLs stay intact.
+    backgroundElement.style.backgroundImage =
+      `url("${dataUrl}")`
+
+    await waitForSlidePaint()
+
+    // The caller restores this in a finally block.
+    return () => {
+      backgroundElement.style.backgroundImage =
+        originalBackgroundImage
+    }
+  } catch (error) {
+    // Protect the preview even if preparation fails.
+    backgroundElement.style.backgroundImage =
+      originalBackgroundImage
+
+    throw new Error(
+      `Unable to export "${venueName}" with its photograph: ${errorMessage(error)}`,
+    )
+  }
+}
+
 export default function RoamEditionSlidePreview({
   editionId,
 }: Props) {
@@ -587,12 +734,52 @@ export default function RoamEditionSlidePreview({
         // Ensure the copper emblem has finished loading.
         await waitForSlideImages(slideElement)
 
-        const pngDataUrl = await toPng(slideElement, {
-          canvasWidth: dimensions.width,
-          canvasHeight: dimensions.height,
-          pixelRatio: 1,
-          cacheBust: true,
-        })
+        // =================================================
+        // VENUE PHOTO — EXPORT-SAFE IMAGE EMBEDDING
+        //
+        // Index 0 is the cover. Venue slides occupy
+        // indices 1 through manifest.items.length.
+        // The final index is the closing slide.
+        //
+        // Use the exact same item ordering already
+        // used by the existing export renderer.
+        // =================================================
+
+        const sortedVenueItems =
+          index > 0 &&
+          index <= manifest.items.length
+            ? [...manifest.items].sort(
+                (a, b) => a.position - b.position,
+              )
+            : null
+
+        const venueItem =
+          sortedVenueItems?.[index - 1] ?? null
+
+        const restoreVenueImage = venueItem
+          ? await prepareVenueImageForExport(
+              slideElement,
+              venueItem,
+            )
+          : () => {}
+
+        let pngDataUrl: string
+
+        try {
+          // Existing PNG dimensions and capture settings.
+          // The venue photograph, when present, is now
+          // already embedded as a data URL.
+          pngDataUrl = await toPng(slideElement, {
+            canvasWidth: dimensions.width,
+            canvasHeight: dimensions.height,
+            pixelRatio: 1,
+            cacheBust: false,
+          })
+        } finally {
+          // Always return the live preview to its
+          // original saved venue image URL.
+          restoreVenueImage()
+        }
 
         const base64 = pngDataUrl.split(',')[1]
 

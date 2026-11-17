@@ -259,10 +259,7 @@ export default function CollectionEndCardGenerator({
     )
 
   const canExport =
-    normalizedHeadline.length >
-      0 &&
-    normalizedMessage.length >
-      0
+    normalizedHeadline.length > 0
 
   const content: CardContent = {
     title,
@@ -1304,40 +1301,41 @@ function renderCardCanvas(
   }
 
   /*
-   * Supporting story direction.
-   */
-  const messageSize =
+ * Supporting Story direction is optional.
+ * When omitted, draw no message and reserve no
+ * additional message height.
+ */
+    const messageSize =
     isTikTok
-      ? 39
-      : 36
+        ? 39
+        : 36
 
-  const messageLayout =
+    const messageLayout =
     measureCanvasText({
-      context,
-      text: message,
-      maxWidth:
-        contentWidth,
-      maxLines: 5,
-      fontSize:
-        messageSize,
-      minFontSize: 25,
-      lineHeight: 1.35,
-      weight: 500,
+        context,
+        text: message,
+        maxWidth: contentWidth,
+        maxLines: 5,
+        fontSize: messageSize,
+        minFontSize: 25,
+        lineHeight: 1.35,
+        weight: 500,
     })
 
-  const messageY =
-    cursorY -
-    messageLayout.height
+    const messageY =
+    message.trim().length > 0
+        ? cursorY - messageLayout.height
+        : cursorY
 
-  drawMeasuredText({
-    context,
-    layout:
-      messageLayout,
-    x: left,
-    y: messageY,
-    color:
-      colors.muted,
-  })
+    if (message.trim().length > 0) {
+    drawMeasuredText({
+        context,
+        layout: messageLayout,
+        x: left,
+        y: messageY,
+        color: colors.muted,
+    })
+    }
 
   // =====================================================
   // OVERSIZED EDITORIAL HEADLINE
@@ -1418,7 +1416,7 @@ function renderCardCanvas(
     'top'
 
   context.fillText(
-    'THE EDITION CONTINUES.',
+    'THE EDITION CONTINUES ON THE ROAM CURATED APP.',
     left,
     headlineY -
       eyebrowGap,

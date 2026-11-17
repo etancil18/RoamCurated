@@ -1,3 +1,4 @@
+
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -45,6 +46,16 @@ export type CreatorFeaturedCollectionsProps = {
    * Optional wrapper classes.
    */
   className?: string
+
+  /**
+   * Optional layout for a parent carousel.
+   *
+   * The default 'grid' preserves all existing uses.
+   *
+   * 'carousel' makes the component fill its parent slide
+   * without an additional padded grid/card wrapper.
+   */
+  layout?: 'grid' | 'carousel'
 }
 
 /* =========================================================
@@ -56,6 +67,7 @@ export default function CreatorFeaturedCollections({
   collections,
   limit = 6,
   className = '',
+  layout = 'grid',
 }: CreatorFeaturedCollectionsProps) {
   const normalizedUsername =
     normalizeUsername(username)
@@ -76,49 +88,64 @@ export default function CreatorFeaturedCollections({
     return null
   }
 
+  const isCarouselLayout =
+    layout === 'carousel'
+
   return (
     <section
       className={[
-        'w-full min-w-0 rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/70 p-4 text-white shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-5',
+        isCarouselLayout
+          ? 'flex h-full w-full min-w-0 flex-col text-white'
+          : 'w-full min-w-0 rounded-[1.75rem] border border-neutral-800/90 bg-neutral-950/70 p-4 text-white shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-5',
         className,
       ]
         .filter(Boolean)
         .join(' ')}
     >
-      <div className="flex justify-end">
-        <span
-          aria-label={`${normalizedCollections.length} featured ${
-            normalizedCollections.length === 1
-              ? 'collection'
-              : 'collections'
-          }`}
-          className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-black/30 px-3 py-1.5 text-xs font-semibold text-neutral-400"
-        >
-          <Sparkles
-            aria-hidden="true"
-            className="h-3.5 w-3.5 text-indigo-400"
-          />
+      {!isCarouselLayout ? (
+        <div className="flex justify-end">
+          <span
+            aria-label={`${normalizedCollections.length} featured ${
+              normalizedCollections.length === 1
+                ? 'collection'
+                : 'collections'
+            }`}
+            className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-black/30 px-3 py-1.5 text-xs font-semibold text-neutral-400"
+          >
+            <Sparkles
+              aria-hidden="true"
+              className="h-3.5 w-3.5 text-indigo-400"
+            />
 
-          {normalizedCollections.length.toLocaleString()}
-        </span>
-      </div>
+            {normalizedCollections.length.toLocaleString()}
+          </span>
+        </div>
+      ) : null}
 
       <ul
         aria-label="Featured creator collections"
-        className={[
-          'mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2',
-          normalizedCollections.length >= 3
-            ? 'lg:grid-cols-3'
-            : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        className={
+          isCarouselLayout
+            ? 'grid h-full min-w-0 flex-1 grid-cols-1 gap-4'
+            : [
+                'mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2',
+                normalizedCollections.length >= 3
+                  ? 'lg:grid-cols-3'
+                  : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
+        }
       >
         {normalizedCollections.map(
           (collection) => (
             <li
               key={collection.id}
-              className="min-w-0"
+              className={
+                isCarouselLayout
+                  ? 'flex h-full min-w-0'
+                  : 'min-w-0'
+              }
             >
               <FeaturedCollectionCard
                 username={
@@ -157,7 +184,7 @@ function FeaturedCollectionCard({
       href={href}
       aria-label={`Open collection: ${collection.title}`}
       className={[
-        'group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-800 bg-black/30 transition',
+        'group flex h-full min-w-0 w-full flex-col overflow-hidden rounded-2xl border border-neutral-800 bg-black/30 transition',
         'hover:-translate-y-0.5 hover:border-indigo-500/40 hover:bg-indigo-500/[0.05] hover:shadow-xl hover:shadow-black/30',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
       ].join(' ')}

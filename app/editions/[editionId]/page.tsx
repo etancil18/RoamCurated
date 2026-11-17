@@ -2,6 +2,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import {
+  ArrowUpRight,
+  Instagram,
+  Music2,
+} from 'lucide-react'
 
 import {
   getPublicEdition,
@@ -15,6 +20,12 @@ import RoamEditionReader from './RoamEditionReader'
 // ============================================================
 
 import EditionReaderAnalytics from './EditionReaderAnalytics'
+
+// ============================================================
+// ROAM EDITIONS — PUBLIC SHARING
+// ============================================================
+
+import ShareEditionLink from '@/components/editorial/ShareEditionLink'
 
 type PageProps = {
   params: Promise<{
@@ -160,6 +171,21 @@ export default async function EditionReaderPage({
   const credit = getCreatorCredit(edition)
 
   // ==========================================================
+  // EDITORIAL CREDIT — PUBLIC CREATOR SOCIAL LINKS
+  //
+  // publicEditions.ts returns only explicitly public
+  // Instagram/TikTok links from creator_social_links.
+  //
+  // Roam Selects editions do not imply creator endorsement.
+  // ==========================================================
+
+  const creatorSocialLinks =
+    edition.creator &&
+    edition.credit_mode !== 'roam_selects'
+      ? edition.creator.social_links
+      : []
+
+  // ==========================================================
   // EDITORIAL DESCRIPTION
   //
   // Optional until the publication data layer includes
@@ -204,9 +230,30 @@ export default async function EditionReaderPage({
             The Roam Library
           </Link>
 
-          <span className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/45">
-            Roam Editions / The Archive
-          </span>
+          {/* ==================================================
+              PUBLIC EDITION — SHARE THIS ISSUE
+
+              Shares this published edition's canonical path.
+              Native sharing and copy-link fallback are
+              handled by the dedicated client component.
+              ================================================== */}
+
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/45">
+              Roam Editions / The Archive
+            </span>
+
+            <ShareEditionLink
+              path={`/editions/${encodeURIComponent(
+                edition.id,
+              )}`}
+              title={`${edition.title} | Roam Editions`}
+              description={
+                edition.subtitle?.trim() ||
+                `Explore ${edition.title} on Roam.`
+              }
+            />
+          </div>
         </header>
 
         <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,540px)] lg:items-start lg:gap-12">
@@ -272,13 +319,71 @@ export default async function EditionReaderPage({
                     >
                       {edition.creator.full_name?.trim() ||
                         `@${edition.creator.username}`}
-                      <span aria-hidden="true"> ↗</span>
+
+                      {/* SVG replaces platform-dependent ↗ glyph */}
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="ml-1 inline-block h-3.5 w-3.5 align-[-1px]"
+                      />
                     </Link>
                   </>
                 ) : (
                   credit
                 )}
               </p>
+
+              {/* ==================================================
+                  EDITORIAL CREDIT — CREATOR SOCIAL ACCOUNTS
+
+                  Only public Instagram/TikTok URLs returned
+                  by the existing public edition data layer.
+
+                  Links are separate from the creator profile
+                  link; no nested interactive elements.
+                  ================================================== */}
+
+              {creatorSocialLinks.length > 0 && (
+                <nav
+                  aria-label="Featured creator social profiles"
+                  className="mt-4 flex flex-wrap items-center gap-2"
+                >
+                  {creatorSocialLinks.map((link) => {
+                    const isInstagram =
+                      link.platform === 'instagram'
+
+                    const Icon = isInstagram
+                      ? Instagram
+                      : Music2
+
+                    const label = isInstagram
+                      ? 'Instagram'
+                      : 'TikTok'
+
+                    return (
+                      <a
+                        key={link.platform}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Visit featured creator on ${label} (opens in a new tab)`}
+                        className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-3 text-[11px] font-medium text-[#b9c2ca] transition hover:border-[#d2ab86]/40 hover:bg-white/[0.08] hover:text-[#f1d0af] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d2ab86]"
+                      >
+                        <Icon
+                          aria-hidden="true"
+                          className="h-3.5 w-3.5 shrink-0"
+                        />
+
+                        <span>{label}</span>
+
+                        <ArrowUpRight
+                          aria-hidden="true"
+                          className="h-3 w-3 shrink-0 opacity-60"
+                        />
+                      </a>
+                    )
+                  })}
+                </nav>
+              )}
             </div>
 
             {/* Editorial description — displayed only when saved */}

@@ -13,6 +13,12 @@ import {
 
 import EditionsLibraryAnalytics from '@/components/editorial/EditionsLibraryAnalytics'
 
+// =====================================================
+// EDITIONS LIBRARY — PUBLIC SHARING
+// =====================================================
+
+import ShareEditionLink from '@/components/editorial/ShareEditionLink'
+
 export const metadata: Metadata = {
   title: 'The Roam Library | RoamCurated',
   description:
@@ -173,7 +179,7 @@ export default async function EditionsLibraryPage() {
 
           No visual output and no modification to
           existing server-rendered edition content.
-          ================================================= */}
+          ================================================== */}
 
       <EditionsLibraryAnalytics
         editionCount={editions.length}
@@ -189,9 +195,25 @@ export default async function EditionsLibraryPage() {
               ← Back to Roam
             </Link>
 
-            <span className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/45">
-              Roam Editions / The Archive
-            </span>
+            {/* =================================================
+                EDITIONS LIBRARY — SHARE ARCHIVE
+
+                Shares the public /editions URL.
+                Native share / copy-link behavior is handled
+                by the dedicated client component.
+                ================================================= */}
+
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/45">
+                Roam Editions / The Archive
+              </span>
+
+              <ShareEditionLink
+                path="/editions"
+                title="The Roam Library"
+                description="Explore the Roam Editions editorial archive."
+              />
+            </div>
           </div>
 
           <h1 className="mt-5 max-w-4xl text-5xl font-black leading-[0.95] tracking-[-0.065em] sm:text-7xl lg:text-8xl">

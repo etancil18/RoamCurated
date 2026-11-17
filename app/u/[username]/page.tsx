@@ -9,6 +9,7 @@ import FollowButton from '@/components/profile/FollowButton'
 import ShareProfileButton from '@/components/profile/ShareProfileButton'
 import PublicRoamCard from '@/components/public-profile/PublicRoamCard'
 import PublicProfileViewLogger from '@/components/public-profile/PublicProfileViewLogger'
+import CreatorContentCarousel from '@/components/public-profile/creator/CreatorContentCarousel'
 
 import {
   getPublicCreatorProfile,
@@ -808,15 +809,18 @@ const followingCount =
                   title="Places worth knowing"
                 />
 
-                <CreatorFeaturedCollections
-                  username={
-                    creatorUsername
-                  }
-                  collections={
-                    creatorBundle
-                      .featuredCollections
-                  }
-                />
+                <CreatorContentCarousel label="Featured creator collections">
+                  {creatorBundle.featuredCollections.map(
+                    (collection, index) => (
+                      <CreatorFeaturedCollections
+                        key={index}
+                        username={creatorUsername}
+                        collections={[collection]}
+                        layout="carousel"
+                      />
+                    ),
+                  )}
+                </CreatorContentCarousel>
               </section>
             ) : null}
 
@@ -824,51 +828,24 @@ const followingCount =
               <section
                 id="moments"
                 aria-labelledby="creator-roam-moments-title"
-                className="scroll-mt-32"
+                className="scroll-mt-32 space-y-6"
               >
+                <ProfileSectionHeading
+                  id="creator-roam-moments-title"
+                  eyebrow="Recent moments"
+                  title="Nights and routes worth remembering"
+                />
+
                 <div className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-white/[0.05] via-white/[0.025] to-indigo-400/[0.04] shadow-[0_24px_80px_rgba(0,0,0,0.2)] ring-1 ring-white/[0.065]">
-                  <div className="border-b border-white/[0.055] p-5 sm:p-6">
-                    <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300">
-                          Recent moments
-                        </p>
-
-                        <h2
-                          id="creator-roam-moments-title"
-                          className="mt-2 text-2xl font-black tracking-[-0.035em] text-white"
-                        >
-                          Nights and routes worth remembering
-                        </h2>
-                      </div>
-
-                      <div className="shrink-0">
-                        <span className="inline-flex items-center rounded-full bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-zinc-500 ring-1 ring-white/[0.06]">
-                          Latest{' '}
-                          {Math.min(
-                            snapshots.length,
-                            9
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="p-4 sm:p-5">
-                    <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
-                      {snapshots.map(
-                        (snapshot) => (
-                          <PublicRoamCard
-                            key={
-                              snapshot.id
-                            }
-                            snapshot={
-                              snapshot
-                            }
-                          />
-                        )
-                      )}
-                    </div>
+                    <CreatorContentCarousel label="Recent creator moments">
+                      {snapshots.map((snapshot) => (
+                        <PublicRoamCard
+                          key={snapshot.id}
+                          snapshot={snapshot}
+                        />
+                      ))}
+                    </CreatorContentCarousel>
                   </div>
                 </div>
               </section>

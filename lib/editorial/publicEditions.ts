@@ -30,10 +30,22 @@ const ITEM_SELECT = `
   image_override_url
 `
 
+// =====================================================
+// PUBLIC EDITIONS — CREATOR SOCIAL LINKS
+// =====================================================
+
+export type PublicEditionCreatorSocialLink = {
+  platform: 'instagram' | 'tiktok'
+  url: string
+}
+
 export type PublicEditionCreator = {
   id: string
   username: string | null
   full_name: string | null
+
+  // Only explicitly public Instagram/TikTok links.
+  social_links: PublicEditionCreatorSocialLink[]
 }
 
 export type PublicEdition = {
@@ -91,6 +103,58 @@ type VenueRow = {
   description: string | null
 }
 
+// =====================================================
+// PUBLIC EDITIONS — CREATOR SOCIAL URL VALIDATION
+//
+// Use only saved, explicitly public Instagram/TikTok URLs.
+// Do not derive social accounts from Roam usernames.
+// =====================================================
+
+function normalizePublicCreatorSocialLink(
+  platform: string,
+  value: string,
+): PublicEditionCreatorSocialLink | null {
+  if (
+    platform !== 'instagram' &&
+    platform !== 'tiktok'
+  ) {
+    return null
+  }
+
+  try {
+    const url = new URL(value.trim())
+
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.port
+    ) {
+      return null
+    }
+
+    const hostname = url.hostname.toLowerCase()
+
+    const validHostname =
+      platform === 'instagram'
+        ? hostname === 'instagram.com' ||
+          hostname === 'www.instagram.com'
+        : hostname === 'tiktok.com' ||
+          hostname === 'www.tiktok.com'
+
+    if (!validHostname) {
+      return null
+    }
+
+    return {
+      platform,
+      url: url.href,
+    }
+  } catch {
+    return null
+  }
+}
+
 async function loadCreators(
   editions: EditionRow[],
 ): Promise<Map<string, PublicEditionCreator>> {
@@ -113,10 +177,83 @@ async function loadCreators(
 
   if (error) throw error
 
+  // =====================================================
+  // PUBLIC EDITIONS — LOAD CREATOR SOCIAL LINKS
+  //
+  // Match the existing public creator-profile privacy
+  // rule: only links with is_public = true may be shown.
+  //
+  // Preserve the saved platform URL and display order.
+  // =====================================================
+
+  const {
+    data: socialData,
+    error: socialError,
+  } = await supabaseAdmin
+    .from('creator_social_links')
+    .select('user_id, platform, url, sort_order')
+    .in('user_id', creatorIds)
+    .eq('is_public', true)
+    .in('platform', ['instagram', 'tiktok'])
+    .order('sort_order', { ascending: true })
+
+  if (socialError) throw socialError
+
+  type CreatorSocialRow = {
+    user_id: string
+    platform: string
+    url: string
+    sort_order: number | null
+  }
+
+  const socialLinksByCreator = new Map<
+    string,
+    PublicEditionCreatorSocialLink[]
+  >()
+
+  for (
+    const row of (socialData ?? []) as CreatorSocialRow[]
+  ) {
+    const link = normalizePublicCreatorSocialLink(
+      row.platform,
+      row.url,
+    )
+
+    if (!link) continue
+
+    const existing =
+      socialLinksByCreator.get(row.user_id) ?? []
+
+    // Show at most one link per social platform.
+    if (
+      existing.some(
+        (item) => item.platform === link.platform,
+      )
+    ) {
+      continue
+    }
+
+    existing.push(link)
+
+    socialLinksByCreator.set(
+      row.user_id,
+      existing,
+    )
+  }
+
   return new Map(
-    ((data ?? []) as PublicEditionCreator[]).map(
-      (creator) => [creator.id, creator],
-    ),
+    ((data ?? []) as {
+      id: string
+      username: string | null
+      full_name: string | null
+    }[]).map((creator) => [
+      creator.id,
+      {
+        ...creator,
+        social_links:
+          socialLinksByCreator.get(creator.id) ?? [],
+      },
+    ]),
   )
 }
 
