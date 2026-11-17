@@ -10,6 +10,7 @@ import ShareProfileButton from '@/components/profile/ShareProfileButton'
 import PublicRoamCard from '@/components/public-profile/PublicRoamCard'
 import PublicProfileViewLogger from '@/components/public-profile/PublicProfileViewLogger'
 import CreatorContentCarousel from '@/components/public-profile/creator/CreatorContentCarousel'
+import CreatorReputationCard from '@/components/public-profile/creator/CreatorReputationCard'
 
 import {
   getPublicCreatorProfile,
@@ -1090,6 +1091,7 @@ function ProfileSectionHeading({
  * Public creator reputation presentation
  * ======================================================= */
 
+
 function CreatorReputationSection({
   reputation,
 }: {
@@ -1114,313 +1116,82 @@ function CreatorReputationSection({
       normalized.summary
     )
 
+  const specialties =
+    normalized.categories.map(
+      (category, index) => {
+        const standing =
+          buildPublicReputationStanding(
+            category
+          )
+
+        const friendlyCategoryLabel =
+          formatPublicReputationCategoryLabel(
+            category.label
+          )
+
+        const friendlyScope =
+          formatPublicReputationScope(
+            category
+          )
+
+        const friendlyRankContext =
+          formatPublicReputationRankContext(
+            category
+          )
+
+        return {
+          key:
+            category.key ??
+            `${category.label}-${index}`,
+
+          label:
+            friendlyCategoryLabel,
+
+          scope:
+            friendlyScope,
+
+          standing:
+            standing.available
+              ? standing.primary
+              : null,
+
+          standingContext:
+            standing.available
+              ? (
+                  friendlyRankContext ??
+                  standing.secondary
+                )
+              : null,
+
+          verifiedPlaceCount:
+            category.verifiedVenueCount,
+
+          level:
+            category.level
+              ? formatPublicReputationLevel(
+                  category.level
+                )
+              : null,
+        }
+      }
+    )
+
   return (
-    <section
-      aria-labelledby="creator-reputation-title"
-      className="relative isolate min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.075] bg-[#0c1015] p-5 shadow-[0_28px_90px_rgba(0,0,0,0.22)] sm:p-7 lg:p-8"
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_95%_0%,rgba(91,193,216,0.085),transparent_42%),radial-gradient(ellipse_at_0%_100%,rgba(99,102,241,0.045),transparent_42%)]"
-      />
-
-      <div className="relative z-10 min-w-0">
-        {/* Section introduction */}
-
-        {/* Primary earned identity */}
-
-        {featuredIdentity ||
-        friendlySummary ||
-        normalized.highestLevel ? (
-          <div className="relative mt-6 min-w-0 overflow-hidden rounded-[1.65rem] border border-cyan-200/[0.11] bg-gradient-to-br from-[#14232a] via-[#101920] to-[#131626] p-5 sm:p-6">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-cyan-300/[0.075] blur-[75px]"
-            />
-
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -bottom-24 right-20 h-48 w-48 rounded-full bg-indigo-400/[0.065] blur-[75px]"
-            />
-
-            <div className="relative z-10 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-[11px] font-semibold tracking-[0.035em] text-cyan-200/75">
-                  Best known for
-                </p>
-
-                <p className="mt-2 break-words text-[clamp(1.5rem,3.2vw,2.35rem)] font-black leading-tight tracking-[-0.045em] text-white">
-                  {featuredIdentity ??
-                    'Real places, real experiences'}
-                </p>
-
-                {friendlySummary ? (
-                  <p className="mt-3 text-sm leading-6 text-zinc-300">
-                    {friendlySummary}
-                  </p>
-                ) : null}
-              </div>
-
-              {normalized.highestLevel ? (
-                <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/[0.09] px-3.5 py-2 text-xs font-bold text-cyan-100">
-                  <span
-                    aria-hidden="true"
-                    className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,0.65)]"
-                  />
-
-                  {formatPublicReputationLevel(
-                    normalized.highestLevel
-                  )}
-                </span>
-              ) : null}
-            </div>
-
-            <div className="relative z-10 mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/[0.09] pt-4">
-              <span className="inline-flex items-center gap-2 text-xs text-zinc-400">
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4 shrink-0 text-cyan-300/80"
-                >
-                  <path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z" />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
-
-                Based on verified visits
-              </span>
-
-              <span className="inline-flex items-center gap-2 text-xs text-zinc-400">
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4 shrink-0 text-cyan-300/80"
-                >
-                  <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
-                  <circle cx="12" cy="10" r="2.5" />
-                </svg>
-
-                Places and local experience
-              </span>
-            </div>
-          </div>
-        ) : null}
-
-        {/* Category specialties */}
-
-        {normalized.categories.length > 0 ? (
-          <div className="mt-7 min-w-0">
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-              <div>
-                <h3 className="text-base font-bold tracking-[-0.025em] text-white">
-                  Their specialties
-                </h3>
-
-                <p className="mt-1 text-xs leading-5 text-zinc-500">
-                  Where their real-world
-                  experience stands out.
-                </p>
-              </div>
-
-              <span className="rounded-full border border-white/[0.075] bg-white/[0.035] px-3 py-1.5 text-[11px] font-medium text-zinc-400">
-                {normalized.categories.length}{' '}
-                {normalized.categories.length === 1
-                  ? 'specialty'
-                  : 'specialties'}
-              </span>
-            </div>
-
-            <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-              {normalized.categories.map(
-                (category, index) => {
-                  const standing =
-                    buildPublicReputationStanding(
-                      category
-                    )
-
-                  const placeCount =
-                    category.verifiedVenueCount
-
-                  const placeLabel =
-                    placeCount === null
-                      ? null
-                      : `${placeCount.toLocaleString(
-                          'en-US'
-                        )} verified ${
-                          placeCount === 1
-                            ? 'place'
-                            : 'places'
-                        }`
-
-                  const friendlyCategoryLabel =
-                    formatPublicReputationCategoryLabel(
-                      category.label
-                    )
-
-                  const friendlyScope =
-                    formatPublicReputationScope(
-                      category
-                    )
-
-                  const friendlyRankContext =
-                    formatPublicReputationRankContext(
-                      category
-                    )
-
-                  return (
-                    <article
-                      key={
-                        category.key ??
-                        `${category.label}-${index}`
-                      }
-                      className="group relative flex min-w-0 flex-col overflow-hidden rounded-[1.4rem] border border-white/[0.075] bg-[#11151b] p-4 transition-colors duration-200 hover:border-white/[0.13] hover:bg-[#151b22] sm:p-5"
-                    >
-                      <div
-                        aria-hidden="true"
-                        className="pointer-events-none absolute right-0 top-0 h-24 w-28 bg-gradient-to-bl from-cyan-300/[0.035] to-transparent"
-                      />
-
-                      <div className="relative z-10 flex min-w-0 items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <h4 className="break-words text-[15px] font-bold leading-5 tracking-[-0.02em] text-white">
-                            {friendlyCategoryLabel}
-                          </h4>
-
-                          <p className="mt-1 text-[11px] leading-4 text-zinc-500">
-                            {friendlyScope}
-                          </p>
-                        </div>
-
-                        {category.level ? (
-                          <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-white/[0.085] bg-white/[0.045] px-2.5 py-1.5 text-[10px] font-semibold text-zinc-300">
-                            <span
-                              aria-hidden="true"
-                              className="h-1 w-1 rounded-full bg-cyan-300/75"
-                            />
-
-                            {formatPublicReputationLevel(
-                              category.level
-                            )}
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <div className="relative z-10 mt-6 flex-1">
-                        {standing.available ? (
-                          <>
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                              Their standing
-                            </p>
-
-                            <p className="mt-1.5 break-words text-[clamp(1.55rem,3vw,2rem)] font-black leading-tight tracking-[-0.045em] text-cyan-200">
-                              {standing.primary}
-                            </p>
-
-                            {friendlyRankContext ? (
-                              <p className="mt-1.5 text-xs leading-5 text-zinc-400">
-                                {friendlyRankContext}
-                              </p>
-                            ) : standing.secondary ? (
-                              <p className="mt-1.5 text-xs leading-5 text-zinc-400">
-                                {standing.secondary}
-                              </p>
-                            ) : null}
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-zinc-500">
-                              Their journey
-                            </p>
-
-                            <p className="mt-2 text-lg font-bold tracking-[-0.03em] text-zinc-200">
-                              Still exploring
-                            </p>
-
-                            <p className="mt-1.5 max-w-xs text-xs leading-5 text-zinc-500">
-                              Their experience here
-                              is growing. A local
-                              ranking isn&apos;t
-                              available yet.
-                            </p>
-                          </>
-                        )}
-                      </div>
-
-                      {placeLabel ? (
-                        <div className="relative z-10 mt-5 border-t border-white/[0.075] pt-3.5">
-                          <div className="flex items-center gap-2">
-                            <svg
-                              aria-hidden="true"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.7"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="h-3.5 w-3.5 shrink-0 text-cyan-300/70"
-                            >
-                              <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
-                              <circle
-                                cx="12"
-                                cy="10"
-                                r="2.5"
-                              />
-                            </svg>
-
-                            <p className="text-xs font-medium text-zinc-400">
-                              {placeLabel}
-                            </p>
-                          </div>
-                        </div>
-                      ) : null}
-                    </article>
-                  )
-                }
-              )}
-            </div>
-          </div>
-        ) : null}
-
-        {/* Plain-language explanation */}
-
-        <div className="mt-6 flex items-start gap-2.5 border-t border-white/[0.075] pt-4">
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 11v5" />
-            <path d="M12 8h.01" />
-          </svg>
-
-          <p className="max-w-3xl text-[11px] leading-[1.7] text-zinc-500">
-            These highlights come from real,
-            verified visits. Rankings compare
-            people exploring the same kinds
-            of places in the same city.
-            Worldwide rankings are kept
-            separate.
-          </p>
-        </div>
-      </div>
-    </section>
+    <CreatorReputationCard
+      headline={featuredIdentity}
+      summary={friendlySummary}
+      highestLevel={
+        normalized.highestLevel
+          ? formatPublicReputationLevel(
+              normalized.highestLevel
+            )
+          : null
+      }
+      specialties={specialties}
+    />
   )
 }
+
 
 /* =========================================================
  * Friendly public reputation copy
