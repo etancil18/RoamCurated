@@ -19902,7 +19902,7 @@ const atlantaData = [
     "lat": 33.7521147,
     "lon": -84.3990442,
     "link": "https://www.instagram.com/fellaship.atl/?hl=en",
-    "cover": "",
+    "cover": "img/venues/fellaship-atl.jpg",
     "openNow": true,
     "hours": [
       "Sunday: 12:00 PM–8:00 PM",
