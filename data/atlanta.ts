@@ -33323,7 +33323,7 @@ const atlantaData = [
     "lat": "33.7879305",
     "lon": "-84.3830763",
     "link": "https://www.instagram.com/holemanandfinch/",
-    "cover": "img/venues/Holeman and Finch.jpg",
+    "cover": "img/venues/Holeman and Finch.png",
     "openNow": "TRUE",
     "hours": [
       "Sunday: 11:00 AM–9:00 PM",

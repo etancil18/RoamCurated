@@ -2,6 +2,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import Image from 'next/image'
 
 import CollectionEndCardGenerator from '@/components/profile/creator/collections/CollectionEndCardGenerator'
@@ -53,10 +54,42 @@ type Attribution = {
   } | null
 }
 
+// =====================================================
+// CONTEXT SLIDES — ADDITIVE TYPES
+// =====================================================
+
+type ContextSlide = {
+  id: string
+  after_item_id: string
+  position: number
+  heading: string | null
+  body: string
+  image_source: 'none' | 'venue_cover' | 'creator_media'
+  creator_media_id: string | null
+  image_url: string | null
+}
+
 type Slide =
-  | { kind: 'cover'; id: string }
-  | { kind: 'venue'; id: string; item: EditionItem }
-  | { kind: 'closing'; id: string }
+  | {
+      kind: 'cover'
+      id: string
+    }
+  | {
+      kind: 'venue'
+      id: string
+      item: EditionItem
+      venueNumber: number
+    }
+  | {
+      kind: 'context'
+      id: string
+      context: ContextSlide
+      venue: EditionItem
+    }
+  | {
+      kind: 'closing'
+      id: string
+    }
 
 type Props = {
   editionId: string
@@ -80,6 +113,85 @@ const EXPORT_PRESETS = {
     label: 'TikTok · 9:16',
   },
 } as const
+
+// =====================================================
+// CONTEXT SLIDES — PRODUCTION-MATCHED SEQUENCE
+//
+// One saved context record creates exactly one slide.
+//
+// No text pagination here. This matches the published
+// RoamEditionReader sequence for both social presets:
+//
+// Cover → Venue → Context(s) → Venue → Closing
+// =====================================================
+
+function buildSlides(
+  items: EditionItem[],
+  contexts: ContextSlide[],
+): Slide[] {
+  const orderedItems = [...items].sort(
+    (a, b) =>
+      a.position - b.position ||
+      a.id.localeCompare(b.id),
+  )
+
+  const contextsByItem = new Map<
+    string,
+    ContextSlide[]
+  >()
+
+  for (const context of contexts) {
+    const existing =
+      contextsByItem.get(context.after_item_id) ?? []
+
+    existing.push(context)
+
+    contextsByItem.set(
+      context.after_item_id,
+      existing,
+    )
+  }
+
+  for (const group of contextsByItem.values()) {
+    group.sort(
+      (a, b) =>
+        a.position - b.position ||
+        a.id.localeCompare(b.id),
+    )
+  }
+
+  const slides: Slide[] = [
+    { kind: 'cover', id: 'cover' },
+  ]
+
+  orderedItems.forEach((item, index) => {
+    slides.push({
+      kind: 'venue',
+      id: item.id,
+      item,
+      venueNumber: index + 1,
+    })
+
+    for (
+      const context of
+      contextsByItem.get(item.id) ?? []
+    ) {
+      slides.push({
+        kind: 'context',
+        id: `context-${context.id}`,
+        context,
+        venue: item,
+      })
+    }
+  })
+
+  slides.push({
+    kind: 'closing',
+    id: 'closing',
+  })
+
+  return slides
+}
 
 // =====================================================
 // COVER & CLOSING — EDITORIAL COLOR PALETTES
@@ -167,6 +279,30 @@ function getEditionPalette(
 // PNG EXPORT — VERIFIED SERVER MANIFEST
 // =====================================================
 
+type ManifestSlide =
+  | {
+      kind: 'cover'
+      id: string
+    }
+  | {
+      kind: 'venue'
+      id: string
+      item_id: string
+    }
+  | {
+      kind: 'context'
+      id: string
+      context_id: string
+      item_id: string
+      page_number?: number
+      page_count?: number
+      body: string
+    }
+  | {
+      kind: 'closing'
+      id: string
+    }
+
 type ExportManifest = {
   edition_id: string
   width: number
@@ -176,6 +312,8 @@ type ExportManifest = {
   permission_verified: boolean
   edition: EditorialEdition
   items: EditionItem[]
+  context_slides: ContextSlide[]
+  slides: ManifestSlide[]
   attribution: Attribution
 }
 
@@ -464,6 +602,214 @@ async function prepareVenueImageForExport(
   }
 }
 
+// =====================================================
+// CONTEXT SLIDES — IMAGE SELECTION
+//
+// Text-only contexts have no background image.
+// Venue-cover contexts use the canonical venue cover.
+// Creator-photo contexts use only the eligible image URL
+// returned by the context API, falling back to the cover.
+// =====================================================
+
+function contextImageUrl(
+  context: ContextSlide,
+  venue: EditionItem,
+): string | null {
+  if (context.image_source === 'none') {
+    return null
+  }
+
+  if (context.image_source === 'venue_cover') {
+    return venue.venue_cover_url
+  }
+
+  return (
+    context.image_url ||
+    venue.venue_cover_url
+  )
+}
+
+function contextBackgroundItem(
+  slide: Extract<Slide, { kind: 'context' }>,
+): EditionItem | null {
+  const imageUrl = contextImageUrl(
+    slide.context,
+    slide.venue,
+  )
+
+  if (!imageUrl) {
+    return null
+  }
+
+  // Reuse the original image embedding helper without
+  // modifying the saved venue or context record.
+  return {
+    ...slide.venue,
+    image_override_url: imageUrl,
+    venue_cover_url: null,
+    image_url: null,
+  }
+}
+
+// =====================================================
+// CONTEXT SLIDES — ONE CONTEXT = ONE SOCIAL SLIDE
+//
+// Text can scroll in the admin preview just as it can
+// in the published 4:5 reader.
+//
+// Static image exports cannot scroll. The exporter
+// checks for overflow instead of generating extra pages
+// or silently hiding written content.
+// =====================================================
+
+function ContextSocialSlide({
+  slide,
+  palette,
+  isTikTok,
+}: {
+  slide: Extract<Slide, { kind: 'context' }>
+  palette: typeof EDITORIAL_PALETTE_STYLES[EditorialPalette]
+  isTikTok: boolean
+}) {
+  const imageUrl = contextImageUrl(
+    slide.context,
+    slide.venue,
+  )
+
+  return (
+    <div
+      className="absolute inset-0 overflow-hidden text-white"
+      style={{
+        background: imageUrl
+          ? '#15283a'
+          : palette.coverBackground,
+      }}
+    >
+      {imageUrl ? (
+        <>
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url("${imageUrl.replace(/["\\]/g, '')}")`,
+            }}
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/90" />
+        </>
+      ) : (
+        <div
+          className={[
+            'pointer-events-none absolute -right-[26%] w-[110%] rotate-[-13deg] opacity-[0.12]',
+            isTikTok ? 'top-[20%]' : 'top-[12%]',
+          ].join(' ')}
+          aria-hidden="true"
+        >
+          <RoamEmblem
+            decorative
+            className="h-auto w-full select-none object-contain"
+          />
+        </div>
+      )}
+
+      {/* CONTEXT LOGO — MATCH VENUE SLIDE POSITION AND SIZE */}
+      <div
+        className={[
+          'absolute left-5 right-5 z-10 flex items-start justify-between',
+          isTikTok ? 'top-[4%]' : 'top-6',
+        ].join(' ')}
+      >
+        <RoamEmblem className="h-12 w-12 shrink-0 object-contain" />
+
+        <span
+          className="pt-2 text-right text-[9px] font-bold uppercase tracking-[0.2em]"
+          style={{
+            color: imageUrl
+              ? 'rgba(255,255,255,0.8)'
+              : palette.coverEyebrow,
+          }}
+        >
+          A Closer Look
+        </span>
+      </div>
+
+      <div
+        className={[
+          'absolute left-[8%] right-[8%] z-10 flex min-h-0 flex-col',
+          isTikTok
+            ? 'bottom-[12%] top-[25%]'
+            : 'bottom-[8%] top-[24%]',
+        ].join(' ')}
+      >
+        <p
+          className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em]"
+          style={{
+            color: imageUrl
+              ? '#e6c5a6'
+              : palette.coverEyebrow,
+          }}
+        >
+          {slide.venue.venue_name}
+        </p>
+
+        <div
+          data-context-export-content="true"
+          className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-y-contain pr-2 [scrollbar-width:thin]"
+        >
+          {slide.context.heading && (
+            <h4 className="break-words font-serif text-[clamp(24px,5.7vw,43px)] font-normal leading-[1.08] tracking-[-0.035em]">
+              {slide.context.heading}
+            </h4>
+          )}
+
+          <div className="mt-4 h-[2px] w-10 bg-[#c68b67]" />
+
+          <p
+            className={[
+              'mt-4 whitespace-pre-wrap break-words text-white/90',
+              isTikTok
+                ? 'text-[15px] leading-[1.65]'
+                : 'text-[14px] leading-[1.55]',
+            ].join(' ')}
+          >
+            {slide.context.body}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// =====================================================
+// CONTEXT SLIDES — STATIC EXPORT CONTENT CHECK
+//
+// Match production's one-slide structure, but never
+// silently truncate saved text in a downloaded PNG.
+// =====================================================
+
+function ensureContextCopyFits(
+  slideElement: HTMLElement,
+): void {
+  const content =
+    slideElement.querySelector<HTMLElement>(
+      '[data-context-export-content]',
+    )
+
+  if (!content) {
+    throw new Error(
+      'The context slide content could not be verified.',
+    )
+  }
+
+  if (
+    content.scrollHeight > content.clientHeight + 2 ||
+    content.scrollWidth > content.clientWidth + 2
+  ) {
+    throw new Error(
+      'This context slide contains more text than fits in a static PNG. The preview matches the published Edition, but a PNG cannot capture vertically scrolled content. Shorten the context copy before downloading.',
+    )
+  }
+}
+
 export default function RoamEditionSlidePreview({
   editionId,
 }: Props) {
@@ -471,6 +817,14 @@ export default function RoamEditionSlidePreview({
     useState<EditorialEdition | null>(null)
 
   const [items, setItems] = useState<EditionItem[]>([])
+
+  // =====================================================
+  // CONTEXT SLIDES — ADDITIVE PREVIEW STATE
+  // =====================================================
+
+  const [contextSlides, setContextSlides] = useState<
+    ContextSlide[]
+  >([])
 
   const [attribution, setAttribution] =
     useState<Attribution | null>(null)
@@ -522,6 +876,7 @@ export default function RoamEditionSlidePreview({
           editionResponse,
           itemsResponse,
           attributionResponse,
+          contextResponse,
         ] = await Promise.all([
           getJson<{
             edition: EditorialEdition
@@ -543,6 +898,13 @@ export default function RoamEditionSlidePreview({
             `${base}/attribution`,
             controller.signal,
           ),
+
+          getJson<{
+            slides: ContextSlide[]
+          }>(
+            `${base}/context-slides`,
+            controller.signal,
+          ),
         ])
 
         if (controller.signal.aborted) return
@@ -553,6 +915,10 @@ export default function RoamEditionSlidePreview({
           [...(itemsResponse.items ?? [])].sort(
             (a, b) => a.position - b.position,
           ),
+        )
+
+        setContextSlides(
+          contextResponse.slides ?? [],
         )
 
         setAttribution(
@@ -576,16 +942,15 @@ export default function RoamEditionSlidePreview({
     return () => controller.abort()
   }, [base, refreshVersion])
 
+  // =====================================================
+  // CONTEXT SLIDES — PRODUCTION-MATCHED PREVIEW
+  //
+  // Exactly one slide per context. Presets change the
+  // composition dimensions, never the slide count.
+  // =====================================================
+
   const slides: Slide[] = edition
-    ? [
-        { kind: 'cover', id: 'cover' },
-        ...items.map((item) => ({
-          kind: 'venue' as const,
-          id: item.id,
-          item,
-        })),
-        { kind: 'closing', id: 'closing' },
-      ]
+    ? buildSlides(items, contextSlides)
     : []
 
   const slide = slides[activeIndex] ?? null
@@ -662,10 +1027,68 @@ export default function RoamEditionSlidePreview({
         manifest.height !== dimensions.height ||
         manifest.format !== 'png' ||
         !Array.isArray(manifest.items) ||
-        manifest.slide_count !== manifest.items.length + 2
+        !Array.isArray(manifest.context_slides) ||
+        !Array.isArray(manifest.slides)
       ) {
         throw new Error(
           'The server returned an invalid export manifest for the selected platform.',
+        )
+      }
+
+      // Rebuild one context per slide from the latest
+      // permission-verified server data.
+      const exportSlides = buildSlides(
+        manifest.items,
+        manifest.context_slides,
+      )
+
+      // The export route must use the same no-pagination
+      // rule. Reject mismatches instead of exporting
+      // the wrong slides or bypassing server verification.
+      if (
+        manifest.slide_count !== exportSlides.length ||
+        manifest.slides.length !== exportSlides.length ||
+        manifest.slides.some((serverSlide, index) => {
+          const localSlide = exportSlides[index]
+
+          if (
+            serverSlide.id !== localSlide.id ||
+            serverSlide.kind !== localSlide.kind
+          ) {
+            return true
+          }
+
+          if (
+            serverSlide.kind === 'venue' &&
+            localSlide.kind === 'venue'
+          ) {
+            return serverSlide.item_id !== localSlide.item.id
+          }
+
+          if (
+            serverSlide.kind === 'context' &&
+            localSlide.kind === 'context'
+          ) {
+            return (
+              serverSlide.context_id !== localSlide.context.id ||
+              serverSlide.item_id !== localSlide.venue.id ||
+              serverSlide.body !== localSlide.context.body ||
+              (
+                serverSlide.page_number !== undefined &&
+                serverSlide.page_number !== 1
+              ) ||
+              (
+                serverSlide.page_count !== undefined &&
+                serverSlide.page_count !== 1
+              )
+            )
+          }
+
+          return false
+        })
+      ) {
+        throw new Error(
+          'The export manifest still differs from the published Edition sequence. Update the export route to use one context record per slide.',
         )
       }
 
@@ -681,94 +1104,113 @@ export default function RoamEditionSlidePreview({
 
       // Render the latest saved data returned by the
       // permission-verified export endpoint.
-      setEdition(manifest.edition)
+      //
+      // Flush React updates so every capture reads
+      // the intended slide, not the previous one.
+      flushSync(() => {
+        setEdition(manifest.edition)
 
-      setItems(
-        [...manifest.items].sort(
-          (a, b) => a.position - b.position,
-        ),
-      )
+        setItems(
+          [...manifest.items].sort(
+            (a, b) => a.position - b.position,
+          ),
+        )
 
-      setAttribution(manifest.attribution)
-      setActiveIndex(0)
+        setContextSlides(
+          manifest.context_slides,
+        )
+
+        setAttribution(manifest.attribution)
+        setActiveIndex(0)
+      })
 
       await waitForSlidePaint()
       await document.fonts.ready
 
       const zip = new JSZip()
 
-      const filenames = [
-        '01-cover.png',
-        ...[...manifest.items]
-          .sort((a, b) => a.position - b.position)
-          .map((_, index) => {
-            const number = String(index + 2).padStart(2, '0')
+      // PNG order matches the published sequence.
+      const filenames = exportSlides.map(
+        (exportSlide, index) => {
+          const number = String(index + 1).padStart(
+            2,
+            '0',
+          )
+
+          if (exportSlide.kind === 'cover') {
+            return `${number}-cover.png`
+          }
+
+          if (exportSlide.kind === 'venue') {
             return `${number}-venue.png`
-          }),
-        `${String(manifest.slide_count).padStart(2, '0')}-closing.png`,
-      ]
+          }
+
+          if (exportSlide.kind === 'context') {
+            return `${number}-context.png`
+          }
+
+          return `${number}-closing.png`
+        },
+      )
 
       for (
         let index = 0;
-        index < manifest.slide_count;
+        index < exportSlides.length;
         index += 1
       ) {
+        const exportSlide = exportSlides[index]
+
         setExportNotice(
-          `Rendering slide ${index + 1} of ${manifest.slide_count}…`,
+          `Rendering slide ${index + 1} of ${exportSlides.length}…`,
         )
 
-        setActiveIndex(index)
+        flushSync(() => {
+          setActiveIndex(index)
+        })
 
-        // Wait for React to commit the requested slide
-        // before capturing its existing DOM markup.
+        // Wait for the selected slide and its styles
+        // to commit before capturing the DOM.
         await waitForSlidePaint()
 
         const slideElement = slideRef.current
 
-        if (!slideElement) {
+        if (
+          !slideElement ||
+          slideElement.dataset.slideId !== exportSlide.id
+        ) {
           throw new Error(
-            `Slide ${index + 1} could not be rendered.`,
+            `Slide ${index + 1} could not be rendered correctly.`,
           )
         }
 
         // Ensure the copper emblem has finished loading.
         await waitForSlideImages(slideElement)
 
-        // =================================================
-        // VENUE PHOTO — EXPORT-SAFE IMAGE EMBEDDING
-        //
-        // Index 0 is the cover. Venue slides occupy
-        // indices 1 through manifest.items.length.
-        // The final index is the closing slide.
-        //
-        // Use the exact same item ordering already
-        // used by the existing export renderer.
-        // =================================================
+        // The mixed sequence determines image selection.
+        // Do not assume all intermediate slides are venues.
+        const imageItem =
+          exportSlide.kind === 'venue'
+            ? exportSlide.item
+            : exportSlide.kind === 'context'
+              ? contextBackgroundItem(exportSlide)
+              : null
 
-        const sortedVenueItems =
-          index > 0 &&
-          index <= manifest.items.length
-            ? [...manifest.items].sort(
-                (a, b) => a.position - b.position,
-              )
-            : null
-
-        const venueItem =
-          sortedVenueItems?.[index - 1] ?? null
-
-        const restoreVenueImage = venueItem
+        const restoreVenueImage = imageItem
           ? await prepareVenueImageForExport(
               slideElement,
-              venueItem,
+              imageItem,
             )
           : () => {}
 
         let pngDataUrl: string
 
         try {
-          // Existing PNG dimensions and capture settings.
-          // The venue photograph, when present, is now
-          // already embedded as a data URL.
+          if (exportSlide.kind === 'context') {
+            ensureContextCopyFits(slideElement)
+          }
+
+          // Preserve the existing capture dimensions
+          // and PNG generation settings.
           pngDataUrl = await toPng(slideElement, {
             canvasWidth: dimensions.width,
             canvasHeight: dimensions.height,
@@ -776,8 +1218,7 @@ export default function RoamEditionSlidePreview({
             cacheBust: false,
           })
         } finally {
-          // Always return the live preview to its
-          // original saved venue image URL.
+          // Restore the original preview image.
           restoreVenueImage()
         }
 
@@ -823,14 +1264,22 @@ export default function RoamEditionSlidePreview({
       }
 
       setExportNotice(
-        `${manifest.slide_count} ${dimensions.width} × ${dimensions.height} PNG slides packaged for download.`,
+        `${exportSlides.length} ${dimensions.width} × ${dimensions.height} PNG slides packaged for download.`,
       )
     } catch (exportFailure) {
       setExportError(errorMessage(exportFailure))
       setExportNotice(null)
     } finally {
       // Restore the slide the administrator was viewing.
-      setActiveIndex(previousActiveIndex)
+      flushSync(() => {
+        setActiveIndex(
+          Math.min(
+            previousActiveIndex,
+            Math.max(0, buildSlides(items, contextSlides).length - 1),
+          ),
+        )
+      })
+
       setExporting(false)
     }
   }
@@ -849,7 +1298,8 @@ export default function RoamEditionSlidePreview({
 
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
             Preview the edition for Instagram or TikTok.
-            Slides follow the saved Places lineup.
+            Slides follow the saved Places lineup,
+            including context slides.
             Nothing is published here.
           </p>
         </div>
@@ -948,6 +1398,7 @@ export default function RoamEditionSlidePreview({
             {/* Instagram 4:5 / TikTok 9:16 composition */}
             <div
               ref={slideRef}
+              data-slide-id={slide.id}
               className={[
                 'relative w-full overflow-hidden rounded-xl border border-white/10 bg-[#11243a] text-white shadow-2xl',
                 isTikTok
@@ -1054,17 +1505,6 @@ export default function RoamEditionSlidePreview({
                     ].join(' ')}
                   >
                     <RoamEmblem className="h-12 w-12 shrink-0 object-contain" />
-
-                    {/* Venue counter: non-wrapping for PNG export */}
-                    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/25 bg-black/25 px-3 py-1 text-[10px] font-semibold leading-none tabular-nums backdrop-blur-sm">
-                      <span className="inline-block min-w-[10px] text-right">
-                        {activeIndex}
-                      </span>
-                      <span>/</span>
-                      <span className="inline-block min-w-[10px] text-left">
-                        {items.length}
-                      </span>
-                    </span>
                   </div>
 
                   <div
@@ -1102,6 +1542,18 @@ export default function RoamEditionSlidePreview({
                     </p>
                   </div>
                 </div>
+              )}
+
+              {/* ==========================================
+                  CONTEXT SLIDE — PRODUCTION MATCH
+              ========================================== */}
+
+              {slide.kind === 'context' && (
+                <ContextSocialSlide
+                  slide={slide}
+                  palette={palette}
+                  isTikTok={isTikTok}
+                />
               )}
 
               {slide.kind === 'closing' && (
@@ -1237,11 +1689,11 @@ export default function RoamEditionSlidePreview({
       {/* STANDALONE SOCIAL END CARD — NOT PART OF CAROUSEL EXPORT */}
       {!loading && edition && (
         <CollectionEndCardGenerator
-            collectionTitle={edition.title}
-            creatorHandle={attribution?.creator?.username ?? null}
-            editionPalette={getEditionPalette(edition)}
-            />
-        )}
+          collectionTitle={edition.title}
+          creatorHandle={attribution?.creator?.username ?? null}
+          editionPalette={getEditionPalette(edition)}
+        />
+      )}
     </section>
   )
 }

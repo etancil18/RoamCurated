@@ -13,6 +13,7 @@ import {
 import type {
   PublicEditionDetail,
   PublicEditionItem,
+  PublicEditionContextSlide,
 } from '@/lib/editorial/publicEditions'
 
 // ============================================================
@@ -26,6 +27,15 @@ import type {
 // - Slide restoration after visiting a venue
 // - Canonical venue-profile links
 // - Existing editorial palettes and slide designs
+//
+// CONTEXT SLIDES — ADDITIVE INITIATIVE
+//
+// - Venue-linked context slides appear after each venue
+// - Text-only, venue-cover, and eligible creator photography
+// - Long-form context remains readable within each slide
+// - Failed context photography falls back safely
+// - Venue numbering stays independent of slide numbering
+// - Stable slide-ID restoration supports mixed sequences
 //
 // No additional carousel dependency required.
 // ============================================================
@@ -43,6 +53,13 @@ type Slide =
       kind: 'venue'
       id: string
       item: PublicEditionItem
+      venueNumber: number
+    }
+  | {
+      kind: 'context'
+      id: string
+      context: PublicEditionContextSlide
+      venue: PublicEditionItem
     }
   | {
       kind: 'closing'
@@ -279,13 +296,9 @@ function CoverSlide({
 
 function VenueSlide({
   item,
-  index,
-  total,
   city,
 }: {
   item: PublicEditionItem
-  index: number
-  total: number
   city: string
 }) {
   const imageUrl =
@@ -315,12 +328,9 @@ function VenueSlide({
 
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/5 to-black/90" />
 
+      {/* Venue: retain existing logo position; remove counter only. */}
       <div className="absolute left-5 right-5 top-6 z-10 flex items-start justify-between">
         <RoamEmblem className="pointer-events-none h-12 w-12 shrink-0 select-none object-contain" />
-
-        <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/25 bg-black/25 px-3 py-1 text-[10px] font-semibold leading-none tabular-nums backdrop-blur-sm">
-          {index} / {total}
-        </span>
       </div>
 
       <div className="absolute bottom-[8%] left-[8%] right-[8%] z-10">
@@ -357,6 +367,182 @@ function VenueSlide({
         <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/65">
           {city} · Roam Editions
         </p>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// CONTEXT SLIDE — ADDITIVE INITIATIVE
+//
+// Separate from VenueSlide so that venue photography,
+// excerpts, links, and the existing visual design remain
+// completely unchanged.
+//
+// Image selection is resolved by the public server loader.
+// If a returned image fails to load, the component attempts
+// the canonical cover, then displays the text-only design.
+//
+// Context text scrolls vertically inside the fixed 4:5
+// magazine slide rather than overflowing or becoming tiny.
+// ============================================================
+
+function ContextSlide({
+  context,
+  venue,
+  edition,
+}: {
+  context: PublicEditionContextSlide
+  venue: PublicEditionItem
+  edition: PublicEditionDetail
+}) {
+  const palette = getEditionPalette(edition)
+
+  const [failedImageUrls, setFailedImageUrls] =
+    useState<string[]>([])
+
+  const imageCandidates =
+    context.image_source === 'none'
+      ? []
+      : [
+          ...new Set(
+            [
+              context.image_url,
+              venue.venue_cover_url,
+            ].filter(
+              (url): url is string =>
+                typeof url === 'string' &&
+                url.length > 0,
+            ),
+          ),
+        ]
+
+  const imageUrl =
+    imageCandidates.find(
+      (url) => !failedImageUrls.includes(url),
+    ) ?? null
+
+  const hasImage = Boolean(imageUrl)
+
+  // Each context slide is keyed by its stable ID by the
+  // carousel. Reset failures if image inputs change.
+  useEffect(() => {
+    setFailedImageUrls([])
+  }, [
+    context.image_url,
+    context.image_source,
+    venue.venue_cover_url,
+  ])
+
+  return (
+    <div
+      className={[
+        'absolute inset-0 overflow-hidden',
+        hasImage
+          ? 'bg-[#15283a] text-white'
+          : 'text-[#f5f3ef]',
+      ].join(' ')}
+      style={
+        hasImage
+          ? undefined
+          : {
+              background:
+                palette.coverBackground,
+            }
+      }
+    >
+      {imageUrl && (
+        <img
+          key={imageUrl}
+          src={imageUrl}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          draggable={false}
+          onError={() => {
+            setFailedImageUrls(
+              (current) =>
+                current.includes(imageUrl)
+                  ? current
+                  : [...current, imageUrl],
+            )
+          }}
+          className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+        />
+      )}
+
+      {hasImage ? (
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/90" />
+      ) : (
+        <div
+          className="pointer-events-none absolute -right-[26%] top-[12%] w-[110%] rotate-[-13deg] opacity-[0.12]"
+          aria-hidden="true"
+        >
+          <RoamEmblem className="h-auto w-full select-none object-contain" />
+        </div>
+      )}
+
+      {/* Context logo: same position and dimensions as venue logo. */}
+      <div className="absolute left-5 right-5 top-6 z-10 flex items-start justify-between gap-3">
+        <RoamEmblem className="pointer-events-none h-12 w-12 shrink-0 select-none object-contain" />
+
+        <span
+          className="pt-2 text-right text-[9px] font-bold uppercase tracking-[0.2em]"
+          style={{
+            color: hasImage
+              ? 'rgba(255,255,255,0.8)'
+              : palette.coverEyebrow,
+          }}
+        >
+          A Closer Look
+        </span>
+      </div>
+
+      {/* The writing region is independently scrollable
+          without changing the carousel's horizontal layout. */}
+      <div
+        className="absolute bottom-[8%] left-[8%] right-[8%] top-[24%] z-10 flex min-h-0 flex-col"
+      >
+        <p
+          className="shrink-0 text-[10px] font-bold uppercase tracking-[0.18em]"
+          style={{
+            color: hasImage
+              ? '#e6c5a6'
+              : palette.coverEyebrow,
+          }}
+        >
+          {venue.venue_name}
+        </p>
+
+        <div
+          data-roam-context-scroll="true"
+          role="region"
+          aria-label={`Context for ${venue.venue_name}`}
+          tabIndex={0}
+          className={[
+            'mt-4 min-h-0 flex-1 overflow-y-auto overscroll-y-contain pr-2',
+            'touch-pan-y select-text',
+            '[scrollbar-width:thin]',
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d2ab86]',
+          ].join(' ')}
+        >
+          {context.heading && (
+            <h2 className="break-words font-serif text-[clamp(24px,5.7vw,43px)] font-normal leading-[1.08] tracking-[-0.035em]">
+              {context.heading}
+            </h2>
+          )}
+
+          <div
+            className="mt-5 h-[2px] w-10"
+            style={{
+              backgroundColor: '#c68b67',
+            }}
+          />
+
+          <p className="mt-4 whitespace-pre-wrap break-words text-[clamp(13px,2.5vw,16px)] leading-[1.75] text-white/90">
+            {context.body}
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -427,15 +613,15 @@ function ClosingSlide({
         </p>
 
         <Link
-        href="/explore"
-        className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.13em] transition hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
-        style={{
+          href="/explore"
+          className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-[0.13em] transition hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"
+          style={{
             borderColor: palette.closingMuted,
             color: palette.closingText,
-        }}
+          }}
         >
-        Explore Places
-        <span aria-hidden="true">↗</span>
+          Explore Places
+          <span aria-hidden="true">↗</span>
         </Link>
       </div>
     </div>
@@ -462,16 +648,66 @@ export default function RoamEditionReader({
   const [activeIndex, setActiveIndex] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
 
+  // ==========================================================
+  // CONTEXT SLIDES — MIXED SEQUENCE
+  //
+  // Context slides are grouped by their associated venue
+  // item ID, then rendered directly after that venue.
+  //
+  // The existing venue item order remains authoritative.
+  // ==========================================================
+
+  const contextsByItem = new Map<
+    string,
+    PublicEditionContextSlide[]
+  >()
+
+  for (const context of edition.context_slides ?? []) {
+    const existing =
+      contextsByItem.get(context.after_item_id) ?? []
+
+    existing.push(context)
+
+    contextsByItem.set(
+      context.after_item_id,
+      existing,
+    )
+  }
+
+  for (const contexts of contextsByItem.values()) {
+    contexts.sort(
+      (a, b) =>
+        a.position - b.position ||
+        a.id.localeCompare(b.id),
+    )
+  }
+
+  const venueAndContextSlides: Slide[] =
+    edition.items.flatMap(
+      (item, venueIndex): Slide[] => [
+        {
+          kind: 'venue',
+          id: item.id,
+          item,
+          venueNumber: venueIndex + 1,
+        },
+        ...(contextsByItem.get(item.id) ?? []).map(
+          (context): Slide => ({
+            kind: 'context',
+            id: `context-${context.id}`,
+            context,
+            venue: item,
+          }),
+        ),
+      ],
+    )
+
   const slides: Slide[] = [
     {
       kind: 'cover',
       id: `cover-${edition.id}`,
     },
-    ...edition.items.map((item) => ({
-      kind: 'venue' as const,
-      id: item.id,
-      item,
-    })),
+    ...venueAndContextSlides,
     {
       kind: 'closing',
       id: `closing-${edition.id}`,
@@ -480,11 +716,25 @@ export default function RoamEditionReader({
 
   const slideCount = slides.length
 
+  // Stable sequence signature: effects need to rerun only
+  // when the ordered slide identities actually change.
+  const slideIds = slides
+    .map((slide) => slide.id)
+    .join('|')
+
+  const hasContextSlides =
+    (edition.context_slides?.length ?? 0) > 0
+
   const credit = getCreatorCredit(edition)
   const cityName = edition.city?.trim() || 'Your City'
 
   const storageKey =
     `roam-edition-reader:${edition.id}`
+
+  // New stable-ID key is additive. The original numeric
+  // storage key remains available for compatibility.
+  const slideIdStorageKey =
+    `${storageKey}:slide-id`
 
   const canGoBack = activeIndex > 0
   const canGoForward = activeIndex < slideCount - 1
@@ -517,17 +767,31 @@ export default function RoamEditionReader({
           storageKey,
           String(nextIndex),
         )
+
+        window.sessionStorage.setItem(
+          slideIdStorageKey,
+          slides[nextIndex].id,
+        )
       } catch {
         // Navigation remains functional if browser
         // storage is unavailable.
       }
     },
-    [slideCount, storageKey],
+    [
+      slideCount,
+      storageKey,
+      slideIdStorageKey,
+      slideIds,
+    ],
   )
 
   // ----------------------------------------------------------
   // Restore the previous slide after returning from
   // a venue profile.
+  //
+  // CONTEXT SLIDES:
+  // Prefer a stable slide ID when present. Fall back
+  // to the original numeric index for older sessions.
   // ----------------------------------------------------------
 
   useEffect(() => {
@@ -538,18 +802,33 @@ export default function RoamEditionReader({
     let savedIndex = 0
 
     try {
-      const storedValue =
-        window.sessionStorage.getItem(storageKey)
+      const storedSlideId =
+        window.sessionStorage.getItem(
+          slideIdStorageKey,
+        )
 
-      if (storedValue !== null) {
-        const parsed = Number(storedValue)
+      const matchingIndex = storedSlideId
+        ? slides.findIndex(
+            (slide) => slide.id === storedSlideId,
+          )
+        : -1
 
-        if (
-          Number.isInteger(parsed) &&
-          parsed >= 0 &&
-          parsed < slideCount
-        ) {
-          savedIndex = parsed
+      if (matchingIndex >= 0) {
+        savedIndex = matchingIndex
+      } else {
+        const storedValue =
+          window.sessionStorage.getItem(storageKey)
+
+        if (storedValue !== null) {
+          const parsed = Number(storedValue)
+
+          if (
+            Number.isInteger(parsed) &&
+            parsed >= 0 &&
+            parsed < slideCount
+          ) {
+            savedIndex = parsed
+          }
         }
       }
     } catch {
@@ -561,7 +840,12 @@ export default function RoamEditionReader({
 
     activeIndexRef.current = savedIndex
     setActiveIndex(savedIndex)
-  }, [storageKey, slideCount])
+  }, [
+    storageKey,
+    slideIdStorageKey,
+    slideCount,
+    slideIds,
+  ])
 
   // ----------------------------------------------------------
   // Maintain slide alignment when the viewport resizes.
@@ -617,6 +901,11 @@ export default function RoamEditionReader({
         storageKey,
         String(nextIndex),
       )
+
+      window.sessionStorage.setItem(
+        slideIdStorageKey,
+        slides[nextIndex].id,
+      )
     } catch {
       // Ignore unavailable session storage.
     }
@@ -627,6 +916,10 @@ export default function RoamEditionReader({
   //
   // Interactive links are excluded so clicking
   // "Explore Venue" never starts a drag.
+  //
+  // CONTEXT SLIDES:
+  // Selecting or vertically scrolling written content
+  // should not initiate desktop carousel dragging.
   // ----------------------------------------------------------
 
   function handleMouseDown(
@@ -639,7 +932,7 @@ export default function RoamEditionReader({
     if (
       target instanceof Element &&
       target.closest(
-        'a, button, input, textarea, select',
+        'a, button, input, textarea, select, [data-roam-context-scroll]',
       )
     ) {
       return
@@ -739,6 +1032,24 @@ export default function RoamEditionReader({
       return
     }
 
+    // Let focused context writing regions use their own
+    // vertical scrolling without interfering with the
+    // reader's navigation shortcuts.
+    const target = event.target
+
+    if (
+      target instanceof Element &&
+      target.closest('[data-roam-context-scroll]') &&
+      (
+        event.key === 'ArrowUp' ||
+        event.key === 'ArrowDown' ||
+        event.key === 'PageUp' ||
+        event.key === 'PageDown'
+      )
+    ) {
+      return
+    }
+
     if (event.key === 'ArrowRight') {
       event.preventDefault()
       goToSlide(activeIndexRef.current + 1)
@@ -782,7 +1093,13 @@ export default function RoamEditionReader({
           onDragStart={(event) => event.preventDefault()}
           className={[
             'flex w-full overflow-x-auto overscroll-x-contain rounded-xl border border-white/10 bg-[#11243a] shadow-[0_24px_70px_rgba(0,0,0,0.3)]',
-            'touch-pan-x select-none',
+            // Existing Editions retain their original
+            // touch-action setting. Context Editions allow
+            // native vertical scrolling inside text panels
+            // as well as horizontal slide navigation.
+            hasContextSlides
+              ? 'touch-auto select-none'
+              : 'touch-pan-x select-none',
             '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
             'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#d2ab86]',
             isDragging
@@ -800,7 +1117,9 @@ export default function RoamEditionReader({
                   ? `Slide ${index + 1} of ${slideCount}: ${edition.title} cover`
                   : slide.kind === 'venue'
                     ? `Slide ${index + 1} of ${slideCount}: ${slide.item.venue_name}`
-                    : `Slide ${index + 1} of ${slideCount}: Closing`
+                    : slide.kind === 'context'
+                      ? `Slide ${index + 1} of ${slideCount}: Context for ${slide.venue.venue_name}`
+                      : `Slide ${index + 1} of ${slideCount}: Closing`
               }
               className="relative aspect-[4/5] w-full shrink-0 snap-start snap-always overflow-hidden"
             >
@@ -814,9 +1133,15 @@ export default function RoamEditionReader({
               {slide.kind === 'venue' && (
                 <VenueSlide
                   item={slide.item}
-                  index={index}
-                  total={edition.items.length}
                   city={cityName}
+                />
+              )}
+
+              {slide.kind === 'context' && (
+                <ContextSlide
+                  context={slide.context}
+                  venue={slide.venue}
+                  edition={edition}
                 />
               )}
 

@@ -651,18 +651,6 @@ export default async function VenueProfilePage({
                       [&_p]:text-slate-400
                     "
                   >
-                    <p
-                      className="
-                        mb-2
-                        text-[10px]
-                        font-black
-                        uppercase
-                        tracking-[0.22em]
-                        text-slate-400
-                      "
-                    >
-                      Reservations
-                    </p>
 
                     <VenueBookingButtons
                       bookingOptions={

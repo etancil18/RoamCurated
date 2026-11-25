@@ -1,4 +1,3 @@
-// components/venue-profile/VenueBookingButtons.tsx
 
 "use client"
 
@@ -61,6 +60,29 @@ function getButtonText(provider: string, compact = false): string {
     default:
       return `Reserve on ${getProviderLabel(normalized)}`
   }
+}
+
+// =====================================================
+// VENUE PROFILE — BOOKING ARROW ICON
+//
+// Matches the arrow used by VenueBuildFlowButton.
+// =====================================================
+
+function BookingArrowIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4 shrink-0"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  )
 }
 
 export default function VenueBookingButtons({
@@ -148,29 +170,47 @@ export default function VenueBookingButtons({
     )
   }
 
+  // =====================================================
+  // VENUE PROFILE — RESERVATION BUTTON SPACING
+  //
+  // Do not render an empty heading/details container
+  // when no reservation guidance has been supplied.
+  //
+  // This removes the unnecessary vertical space above
+  // the gradient button and aligns it with Build a Flow.
+  //
+  // Existing reservation guidance remains unchanged
+  // whenever it is present.
+  // =====================================================
+
+  const hasReservationGuidance =
+    reservationRecommended || Boolean(suggestedTimeLabel)
+
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Reservations
-        </h2>
+    <section className={hasReservationGuidance ? "space-y-4" : ""}>
+      {hasReservationGuidance ? (
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Reservations
+          </h2>
 
-        {reservationRecommended || suggestedTimeLabel ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {reservationRecommended ? (
-              <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-emerald-300">
-                Reservation recommended
-              </span>
-            ) : null}
+          {reservationRecommended || suggestedTimeLabel ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {reservationRecommended ? (
+                <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-emerald-300">
+                  Reservation recommended
+                </span>
+              ) : null}
 
-            {suggestedTimeLabel ? (
-              <span className="rounded-full bg-neutral-900 px-2.5 py-1 text-[11px] text-neutral-300 dark:bg-neutral-900">
-                Suggested time {suggestedTimeLabel}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
+              {suggestedTimeLabel ? (
+                <span className="rounded-full bg-neutral-900 px-2.5 py-1 text-[11px] text-neutral-300 dark:bg-neutral-900">
+                  Suggested time {suggestedTimeLabel}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {normalizedOptions.length > 0 ? (
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -181,9 +221,20 @@ export default function VenueBookingButtons({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => handleBookingClick(option)}
-              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-950"
+              className={[
+                "flex min-h-11 w-full items-center justify-center gap-2",
+                "rounded-xl bg-gradient-to-r",
+                "from-indigo-500 via-violet-500 to-cyan-500",
+                "px-4 py-3 text-center text-sm font-black text-white",
+                "shadow-[0_12px_30px_rgba(34,211,238,0.12)]",
+                "transition hover:brightness-110",
+                "focus-visible:outline focus-visible:outline-2",
+                "focus-visible:outline-offset-2",
+                "focus-visible:outline-cyan-300",
+              ].join(" ")}
             >
               {getButtonText(option.provider)}
+              <BookingArrowIcon />
             </a>
           ))}
         </div>

@@ -1,6 +1,7 @@
 
 import 'server-only'
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 const UUID_PATTERN =
@@ -29,6 +30,79 @@ const ITEM_SELECT = `
   badge,
   image_override_url
 `
+
+// =====================================================
+// PUBLIC EDITIONS — CONTEXT SLIDES
+//
+// Additional fields are loaded separately to preserve
+// the existing public Edition listing query.
+// =====================================================
+
+const CONTEXT_SLIDE_SELECT = `
+  id,
+  edition_id,
+  after_item_id,
+  position,
+  heading,
+  body,
+  image_source,
+  creator_media_id
+`
+
+type PublicEditionContextImageSource =
+  | 'none'
+  | 'venue_cover'
+  | 'creator_media'
+
+export type PublicEditionContextSlide = {
+  id: string
+  after_item_id: string
+  position: number
+  heading: string | null
+  body: string
+  image_source: PublicEditionContextImageSource
+  creator_media_id: string | null
+  image_url: string | null
+}
+
+type ContextSlideRow = {
+  id: string
+  edition_id: string
+  after_item_id: string
+  position: number
+  heading: string | null
+  body: string
+  image_source: PublicEditionContextImageSource
+  creator_media_id: string | null
+}
+
+type ContextEditionEligibilityRow = {
+  edition_type: string
+  featured_creator_id: string | null
+  source_collection_id: string | null
+  creator_permission_status: string
+}
+
+type ContextCollectionRow = {
+  id: string
+  user_id: string
+  visibility: string
+}
+
+type ContextMediaRow = {
+  id: string
+  collection_id: string
+  user_id: string
+  venue_id: string | null
+  media_type: string
+  storage_path: string
+}
+
+// The context-slide table may not yet appear in the
+// project's generated Supabase Database types.
+// Limit this compatibility cast to new context functionality.
+const contextDb =
+  supabaseAdmin as unknown as SupabaseClient
 
 // =====================================================
 // PUBLIC EDITIONS — CREATOR SOCIAL LINKS
@@ -81,6 +155,10 @@ export type PublicEditionItem = {
 
 export type PublicEditionDetail = PublicEdition & {
   items: PublicEditionItem[]
+
+  // Optional additional slides following venue items.
+  // Existing editions without context slides return [].
+  context_slides: PublicEditionContextSlide[]
 }
 
 type EditionRow = Omit<PublicEdition, 'creator'>
@@ -302,6 +380,367 @@ function normalizeEditorialImageUrl(
   return `/${image}`
 }
 
+// =====================================================
+// PUBLIC EDITIONS — CONTEXT IMAGE PATH VALIDATION
+//
+// New context-media references must resolve through the
+// existing public creator-collection-media bucket.
+//
+// Unlike existing venue image URLs, arbitrary external
+// URLs are not accepted for creator media.
+// =====================================================
+
+function validContextStoragePath(
+  value: string,
+): boolean {
+  if (
+    !value ||
+    value.startsWith('/') ||
+    value.includes('\\') ||
+    value.includes('?') ||
+    value.includes('#') ||
+    /^[a-z][a-z0-9+.-]*:/i.test(value)
+  ) {
+    return false
+  }
+
+  return value.split('/').every(
+    (segment) =>
+      segment.length > 0 &&
+      segment !== '.' &&
+      segment !== '..',
+  )
+}
+
+function publicContextMediaUrl(
+  storagePath: string,
+): string | null {
+  if (!validContextStoragePath(storagePath)) {
+    return null
+  }
+
+  const { data } = contextDb.storage
+    .from('creator-collection-media')
+    .getPublicUrl(storagePath)
+
+  return data.publicUrl || null
+}
+
+// =====================================================
+// PUBLIC EDITIONS — LOAD CONTEXT SLIDES
+//
+// This helper:
+// - Loads only context slides belonging to this Edition.
+// - Associates each context with a real public venue item.
+// - Preserves order within each parent venue.
+// - Resolves creator photographs through existing media.
+// - Revalidates creator ownership, source collection,
+//   public collection visibility, image type, and venue tag.
+// - Falls back to the canonical venue cover if creator
+//   media becomes ineligible.
+// - Never exposes creator media storage paths.
+//
+// No changes are made to existing venue-item records.
+// =====================================================
+
+async function loadPublicContextSlides(
+  editionId: string,
+  items: PublicEditionItem[],
+): Promise<PublicEditionContextSlide[]> {
+  if (items.length === 0) {
+    return []
+  }
+
+  const { data: slideData, error: slideError } =
+    await contextDb
+      .from('roam_editorial_edition_context_slides')
+      .select(CONTEXT_SLIDE_SELECT)
+      .eq('edition_id', editionId)
+      .order('position', { ascending: true })
+      .order('id', { ascending: true })
+
+  if (slideError) throw slideError
+
+  const slides =
+    (slideData ?? []) as ContextSlideRow[]
+
+  if (slides.length === 0) {
+    return []
+  }
+
+  const itemMap = new Map(
+    items.map((item) => [item.id, item]),
+  )
+
+  // Do not expose contexts whose parent venue item
+  // is not present in the public Edition.
+  const validSlides = slides.filter(
+    (slide) => itemMap.has(slide.after_item_id),
+  )
+
+  if (validSlides.length === 0) {
+    return []
+  }
+
+  const creatorMediaIds = [
+    ...new Set(
+      validSlides
+        .filter(
+          (slide) =>
+            slide.image_source === 'creator_media' &&
+            typeof slide.creator_media_id === 'string' &&
+            UUID_PATTERN.test(slide.creator_media_id),
+        )
+        .map(
+          (slide) => slide.creator_media_id as string,
+        ),
+    ),
+  ]
+
+  const eligibleMedia = new Map<string, string>()
+
+  if (creatorMediaIds.length > 0) {
+    // The original public Edition query deliberately
+    // remains unchanged. Only fetch the extra fields
+    // when context slides actually reference photos.
+    const {
+      data: eligibilityData,
+      error: eligibilityError,
+    } = await contextDb
+      .from('roam_editorial_editions')
+      .select(
+        `
+          edition_type,
+          featured_creator_id,
+          source_collection_id,
+          creator_permission_status
+        `,
+      )
+      .eq('id', editionId)
+      .maybeSingle()
+
+    if (eligibilityError) throw eligibilityError
+
+    const eligibility =
+      (eligibilityData ??
+        null) as ContextEditionEligibilityRow | null
+
+    // Mirror the conservative eligibility rules used
+    // by the dedicated context-slide admin API.
+    if (
+      eligibility?.edition_type ===
+        'featured_collection' &&
+      eligibility.creator_permission_status ===
+        'approved' &&
+      eligibility.featured_creator_id &&
+      eligibility.source_collection_id
+    ) {
+      const {
+        data: collectionData,
+        error: collectionError,
+      } = await contextDb
+        .from('creator_collections')
+        .select('id, user_id, visibility')
+        .eq(
+          'id',
+          eligibility.source_collection_id,
+        )
+        .eq(
+          'user_id',
+          eligibility.featured_creator_id,
+        )
+        .eq('visibility', 'public')
+        .maybeSingle()
+
+      if (collectionError) throw collectionError
+
+      const collection =
+        (collectionData ??
+          null) as ContextCollectionRow | null
+
+      if (collection) {
+        const {
+          data: mediaData,
+          error: mediaError,
+        } = await contextDb
+          .from('creator_collection_media')
+          .select(
+            `
+              id,
+              collection_id,
+              user_id,
+              venue_id,
+              media_type,
+              storage_path
+            `,
+          )
+          .in('id', creatorMediaIds)
+          .eq('collection_id', collection.id)
+          .eq('user_id', collection.user_id)
+          .eq('media_type', 'image')
+
+        if (mediaError) throw mediaError
+
+        const mediaRows =
+          (mediaData ?? []) as ContextMediaRow[]
+
+        const referencedVenueByMedia =
+          new Map<string, Set<string>>()
+
+        for (const slide of validSlides) {
+          if (
+            slide.image_source !== 'creator_media' ||
+            !slide.creator_media_id
+          ) {
+            continue
+          }
+
+          const parent = itemMap.get(
+            slide.after_item_id,
+          )
+
+          if (!parent) continue
+
+          const venues =
+            referencedVenueByMedia.get(
+              slide.creator_media_id,
+            ) ?? new Set<string>()
+
+          venues.add(parent.venue_id)
+
+          referencedVenueByMedia.set(
+            slide.creator_media_id,
+            venues,
+          )
+        }
+
+        for (const media of mediaRows) {
+          if (
+            media.collection_id !== collection.id ||
+            media.user_id !== collection.user_id ||
+            media.user_id !==
+              eligibility.featured_creator_id ||
+            media.media_type !== 'image' ||
+            !media.venue_id ||
+            !referencedVenueByMedia
+              .get(media.id)
+              ?.has(media.venue_id)
+          ) {
+            continue
+          }
+
+          const imageUrl = publicContextMediaUrl(
+            media.storage_path,
+          )
+
+          if (imageUrl) {
+            eligibleMedia.set(
+              `${media.id}:${media.venue_id}`,
+              imageUrl,
+            )
+          }
+        }
+      }
+    }
+  }
+
+  const publicSlides: PublicEditionContextSlide[] =
+    validSlides.map((slide) => {
+      const parent = itemMap.get(
+        slide.after_item_id,
+      )!
+
+      const coverUrl =
+        parent.venue_cover_url
+
+      // Text-only context: no photography required.
+      if (slide.image_source === 'none') {
+        return {
+          id: slide.id,
+          after_item_id: slide.after_item_id,
+          position: slide.position,
+          heading: slide.heading,
+          body: slide.body,
+          image_source: 'none',
+          creator_media_id: null,
+          image_url: null,
+        }
+      }
+
+      // Official venue cover: always use the same
+      // canonical image already loaded for the venue.
+      if (slide.image_source === 'venue_cover') {
+        return {
+          id: slide.id,
+          after_item_id: slide.after_item_id,
+          position: slide.position,
+          heading: slide.heading,
+          body: slide.body,
+          image_source: coverUrl
+            ? 'venue_cover'
+            : 'none',
+          creator_media_id: null,
+          image_url: coverUrl,
+        }
+      }
+
+      // Creator media must still be eligible at read time.
+      const creatorImageUrl =
+        slide.creator_media_id
+          ? eligibleMedia.get(
+              `${slide.creator_media_id}:${parent.venue_id}`,
+            ) ?? null
+          : null
+
+      if (creatorImageUrl) {
+        return {
+          id: slide.id,
+          after_item_id: slide.after_item_id,
+          position: slide.position,
+          heading: slide.heading,
+          body: slide.body,
+          image_source: 'creator_media',
+          creator_media_id: slide.creator_media_id,
+          image_url: creatorImageUrl,
+        }
+      }
+
+      // If media eligibility changes, safely fall back.
+      // Never expose the previously selected media ID
+      // or its storage location in the public payload.
+      return {
+        id: slide.id,
+        after_item_id: slide.after_item_id,
+        position: slide.position,
+        heading: slide.heading,
+        body: slide.body,
+        image_source: coverUrl
+          ? 'venue_cover'
+          : 'none',
+        creator_media_id: null,
+        image_url: coverUrl,
+      }
+    })
+
+  // The venue positions are authoritative.
+  // Context positions are local to their parent venue.
+  return publicSlides.sort((a, b) => {
+    const aPosition =
+      itemMap.get(a.after_item_id)?.position ??
+      Number.MAX_SAFE_INTEGER
+
+    const bPosition =
+      itemMap.get(b.after_item_id)?.position ??
+      Number.MAX_SAFE_INTEGER
+
+    return (
+      aPosition - bPosition ||
+      a.position - b.position ||
+      a.id.localeCompare(b.id)
+    )
+  })
+}
+
 /**
  * Public library listing.
  *
@@ -429,10 +868,27 @@ export async function getPublicEdition(
     },
   )
 
+  // =====================================================
+  // PUBLIC EDITIONS — CONTEXT SLIDE INTEGRATION
+  //
+  // The original venue query and data mapping above
+  // remain completely unchanged.
+  //
+  // Context slides are loaded separately, validated
+  // against these public venue items, and returned
+  // for interleaving by the swipeable reader.
+  // =====================================================
+
+  const contextSlides = await loadPublicContextSlides(
+    editionId,
+    publicItems,
+  )
+
   const creators = await loadCreators([edition])
 
   return {
     ...withCreators([edition], creators)[0],
     items: publicItems,
+    context_slides: contextSlides,
   }
 }

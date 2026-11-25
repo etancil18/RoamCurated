@@ -83,6 +83,125 @@ async function fetchEditorialData<T>(
   return payload as T
 }
 
+// =====================================================
+// CONTEXT SLIDES — EXPORT DATA CONTRACT
+// =====================================================
+
+type ExportItem = {
+  id: string
+  position: number
+  [key: string]: unknown
+}
+
+type ExportContextSlide = {
+  id: string
+  after_item_id: string
+  position: number
+  heading: string | null
+  body: string
+  image_source: 'none' | 'venue_cover' | 'creator_media'
+  creator_media_id: string | null
+  image_url: string | null
+}
+
+type ExportSlide =
+  | { kind: 'cover'; id: string }
+  | {
+      kind: 'venue'
+      id: string
+      item_id: string
+    }
+  | {
+      kind: 'context'
+      id: string
+      context_id: string
+      item_id: string
+      page_number: number
+      page_count: number
+      body: string
+    }
+  | { kind: 'closing'; id: string }
+
+// =====================================================
+// CONTEXT SLIDES — PRODUCTION-MATCHED EXPORT SEQUENCE
+//
+// One saved context record = exactly one export slide.
+//
+// This matches the published RoamEditionReader and the
+// updated RoamEditionSlidePreview component.
+//
+// Instagram and TikTok retain their individual output
+// dimensions, but neither preset changes slide count.
+//
+// Cover → Venue → Context(s) → Venue → Closing
+//
+// page_number and page_count remain in the manifest
+// for compatibility with its existing data contract,
+// but are always 1 for each context slide.
+// =====================================================
+
+function buildExportSlides(
+  items: ExportItem[],
+  contexts: ExportContextSlide[],
+): ExportSlide[] {
+  const contextsByItem = new Map<
+    string,
+    ExportContextSlide[]
+  >()
+
+  for (const context of contexts) {
+    const existing =
+      contextsByItem.get(context.after_item_id) ?? []
+
+    existing.push(context)
+    contextsByItem.set(context.after_item_id, existing)
+  }
+
+  for (const group of contextsByItem.values()) {
+    group.sort(
+      (a, b) =>
+        a.position - b.position ||
+        a.id.localeCompare(b.id),
+    )
+  }
+
+  const slides: ExportSlide[] = [
+    { kind: 'cover', id: 'cover' },
+  ]
+
+  for (const item of items) {
+    slides.push({
+      kind: 'venue',
+      id: item.id,
+      item_id: item.id,
+    })
+
+    for (
+      const context of
+      contextsByItem.get(item.id) ?? []
+    ) {
+      // One context record produces one complete slide.
+      // No text splitting or additional page generation.
+      slides.push({
+        kind: 'context',
+        id: `context-${context.id}`,
+        context_id: context.id,
+        item_id: item.id,
+        page_number: 1,
+        page_count: 1,
+        body: context.body,
+      })
+    }
+  }
+
+  slides.push({
+    kind: 'closing',
+    id: 'closing',
+  })
+
+  return slides
+}
+
 export async function GET(
   request: Request,
   context: Context,
@@ -128,7 +247,7 @@ export async function GET(
     const dimensions = EXPORT_PRESETS[preset]
 
     // =====================================================
-    // EXPORT PERMISSION GATE
+    // EXPORT PERMISSION GATE — PRESERVED
     // =====================================================
 
     const { data: editionRecord, error: editionError } =
@@ -177,7 +296,7 @@ export async function GET(
     }
 
     // =====================================================
-    // LOAD THE SAME DATA USED BY THE APPROVED PREVIEW
+    // LOAD EDITORIAL DATA — ADD CONTEXT SLIDES ONLY
     // =====================================================
 
     const base =
@@ -189,28 +308,32 @@ export async function GET(
       editionResponse,
       itemsResponse,
       attributionResponse,
+      contextsResponse,
     ] = await Promise.all([
       fetchEditorialData<{
         edition: Record<string, unknown>
       }>(request, base),
 
       fetchEditorialData<{
-        items: Array<{
-          id: string
-          position: number
-          [key: string]: unknown
-        }>
+        items: ExportItem[]
       }>(request, `${base}/items`),
 
       fetchEditorialData<{
         attribution: Record<string, unknown>
       }>(request, `${base}/attribution`),
+
+      // The existing context API performs the
+      // creator/collection/venue media eligibility check.
+      fetchEditorialData<{
+        slides: ExportContextSlide[]
+      }>(request, `${base}/context-slides`),
     ])
 
     if (
       !editionResponse.edition ||
       !Array.isArray(itemsResponse.items) ||
-      !attributionResponse.attribution
+      !attributionResponse.attribution ||
+      !Array.isArray(contextsResponse.slides)
     ) {
       return json(
         { error: 'Incomplete editorial export data.' },
@@ -221,7 +344,106 @@ export async function GET(
     const orderedItems = [
       ...itemsResponse.items,
     ].sort(
-      (a, b) => a.position - b.position,
+      (a, b) =>
+        a.position - b.position ||
+        a.id.localeCompare(b.id),
+    )
+
+    // =====================================================
+    // CONTEXT SLIDES — SAME-EDITION INTEGRITY
+    //
+    // The context API has already checked media eligibility.
+    // Verify its returned slide structure and membership
+    // before putting anything into an export manifest.
+    // =====================================================
+
+    const itemIds = new Set(
+      orderedItems.map((item) => item.id),
+    )
+
+    const orderedContexts: ExportContextSlide[] = []
+
+    for (const slide of contextsResponse.slides) {
+      if (
+        !UUID_PATTERN.test(slide.id) ||
+        !itemIds.has(slide.after_item_id) ||
+        !Number.isInteger(slide.position) ||
+        slide.position < 0 ||
+        typeof slide.body !== 'string' ||
+        slide.body.trim().length < 1 ||
+        slide.body.trim().length > 1500 ||
+        !(
+          slide.heading === null ||
+          (
+            typeof slide.heading === 'string' &&
+            slide.heading.trim().length <= 160
+          )
+        ) ||
+        ![
+          'none',
+          'venue_cover',
+          'creator_media',
+        ].includes(slide.image_source)
+      ) {
+        return json(
+          {
+            error:
+              'Invalid context-slide data in export manifest.',
+          },
+          500,
+        )
+      }
+
+      // If a previously selected photo is no longer
+      // eligible, the context API returns no public image
+      // URL. The preview uses the canonical venue cover.
+      orderedContexts.push({
+        id: slide.id,
+        after_item_id: slide.after_item_id,
+        position: slide.position,
+        heading: slide.heading,
+        body: slide.body,
+        image_source: slide.image_source,
+        creator_media_id:
+          slide.image_source === 'creator_media' &&
+          typeof slide.image_url === 'string'
+            ? slide.creator_media_id
+            : null,
+        image_url:
+          slide.image_source === 'creator_media' &&
+          typeof slide.image_url === 'string'
+            ? slide.image_url
+            : null,
+      })
+    }
+
+    orderedContexts.sort((a, b) => {
+      const aIndex = orderedItems.findIndex(
+        (item) => item.id === a.after_item_id,
+      )
+      const bIndex = orderedItems.findIndex(
+        (item) => item.id === b.after_item_id,
+      )
+
+      return (
+        aIndex - bIndex ||
+        a.position - b.position ||
+        a.id.localeCompare(b.id)
+      )
+    })
+
+    // =====================================================
+    // CONTEXT SLIDES — EXACT PRODUCTION SLIDE COUNT
+    //
+    // Cover + all venues + all context records + closing.
+    //
+    // Each context record contributes exactly one slide,
+    // independently of the Instagram/TikTok preset.
+    // =====================================================
+
+    const orderedSlides = buildExportSlides(
+      orderedItems,
+      orderedContexts,
     )
 
     // =====================================================
@@ -234,10 +456,12 @@ export async function GET(
         width: dimensions.width,
         height: dimensions.height,
         format: 'png',
-        slide_count: orderedItems.length + 2,
+        slide_count: orderedSlides.length,
         permission_verified: true,
         edition: editionResponse.edition,
         items: orderedItems,
+        context_slides: orderedContexts,
+        slides: orderedSlides,
         attribution: attributionResponse.attribution,
       },
     })

@@ -735,11 +735,1054 @@ export default function RoamEditionPlacesPanel({
                     </button>
                   </form>
                 )}
+
+                {/* ==============================================
+                    CONTEXT SLIDES — ADDITIVE INITIATIVE
+
+                    Independent of existing venue editing.
+                    Context slides follow their parent venue
+                    when venue positions are changed.
+                =============================================== */}
+
+                <EditionContextSlidesPanel
+                  editionId={editionId}
+                  item={item}
+                  editable={editable && !busy}
+                />
               </article>
             )
           })}
         </div>
       )}
     </section>
+  )
+}
+
+// ============================================================
+// CONTEXT SLIDES — ISOLATED VENUE-ATTACHED EDITOR
+//
+// This component does not change the existing Places panel
+// state, venue-item endpoints, search, or reorder behavior.
+//
+// It uses:
+//   GET    /context-slides?item_id=...
+//   GET    /context-slides?item_id=...&include_media=true
+//   POST   /context-slides
+//   PATCH  /context-slides
+//   DELETE /context-slides
+//
+// The API remains responsible for media eligibility,
+// draft-only mutations, and all server authorization.
+// ============================================================
+
+type ContextImageSource =
+  | 'none'
+  | 'venue_cover'
+  | 'creator_media'
+
+type ContextSlide = {
+  id: string
+  edition_id: string
+  after_item_id: string
+  position: number
+  heading: string | null
+  body: string
+  image_source: ContextImageSource
+  creator_media_id: string | null
+  image_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+type ContextMediaOption = {
+  id: string
+  venue_id: string
+  image_url: string
+  caption: string | null
+  alt_text: string | null
+  width: number | null
+  height: number | null
+}
+
+type ContextDraft = {
+  slide_id: string | null
+  heading: string
+  body: string
+  image_source: ContextImageSource
+  creator_media_id: string | null
+}
+
+const EMPTY_CONTEXT_DRAFT: ContextDraft = {
+  slide_id: null,
+  heading: '',
+  body: '',
+  image_source: 'none',
+  creator_media_id: null,
+}
+
+const CONTEXT_IMAGE_LABELS: Record<
+  ContextImageSource,
+  string
+> = {
+  none: 'Text only',
+  venue_cover: 'Venue cover',
+  creator_media: 'My tagged photo',
+}
+
+function contextDraftFromSlide(
+  slide: ContextSlide,
+): ContextDraft {
+  return {
+    slide_id: slide.id,
+    heading: slide.heading ?? '',
+    body: slide.body,
+    image_source: slide.image_source,
+    creator_media_id: slide.creator_media_id,
+  }
+}
+
+function contextImageLabel(
+  source: ContextImageSource,
+): string {
+  return CONTEXT_IMAGE_LABELS[source]
+}
+
+function EditionContextSlidesPanel({
+  editionId,
+  item,
+  editable,
+}: {
+  editionId: string
+  item: EditionItem
+  editable: boolean
+}) {
+  const endpoint =
+    `/api/venue-admin/editorial/${encodeURIComponent(
+      editionId,
+    )}/context-slides`
+
+  const itemQuery =
+    `item_id=${encodeURIComponent(item.id)}`
+
+  const [slides, setSlides] = useState<
+    ContextSlide[]
+  >([])
+
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+
+  const [error, setError] = useState<
+    string | null
+  >(null)
+
+  const [notice, setNotice] = useState<
+    string | null
+  >(null)
+
+  const [draft, setDraft] = useState<
+    ContextDraft | null
+  >(null)
+
+  const [mediaOptions, setMediaOptions] = useState<
+    ContextMediaOption[]
+  >([])
+
+  const [loadingMedia, setLoadingMedia] =
+    useState(false)
+
+  const [mediaError, setMediaError] = useState<
+    string | null
+  >(null)
+
+  // ----------------------------------------------------------
+  // Load context slides for this specific venue item.
+  // ----------------------------------------------------------
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadContextSlides() {
+      setLoading(true)
+      setError(null)
+      setNotice(null)
+      setDraft(null)
+      setSlides([])
+
+      try {
+        const response = await request<{
+          slides: ContextSlide[]
+        }>(
+          `${endpoint}?${itemQuery}`,
+          {
+            signal: controller.signal,
+          },
+        )
+
+        if (!controller.signal.aborted) {
+          setSlides(
+            (response.slides ?? [])
+              .filter(
+                (slide) =>
+                  slide.after_item_id === item.id,
+              )
+              .sort(
+                (a, b) =>
+                  a.position - b.position,
+              ),
+          )
+        }
+      } catch (loadError) {
+        if (!controller.signal.aborted) {
+          setError(
+            errorMessage(loadError),
+          )
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadContextSlides()
+
+    return () => controller.abort()
+  }, [endpoint, itemQuery, item.id])
+
+  // ----------------------------------------------------------
+  // Load eligible creator photographs only when the
+  // context editor is using the creator-media option.
+  //
+  // The server decides which images are eligible.
+  // This component never trusts arbitrary image URLs.
+  // ----------------------------------------------------------
+
+  const wantsCreatorMedia =
+    draft?.image_source === 'creator_media'
+
+  useEffect(() => {
+    if (!wantsCreatorMedia) {
+      setMediaOptions([])
+      setLoadingMedia(false)
+      setMediaError(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    async function loadEligibleMedia() {
+      setLoadingMedia(true)
+      setMediaError(null)
+      setMediaOptions([])
+
+      try {
+        const response = await request<{
+          slides: ContextSlide[]
+          media: ContextMediaOption[]
+        }>(
+          `${endpoint}?${itemQuery}&include_media=true`,
+          {
+            signal: controller.signal,
+          },
+        )
+
+        if (!controller.signal.aborted) {
+          setMediaOptions(
+            (response.media ?? []).filter(
+              (media) =>
+                media.venue_id === item.venue_id,
+            ),
+          )
+        }
+      } catch (loadError) {
+        if (!controller.signal.aborted) {
+          setMediaError(
+            errorMessage(loadError),
+          )
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingMedia(false)
+        }
+      }
+    }
+
+    void loadEligibleMedia()
+
+    return () => controller.abort()
+  }, [
+    endpoint,
+    itemQuery,
+    item.venue_id,
+    wantsCreatorMedia,
+  ])
+
+  // ----------------------------------------------------------
+  // Keep returned mutations scoped to the current venue.
+  // The API returns the complete Edition context list.
+  // ----------------------------------------------------------
+
+  function applyContextSlides(
+    nextSlides: ContextSlide[],
+  ) {
+    setSlides(
+      nextSlides
+        .filter(
+          (slide) =>
+            slide.after_item_id === item.id,
+        )
+        .sort(
+          (a, b) =>
+            a.position - b.position,
+        ),
+    )
+  }
+
+  function startNewContext() {
+    if (!editable || busy || loading) return
+
+    setDraft({
+      ...EMPTY_CONTEXT_DRAFT,
+    })
+
+    setError(null)
+    setNotice(null)
+  }
+
+  function editContext(
+    slide: ContextSlide,
+  ) {
+    if (!editable || busy || loading) return
+
+    setDraft(
+      contextDraftFromSlide(slide),
+    )
+
+    setError(null)
+    setNotice(null)
+  }
+
+  function closeContextEditor() {
+    if (busy) return
+
+    setDraft(null)
+    setMediaError(null)
+    setError(null)
+  }
+
+  function updateContextDraft<
+    K extends keyof ContextDraft,
+  >(
+    key: K,
+    value: ContextDraft[K],
+  ) {
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            [key]: value,
+          }
+        : current,
+    )
+
+    setNotice(null)
+  }
+
+  function updateImageSource(
+    source: ContextImageSource,
+  ) {
+    setDraft((current) => {
+      if (!current) return current
+
+      return {
+        ...current,
+        image_source: source,
+        creator_media_id:
+          source === 'creator_media'
+            ? current.image_source ===
+              'creator_media'
+              ? current.creator_media_id
+              : null
+            : null,
+      }
+    })
+
+    setError(null)
+    setNotice(null)
+  }
+
+  // ----------------------------------------------------------
+  // Create or update one context slide.
+  // ----------------------------------------------------------
+
+  async function saveContext(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault()
+
+    if (
+      !editable ||
+      busy ||
+      loading ||
+      !draft
+    ) {
+      return
+    }
+
+    const body = draft.body.trim()
+    const heading =
+      draft.heading.trim() || null
+
+    if (
+      !body ||
+      body.length > 1500 ||
+      (heading && heading.length > 160)
+    ) {
+      setError(
+        'Add a written perspective (1–1500 characters) and keep the optional heading within 160 characters.',
+      )
+      return
+    }
+
+    if (
+      draft.image_source ===
+        'creator_media' &&
+      !draft.creator_media_id
+    ) {
+      setError(
+        'Choose an eligible tagged photo, or select Venue cover or Text only.',
+      )
+      return
+    }
+
+    setBusy(true)
+    setError(null)
+    setNotice(null)
+
+    const isEditing =
+      draft.slide_id !== null
+
+    const payload = isEditing
+      ? {
+          slide_id: draft.slide_id,
+          heading,
+          body,
+          image_source:
+            draft.image_source,
+          creator_media_id:
+            draft.image_source ===
+            'creator_media'
+              ? draft.creator_media_id
+              : null,
+        }
+      : {
+          after_item_id: item.id,
+          heading,
+          body,
+          image_source:
+            draft.image_source,
+          creator_media_id:
+            draft.image_source ===
+            'creator_media'
+              ? draft.creator_media_id
+              : null,
+        }
+
+    try {
+      const response = await request<{
+        slides: ContextSlide[]
+      }>(endpoint, {
+        method:
+          isEditing ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload),
+      })
+
+      applyContextSlides(
+        response.slides ?? [],
+      )
+
+      setDraft(null)
+
+      setNotice(
+        isEditing
+          ? 'Context slide saved.'
+          : 'Context slide added after this venue.',
+      )
+    } catch (saveError) {
+      setError(
+        errorMessage(saveError),
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // ----------------------------------------------------------
+  // Delete one context slide only.
+  // The parent venue remains untouched.
+  // ----------------------------------------------------------
+
+  async function removeContext(
+    slide: ContextSlide,
+  ) {
+    if (!editable || busy || loading) return
+
+    const confirmed = window.confirm(
+      'Remove this context slide? The venue slide will remain in the Edition.',
+    )
+
+    if (!confirmed) return
+
+    setBusy(true)
+    setError(null)
+    setNotice(null)
+
+    try {
+      const response = await request<{
+        slides: ContextSlide[]
+      }>(endpoint, {
+        method: 'DELETE',
+        body: JSON.stringify({
+          slide_id: slide.id,
+        }),
+      })
+
+      applyContextSlides(
+        response.slides ?? [],
+      )
+
+      if (draft?.slide_id === slide.id) {
+        setDraft(null)
+      }
+
+      setNotice('Context slide removed.')
+    } catch (removeError) {
+      setError(
+        errorMessage(removeError),
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const editorDisabled =
+    !editable || busy || loading
+
+  const selectedMedia =
+    mediaOptions.find(
+      (media) =>
+        media.id ===
+        draft?.creator_media_id,
+    ) ?? null
+
+  return (
+    <div className="mt-5 space-y-3 border-t border-[#d2ab86]/20 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d2ab86]">
+            Between the places
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-slate-400">
+            Add written context immediately after
+            this venue slide.
+          </p>
+        </div>
+
+        {editable && (
+          <button
+            type="button"
+            disabled={
+              editorDisabled ||
+              draft !== null ||
+              slides.length >= 12
+            }
+            onClick={startNewContext}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#d2ab86]/40 px-3 py-2 text-xs font-semibold text-[#e6c6a5] transition hover:border-[#d2ab86] hover:bg-[#d2ab86]/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            + Add Context After
+          </button>
+        )}
+      </div>
+
+      {loading && (
+        <p
+          role="status"
+          className="text-xs text-slate-500"
+        >
+          Loading context slides…
+        </p>
+      )}
+
+      {error && (
+        <div
+          role="alert"
+          className="rounded-lg border border-red-500/30 bg-red-950/20 p-3 text-xs leading-5 text-red-200"
+        >
+          {error}
+        </div>
+      )}
+
+      {notice && (
+        <p
+          role="status"
+          className="text-xs text-emerald-300"
+        >
+          {notice}
+        </p>
+      )}
+
+      {!loading &&
+        slides.length === 0 &&
+        !draft && (
+          <p className="text-xs text-slate-500">
+            No additional context slides.
+          </p>
+        )}
+
+      {/* ======================================================
+          EXISTING CONTEXT SLIDES
+      ====================================================== */}
+
+      {!loading &&
+        slides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className="rounded-xl border border-[#d2ab86]/20 bg-[#0a1628] p-3 sm:p-4"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#d2ab86]">
+                  Context {index + 1}
+                </p>
+
+                {slide.heading && (
+                  <p className="mt-2 break-words text-sm font-semibold text-white">
+                    {slide.heading}
+                  </p>
+                )}
+
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-300">
+                  {slide.body}
+                </p>
+
+                <p className="mt-3 text-[11px] text-slate-500">
+                  {contextImageLabel(
+                    slide.image_source,
+                  )}
+                  {slide.image_source ===
+                    'creator_media' &&
+                    !slide.image_url
+                    ? ' · Photo currently unavailable'
+                    : ''}
+                </p>
+              </div>
+
+              {editable && (
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={
+                      editorDisabled ||
+                      draft !== null
+                    }
+                    onClick={() =>
+                      editContext(slide)
+                    }
+                    className="rounded-lg border border-blue-400/30 px-3 py-2 text-xs text-blue-200 transition hover:border-blue-400/60 disabled:opacity-40"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={
+                      editorDisabled ||
+                      draft !== null
+                    }
+                    onClick={() =>
+                      void removeContext(slide)
+                    }
+                    className="rounded-lg border border-red-500/30 px-3 py-2 text-xs text-red-300 transition hover:border-red-400/60 disabled:opacity-40"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {slide.image_source ===
+              'creator_media' &&
+              slide.image_url && (
+                <div className="mt-3 overflow-hidden rounded-lg border border-white/10">
+                  <img
+                    src={slide.image_url}
+                    alt={
+                      slide.heading ||
+                      `Creator photograph for ${item.venue_name}`
+                    }
+                    loading="lazy"
+                    className="max-h-44 w-full object-cover"
+                  />
+                </div>
+              )}
+
+            {slide.image_source ===
+              'venue_cover' &&
+              item.venue_cover_url && (
+                <div className="mt-3 overflow-hidden rounded-lg border border-white/10">
+                  <img
+                    src={item.venue_cover_url}
+                    alt={item.venue_name}
+                    loading="lazy"
+                    className="max-h-44 w-full object-cover"
+                  />
+                </div>
+              )}
+          </div>
+        ))}
+
+      {/* ======================================================
+          CREATE / EDIT CONTEXT SLIDE
+      ====================================================== */}
+
+      {editable && draft && (
+        <form
+          onSubmit={(event) =>
+            void saveContext(event)
+          }
+          className="space-y-4 rounded-xl border border-[#d2ab86]/30 bg-[#101b2b] p-4"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#d2ab86]">
+                {draft.slide_id
+                  ? 'Edit context'
+                  : 'New context'}
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-slate-400">
+                This page will follow{' '}
+                <span className="font-semibold text-white">
+                  {item.venue_name}
+                </span>
+                .
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={busy}
+              onClick={closeContextEditor}
+              className="rounded-lg border border-slate-600 px-3 py-2 text-xs text-slate-300 hover:border-slate-400 disabled:opacity-40"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <label className="block space-y-2">
+            <span className="text-xs font-medium text-slate-300">
+              Heading (optional)
+            </span>
+
+            <input
+              maxLength={160}
+              value={draft.heading}
+              onChange={(event) =>
+                updateContextDraft(
+                  'heading',
+                  event.target.value,
+                )
+              }
+              placeholder="What makes this place memorable"
+              className={INPUT_CLASS}
+              disabled={editorDisabled}
+            />
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-xs font-medium text-slate-300">
+              Written perspective
+            </span>
+
+            <textarea
+              required
+              maxLength={1500}
+              rows={7}
+              value={draft.body}
+              onChange={(event) =>
+                updateContextDraft(
+                  'body',
+                  event.target.value,
+                )
+              }
+              placeholder="Share the atmosphere, the details worth noticing, or the personal perspective behind including this place."
+              className={INPUT_CLASS}
+              disabled={editorDisabled}
+            />
+
+            <span className="block text-right text-[11px] text-slate-500">
+              {draft.body.length}/1500
+            </span>
+          </label>
+
+          {/* ==================================================
+              CONTEXT IMAGE SOURCE
+          ================================================== */}
+
+          <fieldset
+            disabled={editorDisabled}
+            className="space-y-3 disabled:opacity-60"
+          >
+            <legend className="text-xs font-medium text-slate-300">
+              Context slide image
+            </legend>
+
+            <p className="text-xs leading-5 text-slate-500">
+              Use just the writing, the official venue
+              cover, or an eligible photo tagged to
+              this exact venue.
+            </p>
+
+            <div className="grid gap-2 sm:grid-cols-3">
+              {(
+                [
+                  'none',
+                  'venue_cover',
+                  'creator_media',
+                ] as const
+              ).map((source) => {
+                const selected =
+                  draft.image_source === source
+
+                return (
+                  <label
+                    key={source}
+                    className={[
+                      'flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs transition',
+                      selected
+                        ? 'border-[#d2ab86] bg-[#d2ab86]/10 text-[#f0d2b1]'
+                        : 'border-slate-600 text-slate-300 hover:border-slate-400',
+                    ].join(' ')}
+                  >
+                    <input
+                      type="radio"
+                      name={`context-image-${item.id}`}
+                      checked={selected}
+                      onChange={() =>
+                        updateImageSource(source)
+                      }
+                      disabled={
+                        editorDisabled ||
+                        (
+                          source ===
+                            'venue_cover' &&
+                          !item.venue_cover_url
+                        )
+                      }
+                      className="accent-[#d2ab86]"
+                    />
+
+                    <span>
+                      {contextImageLabel(source)}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </fieldset>
+
+          {draft.image_source ===
+            'venue_cover' && (
+            <div className="rounded-lg border border-slate-700/70 p-3">
+              {item.venue_cover_url ? (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={item.venue_cover_url}
+                    alt={item.venue_name}
+                    loading="lazy"
+                    className="h-20 w-20 shrink-0 rounded-lg object-cover"
+                  />
+
+                  <p className="text-xs leading-5 text-slate-300">
+                    The existing canonical cover photo
+                    for {item.venue_name} will be used.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-amber-200">
+                  This venue does not currently have a
+                  canonical cover photo. Choose Text only.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ==================================================
+              ELIGIBLE CREATOR PHOTOGRAPH PICKER
+          ================================================== */}
+
+          {draft.image_source ===
+            'creator_media' && (
+            <div className="space-y-3 rounded-lg border border-slate-700/70 bg-[#0a1628] p-3">
+              <p className="text-xs font-medium text-white">
+                Photos tagged to {item.venue_name}
+              </p>
+
+              {loadingMedia && (
+                <p
+                  role="status"
+                  className="text-xs text-slate-400"
+                >
+                  Loading eligible photos…
+                </p>
+              )}
+
+              {mediaError && (
+                <p
+                  role="alert"
+                  className="text-xs leading-5 text-red-300"
+                >
+                  {mediaError}
+                </p>
+              )}
+
+              {!loadingMedia &&
+                !mediaError &&
+                mediaOptions.length === 0 && (
+                  <p className="text-xs leading-5 text-slate-400">
+                    No eligible creator photos are available
+                    for this venue and Edition. You can
+                    use the venue cover or a text-only page.
+                  </p>
+                )}
+
+              {!loadingMedia &&
+                mediaOptions.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {mediaOptions.map((media) => {
+                      const selected =
+                        draft.creator_media_id ===
+                        media.id
+
+                      return (
+                        <label
+                          key={media.id}
+                          className={[
+                            'cursor-pointer overflow-hidden rounded-lg border transition',
+                            selected
+                              ? 'border-[#d2ab86] ring-1 ring-[#d2ab86]'
+                              : 'border-slate-600 hover:border-slate-400',
+                          ].join(' ')}
+                        >
+                          <input
+                            type="radio"
+                            name={`context-photo-${item.id}`}
+                            checked={selected}
+                            disabled={editorDisabled}
+                            onChange={() =>
+                              updateContextDraft(
+                                'creator_media_id',
+                                media.id,
+                              )
+                            }
+                            className="sr-only"
+                          />
+
+                          <img
+                            src={media.image_url}
+                            alt={
+                              media.alt_text ||
+                              media.caption ||
+                              `Photo of ${item.venue_name}`
+                            }
+                            loading="lazy"
+                            className="aspect-[4/5] w-full object-cover"
+                          />
+
+                          <span className="flex items-center justify-between gap-2 px-2 py-2 text-[11px] text-slate-300">
+                            <span className="truncate">
+                              {media.caption ||
+                                'Tagged photo'}
+                            </span>
+
+                            {selected && (
+                              <span
+                                className="font-semibold text-[#d2ab86]"
+                                aria-label="Selected"
+                              >
+                                ✓
+                              </span>
+                            )}
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                )}
+
+              {draft.creator_media_id &&
+                !selectedMedia &&
+                !loadingMedia && (
+                  <p className="text-xs leading-5 text-amber-200">
+                    The previously selected photo is no
+                    longer available in the eligible
+                    choices. Select another photo or
+                    change the image source.
+                  </p>
+                )}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 border-t border-slate-700/60 pt-4">
+            <button
+              type="submit"
+              disabled={
+                editorDisabled ||
+                !draft.body.trim() ||
+                (
+                  draft.image_source ===
+                    'creator_media' &&
+                  (
+                    loadingMedia ||
+                    !selectedMedia
+                  )
+                ) ||
+                (
+                  draft.image_source ===
+                    'venue_cover' &&
+                  !item.venue_cover_url
+                )
+              }
+              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#d2ab86] px-4 text-xs font-semibold text-[#102337] transition hover:bg-[#e3bd9b] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {busy
+                ? 'Saving context…'
+                : draft.slide_id
+                  ? 'Save context'
+                  : 'Add context slide'}
+            </button>
+
+            <button
+              type="button"
+              disabled={busy}
+              onClick={closeContextEditor}
+              className="min-h-11 rounded-lg border border-slate-600 px-4 text-xs font-semibold text-slate-300 hover:border-slate-400 disabled:opacity-40"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {!editable &&
+        !loading &&
+        slides.length > 0 && (
+          <p className="text-[11px] leading-5 text-slate-500">
+            Context slides are read-only outside
+            draft status.
+          </p>
+        )}
+    </div>
   )
 }
